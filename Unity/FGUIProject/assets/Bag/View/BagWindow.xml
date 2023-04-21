@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <component id="n4_q30y" name="mCommonBg" src="k9ht0" fileName="Component/CommonBg2.xml" pkg="ex3p2il3" xy="280,80" size="720,480">
+      <relation target="" sidePair="width-width,height-height,center-center,middle-middle"/>
+    </component>
+    <graph id="n0_q30y" name="n0" xy="280,180" size="720,380" type="rect" fillColor="#ffccff66">
+      <relation target="n4_q30y" sidePair="width-width,height-height,center-center,bottom-bottom"/>
+    </graph>
+    <text id="n1_q30y" name="n1" xy="599,336" size="80,52" fontSize="38" text="背包">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </text>
+  </displayList>
+</component>

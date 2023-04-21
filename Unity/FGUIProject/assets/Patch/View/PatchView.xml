@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <graph id="n2_goy4" name="n2" xy="0,0" size="1280,720" type="rect" fillColor="#ffcccccc">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="n0_oylh" name="txt" xy="255,568" size="770,29" fontSize="20" align="center" autoSize="none" bold="true" text="111111">
+      <relation target="" sidePair="center-center,bottom-bottom"/>
+    </text>
+    <component id="n1_oylh" name="bar" src="oylhd" fileName="components/PatchBar.xml" xy="256,609" size="768,20">
+      <relation target="" sidePair="center-center,bottom-bottom"/>
+      <ProgressBar value="50" max="100"/>
+    </component>
+  </displayList>
+</component>

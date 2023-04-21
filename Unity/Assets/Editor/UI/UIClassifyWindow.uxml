@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:IMGUIContainer style="-unity-text-align: upper-left; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; word-spacing: 0; -unity-paragraph-spacing: 0; white-space: normal; position: relative;">
+        <uie:ObjectField label="资源目录" name="pathField" allow-scene-objects="true" type="UnityEngine.Object, UnityEngine.CoreModule" style="flex-grow: 1;" />
+        <ui:Button text="重载配置" display-tooltip-when-elided="true" name="btnLoad" />
+        <ui:VisualElement>
+            <ui:Foldout text="内置资源" value="false" style="align-items: stretch; min-width: auto; min-height: auto;">
+                <ui:VisualElement style="flex-grow: 1; flex-direction: row; align-items: stretch;">
+                    <ui:Button text="[+]" display-tooltip-when-elided="true" enable-rich-text="true" name="btnBuildinAdd" style="width: 30px; height: 30px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="buildin" />
+            </ui:Foldout>
+        </ui:VisualElement>
+        <ui:VisualElement>
+            <ui:Foldout text="懒加载资源" value="false">
+                <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+                    <ui:Button text="[+]" display-tooltip-when-elided="true" enable-rich-text="true" name="btnLazyloadAdd" style="width: 30px; height: 30px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="lazyload" />
+            </ui:Foldout>
+        </ui:VisualElement>
+        <ui:Button text="生成配置" display-tooltip-when-elided="true" name="btnApply" style="height: 50px; background-color: rgb(40, 106, 42); margin-top: 10px;" />
+    </ui:IMGUIContainer>
+</ui:UXML>

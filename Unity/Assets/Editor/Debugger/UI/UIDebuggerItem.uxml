@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="flex-direction: row; flex-grow: 1; flex-shrink: 1; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); margin-left: 1px; margin-right: 1px; margin-top: 1px; margin-bottom: 1px;">
+        <ui:VisualElement style="flex-grow: 0; background-color: rgb(47, 47, 47);">
+            <ui:Label text="Label" display-tooltip-when-elided="true" name="txtID" style="background-color: rgba(0, 0, 0, 0); border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; margin-left: 1px; margin-right: 1px; margin-top: 1px; margin-bottom: 1px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); flex-grow: 0; width: 200px; flex-shrink: 1; color: rgb(226, 207, 48);" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" label="注册类" value="filler text" name="txtType" readonly="true" style="flex-grow: 0; flex-shrink: 1;" />
+            <ui:TextField picking-mode="Ignore" label="依赖资源包" value="filler text" name="txtPkgs" readonly="true" style="flex-grow: 0; flex-shrink: 1;" />
+            <ui:TextField picking-mode="Ignore" label="懒加载标签" value="filler text" name="txtTags" readonly="true" style="flex-grow: 0; flex-shrink: 1;" />
+            <ui:TextField picking-mode="Ignore" label="子界面" value="filler text" name="txtChildrens" readonly="true" style="flex-grow: 0; flex-shrink: 1;" />
+            <ui:TextField picking-mode="Ignore" label="父界面" focusable="true" readonly="true" name="txtParID" style="visibility: visible; display: flex; overflow: hidden; opacity: 1;" />
+            <ui:TextField picking-mode="Ignore" label="红点ID" name="txtParRedPoint" readonly="true" />
+            <ui:TextField picking-mode="Ignore" label="界面标题" name="txtParTitle" readonly="true" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

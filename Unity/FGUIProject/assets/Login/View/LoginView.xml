@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <graph id="n0_skmp" name="n0" xy="0,0" size="1280,720" type="rect" fillColor="#ff669999">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="n1_skmp" name="n1" xy="49,33" size="156,52" fontSize="38" text="登录界面">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </text>
+    <component id="n2_skmp" name="btnLogin" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="480,336">
+      <Button title="登录"/>
+    </component>
+    <text id="n3_skmp" name="inputAcc" xy="629,194" size="248,42" fontSize="30" autoSize="none" text="1111" input="true"/>
+    <text id="n4_skmp" name="n4" xy="477,193" size="116,42" fontSize="30" autoSize="none" text="账号"/>
+    <text id="n5_skmp" name="inputPass" xy="627,259" size="248,42" fontSize="30" autoSize="none" text="1111" input="true"/>
+    <text id="n6_skmp" name="n6" xy="475,259" size="116,42" fontSize="30" autoSize="none" text="密码"/>
+  </displayList>
+</component>

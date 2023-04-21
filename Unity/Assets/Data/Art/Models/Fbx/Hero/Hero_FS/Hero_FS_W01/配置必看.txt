@@ -1,0 +1,5 @@
+Jian01 挂在 P_Hand_R
+Dun01  挂在 P_Hand_L
+
+动作Skill08的配置如下：Skill08_01完成接Rush(需要移动到目标前方)接Skill08_02
+

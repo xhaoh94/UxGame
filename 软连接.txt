@@ -1,0 +1,5 @@
+mklink /d "G:\Program Files\Unity\Hub\Editor\2020.3.7f1c1\Editor\Data\il2cpp\libil2cpp" "F:\Project\Unity\huatuo\il2cpp_huatuo\libil2cpp"
+mklink /d 生成目录 源目录
+如果出现命令语法不正确 记得加双引号
+
+https://www.bilibili.com/video/av374477707/?vd_source=e4d4540a6e2e8ffc9fbc77cb48956d65

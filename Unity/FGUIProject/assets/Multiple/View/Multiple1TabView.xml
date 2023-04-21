@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <image id="n2_hq6i" name="n2" src="hq6i6" fileName="assets/ui_jchd_xbzp_bg.jpg" xy="124,103"/>
+    <graph id="n0_q30y" name="n0" xy="265,49" size="750,622" type="regular_polygon" sides="3">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </graph>
+    <text id="n1_q30y" name="n1" xy="724,312" size="109,54" fontSize="40" text="Test2"/>
+  </displayList>
+  <transition name="t0">
+    <item time="0" type="Size" target="n0_q30y" tween="true" startValue="750,622" endValue="528,328" duration="24"/>
+  </transition>
+  <transition name="t1">
+    <item time="0" type="Rotation" target="n0_q30y" tween="true" startValue="0" endValue="22.16" duration="24"/>
+    <item time="0" type="Size" target="n0_q30y" tween="true" startValue="750,622" endValue="525,470" duration="24"/>
+  </transition>
+</component>

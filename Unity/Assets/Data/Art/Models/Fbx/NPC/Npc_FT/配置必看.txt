@@ -1,0 +1,3 @@
+Npc_FT@Down               下降动作
+Npc_FT@Up                    上升动作
+

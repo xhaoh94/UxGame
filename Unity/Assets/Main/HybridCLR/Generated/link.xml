@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="FairyGUI">
+    <type fullname="FairyGUI.EventCallback1" preserve="all" />
+    <type fullname="FairyGUI.EventContext" preserve="all" />
+    <type fullname="FairyGUI.GComponent" preserve="all" />
+    <type fullname="FairyGUI.GList" preserve="all" />
+    <type fullname="FairyGUI.GObject" preserve="all" />
+    <type fullname="FairyGUI.GTextInput" preserve="all" />
+    <type fullname="FairyGUI.Window" preserve="all" />
+  </assembly>
+  <assembly fullname="mscorlib">
+    <type fullname="System.Action" preserve="all" />
+    <type fullname="System.Action`1" preserve="all" />
+    <type fullname="System.Action`2" preserve="all" />
+    <type fullname="System.Action`3" preserve="all" />
+    <type fullname="System.Array" preserve="all" />
+    <type fullname="System.Attribute" preserve="all" />
+    <type fullname="System.AttributeTargets" preserve="all" />
+    <type fullname="System.AttributeUsageAttribute" preserve="all" />
+    <type fullname="System.BitConverter" preserve="all" />
+    <type fullname="System.Byte" preserve="all" />
+    <type fullname="System.Collections.Generic.Dictionary`2" preserve="all" />
+    <type fullname="System.Collections.Generic.List`1" preserve="all" />
+    <type fullname="System.Delegate" preserve="all" />
+    <type fullname="System.Diagnostics.DebuggableAttribute" preserve="all" />
+    <type fullname="System.Diagnostics.DebuggableAttribute/DebuggingModes" preserve="all" />
+    <type fullname="System.Diagnostics.DebuggerHiddenAttribute" preserve="all" />
+    <type fullname="System.Enum" preserve="all" />
+    <type fullname="System.Exception" preserve="all" />
+    <type fullname="System.Func`1" preserve="all" />
+    <type fullname="System.Int64" preserve="all" />
+    <type fullname="System.Object" preserve="all" />
+    <type fullname="System.Reflection.Assembly" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.AsyncStateMachineAttribute" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.AsyncVoidMethodBuilder" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.CompilationRelaxationsAttribute" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.CompilerGeneratedAttribute" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.ExtensionAttribute" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.IAsyncStateMachine" preserve="all" />
+    <type fullname="System.Runtime.CompilerServices.RuntimeCompatibilityAttribute" preserve="all" />
+    <type fullname="System.RuntimeTypeHandle" preserve="all" />
+    <type fullname="System.String" preserve="all" />
+    <type fullname="System.Type" preserve="all" />
+    <type fullname="System.ValueType" preserve="all" />
+  </assembly>
+  <assembly fullname="Protobuf-net">
+    <type fullname="ProtoBuf.Extensible" preserve="all" />
+    <type fullname="ProtoBuf.IExtensible" preserve="all" />
+    <type fullname="ProtoBuf.IExtension" preserve="all" />
+    <type fullname="ProtoBuf.ProtoContractAttribute" preserve="all" />
+    <type fullname="ProtoBuf.ProtoMemberAttribute" preserve="all" />
+  </assembly>
+  <assembly fullname="System">
+    <type fullname="System.ComponentModel.DefaultValueAttribute" preserve="all" />
+    <type fullname="System.Diagnostics.Stopwatch" preserve="all" />
+  </assembly>
+  <assembly fullname="UniTask">
+    <type fullname="Cysharp.Threading.Tasks.UniTask`1" preserve="all" />
+    <type fullname="Cysharp.Threading.Tasks.UniTask`1/Awaiter" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.Main">
+    <type fullname="Log" preserve="all" />
+    <type fullname="Main.AssemblyEx" preserve="all" />
+    <type fullname="Main.DialogFactory" preserve="all" />
+    <type fullname="Main.EventMgr" preserve="all" />
+    <type fullname="Main.EventMgrEx" preserve="all" />
+    <type fullname="Main.EventType" preserve="all" />
+    <type fullname="Main.FsmMgr" preserve="all" />
+    <type fullname="Main.FsmNodeBase" preserve="all" />
+    <type fullname="Main.IEvtAttribute" preserve="all" />
+    <type fullname="Main.IFsmNode" preserve="all" />
+    <type fullname="Main.IUIData" preserve="all" />
+    <type fullname="Main.IUITabData" preserve="all" />
+    <type fullname="Main.LazyloadAttribute" preserve="all" />
+    <type fullname="Main.ModuleAttribute" preserve="all" />
+    <type fullname="Main.ModuleBase`1" preserve="all" />
+    <type fullname="Main.ModuleMgr" preserve="all" />
+    <type fullname="Main.NetAttribute" preserve="all" />
+    <type fullname="Main.NetMgr" preserve="all" />
+    <type fullname="Main.PackageAttribute" preserve="all" />
+    <type fullname="Main.TagMgr" preserve="all" />
+    <type fullname="Main.TimeMgr" preserve="all" />
+    <type fullname="Main.UIAttribute" preserve="all" />
+    <type fullname="Main.UIBase" preserve="all" />
+    <type fullname="Main.UIButton" preserve="all" />
+    <type fullname="Main.UIData" preserve="all" />
+    <type fullname="Main.UILayer" preserve="all" />
+    <type fullname="Main.UILayout" preserve="all" />
+    <type fullname="Main.UIMgr" preserve="all" />
+    <type fullname="Main.UIMgr/UITask" preserve="all" />
+    <type fullname="Main.UIObject" preserve="all" />
+    <type fullname="Main.UITabBtn" preserve="all" />
+    <type fullname="Main.UITabData" preserve="all" />
+    <type fullname="Main.UITabFrame" preserve="all" />
+    <type fullname="Main.UITabView" preserve="all" />
+    <type fullname="Main.UIView" preserve="all" />
+    <type fullname="Main.UIWindow" preserve="all" />
+    <type fullname="Singleton`1" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.CoreModule">
+    <type fullname="UnityEngine.Component" preserve="all" />
+    <type fullname="UnityEngine.Debug" preserve="all" />
+    <type fullname="UnityEngine.GameObject" preserve="all" />
+    <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
+    <type fullname="UnityEngine.Object" preserve="all" />
+  </assembly>
+</linker>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <controller name="c1" pages="0,,1," selected="0"/>
+  <displayList>
+    <image id="n4_hq6i" name="n4" src="hq6i5" fileName="assets/ui_jchd_xglb_bg.jpg" xy="124,102"/>
+    <graph id="n3_q30y" name="n3" xy="590,310" size="100,100" type="eclipse">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </graph>
+  </displayList>
+  <transition name="t0">
+    <item time="0" type="XY" target="n3_q30y" tween="true" startValue="287,310" endValue="589,121" duration="12"/>
+    <item time="12" type="XY" target="n3_q30y" tween="true" startValue="589,121" endValue="590,310" duration="12"/>
+  </transition>
+  <transition name="t1">
+    <item time="0" type="Size" target="n3_q30y" tween="true" startValue="100,100" endValue="297.5,297.5" duration="24"/>
+  </transition>
+</component>

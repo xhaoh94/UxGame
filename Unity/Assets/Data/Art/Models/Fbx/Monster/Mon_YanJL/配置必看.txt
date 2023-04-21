@@ -1,0 +1,5 @@
+
+
+Mon_SJ是水晶。怪物死亡后出现的。
+Mon_SJ@ShangZhen   此动作是接Mon_YanJL@Die
+Mon_SJ@Stand           持续存在
