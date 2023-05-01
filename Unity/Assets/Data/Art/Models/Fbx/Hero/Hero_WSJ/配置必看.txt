@@ -1,4 +1,0 @@
-Hero_WSJ_W01_L挂载在P_Hand_L
-Hero_WSJ_W01_R挂载在P_Hand_R
-
-Hero_WSJ@Attack01为特殊普攻，请根据需求配置

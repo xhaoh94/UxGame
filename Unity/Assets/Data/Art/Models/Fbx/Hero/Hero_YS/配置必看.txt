@@ -1,6 +1,0 @@
-武器挂载：P_Hand_L
-
-
-
-Hero_YS@Skill07_01 接 Hero_YS@Skill07_02（根据策划来配置循环时间）接Hero_YS@Skill07_03
-Hero_YS@Skill09_01 接 Hero_YS@Skill09_02（有可能多配置一次）接Hero_YS@Skill09_03
