@@ -1,6 +1,0 @@
-﻿
-Hero_QS_W01挂载在P_Hand_R
-
-Hero_QS@Idle02需要打开约束
-
-Hero_QS@Skill09_01接@Rush接@Skill09_02（@Skill09_02在敌阵中心）

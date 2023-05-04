@@ -15,7 +15,7 @@ MonoBehaviour:
   ShowPackageView: 1
   EnableAddressable: 1
   UniqueBundleName: 1
-  ShowEditorAlias: 0
+  ShowEditorAlias: 1
   Packages:
   - PackageName: MainPackage
     PackageDesc: "\u4E3B\u5305"
