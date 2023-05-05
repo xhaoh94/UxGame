@@ -13,7 +13,7 @@ namespace Ux
         {
             Go = a;
             Camera = AddComponent<CameraComponent>();
-            AddComponent<AStarComponent>();
+            AddComponent<AStarComponent,AstarPath>(Go.GetOrAddComponent<AstarPath>());
         }
 
         public void AddPlayer(PlayerData playerData)

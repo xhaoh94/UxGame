@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace Ux
 {
     public static class GameObjectEx
@@ -14,6 +15,17 @@ namespace Ux
             {
                 throw new Exception($"获取{gameObject.name}的ReferenceCollector key失败, key: {key}", e);
             }
+        }
+
+        public static T GetOrAddComponent<T>(this GameObject gameObject) where T : Component
+        {
+            var component = gameObject.GetComponent<T>();
+            if (component == null)
+            {
+                component = gameObject.AddComponent<T>();
+            }
+
+            return component;
         }
     }
 }

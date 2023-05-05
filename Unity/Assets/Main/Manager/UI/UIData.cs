@@ -59,12 +59,7 @@ namespace Ux
                 data = UIMgr.Instance.GetUIData(data.TabData.PID);
             }
 
-            if (data == null)
-            {
-                return ID;
-            }
-
-            return data.ID;
+            return data == null ? ID : data.ID;
         }
 
         public virtual string GetTopID()

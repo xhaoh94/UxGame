@@ -65,7 +65,7 @@ namespace Ux
             }
             catch
             {
-                throw (new Exception("资源找不到Package"));
+                throw (new Exception(location+":资源找不到Package"));
             }
         }
         

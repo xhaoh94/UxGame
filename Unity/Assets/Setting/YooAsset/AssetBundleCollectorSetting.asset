@@ -15,7 +15,7 @@ MonoBehaviour:
   ShowPackageView: 1
   EnableAddressable: 1
   UniqueBundleName: 1
-  ShowEditorAlias: 1
+  ShowEditorAlias: 0
   Packages:
   - PackageName: MainPackage
     PackageDesc: "\u4E3B\u5305"
@@ -62,19 +62,19 @@ MonoBehaviour:
       AssetTags: preload
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Prefab
-        CollectorGUID: 51fa6cdee253d9f40b30590507b1aef1
+      - CollectPath: Assets/Data/Res/Prefab/Map
+        CollectorGUID: 81531e71e6b35264bad074572c22b908
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackTopDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/AStar
-        CollectorGUID: 797285e18a9a0364ebea0d6a815d9fc2
+      - CollectPath: Assets/Data/Res/Prefab/Hero
+        CollectorGUID: 380af11a1e9ffcb479ee49926358d18c
         CollectorType: 0
         AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
+        PackRuleName: PackTopDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
