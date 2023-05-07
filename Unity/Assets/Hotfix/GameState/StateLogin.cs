@@ -1,6 +1,4 @@
-﻿using Ux;
-
-namespace Ux
+﻿namespace Ux
 {
     public class StateLogin : StateNode
     {

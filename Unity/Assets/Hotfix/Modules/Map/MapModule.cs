@@ -24,10 +24,8 @@ namespace Ux
         protected override void OnInit()
         {
             base.OnInit();
-            Entity.Create<World>();
-            Log.Debug("xxxxxxxxxxxxxxxxxxxxxxxxx");
+            Entity.Create<World>();                        
         }
-
 
         public async void EnterMap(string mapName)
         {
@@ -54,8 +52,7 @@ namespace Ux
 
         protected override void OnRelease()
         {
-            World.Ins.Destroy();
-            Log.Debug("xxxxxxxxxxxxxxxxxxxxxxxxx1111");
+            World.Ins.Destroy();            
         }
     }
 }

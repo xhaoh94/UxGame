@@ -24,7 +24,7 @@ MonoBehaviour:
       PiplineOption: 1
       NameStyleOption: 4
       IsExportExecutable: 0
-      ResVersion: 0.0.8
+      ResVersion: 0.0.9
       BuildTags: builtin
       IsCopyTo: 1
       BundlePath: ./Bundles

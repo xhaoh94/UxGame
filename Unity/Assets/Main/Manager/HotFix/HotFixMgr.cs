@@ -52,23 +52,17 @@ namespace Ux
 
         public async UniTask Load()
         {
-            switch (GameMain.Instance.PlayMode)
-            {
-                case EPlayMode.EditorSimulateMode:
-                    await UniTask.Yield();
-                    Assembly = AppDomain.CurrentDomain.GetAssemblies()
-                        .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
-                    break;
-                case EPlayMode.OfflinePlayMode:
-                case EPlayMode.HostPlayMode:
-                default:
-                    await LoadMetadataForAOTAssembly();
-                    var handle = YooAssets.LoadAssetAsync<TextAsset>(HotfixAssemblyName + ".dll");
-                    await handle.ToUniTask();
-                    byte[] assBytes = (handle.AssetObject as TextAsset)?.bytes;
-                    Assembly = Assembly.Load(assBytes);
-                    break;
-            }
+#if UNITY_EDITOR
+            await UniTask.Yield();
+            Assembly = AppDomain.CurrentDomain.GetAssemblies()
+                .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
+#else
+            await LoadMetadataForAOTAssembly();
+            var handle = YooAssets.LoadAssetAsync<TextAsset>(HotfixAssemblyName + ".dll");
+            await handle.ToUniTask();
+            byte[] assBytes = (handle.AssetObject as TextAsset)?.bytes;
+            Assembly = Assembly.Load(assBytes);
+#endif
         }
 
         /// <summary>

@@ -91,7 +91,7 @@ namespace Ux
             public void Init(IUI _ui)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Instance.DoOnce(5, Exe); //5秒后执行删除
+                timeKey = TimeMgr.Instance.DoOnce(5, Exe); //5秒后执行删除                
             }
 
             void Release()
@@ -128,7 +128,7 @@ namespace Ux
             }
 
             void RemoveTime()
-            {
+            {                
                 if (timeKey == 0) return;
                 TimeMgr.Instance.RemoveKey(timeKey);
                 timeKey = 0;
@@ -190,7 +190,7 @@ namespace Ux
         }
 
         public UIMgr()
-        {            
+        {
             if (PatchMgr.Instance.IsDone)
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;

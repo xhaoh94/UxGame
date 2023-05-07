@@ -3,6 +3,8 @@ namespace Ux.Main
     public enum EventType
     {
         Min = 0,
+        //程序退出
+        APPLICATION_QUIT,
         /// <summary>
         /// 网络注销
         /// </summary>

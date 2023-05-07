@@ -44,8 +44,8 @@ namespace Ux
             private readonly Dictionary<long, IHandle> handleDic = new Dictionary<long, IHandle>();
             private readonly Dictionary<int, List<long>> thix2keys = new Dictionary<int, List<long>>();
 
-            readonly Queue<IHandle> waitAdds = new Queue<IHandle>();
-            readonly Queue<IHandle> waitDels = new Queue<IHandle>();
+            readonly List<IHandle> waitAdds = new List<IHandle>();
+            readonly List<IHandle> waitDels = new List<IHandle>();
 
             public void Clear()
             {
@@ -88,7 +88,8 @@ namespace Ux
             {
                 while (waitDels.Count > 0)
                 {
-                    var handle = waitDels.Dequeue();
+                    var handle = waitDels[0];
+                    waitDels.RemoveAt(0);
                     var key = handle.Key;
                     var target = handle.Target;
 
@@ -131,7 +132,8 @@ namespace Ux
 
                 while (waitAdds.Count > 0)
                 {
-                    var handle = waitAdds.Dequeue();
+                    var handle = waitAdds[0];
+                    waitAdds.RemoveAt(0);
                     Sort(handle);
                     handleDic.Add(handle.Key, handle);
                     var target = handle.Target;
@@ -253,7 +255,7 @@ namespace Ux
             {
                 if (waitAdds.Contains(handle)) return;
                 handle.Status = Status.Normal;
-                waitAdds.Enqueue(handle);
+                waitAdds.Add(handle);
             }
 
             public bool ContainsKey(long key)
@@ -280,7 +282,15 @@ namespace Ux
 
             public void Remove(long key)
             {
-                if (!handleDic.TryGetValue(key, out var handle)) return;
+                if (!handleDic.TryGetValue(key, out var handle))
+                {
+                    if (waitAdds.Count > 0)
+                    {
+                        var index = waitAdds.FindIndex(x => x.Key == key);
+                        waitAdds.RemoveAt(index);
+                    }                  
+                    return;
+                }
                 Remove(handle);
             }
 
@@ -288,7 +298,7 @@ namespace Ux
             {
                 if (waitDels.Contains(handle)) return;
                 handle.Status = Status.WaitDel;
-                waitDels.Enqueue(handle);
+                waitDels.Add(handle);
             }
         }
 

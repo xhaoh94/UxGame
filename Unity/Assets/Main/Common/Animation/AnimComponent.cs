@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -5,7 +6,7 @@ using UnityEngine.Playables;
 
 namespace Ux
 {
-    public class AnimComponent : Entity, IAwakeSystem<Animator>, IUpdateSystem
+    public class AnimComponent : Entity, IAwakeSystem<Animator>, IUpdateSystem, IApplicationQuitSystem
     {
         private Dictionary<string, AnimClip> _animClips = new Dictionary<string, AnimClip>();
         private Dictionary<int, AnimMixer> _animMixers = new Dictionary<int, AnimMixer>();
@@ -28,6 +29,11 @@ namespace Ux
         {
             var deltaTime = Time.deltaTime;
             _graph.Evaluate(deltaTime);
+        }
+
+        public void OnApplicationQuit()
+        {
+            _graph.Destroy();
         }
 
         protected override void OnDestroy()

@@ -67,6 +67,11 @@ namespace Ux
         void OnFixedUpdate();
     }
 
+    public interface IApplicationQuitSystem
+    {
+        void OnApplicationQuit();
+    }
+
     public interface IEventSystem
     {
     }
@@ -295,6 +300,10 @@ namespace Ux
                 TimeMgr.Instance.DoFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
             }
 
+            if(this is IApplicationQuitSystem applicationQuit)
+            {
+                GameMain.Instance.ApplicationQuit += applicationQuit.OnApplicationQuit;                
+            }
             var temPar = Parent;
             temPar?._event?.Add(this);
 
@@ -316,7 +325,7 @@ namespace Ux
         }
 
         void _RemoveSystem()
-        {
+        {           
             if (this is IUpdateSystem updateSystem)
             {
                 TimeMgr.Instance.RemoveUpdate(updateSystem.OnUpdate);
@@ -325,6 +334,16 @@ namespace Ux
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
                 TimeMgr.Instance.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
+            }
+
+            if (this is IFixedUpdateSystem fixedUpdateSystem)
+            {
+                TimeMgr.Instance.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+            }
+ 
+            if (this is IApplicationQuitSystem applicationQuit)
+            {
+                GameMain.Instance.ApplicationQuit -= applicationQuit.OnApplicationQuit;
             }
 
             if (this is IRemoveComponentSystem removeComponentSystem)
