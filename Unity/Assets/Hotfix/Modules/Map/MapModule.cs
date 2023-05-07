@@ -25,6 +25,7 @@ namespace Ux
         {
             base.OnInit();
             Entity.Create<World>();
+            Log.Debug("xxxxxxxxxxxxxxxxxxxxxxxxx");
         }
 
 
@@ -54,6 +55,7 @@ namespace Ux
         protected override void OnRelease()
         {
             World.Ins.Destroy();
+            Log.Debug("xxxxxxxxxxxxxxxxxxxxxxxxx1111");
         }
     }
 }

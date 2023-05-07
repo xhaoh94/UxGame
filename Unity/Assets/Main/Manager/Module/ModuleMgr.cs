@@ -20,30 +20,31 @@ namespace Ux
 
             public IModule Create()
             {
-                int cnt = 0;
-                var type = _type;
-                while (true)
-                {
-                    if (type == null) break;
-                    var _instance = type.GetField("_instance",
-                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (_instance == null)
-                    {
-                        type = type.BaseType;
-                        if (cnt > 10) break;
-                        cnt++;
-                    }
-                    else
-                    {
-                        var mol = (IModule)Activator.CreateInstance(_type);
-                        _instance.SetValue(null, mol);
-                        return mol;
-                    }
-                }
-                return null;
+                //    int cnt = 0;
+                //    var type = _type;
+                //    while (true)
+                //    {
+                //        if (type == null) break;
+                //        var _instance = type.GetField("_instance",
+                //            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                //        if (_instance == null)
+                //        {
+                //            type = type.BaseType;
+                //            if (cnt > 10) break;
+                //            cnt++;
+                //        }
+                //        else
+                //        {
+                //            var mol = c
+                //            _instance.SetValue(null, mol);
+                //            return mol;
+                //        }
+                //    }
+                //    return null;
+                //}
+                return (IModule)Activator.CreateInstance(_type);
             }
         }
-
         readonly List<ModuleParse> _parses = new List<ModuleParse>();
         readonly List<IModule> _modules = new List<IModule>();
         public void Add(List<ModuleParse> parses)

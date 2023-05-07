@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 
 namespace Ux
-{    
+{
     public interface IModule
     {
         void Init();
@@ -22,6 +22,10 @@ namespace Ux
                 }
                 return _instance;
             }
+        }
+        public ModuleBase()
+        {
+            _instance = this as T;
         }
         public void Init()
         {

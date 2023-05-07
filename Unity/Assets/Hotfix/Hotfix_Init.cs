@@ -15,7 +15,7 @@ namespace Ux
             }
 #endif
             Log.Info("启动热更层");
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
             EventMgr.Instance.___SetEvtAttribute<EvtAttribute>();
             HotFixMgr.Instance.Assembly.Initialize();
 

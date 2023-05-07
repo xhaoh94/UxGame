@@ -16,12 +16,14 @@ namespace Ux
         public void Connect(Action OnConnect)
         {
             //TCP KCP
-            NetMgr.Instance.Connect(NetType.KCP, "127.0.0.1:10002", OnConnect);
+            //NetMgr.Instance.Connect(NetType.KCP, "127.0.0.1:10002", OnConnect);
             //WebSocket
             //NetMgr.Instance.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
+
+            GameMain.Machine.Enter<StateGameIn>();            
         }
         public void LoginAccount(string account, string password)
-        {
+        {            
             var data = new pb.C2SLoginGame();
             data.Account = account;
             data.Password = password;

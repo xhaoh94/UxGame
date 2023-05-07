@@ -15,8 +15,7 @@ namespace Ux
             UIMgr.Instance.Release();
             ModuleMgr.Instance.Release();
             ModuleMgr.Instance.Create();
-            //UIMgr.Instance.Show<UI.LoginView>();
-            MapModule.Instance.EnterMap("Map001");
+            UIMgr.Instance.Show<UI.LoginView>();            
         }
         protected override void OnUpdate()
         {

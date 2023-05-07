@@ -13,7 +13,7 @@ namespace Ux
     {
         public const string HotfixAssemblyName = "Assembly-CSharp";
 
-        public const string HotfixPrefab = "Hotfix_Init";
+        public const string HotfixScene = "Hotfix";
         //AOT 补充元数据dll列表
         public static List<string> AOTMetaAssemblyNames { get; } = new List<string>()
         {
@@ -40,8 +40,7 @@ namespace Ux
             }
 
             ResMgr.Instance.UnloadUnusedAssets();
-            var handle = ResMgr.Instance.LoadAssetSync<GameObject>(HotfixPrefab);
-            handle.InstantiateSync();
+            ResMgr.Instance.LoadSceneAsync(HotfixScene);
         }
 
         public List<Type> GetHotfixTypes()

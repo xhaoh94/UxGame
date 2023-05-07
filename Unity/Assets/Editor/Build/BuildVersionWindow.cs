@@ -124,7 +124,7 @@ public class BuildVersionWindow : EditorWindow
 
         //编译类型
         _buildType = _exportElement.Q<EnumField>("buildType");
-        _buildType.Init(BuildType.ForceRebuild);
+        _buildType.Init(BuildType.IncrementalBuild);
         _buildType.style.width = 500;
         _buildType.RegisterValueChangedCallback(evt =>
         {
@@ -753,6 +753,7 @@ public class BuildVersionWindow : EditorWindow
         buildParameters.PackageName = packageName;
         buildParameters.PackageVersion = _txtVersion.value;
         buildParameters.VerifyBuildingResult = true;
+        buildParameters.ShareAssetPackRule = new DefaultShareAssetPackRule();
         buildParameters.EncryptionServices = CreateEncryptionServicesInstance();
         buildParameters.OutputNameStyle = (EOutputNameStyle)_nameStyleType.value;
         buildParameters.CompressOption = (ECompressOption)_compressionType.value;

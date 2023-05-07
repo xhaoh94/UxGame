@@ -5,6 +5,8 @@ using FairyGUI;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using EventType = Ux.Main.EventType;
+using UnityEngine.Rendering.Universal;
+
 namespace Ux
 {
     public class UIMgr : Singleton<UIMgr>
@@ -185,6 +187,14 @@ namespace Ux
             com.MakeFullScreen();
             com.AddRelation(GRoot.inst, RelationType.Size);
             return com;
+        }
+
+        public UIMgr()
+        {            
+            if (PatchMgr.Instance.IsDone)
+            {
+                StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
+            }
         }
 
         //内存不足时，清理缓存
@@ -594,7 +604,7 @@ namespace Ux
 
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
-            Hide(typeof(T).Name, isAnim);
+            Hide(typeof(T).FullName, isAnim);
         }
 
         public void Hide(string id, bool isAnim = true)

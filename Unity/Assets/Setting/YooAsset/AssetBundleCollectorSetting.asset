@@ -41,8 +41,8 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/Code/Hotfix_Init.prefab
-        CollectorGUID: 8ebfef9f7d7d196448a9099b93de4753
+      - CollectPath: Assets/Scenes/Hotfix.unity
+        CollectorGUID: 8637324786e1dda489f776e4e1cf2fed
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackSeparately

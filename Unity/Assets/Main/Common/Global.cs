@@ -1,4 +1,6 @@
-﻿public class Global
+﻿using UnityEngine;
+
+public class Global
 {
     public static int DownloadingMaxNum => 10;
     public static int FailedTryAgain => 3;    
