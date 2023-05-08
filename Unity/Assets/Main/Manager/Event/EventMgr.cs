@@ -356,6 +356,23 @@ namespace Ux
                 exe.Exe(ref exeCnt);
             }
         }
+
+        Action _quitCb;
+
+        public void AddQuitCallBack(Action action)
+        {
+            _quitCb += action;
+        }
+        public void RemoveQuitCallBack(Action action)
+        {
+            _quitCb -= action;
+        }
+
+        public void OnApplicationQuit()
+        {
+            _quitCb?.Invoke();
+        }
+
 #if UNITY_EDITOR
         public long On(string eTypeStr, int eType, FastMethodInfo action)
         {

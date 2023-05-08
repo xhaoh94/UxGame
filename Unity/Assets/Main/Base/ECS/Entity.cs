@@ -23,11 +23,6 @@ namespace Ux
             _DelayInvoke(200);
         }
 
-        //public static void OnApplicationQuit()
-        //{
-        //    _DelayInvoke(int.MaxValue);
-        //}
-
         public long ID { get; private set; }
         public bool IsFromPool { get; private set; }
         public bool IsDestroy { get; private set; }

@@ -113,24 +113,10 @@ namespace Ux
                 Log.Error(e);
             }
         }
-
-        public Action ApplicationQuit;
+        
         private void OnApplicationQuit()
-        {
-            ApplicationQuit?.Invoke();
-            //try
-            //{
-            //    OneThreadSynchronizationContext.Instance.Clear();
-            //    NetMgr.Instance.Release();
-            //    TagMgr.Instance.Release();
-            //    UIMgr.Instance.Release();
-            //    ModuleMgr.Instance.Release();
-            //    Entity.OnApplicationQuit();
-            //}
-            //catch (Exception e)
-            //{
-            //    Log.Error(e);
-            //}
+        {            
+            EventMgr.Instance.OnApplicationQuit();
         }
 
 
