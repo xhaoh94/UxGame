@@ -341,10 +341,24 @@ public class BuildVersionWindow : EditorWindow
     }
     string AddVersion(string version)
     {
-        System.Text.ASCIIEncoding asciiEncoding = new System.Text.ASCIIEncoding();
-        byte[] bs = asciiEncoding.GetBytes(version);
-        bs[bs.Length - 1]++;
-        return asciiEncoding.GetString(bs);
+        try
+        {
+            var newVersion = string.Empty;
+            var sz = version.Split('.');
+            for (int i = 0; i < sz.Length - 1; i++)
+            {
+                newVersion += sz[i] + ".";
+            }
+            newVersion += (int.Parse(sz[sz.Length - 1]) + 1).ToString();
+            return newVersion;
+        }
+        catch
+        {
+            System.Text.ASCIIEncoding asciiEncoding = new System.Text.ASCIIEncoding();
+            byte[] bs = asciiEncoding.GetBytes(version);
+            bs[bs.Length - 1]++;
+            return asciiEncoding.GetString(bs);
+        }
     }
     void RefreshWindow()
     {
@@ -743,7 +757,7 @@ public class BuildVersionWindow : EditorWindow
         if (buildParameters.BuildPipeline == EBuildPipeline.ScriptableBuildPipeline)
         {
             buildParameters.SBPParameters = new BuildParameters.SBPBuildParameters();
-            buildParameters.SBPParameters.WriteLinkXML = true;
+            buildParameters.SBPParameters.WriteLinkXML = false;
             buildParameters.BuildMode = EBuildMode.IncrementalBuild;//SBP构建只能用热更模式
         }
         else

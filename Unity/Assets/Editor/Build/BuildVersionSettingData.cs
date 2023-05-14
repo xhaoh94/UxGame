@@ -80,7 +80,7 @@ public class BuildVersionPlatform
     public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
     public EOutputNameStyle NameStyleOption = EOutputNameStyle.HashName;
     public bool IsExportExecutable = true;
-    public string ResVersion = "0.0.0";
+    public string ResVersion = "0.0";
     public string BuildTags = "builtin";
     public bool IsCopyTo = false;
     public string BundlePath = "./Bundles";

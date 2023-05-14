@@ -5,17 +5,17 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "3702411ac82129c1683c788d5f695628ad9c1966"
+      "hash": "07b52bed050e90c718271f198428647c19792b85"
     },
     "com.greenbamboogames.playablegraphmonitor": {
-      "version": "2.5.1",
+      "version": "2.5.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.cn"
     },
     "com.tuyoogame.yooasset": {
-      "version": "1.4.12",
+      "version": "1.4.13",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -70,7 +70,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.17",
+      "version": "2.0.18",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -193,7 +193,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.timeline": {
-      "version": "1.6.4",
+      "version": "1.6.5",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -214,7 +214,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.7.8",
+      "version": "1.8.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {

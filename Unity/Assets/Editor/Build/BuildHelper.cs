@@ -39,7 +39,7 @@ public class BuildHelper
                 ex = ".apk";
                 break;
         }
-        if (!name.Contains(ex))
+        if (!name.EndsWith(ex))
         {
             name += ex;
         }
