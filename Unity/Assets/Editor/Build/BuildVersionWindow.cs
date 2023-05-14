@@ -794,17 +794,18 @@ public class BuildVersionWindow : EditorWindow
             return false;
         }
 
-        if (IsExportExecutable)
-        {
-            var tLinkPath = $"{buildPath}/{nowVersion}/link.xml";
-            if (File.Exists(tLinkPath))
-            {
-                var linkPath = $"{Application.dataPath}/Main/YooAsset/{packageName}";
-                if (!Directory.Exists(linkPath))
-                    Directory.CreateDirectory(linkPath);
-                File.Copy(tLinkPath, $"{linkPath}/link.xml", true);
-            }
-        }
+        //不拷贝link.xml，因为会导致打包的时候，电脑直接关机
+        //if (IsExportExecutable)
+        //{
+        //    var tLinkPath = $"{buildPath}/{nowVersion}/link.xml";
+        //    if (File.Exists(tLinkPath))
+        //    {
+        //        var linkPath = $"{Application.dataPath}/Main/YooAsset/{packageName}";
+        //        if (!Directory.Exists(linkPath))
+        //            Directory.CreateDirectory(linkPath);
+        //        File.Copy(tLinkPath, $"{linkPath}/link.xml", true);
+        //    }
+        //}
         string diffPath = string.Empty;
         if (!string.IsNullOrEmpty(lastVersion))
         {

@@ -22,9 +22,9 @@ MonoBehaviour:
       EncyptionClassName: EncryptionNone
       CompressOption: 2
       PiplineOption: 1
-      NameStyleOption: 4
-      IsExportExecutable: 0
-      ResVersion: 0.0.9
+      NameStyleOption: 1
+      IsExportExecutable: 1
+      ResVersion: 0.1
       BuildTags: builtin
       IsCopyTo: 1
       BundlePath: ./Bundles
