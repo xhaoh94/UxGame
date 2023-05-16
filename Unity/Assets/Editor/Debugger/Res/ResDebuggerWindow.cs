@@ -10,7 +10,7 @@ using YooAsset.Editor;
 
 public class ResDebuggerWindow : EditorWindow
 {
-    [MenuItem("Tools/调试工具/资源调试工具", false, 100)]
+    [MenuItem("UxGame/调试/资源", false, 201)]
     public static void ShowExample()
     {
         var window = GetWindow<ResDebuggerWindow>("资源调试工具", true, EditorDefine.DebuggerWindowTypes);

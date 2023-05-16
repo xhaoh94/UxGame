@@ -1,5 +1,7 @@
 using Ux;
 using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 
 namespace Ux
 {
@@ -10,8 +12,8 @@ namespace Ux
 #if UNITY_EDITOR
             if (GameMain.Instance == null)
             {
-                UnityEditor.EditorApplication.isPlaying = false;
-                throw new System.Exception("请在Boot场景启动");
+                UnityEditor.EditorApplication.isPlaying = false;               
+                throw new System.Exception("请在Boot场景启动");                
             }
 #endif
             Log.Info("启动热更层");

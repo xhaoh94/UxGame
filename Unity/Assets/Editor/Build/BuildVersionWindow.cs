@@ -13,6 +13,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using YooAsset;
 using YooAsset.Editor;
+
+
 public enum BuildType
 {
     ForceRebuild,
@@ -33,11 +35,17 @@ public enum PlatformType
 }
 public class BuildVersionWindow : EditorWindow
 {
-    [MenuItem("Tools/Build/打包工具", false, 300)]
+    [MenuItem("UxGame/构建/构建打包", false, 300)]
     public static void Build()
     {
         var window = GetWindow<BuildVersionWindow>("BuildVersionWindow", true);
         window.minSize = new Vector2(800, 500);
+    }
+
+    [MenuItem("UxGame/构建/本地资源服务器", false, 301)]
+    public static void OpenFileServer()
+    {
+        new Command("hfs.exe", "../HFS/");
     }
 
 

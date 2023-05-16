@@ -8,7 +8,7 @@ using static Ux.TimeMgr;
 
 public class TimeDebuggerWindow : EditorWindow
 {
-    [MenuItem("Tools/调试工具/定时器调试工具", false, 103)]
+    [MenuItem("UxGame/调试/定时器", false, 203)]
     public static void ShowExample()
     {
         var window = GetWindow<TimeDebuggerWindow>("定时器调试工具", true, EditorDefine.DebuggerWindowTypes);

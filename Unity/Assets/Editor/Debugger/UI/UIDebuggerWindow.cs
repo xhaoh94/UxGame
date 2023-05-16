@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 public class UIDebuggerWindow : EditorWindow
 {
-    [MenuItem("Tools/调试工具/UI调试工具", false, 101)]
+    [MenuItem("UxGame/调试/UI", false, 200)]
     public static void ShowExample()
     {
         var window = GetWindow<UIDebuggerWindow>("UI调试工具", true, EditorDefine.DebuggerWindowTypes);
@@ -19,7 +19,7 @@ public class UIDebuggerWindow : EditorWindow
     private DebuggerStringListView _listShowed;
     private DebuggerStringListView _listShowing;
     private DebuggerStringListView _listCacel;
-    private DebuggerStringListView _listTemCacel;    
+    private DebuggerStringListView _listTemCacel;
     private DebuggerStringListView _listWaitDel;
 
     public void CreateGUI()

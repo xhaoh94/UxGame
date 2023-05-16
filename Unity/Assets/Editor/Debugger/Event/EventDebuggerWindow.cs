@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 public class EventDebuggerWindow : EditorWindow
 {
-    [MenuItem("Tools/调试工具/事件调试工具", false, 102)]
+    [MenuItem("UxGame/调试/事件", false, 202)]
     public static void ShowExample()
     {
         var window = GetWindow<EventDebuggerWindow>("事件调试工具", true, EditorDefine.DebuggerWindowTypes);
