@@ -33,7 +33,7 @@ namespace Ux
         }
         public IEnumerator Initialize()
         {
-            var playMode = GameMain.Instance.PlayMode;
+            var playMode = GameMain.Ins.PlayMode;
 
             switch (playMode)
             {

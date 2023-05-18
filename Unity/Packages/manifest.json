@@ -55,7 +55,9 @@
       "url": "https://package.openupm.cn",
       "scopes": [
         "com.tuyoogame.yooasset",
-        "com.greenbamboogames.playablegraphmonitor"
+        "com.greenbamboogames.playablegraphmonitor",
+        "com.cysharp.unitask",
+        "com.cysharp.zstring"
       ]
     },
     {

@@ -217,7 +217,7 @@ namespace Ux
                 Key = _key;
                 isLocalTime = _isLocalTime;
                 _data = CronData.Create(cron);
-                var list = _data.GetExeTime((isLocalTime ? Instance.LocalTime : Instance.ServerTime).Now);
+                var list = _data.GetExeTime((isLocalTime ? Ins.LocalTime : Ins.ServerTime).Now);
                 if (list == null || list.Count == 0)
                 {
                     return false;
@@ -255,7 +255,7 @@ namespace Ux
                     return RunStatus.None;
                 }
 
-                IGameTime gameTime = isLocalTime ? Instance.LocalTime : Instance.ServerTime;
+                IGameTime gameTime = isLocalTime ? Ins.LocalTime : Ins.ServerTime;
                 if (gameTime.TimeStamp < TimeStamp) return RunStatus.Wait;
                 exe?.Run();
                 if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
@@ -329,7 +329,7 @@ namespace Ux
                     return RunStatus.None;
                 }
 
-                if ((isLocalTime ? Instance.LocalTime : Instance.ServerTime).TimeStamp < TimeStamp)
+                if ((isLocalTime ? Ins.LocalTime : Ins.ServerTime).TimeStamp < TimeStamp)
                     return RunStatus.Wait;
                 exe?.Run();
                 if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
@@ -403,7 +403,7 @@ namespace Ux
                 IsLoop = Repeat <= 0;
                 ExeCnt = 0;
                 var addTime = _first >= 0 ? _first : Delay;
-                ExeTime = UseFrame ? Instance.TotalFrame + addTime : Instance.TotalTime + addTime;
+                ExeTime = UseFrame ? Ins.TotalFrame + addTime : Ins.TotalTime + addTime;
             }
 
             public void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
@@ -419,7 +419,7 @@ namespace Ux
                 IsLoop = Repeat <= 0;
                 ExeCnt = 0;
                 var addTime = _first >= 0 ? _first : Delay;
-                ExeTime = UseFrame ? Instance.TotalFrame + addTime : Instance.TotalTime + addTime;
+                ExeTime = UseFrame ? Ins.TotalFrame + addTime : Ins.TotalTime + addTime;
             }
 
             public int Compare(IHandle compare)

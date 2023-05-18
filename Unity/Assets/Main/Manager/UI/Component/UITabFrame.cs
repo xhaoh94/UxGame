@@ -150,7 +150,7 @@ namespace Ux
             var id = _tabDatas[index];
             if (string.IsNullOrEmpty(id)) return;
             if (SelectItem != null && SelectItem.ID == id) return;
-            UIMgr.Instance.Show(id);
+            UIMgr.Ins.Show(id);
         }
 
         private void OnItemRenderer(int index, GObject item)
@@ -158,7 +158,7 @@ namespace Ux
             if (_tabDatas == null) return;
             var id = _tabDatas[index];
             if (string.IsNullOrEmpty(id)) return;
-            var data = UIMgr.Instance.GetUIData(id);
+            var data = UIMgr.Ins.GetUIData(id);
             if (data == null) return;
             _tabRenderer ??= typeof(CommonTabBtn);
 

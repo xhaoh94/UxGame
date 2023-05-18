@@ -1,6 +1,6 @@
 {
     "name": "Unity.Main",
-    "rootNamespace": "Main",
+    "rootNamespace": "Ux",
     "references": [
         "GUID:e34a5702dd353724aa315fb8011f08c3",
         "GUID:644002850b3c12e408b65b147d1e75e4",
@@ -11,7 +11,8 @@
         "GUID:3de88c88fbbb8f944b9210d496af9762",
         "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:efa45043feb7e4147a305b73b5cea642",
-        "GUID:15fc0a57446b3144c949da3e2b9737a9"
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:33661e06c33d31b4c9223810bf503247"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

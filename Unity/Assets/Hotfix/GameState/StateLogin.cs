@@ -8,12 +8,12 @@
         }
         protected override void OnEnter(object args)
         {
-            NetMgr.Instance.Release();
-            TagMgr.Instance.Release();
-            UIMgr.Instance.Release();
-            ModuleMgr.Instance.Release();
-            ModuleMgr.Instance.Create();
-            UIMgr.Instance.Show<UI.LoginView>();            
+            NetMgr.Ins.Release();
+            TagMgr.Ins.Release();
+            UIMgr.Ins.Release();
+            ModuleMgr.Ins.Release();
+            ModuleMgr.Ins.Create();
+            UIMgr.Ins.Show<UI.LoginView>();            
         }
         protected override void OnUpdate()
         {

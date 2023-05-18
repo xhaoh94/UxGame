@@ -335,7 +335,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Time_CallBack?.Invoke(Instance._timer.desc2editor);
+                __Debugger_Time_CallBack?.Invoke(Ins._timer.desc2editor);
             }
         }
 
@@ -343,7 +343,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Frame_CallBack?.Invoke(Instance._frame.desc2editor);
+                __Debugger_Frame_CallBack?.Invoke(Ins._frame.desc2editor);
             }
         }
 
@@ -351,7 +351,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_TimeStamp_CallBack?.Invoke(Instance._timeStamp.desc2editor);
+                __Debugger_TimeStamp_CallBack?.Invoke(Ins._timeStamp.desc2editor);
             }
         }
 
@@ -359,7 +359,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Cron_CallBack?.Invoke(Instance._cron.desc2editor);
+                __Debugger_Cron_CallBack?.Invoke(Ins._cron.desc2editor);
             }
         }
 

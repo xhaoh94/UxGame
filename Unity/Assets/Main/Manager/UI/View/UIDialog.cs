@@ -172,7 +172,7 @@ namespace Ux
 
             var id = $"{type.Name}_{IDGenerater.GenerateId()}";
             var data = new UIData(id, type, pkgs, lazyloads);
-            UIMgr.Instance.RegisterUI(data);
+            UIMgr.Ins.RegisterUI(data);
             return id;
         }
         public void SingleBtn<T>(string[] pkgs, string title, string content, string btn1Title, Action btn1Fn = null) where T : UIDialog
@@ -187,7 +187,7 @@ namespace Ux
             mbData.Param.Add(ParamType.Content, content);
             mbData.Param.Add(ParamType.Btn1Title, btn1Title);
             mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
-            UIMgr.Instance.Show(id, mbData);
+            UIMgr.Ins.Show(id, mbData);
         }
         public void SingleBtn(string title, string content, string btn1Title, Action btn1Fn = null)
         {
@@ -209,7 +209,7 @@ namespace Ux
             mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
             mbData.Param.Add(ParamType.Btn2Title, btn2Title);
             mbData.Param.Add(ParamType.Btn2Fn, btn2Fn);
-            UIMgr.Instance.Show(id, mbData);
+            UIMgr.Ins.Show(id, mbData);
         }
         public void DoubleBtn(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
         {
@@ -225,7 +225,7 @@ namespace Ux
             var id = __GetTypeUIID(typeof(T), pkgs, lazyloads);
             var mbData = new DialogData(_Hide, DialogType.Custom);
             mbData.Param.Add(ParamType.Custom, param);
-            UIMgr.Instance.Show(id, mbData);
+            UIMgr.Ins.Show(id, mbData);
         }
         public void ShowCustom(object param)
         {

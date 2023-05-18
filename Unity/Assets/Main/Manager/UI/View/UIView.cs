@@ -7,7 +7,7 @@ namespace Ux
         protected override void AddToStage()
         {
             if (GObject == null) return;
-            UIMgr.Instance.GetLayer(Layer).AddChild(GObject);
+            UIMgr.Ins.GetLayer(Layer).AddChild(GObject);
         }
 
         protected override void OnLayout()

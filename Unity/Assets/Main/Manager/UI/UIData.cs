@@ -56,7 +56,7 @@ namespace Ux
             {
                 if (data.TabData == null) break;
                 if (string.IsNullOrEmpty(data.TabData.PID)) break;
-                data = UIMgr.Instance.GetUIData(data.TabData.PID);
+                data = UIMgr.Ins.GetUIData(data.TabData.PID);
             }
 
             return data == null ? ID : data.ID;
@@ -71,7 +71,7 @@ namespace Ux
                 bool first = true;
                 foreach (var child in data.Children)
                 {
-                    var temData = UIMgr.Instance.GetUIData(child);
+                    var temData = UIMgr.Ins.GetUIData(child);
                     if (temData == null) continue;
                     if (first)
                     {
@@ -82,7 +82,7 @@ namespace Ux
 
                     if (temData.TabData == null) continue;
                     if (temData.TabData.TagId == 0) continue;
-                    if (!TagMgr.Instance.Check(temData.TabData.TagId)) continue;
+                    if (!TagMgr.Ins.Check(temData.TabData.TagId)) continue;
                     data = temData;
                     break;
                 }

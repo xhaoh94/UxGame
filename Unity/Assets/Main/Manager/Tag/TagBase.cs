@@ -52,7 +52,7 @@ namespace Ux
             {
                 foreach (var mc in mcs)
                 {
-                    EventMgr.Instance.On(mc, _DoMessage);
+                    EventMgr.Ins.On(mc, _DoMessage);
                 }
             }
 
@@ -73,7 +73,7 @@ namespace Ux
                 return;
             }
 
-            timeKey = TimeMgr.Instance.DoOnce(0.2f, _Check);
+            timeKey = TimeMgr.Ins.DoOnce(0.2f, _Check);
         }
 
         private bool isUnLock;
@@ -107,7 +107,7 @@ namespace Ux
             {
                 isChanged = true;
                 _isRed = b;
-                TagMgr.Instance.UpdateStatusByTag(this);
+                TagMgr.Ins.UpdateStatusByTag(this);
             }
 
             int num = CheckRedNum();
@@ -115,7 +115,7 @@ namespace Ux
             {
                 isChanged = true;
                 _redNum = num;
-                TagMgr.Instance.UpdateNumByTag(this);
+                TagMgr.Ins.UpdateNumByTag(this);
             }
 
             if (!isChanged || _parents is not { Count: > 0 }) return;
@@ -140,11 +140,11 @@ namespace Ux
         {
             if (timeKey != 0)
             {
-                TimeMgr.Instance.RemoveKey(timeKey);
+                TimeMgr.Ins.RemoveKey(timeKey);
             }
 
-            EventMgr.Instance.OffAll(this);
-            TagMgr.Instance.Off(this);
+            EventMgr.Ins.OffAll(this);
+            TagMgr.Ins.Off(this);
             _parents?.Clear();
         }
     }

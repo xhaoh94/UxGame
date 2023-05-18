@@ -56,7 +56,7 @@ namespace Ux
         {
             Action callback = () =>
             {
-                PatchMgr.Instance.Enter<PatchDownloadWebFiles>(downloader);
+                PatchMgr.Ins.Enter<PatchDownloadWebFiles>(downloader);
             };
             string totalSizeMB = downloader.TotalSizeMB.ToString("f1");
             int totalCnt = downloader.TotalDownloadCount;
@@ -68,7 +68,7 @@ namespace Ux
         {
             Action callback = () =>
             {
-                PatchMgr.Instance.Enter<PatchUpdateStaticVersion>();
+                PatchMgr.Ins.Enter<PatchUpdateStaticVersion>();
             };
             UIMgr.Dialog.SingleBtn("提示", $"获取资源版本失败，请检测网络状态。", "确定", callback);
         }
@@ -78,7 +78,7 @@ namespace Ux
         {
             Action callback = () =>
             {
-                PatchMgr.Instance.Enter<PatchUpdateManifest>();
+                PatchMgr.Ins.Enter<PatchUpdateManifest>();
             };
             UIMgr.Dialog.SingleBtn("提示", $"获取补丁清单失败，请检测网络状态。", "确定", callback);
         }

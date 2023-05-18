@@ -6,16 +6,16 @@ public class Singleton<T> where T : class, new()
 {
     #region singleton
 
-    private static T _instance;
+    private static T _ins;
 
-    public static T Instance
+    public static T Ins
     {
         get
         {
-            if (_instance != null) return _instance;
+            if (_ins != null) return _ins;
             try
             {
-                _instance = new T();
+                _ins = new T();
             }
             catch (MissingMethodException ex)
             {
@@ -28,7 +28,7 @@ public class Singleton<T> where T : class, new()
                 throw new System.Exception($"{ex.Message}(单例模式，构造函数报错){typeof(T).Name}");
             }
 
-            return _instance;
+            return _ins;
         }
     }
 

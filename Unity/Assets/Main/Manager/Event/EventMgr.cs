@@ -25,12 +25,12 @@ namespace Ux
 
             public void Exe(ref int exeCnt)
             {
-                if (!Instance.eTypeKeys.TryGetValue(eType, out var keys)) return;
+                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
                 for (var i = keys.Count - 1; i >= 0; i--)
                 {
                     var key = keys[i];
-                    if (!Instance.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Instance._waitDels.Count > 0 && Instance._waitDels.Contains(key)) continue;
+                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
+                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
                     {
                         aEvent?.Run();
@@ -57,12 +57,12 @@ namespace Ux
 
             public void Exe(ref int exeCnt)
             {
-                if (!Instance.eTypeKeys.TryGetValue(eType, out var keys)) return;
+                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
                 for (var i = keys.Count - 1; i >= 0; i--)
                 {
                     var key = keys[i];
-                    if (!Instance.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Instance._waitDels.Count > 0 && Instance._waitDels.Contains(key)) continue;
+                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
+                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
                     {
                         aEvent?.Run(a);
@@ -91,12 +91,12 @@ namespace Ux
 
             public void Exe(ref int exeCnt)
             {
-                if (!Instance.eTypeKeys.TryGetValue(eType, out var keys)) return;
+                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
                 for (var i = keys.Count - 1; i >= 0; i--)
                 {
                     var key = keys[i];
-                    if (!Instance.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Instance._waitDels.Count > 0 && Instance._waitDels.Contains(key)) continue;
+                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
+                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
                     {
                         aEvent?.Run(a, b);
@@ -127,12 +127,12 @@ namespace Ux
 
             public void Exe(ref int exeCnt)
             {
-                if (!Instance.eTypeKeys.TryGetValue(eType, out var keys)) return;
+                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
                 for (var i = keys.Count - 1; i >= 0; i--)
                 {
                     var key = keys[i];
-                    if (!Instance.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Instance._waitDels.Count > 0 && Instance._waitDels.Contains(key)) continue;
+                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
+                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
                     {
                         aEvent?.Run(a, b, c);
@@ -167,7 +167,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_CallBack?.Invoke(Instance.type2editor);
+                __Debugger_CallBack?.Invoke(Ins.type2editor);
             }
         }
 

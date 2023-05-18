@@ -22,12 +22,12 @@ namespace Ux
             msg.CurrentDownloadCount = currentDownloadCount;
             msg.TotalDownloadSizeBytes = totalDownloadSizeBytes;
             msg.CurrentDownloadSizeBytes = currentDownloadSizeBytes;
-            EventMgr.Instance.Send(EventType.DOWNLOAD_PROGRESS_UPDATE, msg);
+            EventMgr.Ins.Send(EventType.DOWNLOAD_PROGRESS_UPDATE, msg);
         }
         void OnDownloadErrorCallback(string fileName, string error)
         {
             Log.Error($"文件下载失败:{fileName},error:{error}");
-            EventMgr.Instance.Send(EventType.WEBFILE_DOWNLOAD_FAILED, fileName, error, this);
+            EventMgr.Ins.Send(EventType.WEBFILE_DOWNLOAD_FAILED, fileName, error, this);
         }
 
         private void BeginDownload(Downloader downloader)

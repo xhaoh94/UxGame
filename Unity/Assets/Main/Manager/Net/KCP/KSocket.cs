@@ -22,7 +22,7 @@ namespace Ux
         readonly long startTime;
 
         // 当前时间 - KSocket创建的时间
-        public uint TimeNow => (uint)(TimeMgr.Instance.LocalTime.TimeStamp - startTime);
+        public uint TimeNow => (uint)(TimeMgr.Ins.LocalTime.TimeStamp - startTime);
         uint nextUpdateTime;
         protected override bool IsCheckUpdate
         {
@@ -33,7 +33,7 @@ namespace Ux
         }
         public KSocket(string address) : base(address)
         {
-            this.startTime = TimeMgr.Instance.LocalTime.TimeStamp;
+            this.startTime = TimeMgr.Ins.LocalTime.TimeStamp;
         }
         private static readonly byte[] logBuffer = new byte[1024];
 #if ENABLE_IL2CPP
@@ -173,7 +173,7 @@ namespace Ux
             else
             {
                 //超过心跳一定时间后，没有回应，则判断为断开连接
-                if (LastRecvTime > 0 && TimeMgr.Instance.TotalTime - LastRecvTime > heartTime + 10)
+                if (LastRecvTime > 0 && TimeMgr.Ins.TotalTime - LastRecvTime > heartTime + 10)
                 {
                     this.OnSocketCode(SocketCode.Error);
                     return;

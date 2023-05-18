@@ -35,7 +35,7 @@ namespace Ux
 
         async UniTaskVoid LoadPlayer()
         {
-            var handle = ResMgr.Instance.LoadAssetAsync<GameObject>(playerData.res);
+            var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
             await handle.ToUniTask();
             Go = handle.InstantiateSync();
             Go.transform.SetParent(Go.transform);

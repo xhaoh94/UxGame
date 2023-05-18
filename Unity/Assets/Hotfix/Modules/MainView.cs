@@ -18,15 +18,15 @@ namespace Ux.UI
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
-            UIMgr.Instance.Show<MultipleView>();
+            UIMgr.Ins.Show<MultipleView>();
         }
         partial void OnBtnNoneViewClick(EventContext e)
         {
-            UIMgr.Instance.Show<TipView>();
+            UIMgr.Ins.Show<TipView>();
         }
         partial void OnBtnNoneWindowClick(EventContext e)
         {
-            UIMgr.Instance.Show<BagWindow>();
+            UIMgr.Ins.Show<BagWindow>();
         }
         partial void OnBtnTestClick(EventContext e)
         {

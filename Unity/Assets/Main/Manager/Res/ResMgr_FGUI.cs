@@ -55,7 +55,7 @@ namespace Ux
         {
             //热更没完成前，加载资源的语柄都是直接Release，
             //不会计算引用计数，所以不需要走此逻辑
-            if (!PatchMgr.Instance.IsDone)
+            if (!PatchMgr.Ins.IsDone)
             {
                 return;
             }
@@ -100,7 +100,7 @@ namespace Ux
         public async UniTask<bool> LoaUIdPackage(string[] pkgs)
         {
             //热更没完成前，直接加载资源，不需要引用计数判断
-            if (!PatchMgr.Instance.IsDone)
+            if (!PatchMgr.Ins.IsDone)
             {
                 foreach (var pkg in pkgs)
                 {
@@ -181,7 +181,7 @@ namespace Ux
             }
 
             //热更没完成前，加载资源的语柄，都直接Release掉
-            if (!PatchMgr.Instance.IsDone)
+            if (!PatchMgr.Ins.IsDone)
             {
                 handle.Release();
                 return suc;
@@ -224,7 +224,7 @@ namespace Ux
             item.owner.SetItemAsset(item, texture, DestroyMethod.None);
 
             //热更没完成前，加载资源的语柄，都直接Release掉
-            if (!PatchMgr.Instance.IsDone)
+            if (!PatchMgr.Ins.IsDone)
             {
                 handle.Release();
                 return;
@@ -248,7 +248,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_CallBack?.Invoke(Instance._pkgToRef);
+                __Debugger_CallBack?.Invoke(Ins._pkgToRef);
             }
         }
 

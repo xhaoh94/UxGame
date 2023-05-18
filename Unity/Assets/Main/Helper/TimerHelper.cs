@@ -30,7 +30,7 @@ namespace Ux
         public static string TimeSpanToString(long time)
         {
             DateTime temp = time.ToDateTime();
-            return TimeSpanToString(TimeMgr.Instance.ServerTime.Now - temp);
+            return TimeSpanToString(TimeMgr.Ins.ServerTime.Now - temp);
         }
         public static string TimeSpanToString(TimeSpan timeSpan)
         {

@@ -96,7 +96,7 @@ namespace Ux
 
         protected void OnSocketCode(SocketCode e)
         {
-            EventMgr.Instance.Send(EventType.NET_SOCKET_CODE, Address, e);
+            EventMgr.Ins.Send(EventType.NET_SOCKET_CODE, Address, e);
             Dispose();
         }
         public void Connect(Action connectCallback)
@@ -126,14 +126,14 @@ namespace Ux
             IsConnecting = false;
             IsConnected = true;
             _connectCallback?.Invoke();
-            EventMgr.Instance.Send(EventType.NET_CONNECTED, Address);
+            EventMgr.Ins.Send(EventType.NET_CONNECTED, Address);
         }
 
         #region 解析消息包
 
         protected bool OnParse()
         {
-            LastRecvTime = TimeMgr.Instance.TotalTime;
+            LastRecvTime = TimeMgr.Ins.TotalTime;
             // 收到消息回调
             while (true)
             {
@@ -231,7 +231,7 @@ namespace Ux
                 return;
             }
 
-            if (LastSendTime == 0 || TimeMgr.Instance.TotalTime - LastSendTime > heartTime)
+            if (LastSendTime == 0 || TimeMgr.Ins.TotalTime - LastSendTime > heartTime)
             {
                 this.sendBytes.WriteUInt16(2);
                 this.sendBytes.WriteByte((byte)OpType.H_B_S);
@@ -270,7 +270,7 @@ namespace Ux
         #region 发送检测
         void OnSend()
         {
-            LastSendTime = TimeMgr.Instance.TotalTime;
+            LastSendTime = TimeMgr.Ins.TotalTime;
             this.IsSending = true;
             StartSend();
             CheckSend();
@@ -350,7 +350,7 @@ namespace Ux
             recvBytes.Dispose();
             Address = string.Empty;
             OnDispose();
-            EventMgr.Instance.Send(EventType.NET_DISPOSE, this);
+            EventMgr.Ins.Send(EventType.NET_DISPOSE, this);
         }
         protected virtual void OnDispose() { }
     }

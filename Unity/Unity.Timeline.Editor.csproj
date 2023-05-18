@@ -68,8 +68,8 @@
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\State\SequenceState.cs" />
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Manipulators\AddDelete\IAddDeleteItemMode.cs" />
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Tooltip.cs" />
-    <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Items\ItemsGroup.cs" />
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Utilities\Scopes\LabelWidthScope.cs" />
+    <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Items\ItemsGroup.cs" />
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\State\ISequenceState.cs" />
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Window\Modes\TimelineDisabledMode.cs" />
     <Compile Include="Library\PackageCache\com.unity.timeline@1.6.5\Editor\Window\TimelineWindow_Gui.cs" />

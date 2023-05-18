@@ -20,7 +20,7 @@ namespace Ux
         {
             _childs ??= new List<TagBase>();
             if (_childs.FindIndex(x => x.TagId == tId) >= 0) return;
-            var tag = TagMgr.Instance.GetTag(tId);
+            var tag = TagMgr.Ins.GetTag(tId);
             if (tag == null) return;
             _AddTag(tag);
         }

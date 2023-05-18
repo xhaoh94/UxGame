@@ -29,7 +29,7 @@ namespace Ux
 
         public async void EnterMap(string mapName)
         {
-            var handle = ResMgr.Instance.LoadAssetAsync<GameObject>(mapName);
+            var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
             await handle.ToUniTask();
             var go = handle.InstantiateSync();
             handle.Release();

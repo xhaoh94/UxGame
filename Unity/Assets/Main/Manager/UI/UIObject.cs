@@ -184,7 +184,7 @@ namespace Ux
             }
 
             OnShow(param);
-            EventMgr.Instance.___RegisterFastMethod(this);
+            EventMgr.Ins.___RegisterFastMethod(this);
 
             foreach (var component in Components)
             {
@@ -437,7 +437,7 @@ namespace Ux
         private void RemoveEvents()
         {
             _event?.RemoveEvents();
-            EventMgr.Instance.OffAll(this);
+            EventMgr.Ins.OffAll(this);
         }
 
         #endregion
@@ -446,7 +446,7 @@ namespace Ux
 
         private void RemoveTimers()
         {
-            TimeMgr.Instance.RemoveAll(this);
+            TimeMgr.Ins.RemoveAll(this);
         }
 
         #region 定时器 Time
@@ -496,25 +496,25 @@ namespace Ux
         protected long DoTimer(float delay, int repeat, Action action,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, complete);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, complete);
         }
 
         protected long DoTimer(float first, float delay, int repeat, Action action,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, complete);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, complete);
         }
 
         protected long DoTimer(float delay, int repeat, Action action,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, complete, completeParam);
         }
 
         protected long DoTimer(float first, float delay, int repeat, Action action,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, complete, completeParam);
         }
 
         /// <summary>
@@ -529,25 +529,25 @@ namespace Ux
         public long DoTimer<A>(float delay, int repeat, Action<A> action, A a,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, a, complete);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, a, complete);
         }
 
         public long DoTimer<A>(float first, float delay, int repeat, Action<A> action, A a,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, a, complete);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, complete);
         }
 
         public long DoTimer<A>(float delay, int repeat, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, a, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, a, complete, completeParam);
         }
 
         public long DoTimer<A>(float first, float delay, int repeat, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, a, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, complete, completeParam);
         }
 
         /// <summary>
@@ -563,25 +563,25 @@ namespace Ux
         public long DoTimer<A, B>(float delay, int repeat, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, a, b, complete);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, complete);
         }
 
         public long DoTimer<A, B>(float first, float delay, int repeat, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, a, b, complete);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, complete);
         }
 
         public long DoTimer<A, B>(float delay, int repeat, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, a, b, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, complete, completeParam);
         }
 
         public long DoTimer<A, B>(float first, float delay, int repeat, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, a, b, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, complete, completeParam);
         }
 
         /// <summary>
@@ -598,45 +598,45 @@ namespace Ux
         public long DoTimer<A, B, C>(float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, a, b, c, complete);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, c, complete);
         }
 
         public long DoTimer<A, B, C>(float first, float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, a, b, c, complete);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, c, complete);
         }
 
         public long DoTimer<A, B, C>(float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(delay, repeat, action, a, b, c, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, c, complete, completeParam);
         }
 
         public long DoTimer<A, B, C>(float first, float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoTimer(first, delay, repeat, action, a, b, c, complete, completeParam);
+            return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, c, complete, completeParam);
         }
 
         public void RemoveTimer(Action action)
         {
-            TimeMgr.Instance.RemoveTimer(action);
+            TimeMgr.Ins.RemoveTimer(action);
         }
 
         public void RemoveTimer<A>(Action<A> action)
         {
-            TimeMgr.Instance.RemoveTimer(action);
+            TimeMgr.Ins.RemoveTimer(action);
         }
 
         public void RemoveTimer<A, B>(Action<A, B> action)
         {
-            TimeMgr.Instance.RemoveTimer(action);
+            TimeMgr.Ins.RemoveTimer(action);
         }
 
         public void RemoveTimer<A, B, C>(Action<A, B, C> action)
         {
-            TimeMgr.Instance.RemoveTimer(action);
+            TimeMgr.Ins.RemoveTimer(action);
         }
 
         #endregion
@@ -654,25 +654,25 @@ namespace Ux
         public long DoFrame(int delay, int repeat, Action action,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, complete);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, complete);
         }
 
         public long DoFrame(int first, int delay, int repeat, Action action,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, complete);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, complete);
         }
 
         public long DoFrame(int delay, int repeat, Action action,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, complete, completeParam);
         }
 
         public long DoFrame(int first, int delay, int repeat, Action action,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, complete, completeParam);
         }
 
         /// <summary>
@@ -687,25 +687,25 @@ namespace Ux
         public long DoFrame<A>(int delay, int repeat, Action<A> action, A a,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, a, complete);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, a, complete);
         }
 
         public long DoFrame<A>(int first, int delay, int repeat, Action<A> action, A a,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, a, complete);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, complete);
         }
 
         public long DoFrame<A>(int delay, int repeat, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, a, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, a, complete, completeParam);
         }
 
         public long DoFrame<A>(int first, int delay, int repeat, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, a, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, complete, completeParam);
         }
 
         /// <summary>
@@ -721,25 +721,25 @@ namespace Ux
         public long DoFrame<A, B>(int delay, int repeat, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, a, b, complete);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, complete);
         }
 
         public long DoFrame<A, B>(int first, int delay, int repeat, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, a, b, complete);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, complete);
         }
 
         public long DoFrame<A, B>(int delay, int repeat, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, a, b, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, complete, completeParam);
         }
 
         public long DoFrame<A, B>(int first, int delay, int repeat, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, a, b, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, complete, completeParam);
         }
 
         /// <summary>
@@ -756,46 +756,46 @@ namespace Ux
         public long DoFrame<A, B, C>(int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, a, b, c, complete);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, c, complete);
         }
 
         public long DoFrame<A, B, C>(int first, int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, a, b, c, complete);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, c, complete);
         }
 
         public long DoFrame<A, B, C>(int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(delay, repeat, action, a, b, c, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, c, complete, completeParam);
         }
 
         public long DoFrame<A, B, C>(int first, int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return TimeMgr.Instance.DoFrame(first, delay, repeat, action, a, b, c, complete, completeParam);
+            return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, c, complete, completeParam);
         }
 
 
         public void RemoveFrame(Action action)
         {
-            TimeMgr.Instance.RemoveFrame(action);
+            TimeMgr.Ins.RemoveFrame(action);
         }
 
         public void RemoveFrame<A>(Action<A> action)
         {
-            TimeMgr.Instance.RemoveFrame(action);
+            TimeMgr.Ins.RemoveFrame(action);
         }
 
         public void RemoveFrame<A, B>(Action<A, B> action)
         {
-            TimeMgr.Instance.RemoveFrame(action);
+            TimeMgr.Ins.RemoveFrame(action);
         }
 
         public void RemoveFrame<A, B, C>(Action<A, B, C> action)
         {
-            TimeMgr.Instance.RemoveFrame(action);
+            TimeMgr.Ins.RemoveFrame(action);
         }
 
         #endregion
@@ -809,7 +809,7 @@ namespace Ux
 
         public long DoTimeStamp(long timeStamp, Action action)
         {
-            return TimeMgr.Instance.DoTimeStamp(timeStamp, action);
+            return TimeMgr.Ins.DoTimeStamp(timeStamp, action);
         }
 
         public long DoTimeStamp<A>(DateTime dt, Action<A> action, A a)
@@ -819,7 +819,7 @@ namespace Ux
 
         public long DoTimeStamp<A>(long timeStamp, Action<A> action, A a)
         {
-            return TimeMgr.Instance.DoTimeStamp(timeStamp, action, a);
+            return TimeMgr.Ins.DoTimeStamp(timeStamp, action, a);
         }
 
         public long DoTimeStamp<A, B>(DateTime dt, Action<A, B> action, A a, B b)
@@ -829,7 +829,7 @@ namespace Ux
 
         public long DoTimeStamp<A, B>(long timeStamp, Action<A, B> action, A a, B b)
         {
-            return TimeMgr.Instance.DoTimeStamp(timeStamp, action, a, b);
+            return TimeMgr.Ins.DoTimeStamp(timeStamp, action, a, b);
         }
 
         public long DoTimeStamp<A, B, C>(DateTime dt, Action<A, B, C> action, A a, B b, C c)
@@ -839,27 +839,27 @@ namespace Ux
 
         public long DoTimeStamp<A, B, C>(long timeStamp, Action<A, B, C> action, A a, B b, C c)
         {
-            return TimeMgr.Instance.DoTimeStamp(timeStamp, action, a, b, c);
+            return TimeMgr.Ins.DoTimeStamp(timeStamp, action, a, b, c);
         }
 
         public void RemoveTimeStamp(Action action)
         {
-            TimeMgr.Instance.RemoveTimeStamp(action);
+            TimeMgr.Ins.RemoveTimeStamp(action);
         }
 
         public void RemoveTimeStamp<A>(Action<A> action)
         {
-            TimeMgr.Instance.RemoveTimeStamp(action);
+            TimeMgr.Ins.RemoveTimeStamp(action);
         }
 
         public void RemoveTimeStamp<A, B>(Action<A, B> action)
         {
-            TimeMgr.Instance.RemoveTimeStamp(action);
+            TimeMgr.Ins.RemoveTimeStamp(action);
         }
 
         public void RemoveTimeStamp<A, B, C>(Action<A, B, C> action)
         {
-            TimeMgr.Instance.RemoveTimeStamp(action);
+            TimeMgr.Ins.RemoveTimeStamp(action);
         }
 
         #endregion TimeStamp
@@ -868,42 +868,42 @@ namespace Ux
 
         public long DoCron(string cron, Action action)
         {
-            return TimeMgr.Instance.DoCron(cron, action);
+            return TimeMgr.Ins.DoCron(cron, action);
         }
 
         public long DoCron<A>(string cron, Action<A> action, A a)
         {
-            return TimeMgr.Instance.DoCron(cron, action, a);
+            return TimeMgr.Ins.DoCron(cron, action, a);
         }
 
         public long DoCron<A, B>(string cron, Action<A, B> action, A a, B b)
         {
-            return TimeMgr.Instance.DoCron(cron, action, a, b);
+            return TimeMgr.Ins.DoCron(cron, action, a, b);
         }
 
         public long DoCron<A, B, C>(string cron, Action<A, B, C> action, A a, B b, C c)
         {
-            return TimeMgr.Instance.DoCron(cron, action, a, b, c);
+            return TimeMgr.Ins.DoCron(cron, action, a, b, c);
         }
 
         public void RemoveCron(Action action)
         {
-            TimeMgr.Instance.RemoveCron(action);
+            TimeMgr.Ins.RemoveCron(action);
         }
 
         public void RemoveCron<A>(Action<A> action)
         {
-            TimeMgr.Instance.RemoveCron(action);
+            TimeMgr.Ins.RemoveCron(action);
         }
 
         public void RemoveCron<A, B>(Action<A, B> action)
         {
-            TimeMgr.Instance.RemoveCron(action);
+            TimeMgr.Ins.RemoveCron(action);
         }
 
         public void RemoveCron<A, B, C>(Action<A, B, C> action)
         {
-            TimeMgr.Instance.RemoveCron(action);
+            TimeMgr.Ins.RemoveCron(action);
         }
 
         #endregion

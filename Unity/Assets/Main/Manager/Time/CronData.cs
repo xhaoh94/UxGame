@@ -376,7 +376,7 @@ namespace Ux
                     switch (type)
                     {
                         case CronType.Year:
-                            return TimeMgr.Instance.ServerTime.Year;
+                            return TimeMgr.Ins.ServerTime.Year;
                         case CronType.Week:
                             return 1;
                         case CronType.Month:

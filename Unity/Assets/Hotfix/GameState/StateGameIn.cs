@@ -15,7 +15,7 @@ namespace Ux
         {
             //var ui = await UIMgr.Instance.Show<UI.MainView>().Task();
             MapModule.Instance.EnterMap("Map001");
-            UIMgr.Instance.Hide<UI.LoginView>();
+            UIMgr.Ins.Hide<UI.LoginView>();
         }
 
         protected override void OnExit()

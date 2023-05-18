@@ -66,11 +66,11 @@ public class TimeDebuggerWindow : EditorWindow
     {
         if (EditorApplication.isPlaying)
         {
-            _txtTime.SetValueWithoutNotify(TimeMgr.Instance.TotalTime.ToString());
-            _txtFrame.SetValueWithoutNotify(TimeMgr.Instance.TotalFrame.ToString());
+            _txtTime.SetValueWithoutNotify(TimeMgr.Ins.TotalTime.ToString());
+            _txtFrame.SetValueWithoutNotify(TimeMgr.Ins.TotalFrame.ToString());
 
-            _txtLocalTime.SetValueWithoutNotify(TimeMgr.Instance.LocalTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));
-            _txtServerTime.SetValueWithoutNotify(TimeMgr.Instance.ServerTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));
+            _txtLocalTime.SetValueWithoutNotify(TimeMgr.Ins.LocalTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));
+            _txtServerTime.SetValueWithoutNotify(TimeMgr.Ins.ServerTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));
         }
     }
     private void OnChangeType(TimeType type, bool force = false)

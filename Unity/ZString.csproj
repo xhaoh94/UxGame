@@ -8,11 +8,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace>Ux</RootNamespace>
-    <ProjectGuid>{47F1CF94-67B0-A27F-4D82-8A076580ACEA}</ProjectGuid>
+    <RootNamespace></RootNamespace>
+    <ProjectGuid>{BF3D337F-A392-23FE-67EF-99BD3B5A078B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <AssemblyName>Unity.Main</AssemblyName>
+    <AssemblyName>ZString</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <BaseDirectory>.</BaseDirectory>
@@ -56,117 +56,57 @@
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Main\Manager\Patch\PatchPatchInit.cs" />
-    <Compile Include="Assets\Main\Ex\DictionaryEx.cs" />
-    <Compile Include="Assets\Main\Base\OneThreadSynchronizationContext.cs" />
-    <Compile Include="Assets\Main\HybridCLR\Generated\AOTGenericReferences.cs" />
-    <Compile Include="Assets\Main\Helper\TimerHelper.cs" />
-    <Compile Include="Assets\Main\Manager\Time\TimeHandler.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\Recast.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\KChannel.cs" />
-    <Compile Include="Assets\Main\Base\ExpressionEvaluator\AnalysisMain.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchDone.cs" />
-    <Compile Include="Assets\Main\Manager\UI\View\UITabView.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\ModuleAttribute.cs" />
-    <Compile Include="Assets\Main\Common\Animation\AnimClip.cs" />
-    <Compile Include="Assets\Main\Common\Global.cs" />
-    <Compile Include="Assets\Main\Ex\MainUIObjectEx.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\AService.cs" />
-    <Compile Include="Assets\Main\Base\RecyclableMemoryStream\Events.cs" />
-    <Compile Include="Assets\Main\Manager\Res\ResMgr.cs" />
-    <Compile Include="Assets\Main\Modules\TestMD.cs" />
-    <Compile Include="Assets\Main\Ex\StringEx.cs" />
-    <Compile Include="Assets\Main\Base\ExpressionEvaluator\ExpressionEvaluator.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchMgr.cs" />
-    <Compile Include="Assets\Main\Manager\Net\WebSocket\WSocket.cs" />
-    <Compile Include="Assets\Main\Manager\Time\TimeEditor.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\EntityAttribute.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\KSocket.cs" />
-    <Compile Include="Assets\Main\Manager\Tag\TagBase.cs" />
-    <Compile Include="Assets\Main\Manager\Res\ResPackage.cs" />
-    <Compile Include="Assets\Main\Manager\Condition\ConditionType.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\ConditionAttribute.cs" />
-    <Compile Include="Assets\Main\Common\Animation\AnimComponent.cs" />
-    <Compile Include="Assets\Main\Manager\Time\IGameTime.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchStateNode.cs" />
-    <Compile Include="Assets\Main\Manager\Net\ClientSocket.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchUpdateManifest.cs" />
-    <Compile Include="Assets\Main\Ex\DelegateEx.cs" />
-    <Compile Include="Assets\Main\Common\Animation\AnimMixer.cs" />
-    <Compile Include="Assets\Main\Ex\TypeEx.cs" />
-    <Compile Include="Assets\Main\Manager\Tag\TagMgr.cs" />
-    <Compile Include="Assets\Main\Manager\Res\ResLazyload.cs" />
-    <Compile Include="Assets\Main\Base\Fsm\IStateNode.cs" />
-    <Compile Include="Assets\Main\Manager\UI\Component\UITabBtn.cs" />
-    <Compile Include="Assets\Main\Base\RecyclableMemoryStream\RecyclableMemoryStream.cs" />
-    <Compile Include="Assets\Main\Manager\Event\EventEditor.cs" />
-    <Compile Include="Assets\Main\Manager\Net\NetMgr.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\KService.cs" />
-    <Compile Include="Assets\Main\Manager\Event\EventType.cs" />
-    <Compile Include="Assets\Main\Manager\Module\ModuleMgr.cs" />
-    <Compile Include="Assets\Main\Common\ReferenceCollector.cs" />
-    <Compile Include="Assets\Main\Manager\Tag\TagGroug.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchCreateDownloader.cs" />
-    <Compile Include="Assets\Main\Manager\Condition\ICondition.cs" />
-    <Compile Include="Assets\Main\Ex\StreamEx.cs" />
-    <Compile Include="Assets\Main\Manager\Res\ResMgr_FGUI.cs" />
-    <Compile Include="Assets\Main\HybridCLR\RefTypes.cs" />
-    <Compile Include="Assets\Main\Manager\Time\CronData.cs" />
-    <Compile Include="Assets\Main\Manager\UI\UIObject.cs" />
-    <Compile Include="Assets\Main\Manager\UI\UIMgr.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\Kcp.cs" />
-    <Compile Include="Assets\Main\Manager\Event\EventMgr.cs" />
-    <Compile Include="Assets\Main\Helper\StreamingAssetsHelper.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\UIAttribute.cs" />
-    <Compile Include="Assets\Main\Base\IdGenerater.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\AChannel.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\TagAttribute.cs" />
-    <Compile Include="Assets\Main\Manager\Net\PacketParser.cs" />
-    <Compile Include="Assets\Main\Manager\Event\IEvent.cs" />
-    <Compile Include="Assets\Main\Base\Downloader.cs" />
-    <Compile Include="Assets\Main\Manager\UI\UIEvent.cs" />
-    <Compile Include="Assets\Main\Manager\UI\View\UIDialog.cs" />
-    <Compile Include="Assets\Main\Common\Pool.cs" />
-    <Compile Include="Assets\Main\Manager\UI\UILayout.cs" />
-    <Compile Include="Assets\Main\Manager\UI\View\UIWindow.cs" />
-    <Compile Include="Assets\Main\GameMain.cs" />
-    <Compile Include="Assets\Main\Manager\UI\View\UIView.cs" />
-    <Compile Include="Assets\Main\Manager\UI\Component\UITabFrame.cs" />
-    <Compile Include="Assets\Main\Ex\GameObjectEx.cs" />
-    <Compile Include="Assets\Main\Manager\HotFix\HotFixMgr.cs" />
-    <Compile Include="Assets\Main\Base\ECS\Component.cs" />
-    <Compile Include="Assets\Main\Manager\UI\FGUI\UIProgressBar.cs" />
-    <Compile Include="Assets\Main\Manager\Module\ModuleBase.cs" />
-    <Compile Include="Assets\Main\Ex\AssemblyEx.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchDownloadWebFiles.cs" />
-    <Compile Include="Assets\Main\Manager\Eval\ExpessionMgr.cs" />
-    <Compile Include="Assets\Main\Common\Animation\AnimNode.cs" />
-    <Compile Include="Assets\Main\Base\Fsm\StateMachine.cs" />
-    <Compile Include="Assets\Main\Manager\UI\FGUI\UIButton.cs" />
-    <Compile Include="Assets\Main\Manager\Time\TimeMgr.cs" />
-    <Compile Include="Assets\Main\Base\ECS\Entity.cs" />
-    <Compile Include="Assets\Main\Base\FastMethodInfo.cs" />
-    <Compile Include="Assets\Main\Manager\UI\UILayer.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchUpdateStaticVersion.cs" />
-    <Compile Include="Assets\Main\Manager\UI\UIData.cs" />
-    <Compile Include="Assets\Main\Manager\Net\TCP\TSocket.cs" />
-    <Compile Include="Assets\Main\Common\Log.cs" />
-    <Compile Include="Assets\Main\Manager\Condition\ConditionMgr.cs" />
-    <Compile Include="Assets\Main\Base\RecyclableMemoryStream\RecyclableMemoryStreamManager.cs" />
-    <Compile Include="Assets\Main\Manager\Net\KCP\KSocket_Tem.cs" />
-    <Compile Include="Assets\Main\Common\Singleton.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\AttributeTool.cs" />
-    <Compile Include="Assets\Main\Base\ECS\ISystem.cs" />
-    <Compile Include="Assets\Main\Manager\Net\BytesArray.cs" />
-    <Compile Include="Assets\Main\Manager\Patch\PatchView.cs" />
-    <Compile Include="Assets\Main\Base\Attributes\EvtAttribute.cs" />
-    <Compile Include="Assets\Main\Ex\DateTimeEx.cs" />
-    <Compile Include="Assets\Main\Ex\MainEventMgrEx.cs" />
-    <Compile Include="Assets\Main\Manager\UI\View\UIBase.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.Grisu3.cs" />
+    <Compile Include="Assets\Scripts\ZString\PreparedFormatHelper.cs" />
+    <Compile Include="Assets\Scripts\ZString\ZString.Format.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\NumberFormatInfoEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\FloatEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\FormatParser.cs" />
+    <Compile Include="Assets\Scripts\ZString\ZString.Prepare.cs" />
+    <Compile Include="Assets\Scripts\ZString\ExceptionUtil.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.BigInteger.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf8\Utf8ValueStringBuilder.SpanFormattableAppend.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.DiyFp.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\BitOperations.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\InternalSpanEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\HexConverter.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.Dragon4.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.NumberBuffer.cs" />
+    <Compile Include="Assets\Scripts\ZString\FormatHelper.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\BufferEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf16\Utf16ValueStringBuilder.SpanFormattableAppend.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\MathEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf16\Utf16ValueStringBuilder.AppendFormat.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\GuidEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.NumberToFloatingPointBits.cs" />
+    <Compile Include="Assets\Scripts\ZString\EnumUtil.cs" />
+    <Compile Include="Assets\Scripts\ZString\ReadOnlyListAdaptor.cs" />
+    <Compile Include="Assets\Scripts\ZString\PreparedFormat.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\DecimalEx.cs" />
+    <Compile Include="Assets\Scripts\ZString\NestedStringBuilderCreationException.cs" />
+    <Compile Include="Assets\Scripts\ZString\FastNumberWriter.cs" />
+    <Compile Include="Assets\Scripts\ZString\ZString.Utf8Format.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf8ValueStringBuilder.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\ValueStringBuilder.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf8\Utf8ValueStringBuilder.AppendFormat.cs" />
+    <Compile Include="Assets\Scripts\ZString\IResettableBufferWriter.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\FormattingHelpers.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf16ValueStringBuilder.cs" />
+    <Compile Include="Assets\Scripts\ZString\StringBuilder.AppendJoin.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.Parsing.cs" />
+    <Compile Include="Assets\Scripts\ZString\Unity\TextMeshProExtensions.cs" />
+    <Compile Include="Assets\Scripts\ZString\Shims.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf16\Utf16ValueStringBuilder.CreateFormatter.cs" />
+    <Compile Include="Assets\Scripts\ZString\ZString.Concat.cs" />
+    <Compile Include="Assets\Scripts\ZString\Unity\TextMeshProExtensions.SetStringBuilder.cs" />
+    <Compile Include="Assets\Scripts\ZString\Number\Number.Formatting.cs" />
+    <Compile Include="Assets\Scripts\ZString\ZString.cs" />
+    <Compile Include="Assets\Scripts\ZString\ZStringWriter.cs" />
+    <Compile Include="Assets\Scripts\ZString\Utf8\Utf8ValueStringBuilder.CreateFormatter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Main\HybridCLR\Generated\link.xml" />
-    <None Include="Assets\Main\Unity.Main.asmdef" />
+    <None Include="Assets\Scripts\ZString\ZString.asmdef" />
+    <None Include="Assets\Scripts\ZString\csc.rsp" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -435,6 +375,9 @@
     </Reference>
     <Reference Include="Pathfinding.Ionic.Zip.Reduced">
       <HintPath>Assets\ThirdParty\AstarPathfindingProject\Plugins\DotNetZip\Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>Assets\Plugins\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Burst.Cecil.Pdb">
       <HintPath>Library\PackageCache\com.unity.burst@1.8.2\Unity.Burst.CodeGen\Unity.Burst.Cecil.Pdb.dll</HintPath>
@@ -870,53 +813,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="YooAsset.csproj">
-      <Project>{93639B96-2673-C59C-AC5F-D252D24B1A34}</Project>
-      <Name>YooAsset</Name>
-    </ProjectReference>
-    <ProjectReference Include="YooAssetEx.csproj">
-      <Project>{1F552E5F-E4D2-DFD1-653D-9AA4E312830A}</Project>
-      <Name>YooAssetEx</Name>
-    </ProjectReference>
-    <ProjectReference Include="UniTask.csproj">
-      <Project>{2AD2B5BA-8385-7D2C-88ED-C468EC0E7027}</Project>
-      <Name>UniTask</Name>
-    </ProjectReference>
-    <ProjectReference Include="FairyGUI.csproj">
-      <Project>{5C351BF4-1A33-48AF-B348-52FD7A76B064}</Project>
-      <Name>FairyGUI</Name>
-    </ProjectReference>
-    <ProjectReference Include="HybridCLR.Runtime.csproj">
-      <Project>{AF18F19D-B8F9-B547-C242-63718D7ED119}</Project>
-      <Name>HybridCLR.Runtime</Name>
-    </ProjectReference>
-    <ProjectReference Include="Protobuf-net.csproj">
-      <Project>{6EB5627D-E8FA-9187-0D5C-CD9A2E61E29D}</Project>
-      <Name>Protobuf-net</Name>
-    </ProjectReference>
-    <ProjectReference Include="IngameDebugConsole.Runtime.csproj">
-      <Project>{4E4F3AF3-8D83-5CB3-CEB7-3F8A7AB9A9AF}</Project>
-      <Name>IngameDebugConsole.Runtime</Name>
-    </ProjectReference>
-    <ProjectReference Include="Unity.InputSystem.csproj">
-      <Project>{6A95DC37-73AC-78A7-C063-9FBAC5003603}</Project>
-      <Name>Unity.InputSystem</Name>
-    </ProjectReference>
-    <ProjectReference Include="AstarPathfindingProject.csproj">
-      <Project>{1FE75BFA-56D6-6B49-4DCC-375D8109000D}</Project>
-      <Name>AstarPathfindingProject</Name>
-    </ProjectReference>
-    <ProjectReference Include="Unity.RenderPipelines.Universal.Runtime.csproj">
-      <Project>{02C678C6-4A0A-4632-5B09-5B414FC0D5DE}</Project>
-      <Name>Unity.RenderPipelines.Universal.Runtime</Name>
-    </ProjectReference>
-    <ProjectReference Include="UnityEditor.UI.csproj">
-      <Project>{C0C5E174-727C-9FFA-CD43-B55BDEF754DA}</Project>
-      <Name>UnityEditor.UI</Name>
+    <ProjectReference Include="Unity.TextMeshPro.csproj">
+      <Project>{9C01D7DF-86BB-9834-4973-5D336B1F52EF}</Project>
+      <Name>Unity.TextMeshPro</Name>
     </ProjectReference>
     <ProjectReference Include="UnityEngine.UI.csproj">
       <Project>{98FE9D97-9991-E594-7D3C-A2ABC20E4793}</Project>
       <Name>UnityEngine.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="UnityEditor.UI.csproj">
+      <Project>{C0C5E174-727C-9FFA-CD43-B55BDEF754DA}</Project>
+      <Name>UnityEditor.UI</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

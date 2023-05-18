@@ -14,9 +14,9 @@ namespace Ux
             var data1 = new UITestData("333301", typeof(LoginTestSub), null, null, new UITabData("3333", "测试1"));
             var data3 = new UITestData("333302", typeof(LoginTestSub), null, null, new UITabData("3333", "测试3"));
             TTTChilds.Add("3333", new List<string>() { data1.ID, data3.ID });
-            UIMgr.Instance.RegisterUI(par);
-            UIMgr.Instance.RegisterUI(data1);
-            UIMgr.Instance.RegisterUI(data3);
+            UIMgr.Ins.RegisterUI(par);
+            UIMgr.Ins.RegisterUI(data1);
+            UIMgr.Ins.RegisterUI(data3);
         }
         protected override void OnRelease()
         {

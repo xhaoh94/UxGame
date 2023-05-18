@@ -7,7 +7,7 @@ namespace Ux
     {
         protected override void OnEnter(object args)
         {
-            GameMain.Instance.StartCoroutine(UpdateManifest());
+            GameMain.Ins.StartCoroutine(UpdateManifest());
         }
         protected override void OnUpdate()
         {
@@ -21,16 +21,16 @@ namespace Ux
         {
             IsSucceed = true;
             // 强制卸载所有资源
-            ResMgr.Instance.ForceUnloadAllAssets();
+            ResMgr.Ins.ForceUnloadAllAssets();
             // 更新补丁清单
-            yield return ResMgr.Instance.ForEachPackage(UpdateManifestAsync);
+            yield return ResMgr.Ins.ForEachPackage(UpdateManifestAsync);
             if (IsSucceed)
             {
                 PatchMgr.Enter<PatchCreateDownloader>();
             }
             else
             {
-                EventMgr.Instance.Send(EventType.PATCH_MANIFEST_UPDATE_FAILED);
+                EventMgr.Ins.Send(EventType.PATCH_MANIFEST_UPDATE_FAILED);
             }
         }
 

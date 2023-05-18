@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
+using Analysis;
 using System;
 using System.Collections;
 using System.Threading;
@@ -11,7 +12,7 @@ namespace Ux
 {
     public class GameMain : MonoBehaviour
     {
-        public static GameMain Instance { get; private set; }
+        public static GameMain Ins { get; private set; }
         public static StateMachine Machine { get; private set; }
 
         public EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
@@ -25,16 +26,12 @@ namespace Ux
 
         void Awake()
         {
-            using (zstring.Block())
-            {
-            }
-
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
             }
 
-            Instance = this;
+            Ins = this;
             Machine = StateMachine.CreateByPool();
             SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
             DontDestroyOnLoad(gameObject);
@@ -49,20 +46,45 @@ namespace Ux
         }
 
 
-        IEnumerator Start()
+        //IEnumerator Start()
+        void Start()
         {
 #if !UNITY_EDITOR
             if (PlayMode == EPlayMode.EditorSimulateMode)
                 PlayMode = EPlayMode.HostPlayMode;
 #endif
-            Log.Debug($"资源系统运行模式：{PlayMode}");
+            //Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Instance.Initialize();
+            //yield return ResMgr.Instance.Initialize();
 
-            typeof(GameMain).Assembly.Initialize();
-            // 运行补丁流程
-            PatchMgr.Instance.Run(PlayMode);
+            //typeof(GameMain).Assembly.Initialize();
+            //// 运行补丁流程
+            //PatchMgr.Instance.Run(PlayMode);
+            ExpessionMgr.Ins.AddFunction("getRemainsStarParameter", (object[] args) =>
+            {
+                return Convert.ToDouble(args[0]) + Convert.ToDouble(args[1]);
+            });
+            ExpessionMgr.Ins.AddFunction("getRemainsAwakenParameter", (object[] args) =>
+            {
+                return 1;
+            });
+            ExpessionMgr.Ins.AddFunction("getDisplaysParameter", (object[] args) =>
+            {
+                return 1;
+            });
+            string eval = "floor((1+(11)+getRemainsAwakenParameter())*getRemainsStarParameter(10+1,2+0)+getDisplaysParameter())";
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            var tt = ExpessionMgr.Ins.Parse(eval);
+            sw.Stop();
+            Log.Debug("11 Eval Parse Time " + sw.ElapsedMilliseconds);
+            Log.Debug("11 Eval Parse Time " + tt.ToString());
+
+            var test = new AnalysisMain();
+            test.TT(eval);
+            sw.Reset();
         }
+
 
         void Update()
         {
@@ -78,9 +100,9 @@ namespace Ux
             try
             {
                 OneThreadSynchronizationContext.Instance.Update();
-                TimeMgr.Instance.Update();
-                EventMgr.Instance.Update();
-                NetMgr.Instance.Update();
+                TimeMgr.Ins.Update();
+                EventMgr.Ins.Update();
+                NetMgr.Ins.Update();
                 Entity.Update();
             }
             catch (Exception e)
@@ -94,7 +116,7 @@ namespace Ux
         {
             try
             {
-                TimeMgr.Instance.LateUpdate();
+                TimeMgr.Ins.LateUpdate();
             }
             catch (Exception e)
             {
@@ -106,24 +128,24 @@ namespace Ux
         {
             try
             {
-                TimeMgr.Instance.FixedUpdate();
+                TimeMgr.Ins.FixedUpdate();
             }
             catch (Exception e)
             {
                 Log.Error(e);
             }
         }
-        
+
         private void OnApplicationQuit()
-        {            
-            EventMgr.Instance.OnApplicationQuit();
+        {
+            EventMgr.Ins.OnApplicationQuit();
         }
 
 
         void OnLowMemory()
         {
-            UIMgr.Instance.OnLowMemory();
-            ResMgr.Instance.OnLowMemory();
+            UIMgr.Ins.OnLowMemory();
+            ResMgr.Ins.OnLowMemory();
             Pool.Clear();
         }
     }

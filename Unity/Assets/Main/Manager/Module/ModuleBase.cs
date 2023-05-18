@@ -29,15 +29,15 @@ namespace Ux
         }
         public void Init()
         {
-            EventMgr.Instance.___RegisterFastMethod(this);
+            EventMgr.Ins.___RegisterFastMethod(this);
             OnInit();
         }
         protected virtual void OnInit() { }
         public void Release()
         {
             OnRelease();
-            EventMgr.Instance.OffAll(this);
-            TimeMgr.Instance.RemoveAll(this);
+            EventMgr.Ins.OffAll(this);
+            TimeMgr.Ins.RemoveAll(this);
             _instance = null;
         }
         protected virtual void OnRelease() { }
@@ -45,11 +45,11 @@ namespace Ux
 
         protected void Send(uint cmd, object message)
         {
-            NetMgr.Instance.Send(cmd, message);
+            NetMgr.Ins.Send(cmd, message);
         }
         protected async UniTask<V> Call<V>(uint cmd, object message)
         {
-            return await NetMgr.Instance.Call<V>(cmd, message);
+            return await NetMgr.Ins.Call<V>(cmd, message);
         }
     }
 }

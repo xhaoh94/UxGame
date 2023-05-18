@@ -306,8 +306,8 @@
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Variables\ObjectVariables.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Graphs\GraphPointerException.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Machines\IMachine.cs" />
-    <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Dependencies\FullSerializer\Converters\fsTypeConverter.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Reflection\Optimization\StaticFunctionInvokerBase.cs" />
+    <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Dependencies\FullSerializer\Converters\fsTypeConverter.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Listeners\MonoBehaviour\UnityOnCollisionEnterMessageListener.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Serialization\Converters\NamespaceConverter.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Runtime\VisualScripting.Core\Events\EventMachine.cs" />

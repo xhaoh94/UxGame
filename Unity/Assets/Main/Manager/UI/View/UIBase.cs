@@ -52,7 +52,7 @@ namespace Ux
 
         public virtual void Hide()
         {
-            UIMgr.Instance.Hide(Data.ID);
+            UIMgr.Ins.Hide(Data.ID);
         }
 
         protected void MakeFullScreen()
@@ -87,7 +87,7 @@ namespace Ux
         protected void SetLayout(UILayout layout, bool restraint = true)
         {
             if (GObject == null) return;
-            GObject parent = GObject.parent ?? UIMgr.Instance.GetLayer(UILayer.Root);
+            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
             switch (layout)
             {
                 case UILayout.Left_Top:
@@ -182,14 +182,14 @@ namespace Ux
         protected void AddRelation(RelationType relation)
         {
             if (GObject == null) return;
-            GObject parent = GObject.parent ?? UIMgr.Instance.GetLayer(UILayer.Root);
+            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
             GObject.AddRelation(parent, relation);
         }
 
         protected void RemoveRelation(RelationType relation)
         {
             if (GObject == null) return;
-            GObject parent = GObject.parent ?? UIMgr.Instance.GetLayer(UILayer.Root);
+            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
             GObject.RemoveRelation(parent, relation);
         }
     }

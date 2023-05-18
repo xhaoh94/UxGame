@@ -7,7 +7,7 @@ namespace Ux
     {
         protected override void OnEnter(object args = null)
         {
-            GameMain.Instance.StartCoroutine(GetStaticVersion());
+            GameMain.Ins.StartCoroutine(GetStaticVersion());
         }
         protected override void OnUpdate()
         {
@@ -20,14 +20,14 @@ namespace Ux
         {
             IsSucceed = true;
             // 更新资源版本号
-            yield return ResMgr.Instance.ForEachPackage(UpdateStaticVersionAsync);
+            yield return ResMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
             if (IsSucceed)
             {
                 PatchMgr.Enter<PatchUpdateManifest>();
             }
             else
             {
-                EventMgr.Instance.Send(EventType.STATIC_VERSION_UPDATE_FAILED);
+                EventMgr.Ins.Send(EventType.STATIC_VERSION_UPDATE_FAILED);
             }
         }
 

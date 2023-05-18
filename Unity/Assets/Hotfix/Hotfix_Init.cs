@@ -1,7 +1,5 @@
 using Ux;
 using UnityEngine;
-using UnityEditor;
-using UnityEditor.SceneManagement;
 
 namespace Ux
 {
@@ -10,18 +8,18 @@ namespace Ux
         private void Awake()
         {
 #if UNITY_EDITOR
-            if (GameMain.Instance == null)
+            if (GameMain.Ins == null)
             {
-                UnityEditor.EditorApplication.isPlaying = false;               
-                throw new System.Exception("请在Boot场景启动");                
+                UnityEditor.EditorApplication.isPlaying = false;
+                throw new System.Exception("请在Boot场景启动");
             }
 #endif
             Log.Info("启动热更层");
             //DontDestroyOnLoad(gameObject);
-            EventMgr.Instance.___SetEvtAttribute<EvtAttribute>();
-            HotFixMgr.Instance.Assembly.Initialize();
+            EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
+            HotFixMgr.Ins.Assembly.Initialize();
 
-            PatchMgr.Instance.Done();
+            PatchMgr.Ins.Done();
             GameMain.Machine.AddNode<StateLogin>();
             GameMain.Machine.AddNode<StateGameIn>();
             GameMain.Machine.Enter<StateLogin>();

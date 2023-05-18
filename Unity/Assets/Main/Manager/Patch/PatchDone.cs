@@ -12,8 +12,8 @@ namespace Ux
         {
             try
             {
-                await HotFixMgr.Instance.Load();
-                HotFixMgr.Instance.Init();
+                await HotFixMgr.Ins.Load();
+                HotFixMgr.Ins.Init();
             }
             catch (Exception e)
             {

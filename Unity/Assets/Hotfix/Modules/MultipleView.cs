@@ -15,9 +15,9 @@ namespace Ux.UI
         protected override void OnShow(object param)
         {
             base.OnShow(param);
-            TimeMgr.Instance.DoTimer(5, 1, () =>
+            TimeMgr.Ins.DoTimer(5, 1, () =>
             {
-                var data = UIMgr.Instance.GetUIData("MultipleView");
+                var data = UIMgr.Ins.GetUIData("MultipleView");
                 data.Children.Reverse();
                 RefreshTab();
                 Log.Debug("RefreshTab");

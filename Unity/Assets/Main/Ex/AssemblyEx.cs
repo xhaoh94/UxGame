@@ -39,10 +39,10 @@ namespace Ux
                 }
             }
 
-            ModuleMgr.Instance.Add(mols);
-            TagMgr.Instance.Add(tags);
-            UIMgr.Instance.Add(uis);
-            ConditionMgr.Instance.Add(conditions);
+            ModuleMgr.Ins.Add(mols);
+            TagMgr.Ins.Add(tags);
+            UIMgr.Ins.Add(uis);
+            ConditionMgr.Ins.Add(conditions);
         }
     }
 }

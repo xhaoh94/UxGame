@@ -358,8 +358,8 @@ namespace Ux
             if (!isDestroy) return;
             if (IsDestroy) return;
             isDestroying = true;
-            TimeMgr.Instance.RemoveAll(this);
-            EventMgr.Instance.OffAll(this);
+            TimeMgr.Ins.RemoveAll(this);
+            EventMgr.Ins.OffAll(this);
 
             foreach (var entity in _entitys)
             {

@@ -814,6 +814,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
+      <Project>{2662B409-6332-1E56-D797-C9025C53BDD6}</Project>
+      <Name>Assembly-CSharp-firstpass</Name>
+    </ProjectReference>
     <ProjectReference Include="Assembly-CSharp.csproj">
       <Project>{CD8C9303-404B-FB8D-6B9B-21988D5CAC0A}</Project>
       <Name>Assembly-CSharp</Name>
@@ -833,6 +837,10 @@
     <ProjectReference Include="Unity.VSCode.Editor.csproj">
       <Project>{F63CEAD4-2145-A864-65F2-FF3CC0A4E30C}</Project>
       <Name>Unity.VSCode.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="YooAsset.Editor.csproj">
+      <Project>{B1497EE1-7B46-359F-A59E-D9AEA156DE57}</Project>
+      <Name>YooAsset.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Universal.Shaders.csproj">
       <Project>{060E532F-A7CC-1A16-01B9-0629A5A15367}</Project>
@@ -925,6 +933,10 @@
     <ProjectReference Include="AstarPathfindingProjectEditor.csproj">
       <Project>{8CDDEF6B-A123-D833-AAC6-996FC9568B1E}</Project>
       <Name>AstarPathfindingProjectEditor</Name>
+    </ProjectReference>
+    <ProjectReference Include="YooAsset.csproj">
+      <Project>{93639B96-2673-C59C-AC5F-D252D24B1A34}</Project>
+      <Name>YooAsset</Name>
     </ProjectReference>
     <ProjectReference Include="KumoKyaku.Kcp.csproj">
       <Project>{21993E3C-F847-609D-5102-F3696F8FBE3F}</Project>
@@ -1089,14 +1101,6 @@
     <ProjectReference Include="Unity.VisualScripting.State.csproj">
       <Project>{50C03743-3ACC-4B13-6DFA-C9E140F3F61A}</Project>
       <Name>Unity.VisualScripting.State</Name>
-    </ProjectReference>
-    <ProjectReference Include="YooAsset.Editor.csproj">
-      <Project>{B1497EE1-7B46-359F-A59E-D9AEA156DE57}</Project>
-      <Name>YooAsset.Editor</Name>
-    </ProjectReference>
-    <ProjectReference Include="YooAsset.csproj">
-      <Project>{93639B96-2673-C59C-AC5F-D252D24B1A34}</Project>
-      <Name>YooAsset</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -45,8 +45,8 @@ namespace Ux
             _isRun = false;
             machine.Release();
             machine = null;
-            UIMgr.Instance.Hide<PatchView>();
-            UIMgr.Instance.OnLowMemory();
+            UIMgr.Ins.Hide<PatchView>();
+            UIMgr.Ins.OnLowMemory();
             IsDone = true;
         }
 

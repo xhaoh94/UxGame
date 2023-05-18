@@ -80,7 +80,7 @@ namespace Ux
         }
         public static void ForEach(Action<IModule> fn)
         {
-            Instance._ForEach(fn);
+            Ins._ForEach(fn);
         }
         void _ForEach(Action<IModule> fn)
         {

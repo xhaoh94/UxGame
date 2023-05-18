@@ -16,7 +16,7 @@ namespace Ux
 
         async UniTaskVoid _load()
         {
-            var handle = ResMgr.Instance.LoadAssetAsync<TextAsset>("map001graph");
+            var handle = ResMgr.Ins.LoadAssetAsync<TextAsset>("map001graph");
             await handle.ToUniTask();
             _astarPath.data.DeserializeGraphs(((TextAsset)handle.AssetObject).bytes);
         }

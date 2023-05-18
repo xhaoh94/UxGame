@@ -91,7 +91,7 @@ namespace Ux
             public void Init(IUI _ui)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Instance.DoOnce(5, Exe); //5秒后执行删除                
+                timeKey = TimeMgr.Ins.DoOnce(5, Exe); //5秒后执行删除                
             }
 
             void Release()
@@ -107,8 +107,8 @@ namespace Ux
             public void Dispose()
             {
                 Dialog._waitDels.Remove(ui.ID);
-                Instance._waitDels.Remove(ui.ID);
-                Instance.Dispose(ui);
+                Ins._waitDels.Remove(ui.ID);
+                Ins.Dispose(ui);
                 Release();
             }
 
@@ -116,7 +116,7 @@ namespace Ux
             {
                 outUi = ui;
                 Dialog._waitDels.Remove(ui.ID);
-                Instance._waitDels.Remove(ui.ID);
+                Ins._waitDels.Remove(ui.ID);
                 Release();
             }
 
@@ -130,7 +130,7 @@ namespace Ux
             void RemoveTime()
             {                
                 if (timeKey == 0) return;
-                TimeMgr.Instance.RemoveKey(timeKey);
+                TimeMgr.Ins.RemoveKey(timeKey);
                 timeKey = 0;
             }
         }
@@ -191,7 +191,7 @@ namespace Ux
 
         public UIMgr()
         {
-            if (PatchMgr.Instance.IsDone)
+            if (PatchMgr.Ins.IsDone)
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
@@ -417,14 +417,14 @@ namespace Ux
                     if (_showed.ContainsKey(uiid))
                     {
                         ui.DoResume(uiid == id ? param : null);
-                        EventMgr.Instance.Send(EventType.UI_RESUME, uiid);
+                        EventMgr.Ins.Send(EventType.UI_RESUME, uiid);
                     }
                     else
                     {
                         ui.DoShow(isAnim, uiid == id ? param : null);
                         _showed.Add(uiid, ui);
                         _showing.Remove(uiid);
-                        EventMgr.Instance.Send(EventType.UI_SHOW, uiid);
+                        EventMgr.Ins.Send(EventType.UI_SHOW, uiid);
                     }
                 }
 #if UNITY_EDITOR
@@ -552,7 +552,7 @@ namespace Ux
         {
             if (data.Pkgs is { Length: > 0 })
             {
-                if (!await ResMgr.Instance.LoaUIdPackage(data.Pkgs))
+                if (!await ResMgr.Ins.LoaUIdPackage(data.Pkgs))
                 {
                     Log.Error($"[{nameof(data.CType)}]包加载错误");
                     return null;
@@ -640,7 +640,7 @@ namespace Ux
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
 #endif
-            EventMgr.Instance.Send(EventType.UI_HIDE, id);
+            EventMgr.Ins.Send(EventType.UI_HIDE, id);
         }
 
         private void CheckDestroy(IUI ui)
@@ -731,7 +731,7 @@ namespace Ux
             var data = GetUIData(id);
             if (data == null) return;
             if (data.Pkgs == null || data.Pkgs.Length == 0) return;
-            ResMgr.Instance.RemoveUIPackage(data.Pkgs);
+            ResMgr.Ins.RemoveUIPackage(data.Pkgs);
             if (ui is UIDialog)
             {
                 LogoutUI(id);
@@ -838,7 +838,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_UI_CallBack?.Invoke(Instance._idUIData);
+                __Debugger_UI_CallBack?.Invoke(Ins._idUIData);
             }
         }
 
@@ -846,7 +846,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Showed_CallBack?.Invoke(Instance._showed.Keys.ToList());
+                __Debugger_Showed_CallBack?.Invoke(Ins._showed.Keys.ToList());
             }
         }
 
@@ -854,7 +854,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Showing_CallBack?.Invoke(Instance._showing);
+                __Debugger_Showing_CallBack?.Invoke(Ins._showing);
             }
         }
 
@@ -862,7 +862,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Cacel_CallBack?.Invoke(Instance._cacel.Keys.ToList());
+                __Debugger_Cacel_CallBack?.Invoke(Ins._cacel.Keys.ToList());
             }
         }
 
@@ -870,7 +870,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_TemCacel_CallBack?.Invoke(Instance._temCacel.Keys.ToList());
+                __Debugger_TemCacel_CallBack?.Invoke(Ins._temCacel.Keys.ToList());
             }
         }
 
@@ -878,7 +878,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_WaitDel_CallBack?.Invoke(Instance._waitDels.Keys.ToList());
+                __Debugger_WaitDel_CallBack?.Invoke(Ins._waitDels.Keys.ToList());
             }
         }
 

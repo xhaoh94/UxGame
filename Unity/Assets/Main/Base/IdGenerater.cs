@@ -10,7 +10,7 @@ namespace Ux
 
         public static long GenerateId()
         {
-            long time = TimeMgr.Instance.LocalTime.TimeStamp / 10;
+            long time = TimeMgr.Ins.LocalTime.TimeStamp / 10;
 
             return head + (time << 18) + ++value;
         }

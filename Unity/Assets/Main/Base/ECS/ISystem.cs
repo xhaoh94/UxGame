@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Ux
 {
@@ -173,23 +172,17 @@ namespace Ux
                 foreach (var method in methods)
                 {
                     var addAttrs = method.GetCustomAttributes(typeof(ListenAddEntityAttribute)).ToArray();
-                    zstring temKey;
                     if (addAttrs.Length > 0)
                     {
                         var fastMethod = new FastMethodInfo(target, method);
                         if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
-                        using (zstring.Block())
+                        if (!_eventAdd.TryGetValue(evtAttr.type.FullName, out var list))
                         {
-                            temKey = evtAttr.type.FullName;
-                            var key = temKey.Intern();
-                            if (!_eventAdd.TryGetValue(key, out var list))
-                            {
-                                list = new List<FastMethodInfo>();
-                                _eventAdd.Add(key, list);
-                            }
-
-                            list.Add(fastMethod);
+                            list = new List<FastMethodInfo>();
+                            _eventAdd.Add(evtAttr.type.FullName, list);
                         }
+
+                        list.Add(fastMethod);
                     }
 
                     var removeAttrs = method.GetCustomAttributes(typeof(ListenRemoveEntityAttribute)).ToArray();
@@ -197,18 +190,13 @@ namespace Ux
                     {
                         var fastMethod = new FastMethodInfo(target, method);
                         if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
-                        using (zstring.Block())
+                        if (!_eventRemove.TryGetValue(evtAttr.type.FullName, out var list))
                         {
-                            temKey = evtAttr.type.FullName;
-                            var key = temKey.Intern();
-                            if (!_eventRemove.TryGetValue(key, out var list))
-                            {
-                                list = new List<FastMethodInfo>();
-                                _eventRemove.Add(key, list);
-                            }
-
-                            list.Add(fastMethod);
+                            list = new List<FastMethodInfo>();
+                            _eventRemove.Add(evtAttr.type.FullName, list);
                         }
+
+                        list.Add(fastMethod);
                     }
                 }
             }
@@ -287,22 +275,22 @@ namespace Ux
 
             if (this is IUpdateSystem updateSystem)
             {
-                TimeMgr.Instance.DoUpdate(updateSystem.OnUpdate);
+                TimeMgr.Ins.DoUpdate(updateSystem.OnUpdate);
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
-                TimeMgr.Instance.DoLateUpdate(lateUpdateSystem.OnLateUpdate);
+                TimeMgr.Ins.DoLateUpdate(lateUpdateSystem.OnLateUpdate);
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
             {
-                TimeMgr.Instance.DoFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                TimeMgr.Ins.DoFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                EventMgr.Instance.AddQuitCallBack(applicationQuit.OnApplicationQuit);
+                EventMgr.Ins.AddQuitCallBack(applicationQuit.OnApplicationQuit);
             }
             var temPar = Parent;
             temPar?._event?.Add(this);
@@ -317,7 +305,7 @@ namespace Ux
             {
                 if (this is IEventSystem)
                 {
-                    EventMgr.Instance.___RegisterFastMethod(this);
+                    EventMgr.Ins.___RegisterFastMethod(this);
                 }
 
                 __is_init = true;
@@ -328,22 +316,22 @@ namespace Ux
         {
             if (this is IUpdateSystem updateSystem)
             {
-                TimeMgr.Instance.RemoveUpdate(updateSystem.OnUpdate);
+                TimeMgr.Ins.RemoveUpdate(updateSystem.OnUpdate);
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
-                TimeMgr.Instance.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
+                TimeMgr.Ins.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
             {
-                TimeMgr.Instance.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                TimeMgr.Ins.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                EventMgr.Instance.RemoveQuitCallBack(applicationQuit.OnApplicationQuit);
+                EventMgr.Ins.RemoveQuitCallBack(applicationQuit.OnApplicationQuit);
             }
 
             if (this is IRemoveComponentSystem removeComponentSystem)

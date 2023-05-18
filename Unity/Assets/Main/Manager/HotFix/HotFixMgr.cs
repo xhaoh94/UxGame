@@ -39,8 +39,8 @@ namespace Ux
                 return;
             }
 
-            ResMgr.Instance.UnloadUnusedAssets();
-            ResMgr.Instance.LoadSceneAsync(HotfixScene);
+            ResMgr.Ins.UnloadUnusedAssets();
+            ResMgr.Ins.LoadSceneAsync(HotfixScene);
         }
 
         public List<Type> GetHotfixTypes()

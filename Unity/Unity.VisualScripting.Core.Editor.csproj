@@ -127,10 +127,10 @@
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Interface\Fuzzy\IFuzzyOptionTree.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Dependencies\ReorderableList\ReorderableListFlags.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Plugin\Changelogs\LegacyLudiqCore\Changelog_1_4_11.cs" />
-    <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Utilities\ScriptUtility.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Plugin\Changelogs\LegacyLudiqCore\Changelog_1_4_0.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Inspection\DraggedListItem.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Widgets\Nodes\INodeWidget.cs" />
+    <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Utilities\ScriptUtility.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Utilities\AssetUtility.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Meta\MemberMetadata.cs" />
     <Compile Include="Library\PackageCache\com.unity.visualscripting@1.8.0\Editor\VisualScripting.Core\Inspection\Primitives\ShortInspector.cs" />

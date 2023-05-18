@@ -30,7 +30,7 @@ namespace Ux
                 contentPane = gObject.asCom,
                 modal = IsModal()
             };
-            var layer = UIMgr.Instance.GetLayer(Layer);
+            var layer = UIMgr.Ins.GetLayer(Layer);
             if (layer == GRoot.inst)
             {
                 _window.sortingOrder = 0;

@@ -46,7 +46,7 @@ namespace Ux
         }
         public void Release()
         {
-            TimeMgr.Instance.RemoveUpdate(Update);
+            TimeMgr.Ins.RemoveUpdate(Update);
             Owner = null;
             _curNode?.Exit();
             _curNode = null;
@@ -106,7 +106,7 @@ namespace Ux
             }
             else
             {
-                TimeMgr.Instance.DoUpdate(Update);
+                TimeMgr.Ins.DoUpdate(Update);
                 Log.Debug($"{OwnerName} 进入节点：{node.Name}");
                 _preNode = _curNode;
             }
