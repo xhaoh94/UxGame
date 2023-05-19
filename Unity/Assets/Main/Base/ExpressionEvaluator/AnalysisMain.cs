@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using Ux;
 
 namespace Analysis
 {
@@ -28,8 +29,9 @@ namespace Analysis
             var test = GetRPN("(-10)+5*1+5*PARAM", out var tt);
         }
 
-        public void TT(string eval)
+        public void TT(string eval, int cnt)
         {
+            SetVariable("test", 11);
             SetFormula("getRemainsStarParameter", (object[] args) =>
             {
                 return Convert.ToDouble(args[0]) + Convert.ToDouble(args[1]);
@@ -41,10 +43,14 @@ namespace Analysis
             SetFormula("getDisplaysParameter", (object[] args) =>
             {
                 return 1;
-            });            
+            });
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-            var t = GetExpressionValue(eval); 
+            double t = 0;
+            for (int i = 0; i < cnt; i++)
+            {
+                t = GetExpressionValue(string.Format(eval, i));
+            }
             sw.Stop();
             Log.Debug("22 Eval Parse Time " + sw.ElapsedMilliseconds);
             Log.Debug("22 Eval Parse Time " + t.ToString());
@@ -377,7 +383,7 @@ namespace Analysis
 
             //[(](?<v>([0-9]|[a-z]|[A-Z]|[+\-*/?$\x22]+)+)[)]
 
-            StringBuilder sb = new StringBuilder(input);            
+            StringBuilder sb = new StringBuilder(input);
             StringBuilder temp = new StringBuilder();
             Stack<char> stack = new Stack<char>();
             int lasEnd = 0;
@@ -705,7 +711,7 @@ namespace Analysis
                 return expression;
             }
             else
-            {                
+            {
                 var e = new Expression(input, this);
                 expressionDic.Add(input, e);
                 return e;

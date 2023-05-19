@@ -5,6 +5,10 @@ using CodingSeb.ExpressionEvaluator;
 using System;
 using System.Text.RegularExpressions;
 using System.Text;
+using static UnityEngine.InputSystem.InputControlScheme.MatchResult;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
+using UnityEngine.Windows;
+using UnityEngine.InputSystem;
 
 namespace Ux
 {
@@ -15,17 +19,31 @@ namespace Ux
             Operator1,
             Operator2
         }
+        enum ArgType
+        {
+            Arg,
+            Value,
+
+        }
         #region 正则表达式
-        static readonly string FnRegex = @"(?<fnName>(\d|[a-z]|[A-Z]?)+)[(](?<varName>(()|\d|[a-z]|[A-Z]|[_,+\-*/%]+)+)[)]";
-        static readonly string VariableRegex = @"^[-]?(\w)+[(+|\-|*|/|%)](\w)+";
-        static readonly string ValueRegex = @"^[-]?\d*[.]?\d+$";
-        static readonly string ArgRegex = @"^($arg_)([\d]+)$";
-        static readonly string Operator1 = $@"(?<var1>[-]?[.\d\w]+)(?<tag>[*|/|%])(?<var2>[-]?[.\d\w]+)";
-        static readonly string Operator2 = $@"(?<var1>[-]?[.\d\w]+)(?<tag>[+|-])(?<var2>[-]?[.\d\w]+)";
+        static readonly Regex FnRegex = new Regex(@"(?<fnName>(([0-9]|[a-z]|[A-Z])*))[(](?<varName>((arg#\d)|[0-9]|[a-z]|[A-Z]|[,+\-*/%])*)[)]");
+        static readonly Regex OperatorRegex = new Regex(@"^[-]?(\w)+[(+|\-|*|/|%)](\w)+");
+        static readonly Regex VariableRegex = new Regex(@"^[-]?(\w+)$");
+        static readonly Regex ValueRegex = new Regex(@"^[-]?((\d+\.{1}\d+)|(\d+)$)");
+        static readonly Regex ArgRegex = new Regex(@"^(arg#)[\d]$");
+        static readonly Regex Operator1 = new Regex(@"(?<var1>^[-]?[#\.\d\w]+)(?<tag>[*|/|%])(?<var2>[-]?[#\.\d\w]+)");
+        static readonly Regex Operator2 = new Regex(@"(?<var1>^[-]?[#\.\d\w]+)(?<tag>[+|-])(?<var2>[-]?[#\.\d\w]+)");
+        static readonly string ArgStr = "arg#{0}";
         #endregion
 
         #region 静态字典
-        static IDictionary<string, double> variables = new Dictionary<string, double>();
+        static StringBuilder stringBuilder = new StringBuilder();
+        static IDictionary<string, double> variables = new Dictionary<string, double>() {
+            { "Pi", Math.PI },
+            { "pi", Math.PI },
+            { "E", Math.E },
+            { "e", Math.E },
+        };
         static IDictionary<string, Func<double>> nameToVariable = new Dictionary<string, Func<double>>();
         static IDictionary<string, Func<object[], double>> nameToFunction = new Dictionary<string, Func<object[], double>>();
         static IDictionary<string, Func<double, double>> singleDoubleMath = new Dictionary<string, Func<double, double>>(StringComparer.Ordinal)
@@ -63,21 +81,52 @@ namespace Ux
             { "Truncate", Math.Truncate },
             { "truncate", Math.Truncate },
         };
+
+        static IDictionary<string, ExpessionMatch> Operator1Dict = new Dictionary<string, ExpessionMatch>();
+        static IDictionary<string, ExpessionMatch> Operator2Dict = new Dictionary<string, ExpessionMatch>();
+        static IDictionary<string, ExpessionMatch> FnDict = new Dictionary<string, ExpessionMatch>();
+        static IDictionary<string, ExpessionMatch> VariableDict = new Dictionary<string, ExpessionMatch>();
+        static IDictionary<string, ExpessionMatch> ValueDict = new Dictionary<string, ExpessionMatch>();
+        static IDictionary<string, ExpessionMatch> OperatorDict = new Dictionary<string, ExpessionMatch>();
+        static IDictionary<string, string[]> ArgDict = new Dictionary<string, string[]>();
+        static IDictionary<string, ArgType> ArgTypeDict = new Dictionary<string, ArgType>();
         #endregion
 
         #region Type
+
+        struct ExpessionMatch
+        {
+            public string Value { get; }
+            public string V1 { get; }
+            public string V2 { get; }
+            public string Data { get; }
+            public ExpessionMatch(string v, string v1, string v2, string data)
+            {
+                this.Value = v;
+                this.V1 = v1;
+                this.V2 = v2;
+                this.Data = data;
+            }
+        }
         class BaseType
         {
             public string key;
-            protected string varName;
+            protected ExpessionMatch match;
             protected ExpessionParse expession;
-            public BaseType(ExpessionParse expession, string key, string varName)
+            public BaseType(string key, ExpessionParse expession, ExpessionMatch match)
             {
                 this.expession = expession;
                 this.key = key;
-                this.varName = varName;
+                this.match = match;
             }
-
+            bool IsArgs(string input)
+            {
+                return ArgRegex.IsMatch(input);
+            }
+            bool IsValue(string input)
+            {
+                return ValueRegex.IsMatch(input);
+            }
             protected double GetValue(string input)
             {
                 if (string.IsNullOrEmpty(input))
@@ -90,26 +139,28 @@ namespace Ux
                     return value;
                 }
                 double v = 0;
-                bool b = false;
-                var sb = new StringBuilder(input);
+                int r = 0;
+                stringBuilder.Clear();
+                stringBuilder.Append(input);
                 while (true)
                 {
-                    if (TryParse(sb, OperatorType.Operator1, ref v))
+                    if (r <= 1 && TryParse(stringBuilder, OperatorType.Operator1, ref v))
                     {
-                        b = true;                        
+                        r = 1;
                         continue;
                     }
-                    if (TryParse(sb, OperatorType.Operator2, ref v))
+                    if (r <= 2 && TryParse(stringBuilder, OperatorType.Operator2, ref v))
                     {
-                        b = true;                        
+                        r = 2;
                         continue;
                     }
                     break;
                 }
-                if (b)
+                if (r > 0)
                 {
                     return v;
                 }
+                Log.Error($"公式解析错误:{stringBuilder.ToString()}");
                 return 0;
             }
             bool TryGetValue(string input, out double value)
@@ -123,49 +174,79 @@ namespace Ux
                     value = func();
                     return true;
                 }
+                if (ArgTypeDict.TryGetValue(input, out var argType))
+                {
+                    switch (argType)
+                    {
+                        case ArgType.Arg:
+                            value = expession.values[input];
+                            break;
+                        case ArgType.Value:
+                            value = Convert.ToDouble(input);
+                            break;
+                    }
+                    return true;
+                }
                 if (IsArgs(input))
                 {
+                    ArgTypeDict.Add(input, ArgType.Arg);
                     value = expession.values[input];
                     return true;
                 }
-                else if (IsValue(input))
+                if (IsValue(input))
                 {
-                    value = Convert.ToDouble(input);
-                    return true;
+                    if (double.TryParse(input, out value))
+                    {
+                        ArgTypeDict.Add(input, ArgType.Value);
+                        return true;
+                    }
+                    Log.Error($"{input} 不是Value类型");
                 }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
-            bool TryParse(StringBuilder input, OperatorType tag, ref double v)
+            bool TryParse(StringBuilder input, OperatorType type, ref double v)
             {
-                Match match = null;
-                switch (tag)
+                Regex regex = null;
+                ExpessionMatch match;
+                IDictionary<string, ExpessionMatch> dict = null;
+
+                switch (type)
                 {
                     case OperatorType.Operator1:
-                        match = Regex.Match(input.ToString(), Operator1);
+                        dict = Operator1Dict;
+                        regex = Operator1;
                         break;
                     case OperatorType.Operator2:
-                        match = Regex.Match(input.ToString(), Operator2);
+                        dict = Operator2Dict;
+                        regex = Operator2;
                         break;
                 }
-                if (match == null)
+                if (dict == null || regex == null) return false;
+
+                var key = input.ToString();
+                if (!dict.TryGetValue(key, out match))
+                {
+                    var temMatch = regex.Match(key);
+                    if (temMatch == null || !temMatch.Success)
+                    {
+                        return false;
+                    }
+                    var v1 = temMatch.Groups["var1"].Value;
+                    var v2 = temMatch.Groups["var2"].Value;
+                    var tag = temMatch.Groups["tag"].Value;
+                    match = new ExpessionMatch(temMatch.Value, v1, v2, tag);
+                    dict.Add(key, match);
+                }
+
+                if (!TryGetValue(match.V1, out var arg1))
                 {
                     return false;
                 }
-                var v1 = match.Groups["var1"].Value;
-                var v2 = match.Groups["var2"].Value;
-                var vtag = match.Groups["tag"].Value;
-                if (!TryGetValue(v1, out var arg1))
-                {                    
+                if (!TryGetValue(match.V2, out var arg2))
+                {
                     return false;
                 }
-                if (!TryGetValue(v2, out var arg2))
-                {                    
-                    return false;
-                }
-                switch (vtag)
+                switch (match.Data)
                 {
                     case "%":
                         v = arg1 % arg2;
@@ -183,7 +264,7 @@ namespace Ux
                         v = arg1 - arg2;
                         break;
                     default:
-                        Log.Error($"未知的数学运算符{vtag}");
+                        Log.Error($"未知的数学运算符{match.Data}");
                         break;
                 }
                 input.Replace(match.Value, v.ToString());
@@ -194,27 +275,29 @@ namespace Ux
         }
         class FunctionType : BaseType
         {
-            public string _fnName;
-            public FunctionType(string key, string fnName, string varName, ExpessionParse expession) : base(expession, key, varName)
+            public FunctionType(string key, ExpessionParse expession, ExpessionMatch match) : base(key, expession, match)
             {
-                _fnName = fnName;
             }
             public override double Value
             {
                 get
                 {
-                    if (singleDoubleMath.TryGetValue(_fnName, out var singleFunc))
+                    if (singleDoubleMath.TryGetValue(match.V1, out var singleFunc))
                     {
-                        return singleFunc(GetValue(varName));
+                        return singleFunc(GetValue(match.V2));
                     }
-                    if (!nameToFunction.TryGetValue(_fnName, out var func))
+                    if (!nameToFunction.TryGetValue(match.V1, out var func))
                     {
                         return 0;
                     }
-                    if (varName.Length > 0)
+                    if (match.V2.Length > 0)
                     {
-                        var vars = varName.Split(',');
-                        object[] objs = new object[vars.Length];
+                        if (!ArgDict.TryGetValue(match.V2, out var vars))
+                        {
+                            vars = match.V2.Split(',');
+                            ArgDict.Add(match.V2, vars);
+                        }
+                        var objs = new object[vars.Length];
                         for (int i = 0; i < vars.Length; i++)
                         {
                             objs[i] = GetValue(vars[i]);
@@ -223,68 +306,101 @@ namespace Ux
                     }
                     else
                     {
-                        return func.Invoke(new object[] { });
+                        return func.Invoke(null);
                     }
                 }
             }
         }
         class VariableType : BaseType
         {
-            public VariableType(string key, string varName, ExpessionParse expession) : base(expession, key, varName)
+            public VariableType(string key, ExpessionParse expession, ExpessionMatch match) : base(key, expession, match)
             {
             }
-            public override double Value => GetValue(varName);
+            public override double Value => GetValue(match.V2);
         }
         class ExpessionParse
         {
-            public Dictionary<string, double> values;
+            public Dictionary<string, double> values = new Dictionary<string, double>();
             public string text;
 
-            Queue<BaseType> _queue;
-            string arg_key;
+            List<BaseType> _queue = new List<BaseType>();
+            string _argKey;
             string _key;
 
             public ExpessionParse(string _text)
             {
                 text = _text;
                 _key = _text;
+                if (_Parse(ValueDict, ValueRegex))
+                {
+                    return;
+                }
+                if (_Parse(VariableDict, VariableRegex))
+                {
+                    return;
+                }
                 _ParseFn(0);
             }
-            void _ParseVar(int argIndex)
+            bool _Parse(IDictionary<string, ExpessionMatch> dict, Regex regex, int argIndex = 1)
             {
-                var m = Regex.Match(_key, VariableRegex);
-                if (m == null || m.Captures.Count == 0)
+                if (!dict.TryGetValue(_key, out var match))
                 {
-                    return;
-                }
-                argIndex++;
-                arg_key = string.Format("$arg_{0}", argIndex);
-                _queue.Enqueue(new VariableType(arg_key, m.Value, this));
-                _key = _key.Replace(m.Value, arg_key);
-            }
-            void _ParseFn(int argIndex)
-            {
-                var m = Regex.Match(_key, FnRegex);
-                if (m == null || m.Captures.Count == 0)
-                {
-                    _ParseVar(argIndex);
-                    return;
+                    var temMatch = regex.Match(_key);
+                    if (temMatch == null || !temMatch.Success)
+                    {
+                        match = new ExpessionMatch(null, null, null, null);
+                    }
+                    else
+                    {
+                        match = new ExpessionMatch(temMatch.Value, null, temMatch.Value, null);
+                    }
+                    dict.Add(_key, match);
                 }
 
-                argIndex++;
-                arg_key = string.Format("$arg_{0}", argIndex);
-                var fnName = m.Groups["fnName"].Value;
-                var varName = m.Groups["varName"].Value;
-                _queue ??= new Queue<BaseType>();
-                if (string.IsNullOrEmpty(fnName))
+                if (string.IsNullOrEmpty(match.Value))
                 {
-                    _queue.Enqueue(new VariableType(arg_key, varName, this));
+                    return false;
+                }
+                _argKey = string.Format(ArgStr, argIndex);
+                _queue.Add(new VariableType(_argKey, this, match));
+                _key = _key.Replace(match.Value, _argKey);
+                return true;
+            }
+
+            void _ParseFn(int argIndex)
+            {
+                if (!FnDict.TryGetValue(_key, out var match))
+                {
+                    var temMatch = FnRegex.Match(_key);
+                    if (temMatch == null || !temMatch.Success)
+                    {
+                        match = new ExpessionMatch(null, null, null, null);
+                    }
+                    else
+                    {
+                        var v1 = temMatch.Groups["fnName"].Value;
+                        var v2 = temMatch.Groups["varName"].Value;
+                        match = new ExpessionMatch(temMatch.Value, v1, v2, null);
+                    }
+                    FnDict.Add(_key, match);
+                }
+                argIndex++;
+                if (string.IsNullOrEmpty(match.Value))
+                {
+                    _Parse(OperatorDict, OperatorRegex, argIndex);
+                    return;
+                }
+                _argKey = string.Format(ArgStr, argIndex);
+
+                if (string.IsNullOrEmpty(match.V1))
+                {
+                    _queue.Add(new VariableType(_argKey, this, match));
                 }
                 else
                 {
-                    _queue.Enqueue(new FunctionType(arg_key, fnName, varName, this));
+                    _queue.Add(new FunctionType(_argKey, this, match));
                 }
-                _key = _key.Replace(m.Value, arg_key);
+                _key = _key.Replace(match.Value, _argKey);
                 _ParseFn(argIndex);
             }
 
@@ -292,21 +408,16 @@ namespace Ux
             {
                 get
                 {
-                    if (IsValue(arg_key))
-                    {
-                        return Convert.ToDouble(arg_key);
-                    }
-                    values ??= new Dictionary<string, double>();
                     values.Clear();
-                    while (_queue.Count > 0)
+                    for (int i = 0; i < _queue.Count; i++)
                     {
-                        var _q = _queue.Dequeue();
+                        var _q = _queue[i];
                         values[_q.key] = _q.Value;
                     }
-                    return values[arg_key];
+                    return values[_argKey];
                 }
             }
-            public string Desc => _key.Replace(arg_key, Value.ToString());
+            public string Desc => _key.Replace(_argKey, Value.ToString());
         }
         #endregion
 
@@ -314,7 +425,7 @@ namespace Ux
         /// <summary>
         /// 设置常量
         /// </summary>
-        public void AddVariables(string name, double value)
+        public void AddVariable(string name, double value)
         {
             nameToVariable.Remove(name);
             variables[name] = value;
@@ -324,7 +435,7 @@ namespace Ux
         /// </summary>
         /// <param name="name"></param>
         /// <param name="func">获取常量函数</param>
-        public void AddVariables(string name, Func<double> func)
+        public void AddVariable(string name, Func<double> func)
         {
             variables.Remove(name);
             nameToVariable[name] = func;
@@ -355,14 +466,7 @@ namespace Ux
         #endregion
 
         Dictionary<string, ExpessionParse> textToExpssion = new Dictionary<string, ExpessionParse>();
-        static bool IsArgs(string input)
-        {
-            return Regex.IsMatch(input, ArgRegex);
-        }
-        static bool IsValue(string input)
-        {
-            return Regex.IsMatch(input, ValueRegex);
-        }
+
         public double Parse(string _text)
         {
             if (!textToExpssion.TryGetValue(_text, out var e))
@@ -371,6 +475,15 @@ namespace Ux
                 textToExpssion.Add(_text, e);
             }
             return e.Value;
+        }
+        public string Desc(string _text)
+        {
+            if (!textToExpssion.TryGetValue(_text, out var e))
+            {
+                e = new ExpessionParse(_text);
+                textToExpssion.Add(_text, e);
+            }
+            return e.Desc;
         }
     }
 }
