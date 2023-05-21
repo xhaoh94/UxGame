@@ -7,6 +7,7 @@ using System.Collections;
 using System.Threading;
 using UnityEngine;
 using YooAsset;
+using UnityEngine.Profiling;
 
 namespace Ux
 {
@@ -30,7 +31,7 @@ namespace Ux
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
             }
-
+            using (zstring.Block()) { }
             Ins = this;
             Machine = StateMachine.CreateByPool();
             SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
@@ -73,25 +74,30 @@ namespace Ux
             {
                 return 1;
             });
-            string eval = "floor((1+test+getRemainsAwakenParameter())*getRemainsStarParameter({0},2+test)+getDisplaysParameter())";
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            double tt = 0;
-            for (int i = 0; i < 1; i++)
-            {
-                tt = ExpessionMgr.Ins.Parse(string.Format(eval, i));
-            }
-            sw.Stop();
-            Log.Debug("11 Eval Parse Time " + sw.ElapsedMilliseconds);
-            Log.Debug("11 Eval Parse Time " + tt.ToString());
-            var test = new AnalysisMain();
-            test.TT(eval, 1);
-            sw.Reset();
+            test = new AnalysisMain();
+            test.Init();
+            Test();
         }
 
+        void Test()
+        {
+            string eval = $"floor(({Time.frameCount}+test+getRemainsAwakenParameter())*getRemainsStarParameter(10,2+test)+getDisplaysParameter())";
+            Profiler.BeginSample("Eval 11");
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            var tt = ExpessionMgr.Ins.Parse(eval);
+            sw.Stop();
+            Profiler.EndSample();
+            Log.Debug("11 Eval Parse Time " + sw.ElapsedMilliseconds);
+            Log.Debug("11 Eval Parse Time " + tt.ToString());
 
+            test.TT(eval, 1);
+        }
+
+        AnalysisMain test;
         void Update()
         {
+            Test();
 #if UNITY_EDITOR
             if (UnityEditor.EditorApplication.isCompiling)
             {

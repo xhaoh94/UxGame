@@ -95,7 +95,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.RenderPipelines.Core.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniTask.TextMeshPro", "UniTask.TextMeshPro.csproj", "{C0F56DAE-2FA9-816E-5F7E-F196D8FFE5F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-firstpass", "Assembly-CSharp-firstpass.csproj", "{2662B409-6332-1E56-D797-C9025C53BDD6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zstring", "zstring.csproj", "{97274FCA-0A57-983F-0498-33C74A3F453D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.RenderPipelines.Universal.Shaders", "Unity.RenderPipelines.Universal.Shaders.csproj", "{060E532F-A7CC-1A16-01B9-0629A5A15367}"
 EndProject
@@ -373,10 +373,10 @@ Global
 		{C0F56DAE-2FA9-816E-5F7E-F196D8FFE5F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0F56DAE-2FA9-816E-5F7E-F196D8FFE5F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0F56DAE-2FA9-816E-5F7E-F196D8FFE5F0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2662B409-6332-1E56-D797-C9025C53BDD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2662B409-6332-1E56-D797-C9025C53BDD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2662B409-6332-1E56-D797-C9025C53BDD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2662B409-6332-1E56-D797-C9025C53BDD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97274FCA-0A57-983F-0498-33C74A3F453D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97274FCA-0A57-983F-0498-33C74A3F453D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97274FCA-0A57-983F-0498-33C74A3F453D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97274FCA-0A57-983F-0498-33C74A3F453D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{060E532F-A7CC-1A16-01B9-0629A5A15367}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{060E532F-A7CC-1A16-01B9-0629A5A15367}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{060E532F-A7CC-1A16-01B9-0629A5A15367}.Release|Any CPU.ActiveCfg = Release|Any CPU

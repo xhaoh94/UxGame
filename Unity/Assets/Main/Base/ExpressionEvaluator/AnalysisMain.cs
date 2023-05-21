@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using UnityEngine.Profiling;
 using Ux;
 
 namespace Analysis
@@ -28,8 +29,7 @@ namespace Analysis
             //RegGlobalForParse();
             var test = GetRPN("(-10)+5*1+5*PARAM", out var tt);
         }
-
-        public void TT(string eval, int cnt)
+        public void Init()
         {
             SetVariable("test", 11);
             SetFormula("getRemainsStarParameter", (object[] args) =>
@@ -44,14 +44,16 @@ namespace Analysis
             {
                 return 1;
             });
+        }
+        public void TT(string eval, int cnt)
+        {
+           
+            Profiler.BeginSample("Eval22");
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-            double t = 0;
-            for (int i = 0; i < cnt; i++)
-            {
-                t = GetExpressionValue(string.Format(eval, i));
-            }
+            double t = GetExpressionValue(eval);  
             sw.Stop();
+            Profiler.EndSample();
             Log.Debug("22 Eval Parse Time " + sw.ElapsedMilliseconds);
             Log.Debug("22 Eval Parse Time " + t.ToString());
         }
