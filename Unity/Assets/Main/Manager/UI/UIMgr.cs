@@ -128,7 +128,7 @@ namespace Ux
             }
 
             void RemoveTime()
-            {                
+            {
                 if (timeKey == 0) return;
                 TimeMgr.Ins.RemoveKey(timeKey);
                 timeKey = 0;
@@ -449,7 +449,6 @@ namespace Ux
             }
         }
 
-        // ReSharper disable Unity.PerformanceAnalysis
         private async UniTask<bool> ToShow(string id, ICollection<IUI> arr)
         {
             var data = GetUIData(id);
@@ -808,8 +807,11 @@ namespace Ux
             download = ResMgr.Lazyload.GetDownloaderByTags(tags);
             if (download == null) return false;
             Log.Debug($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
-            Dialog.DoubleBtn("下载", $"一共发现了{download.TotalDownloadCount}个资源需要更新下载。",
-                "下载", () =>
+            Dialog.DoubleBtn(
+                "下载",
+                $"一共发现了{download.TotalDownloadCount}个资源需要更新下载。",
+                "下载", 
+                () =>
                 {
                     //TODO 显示下载界面
                     _idDownloader.Add(id, download);
