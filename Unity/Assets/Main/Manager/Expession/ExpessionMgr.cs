@@ -63,6 +63,7 @@ namespace Ux
             { "truncate", Math.Truncate },
         };
 
+        static IDictionary<Regex, Dictionary<string, bool>> RegexToMatch = new Dictionary<Regex, Dictionary<string, bool>>();
         static IDictionary<string, MatchData> Operator1Dict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> Operator2Dict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> FnDict = new Dictionary<string, MatchData>();
@@ -171,12 +172,11 @@ namespace Ux
                     }
                     break;
                 }
-                if (r > 0)
+                if (r == 0)
                 {
-                    return v;
-                }
-                Log.Error(zstring.Format("公式解析错误:{0}", str));
-                return 0;
+                    Log.Error(zstring.Format("公式解析错误:{0}", str));
+                }                
+                return v;
             }
             bool TryGetValue(string input, out double value)
             {
@@ -227,21 +227,29 @@ namespace Ux
                     var temMatch = regex.Match(input);
                     if (temMatch == null || !temMatch.Success)
                     {
-                        return false;
+                        match = new MatchData();
                     }
-                    var v1 = temMatch.Groups["var1"].Value;
-                    var v2 = temMatch.Groups["var2"].Value;
-                    var tag = temMatch.Groups["tag"].Value;
-                    match = new MatchData(temMatch.Value, v1, v2, tag);
+                    else
+                    {
+                        var v1 = temMatch.Groups["var1"].Value;
+                        var v2 = temMatch.Groups["var2"].Value;
+                        var tag = temMatch.Groups["tag"].Value;
+                        match = new MatchData(temMatch.Value, v1, v2, tag);
+                    }
                     dict.Add(input, match);
                 }
-
-                if (!TryGetValue(match.V2, out var arg1))
+                if (string.IsNullOrEmpty(match.Value))
                 {
                     return false;
                 }
-                if (!TryGetValue(match.V1, out var arg2))
+                if (!TryGetValue(match.V1, out var arg1))
                 {
+                    Log.Error($"公式无法获取正确的值{match.V1}");
+                    return false;
+                }
+                if (!TryGetValue(match.V2, out var arg2))
+                {
+                    Log.Error($"公式无法获取正确的值{match.V2}");
                     return false;
                 }
                 switch (match.Type)
@@ -344,7 +352,7 @@ namespace Ux
                     }
                     _ParseFn(0, ref input);
                     _argValue = input.ToString();
-                } 
+                }
             }
             bool _Parse(IDictionary<string, MatchData> dict, Regex regex, int argIndex, ref zstring input)
             {

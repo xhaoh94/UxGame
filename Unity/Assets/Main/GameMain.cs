@@ -81,7 +81,7 @@ namespace Ux
 
         void Test()
         {
-            string eval = $"floor(({Time.frameCount}+test+getRemainsAwakenParameter())*getRemainsStarParameter(10,2+test)+getDisplaysParameter())";
+            string eval = $"floor((11+test+getRemainsAwakenParameter())*getRemainsStarParameter(10,2+test)+getDisplaysParameter())";
             Profiler.BeginSample("Eval 11");
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
