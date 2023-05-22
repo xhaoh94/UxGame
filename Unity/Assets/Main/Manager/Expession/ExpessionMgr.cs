@@ -26,7 +26,8 @@ namespace Ux
             { "e", Math.E },
         };
         static IDictionary<string, Func<double>> nameToVariable = new Dictionary<string, Func<double>>();
-        static IDictionary<string, Func<object[], double>> nameToFunction = new Dictionary<string, Func<object[], double>>();
+        static IDictionary<string, Func<double[], double>> nameToDoubleFunc = new Dictionary<string, Func<double[], double>>();
+        static IDictionary<string, Func<string[], double>> nameToStringFunc = new Dictionary<string, Func<string[], double>>();
         static IDictionary<string, Func<double, double>> singleDoubleMath = new Dictionary<string, Func<double, double>>(StringComparer.Ordinal)
         {
             { "Abs", Math.Abs },
@@ -39,6 +40,8 @@ namespace Ux
             { "atan", Math.Atan },
             { "Ceiling", Math.Ceiling },
             { "ceiling", Math.Ceiling },
+            { "Ceil", Math.Ceiling },
+            { "ceil", Math.Ceiling },
             { "Cos", Math.Cos },
             { "cos", Math.Cos },
             { "Cosh", Math.Cosh },
@@ -61,9 +64,10 @@ namespace Ux
             { "tanh", Math.Tanh },
             { "Truncate", Math.Truncate },
             { "truncate", Math.Truncate },
+            { "Round", Math.Round },
+            { "round", Math.Round },
         };
 
-        static IDictionary<Regex, Dictionary<string, bool>> RegexToMatch = new Dictionary<Regex, Dictionary<string, bool>>();
         static IDictionary<string, MatchData> Operator1Dict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> Operator2Dict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> FnDict = new Dictionary<string, MatchData>();
@@ -175,7 +179,7 @@ namespace Ux
                 if (r == 0)
                 {
                     Log.Error(zstring.Format("公式解析错误:{0}", str));
-                }                
+                }
                 return v;
             }
             bool TryGetValue(string input, out double value)
@@ -295,28 +299,39 @@ namespace Ux
                     {
                         return singleFunc(GetValue(match.V1));
                     }
-                    if (!nameToFunction.TryGetValue(match.V2, out var func))
+                    string[] Func(string content)
                     {
-                        return 0;
-                    }
-                    if (match.V1.Length > 0)
-                    {
-                        if (!ArgDict.TryGetValue(match.V1, out var vars))
+                        if (string.IsNullOrEmpty(content) || content.Length == 0)
                         {
-                            vars = ((string)match.V1).Split(',');
-                            ArgDict.Add(match.V1, vars);
+                            return null;
                         }
-                        var objs = new object[vars.Length];
+                        if (!ArgDict.TryGetValue(content, out var vars))
+                        {
+                            vars = content.Split(',');
+                            ArgDict.Add(content, vars);
+                        }
+                        return vars;
+                    }
+                    if (nameToDoubleFunc.TryGetValue(match.V2, out var func1))
+                    {
+                        var vars = Func(match.V1);
+                        if (vars == null)
+                        {
+                            return func1.Invoke(null);
+                        }
+                        var objs = new double[vars.Length];
                         for (int i = 0; i < vars.Length; i++)
                         {
                             objs[i] = GetValue(vars[i]);
                         }
-                        return func.Invoke(objs);
+                        return func1.Invoke(objs);
                     }
-                    else
+                    if (nameToStringFunc.TryGetValue(match.V2, out var func2))
                     {
-                        return func.Invoke(null);
+                        return func2.Invoke(Func(match.V1));
                     }
+                    Log.Error($"{match.V2}没有注册解析函数");
+                    return 0;
                 }
             }
         }
@@ -488,36 +503,93 @@ namespace Ux
         /// </summary>
         /// <param name="name"></param>
         /// <param name="func">获取函数</param>
-        public void AddFunction(string name, Func<object[], double> func)
+        public void AddFunction(string name, Func<double[], double> func)
         {
-            nameToFunction[name] = func;
+            nameToStringFunc.Remove(name);
+            nameToDoubleFunc[name] = func;
+        }
+        /// <summary>
+        /// 设置函数
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="func">获取函数</param>
+        public void AddFunction(string name, Func<string[], double> func)
+        {
+            nameToDoubleFunc.Remove(name);
+            nameToStringFunc[name] = func;
         }
         public void RemoveFunction(string name)
         {
-            nameToFunction.Remove(name);
+            nameToDoubleFunc.Remove(name);
+            nameToStringFunc.Remove(name);
         }
         #endregion
 
-        Dictionary<string, ExpessionParse> strToExpssion = new Dictionary<string, ExpessionParse>();
+        Dictionary<string, ExpessionParse> inputToExpssion = new Dictionary<string, ExpessionParse>();
+        protected override void OnInit()
+        {
+            InitGlobalFunc();
+        }
 
+        #region 全局方法
+        void InitGlobalFunc()
+        {
+            AddFunction("Max", Max);
+            AddFunction("max", Max);
+            AddFunction("Min", Min);
+            AddFunction("min", Min);
+            AddFunction("Pow", Pow);
+            AddFunction("pow", Pow);
+        }
+        double Max(double[] objs)
+        {
+            if (objs.Length != 2)
+            {
+                Log.Error("Max 参数错误");
+                return 0;
+            }
+            return Math.Max(objs[0], objs[1]);
+        }
+        double Min(double[] objs)
+        {
+            if (objs.Length != 2)
+            {
+                Log.Error("Min 参数错误");
+                return 0;
+            }
+            return Math.Min(objs[0], objs[1]);
+        }
+        double Pow(double[] objs)
+        {
+            if (objs.Length != 2)
+            {
+                Log.Error("Pow 参数错误");
+                return 0;
+            }
+            return Math.Pow(objs[0], objs[1]);
+        }
+        #endregion
+
+        #region 解析
         public double Parse(string input)
         {
-            if (!strToExpssion.TryGetValue(input, out var e))
+            if (!inputToExpssion.TryGetValue(input, out var e))
             {
                 e = new ExpessionParse(input);
-                strToExpssion.Add(input, e);
+                inputToExpssion.Add(input, e);
             }
             return e.Value;
         }
         public string Desc(string input)
         {
-            if (!strToExpssion.TryGetValue(input, out var e))
+            if (!inputToExpssion.TryGetValue(input, out var e))
             {
                 e = new ExpessionParse(input);
-                strToExpssion.Add(input, e);
+                inputToExpssion.Add(input, e);
             }
             return e.Desc;
         }
+        #endregion
     }
 }
 

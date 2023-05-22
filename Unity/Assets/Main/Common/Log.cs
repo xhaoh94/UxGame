@@ -12,33 +12,49 @@ public static class Log
     {
         UnityEngine.Debug.Log(msg);
     }
-
+    public static void Debug(object msg)
+    {
+        UnityEngine.Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
+    }
     public static void Info(string msg)
     {
         UnityEngine.Debug.Log(msg);
     }
-
-    // ReSharper disable Unity.PerformanceAnalysis
+    public static void Info(object msg)
+    {
+        UnityEngine.Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
+    }
+    
     public static void Warning(string msg)
     {
         UnityEngine.Debug.LogWarning(msg);
     }
-
-    // ReSharper disable Unity.PerformanceAnalysis
+    public static void Warning(object msg)
+    {
+        UnityEngine.Debug.LogWarning(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
+    }
+    
     public static void Error(string msg)
     {
         UnityEngine.Debug.LogError(msg);
     }
-
-    // ReSharper disable Unity.PerformanceAnalysis
+    
     public static void Error(Exception e)
     {
         UnityEngine.Debug.LogException(e);
+    }
+    public static void Error(object msg)
+    {
+        UnityEngine.Debug.LogError(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
     }
 
     public static void Fatal(string msg)
     {
         UnityEngine.Debug.LogAssertion(msg);
+    }
+    public static void Fatal(object msg)
+    {
+        UnityEngine.Debug.LogAssertion(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
     }
 
     public static void Trace(string message, params object[] args)
@@ -69,10 +85,5 @@ public static class Log
     public static void Fatal(string message, params object[] args)
     {
         UnityEngine.Debug.LogAssertionFormat(message, args);
-    }
-
-    public static void Msg(object msg)
-    {
-        UnityEngine.Debug.Log(msg);
     }
 }

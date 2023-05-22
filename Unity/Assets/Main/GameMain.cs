@@ -62,15 +62,15 @@ namespace Ux
             //// 运行补丁流程
             //PatchMgr.Instance.Run(PlayMode);
             ExpessionMgr.Ins.AddVariable("test", 11);
-            ExpessionMgr.Ins.AddFunction("getRemainsStarParameter", (object[] args) =>
+            ExpessionMgr.Ins.AddFunction("getRemainsStarParameter", (double[] args) =>
             {
-                return Convert.ToDouble(args[0]) + Convert.ToDouble(args[1]);
+                return args[0] + args[1];
             });
-            ExpessionMgr.Ins.AddFunction("getRemainsAwakenParameter", (object[] args) =>
+            ExpessionMgr.Ins.AddFunction("getRemainsAwakenParameter", (double[] args) =>
             {
                 return 1;
             });
-            ExpessionMgr.Ins.AddFunction("getDisplaysParameter", (object[] args) =>
+            ExpessionMgr.Ins.AddFunction("getDisplaysParameter", (double[] args) =>
             {
                 return 1;
             });

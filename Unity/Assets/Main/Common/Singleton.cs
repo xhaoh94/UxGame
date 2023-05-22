@@ -16,6 +16,7 @@ public class Singleton<T> where T : class, new()
             try
             {
                 _ins = new T();
+                (_ins as Singleton<T>).OnInit();
             }
             catch (MissingMethodException ex)
             {
@@ -32,5 +33,9 @@ public class Singleton<T> where T : class, new()
         }
     }
 
+    protected virtual void OnInit()
+    {
+
+    }
     #endregion
 }
