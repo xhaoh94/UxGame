@@ -21,11 +21,11 @@ namespace Ux
             "Unity.Main.dll",
             "mscorlib.dll",
             "System.dll",
-            "System.Core.dll",
-            "CatJson.dll",
+            "System.Core.dll",            
             "FairyGUI.dll",
             "YooAsset.dll",
-            "Protobuf-net.dll"
+            "Protobuf-net.dll",
+            "ZString.dll"
         };
 
 

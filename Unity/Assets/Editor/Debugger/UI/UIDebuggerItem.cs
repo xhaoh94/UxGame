@@ -10,7 +10,9 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
 {
     private VisualTreeAsset _visualAsset;
 
-    Label _txtID;
+
+    Label _txtIDStr;
+    TextField _txtID;
     TextField _txtType;
     TextField _txtPkgs;
     TextField _txtTags;
@@ -38,7 +40,8 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
     /// </summary>
     void CreateView()
     {
-        _txtID = this.Q<Label>("txtID");
+        _txtIDStr = this.Q<Label>("txtIDStr");
+        _txtID = this.Q<TextField>("txtID");
         _txtType = this.Q<TextField>("txtType");
         _txtPkgs = this.Q<TextField>("txtPkgs");
         _txtTags = this.Q<TextField>("txtTags");
@@ -50,7 +53,9 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
 
     public void SetData(IUIData data)
     {
-        _txtID.text = data.ID;
+        var zs = data.IDStr.Split("_");
+        _txtIDStr.text = zs[0];
+        _txtID.SetValueWithoutNotify(zs[1]);
         _txtType.SetValueWithoutNotify(data.CType.FullName);
 
 
@@ -87,7 +92,7 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
         if (data.TabData != null)
         {
             _txtParID.style.display = DisplayStyle.Flex;
-            _txtParID.SetValueWithoutNotify(data.TabData.PID);
+            _txtParID.SetValueWithoutNotify(data.TabData.PID.ToString());
             if (data.TabData.TagId == 0)
             {
                 _txtParRedPoint.style.display = DisplayStyle.None;

@@ -145,7 +145,7 @@ namespace Ux
             {
                 if (string.IsNullOrEmpty(input))
                 {
-                    Log.Error(zstring.Format("公式解析错误:{0}", expession.text));
+                    Log.Error(string.Format("公式解析错误:{0}", expession.text));
                     return 0;
                 }
                 if (TryGetValue(input, out var value))
@@ -178,7 +178,10 @@ namespace Ux
                 }
                 if (r == 0)
                 {
-                    Log.Error(zstring.Format("公式解析错误:{0}", str));
+                    using (zstring.Block())
+                    {
+                        Log.Error(zstring.Format("公式解析错误:{0}", str));
+                    }
                 }
                 return v;
             }

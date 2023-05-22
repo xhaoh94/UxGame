@@ -6,7 +6,10 @@ namespace Ux
     public interface IUI
     {
         UIState State { get; }
-        string ID { get; }
+#if UNITY_EDITOR
+        string IDStr { get; }
+#endif
+        int ID { get; }
         IUIData Data { get; }
         bool IsDestroy { get; }
         void InitData(IUIData data, Action<IUI> remove);
@@ -18,7 +21,6 @@ namespace Ux
 
     public abstract class UIBase : UIObject, IUI
     {
-
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         public virtual bool IsDestroy => true;
@@ -46,8 +48,10 @@ namespace Ux
             return UIPackage.CreateObject(pkg, res);
         }
 
-        public string ID => Data.ID;
-
+        public int ID => Data.ID;
+#if UNITY_EDITOR
+        public string IDStr => Data.IDStr;
+#endif
         public IUIData Data { get; private set; }
 
         public virtual void Hide()

@@ -17,7 +17,7 @@ namespace Ux.UI
             base.OnShow(param);
             TimeMgr.Ins.DoTimer(5, 1, () =>
             {
-                var data = UIMgr.Ins.GetUIData("MultipleView");
+                var data = UIMgr.Ins.GetUIData(ID);
                 data.Children.Reverse();
                 RefreshTab();
                 Log.Debug("RefreshTab");

@@ -6,10 +6,10 @@ namespace Ux
 {
     public abstract class UITabFrame : UIObject
     {
-        private List<string> _tabDatas;
+        private List<int> _tabDatas;
         private Type _tabRenderer;
 
-        public int SelectIndex => GetIndex(SelectItem?.ID);
+        public int SelectIndex => GetIndex(SelectItem != null ? SelectItem.ID : 0);
         public UITabView SelectItem { get; private set; }
 
         readonly List<UITabBtn> _frameTabs = new List<UITabBtn>();
@@ -46,7 +46,7 @@ namespace Ux
             var _children = parent.Data.Children;
             if (_children == null || _children.Count == 0) return;
             __listTab.itemRenderer = OnItemRenderer;
-            _tabDatas = new List<string>();
+            _tabDatas = new List<int>();
             OnHideCallBack += _Hide;
         }
 
@@ -116,16 +116,16 @@ namespace Ux
                 Log.Error("找不到对应的CHILD");
                 return;
             }
-            
+
             HideCurrent(false);
             __tabContent.AddChild(tab.GObject);
             if (index != __listTab.selectedIndex) __listTab.selectedIndex = index;
             SelectItem = tab;
         }
 
-        private int GetIndex(string id)
+        private int GetIndex(int id)
         {
-            if (string.IsNullOrEmpty(id)) return -1;
+            if (id == 0) return -1;
             if (_tabDatas == null) return -1;
             return _tabDatas.FindIndex(a => a == id);
         }
@@ -148,7 +148,7 @@ namespace Ux
         private void OnTabClick(int index)
         {
             var id = _tabDatas[index];
-            if (string.IsNullOrEmpty(id)) return;
+            if (id == 0) return;
             if (SelectItem != null && SelectItem.ID == id) return;
             UIMgr.Ins.Show(id);
         }
@@ -157,7 +157,7 @@ namespace Ux
         {
             if (_tabDatas == null) return;
             var id = _tabDatas[index];
-            if (string.IsNullOrEmpty(id)) return;
+            if (id == 0) return;
             var data = UIMgr.Ins.GetUIData(id);
             if (data == null) return;
             _tabRenderer ??= typeof(CommonTabBtn);

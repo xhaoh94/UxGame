@@ -17,7 +17,7 @@ public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDe
     private int tPage = 1;
     private int curPage = 1;
     private int pageMaxCnt = 5;
-    Dictionary<string, V> dict;
+    Dictionary<string, V> dict;    
 
     private TextField _inputSearch;
     private VisualElement _vePage;

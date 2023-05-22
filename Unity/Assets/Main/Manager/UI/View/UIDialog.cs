@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+
 namespace Ux
 {
     public class UIDialog : UIWindow
@@ -58,7 +60,7 @@ namespace Ux
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            
+
 
             switch (dialogData.DType)
             {
@@ -129,8 +131,8 @@ namespace Ux
             public DialogType DType { get; }
             public Dictionary<ParamType, object> Param { get; }
         }
-        public readonly Dictionary<string, IUI> _waitDels = new Dictionary<string, IUI>();
-        readonly Dictionary<Type, Queue<string>> _pool = new Dictionary<Type, Queue<string>>();
+        public readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
+        readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
         void _Hide(UIDialog mb)
         {
             if (mb.IsDestroy)
@@ -142,7 +144,7 @@ namespace Ux
                 var type = mb.GetType();
                 if (!_pool.TryGetValue(type, out var ids))
                 {
-                    ids = new Queue<string>();
+                    ids = new Queue<int>();
                     _pool.Add(type, ids);
                 }
                 ids.Enqueue(mb.ID);
@@ -152,7 +154,7 @@ namespace Ux
         {
             _pool.Clear();
         }
-        string __GetTypeUIID(Type type, string[] pkgs, string[] lazyloads)
+        int __GetTypeUIID(Type type, string[] pkgs, string[] lazyloads)
         {
             if (_pool.TryGetValue(type, out var ids) && ids.Count > 0)
             {
@@ -169,11 +171,10 @@ namespace Ux
                     return key;
                 }
             }
-
-            var id = $"{type.Name}_{IDGenerater.GenerateId()}";
-            var data = new UIData(id, type, pkgs, lazyloads);
+            
+            var data = new UIData((int)IDGenerater.GenerateId(), type, pkgs, lazyloads);
             UIMgr.Ins.RegisterUI(data);
-            return id;
+            return data.ID;
         }
         public void SingleBtn<T>(string[] pkgs, string title, string content, string btn1Title, Action btn1Fn = null) where T : UIDialog
         {

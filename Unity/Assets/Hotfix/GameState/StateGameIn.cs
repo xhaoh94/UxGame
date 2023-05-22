@@ -11,16 +11,16 @@ namespace Ux
         {
 
         }
-        protected override void OnEnter(object args = null)
+        protected override async void OnEnter(object args = null)
         {
-            //var ui = await UIMgr.Instance.Show<UI.MainView>().Task();
-            MapModule.Instance.EnterMap("Map001");
+            var ui = await UIMgr.Ins.Show<UI.MainView>().Task();
+            //MapModule.Ins.EnterMap("Map001");
             UIMgr.Ins.Hide<UI.LoginView>();
         }
 
         protected override void OnExit()
         {
-            //UIMgr.Instance.Hide<UI.MainView>();
+            UIMgr.Ins.Hide<UI.MainView>();
         }
 
         protected override void OnUpdate()

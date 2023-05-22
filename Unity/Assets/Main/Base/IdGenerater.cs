@@ -4,16 +4,16 @@ namespace Ux
 {
     public static class IDGenerater
     {
-        private static long head;
 
-        private static ushort value;        
+        private static ushort value;
 
         public static long GenerateId()
         {
             long time = TimeMgr.Ins.LocalTime.TimeStamp / 10;
 
-            return head + (time << 18) + ++value;
+            return (time << 18) + ++value;
         }
+
 
         public static Guid NewGuid()
         {

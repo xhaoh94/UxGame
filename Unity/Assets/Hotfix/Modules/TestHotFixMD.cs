@@ -10,10 +10,10 @@ namespace Ux
         {
             base.OnInit();
 
-            var par = new UITestData("3333", typeof(LoginTestUI), new[] { "Common", "Login" }, null);
-            var data1 = new UITestData("333301", typeof(LoginTestSub), null, null, new UITabData("3333", "测试1"));
-            var data3 = new UITestData("333302", typeof(LoginTestSub), null, null, new UITabData("3333", "测试3"));
-            TTTChilds.Add("3333", new List<string>() { data1.ID, data3.ID });
+            var par = new UITestData(3333, typeof(LoginTestUI), new[] { "Common", "Login" }, null);
+            var data1 = new UITestData(333301, typeof(LoginTestSub), null, null, new UITabData(3333, "测试1"));
+            var data3 = new UITestData(333302, typeof(LoginTestSub), null, null, new UITabData(3333, "测试3"));
+            TTTChilds.Add(3333, new List<int>() { data1.ID, data3.ID });
             UIMgr.Ins.RegisterUI(par);
             UIMgr.Ins.RegisterUI(data1);
             UIMgr.Ins.RegisterUI(data3);
@@ -22,7 +22,7 @@ namespace Ux
         {
             TTTChilds.Clear();
         }
-        public static Dictionary<string, List<string>> TTTChilds = new Dictionary<string, List<string>>();        
+        public static Dictionary<int, List<int>> TTTChilds = new Dictionary<int, List<int>>();        
     }
 
     public class TTData
@@ -55,11 +55,11 @@ namespace Ux
 
     public class UITestData : UIData
     {
-        public UITestData(string id, Type type, string[] pkgs, string[] lazyloads, IUITabData tabData = null) : base(id, type, pkgs, lazyloads, tabData)
+        public UITestData(int id, Type type, string[] pkgs, string[] lazyloads, IUITabData tabData = null) : base(id, type, pkgs, lazyloads, tabData)
         {
         }
 
-        public override List<string> Children
+        public override List<int> Children
         {
             get
             {

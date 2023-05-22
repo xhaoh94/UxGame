@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Ux
 {
@@ -9,41 +10,41 @@ namespace Ux
         {
 
         }
-        public UIAttribute(string id)
+        public UIAttribute(int id)
         {
             this.id = id;
         }
 
-        public UIAttribute(string pId, string title, int tagId = 0)
+        public UIAttribute(int pId, string title, int tagId = 0)
         {
             tabData = new UITabData(pId, title, tagId);
         }
-        
+
         public UIAttribute(Type pId, string title, int tagId = 0)
         {
-            tabData = new UITabData(pId.FullName, title, tagId);
+            tabData = new UITabData(Animator.StringToHash(pId.FullName), title, tagId);
         }
-        
-        public UIAttribute(string id, string pId, string title, int tagId = 0)
+
+        public UIAttribute(int id, int pId, string title, int tagId = 0)
         {
             this.id = id;
             tabData = new UITabData(pId, title, tagId);
         }
-        public UIAttribute(string id, Type pId, string title, int tagId = 0)
+        public UIAttribute(int id, Type pId, string title, int tagId = 0)
         {
             this.id = id;
-            tabData = new UITabData(pId.FullName, title, tagId);
+            tabData = new UITabData(Animator.StringToHash(pId.FullName), title, tagId);
         }
         public UIAttribute(IUITabData tabData)
         {
             this.tabData = tabData;
         }
-        public UIAttribute(string id, IUITabData tabData)
+        public UIAttribute(int id, IUITabData tabData)
         {
             this.id = id;
             this.tabData = tabData;
         }
-        public readonly string id;
+        public readonly int id;
         public readonly IUITabData tabData;
     }
 

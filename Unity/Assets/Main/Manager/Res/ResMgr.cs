@@ -65,10 +65,10 @@ namespace Ux
             }
             catch
             {
-                throw (new Exception(location+":资源找不到Package"));
+                throw (new Exception($"资源找不到Package{location}"));
             }
         }
-        
+
         #region 原生文件
         /// <summary>
         /// 同步加载原生文件
@@ -111,17 +111,17 @@ namespace Ux
         }
 
 
-       
+
         #endregion
-        
+
         #region 资源加载
         /// <summary>
-		/// 异步加载场景
-		/// </summary>
-		/// <param name="location">场景的定位地址</param>
-		/// <param name="sceneMode">场景加载模式</param>
-		/// <param name="activateOnLoad">加载完毕时是否主动激活</param>
-		/// <param name="priority">优先级</param>
+        /// 异步加载场景
+        /// </summary>
+        /// <param name="location">场景的定位地址</param>
+        /// <param name="sceneMode">场景加载模式</param>
+        /// <param name="activateOnLoad">加载完毕时是否主动激活</param>
+        /// <param name="priority">优先级</param>
         public SceneOperationHandle LoadSceneAsync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single, bool activateOnLoad = true, int priority = 100)
         {
             var package = GetPackageByLocation(location);

@@ -47,36 +47,37 @@ namespace Ux
         }
 
 
-        //IEnumerator Start()
-        void Start()
+        IEnumerator Start()
+        //void Start()
         {
 #if !UNITY_EDITOR
             if (PlayMode == EPlayMode.EditorSimulateMode)
                 PlayMode = EPlayMode.HostPlayMode;
 #endif
-            //Log.Debug($"资源系统运行模式：{PlayMode}");
+            Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            //yield return ResMgr.Instance.Initialize();
+            yield return ResMgr.Ins.Initialize();
 
-            //typeof(GameMain).Assembly.Initialize();
-            //// 运行补丁流程
-            //PatchMgr.Instance.Run(PlayMode);
-            ExpessionMgr.Ins.AddVariable("test", 11);
-            ExpessionMgr.Ins.AddFunction("getRemainsStarParameter", (double[] args) =>
-            {
-                return args[0] + args[1];
-            });
-            ExpessionMgr.Ins.AddFunction("getRemainsAwakenParameter", (double[] args) =>
-            {
-                return 1;
-            });
-            ExpessionMgr.Ins.AddFunction("getDisplaysParameter", (double[] args) =>
-            {
-                return 1;
-            });
-            test = new AnalysisMain();
-            test.Init();
-            Test();
+            typeof(GameMain).Assembly.Initialize();
+            // 运行补丁流程
+            PatchMgr.Ins.Run(PlayMode);
+
+            //ExpessionMgr.Ins.AddVariable("test", 11);
+            //ExpessionMgr.Ins.AddFunction("getRemainsStarParameter", (double[] args) =>
+            //{
+            //    return args[0] + args[1];
+            //});
+            //ExpessionMgr.Ins.AddFunction("getRemainsAwakenParameter", (double[] args) =>
+            //{
+            //    return 1;
+            //});
+            //ExpessionMgr.Ins.AddFunction("getDisplaysParameter", (double[] args) =>
+            //{
+            //    return 1;
+            //});
+            //test = new AnalysisMain();
+            //test.Init();
+            //Test();
         }
 
         void Test()
@@ -97,7 +98,7 @@ namespace Ux
         AnalysisMain test;
         void Update()
         {
-            Test();
+            //Test();
 #if UNITY_EDITOR
             if (UnityEditor.EditorApplication.isCompiling)
             {

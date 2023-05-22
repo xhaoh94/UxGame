@@ -2,21 +2,25 @@
 #endif
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Ux
 {
     //如果有动态生成的界面 可以继承此接口后 通过UIMgr注册即可
     public interface IUIData
     {
-        string ID { get; }
+        int ID { get; }
+#if UNITY_EDITOR
+        string IDStr { get; }
+#endif
         Type CType { get; }
         string[] Pkgs { get; }
         string[] Lazyloads { get; }
-        List<string> Children { get; }
+        List<int> Children { get; }
         IUITabData TabData { get; }
 
-        string GetBottomID();
-        string GetTopID();
+        int GetBottomID();
+        int GetTopID();
     }
 
     public interface IUITabData
@@ -24,45 +28,49 @@ namespace Ux
         /// <summary>
         /// 父界面ID
         /// </summary>
-        string PID { get; }
-
+        int PID { get; }
+#if UNITY_EDITOR
+        string PIDStr { get; }
+#endif
         string Title { get; }
         int TagId { get; }
     }
 
     public class UIData : IUIData
     {
-        public UIData(string id, Type type, string[] pkgs, string[] lazyloads, IUITabData tabData = null)
+        public UIData(int id, Type type, string[] pkgs, string[] lazyloads, IUITabData tabData = null)
         {
             ID = id;
             CType = type;
             Pkgs = pkgs ?? new string[] { };
             Lazyloads = lazyloads ?? new string[] { };
             TabData = tabData;
-            Children = new List<string>();
+            Children = new List<int>();
         }
-
-        public virtual string ID { get; }
+        public virtual int ID { get; }
+#if UNITY_EDITOR
+        public string IDStr => $"{CType.FullName}_{ID}";
+#endif
         public virtual Type CType { get; }
         public virtual string[] Pkgs { get; }
         public virtual string[] Lazyloads { get; }
-        public virtual List<string> Children { get; }
+        public virtual List<int> Children { get; }
         public virtual IUITabData TabData { get; }
 
-        public virtual string GetBottomID()
+        public virtual int GetBottomID()
         {
             IUIData data = this;
             while (data != null)
             {
                 if (data.TabData == null) break;
-                if (string.IsNullOrEmpty(data.TabData.PID)) break;
+                if (data.TabData.PID == 0) break;
                 data = UIMgr.Ins.GetUIData(data.TabData.PID);
             }
 
             return data == null ? ID : data.ID;
         }
 
-        public virtual string GetTopID()
+        public virtual int GetTopID()
         {
             IUIData data = this;
             while (true)
@@ -94,14 +102,25 @@ namespace Ux
 
     public sealed class UITabData : IUITabData
     {
-        public UITabData(string pId, string title, int tagId = 0)
+        public UITabData(int pId, string title, int tagId = 0)
         {
             PID = pId;
             Title = title;
             TagId = tagId;
         }
-
-        public string PID { get; }
+        public int PID { get; }
+        public string PIDStr
+        {
+            get
+            {
+                var data = UIMgr.Ins.GetUIData(PID);
+                if (data != null)
+                {
+                    return data.IDStr;
+                }
+                return PID.ToString();
+            }
+        }
         public int TagId { get; }
         public string Title { get; }
     }

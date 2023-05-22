@@ -13,9 +13,9 @@ namespace Ux
     {
         public readonly struct UIParse
         {
-            public UIParse(Type type, string id, IUITabData tabData)
+            public UIParse(Type type, int id, IUITabData tabData)
             {
-                id = string.IsNullOrEmpty(id) ? type.FullName : id;
+                id = id == 0 ? Animator.StringToHash(type.FullName) : id;
                 string[] pkgs = null;
                 var pkgsAttr = type.GetAttribute<PackageAttribute>();
                 if (pkgsAttr != null)
@@ -29,13 +29,13 @@ namespace Ux
                 {
                     lazyloads = resAttr.lazyloads;
                 }
-
+                
                 data = new UIData(id, type, pkgs, lazyloads, tabData);
             }
 
             UIData data { get; }
 
-            public void Add(Dictionary<string, IUIData> _id2data)
+            public void Add(Dictionary<int, IUIData> _id2data)
             {
                 if (_id2data.ContainsKey(data.ID))
                 {
@@ -46,11 +46,11 @@ namespace Ux
                 _id2data.Add(data.ID, data);
             }
 
-            public void Parse(Dictionary<string, IUIData> _id2data)
+            public void Parse(Dictionary<int, IUIData> _id2data)
             {
                 if (data.TabData == null) return;
 
-                if (string.IsNullOrEmpty(data.TabData.PID))
+                if (data.TabData.PID == 0)
                 {
                     Log.Error("UITabData父ID为空。ID[{0}]", data.ID);
                     return;
@@ -87,7 +87,9 @@ namespace Ux
         {
             IUI ui;
             long timeKey;
-
+#if UNITY_EDITOR
+            public string IDStr => ui.IDStr;
+#endif
             public void Init(IUI _ui)
             {
                 ui = _ui;
@@ -135,38 +137,41 @@ namespace Ux
             }
         }
 
+        //public static readonly Dictionary<int, string> idToStr = new Dictionary<int, string>();
+        //public static readonly Dictionary<string, int> strToId = new Dictionary<string, int>();
+
         //对话弹窗
         public static readonly DialogFactory Dialog = new DialogFactory();
 
-        private readonly Dictionary<string, IUIData> _idUIData = new Dictionary<string, IUIData>();
+        private readonly Dictionary<int, IUIData> _idUIData = new Dictionary<int, IUIData>();
 
         //动态创建的UI数据
-        private readonly List<string> dymUIData = new List<string>();
+        private readonly List<int> dymUIData = new List<int>();
 
         //界面缓存，关闭不销毁的界面会缓存起来
-        private readonly Dictionary<string, IUI> _cacel = new Dictionary<string, IUI>();
+        private readonly Dictionary<int, IUI> _cacel = new Dictionary<int, IUI>();
 
         //临时界面缓存，关闭销毁的界面，如果父界面没销毁，
         //会临时缓存起来，等父界面关闭了，再销毁
-        private readonly Dictionary<string, IUI> _temCacel = new Dictionary<string, IUI>();
-        private readonly Dictionary<string, List<string>> _bottomTemCacel = new Dictionary<string, List<string>>();
+        private readonly Dictionary<int, IUI> _temCacel = new Dictionary<int, IUI>();
+        private readonly Dictionary<int, List<int>> _bottomTemCacel = new Dictionary<int, List<int>>();
 
         //正在显示中的ui列表
-        private readonly List<string> _showing = new List<string>();
+        private readonly List<int> _showing = new List<int>();
 
         //已经显示的ui列表
-        private readonly Dictionary<string, IUI> _showed = new Dictionary<string, IUI>();
+        private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
 
         //等待销毁的界面
-        private readonly Dictionary<string, WaitDel> _waitDels = new Dictionary<string, WaitDel>();
+        private readonly Dictionary<int, WaitDel> _waitDels = new Dictionary<int, WaitDel>();
 
         //创建完需要关闭的界面（用于打开界面后正在加载的时候，在其他地方又马上关闭了界面）
-        private readonly List<string> _createdDels = new List<string>();
+        private readonly List<int> _createdDels = new List<int>();
 
         //界面对应的懒加载标签
-        private readonly Dictionary<string, string[]> _idLazyloads = new Dictionary<string, string[]>();
+        private readonly Dictionary<int, string[]> _idLazyloads = new Dictionary<int, string[]>();
 
-        private readonly Dictionary<string, Downloader> _idDownloader = new Dictionary<string, Downloader>();
+        private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
 
         //UI层级
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
@@ -289,7 +294,11 @@ namespace Ux
         {
             if (HasUIData(data.ID))
             {
+#if UNITY_EDITOR
+                Log.Error("重复注册UI面板:{0}", data.IDStr);
+#else
                 Log.Error("重复注册UI面板:{0}", data.ID);
+#endif
                 return;
             }
 
@@ -304,7 +313,7 @@ namespace Ux
         /// 注销UI界面，一般用于动态创建界面的销毁
         /// </summary>
         /// <param name="id"></param>
-        public void LogoutUI(string id)
+        public void LogoutUI(int id)
         {
             if (!_idUIData.Remove(id)) return;
             dymUIData.Remove(id);
@@ -318,18 +327,17 @@ namespace Ux
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public IUIData GetUIData(string id)
+        public IUIData GetUIData(int id)
         {
             if (_idUIData.TryGetValue(id, out var data))
             {
                 return data;
             }
-
             Log.Error($"没有注册UIID[{id}]");
             return null;
         }
 
-        public bool HasUIData(string id)
+        public bool HasUIData(int id)
         {
             return _idUIData.ContainsKey(id);
         }
@@ -341,7 +349,7 @@ namespace Ux
         }
 
         //获取UI
-        public T GetUI<T>(string id) where T : IUI
+        public T GetUI<T>(int id) where T : IUI
         {
             if (!_showed.ContainsKey(id)) return default(T);
             return (T)_showed[id];
@@ -349,37 +357,38 @@ namespace Ux
 
         public T GetUI<T>() where T : IUI
         {
-            return GetUI<T>(typeof(T).FullName);
+            return GetUI<T>(Animator.StringToHash(typeof(T).FullName));
         }
 
         public bool IsShow<T>() where T : UIBase
         {
-            return IsShow(typeof(T).FullName);
+            return IsShow(Animator.StringToHash(typeof(T).FullName));
         }
 
-        public bool IsShow(string id)
+        public bool IsShow(int id)
         {
             return _showed.TryGetValue(id, out var ui) && (ui.State == UIState.ShowAnim || ui.State == UIState.Show);
         }
 
         public UITask<T> Show<T>(object param = null, bool isAnim = true) where T : IUI
         {
-            return Show<T>(typeof(T).FullName, param, isAnim);
+            Log.Debug("xxxxxxx");
+            return Show<T>(Animator.StringToHash(typeof(T).FullName), param, isAnim);
         }
 
-        public UITask<T> Show<T>(string id, object param = null, bool isAnim = true) where T : IUI
+        public UITask<T> Show<T>(int id, object param = null, bool isAnim = true) where T : IUI
         {
             var task = ShowAsync<T>(id, param, isAnim);
             return new UITask<T>(task);
         }
 
-        public UITask<IUI> Show(string id, object param = null, bool isAnim = true)
+        public UITask<IUI> Show(int id, object param = null, bool isAnim = true)
         {
             var task = ShowAsync<IUI>(id, param, isAnim);
             return new UITask<IUI>(task);
         }
 
-        private async UniTask<T> ShowAsync<T>(string id, object param = null, bool isAnim = true) where T : IUI
+        private async UniTask<T> ShowAsync<T>(int id, object param = null, bool isAnim = true) where T : IUI
         {
             var data = GetUIData(id);
             if (data == null)
@@ -425,6 +434,7 @@ namespace Ux
                         _showed.Add(uiid, ui);
                         _showing.Remove(uiid);
                         EventMgr.Ins.Send(EventType.UI_SHOW, uiid);
+                        Log.Debug("xxxxxxx2222");
                     }
                 }
 #if UNITY_EDITOR
@@ -449,7 +459,7 @@ namespace Ux
             }
         }
 
-        private async UniTask<bool> ToShow(string id, ICollection<IUI> arr)
+        private async UniTask<bool> ToShow(int id, ICollection<IUI> arr)
         {
             var data = GetUIData(id);
             if (data == null)
@@ -485,7 +495,7 @@ namespace Ux
             __Debugger_Showing_Event();
 #endif
 
-            if (data.TabData != null && !string.IsNullOrEmpty(data.TabData.PID))
+            if (data.TabData != null && data.TabData.PID != 0)
             {
                 if (!await ToShow(data.TabData.PID, arr))
                 {
@@ -550,24 +560,46 @@ namespace Ux
         private async UniTask<IUI> CreateUI(IUIData data)
         {
             if (data.Pkgs is { Length: > 0 })
-            {
+            {                
                 if (!await ResMgr.Ins.LoaUIdPackage(data.Pkgs))
                 {
-                    Log.Error($"[{nameof(data.CType)}]包加载错误");
+#if UNITY_EDITOR
+                    Log.Error($"[{data.IDStr}]包加载错误");
+#else
+                    Log.Error($"[{data.ID}]包加载错误");
+#endif
+
                     return null;
                 }
-            }
-
+            }            
             var ui = (IUI)Activator.CreateInstance(data.CType);
             ui.InitData(data, Remove);
             return ui;
         }
 
-        public void HideAll(List<string> ignoreList = null)
+        public void HideAll(List<int> ignoreList = null)
         {
-            bool Func(string id)
+            bool Func(int id)
             {
                 return ignoreList is { Count: > 0 } && ignoreList.Contains(id);
+            }
+
+            foreach (var id in _showing.Where(id => !Func(id)))
+            {
+                Hide(id, false);
+            }
+
+            var ids = _showed.Keys.ToList();
+            foreach (var id in ids.Where(id => !Func(id)))
+            {
+                Hide(id, false);
+            }
+        }
+        public void HideAll(List<string> ignoreList = null)
+        {
+            bool Func(int id)
+            {
+                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => Animator.StringToHash(x) == id) >= 0;
             }
 
             foreach (var id in _showing.Where(id => !Func(id)))
@@ -584,9 +616,9 @@ namespace Ux
 
         public void HideAll(List<Type> ignoreList = null)
         {
-            bool Func(string id)
+            bool Func(int id)
             {
-                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => x.FullName == id) >= 0;
+                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => Animator.StringToHash(x.FullName) == id) >= 0;
             }
 
             foreach (var id in _showing.Where(id => !Func(id)))
@@ -603,10 +635,10 @@ namespace Ux
 
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
-            Hide(typeof(T).FullName, isAnim);
+            Hide(Animator.StringToHash(typeof(T).FullName), isAnim);
         }
 
-        public void Hide(string id, bool isAnim = true)
+        public void Hide(int id, bool isAnim = true)
         {
             if (_showing.Contains(id))
             {
@@ -623,9 +655,12 @@ namespace Ux
             {
                 return;
             }
-
-            var bottom = ui?.Data.GetBottomID();
-            if (string.IsNullOrEmpty(bottom) == false && _showed.TryGetValue(bottom, out ui))
+            if (ui == null)
+            {
+                return;
+            }
+            var bottom = ui.Data.GetBottomID();
+            if (bottom != 0 && _showed.TryGetValue(bottom, out ui))
             {
                 ui.DoHide(isAnim);
             }
@@ -653,14 +688,19 @@ namespace Ux
                 {
                     if (_temCacel.ContainsKey(id))
                     {
+#if UNITY_EDITOR
+                        Log.Error($"界面[{ui.IDStr}]多次放入临时缓存列表");
+#else
                         Log.Error($"界面[{id}]多次放入临时缓存列表");
+#endif
+
                         return;
                     }
 
                     _temCacel.Add(id, ui);
                     if (!_bottomTemCacel.TryGetValue(bottomID, out var temList))
                     {
-                        temList = new List<string>();
+                        temList = new List<int>();
                         _bottomTemCacel.Add(bottomID, temList);
                     }
 
@@ -673,7 +713,12 @@ namespace Ux
                 {
                     if (_waitDels.ContainsKey(id))
                     {
+#if UNITY_EDITOR
+                        Log.Error($"界面[{ui.IDStr}]多次放入待删除列表");
+#else
                         Log.Error($"界面[{id}]多次放入待删除列表");
+#endif
+
                         return;
                     }
 
@@ -690,7 +735,11 @@ namespace Ux
                 //不销毁的界面放进缓存列表
                 if (_cacel.ContainsKey(id))
                 {
-                    Log.Error($"界面[{id}]多次放入缓存列表");
+#if UNITY_EDITOR
+                    Log.Error($"界面[{ui.IDStr}]多次放入待删除列表");
+#else
+                    Log.Error($"界面[{id}]多次放入待删除列表");
+#endif                    
                     return;
                 }
 
@@ -742,9 +791,9 @@ namespace Ux
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        string[] GetDependenciesLazyload(string id)
+        string[] GetDependenciesLazyload(int id)
         {
-            if (string.IsNullOrEmpty(id)) return null;
+            if (id == 0) return null;
             if (!_idLazyloads.TryGetValue(id, out var lazyloads))
             {
                 var data = GetUIData(id);
@@ -773,7 +822,7 @@ namespace Ux
                         break;
                     }
 
-                    if (string.IsNullOrEmpty(data.TabData.PID))
+                    if (data.TabData.PID == 0)
                     {
                         break;
                     }
@@ -788,7 +837,7 @@ namespace Ux
             return lazyloads;
         }
 
-        bool CheckDownload(string id)
+        bool CheckDownload(int id)
         {
             if (_idDownloader.TryGetValue(id, out var download))
             {
@@ -810,7 +859,7 @@ namespace Ux
             Dialog.DoubleBtn(
                 "下载",
                 $"一共发现了{download.TotalDownloadCount}个资源需要更新下载。",
-                "下载", 
+                "下载",
                 () =>
                 {
                     //TODO 显示下载界面
@@ -840,7 +889,12 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_UI_CallBack?.Invoke(Ins._idUIData);
+                var list = new Dictionary<string, IUIData>();
+                foreach (var kv in Ins._idUIData)
+                {
+                    list.Add(kv.Value.IDStr, kv.Value);
+                }
+                __Debugger_UI_CallBack?.Invoke(list);
             }
         }
 
@@ -848,7 +902,12 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Showed_CallBack?.Invoke(Ins._showed.Keys.ToList());
+                var list = new List<string>();
+                foreach (var kv in Ins._showed)
+                {
+                    list.Add(kv.Value.IDStr);
+                }
+                __Debugger_Showed_CallBack?.Invoke(list);
             }
         }
 
@@ -856,7 +915,12 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Showing_CallBack?.Invoke(Ins._showing);
+                var list = new List<string>();
+                foreach (var id in Ins._showing)
+                {
+                    list.Add(Ins.GetUIData(id).IDStr);
+                }
+                __Debugger_Showing_CallBack?.Invoke(list);
             }
         }
 
@@ -864,7 +928,12 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Cacel_CallBack?.Invoke(Ins._cacel.Keys.ToList());
+                var list = new List<string>();
+                foreach (var kv in Ins._cacel)
+                {
+                    list.Add(kv.Value.IDStr);
+                }
+                __Debugger_Cacel_CallBack?.Invoke(list);
             }
         }
 
@@ -872,7 +941,12 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_TemCacel_CallBack?.Invoke(Ins._temCacel.Keys.ToList());
+                var list = new List<string>();
+                foreach (var kv in Ins._temCacel)
+                {
+                    list.Add(kv.Value.IDStr);
+                }
+                __Debugger_TemCacel_CallBack?.Invoke(list);
             }
         }
 
@@ -880,7 +954,12 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_WaitDel_CallBack?.Invoke(Ins._waitDels.Keys.ToList());
+                var list = new List<string>();
+                foreach (var kv in Ins._waitDels)
+                {
+                    list.Add(kv.Value.IDStr);
+                }
+                __Debugger_WaitDel_CallBack?.Invoke(list);
             }
         }
 

@@ -7,7 +7,7 @@
         protected override void AddToStage()
         {
             if (GObject == null) return;
-            if (string.IsNullOrEmpty(Data.TabData.PID))
+            if (Data.TabData.PID == 0)
             {
                 Log.Error("UITab界面没有指定父类");
                 return;

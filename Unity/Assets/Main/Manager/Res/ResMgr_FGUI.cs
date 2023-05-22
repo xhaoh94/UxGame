@@ -167,8 +167,12 @@ namespace Ux
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
         {
             string pkgName = pkg + "_fui";
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
             var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<TextAsset>(pkgName);
             await handle.ToUniTask();
+            sw.Stop();
+            Log.Debug($"xxxxxxx{pkgName}_{sw.ElapsedMilliseconds}");
             var suc = true;
             if (handle.Status == EOperationStatus.Succeed && handle.AssetObject is TextAsset ta && ta != null)
             {
