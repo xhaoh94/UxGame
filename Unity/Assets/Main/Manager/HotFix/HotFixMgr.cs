@@ -17,15 +17,18 @@ namespace Ux
         //AOT 补充元数据dll列表
         public static List<string> AOTMetaAssemblyNames { get; } = new List<string>()
         {
-            "UniTask.dll",
-            "Unity.Main.dll",
             "mscorlib.dll",
             "System.dll",
-            "System.Core.dll",            
+            "System.Core.dll",
+
+            "AstarPathfindingProject.dll",
+            "Cinemachine.dll",
             "FairyGUI.dll",
-            "YooAsset.dll",
             "Protobuf-net.dll",
-            "ZString.dll"
+            "UniTask.dll",
+            "Unity.Main.dll",           
+            "YooAsset.dll",
+            "zstring.dll"
         };
 
 

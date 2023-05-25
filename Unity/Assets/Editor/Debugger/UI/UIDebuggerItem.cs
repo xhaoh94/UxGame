@@ -12,7 +12,7 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
 
 
     Label _txtIDStr;
-    TextField _txtID;
+    //TextField _txtID;
     TextField _txtType;
     TextField _txtPkgs;
     TextField _txtTags;
@@ -41,7 +41,7 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
     void CreateView()
     {
         _txtIDStr = this.Q<Label>("txtIDStr");
-        _txtID = this.Q<TextField>("txtID");
+        //_txtID = this.Q<TextField>("txtID");
         _txtType = this.Q<TextField>("txtType");
         _txtPkgs = this.Q<TextField>("txtPkgs");
         _txtTags = this.Q<TextField>("txtTags");
@@ -54,8 +54,8 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
     public void SetData(IUIData data)
     {
         var zs = data.IDStr.Split("_");
-        _txtIDStr.text = zs[0];
-        _txtID.SetValueWithoutNotify(zs[1]);
+        _txtIDStr.text = $"{zs[1]}";
+        //_txtID.SetValueWithoutNotify(zs[1]);
         _txtType.SetValueWithoutNotify(data.CType.FullName);
 
 

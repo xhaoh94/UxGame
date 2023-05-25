@@ -1,12 +1,10 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using FairyGUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using FairyGUI;
 using UnityEngine;
 using YooAsset;
-using Cysharp.Threading.Tasks;
-#if UNITY_EDITOR
-#endif
 
 namespace Ux
 {
@@ -166,13 +164,22 @@ namespace Ux
 
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
         {
-            string pkgName = pkg + "_fui";
+            zstring resName;
+            using (zstring.Block())
+            {
+                resName = pkg;
+                resName = zstring.Format("{0}_{1}_fui", resName, resName);
+            }
+#if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-            var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<TextAsset>(pkgName);
+#endif
+            var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<TextAsset>(resName);
             await handle.ToUniTask();
+#if UNITY_EDITOR
             sw.Stop();
-            Log.Debug($"xxxxxxx{pkgName}_{sw.ElapsedMilliseconds}");
+            Log.Debug($"load {resName}:{sw.ElapsedMilliseconds}");
+#endif
             var suc = true;
             if (handle.Status == EOperationStatus.Succeed && handle.AssetObject is TextAsset ta && ta != null)
             {
@@ -180,7 +187,7 @@ namespace Ux
             }
             else
             {
-                Log.Error($"UI包加载错误PKG: {pkgName}");
+                Log.Error($"UI包加载错误PKG: {resName}");
                 suc = false;
             }
 
@@ -212,14 +219,25 @@ namespace Ux
         private async void _LoadTextureFn(string name, string ex, Type type, PackageItem item)
         {
             if (type != typeof(Texture)) return;
-            //var key = $"UI/{item.owner.name}/{name}{ex}";
-            var key = name;
-            var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<Texture>(key);
+            zstring resName;
+            using (zstring.Block())
+            {
+                resName = zstring.Format("{0}_{1}", item.owner.name, name);
+            }
+#if UNITY_EDITOR
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
+            var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<Texture>(resName);
             await handle.ToUniTask();
+#if UNITY_EDITOR
+            sw.Stop();
+            Log.Debug($"load {resName}:{sw.ElapsedMilliseconds}");
+#endif
 
             if (handle.Status != EOperationStatus.Succeed)
             {
-                Log.Error($"UI图集加载错误KEY: {key}");
+                Log.Error($"UI图集加载错误KEY: {resName}");
                 handle.Release();
                 return;
             }

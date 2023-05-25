@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using Sirenix.OdinInspector;
 #endif
-using Analysis;
 using System;
 using System.Collections;
 using System.Threading;
@@ -30,9 +29,9 @@ namespace Ux
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
-            }
-            using (zstring.Block()) { }
+            }            
             Ins = this;
+            zstring.Init(Log.Error);
             Machine = StateMachine.CreateByPool();
             SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
             DontDestroyOnLoad(gameObject);
@@ -60,45 +59,12 @@ namespace Ux
 
             typeof(GameMain).Assembly.Initialize();
             // 运行补丁流程
-            PatchMgr.Ins.Run(PlayMode);
-
-            //ExpessionMgr.Ins.AddVariable("test", 11);
-            //ExpessionMgr.Ins.AddFunction("getRemainsStarParameter", (double[] args) =>
-            //{
-            //    return args[0] + args[1];
-            //});
-            //ExpessionMgr.Ins.AddFunction("getRemainsAwakenParameter", (double[] args) =>
-            //{
-            //    return 1;
-            //});
-            //ExpessionMgr.Ins.AddFunction("getDisplaysParameter", (double[] args) =>
-            //{
-            //    return 1;
-            //});
-            //test = new AnalysisMain();
-            //test.Init();
-            //Test();
+            PatchMgr.Ins.Run(PlayMode);           
         }
 
-        void Test()
-        {
-            string eval = $"floor((11+test+getRemainsAwakenParameter())*getRemainsStarParameter(10,2+test)+getDisplaysParameter())";
-            Profiler.BeginSample("Eval 11");
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            var tt = ExpessionMgr.Ins.Parse(eval);
-            sw.Stop();
-            Profiler.EndSample();
-            Log.Debug("11 Eval Parse Time " + sw.ElapsedMilliseconds);
-            Log.Debug("11 Eval Parse Time " + tt.ToString());
-
-            test.TT(eval, 1);
-        }
-
-        AnalysisMain test;
+        
         void Update()
-        {
-            //Test();
+        {            
 #if UNITY_EDITOR
             if (UnityEditor.EditorApplication.isCompiling)
             {

@@ -316,7 +316,7 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\2021.3.23f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="LZ4">
-      <HintPath>Library\PackageCache\com.focus-creative-games.hybridclr_unity@07b52bed05\Plugins\LZ4.dll</HintPath>
+      <HintPath>Library\PackageCache\com.focus-creative-games.hybridclr_unity@f5afc43625\Plugins\LZ4.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.OdinInspector.Attributes">
       <HintPath>Assets\ThirdParty\Sirenix\Assemblies\Sirenix.OdinInspector.Attributes.dll</HintPath>
@@ -337,7 +337,7 @@
       <HintPath>Library\PackageCache\com.unity.collab-proxy@1.17.7\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
     </Reference>
     <Reference Include="dnlib">
-      <HintPath>Library\PackageCache\com.focus-creative-games.hybridclr_unity@07b52bed05\Plugins\dnlib.dll</HintPath>
+      <HintPath>Library\PackageCache\com.focus-creative-games.hybridclr_unity@f5afc43625\Plugins\dnlib.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.Serialization.Config">
       <HintPath>Assets\ThirdParty\Sirenix\Assemblies\Sirenix.Serialization.Config.dll</HintPath>

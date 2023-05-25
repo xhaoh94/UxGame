@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-#endif
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -109,6 +107,7 @@ namespace Ux
             TagId = tagId;
         }
         public int PID { get; }
+#if UNITY_EDITOR
         public string PIDStr
         {
             get
@@ -121,6 +120,8 @@ namespace Ux
                 return PID.ToString();
             }
         }
+
+#endif
         public int TagId { get; }
         public string Title { get; }
     }

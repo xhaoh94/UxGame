@@ -1,3 +1,4 @@
+using Mono.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -50,6 +51,7 @@ namespace UI.Editor
                 if (!Directory.Exists(dir)) continue;
                 var collector = new AssetBundleCollector();
                 collector.CollectPath = dir;
+                collector.AddressRuleName = nameof(AddressByFolderAndFileName);
                 buildinGp.Collectors.Add(collector);
                 excludes.Add(buildin);
             }
@@ -75,6 +77,7 @@ namespace UI.Editor
                 var collector = new AssetBundleCollector();
                 collector.CollectPath = dir;
                 collector.AssetTags = lazyload.value;
+                collector.AddressRuleName = nameof(AddressByFolderAndFileName);
                 lazyloadGp.Collectors.Add(collector);
                 excludes.Add(lazyload.key);
             }
@@ -96,6 +99,7 @@ namespace UI.Editor
             collectorPreload.CollectPath = ResClassifySettings.path;
             collectorPreload.PackRuleName = typeof(PackTopDirectory).Name;
             collectorPreload.FilterRuleName = typeof(CollectPreloadUI).Name;
+            collectorPreload.AddressRuleName = nameof(AddressByFolderAndFileName);
             preloadGp.Collectors.Add(collectorPreload);
             #endregion
 

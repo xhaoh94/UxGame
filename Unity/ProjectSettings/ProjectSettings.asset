@@ -622,7 +622,7 @@ PlayerSettings:
   scriptingBackend:
     Standalone: 1
   il2cppCompilerConfiguration:
-    Standalone: 1
+    Standalone: 0
   managedStrippingLevel:
     EmbeddedLinux: 1
     GameCoreScarlett: 1

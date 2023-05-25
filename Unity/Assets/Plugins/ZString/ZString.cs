@@ -118,10 +118,10 @@ namespace Ux
         bool _disposed;//销毁标记
 
         //不支持构造
-        private zstring()
-        {
-            throw new NotSupportedException();
-        }
+        //private zstring()
+        //{
+        //    throw new NotSupportedException();
+        //}
         //带默认长度的构造
         private zstring(int length)
         {
@@ -195,7 +195,7 @@ namespace Ux
         {
             if (g_current_block == null)
             {
-                throw new InvalidOperationException("nstring 操作必须在一个nstring_block块中。");
+                throw new InvalidOperationException("zstring 操作必须在一个zstring_block块中。");
             }
             zstring result;
             if (g_shallowCache.Count == 0)
@@ -248,9 +248,10 @@ namespace Ux
         //获取特定长度zstring
         private static zstring get(int length)
         {
-            if (g_current_block == null || length <= 0)
+            if (g_current_block == null)
                 throw new InvalidOperationException("zstring 操作必须在一个zstring_block块中。");
-
+            if (length <= 0)
+                throw new InvalidOperationException("zstring 获取特定长度zstring 长度需要大于0。");
             zstring result;
             Queue<zstring> stack;
             getStackInCache(length, out stack);
@@ -390,13 +391,23 @@ namespace Ux
         //获取char在字符串中start开始的下标
         private unsafe static int internal_index_of(string input, char value, int start, int count)
         {
-            if (start < 0 || start >= input.Length)
-                // throw new ArgumentOutOfRangeException("start");
+            if (start < 0)
+            {
+                start = 0;
+                Log?.Invoke($"zstring IndexOf 下标小于0");
+            }
+            if (start >= input.Length)
+            {                
                 return -1;
+            }
 
-            if (start + count > input.Length)
+            if (count <= 0 || start + count > input.Length)
+            {
+                count = input.Length - start;
+            }
+
+            if (count == 0)
                 return -1;
-            // throw new ArgumentOutOfRangeException("count=" + count + " start+count=" + start + count);
 
             fixed (char* ptr_this = input)
             {
@@ -412,11 +423,20 @@ namespace Ux
         {
             int input_len = input.Length;
 
-            if (start < 0 || start >= input_len)
-                throw new ArgumentOutOfRangeException("start");
+            if (start < 0)
+            {
+                start = 0;
+                Log?.Invoke($"zstring IndexOf 下标小于0");
+            }
+            if (start >= input.Length)
+            {                
+                return -1;
+            }
 
-            if (count < 0 || start + count > input_len)
-                throw new ArgumentOutOfRangeException("count=" + count + " start+count=" + (start + count));
+            if (count <= 0 || start + count > input_len)
+            {
+                count = input_len - start;
+            }
 
             if (count == 0)
                 return -1;
@@ -449,15 +469,28 @@ namespace Ux
         //移除string中自start起始count长度子串
         private unsafe static zstring internal_remove(string input, int start, int count)
         {
-            if (start < 0 || start >= input.Length)
-                throw new ArgumentOutOfRangeException("start=" + start + " Length=" + input.Length);
-
-            if (count < 0 || start + count > input.Length)
-                throw new ArgumentOutOfRangeException("count=" + count + " start+count=" + (start + count) + " Length=" + input.Length);
-
-            if (count == 0)
+            if (start < 0)
+            {
+                start = 0;
+                Log?.Invoke($"zstring 下标小于0");
+            }
+            if (start >= input.Length)
+            {
+                Log?.Invoke($"zstring 下标超过字符串长度");
                 return input;
+            }
+            if (count <= 0)
+            {
+                Log?.Invoke($"zstring count 长度等于0");
+                return input;
+            }
+            if (start + count > input.Length)
+            {
+                count = input.Length - start;
+            }
 
+            if (input.Length == count)
+                return string.Empty;
             zstring result = get(input.Length - count);
             internal_remove(result, input, start, count);
             return result;
@@ -481,25 +514,15 @@ namespace Ux
         //字符串replace，原字符串，需替换子串，替换的新子串
         private unsafe static zstring internal_replace(string value, string old_value, string new_value)
         {
-            // "Hello, World. There World" | World->Jon =
-            // "000000000000000000000" (len = orig - 2 * (world-jon) = orig - 4
-            // "Hello, 00000000000000"
-            // "Hello, Jon00000000000"
-            // "Hello, Jon. There 000"
-            // "Hello, Jon. There Jon"
-
-            // "Hello, World. There World" | World->Alexander =
-            // "000000000000000000000000000000000" (len = orig + 2 * (alexander-world) = orig + 8
-            // "Hello, 00000000000000000000000000"
-            // "Hello, Alexander00000000000000000"
-            // "Hello, Alexander. There 000000000"
-            // "Hello, Alexander. There Alexander"
-
             if (old_value == null)
-                throw new ArgumentNullException("old_value");
+            {
+                //throw new ArgumentNullException("old_value");
+                Log?.Invoke("old_value为空");
+                return value;
+            }
 
             if (new_value == null)
-                throw new ArgumentNullException("new_value");
+                new_value = string.Empty;
 
             int idx = internal_index_of(value, old_value);
             if (idx == -1)
@@ -553,10 +576,17 @@ namespace Ux
         //向字符串value中自start位置插入count长度的to_insertChar
         private unsafe static zstring internal_insert(string value, char to_insert, int start, int count)
         {
-            // "HelloWorld" (to_insert=x, start=5, count=3) -> "HelloxxxWorld"
+            if (start >= value.Length)
+            {
+                start = value.Length - 1;
+                Log?.Invoke($"zstring 插入字符串 开始下标超过字符串长度");
+            }
 
-            if (start < 0 || start >= value.Length)
-                throw new ArgumentOutOfRangeException("start=" + start + " Length=" + value.Length);
+            if (start < 0)
+            {
+                start = 0;
+                Log?.Invoke($"zstring 插入字符串 开始下标小于0");
+            }
 
             if (count < 0)
                 throw new ArgumentOutOfRangeException("count=" + count);
@@ -587,11 +617,22 @@ namespace Ux
             if (input == null)
                 throw new ArgumentNullException("input");
 
-            if (to_insert == null)
-                throw new ArgumentNullException("to_insert");
+            if (string.IsNullOrEmpty(to_insert))
+            {
+                return input;
+            }
 
-            if (start < 0 || start >= input.Length)
-                throw new ArgumentOutOfRangeException("start=" + start + " Length=" + input.Length);
+            if (start >= input.Length)
+            {
+                start = input.Length - 1;
+                Log?.Invoke($"zstring Insert 下标超过字符串长度");
+            }
+
+            if (start < 0)
+            {
+                start = 0;
+                Log?.Invoke($"zstring Insert 下标小于0");
+            }
 
             if (to_insert.Length == 0)
                 return get(input);
@@ -962,7 +1003,7 @@ namespace Ux
         // Public API
         #region 
 
-        public static Action<string> Log = null;
+        static Action<string> Log = null;
 
         public static uint DecimalAccuracy = 3; // 小数点后精度位数
         //获取字符串长度
@@ -996,6 +1037,11 @@ namespace Ux
             {
                 g_shallowCache.Push(new zstring(null, true));
             }
+        }
+        public static void Init(Action<string> log)
+        {
+            using (Block()) { }
+            Log = log;
         }
 
         //using语法所用。从zstring_block栈中取出一个block并将其置为当前g_current_block，在代码块{}中新生成的zstring都将push入块内部stack中。当离开块作用域时，调用块的Dispose函数，将内栈中所有zstring填充初始值并放入zstring缓存栈。同时将自身放入block缓存栈中。（此处有个问题：使用Stack缓存block，当block被dispose放入Stack后g_current_block仍然指向此block，无法记录此block之前的block，这样导致zstring.Block()无法嵌套使用）
@@ -1190,6 +1236,27 @@ namespace Ux
         {
             return internal_concat(left, right);
         }
+        //+重载
+        public static zstring operator +(zstring left, char right)
+        {
+            return internal_concat(left, right.ToString());
+        }
+        public static zstring operator +(zstring left, bool right)
+        {
+            return internal_concat(left, (zstring)right);
+        }
+        public static zstring operator +(zstring left, int right)
+        {
+            return internal_concat(left, (zstring)right);
+        }
+        public static zstring operator +(zstring left, long right)
+        {
+            return internal_concat(left, (zstring)right);
+        }
+        public static zstring operator +(zstring left, float right)
+        {
+            return internal_concat(left, (zstring)right);
+        }
         //==重载
         public static bool operator ==(zstring left, zstring right)
         {
@@ -1244,24 +1311,28 @@ namespace Ux
             }
             return result;
         }
-        //移除剪切
+        //移除从start起的字符串
         public zstring Remove(int start)
         {
             return Remove(start, Length - start);
         }
-        //移除剪切
+        //移除从start起到start+count的字符串
         public zstring Remove(int start, int count)
         {
+            if (count == 0) return this;
+            if (start >= Length) return this;
             return internal_remove(this._value, start, count);
         }
         //插入start起count长度字符
         public zstring Insert(char value, int start, int count)
         {
+            if (count == 0) return this;
             return internal_insert(this._value, value, start, count);
         }
         //插入start起字符串
         public zstring Insert(string value, int start)
         {
+            if (string.IsNullOrEmpty(value)) return this;
             return internal_insert(this._value, value, start);
         }
         //子字符替换
@@ -1285,19 +1356,29 @@ namespace Ux
         {
             return internal_replace(this._value, old_value, new_value);
         }
-        //剪切start位置起后续子串
+        //保留start位置起后续子串
         public zstring Substring(int start)
         {
             return Substring(start, Length - start);
         }
-        //剪切start起count长度的子串
+        //保留start起count长度的子串
         public unsafe zstring Substring(int start, int count)
         {
-            if (start < 0 || start >= Length)
-                throw new ArgumentOutOfRangeException("start");
+            if (start < 0)
+            {
+                start = 0;
+                Log?.Invoke($"zstring Substring 下标小于0");
+            }
+            if (start >= Length)
+            {
+                Log?.Invoke($"zstring Substring 下标超过字符串长度");
+                return string.Empty;
+            }
 
-            if (count > Length)
-                throw new ArgumentOutOfRangeException("count");
+            if (start + count > Length)
+                count = Length - start;
+
+            if (count == 0) return this;
 
             zstring result = get(count);
             fixed (char* src = this._value)
@@ -1423,11 +1504,15 @@ namespace Ux
             getStackInCache(length, out stack);
             return stack.Count;
         }
-        //自身+value拼接
-        public zstring Concat(zstring value)
-        {
-            return internal_concat(this, value);
-        }
+        ////自身+value拼接
+        //public zstring Concat(zstring value)
+        //{
+        //    return internal_concat(this, value);
+        //}
+        //public zstring Concat(char value)
+        //{
+        //    return internal_concat(this, value.ToString());
+        //}
         //静态拼接方法簇
         public static zstring Concat(zstring s0, zstring s1) { return s0 + s1; }
 

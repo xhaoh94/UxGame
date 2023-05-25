@@ -1,11 +1,11 @@
+using Cysharp.Threading.Tasks;
+using FairyGUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FairyGUI;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
-using EventType = Ux.Main.EventType;
 using UnityEngine.Rendering.Universal;
+using EventType = Ux.Main.EventType;
 
 namespace Ux
 {
@@ -195,7 +195,8 @@ namespace Ux
         }
 
         public UIMgr()
-        {
+        {            
+            //StageCamera.main.clearFlags = CameraClearFlags.Nothing;
             if (PatchMgr.Ins.IsDone)
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
@@ -371,8 +372,7 @@ namespace Ux
         }
 
         public UITask<T> Show<T>(object param = null, bool isAnim = true) where T : IUI
-        {
-            Log.Debug("xxxxxxx");
+        {            
             return Show<T>(Animator.StringToHash(typeof(T).FullName), param, isAnim);
         }
 
@@ -433,8 +433,7 @@ namespace Ux
                         ui.DoShow(isAnim, uiid == id ? param : null);
                         _showed.Add(uiid, ui);
                         _showing.Remove(uiid);
-                        EventMgr.Ins.Send(EventType.UI_SHOW, uiid);
-                        Log.Debug("xxxxxxx2222");
+                        EventMgr.Ins.Send(EventType.UI_SHOW, uiid);                        
                     }
                 }
 #if UNITY_EDITOR

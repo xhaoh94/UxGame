@@ -1,6 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <ui:VisualElement name="veList">
-        <ui:TextField picking-mode="Ignore" name="inputSearch" label="模糊搜索" style="flex-grow: 1;" />
+        <ui:VisualElement style="flex-direction: row;">
+            <ui:TextField picking-mode="Ignore" name="inputSearch" label="模糊搜索" style="flex-grow: 1; flex-shrink: 0;" />
+            <ui:Button text="X" display-tooltip-when-elided="true" name="btnClear" />
+        </ui:VisualElement>
         <uie:Toolbar name="TopBar" style="height: 25px; margin-left: 1px; margin-right: 1px;">
             <uie:ToolbarButton text="事件ID" display-tooltip-when-elided="true" name="TopBar0" style="width: 305px; -unity-text-align: middle-left; flex-grow: 0;" />
             <uie:ToolbarButton text="事件" display-tooltip-when-elided="true" name="TopBar1" style="width: 150px; -unity-text-align: middle-left; flex-grow: 1;" />

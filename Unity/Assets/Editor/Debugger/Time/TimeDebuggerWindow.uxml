@@ -23,7 +23,10 @@
     </uie:Toolbar>
     <ui:ScrollView name="tbBtnTime" style="flex-grow: 1;">
         <ui:VisualElement name="veTime" style="flex-grow: 0;">
-            <ui:TextField picking-mode="Ignore" name="inputSearch" label="模糊搜索" style="flex-grow: 1;" />
+            <ui:VisualElement style="flex-direction: row;">
+                <ui:TextField picking-mode="Ignore" name="inputSearch" label="模糊搜索" style="flex-grow: 1; flex-shrink: 0;" />
+                <ui:Button text="X" display-tooltip-when-elided="true" name="btnClear" />
+            </ui:VisualElement>
             <uie:Toolbar name="TopBar" style="height: 25px; margin-left: 1px; margin-right: 1px;">
                 <uie:ToolbarButton text="执行方法" display-tooltip-when-elided="true" name="TopBar0" style="width: 300px; -unity-text-align: middle-left; flex-grow: 0;" />
                 <uie:ToolbarButton text="Handle" display-tooltip-when-elided="true" name="TopBar1" style="width: 150px; -unity-text-align: middle-left; flex-grow: 1;" />

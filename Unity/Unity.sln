@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityEngine.UI", "UnityEngine.UI.csproj", "{98FE9D97-9991-E594-7D3C-A2ABC20E4793}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Core.Runtime.csproj", "{24A69FBD-3987-A725-EB0E-444640A78F6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityEngine.UI", "UnityEngine.UI.csproj", "{98FE9D97-9991-E594-7D3C-A2ABC20E4793}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FairyGUI", "FairyGUI.csproj", "{5C351BF4-1A33-48AF-B348-52FD7A76B064}"
 EndProject
@@ -185,14 +185,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Release|Any CPU.Build.0 = Release|Any CPU
 		{24A69FBD-3987-A725-EB0E-444640A78F6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{24A69FBD-3987-A725-EB0E-444640A78F6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24A69FBD-3987-A725-EB0E-444640A78F6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24A69FBD-3987-A725-EB0E-444640A78F6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98FE9D97-9991-E594-7D3C-A2ABC20E4793}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5C351BF4-1A33-48AF-B348-52FD7A76B064}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5C351BF4-1A33-48AF-B348-52FD7A76B064}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C351BF4-1A33-48AF-B348-52FD7A76B064}.Release|Any CPU.ActiveCfg = Release|Any CPU

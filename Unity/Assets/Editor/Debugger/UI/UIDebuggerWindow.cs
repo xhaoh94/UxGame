@@ -37,13 +37,17 @@ public class UIDebuggerWindow : EditorWindow
         visualAsset.CloneTree(root);
 
         _listUI = new DebuggerObjectSearchListView<UIDebuggerItem, IUIData>(root.Q<VisualElement>("veList"), 5);
-        _listShowed = new DebuggerStringListView(root.Q<ListView>("listShowed"));
-        _listShowing = new DebuggerStringListView(root.Q<ListView>("listShowing"));
-        _listCacel = new DebuggerStringListView(root.Q<ListView>("listCacel"));
-        _listTemCacel = new DebuggerStringListView(root.Q<ListView>("listTemCacel"));
-        _listWaitDel = new DebuggerStringListView(root.Q<ListView>("listWaitDel"));
+        _listShowed = new DebuggerStringListView(root.Q<ListView>("listShowed"), OnBtnClick);
+        _listShowing = new DebuggerStringListView(root.Q<ListView>("listShowing"), OnBtnClick);
+        _listCacel = new DebuggerStringListView(root.Q<ListView>("listCacel"), OnBtnClick);
+        _listTemCacel = new DebuggerStringListView(root.Q<ListView>("listTemCacel"), OnBtnClick);
+        _listWaitDel = new DebuggerStringListView(root.Q<ListView>("listWaitDel"), OnBtnClick);
 
         UIMgr.__Debugger_Event();
+    }
+    private void OnBtnClick(string idStr)
+    {
+        _listUI.Search(idStr);
     }
     private void OnUpdateUI(Dictionary<string, IUIData> dict)
     {

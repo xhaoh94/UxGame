@@ -32,6 +32,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.KeyValuePair<object,object>
 	// System.Collections.Generic.List<object>
 	// System.Collections.Generic.List<UnityEngine.Vector3>
+	// System.Collections.Generic.List<int>
 	// System.Collections.Generic.List<byte>
 	// System.Collections.Generic.List.Enumerator<object>
 	// System.Collections.Generic.Stack<object>
@@ -40,33 +41,36 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Func<object,int,int,object>
 	// System.IEquatable<object>
 	// System.Nullable<short>
+	// System.Nullable<long>
 	// System.Nullable<byte>
 	// System.Nullable<double>
 	// System.Nullable<float>
 	// System.Nullable<int>
-	// System.Nullable<long>
 	// UnityEngine.InputSystem.InputControl<UnityEngine.Vector2>
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.InputControlScheme>
 	// Ux.IAwakeSystem<object>
 	// Ux.ModuleBase<object>
+	// Ux.UIMgr.UITask<object>
 	// }}
 
 	public void RefMethods()
 	{
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.UnitStateNode.<AddAnimation>d__14>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.UnitStateNode.<AddAnimation>d__14&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.AStarComponent.<_load>d__2>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.AStarComponent.<_load>d__2&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.Player.<LoadPlayer>d__24>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.Player.<LoadPlayer>d__24&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.AStarComponent.<_load>d__2>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.AStarComponent.<_load>d__2&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.UnitStateNode.<AddAnimation>d__14>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.UnitStateNode.<AddAnimation>d__14&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.Player.<LoadPlayer>d__24>(Ux.Player.<LoadPlayer>d__24&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.AStarComponent.<_load>d__2>(Ux.AStarComponent.<_load>d__2&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.UnitStateNode.<AddAnimation>d__14>(Ux.UnitStateNode.<AddAnimation>d__14&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.Player.<LoadPlayer>d__24>(Ux.Player.<LoadPlayer>d__24&)
 		// byte[] System.Array.Empty<byte>()
 		// System.Collections.Generic.KeyValuePair<object,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<object,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>,int)
 		// System.Collections.Generic.KeyValuePair<object,object> System.Linq.Enumerable.First<System.Collections.Generic.KeyValuePair<object,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>)
 		// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>> System.Linq.Enumerable.Where<System.Collections.Generic.KeyValuePair<object,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>,System.Func<System.Collections.Generic.KeyValuePair<object,object>,bool>)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.MapModule.<EnterMap>d__2>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.MapModule.<EnterMap>d__2&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.LoginModule.<LoginAccountRPC>d__3>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.LoginModule.<LoginAccountRPC>d__3&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.MapModule.<EnterMap>d__2>(Ux.MapModule.<EnterMap>d__2&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.StateGameIn.<OnEnter>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.StateGameIn.<OnEnter>d__1&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.LoginModule.<LoginAccountRPC>d__3>(Ux.LoginModule.<LoginAccountRPC>d__3&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.StateGameIn.<OnEnter>d__1>(Ux.StateGameIn.<OnEnter>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.MapModule.<EnterMap>d__2>(Ux.MapModule.<EnterMap>d__2&)
 		// object UnityEngine.GameObject.GetComponent<object>()
 		// object UnityEngine.GameObject.GetComponentInChildren<object>()
 		// UnityEngine.Vector2 UnityEngine.InputSystem.InputAction.CallbackContext.ReadValue<UnityEngine.Vector2>()

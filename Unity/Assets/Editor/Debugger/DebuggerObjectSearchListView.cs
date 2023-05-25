@@ -17,9 +17,10 @@ public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDe
     private int tPage = 1;
     private int curPage = 1;
     private int pageMaxCnt = 5;
-    Dictionary<string, V> dict;    
+    Dictionary<string, V> dict;
 
     private TextField _inputSearch;
+    private Button _btnClear;
     private VisualElement _vePage;
     private IntegerField _inputPage;
     private Label _txtPage;
@@ -35,6 +36,11 @@ public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDe
             this.pageMaxCnt = pageMaxCnt;
             _inputSearch = root.Q<TextField>("inputSearch");
             _inputSearch.RegisterValueChangedCallback(_OnSearch);
+            _btnClear = root.Q<Button>("btnClear");
+            if (_btnClear != null)
+            {
+                _btnClear.clicked += _OnBtnClear;
+            }
 
 
             _vePage = root.Q<VisualElement>("vePage");
@@ -77,14 +83,18 @@ public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDe
         curPage = e.newValue;
         _OnSearch(null);
     }
-    
+
     void _OnSearch(ChangeEvent<string> e)
-    {               
+    {
         FilterViewItems(dict);
         _list.Clear();
         _list.ClearSelection();
         _list.itemsSource = _listData;
         _list.RefreshItems();
+    }
+    void _OnBtnClear()
+    {
+        Search(string.Empty);
     }
     void _OnBtnLast()
     {
@@ -103,11 +113,18 @@ public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDe
         }
     }
 
+    public void Search(string text)
+    {
+        if (_inputSearch.text == text) return;
+        _inputSearch.SetValueWithoutNotify(text);
+        _OnSearch(null);
+    }
+
     List<V> _listData;
     private void FilterViewItems(Dictionary<string, V> dict)
     {
         _listData = new List<V>();
-        var searchKey = _inputSearch.text;
+        var searchKey = _inputSearch.text.ToLower();
         if (searchKey == string.Empty)
         {
             _listData = dict.Values.ToList();
@@ -116,7 +133,7 @@ public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDe
         {
             foreach (var kv in dict)
             {
-                if (kv.Key.IndexOf(searchKey) >= 0)
+                if (kv.Key.ToLower().IndexOf(searchKey) >= 0)
                 {
                     _listData.Add(kv.Value);
                 }

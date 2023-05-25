@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -6,9 +7,11 @@ using UnityEngine.UIElements;
 public class DebuggerStringListView
 {
     private ListView _list;
-    public DebuggerStringListView(ListView listView)
+    Action<string> _clickEvt;
+    public DebuggerStringListView(ListView listView, Action<string> clickEvt = null)
     {
         _list = listView;
+        _clickEvt = clickEvt;
         _list.makeItem = _MakeListItem;
         _list.bindItem = _BindListItem;
     }
@@ -23,32 +26,41 @@ public class DebuggerStringListView
         _list.RefreshItems();
     }
 
+
     VisualElement _MakeListItem()
     {
         // 加载视图
         var element = new VisualElement();
         element.style.flexDirection = FlexDirection.Row;
         {
+            var btn = new Button();
+            btn.clicked += () =>
+            {
+                var lb0 = btn.Q<Label>("Label0");
+                _clickEvt?.Invoke(lb0.text);
+            };
             var label = new Label();
             label.name = "Label0";
             label.style.unityTextAlign = TextAnchor.MiddleLeft;
-            label.style.marginBottom = 1f;
-            label.style.marginLeft = 1f;
-            label.style.marginRight = 1f;
-            label.style.marginTop = 1f;
-            label.style.backgroundColor = new StyleColor(new Color(71, 71, 71, 0));
-            label.style.borderTopColor =
-            label.style.borderLeftColor =
-            label.style.borderBottomColor =
-            label.style.borderRightColor = new StyleColor(new Color(0, 0, 0, 1));
+            //label.style.marginBottom = 1f;
+            //label.style.marginLeft = 1f;
+            //label.style.marginRight = 1f;
+            //label.style.marginTop = 1f;
+            //label.style.backgroundColor = new StyleColor(new Color(71, 71, 71, 0));
+            //label.style.borderTopColor =
+            //label.style.borderLeftColor =
+            //label.style.borderBottomColor =
+            //label.style.borderRightColor = new StyleColor(new Color(0, 0, 0, 1));
 
-            label.style.borderBottomWidth = 1;
-            label.style.borderTopWidth = 1;
-            label.style.borderLeftWidth = 1;
-            label.style.borderRightWidth = 1;
+            //label.style.borderBottomWidth = 1;
+            //label.style.borderTopWidth = 1;
+            //label.style.borderLeftWidth = 1;
+            //label.style.borderRightWidth = 1;
             label.style.flexGrow = 1f;
+
             //label.style.width = 200;
-            element.Add(label);
+            btn.Add(label);
+            element.Add(btn);
         }
         return element;
     }

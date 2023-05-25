@@ -94,7 +94,7 @@ MonoBehaviour:
       - CollectPath: Assets/Data/Res/UI/Common
         CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByFileName
+        AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
@@ -102,7 +102,7 @@ MonoBehaviour:
       - CollectPath: Assets/Data/Res/UI/Patch
         CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByFileName
+        AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
@@ -110,7 +110,7 @@ MonoBehaviour:
       - CollectPath: Assets/Data/Res/UI/Main
         CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByFileName
+        AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
@@ -123,7 +123,7 @@ MonoBehaviour:
       - CollectPath: Assets/Data/Res/UI/Bag
         CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByFileName
+        AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: lazyload_bag
@@ -131,7 +131,7 @@ MonoBehaviour:
       - CollectPath: Assets/Data/Res/UI/Multiple
         CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByFileName
+        AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: lazyload_multiple
@@ -144,7 +144,7 @@ MonoBehaviour:
       - CollectPath: Assets/Data/Res/UI
         CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByFileName
+        AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackTopDirectory
         FilterRuleName: CollectPreloadUI
         AssetTags: 
