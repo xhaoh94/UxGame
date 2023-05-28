@@ -57,6 +57,14 @@ MonoBehaviour:
         FilterRuleName: CollectShaderVariants
         AssetTags: 
         UserData: 
+      - CollectPath: Assets/Data/Res/Config
+        CollectorGUID: 8f52838e936dc4e42976f151a4bf6d17
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
     - GroupName: Preload
       GroupDesc: "\u9884\u52A0\u8F7D"
       AssetTags: preload

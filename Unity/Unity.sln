@@ -61,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KumoKyaku.Kcp", "KumoKyaku.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.Services.Core.Scheduler", "Unity.Services.Core.Scheduler.csproj", "{FD29E4E8-9D12-848B-532B-C8667AD4C1E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luban", "Luban.csproj", "{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.Services.Core.Device", "Unity.Services.Core.Device.csproj", "{CE2BCDD2-8153-EBF1-572C-2A35B57F22AE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IngameDebugConsole.Runtime", "IngameDebugConsole.Runtime.csproj", "{4E4F3AF3-8D83-5CB3-CEB7-3F8A7AB9A9AF}"
@@ -305,6 +307,10 @@ Global
 		{FD29E4E8-9D12-848B-532B-C8667AD4C1E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD29E4E8-9D12-848B-532B-C8667AD4C1E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD29E4E8-9D12-848B-532B-C8667AD4C1E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CE2BCDD2-8153-EBF1-572C-2A35B57F22AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CE2BCDD2-8153-EBF1-572C-2A35B57F22AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE2BCDD2-8153-EBF1-572C-2A35B57F22AE}.Release|Any CPU.ActiveCfg = Release|Any CPU

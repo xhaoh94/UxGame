@@ -1,6 +1,5 @@
 ﻿//自动生成的代码，请勿修改!!!
 using FairyGUI;
-using Ux;
 namespace Ux.UI
 {
 	[Package("Main","Common")]

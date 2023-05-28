@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1864b51bae6e73444b69c327d37e7100, type: 3}
   m_Name: UICodeGenSettingData
   m_EditorClassIdentifier: 
-  defaultNs: Hotfix.UI
-  path: Assets/Hotfix/Manager/UI/CodeGen
+  defaultNs: Ux.UI
+  path: Assets/Hotfix/CodeGen/UI
   ingoreDefault: 1
   pkgs:
   - name: Main
@@ -114,6 +114,16 @@ MonoBehaviour:
         evtParam: 
       - index: 8
         name: btnTest
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 9
+        name: btnBack
         defaultType: GButton
         customType: Btn1
         pkg: Common
@@ -588,6 +598,52 @@ MonoBehaviour:
         name: t1
         defaultType: Transition
         customType: Transition
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+  - name: Bag
+    components:
+    - ID: e59edc9a-0a20-49be-ba69-30725cec9eba
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Bag
+      resName: BagWindow
+      ns: Ux.UI
+      cls: BagWindow
+      ext: Panel/Window
+      isExport: 1
+      gList: 
+      gTabContent: 
+      gBtnClose: 
+      members:
+      - index: 0
+        name: mCommonBg
+        defaultType: GComponent
+        customType: Common2TabFrame
+        pkg: Common
+        res: Common2TabFrame
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: n1
+        defaultType: GTextField
+        customType: GTextField
         pkg: 
         res: 
         isCreateVar: 1

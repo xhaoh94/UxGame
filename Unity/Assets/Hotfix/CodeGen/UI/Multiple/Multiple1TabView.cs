@@ -1,14 +1,13 @@
 ﻿//自动生成的代码，请勿修改!!!
 using FairyGUI;
-using Ux;
 namespace Ux.UI
 {
 	[Package("Multiple")]
 	[Lazyload("lazyload_multiple")]
-	public partial class Multiple3TabView : UITabView
+	public partial class Multiple1TabView : UITabView
 	{
 		protected override string PkgName => "Multiple";
-		protected override string ResName => "Multiple3TabView";
+		protected override string ResName => "Multiple1TabView";
 
 	}
 }

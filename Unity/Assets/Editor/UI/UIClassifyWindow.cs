@@ -104,7 +104,7 @@ namespace UI.Editor
             #endregion
 
             EditorUtility.SetDirty(ResClassifySettings);
-            //UICodeGenWindow.Export();
+            UICodeGenWindow.Export();
             AssetBundleCollectorSettingData.SaveFile();
         }
         static UIResClassifySettingData _ResClassifySettings;
