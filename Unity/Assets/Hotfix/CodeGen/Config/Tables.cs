@@ -15,21 +15,26 @@ namespace cfg
 public sealed partial class Tables
 {
     public TbItem TbItem {get; }
+    public TbTest TbTest {get; }
 
     public Tables(System.Func<string, JSONNode> loader)
     {
         var tables = new System.Collections.Generic.Dictionary<string, object>();
         TbItem = new TbItem(loader("tbitem")); 
         tables.Add("TbItem", TbItem);
+        TbTest = new TbTest(loader("tbtest")); 
+        tables.Add("TbTest", TbTest);
         PostInit();
 
         TbItem.Resolve(tables); 
+        TbTest.Resolve(tables); 
         PostResolve();
     }
 
     public void TranslateText(System.Func<string, string, string> translator)
     {
         TbItem.TranslateText(translator); 
+        TbTest.TranslateText(translator); 
     }
     
     partial void PostInit();
