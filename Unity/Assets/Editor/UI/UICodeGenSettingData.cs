@@ -329,7 +329,7 @@ namespace UI.Editor
 
     }
 
-    [CreateAssetMenu(fileName = "UICodeGenSettingData", menuName = "UI/CodeGenSettings")]
+    [CreateAssetMenu(fileName = "UICodeGenSettingData", menuName = "Ux/UI/Create CodeGenSettings")]
     public class UICodeGenSettingData : ScriptableObject
     {
         [LabelText("命名空间")]

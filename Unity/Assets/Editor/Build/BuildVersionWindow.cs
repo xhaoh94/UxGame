@@ -35,17 +35,17 @@ public enum PlatformType
 }
 public class BuildVersionWindow : EditorWindow
 {
-    [MenuItem("UxGame/构建/构建打包", false, 300)]
+    [MenuItem("UxGame/构建/构建打包", false, 400)]
     public static void Build()
     {
         var window = GetWindow<BuildVersionWindow>("BuildVersionWindow", true);
         window.minSize = new Vector2(800, 500);
     }
 
-    [MenuItem("UxGame/构建/本地资源服务器", false, 301)]
+    [MenuItem("UxGame/构建/本地资源服务器", false, 401)]
     public static void OpenFileServer()
     {
-        new Command("hfs.exe", "../HFS/");
+        new Command("../HFS/hfs.exe");
     }
 
 
@@ -94,195 +94,204 @@ public class BuildVersionWindow : EditorWindow
 
     public void CreateGUI()
     {
-        LoadConfig();
-        VisualElement root = rootVisualElement;
-
-        var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/BuildVersionWindow.uxml");
-        visualAsset.CloneTree(root);
-        _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
-        _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
-        _buildPackageNames = GetBuildPackageNames();
-
-        _listExport = root.Q<ListView>("listExport");
-        _listExport.makeItem = MakeExportListViewItem;
-        _listExport.bindItem = BindExportListViewItem;
-        _listExport.onSelectionChange += OnExportListSelectionChange;
-
-        _btnAdd = root.Q<Button>("btnAdd");
-        _btnAdd.clicked += OnBtnAddClick;
-        _btnRemove = root.Q<Button>("btnRemove");
-        _btnRemove.clicked += OnBtnRemoveClick;
-
-
-        _exportElement = root.Q<VisualElement>("exportElement");
-        _txtName = _exportElement.Q<TextField>("txtName");
-        _txtName.RegisterValueChangedCallback(evt =>
+        try
         {
-            SelectItem.Name = evt.newValue;
-            OnExportListData();
-        });
-        _platformType = _exportElement.Q<EnumField>("platformType");
-        _platformType.Init(PlatformType.Win64);
-        _platformType.style.width = 500;
-        _platformType.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.CurPlatform = (PlatformType)_platformType.value;
-            RefreshWindow();
-        });
-
-        //编译类型
-        _buildType = _exportElement.Q<EnumField>("buildType");
-        _buildType.Init(BuildType.IncrementalBuild);
-        _buildType.style.width = 500;
-        _buildType.RegisterValueChangedCallback(evt =>
-        {
-            var resVersion = _txtVersion.value;
-            RefreshWindow();
-            _txtVersion.SetValueWithoutNotify(resVersion);
-        });
-
-        //资源导出路径
-        _inputBundlePath = _exportElement.Q<TextField>("inputBundlePath");
-        _inputBundlePath.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.BundlePath = evt.newValue;
-        });
-        _btnBundlePath = _exportElement.Q<Button>("btnBundlePath");
-        _btnBundlePath.clicked += OnBtnBundlePathClick;
-
-        //是否拷贝
-        _tgCopy = _exportElement.Q<Toggle>("tgCopy");
-        _tgCopy.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.IsCopyTo = evt.newValue;
-            RefreshElement();
-        });
-        //拷贝路径
-        _inputCopyPath = _exportElement.Q<TextField>("inputCopyPath");
-        _inputCopyPath.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.CopyPath = evt.newValue;
-        });
-        _btnCopyPath = _exportElement.Q<Button>("btnCopyPath");
-        _btnCopyPath.clicked += OnBtnCopyPathClick;
-
-        // 是否清理沙盒缓存
-        _tgClearSandBox = _exportElement.Q<Toggle>("tgClearSandBox");
-        _tgClearSandBox.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.IsClearSandBox = evt.newValue;
-        });
-
-        // 是否编译热更DLL
-        _tgCompileDLL = _exportElement.Q<Toggle>("tgCompileDLL");
-        _tgCompileDLL.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.IsCompileDLL = evt.newValue;
-        });
-
-        // 构建包裹
-        _buildPackage = _exportElement.Q<MaskField>("buildPackage");
-        _buildPackage.choices = _buildPackageNames;
-        _buildPackage.value = -1;
-        _buildPackage.style.width = 350;
-
-        //资源版本
-        _txtVersion = _exportElement.Q<TextField>("txtVersion");
-        //_txtVersion.RegisterValueChangedCallback(evt =>
-        //{
-        //    SelectItem.PlatformConfig.ResVersion = evt.newValue;
-        //});        
-
-        // 构建管线
-        _pipelineType = _exportElement.Q<EnumField>("pipelineType");
-        _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
-        _pipelineType.style.width = 500;
-        _pipelineType.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.PiplineOption = (EBuildPipeline)evt.newValue;
-        });
-
-        // 资源命名格式
-        _nameStyleType = _exportElement.Q<EnumField>("nameStyleType");
-        _nameStyleType.Init(EOutputNameStyle.HashName);
-        _nameStyleType.style.width = 500;
-        _nameStyleType.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.NameStyleOption = (EOutputNameStyle)evt.newValue;
-        });
-
-        // 压缩方式
-        _compressionType = _exportElement.Q<EnumField>("compressionType");
-        _compressionType.Init(ECompressOption.LZ4);
-        _compressionType.style.width = 500;
-        _compressionType.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.CompressOption = (ECompressOption)evt.newValue;
-        });
-
-        // 首包资源标签
-        _inputBuiltinTags = _exportElement.Q<TextField>("inputBuiltinTags");
-        _inputBuiltinTags.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.BuildTags = evt.newValue;
-        });
 
 
-        // 加密方法
-        var encryptionContainer = _exportElement.Q("encryptionContainer");
-        if (_encryptionServicesClassNames.Count > 0)
-        {
-            _encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-            _encryption.label = "加密方法";
-            _encryption.style.width = 500;
-            _encryption.RegisterValueChangedCallback(evt =>
+            LoadConfig();
+            VisualElement root = rootVisualElement;
+
+            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/BuildVersionWindow.uxml");
+            visualAsset.CloneTree(root);
+            _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
+            _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
+            _buildPackageNames = GetBuildPackageNames();
+
+            _listExport = root.Q<ListView>("listExport");
+            _listExport.makeItem = MakeExportListViewItem;
+            _listExport.bindItem = BindExportListViewItem;
+            _listExport.onSelectionChange += OnExportListSelectionChange;
+
+            _btnAdd = root.Q<Button>("btnAdd");
+            _btnAdd.clicked += OnBtnAddClick;
+            _btnRemove = root.Q<Button>("btnRemove");
+            _btnRemove.clicked += OnBtnRemoveClick;
+
+
+            _exportElement = root.Q<VisualElement>("exportElement");
+            _txtName = _exportElement.Q<TextField>("txtName");
+            _txtName.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.EncyptionClassName = evt.newValue;
+                SelectItem.Name = evt.newValue;
+                OnExportListData();
             });
-            encryptionContainer.Add(_encryption);
+            _platformType = _exportElement.Q<EnumField>("platformType");
+            _platformType.Init(PlatformType.Win64);
+            _platformType.style.width = 500;
+            _platformType.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.CurPlatform = (PlatformType)_platformType.value;
+                RefreshWindow();
+            });
+
+            //编译类型
+            _buildType = _exportElement.Q<EnumField>("buildType");
+            _buildType.Init(BuildType.IncrementalBuild);
+            _buildType.style.width = 500;
+            _buildType.RegisterValueChangedCallback(evt =>
+            {
+                var resVersion = _txtVersion.value;
+                RefreshWindow();
+                _txtVersion.SetValueWithoutNotify(resVersion);
+            });
+
+            //资源导出路径
+            _inputBundlePath = _exportElement.Q<TextField>("inputBundlePath");
+            _inputBundlePath.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.BundlePath = evt.newValue;
+            });
+            _btnBundlePath = _exportElement.Q<Button>("btnBundlePath");
+            _btnBundlePath.clicked += OnBtnBundlePathClick;
+
+            //是否拷贝
+            _tgCopy = _exportElement.Q<Toggle>("tgCopy");
+            _tgCopy.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.IsCopyTo = evt.newValue;
+                RefreshElement();
+            });
+            //拷贝路径
+            _inputCopyPath = _exportElement.Q<TextField>("inputCopyPath");
+            _inputCopyPath.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.CopyPath = evt.newValue;
+            });
+            _btnCopyPath = _exportElement.Q<Button>("btnCopyPath");
+            _btnCopyPath.clicked += OnBtnCopyPathClick;
+
+            // 是否清理沙盒缓存
+            _tgClearSandBox = _exportElement.Q<Toggle>("tgClearSandBox");
+            _tgClearSandBox.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.IsClearSandBox = evt.newValue;
+            });
+
+            // 是否编译热更DLL
+            _tgCompileDLL = _exportElement.Q<Toggle>("tgCompileDLL");
+            _tgCompileDLL.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.IsCompileDLL = evt.newValue;
+            });
+
+            // 构建包裹
+            _buildPackage = _exportElement.Q<MaskField>("buildPackage");
+            _buildPackage.choices = _buildPackageNames;
+            _buildPackage.value = -1;
+            _buildPackage.style.width = 350;
+
+            //资源版本
+            _txtVersion = _exportElement.Q<TextField>("txtVersion");
+            //_txtVersion.RegisterValueChangedCallback(evt =>
+            //{
+            //    SelectItem.PlatformConfig.ResVersion = evt.newValue;
+            //});        
+
+            // 构建管线
+            _pipelineType = _exportElement.Q<EnumField>("pipelineType");
+            _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
+            _pipelineType.style.width = 500;
+            _pipelineType.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.PiplineOption = (EBuildPipeline)evt.newValue;
+            });
+
+            // 资源命名格式
+            _nameStyleType = _exportElement.Q<EnumField>("nameStyleType");
+            _nameStyleType.Init(EOutputNameStyle.HashName);
+            _nameStyleType.style.width = 500;
+            _nameStyleType.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.NameStyleOption = (EOutputNameStyle)evt.newValue;
+            });
+
+            // 压缩方式
+            _compressionType = _exportElement.Q<EnumField>("compressionType");
+            _compressionType.Init(ECompressOption.LZ4);
+            _compressionType.style.width = 500;
+            _compressionType.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.CompressOption = (ECompressOption)evt.newValue;
+            });
+
+            // 首包资源标签
+            _inputBuiltinTags = _exportElement.Q<TextField>("inputBuiltinTags");
+            _inputBuiltinTags.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.BuildTags = evt.newValue;
+            });
+
+
+            // 加密方法
+            var encryptionContainer = _exportElement.Q("encryptionContainer");
+            if (_encryptionServicesClassNames.Count > 0)
+            {
+                _encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
+                _encryption.label = "加密方法";
+                _encryption.style.width = 500;
+                _encryption.RegisterValueChangedCallback(evt =>
+                {
+                    SelectItem.PlatformConfig.EncyptionClassName = evt.newValue;
+                });
+                encryptionContainer.Add(_encryption);
+            }
+            else
+            {
+                _encryption = new PopupField<string>();
+                _encryption.label = "加密方法";
+                _encryption.style.width = 500;
+                encryptionContainer.Add(_encryption);
+            }
+
+            _tgExe = _exportElement.Q<Toggle>("tgExe");
+            _tgExe.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.IsExportExecutable = evt.newValue;
+                RefreshElement();
+            });
+            _exeElement = _exportElement.Q<VisualElement>("exeElement");
+            //导出路径
+            _inputExePath = _exeElement.Q<TextField>("inputExePath");
+            _inputExePath.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.ExePath = evt.newValue;
+            });
+            _btnExePath = _exeElement.Q<Button>("btnExePath");
+            _btnExePath.clicked += OnBtnExePathClick;
+
+            //编译类型
+            _compileType = _exeElement.Q<EnumField>("compileType");
+            _compileType.Init(CompileType.Development);
+            _compileType.style.width = 500;
+            _compileType.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.PlatformConfig.CompileType = (CompileType)evt.newValue;
+            });
+
+            // 构建按钮
+            var btnBuild = _exportElement.Q<Button>("build");
+            btnBuild.clicked += OnBuildClick;
+
+            // 清理按钮
+            var btnClear = _exportElement.Q<Button>("clear");
+            btnClear.clicked += OnClearClick;
+
+            OnExportListData();
         }
-        else
+        catch (Exception ex)
         {
-            _encryption = new PopupField<string>();
-            _encryption.label = "加密方法";
-            _encryption.style.width = 500;
-            encryptionContainer.Add(_encryption);
+            Log.Error(ex);
         }
-
-        _tgExe = _exportElement.Q<Toggle>("tgExe");
-        _tgExe.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.IsExportExecutable = evt.newValue;
-            RefreshElement();
-        });
-        _exeElement = _exportElement.Q<VisualElement>("exeElement");
-        //导出路径
-        _inputExePath = _exeElement.Q<TextField>("inputExePath");
-        _inputExePath.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.ExePath = evt.newValue;
-        });
-        _btnExePath = _exeElement.Q<Button>("btnExePath");
-        _btnExePath.clicked += OnBtnExePathClick;
-
-        //编译类型
-        _compileType = _exeElement.Q<EnumField>("compileType");
-        _compileType.Init(CompileType.Development);
-        _compileType.style.width = 500;
-        _compileType.RegisterValueChangedCallback(evt =>
-        {
-            SelectItem.PlatformConfig.CompileType = (CompileType)evt.newValue;
-        });
-
-        // 构建按钮
-        var btnBuild = _exportElement.Q<Button>("build");
-        btnBuild.clicked += OnBuildClick;
-
-        // 清理按钮
-        var btnClear = _exportElement.Q<Button>("clear");
-        btnClear.clicked += OnClearClick;
-
-        OnExportListData();
     }
 
     BuildExportSetting SelectItem
@@ -429,50 +438,18 @@ public class BuildVersionWindow : EditorWindow
         Setting.ExportSettings.Remove(item);
         OnExportListData();
     }
+
     void OnBtnExePathClick()
     {
-        var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", SelectItem.PlatformConfig.ExePath, "");
-        if (temPath.Length == 0)
-        {
-            return;
-        }
-
-        if (!Directory.Exists(temPath))
-        {
-            EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-            return;
-        }
-        _inputExePath.SetValueWithoutNotify(temPath);
+        BuildHelper.OpenFolderPanel(SelectItem.PlatformConfig.ExePath, "请选择生成路径", _inputExePath);
     }
     void OnBtnBundlePathClick()
     {
-        var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", SelectItem.PlatformConfig.BundlePath, "");
-        if (temPath.Length == 0)
-        {
-            return;
-        }
-
-        if (!Directory.Exists(temPath))
-        {
-            EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-            return;
-        }
-        _inputBundlePath.SetValueWithoutNotify(temPath);
+        BuildHelper.OpenFolderPanel(SelectItem.PlatformConfig.BundlePath, "请选择生成路径", _inputBundlePath);
     }
     void OnBtnCopyPathClick()
     {
-        var temPath = EditorUtility.OpenFolderPanel("请选择CDN路径", SelectItem.PlatformConfig.CopyPath, "");
-        if (temPath.Length == 0)
-        {
-            return;
-        }
-
-        if (!Directory.Exists(temPath))
-        {
-            EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-            return;
-        }
-        _inputCopyPath.SetValueWithoutNotify(temPath);
+        BuildHelper.OpenFolderPanel(SelectItem.PlatformConfig.CopyPath, "请选择CDN路径", _inputCopyPath);
     }
 
     void OnBuildClick()
@@ -581,8 +558,7 @@ public class BuildVersionWindow : EditorWindow
         if (!(await BuildRes(buildTarget))) return;
         if (!BuildExe(buildTarget, buildOptions)) return;
         SaveConfig();
-    }
-
+    }    
     private bool CompileDLL(BuildTarget buildTarget, BuildOptions buildOptions)
     {
         if (_tgCompileDLL.value)
@@ -655,6 +631,8 @@ public class BuildVersionWindow : EditorWindow
                 }
             }
         }
+        Log.Debug("---------------------------------------->生成配置文件<---------------------------------------");
+        BuildConfigSettingData.Export();
 
         Log.Debug("---------------------------------------->生成YooAsset UI收集器配置<---------------------------------------");
         UIClassifyWindow.CreateYooAssetUIGroup();

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SevenZip.Compression.LZ;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,45 +7,60 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+[AttributeUsage(AttributeTargets.Field)]
+internal class CommandAttribute : Attribute
+{
+    public readonly string option;
+    public readonly bool newLine;
+
+    public CommandAttribute(string option, bool newLine = true)
+    {
+        this.option = option;
+        this.newLine = newLine;
+    }
+    public CommandAttribute(bool newLine = true)
+    {
+        this.option = string.Empty;
+        this.newLine = newLine;
+    }
+}
+
 /// <summary>
 /// 控制台命令
 /// </summary>
 public class Command
 {
-    private const int _ReadSize = 2048;
-    private Process _CMD;//cmd进程
-    private Encoding _OutEncoding;//输出字符编码
-    private Stream _OutStream;//基础输出流
-    private Stream _ErrorStream;//错误输出流
-    public event Action<string> Output;//输出事件
-    public event Action<string> Error;//错误事件
-    public event Action Exited;//退出事件
-    private bool _Run;//循环控制
-    private byte[] _TempBuffer;//临时缓冲
-    private byte[] _ReadBuffer;//读取缓存区
+    private static readonly int _ReadSize = 2048;
 
-    private byte[] _ETempBuffer;//临时缓冲
-    private byte[] _ErrorBuffer;//错误读取缓存区
-    public Command(string fileName = "cmd.exe", string directory = "")
+    public event Action<string> Output = Log.Info;//输出事件
+    public event Action<string> Error = Log.Error;//错误事件
+    private event Action _exited;//退出事件
+
+    private bool _run;//循环控制
+    private Process _process;//cmd进程
+    private Encoding _outEncoding = Encoding.Default;//输出字符编码
+    private Stream _outStream;//基础输出流
+    private Stream _errorStream;//错误输出流
+
+    private byte[] _tempBuffer;//临时缓冲
+    private byte[] _readBuffer = new byte[_ReadSize];//读取缓存区
+
+    private byte[] _eTempBuffer;//临时缓冲
+    private byte[] _errorBuffer = new byte[_ReadSize];//错误读取缓存区
+
+    public Command(string fileName = "cmd.exe", string argument = "", Action exited = null)
     {
-        _CMD = new Process();        
-        if (!string.IsNullOrEmpty(directory))
-        {
-            var dir = Directory.CreateDirectory(directory);            
-            _CMD.StartInfo.FileName = dir.FullName + fileName;
-        }
-        else
-        {
-            _CMD.StartInfo.FileName = fileName;
-        }
-        _CMD.StartInfo.UseShellExecute = false;//是否使用操作系统shell启动
-        _CMD.StartInfo.RedirectStandardInput = true;//接受来自调用程序的输入信息
-        _CMD.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
-        _CMD.StartInfo.RedirectStandardError = true;//重定向标准错误输出
-        _CMD.StartInfo.CreateNoWindow = true;//不显示程序窗口
-        _CMD.Exited += _CMD_Exited;
-        _ReadBuffer = new byte[_ReadSize];
-        _ErrorBuffer = new byte[_ReadSize];
+        _exited = exited;
+        _process = new Process();
+        _process.StartInfo.Arguments = argument;
+        _process.StartInfo.FileName = fileName;
+        _process.StartInfo.UseShellExecute = false;//是否使用操作系统shell启动
+        _process.StartInfo.RedirectStandardInput = true;//接受来自调用程序的输入信息        
+        _process.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
+        _process.StartInfo.RedirectStandardError = true;//重定向标准错误输出
+        _process.StartInfo.CreateNoWindow = true;//不显示程序窗口
+        _process.Exited += _Exited;
+
         ReStart();
     }
 
@@ -53,8 +69,8 @@ public class Command
     /// </summary>
     public void Stop()
     {
-        _Run = false;
-        _CMD.Close();
+        _run = false;
+        _process.Close();
     }
 
 
@@ -64,20 +80,19 @@ public class Command
     public void ReStart()
     {
         Stop();
-        _CMD.Start();
-        _OutEncoding = Encoding.GetEncoding("gb2312");//Encoding.UTF8;
-        _OutStream = _CMD.StandardOutput.BaseStream;
-        _ErrorStream = _CMD.StandardError.BaseStream;
-        _Run = true;
-        _CMD.StandardInput.AutoFlush = true;
+        _process.Start();
+        _outStream = _process.StandardOutput.BaseStream;
+        _errorStream = _process.StandardError.BaseStream;
+        _run = true;
+        _process.StandardInput.AutoFlush = true;
         ReadResult();
         ErrorResult();
     }
 
     //退出事件
-    private void _CMD_Exited(object sender, EventArgs e)
+    private void _Exited(object sender, EventArgs e)
     {
-        Exited?.Invoke();
+        _exited?.Invoke();
     }
 
     /// <summary>
@@ -87,7 +102,7 @@ public class Command
     public void RunCMD(string cmd)
     {
 
-        if (!_Run)
+        if (!_run)
         {
             if (cmd.Trim().Equals("/restart", StringComparison.CurrentCultureIgnoreCase))
             {
@@ -95,12 +110,12 @@ public class Command
             }
             return;
         }
-        if (_CMD.HasExited)
+        if (_process.HasExited)
         {
             Stop();
             return;
         }
-        _CMD.StandardInput.WriteLine(cmd);
+        _process.StandardInput.WriteLine(cmd);
     }
 
 
@@ -108,45 +123,45 @@ public class Command
     //异步读取输出结果
     private void ReadResult()
     {
-        if (!_Run)
+        if (!_run)
         {
             return;
         }
-        _OutStream.BeginRead(_ReadBuffer, 0, _ReadSize, ReadEnd, null);
+        _outStream?.BeginRead(_readBuffer, 0, _ReadSize, ReadEnd, null);
     }
 
     //一次异步读取结束
     private void ReadEnd(IAsyncResult ar)
     {
-        int count = _OutStream.EndRead(ar);
+        int count = _outStream.EndRead(ar);
 
         if (count < 1)
         {
-            if (_CMD.HasExited)
+            if (_process.HasExited)
             {
                 Stop();
             }
             return;
         }
 
-        if (_TempBuffer == null)
+        if (_tempBuffer == null)
         {
-            _TempBuffer = new byte[count];
-            Buffer.BlockCopy(_ReadBuffer, 0, _TempBuffer, 0, count);
+            _tempBuffer = new byte[count];
+            Buffer.BlockCopy(_readBuffer, 0, _tempBuffer, 0, count);
         }
         else
         {
-            byte[] buff = _TempBuffer;
-            _TempBuffer = new byte[buff.Length + count];
-            Buffer.BlockCopy(buff, 0, _TempBuffer, 0, buff.Length);
-            Buffer.BlockCopy(_ReadBuffer, 0, _TempBuffer, buff.Length, count);
+            byte[] buff = _tempBuffer;
+            _tempBuffer = new byte[buff.Length + count];
+            Buffer.BlockCopy(buff, 0, _tempBuffer, 0, buff.Length);
+            Buffer.BlockCopy(_readBuffer, 0, _tempBuffer, buff.Length, count);
         }
 
         if (count < _ReadSize)
         {
-            string str = _OutEncoding.GetString(_TempBuffer);
+            string str = _outEncoding.GetString(_tempBuffer);
             if (!string.IsNullOrEmpty(str)) Output?.Invoke(str);
-            _TempBuffer = null;
+            _tempBuffer = null;
         }
 
         ReadResult();
@@ -156,44 +171,44 @@ public class Command
     //异步读取错误输出
     private void ErrorResult()
     {
-        if (!_Run)
+        if (!_run)
         {
             return;
         }
-        _ErrorStream.BeginRead(_ErrorBuffer, 0, _ReadSize, ErrorCallback, null);
+        _errorStream?.BeginRead(_errorBuffer, 0, _ReadSize, ErrorCallback, null);
     }
 
     private void ErrorCallback(IAsyncResult ar)
     {
-        int count = _ErrorStream.EndRead(ar);
+        int count = _errorStream.EndRead(ar);
 
         if (count < 1)
         {
-            if (_CMD.HasExited)
+            if (_process.HasExited)
             {
                 Stop();
             }
             return;
         }
 
-        if (_ETempBuffer == null)
+        if (_eTempBuffer == null)
         {
-            _ETempBuffer = new byte[count];
-            Buffer.BlockCopy(_ErrorBuffer, 0, _ETempBuffer, 0, count);
+            _eTempBuffer = new byte[count];
+            Buffer.BlockCopy(_errorBuffer, 0, _eTempBuffer, 0, count);
         }
         else
         {
-            byte[] buff = _ETempBuffer;
-            _ETempBuffer = new byte[buff.Length + count];
-            Buffer.BlockCopy(buff, 0, _ETempBuffer, 0, buff.Length);
-            Buffer.BlockCopy(_ErrorBuffer, 0, _ETempBuffer, buff.Length, count);
+            byte[] buff = _eTempBuffer;
+            _eTempBuffer = new byte[buff.Length + count];
+            Buffer.BlockCopy(buff, 0, _eTempBuffer, 0, buff.Length);
+            Buffer.BlockCopy(_errorBuffer, 0, _eTempBuffer, buff.Length, count);
         }
 
         if (count < _ReadSize)
         {
-            string str = _OutEncoding.GetString(_ETempBuffer);
+            string str = _outEncoding.GetString(_eTempBuffer);
             if (!string.IsNullOrEmpty(str)) Error?.Invoke(str);
-            _ETempBuffer = null;
+            _eTempBuffer = null;
         }
 
         ErrorResult();
@@ -201,9 +216,9 @@ public class Command
 
     ~Command()
     {
-        _Run = false;
-        _CMD?.Close();
-        _CMD?.Dispose();
+        _run = false;
+        _process?.Close();
+        _process?.Dispose();
     }
 
 }

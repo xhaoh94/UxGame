@@ -64,9 +64,12 @@
     <Compile Include="Assets\Hotfix\CodeGen\ProtoCS\cs\bcst\bcst_entergame.cs" />
     <Compile Include="Assets\Hotfix\Common\State\StateComponent.cs" />
     <Compile Include="Assets\Hotfix\Common\State\StateIdle.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\TbItem.cs" />
     <Compile Include="Assets\Hotfix\Modules\Login\LoginView.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Multiple\MultipleView.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\ProtoCS\cs\login\login.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\TbTest.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\Item.cs" />
     <Compile Include="Assets\Hotfix\Common\InputSystem\InputActions.cs" />
     <Compile Include="Assets\Hotfix\Common\CameraComponent.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Multiple\Multiple2TabView.cs" />
@@ -74,6 +77,7 @@
     <Compile Include="Assets\Hotfix\Modules\TipView.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\ProtoCS\cs\login\entergame.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Common\BtnClose.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\RewardType.cs" />
     <Compile Include="Assets\Hotfix\Modules\Map\Map.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\ProtoCS\cs\Cmd.cs" />
     <Compile Include="Assets\Hotfix\Modules\Login\LoginModule.cs" />
@@ -82,10 +86,14 @@
     <Compile Include="Assets\Hotfix\GameState\StateLogin.cs" />
     <Compile Include="Assets\Hotfix\Modules\MultipleView.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\ProtoCS\cs\common\common.cs" />
+    <Compile Include="Assets\Hotfix\Manager\Config\ConfigMgr.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\ItemExchange.cs" />
     <Compile Include="Assets\Hotfix\Ex\EventMgrEx.cs" />
     <Compile Include="Assets\Hotfix\Modules\Map\MapModule.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Bag\BagWindow.cs" />
     <Compile Include="Assets\Hotfix\Modules\Net\NetModule.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\Tables.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\Reward.cs" />
     <Compile Include="Assets\Hotfix\Hotfix_Init.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Common\Common1TabFrame.cs" />
     <Compile Include="Assets\Hotfix\Common\State\UnitStateNode.cs" />
@@ -96,21 +104,13 @@
     <Compile Include="Assets\Hotfix\CodeGen\UI\Main\MainView.cs" />
     <Compile Include="Assets\Hotfix\Ex\UIObjectEx.cs" />
     <Compile Include="Assets\Hotfix\Modules\MainView.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\Test.cs" />
     <Compile Include="Assets\Hotfix\Modules\BagWindow.cs" />
     <Compile Include="Assets\Hotfix\Common\Input\OperateComponent.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\Config\Quality.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Multiple\Multiple1TabView.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Common\Common2TabFrame.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Multiple\Multiple3TabView.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\ItemExchange.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\TbItem.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\Item.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\Quality.cs" />
-    <Compile Include="Assets\Hotfix\Manager\Config\ConfigMgr.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\Reward.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\RewardType.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\Tables.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\Test.cs" />
-    <Compile Include="Assets\Hotfix\CodeGen\Config\TbTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
@@ -855,6 +855,10 @@
       <Project>{3A91D147-3EF2-B875-F70E-F99525D793C5}</Project>
       <Name>UnityEditor.CacheServer</Name>
     </ProjectReference>
+    <ProjectReference Include="Luban.csproj">
+      <Project>{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}</Project>
+      <Name>Luban</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.TextMeshPro.Editor.csproj">
       <Project>{23921B65-491D-5235-FADE-892E6E843C3F}</Project>
       <Name>Unity.TextMeshPro.Editor</Name>
@@ -1110,10 +1114,6 @@
     <ProjectReference Include="Unity.VisualScripting.State.csproj">
       <Project>{50C03743-3ACC-4B13-6DFA-C9E140F3F61A}</Project>
       <Name>Unity.VisualScripting.State</Name>
-    </ProjectReference>
-    <ProjectReference Include="Luban.csproj">
-      <Project>{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}</Project>
-      <Name>Luban</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

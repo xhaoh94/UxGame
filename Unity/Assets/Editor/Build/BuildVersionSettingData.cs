@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using YooAsset.Editor;
 
-[CreateAssetMenu(fileName = "BuildVersionSettingData", menuName = "Build/CodeGenSettings")]
+[CreateAssetMenu(fileName = "BuildVersionSettingData", menuName = "Ux/Build/Create BuildVersionSetting")]
 public class BuildVersionSettingData : ScriptableObject
 {
     public List<BuildExportSetting> ExportSettings = new List<BuildExportSetting>();

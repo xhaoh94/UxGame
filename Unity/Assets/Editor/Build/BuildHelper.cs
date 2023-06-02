@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine.UIElements;
 
 // [UnityEditor.InitializeOnLoad]
 // public class ExcuteInEditorLoad
@@ -52,5 +53,53 @@ public class BuildHelper
             targetGroup = BuildPipeline.GetBuildTargetGroup(buildTarget),
         };
         return buildPlayerOptions;
+    }
+
+    public static void OpenFolderPanel(string path, string title, TextField textField)
+    {
+        if (!string.IsNullOrEmpty(path))
+        {
+            path = Path.GetFullPath(path);
+            path = path.Replace("\\", "/");
+        }
+
+        var temPath = EditorUtility.OpenFolderPanel(title, path, "");
+        if (temPath.Length == 0)
+        {
+            return;
+        }
+
+        if (!Directory.Exists(temPath))
+        {
+            EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
+            return;
+        }
+        textField.SetValueWithoutNotify(temPath);
+    }
+
+    public static void OpenFilePanel(string path, string title, TextField textField, string extension)
+    {
+        if (!string.IsNullOrEmpty(path))
+        {
+            path = Path.GetFullPath(path);
+            path = path.Replace("\\", "/");
+            var index = path.LastIndexOf('/');
+            if (index >= 0)
+            {
+                path = path.Substring(0, index);
+            }
+        }
+        var temPath = EditorUtility.OpenFilePanel(title, path, extension);
+        if (temPath.Length == 0)
+        {
+            return;
+        }
+
+        if (!File.Exists(temPath))
+        {
+            EditorUtility.DisplayDialog("错误", "文件不存在!", "ok");
+            return;
+        }
+        textField.SetValueWithoutNotify(temPath);
     }
 }

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 450148655de865640ab398b01b3200aa, type: 3}
+  m_Name: BuildConfigSettingData
+  m_EditorClassIdentifier: 
+  DllFile: ../Luban/Tools/Luban.ClientServer/Luban.ClientServer.dll
+  Job: cfg --
+  DefineFile: ../Luban/Defines/__root__.xml
+  InputDataPath: ../Luban/Datas
+  OutCodePath: Assets/Hotfix/CodeGen/Config
+  OutDataPath: Assets/Data/Res/Config
+  GenType: code_cs_unity_json,data_json
+  ServiceType: client

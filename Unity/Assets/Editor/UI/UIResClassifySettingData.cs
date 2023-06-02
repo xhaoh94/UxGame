@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace UI.Editor
 {
-    [CreateAssetMenu(fileName = "UIResClassifySettingData", menuName = "UI/ResClassifySettings")]
+    [CreateAssetMenu(fileName = "UIResClassifySettingData", menuName = "Ux/UI/Create ResClassifySettings")]
     public class UIResClassifySettingData : ScriptableObject
     {
         [Serializable]

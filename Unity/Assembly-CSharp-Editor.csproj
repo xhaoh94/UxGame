@@ -62,6 +62,8 @@
     <Compile Include="Assets\Editor\Debugger\DebuggerStringListView.cs" />
     <Compile Include="Assets\Editor\Build\BuildVersionSettingData.cs" />
     <Compile Include="Assets\Editor\UI\UIEditorTools.cs" />
+    <Compile Include="Assets\Editor\Build\BuildConfigSettingData.cs" />
+    <Compile Include="Assets\Editor\Build\BuildConfigWindow.cs" />
     <Compile Include="Assets\Editor\Other\UxEditor.cs" />
     <Compile Include="Assets\Editor\Debugger\Res\ResDebuggerWindow.cs" />
     <Compile Include="Assets\Editor\UI\UICodeGenWindowExport.cs" />
@@ -102,6 +104,7 @@
     <None Include="Assets\Editor\Debugger\Res\ResDebuggerWindow.uxml" />
     <None Include="Assets\Editor\Debugger\Time\TimeDebuggerItemSub1.uxml" />
     <None Include="Assets\Editor\Debugger\Time\TimeDebuggerWindow.uxml" />
+    <None Include="Assets\Editor\Build\BuildConfigWindow.uxml" />
     <None Include="Assets\Editor\UI\UIClassifyWindow.uxml" />
     <None Include="Assets\Editor\Debugger\Event\EventDebuggerItem.uxml" />
     <None Include="Assets\Editor\Debugger\UI\UIDebuggerItem.uxml" />
@@ -846,6 +849,10 @@
       <Project>{3A91D147-3EF2-B875-F70E-F99525D793C5}</Project>
       <Name>UnityEditor.CacheServer</Name>
     </ProjectReference>
+    <ProjectReference Include="Luban.csproj">
+      <Project>{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}</Project>
+      <Name>Luban</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.TextMeshPro.Editor.csproj">
       <Project>{23921B65-491D-5235-FADE-892E6E843C3F}</Project>
       <Name>Unity.TextMeshPro.Editor</Name>
@@ -1101,10 +1108,6 @@
     <ProjectReference Include="Unity.VisualScripting.State.csproj">
       <Project>{50C03743-3ACC-4B13-6DFA-C9E140F3F61A}</Project>
       <Name>Unity.VisualScripting.State</Name>
-    </ProjectReference>
-    <ProjectReference Include="Luban.csproj">
-      <Project>{491847F4-C4D1-8A8E-1E99-93BEE2373BFC}</Project>
-      <Name>Luban</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
