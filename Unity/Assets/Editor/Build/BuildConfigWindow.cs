@@ -1,16 +1,9 @@
+using System;
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
-using static GluonGui.WorkspaceWindow.Views.Checkin.Operations.CheckinViewDeleteOperation;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Reflection;
-using System.Collections.Generic;
-using YooAsset.Editor;
-using YooAsset;
-using System;
-using System.Drawing.Drawing2D;
 
 public enum ConfGenType
 {
@@ -25,10 +18,10 @@ public enum ConfServiceType
 public class BuildConfigWindow : EditorWindow
 {
     [MenuItem("UxGame/≈‰÷√", false, 300)]
-    public static void ShowExample()
+    public static void ShowConfigWindo()
     {
-        BuildConfigWindow wnd = GetWindow<BuildConfigWindow>();
-        wnd.titleContent = new GUIContent("BuildConfigWindow");
+        var window = GetWindow<BuildConfigWindow>("BuildConfigWindow", true);
+        window.minSize = new Vector2(800, 500);
     }
 
     private List<string> GenTypes = new List<string>() { "code_cs_unity_bin,data_bin", "code_cs_unity_json,data_json" };

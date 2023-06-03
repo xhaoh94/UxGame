@@ -42,11 +42,12 @@ public class Pool
             queue = new Queue<object>();
             dictionary.Add(type, queue);
         }
+#if UNITY_EDITOR
         if (queue.Contains(obj))
         {
-            Log.Warning("对象池重复添加！请检查代码");
-            return;
+            throw new Exception("对象池重复添加！请检查代码");            
         }
+#endif
         queue.Enqueue(obj);
     }
 
