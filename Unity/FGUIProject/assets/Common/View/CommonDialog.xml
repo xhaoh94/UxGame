@@ -8,19 +8,19 @@
     <graph id="n4_muls" name="n4" xy="0,0" size="500,400" type="rect" fillColor="#ffffcc33">
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
-    <text id="n0_oylh" name="txtTitle" xy="150,50" size="215,53" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="标题"/>
-    <text id="n1_oylh" name="txtContent" xy="78,111" size="360,155" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="文本"/>
-    <component id="n2_oylh" name="btn1" src="oylhc" fileName="Component/Btn1.xml" xy="200,298" size="100,48" group="n5_muls">
-      <gearXY controller="dialogState" pages="0" values="200,298" default="61,298"/>
+    <text id="n0_oylh" name="txtTitle" xy="142,50" size="215,53" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="标题"/>
+    <text id="n1_oylh" name="txtContent" xy="70,111" size="360,155" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="文本"/>
+    <component id="n2_oylh" name="btn1" src="oylhc" fileName="Component/Btn1.xml" xy="192,298" size="100,48" group="n5_muls">
+      <gearXY controller="dialogState" pages="0" values="192,298" default="61,298"/>
       <Button title="确定"/>
     </component>
-    <component id="n3_oylh" name="btn2" src="oylhc" fileName="Component/Btn1.xml" xy="322,302" size="100,48" group="n5_muls">
+    <component id="n3_oylh" name="btn2" src="oylhc" fileName="Component/Btn1.xml" xy="314,302" size="100,48" group="n5_muls">
       <gearDisplay controller="dialogState" pages="1"/>
       <Button title="取消"/>
     </component>
-    <component id="n6_dvaq" name="btnClose" src="o2441" fileName="Component/BtnClose.xml" xy="426,22" group="n5_muls">
+    <group id="n5_muls" name="n5" xy="70,50" size="360,300"/>
+    <component id="n6_dvaq" name="btnClose" src="o2441" fileName="Component/BtnClose.xml" xy="426,22">
       <relation target="" sidePair="right-right"/>
     </component>
-    <group id="n5_muls" name="n5" xy="78,22" size="398,328"/>
   </displayList>
 </component>

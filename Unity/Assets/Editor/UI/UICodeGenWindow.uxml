@@ -45,9 +45,17 @@
                         <ui:TextField picking-mode="Ignore" label="类名" name="inputClsName" />
                         <ui:DropdownField label="继承类型" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="ddExt" />
                         <ui:VisualElement name="frameCon">
-                            <ui:TextField picking-mode="Ignore" label="ListTab" text="mListTab" name="inputGList" />
-                            <ui:TextField picking-mode="Ignore" label="TabContent" text="mViewStack" name="inputViewStack" />
-                            <ui:TextField picking-mode="Ignore" label="BtnClose" text="mBtnClose" name="inputBtnClose" readonly="false" />
+                            <ui:TextField picking-mode="Ignore" label="ListTab" name="inputGList" />
+                            <ui:TextField picking-mode="Ignore" label="TabContent" name="inputViewStack" />
+                            <ui:TextField picking-mode="Ignore" label="BtnClose" name="inputBtnClose" readonly="false" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="dialogCon">
+                            <ui:TextField picking-mode="Ignore" label="Title" name="inputDialogTitle" />
+                            <ui:TextField picking-mode="Ignore" label="Content" name="inputDialogContent" />
+                            <ui:TextField picking-mode="Ignore" label="BtnClose" name="inputDialogBtnClose" readonly="false" />
+                            <ui:TextField picking-mode="Ignore" label="Btn1" name="inputDialogBtn1" readonly="false" />
+                            <ui:TextField picking-mode="Ignore" label="Btn2" name="inputDialogBtn2" readonly="false" />
+                            <ui:TextField picking-mode="Ignore" label="Controller" name="inputDialogController" readonly="false" />
                         </ui:VisualElement>
                         <ui:Button text="导出选中组件" display-tooltip-when-elided="true" name="btnGenSelectItem" />
                     </ui:VisualElement>

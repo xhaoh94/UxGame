@@ -17,9 +17,8 @@ namespace Ux.UI
 			btnLogin = new Btn1(gCom.GetChildAt(2), this);
 			inputAcc = (GTextInput)gCom.GetChildAt(3);
 			inputPass = (GTextInput)gCom.GetChildAt(5);
-			OnShowCallBack += OnAddEvent;
 		}
-		protected void OnAddEvent()
+		protected override void OnAddEvent()
 		{
 			btnLogin.AddClick(e => OnBtnLoginClick(e));
 		}

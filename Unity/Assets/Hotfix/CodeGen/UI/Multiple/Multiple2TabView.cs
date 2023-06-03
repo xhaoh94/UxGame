@@ -9,5 +9,8 @@ namespace Ux.UI
 		protected override string PkgName => "Multiple";
 		protected override string ResName => "Multiple2TabView";
 
+		protected override void CreateChildren()
+		{
+		}
 	}
 }

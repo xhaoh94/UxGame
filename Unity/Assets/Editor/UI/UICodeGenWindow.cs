@@ -83,6 +83,15 @@ namespace UI.Editor
         TextField inputViewStack;
         TextField inputBtnClose;
 
+
+        TextField inputDialogTitle;
+        TextField inputDialogContent;
+        TextField inputDialogBtnClose;
+        TextField inputDialogBtn1;
+        TextField inputDialogBtn2;
+        TextField inputDialogController;
+
+
         public void CreateGUI()
         {
             UICodeGenSettingData.Load();
@@ -207,6 +216,20 @@ namespace UI.Editor
                 inputBtnClose = root.Q<TextField>("inputBtnClose");
                 inputBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
 
+                inputDialogTitle = root.Q<TextField>("inputDialogTitle");
+                inputDialogTitle.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                inputDialogContent = root.Q<TextField>("inputDialogContent");
+                inputDialogContent.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                inputDialogBtnClose = root.Q<TextField>("inputDialogBtnClose");
+                inputDialogBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                inputDialogBtn1 = root.Q<TextField>("inputDialogBtn1");
+                inputDialogBtn1.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                inputDialogBtn2 = root.Q<TextField>("inputDialogBtn2");
+                inputDialogBtn2.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                inputDialogController = root.Q<TextField>("inputDialogController");
+                inputDialogController.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+
+
                 var btnGenSelectItem = root.Q<Button>("btnGenSelectItem");
                 btnGenSelectItem.clicked += OnBtnGenClick;
                 var btnGenAll = root.Q<Button>("btnGenAll");
@@ -303,9 +326,17 @@ namespace UI.Editor
             inputClsName.SetValueWithoutNotify(data.cls);
             ddExt.SetValueWithoutNotify(data.ext);
             inputGList.value = data.gList;
-            inputViewStack.value = data.gTabContent;
-            inputBtnClose.value = data.gBtnClose;
+            inputViewStack.value = data.tabContent;
+            inputBtnClose.value = data.btnClose;
             inputGList.parent.style.display = data.IsTabFrame ? DisplayStyle.Flex : DisplayStyle.None;
+
+            inputDialogTitle.value = data.dialogTitle;
+            inputDialogContent.value = data.dialogContent;
+            inputDialogBtnClose.value = data.dialogBtnClose;
+            inputDialogBtn1.value = data.dialogBtn1;
+            inputDialogBtn2.value = data.dialogBtn2;
+            inputDialogController.value = data.dialogController;
+            inputDialogTitle.parent.style.display = data.IsDialog ? DisplayStyle.Flex : DisplayStyle.None;
         }
         void SaveSelectItemData()
         {
@@ -330,8 +361,15 @@ namespace UI.Editor
             data.ext = ddExt.value;
             data.isExport = tgExport.value;
             data.gList = inputGList.value;
-            data.gTabContent = inputViewStack.value;
-            data.gBtnClose = inputBtnClose.value;
+            data.tabContent = inputViewStack.value;
+            data.btnClose = inputBtnClose.value;
+
+            data.dialogTitle = inputDialogTitle.value;
+            data.dialogContent = inputDialogContent.value;
+            data.dialogBtnClose = inputDialogBtnClose.value;
+            data.dialogBtn1 = inputDialogBtn1.value;
+            data.dialogBtn2 = inputDialogBtn2.value;
+            data.dialogController = inputDialogController.value;
             UICodeGenSettingData.SetComponentData(data);
             FreshComponentData();
         }

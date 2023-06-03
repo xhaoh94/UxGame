@@ -51,7 +51,7 @@ namespace Ux
         /// <summary>
         /// 关闭动效
         /// </summary>
-        protected virtual Transition HideTransition { get; }= null;
+        protected virtual Transition HideTransition { get; } = null;
 
         protected Action OnShowCallBack;
         protected Action OnHideCallBack;
@@ -90,7 +90,69 @@ namespace Ux
         protected virtual void OnInit()
         {
         }
+        void _SetInfo(MemberInfo info, GObject child)
+        {
+            if (info == null) return;
+            object[] attributes = info.GetCustomAttributes(typeof(UIComponentAttribute), true);
+            if (attributes.Length == 0)
+            {
+                if (info is FieldInfo field)
+                {
+                    field.SetValue(this, child);
+                }
+                else if (info is PropertyInfo property)
+                {
+                    property.SetValue(this, child);
+                }
+            }
+            else
+            {
+                var attribute = (UIComponentAttribute)attributes[0];
+                UIObject com = null;
+                if (attribute.Component != null)
+                {
+                    com = (UIObject)Activator.CreateInstance(attribute.Component);
+                }
+                else
+                {
+                    if (info is FieldInfo field)
+                    {
+                        com = (UIObject)Activator.CreateInstance(field.FieldType);
+                    }
+                    else if (info is PropertyInfo property)
+                    {
+                        com = (UIObject)Activator.CreateInstance(property.PropertyType);
+                    }
+                }
+                if (com != null)
+                {
+                    com.Init(child, this);
+                    if (info is FieldInfo field)
+                    {
+                        field.SetValue(this, com);
+                    }
+                    else if (info is PropertyInfo property)
+                    {
+                        property.SetValue(this, com);
+                    }
+                    Components.Add(com);
+                }
+            }
+        }
 
+        void _SetInfo(MemberInfo info, object child)
+        {
+            if (info == null) return;
+
+            if (info is FieldInfo field)
+            {
+                field.SetValue(this, child);
+            }
+            else if (info is PropertyInfo property)
+            {
+                property.SetValue(this, child);
+            }
+        }
 
         private void ToCreateChildren(Type selfType, GComponent component)
         {
@@ -98,60 +160,39 @@ namespace Ux
             {
                 var child = component.GetChildAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                var info = selfType.GetField(child.name, flag);
+                MemberInfo info;
+                info = selfType.GetField(child.name, flag);
                 if (info == null)
                 {
-                    continue;
+                    info = selfType.GetProperty(child.name, flag);
                 }
-
-                object[] attributes = info.GetCustomAttributes(typeof(UIComponentAttribute), true);
-                if (attributes.Length == 0)
-                {
-                    info.SetValue(this, child);
-                }
-                else
-                {
-                    var attribute = (UIComponentAttribute)attributes[0];
-                    UIObject com;
-                    if (attribute.Component != null)
-                    {
-                        com = (UIObject)Activator.CreateInstance(attribute.Component);
-                    }
-                    else
-                    {
-                        com = (UIObject)Activator.CreateInstance(info.FieldType);
-                    }
-
-                    com.Init(child, this);
-                    info.SetValue(this, com);
-                    Components.Add(com);
-                }
+                _SetInfo(info, child);
             }
 
             for (int i = 0; i < component.Controllers.Count; i++)
             {
                 var cont = component.GetControllerAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                var info = selfType.GetField(cont.name, flag);
+                MemberInfo info;
+                info = selfType.GetField(cont.name, flag);
                 if (info == null)
                 {
-                    continue;
+                    info = selfType.GetProperty(cont.name, flag);
                 }
-
-                info.SetValue(this, cont);
+                _SetInfo(info, cont);
             }
 
             for (int i = 0; i < component.Transitions.Count; i++)
             {
                 var trans = component.GetTransitionAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                var info = selfType.GetField(trans.name, flag);
+                MemberInfo info;   
+                info = selfType.GetField(trans.name, flag);
                 if (info == null)
                 {
-                    continue;
+                    info = selfType.GetProperty(trans.name, flag);
                 }
-
-                info.SetValue(this, trans);
+                _SetInfo(info, trans);
             }
         }
 
@@ -202,6 +243,7 @@ namespace Ux
             if (!token.IsCancellationRequested)
             {
                 OnShowTransitionComplete();
+                OnAddEvent();
                 OnShowCallBack?.Invoke();
             }
 
@@ -230,6 +272,10 @@ namespace Ux
         {
         }
 
+        protected virtual void OnAddEvent()
+        {
+
+        }
 
         public virtual void DoResume(object param)
         {

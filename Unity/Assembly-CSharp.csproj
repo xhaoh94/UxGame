@@ -111,6 +111,9 @@
     <Compile Include="Assets\Hotfix\CodeGen\UI\Multiple\Multiple1TabView.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Common\Common2TabFrame.cs" />
     <Compile Include="Assets\Hotfix\CodeGen\UI\Multiple\Multiple3TabView.cs" />
+    <Compile Include="Assets\Hotfix\Modules\UICustomDialog.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\UI\Common\UICustomDialog.cs" />
+    <Compile Include="Assets\Hotfix\CodeGen\UI\Common\CommonDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

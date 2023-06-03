@@ -29,7 +29,7 @@ namespace Ux
                 {
                     lazyloads = resAttr.lazyloads;
                 }
-                
+
                 data = new UIData(id, type, pkgs, lazyloads, tabData);
             }
 
@@ -137,11 +137,11 @@ namespace Ux
             }
         }
 
-        //public static readonly Dictionary<int, string> idToStr = new Dictionary<int, string>();
-        //public static readonly Dictionary<string, int> strToId = new Dictionary<string, int>();
-
         //对话弹窗
-        public static readonly DialogFactory Dialog = new DialogFactory();
+        public static readonly UIDialogFactory Dialog = new UIDialogFactory();
+
+        //窗口类型对应的ID
+        private readonly Dictionary<Type, int> _typeToId = new Dictionary<Type, int>();
 
         private readonly Dictionary<int, IUIData> _idUIData = new Dictionary<int, IUIData>();
 
@@ -177,13 +177,13 @@ namespace Ux
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
         {
             { UILayer.Root, GRoot.inst },
-            { UILayer.Bottom, CreateLayer(UILayer.Bottom, -100) },
-            { UILayer.Normal, CreateLayer(UILayer.Normal, 0) },
-            { UILayer.Tip, CreateLayer(UILayer.Tip, 90) },
-            { UILayer.Top, CreateLayer(UILayer.Top, 100) }
+            { UILayer.Bottom, _CreateLayer(UILayer.Bottom, -100) },
+            { UILayer.Normal, _CreateLayer(UILayer.Normal, 0) },
+            { UILayer.Tip, _CreateLayer(UILayer.Tip, 90) },
+            { UILayer.Top, _CreateLayer(UILayer.Top, 100) }
         };
 
-        static GComponent CreateLayer(UILayer layer, int v)
+        static GComponent _CreateLayer(UILayer layer, int v)
         {
             var com = new GComponent();
             com.name = com.gameObjectName = layer.ToString();
@@ -195,7 +195,7 @@ namespace Ux
         }
 
         public UIMgr()
-        {            
+        {
             //StageCamera.main.clearFlags = CameraClearFlags.Nothing;
             if (PatchMgr.Ins.IsDone)
             {
@@ -358,12 +358,12 @@ namespace Ux
 
         public T GetUI<T>() where T : IUI
         {
-            return GetUI<T>(Animator.StringToHash(typeof(T).FullName));
+            return GetUI<T>(ConverterID(typeof(T)));
         }
 
         public bool IsShow<T>() where T : UIBase
         {
-            return IsShow(Animator.StringToHash(typeof(T).FullName));
+            return IsShow(ConverterID(typeof(T)));
         }
 
         public bool IsShow(int id)
@@ -371,9 +371,19 @@ namespace Ux
             return _showed.TryGetValue(id, out var ui) && (ui.State == UIState.ShowAnim || ui.State == UIState.Show);
         }
 
+        int ConverterID(Type type)
+        {
+            if (_typeToId.TryGetValue(type, out var id))
+            {
+                return id;
+            }
+            id = Animator.StringToHash(type.FullName);
+            _typeToId.Add(type, id);
+            return id;
+        }
         public UITask<T> Show<T>(object param = null, bool isAnim = true) where T : IUI
-        {            
-            return Show<T>(Animator.StringToHash(typeof(T).FullName), param, isAnim);
+        {
+            return Show<T>(ConverterID(typeof(T)), param, isAnim);
         }
 
         public UITask<T> Show<T>(int id, object param = null, bool isAnim = true) where T : IUI
@@ -433,7 +443,7 @@ namespace Ux
                         ui.DoShow(isAnim, uiid == id ? param : null);
                         _showed.Add(uiid, ui);
                         _showing.Remove(uiid);
-                        EventMgr.Ins.Send(EventType.UI_SHOW, uiid);                        
+                        EventMgr.Ins.Send(EventType.UI_SHOW, uiid);
                     }
                 }
 #if UNITY_EDITOR
@@ -559,7 +569,7 @@ namespace Ux
         private async UniTask<IUI> CreateUI(IUIData data)
         {
             if (data.Pkgs is { Length: > 0 })
-            {                
+            {
                 if (!await ResMgr.Ins.LoaUIdPackage(data.Pkgs))
                 {
 #if UNITY_EDITOR
@@ -570,7 +580,7 @@ namespace Ux
 
                     return null;
                 }
-            }            
+            }
             var ui = (IUI)Activator.CreateInstance(data.CType);
             ui.InitData(data, Remove);
             return ui;
@@ -600,33 +610,27 @@ namespace Ux
             {
                 return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => Animator.StringToHash(x) == id) >= 0;
             }
-
-            foreach (var id in _showing.Where(id => !Func(id)))
-            {
-                Hide(id, false);
-            }
-
-            var ids = _showed.Keys.ToList();
-            foreach (var id in ids.Where(id => !Func(id)))
-            {
-                Hide(id, false);
-            }
+            _HideAll(Func);
         }
 
         public void HideAll(List<Type> ignoreList = null)
         {
             bool Func(int id)
             {
-                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => Animator.StringToHash(x.FullName) == id) >= 0;
+                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => ConverterID(x) == id) >= 0;
             }
+            _HideAll(Func);
+        }
 
-            foreach (var id in _showing.Where(id => !Func(id)))
+        void _HideAll(Func<int, bool> func)
+        {
+            foreach (var id in _showing.Where(id => !func(id)))
             {
                 Hide(id, false);
             }
 
             var ids = _showed.Keys.ToList();
-            foreach (var id in ids.Where(id => !Func(id)))
+            foreach (var id in ids.Where(id => !func(id)))
             {
                 Hide(id, false);
             }
@@ -634,7 +638,7 @@ namespace Ux
 
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
-            Hide(Animator.StringToHash(typeof(T).FullName), isAnim);
+            Hide(ConverterID(typeof(T)), isAnim);
         }
 
         public void Hide(int id, bool isAnim = true)
@@ -650,11 +654,12 @@ namespace Ux
                 return;
             }
 
-            if (_showed.TryGetValue(id, out IUI ui) && ui.State == UIState.HideAnim)
+            if (!_showed.TryGetValue(id, out IUI ui))
             {
                 return;
             }
-            if (ui == null)
+
+            if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
             {
                 return;
             }

@@ -157,6 +157,7 @@
     <Compile Include="Assets\Main\Ex\DateTimeEx.cs" />
     <Compile Include="Assets\Main\Ex\MainEventMgrEx.cs" />
     <Compile Include="Assets\Main\Manager\UI\View\UIBase.cs" />
+    <Compile Include="Assets\Main\Manager\UI\UIDialogFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Main\HybridCLR\Generated\link.xml" />

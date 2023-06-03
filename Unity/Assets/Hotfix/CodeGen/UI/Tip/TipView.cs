@@ -8,5 +8,8 @@ namespace Ux.UI
 		protected override string PkgName => "Tip";
 		protected override string ResName => "TipView";
 
+		protected override void CreateChildren()
+		{
+		}
 	}
 }

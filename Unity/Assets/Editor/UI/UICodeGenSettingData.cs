@@ -88,11 +88,35 @@ namespace UI.Editor
         [FoldoutGroup("@resName", expanded: false)]
         [LabelText("Tab面板容器")]
         [ShowIf("@IsTabFrame")]
-        public string gTabContent;
+        public string tabContent;
         [FoldoutGroup("@resName", expanded: false)]
         [LabelText("Tab面板关闭按钮")]
         [ShowIf("@IsTabFrame")]
-        public string gBtnClose;
+        public string btnClose;
+        [FoldoutGroup("@resName", expanded: false)]
+        [LabelText("Dialog标题")]
+        [ShowIf("@IsDialog")]
+        public string dialogTitle;
+        [FoldoutGroup("@resName", expanded: false)]
+        [LabelText("Dialog文本")]
+        [ShowIf("@IsDialog")]
+        public string dialogContent;
+        [FoldoutGroup("@resName", expanded: false)]
+        [LabelText("Dialog关闭按钮")]
+        [ShowIf("@IsDialog")]
+        public string dialogBtnClose;
+        [FoldoutGroup("@resName", expanded: false)]
+        [LabelText("Dialog按钮1")]
+        [ShowIf("@IsDialog")]
+        public string dialogBtn1;
+        [FoldoutGroup("@resName", expanded: false)]
+        [LabelText("Dialog按钮2")]
+        [ShowIf("@IsDialog")]
+        public string dialogBtn2;
+        [FoldoutGroup("@resName", expanded: false)]
+        [LabelText("Dialog控制器")]
+        [ShowIf("@IsDialog")]
+        public string dialogController;   
 
         [HideInInspector]
         public List<UIMemberData> members = new List<UIMemberData>();
@@ -120,6 +144,13 @@ namespace UI.Editor
             get
             {
                 return ext == $"{UIExtends.Component}/{UIExtendComponent.TabFrame}";
+            }
+        }
+        public bool IsDialog
+        {
+            get
+            {
+                return ext == $"{UIExtends.Panel}/{UIExtendPanel.Dialog}";
             }
         }
         public object Extend
@@ -320,7 +351,7 @@ namespace UI.Editor
                     if (member.defaultType == nameof(GList) &&
                         member.name == data.gList) cnt--;
                     else if (member.defaultType == nameof(GComponent) &&
-                        member.name == data.gTabContent) cnt--;
+                        member.name == data.tabContent) cnt--;
                 }
                 return cnt <= 0;
             }
@@ -509,10 +540,17 @@ namespace UI.Editor
             data.ext = UIEditorTools.CheckExt(com);
             data.isExport = true;
             data.gList = string.Empty;
-            data.gTabContent = string.Empty;
-            data.gBtnClose = string.Empty;
+            data.tabContent = string.Empty;
+            data.btnClose = string.Empty;
+            data.dialogTitle= string.Empty;
+            data.dialogContent = string.Empty;
+            data.dialogBtnClose = string.Empty;
+            data.dialogBtn1 = string.Empty;
+            data.dialogBtn2 = string.Empty;
+            data.dialogController = string.Empty;
             return data;
         }
 
     }
 }
+

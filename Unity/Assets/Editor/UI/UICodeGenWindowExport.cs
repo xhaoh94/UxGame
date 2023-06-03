@@ -159,13 +159,21 @@ namespace UI.Editor
             };
 
             var glist = comData.gList;
-            var viewStack = comData.gTabContent;
-            var btnClose = comData.gBtnClose;
+            var viewStack = comData.tabContent;
+            var btnClose = comData.btnClose;
+
+            var dialogTitle = comData.dialogTitle;
+            var dialogContent = comData.dialogContent;
+            var dialogBtnClose = comData.dialogBtnClose;
+            var dialogBtn1 = comData.dialogBtn1;
+            var dialogBtn2 = comData.dialogBtn2;
+            var dialogController = comData.dialogController;
             switch (ext)
             {
                 case UIExtendPanel.View:
                 case UIExtendPanel.Window:
                 case UIExtendPanel.TabView:
+                case UIExtendPanel.Dialog:
                     var pkgs = UIEditorTools.GetDependenciesPkg(com);
                     if (pkgs != null && pkgs.Count > 0)
                     {
@@ -198,6 +206,36 @@ namespace UI.Editor
                     clsFn();
                     write.Writeln($"protected override string PkgName => \"{com.packageItem.owner.name}\";");
                     write.Writeln($"protected override string ResName => \"{com.packageItem.name}\";");
+                    if (ext is UIExtendPanel.Dialog)
+                    {
+                        foreach (var member in members)
+                        {
+                            if (member.name == dialogTitle)
+                            {
+                                write.Writeln($"protected override GTextField __txtTitle => {member.name};");
+                            }
+                            else if (member.name == dialogContent)
+                            {
+                                write.Writeln($"protected override GTextField __txtContent => {member.name};");
+                            }
+                            else if (member.name == dialogBtnClose)
+                            {
+                                write.Writeln($"protected override UIButton __btnClose => {member.name};");
+                            }
+                            else if (member.name == dialogBtn1)
+                            {
+                                write.Writeln($"protected override UIButton __btn1 => {member.name};");
+                            }
+                            else if (member.name == dialogBtn2)
+                            {
+                                write.Writeln($"protected override UIButton __btn2 => {member.name};");
+                            }
+                            else if (member.name == dialogController)
+                            {
+                                write.Writeln($"protected override Controller __controller => {member.name};");
+                            }
+                        }
+                    }
                     write.Writeln();
                     memberVarFn();
                     break;
@@ -251,10 +289,10 @@ namespace UI.Editor
             List<UIMemberData> dbtns = new List<UIMemberData>();
             List<UIMemberData> longbtns = new List<UIMemberData>();
             List<UIMemberData> lists = new List<UIMemberData>();
+            write.Writeln($"protected override void CreateChildren()");
+            write.StartBlock();
             if (members.Count > 0)
             {
-                write.Writeln($"protected override void CreateChildren()");
-                write.StartBlock();
                 if (ext is UIExtendPanel.Window)
                 {
                     write.Writeln("var gCom = ObjAs<Window>().contentPane;");
@@ -292,6 +330,9 @@ namespace UI.Editor
                     {
                         case nameof(FairyGUI.GButton):
                             if (member.name == btnClose) continue;
+                            if (member.name == dialogBtnClose) continue;
+                            if (member.name == dialogBtn1) continue;
+                            if (member.name == dialogBtn2) continue;
                             switch (member.evtType)
                             {
                                 case "单击":
@@ -312,18 +353,12 @@ namespace UI.Editor
                             break;
                     }
                 }
-                if (btns.Count > 0 || dbtns.Count > 0 ||
-                    longbtns.Count > 0 || lists.Count > 0)
-                {
-                    write.Writeln($"OnShowCallBack += OnAddEvent;");
-                }
-                write.EndBlock();
             }
-
+            write.EndBlock();
             if (btns.Count > 0 || dbtns.Count > 0 ||
                     longbtns.Count > 0 || lists.Count > 0)
             {
-                write.Writeln($"protected void OnAddEvent()");
+                write.Writeln($"protected override void OnAddEvent()");
                 write.StartBlock();
                 foreach (var btn in btns)
                 {

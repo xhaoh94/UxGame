@@ -29,8 +29,14 @@ MonoBehaviour:
       ext: Panel/View
       isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -145,8 +151,14 @@ MonoBehaviour:
       ext: Panel/View
       isExport: 0
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n2
@@ -189,8 +201,14 @@ MonoBehaviour:
       ext: FGUI/ProgressBar
       isExport: 0
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -223,10 +241,16 @@ MonoBehaviour:
       ns: Hotfix.UI
       cls: CommonDialog
       ext: Panel/Dialog
-      isExport: 0
+      isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: txtTitle
+      dialogContent: txtContent
+      dialogBtnClose: btnClose
+      dialogBtn1: btn1
+      dialogBtn2: btn2
+      dialogController: dialogState
       members:
       - index: 0
         name: n4
@@ -309,8 +333,14 @@ MonoBehaviour:
       ext: Component/TabFrame
       isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: btnClose
+      tabContent: 
+      btnClose: btnClose
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -343,8 +373,14 @@ MonoBehaviour:
       ext: Component/TabFrame
       isExport: 1
       gList: listTab
-      gTabContent: tabContent
-      gBtnClose: btnClose
+      tabContent: tabContent
+      btnClose: btnClose
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -407,8 +443,14 @@ MonoBehaviour:
       ext: Component/TabBtn
       isExport: 0
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -451,8 +493,14 @@ MonoBehaviour:
       ext: FGUI/Button
       isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -495,8 +543,14 @@ MonoBehaviour:
       ext: FGUI/Button
       isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n0
@@ -538,6 +592,266 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
+    - ID: 1192ce99-8bc8-4f74-89ae-f0984124745e
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: UICustomDialogView
+      ns: Ux.UI
+      cls: UICustomDialogView
+      ext: Panel/Dialog
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: txtTitle
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: txtContent
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: btn1
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 4
+        name: btn2
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 5
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 6
+        name: n7
+        defaultType: GComponent
+        customType: GComponent
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: b32f5bb6-b96c-40a1-be0d-db1368ec350a
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: UICustomDialog
+      ns: Ux.UI
+      cls: UICustomDialog
+      ext: Panel/Dialog
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: txtTitle
+      dialogContent: txtContent
+      dialogBtnClose: btnClose
+      dialogBtn1: btn1
+      dialogBtn2: btn2
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: txtTitle
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: txtContent
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: btn1
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 4
+        name: btn2
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 5
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+    - ID: 54684371-1c0a-4956-86d7-cc525ba0bcf7
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: UICommonDialog
+      ns: Ux.UI
+      cls: UICommonDialog
+      ext: Panel/Dialog
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: txtTitle
+      dialogContent: txtContent
+      dialogBtnClose: btnClose
+      dialogBtn1: btn1
+      dialogBtn2: btn2
+      dialogController: dialogState
+      members:
+      - index: 0
+        name: n4
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: txtTitle
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: txtContent
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: btn1
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 4
+        name: btn2
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 5
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 0
+        name: dialogState
+        defaultType: Controller
+        customType: Controller
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
   - name: Multiple
     components:
     - ID: 9abcce9c-cee9-41f7-b561-9ac1ae136bbf
@@ -551,8 +865,14 @@ MonoBehaviour:
       ext: Panel/TabView
       isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: n2
@@ -617,8 +937,14 @@ MonoBehaviour:
       ext: Panel/Window
       isExport: 1
       gList: 
-      gTabContent: 
-      gBtnClose: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
       members:
       - index: 0
         name: mCommonBg

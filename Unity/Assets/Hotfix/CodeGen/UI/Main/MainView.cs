@@ -27,9 +27,8 @@ namespace Ux.UI
 			btnLongClick = new Btn1(gCom.GetChildAt(7), this);
 			btnTest = new Btn1(gCom.GetChildAt(8), this);
 			btnBack = new Btn1(gCom.GetChildAt(9), this);
-			OnShowCallBack += OnAddEvent;
 		}
-		protected void OnAddEvent()
+		protected override void OnAddEvent()
 		{
 			btnMultiple.AddClick(e => OnBtnMultipleClick(e));
 			btnNoneWindow.AddClick(e => OnBtnNoneWindowClick(e));

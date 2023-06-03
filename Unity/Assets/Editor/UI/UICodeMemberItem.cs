@@ -131,8 +131,36 @@ public class UICodeMemberItem : TemplateContainer
         if (comData.IsTabFrame)
         {
             if (data.name == comData.gList ||
-                 data.name == comData.gTabContent ||
-                 data.name == comData.gBtnClose)
+                 data.name == comData.tabContent ||
+                 data.name == comData.btnClose)
+            {
+                return;
+            }
+        }
+
+        if (comData.IsDialog)
+        {
+            if (data.name == comData.dialogTitle)
+            {
+                return;
+            }
+            if (data.name == comData.dialogContent)
+            {
+                return;
+            }
+            if (data.name == comData.dialogBtnClose)
+            {
+                return;
+            }
+            if (data.name == comData.dialogBtn1)
+            {
+                return;
+            }
+            if (data.name == comData.dialogBtn2)
+            {
+                return;
+            }
+            if (data.name == comData.dialogController)
             {
                 return;
             }
@@ -196,7 +224,7 @@ public class UICodeMemberItem : TemplateContainer
                 }
                 else
                 {
-                    lContent = JsonConvert.DeserializeObject<MemberEvtLong>(data.evtParam);                    
+                    lContent = JsonConvert.DeserializeObject<MemberEvtLong>(data.evtParam);
                 }
                 _lFirst.SetValueWithoutNotify(lContent.lFirst);
                 _lGapTime.SetValueWithoutNotify(lContent.lGapTime);
@@ -218,7 +246,7 @@ public class UICodeMemberItem : TemplateContainer
                 var dContent = new MemberEvtDouble();
                 dContent.dCnt = _dCnt.value;
                 dContent.dGapTime = _dGapTime.value;
-                data.evtParam = JsonConvert.SerializeObject(dContent);                
+                data.evtParam = JsonConvert.SerializeObject(dContent);
                 _saveCb?.Invoke();
                 break;
             case "³¤°´":
@@ -227,7 +255,7 @@ public class UICodeMemberItem : TemplateContainer
                 lContent.lGapTime = _lGapTime.value;
                 lContent.lCnt = _lCnt.value;
                 lContent.lRadius = _lRadius.value;
-                data.evtParam = JsonConvert.SerializeObject(lContent);                
+                data.evtParam = JsonConvert.SerializeObject(lContent);
                 _saveCb?.Invoke();
                 break;
             default:

@@ -1,24 +1,39 @@
 ﻿using FairyGUI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 
 namespace Ux
 {
+    [Package("Common")]
     public class UIDialog : UIWindow
     {
-        protected override UILayer Layer => UILayer.Normal;
+        protected override UILayer Layer => UILayer.Top;
         protected override string PkgName => "Common";
 
         protected override string ResName => "CommonDialog";
 
-        protected DialogFactory.DialogData dialogData;
-        GTextField txtTitle;
-        GTextField txtContent;
-        GButton btn1;
-        GButton btn2;
-        Controller dialogState;
+        protected UIDialogFactory.DialogData dialogData;
+
+        #region 组件
+        protected virtual GTextField __txtTitle { get; private set; } = null;
+        protected virtual GTextField __txtContent { get; private set; } = null;
+        protected virtual UIButton __btnClose { get; private set; } = null;
+        protected virtual UIButton __btn1 { get; private set; } = null;
+        protected virtual UIButton __btn2 { get; private set; } = null;
+        protected virtual Controller __controller { get; private set; } = null;
+        #endregion
+
+        protected override void CreateChildren()
+        {
+            base.CreateChildren();
+            var gCom = ObjAs<Window>().contentPane;
+            __txtTitle = (GTextField)gCom.GetChild("txtTitle");
+            __txtContent = (GTextField)gCom.GetChild("txtContent");
+            __btnClose = new UIButton(gCom.GetChild("btnClose"), this);
+            __btn1 = new UIButton(gCom.GetChild("btn1"), this);
+            __btn2 = new UIButton(gCom.GetChild("btn2"), this);
+            __controller= (Controller)gCom.GetController("dialogState");
+        }
+
         public override void InitData(IUIData data, Action<IUI> remove)
         {
             OnHideCallBack += _Hide;
@@ -27,58 +42,72 @@ namespace Ux
 
         public override void DoShow(bool isAnim, object param)
         {
-            dialogData = (DialogFactory.DialogData)param;
+            dialogData = (UIDialogFactory.DialogData)param;
             base.DoShow(isAnim, param);
         }
         protected override void OnShow(object param)
         {
+            __btnClose?.AddClick(Hide);
             foreach (var (paramType, value) in dialogData.Param)
             {
                 switch (paramType)
                 {
-                    case DialogFactory.ParamType.Title:
-                        txtTitle.text = value.ToString();
+                    case UIDialogFactory.ParamType.Title:
+                        if (__txtTitle != null) __txtTitle.text = value.ToString();
                         break;
-                    case DialogFactory.ParamType.Content:
-                        txtContent.text = value.ToString();
+                    case UIDialogFactory.ParamType.Content:
+                        if (__txtContent != null) __txtContent.text = value.ToString();
                         break;
-                    case DialogFactory.ParamType.Btn1Title:
-                        btn1.text = value.ToString();
+                    case UIDialogFactory.ParamType.Btn1Title:
+                        if (__btn1 != null) __btn1.text = value.ToString();
                         break;
-                    case DialogFactory.ParamType.Btn1Fn:
-                        AddClick(btn1, OnBtn1Click);
+                    case UIDialogFactory.ParamType.Btn1Fn:
+                        __btn1?.AddClick(OnBtn1Click);
                         break;
-                    case DialogFactory.ParamType.Btn2Title:
-                        btn2.text = value.ToString();
+                    case UIDialogFactory.ParamType.Btn2Title:
+                        if (__btn2 != null) __btn2.text = value.ToString();
                         break;
-                    case DialogFactory.ParamType.Btn2Fn:
-                        AddClick(btn2, OnBtn2Click);
+                    case UIDialogFactory.ParamType.Btn2Fn:
+                        __btn2?.AddClick(OnBtn1Click);
                         break;
-                    case DialogFactory.ParamType.Custom:
+                    case UIDialogFactory.ParamType.Custom:
+                        OnParamCustom(value);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
             }
 
-
-            switch (dialogData.DType)
+            if (__controller != null)
             {
-                case DialogFactory.DialogType.SingleBtn:
-                    dialogState.selectedPage = "btn1";
-                    break;
-                case DialogFactory.DialogType.DoubleBtn:
-                    dialogState.selectedPage = "btn2";
-                    break;
-                case DialogFactory.DialogType.Custom:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (dialogData.DType)
+                {
+                    case UIDialogFactory.DialogType.SingleBtn:
+                        __controller.selectedPage = "btn1";
+                        break;
+                    case UIDialogFactory.DialogType.DoubleBtn:
+                        __controller.selectedPage = "btn2";
+                        break;
+                    case UIDialogFactory.DialogType.Custom:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
+
+        }
+
+        protected virtual void OnParamCustom(object param)
+        {
+
+        }
+        protected virtual void OnDialogCustom()
+        {
+
         }
         void OnBtn1Click()
         {
-            if (dialogData.Param.TryGetValue(DialogFactory.ParamType.Btn1Fn, out var obj))
+            if (dialogData.Param.TryGetValue(UIDialogFactory.ParamType.Btn1Fn, out var obj))
             {
                 (obj as Action)?.Invoke();
             }
@@ -86,7 +115,7 @@ namespace Ux
         }
         void OnBtn2Click()
         {
-            if (dialogData.Param.TryGetValue(DialogFactory.ParamType.Btn2Fn, out var obj))
+            if (dialogData.Param.TryGetValue(UIDialogFactory.ParamType.Btn2Fn, out var obj))
             {
                 (obj as Action)?.Invoke();
             }
@@ -99,138 +128,6 @@ namespace Ux
         private void _Hide()
         {
             dialogData.HideCallBack?.Invoke(this);
-        }
-    }
-    public class DialogFactory
-    {
-        public enum ParamType
-        {
-            Title,
-            Content,
-            Btn1Title,
-            Btn1Fn,
-            Btn2Title,
-            Btn2Fn,
-            Custom,
-        }
-        public enum DialogType
-        {
-            SingleBtn,
-            DoubleBtn,
-            Custom
-        }
-        public struct DialogData
-        {
-            public DialogData(Action<UIDialog> _closeFn, DialogType _boxType)
-            {
-                HideCallBack = _closeFn;
-                DType = _boxType;
-                Param = new Dictionary<ParamType, object>();
-            }
-            public Action<UIDialog> HideCallBack { get; }
-            public DialogType DType { get; }
-            public Dictionary<ParamType, object> Param { get; }
-        }
-        public readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
-        readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
-        void _Hide(UIDialog mb)
-        {
-            if (mb.IsDestroy)
-            {
-                _waitDels.Add(mb.ID, mb);
-            }
-            else
-            {
-                var type = mb.GetType();
-                if (!_pool.TryGetValue(type, out var ids))
-                {
-                    ids = new Queue<int>();
-                    _pool.Add(type, ids);
-                }
-                ids.Enqueue(mb.ID);
-            }
-        }
-        public void Clear()
-        {
-            _pool.Clear();
-        }
-        int __GetTypeUIID(Type type, string[] pkgs, string[] lazyloads)
-        {
-            if (_pool.TryGetValue(type, out var ids) && ids.Count > 0)
-            {
-                return ids.Dequeue();
-            }
-
-            if (_waitDels.Count > 0)
-            {
-                var keys = _waitDels.Keys.ToList();
-                foreach (var key in keys)
-                {
-                    if (!_waitDels.TryGetValue(key, out var ui) || ui.GetType() != type) continue;
-                    _waitDels.Remove(key);
-                    return key;
-                }
-            }
-            
-            var data = new UIData((int)IDGenerater.GenerateId(), type, pkgs, lazyloads);
-            UIMgr.Ins.RegisterUI(data);
-            return data.ID;
-        }
-        public void SingleBtn<T>(string[] pkgs, string title, string content, string btn1Title, Action btn1Fn = null) where T : UIDialog
-        {
-            SingleBtn<T>(pkgs, null, title, content, btn1Title, btn1Fn);
-        }
-        public void SingleBtn<T>(string[] pkgs, string[] lazyloads, string title, string content, string btn1Title, Action btn1Fn = null) where T : UIDialog
-        {
-            var id = __GetTypeUIID(typeof(T), pkgs, lazyloads);
-            var mbData = new DialogData(_Hide, DialogType.SingleBtn);
-            mbData.Param.Add(ParamType.Title, title);
-            mbData.Param.Add(ParamType.Content, content);
-            mbData.Param.Add(ParamType.Btn1Title, btn1Title);
-            mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
-            UIMgr.Ins.Show(id, mbData);
-        }
-        public void SingleBtn(string title, string content, string btn1Title, Action btn1Fn = null)
-        {
-            SingleBtn<UIDialog>(new[] { "Common" }, title, content, btn1Title, btn1Fn);
-        }
-
-
-        public void DoubleBtn<T>(string[] pkgs, string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn) where T : UIDialog
-        {
-            DoubleBtn<T>(pkgs, null, title, content, btn1Title, btn1Fn, btn2Title, btn2Fn);
-        }
-        public void DoubleBtn<T>(string[] pkgs, string[] lazyloads, string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn) where T : UIDialog
-        {
-            var id = __GetTypeUIID(typeof(T), pkgs, lazyloads);
-            var mbData = new DialogData(_Hide, DialogType.DoubleBtn);
-            mbData.Param.Add(ParamType.Title, title);
-            mbData.Param.Add(ParamType.Content, content);
-            mbData.Param.Add(ParamType.Btn1Title, btn1Title);
-            mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
-            mbData.Param.Add(ParamType.Btn2Title, btn2Title);
-            mbData.Param.Add(ParamType.Btn2Fn, btn2Fn);
-            UIMgr.Ins.Show(id, mbData);
-        }
-        public void DoubleBtn(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
-        {
-            DoubleBtn<UIDialog>(new[] { "Common" }, title, content, btn1Title, btn1Fn, btn2Title, btn2Fn);
-        }
-
-        public void Custom<T>(string[] pkgs, object param)
-        {
-            Custom<T>(pkgs, null, param);
-        }
-        public void Custom<T>(string[] pkgs, string[] lazyloads, object param)
-        {
-            var id = __GetTypeUIID(typeof(T), pkgs, lazyloads);
-            var mbData = new DialogData(_Hide, DialogType.Custom);
-            mbData.Param.Add(ParamType.Custom, param);
-            UIMgr.Ins.Show(id, mbData);
-        }
-        public void ShowCustom(object param)
-        {
-            Custom<UIDialog>(new[] { "Common" }, param);
         }
     }
 }

@@ -12,6 +12,7 @@
     <image id="pr7z9" name="ui_tyzy_tcdk_02.png" path="/Asset/"/>
     <component id="oylhb" name="CommonDialog.xml" path="/View/" exported="true"/>
     <component id="oylhc" name="Btn1.xml" path="/Component/" exported="true"/>
+    <component id="bsehd" name="UICustomDialog.xml" path="/View/" exported="true"/>
   </resources>
   <publish name="Common" genCode="true"/>
 </packageDescription>

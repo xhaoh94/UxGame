@@ -6,6 +6,18 @@ namespace Ux
 {
     public class UIButton : UIObject
     {
+        public UIButton()
+        {
+
+        }
+        public UIButton(GObject gObject, UIObject parent)
+        {
+            Init(gObject, parent);
+            parent?.Components?.Add(this);
+        }
+        protected override void CreateChildren()
+        {
+        }
         public GButton Button => ObjAs<GButton>();
 
         #region FairyGUI 属性-方法

@@ -9,5 +9,8 @@ namespace Ux.UI
 			Init(gObject,parent);
 			parent?.Components?.Add(this);
 		}
+		protected override void CreateChildren()
+		{
+		}
 	}
 }
