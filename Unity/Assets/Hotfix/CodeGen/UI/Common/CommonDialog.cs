@@ -22,13 +22,20 @@ namespace Ux.UI
 		protected Controller dialogState;
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<GComponent>();
-			txtTitle = (GTextField)gCom.GetChildAt(1);
-			txtContent = (GTextField)gCom.GetChildAt(2);
-			btn1 = new Btn1(gCom.GetChildAt(3), this);
-			btn2 = new Btn1(gCom.GetChildAt(4), this);
-			btnClose = new BtnClose(gCom.GetChildAt(5), this);
-			dialogState = gCom.GetControllerAt(0);
+			try
+			{
+				var gCom = ObjAs<Window>().contentPane;
+				txtTitle = (GTextField)gCom.GetChildAt(1);
+				txtContent = (GTextField)gCom.GetChildAt(2);
+				btn1 = new Btn1(gCom.GetChildAt(3), this);
+				btn2 = new Btn1(gCom.GetChildAt(4), this);
+				btnClose = new BtnClose(gCom.GetChildAt(5), this);
+				dialogState = gCom.GetControllerAt(0);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 	}
 }

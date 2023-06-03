@@ -18,15 +18,22 @@ namespace Ux.UI
 		protected Btn1 btnBack;
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<GComponent>();
-			btnMultiple = new Btn1(gCom.GetChildAt(2), this);
-			btnNoneWindow = new Btn1(gCom.GetChildAt(3), this);
-			btnNoneView = new Btn1(gCom.GetChildAt(4), this);
-			btnSingle = new Btn1(gCom.GetChildAt(5), this);
-			btnDouble = new Btn1(gCom.GetChildAt(6), this);
-			btnLongClick = new Btn1(gCom.GetChildAt(7), this);
-			btnTest = new Btn1(gCom.GetChildAt(8), this);
-			btnBack = new Btn1(gCom.GetChildAt(9), this);
+			try
+			{
+				var gCom = ObjAs<GComponent>();
+				btnMultiple = new Btn1(gCom.GetChildAt(2), this);
+				btnNoneWindow = new Btn1(gCom.GetChildAt(3), this);
+				btnNoneView = new Btn1(gCom.GetChildAt(4), this);
+				btnSingle = new Btn1(gCom.GetChildAt(5), this);
+				btnDouble = new Btn1(gCom.GetChildAt(6), this);
+				btnLongClick = new Btn1(gCom.GetChildAt(7), this);
+				btnTest = new Btn1(gCom.GetChildAt(8), this);
+				btnBack = new Btn1(gCom.GetChildAt(9), this);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 		protected override void OnAddEvent()
 		{

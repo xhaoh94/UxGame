@@ -18,10 +18,17 @@ namespace Ux.UI
 		}
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<GComponent>();
-			tabContent = (GComponent)gCom.GetChildAt(2);
-			listTab = (GList)gCom.GetChildAt(3);
-			btnClose = new BtnClose(gCom.GetChildAt(4), this);
+			try
+			{
+				var gCom = ObjAs<GComponent>();
+				tabContent = (GComponent)gCom.GetChildAt(2);
+				listTab = (GList)gCom.GetChildAt(3);
+				btnClose = new BtnClose(gCom.GetChildAt(4), this);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 	}
 }

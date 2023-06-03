@@ -14,8 +14,15 @@ namespace Ux.UI
 		}
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<GComponent>();
-			btnClose = new BtnClose(gCom.GetChildAt(1), this);
+			try
+			{
+				var gCom = ObjAs<GComponent>();
+				btnClose = new BtnClose(gCom.GetChildAt(1), this);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 	}
 }

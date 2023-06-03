@@ -13,10 +13,17 @@ namespace Ux.UI
 		protected GTextInput inputPass;
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<GComponent>();
-			btnLogin = new Btn1(gCom.GetChildAt(2), this);
-			inputAcc = (GTextInput)gCom.GetChildAt(3);
-			inputPass = (GTextInput)gCom.GetChildAt(5);
+			try
+			{
+				var gCom = ObjAs<GComponent>();
+				btnLogin = new Btn1(gCom.GetChildAt(2), this);
+				inputAcc = (GTextInput)gCom.GetChildAt(3);
+				inputPass = (GTextInput)gCom.GetChildAt(5);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 		protected override void OnAddEvent()
 		{

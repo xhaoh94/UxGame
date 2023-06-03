@@ -293,7 +293,9 @@ namespace UI.Editor
             write.StartBlock();
             if (members.Count > 0)
             {
-                if (ext is UIExtendPanel.Window)
+                write.Writeln("try");
+                write.StartBlock();
+                if (ext is UIExtendPanel.Window || ext is UIExtendPanel.Dialog)
                 {
                     write.Writeln("var gCom = ObjAs<Window>().contentPane;");
                 }
@@ -353,6 +355,11 @@ namespace UI.Editor
                             break;
                     }
                 }
+                write.EndBlock();
+                write.Writeln("catch (System.Exception e)");
+                write.StartBlock();
+                write.Writeln(" Log.Error(e);");
+                write.EndBlock();
             }
             write.EndBlock();
             if (btns.Count > 0 || dbtns.Count > 0 ||

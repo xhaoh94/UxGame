@@ -95,13 +95,33 @@ namespace Ux
             UIMgr.Ins.RegisterUI(data);
             return data.ID;
         }
+
+        Type _defalutType;
+        public void SetDefalutType<T>() where T : UIDialog
+        {
+            _defalutType = typeof(T);
+        }
+        int GetDefalutID()
+        {
+            Type type = _defalutType;
+            if (type == null)
+            {
+                type = typeof(UIDialog);
+            }
+            var id = _GetTypeUIID(type);
+            return id;
+        }
         public void SingleBtn(string title, string content, string btn1Title, Action btn1Fn = null)
         {
-            SingleBtn<UIDialog>(title, content, btn1Title, btn1Fn);
+            SingleBtn(GetDefalutID(), title, content, btn1Title, btn1Fn);
         }
         public void SingleBtn<T>(string title, string content, string btn1Title, Action btn1Fn = null) where T : UIDialog
         {
             var id = _GetTypeUIID(typeof(T));
+            SingleBtn(id, title, content, btn1Title, btn1Fn);
+        }
+        public void SingleBtn(int id, string title, string content, string btn1Title, Action btn1Fn = null)
+        {
             var mbData = new DialogData(_Hide, DialogType.SingleBtn);
             mbData.Param.Add(ParamType.Title, title);
             mbData.Param.Add(ParamType.Content, content);
@@ -111,11 +131,15 @@ namespace Ux
         }
         public void DoubleBtn(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
         {
-            DoubleBtn<UIDialog>(title, content, btn1Title, btn1Fn, btn2Title, btn2Fn);
+            DoubleBtn(GetDefalutID(), title, content, btn1Title, btn1Fn, btn2Title, btn2Fn);
         }
         public void DoubleBtn<T>(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn) where T : UIDialog
         {
             var id = _GetTypeUIID(typeof(T));
+            DoubleBtn(id, title, content, btn1Title, btn1Fn, btn2Title, btn2Fn);
+        }
+        void DoubleBtn(int id, string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
+        {
             var mbData = new DialogData(_Hide, DialogType.DoubleBtn);
             mbData.Param.Add(ParamType.Title, title);
             mbData.Param.Add(ParamType.Content, content);

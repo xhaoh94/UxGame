@@ -12,8 +12,15 @@ namespace Ux.UI
 		protected Common1TabFrame mCommonBg;
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<GComponent>();
-			mCommonBg = new Common1TabFrame(gCom.GetChildAt(0), this);
+			try
+			{
+				var gCom = ObjAs<GComponent>();
+				mCommonBg = new Common1TabFrame(gCom.GetChildAt(0), this);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 		public override void AddChild(UITabView child)
 		{

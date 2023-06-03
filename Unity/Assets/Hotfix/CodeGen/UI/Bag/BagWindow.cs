@@ -12,8 +12,15 @@ namespace Ux.UI
 		protected Common2TabFrame mCommonBg;
 		protected override void CreateChildren()
 		{
-			var gCom = ObjAs<Window>().contentPane;
-			mCommonBg = new Common2TabFrame(gCom.GetChildAt(0), this);
+			try
+			{
+				var gCom = ObjAs<Window>().contentPane;
+				mCommonBg = new Common2TabFrame(gCom.GetChildAt(0), this);
+			}
+			catch (System.Exception e)
+			{
+				 Log.Error(e);
+			}
 		}
 	}
 }

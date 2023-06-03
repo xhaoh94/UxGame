@@ -1,5 +1,6 @@
 using Ux;
 using UnityEngine;
+using Ux.UI;
 
 namespace Ux
 {
@@ -14,11 +15,12 @@ namespace Ux
                 throw new System.Exception("请在Boot场景启动");
             }
 #endif            
-            Log.Info("启动热更层");            
+            Log.Info("启动热更层");
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
             HotFixMgr.Ins.Assembly.Initialize();
 
             PatchMgr.Ins.Done();
+            UIMgr.Dialog.SetDefalutType<CommonDialog>();
             ConfigMgr.Ins.Init();
             GameMain.Machine.AddNode<StateLogin>();
             GameMain.Machine.AddNode<StateGameIn>();
