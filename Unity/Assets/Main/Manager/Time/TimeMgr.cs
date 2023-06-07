@@ -288,7 +288,7 @@ namespace Ux
                     {
                         var index = waitAdds.FindIndex(x => x.Key == key);
                         waitAdds.RemoveAt(index);
-                    }                  
+                    }
                     return;
                 }
                 Remove(handle);
@@ -438,14 +438,16 @@ namespace Ux
         private long GetKey(Delegate action, HandleMap dic)
         {
             if (action == null) return 0;
-            long flag = (long)Math.Abs(dic.GetHashCode()) << 32;
-            var key = (flag << 32) + Math.Abs(action.GetHashCode());
+            long key = 0;
             var target = action.Target;
-            if (target != null)
+            if (target == null)
             {
-                key |= (uint)Math.Abs(target.GetHashCode());
+                key = IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode());
             }
-
+            else
+            {
+                key = IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), target.GetHashCode());
+            }
             return key;
         }
 

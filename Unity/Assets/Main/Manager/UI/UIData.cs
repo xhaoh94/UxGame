@@ -16,8 +16,15 @@ namespace Ux
         string[] Lazyloads { get; }
         List<int> Children { get; }
         IUITabData TabData { get; }
-
+        /// <summary>
+        /// 获取最下层的ID（最底下的父类面板）
+        /// </summary>
+        /// <returns></returns>
         int GetBottomID();
+        /// <summary>
+        /// 获取最上层的ID（最上层的子类面板）
+        /// </summary>
+        /// <returns></returns>
         int GetTopID();
     }
 
@@ -27,23 +34,32 @@ namespace Ux
         /// 父界面ID
         /// </summary>
         int PID { get; }
+        object Title { get; }
+        Type TagType { get; }
 #if UNITY_EDITOR
         string PIDStr { get; }
+        string TitleStr { get; }
 #endif
-        string Title { get; }
-        int TagId { get; }
+        void Init(IUIData data);
+        bool IsRed();
     }
 
     public class UIData : IUIData
     {
-        public UIData(int id, Type type, string[] pkgs, string[] lazyloads, IUITabData tabData = null)
+        public UIData(int id, Type type, IUITabData tabData = null)
         {
             ID = id;
             CType = type;
-            Pkgs = pkgs ?? new string[] { };
-            Lazyloads = lazyloads ?? new string[] { };
             TabData = tabData;
             Children = new List<int>();
+
+            var pkgsAttr = type.GetAttribute<PackageAttribute>();
+            Pkgs = pkgsAttr?.pkgs;
+
+            var resAttr = type.GetAttribute<LazyloadAttribute>();
+            Lazyloads = resAttr?.lazyloads;
+
+            tabData?.Init(this);
         }
         public virtual int ID { get; }
 #if UNITY_EDITOR
@@ -67,7 +83,6 @@ namespace Ux
 
             return data == null ? ID : data.ID;
         }
-
         public virtual int GetTopID()
         {
             IUIData data = this;
@@ -87,8 +102,7 @@ namespace Ux
                     }
 
                     if (temData.TabData == null) continue;
-                    if (temData.TabData.TagId == 0) continue;
-                    if (!TagMgr.Ins.Check(temData.TabData.TagId)) continue;
+                    if (!temData.TabData.IsRed()) continue;
                     data = temData;
                     break;
                 }
@@ -98,13 +112,28 @@ namespace Ux
         }
     }
 
-    public sealed class UITabData : IUITabData
+    public class UITabData : IUITabData
     {
-        public UITabData(int pId, string title, int tagId = 0)
+        public UITabData(int pId)
         {
             PID = pId;
-            Title = title;
-            TagId = tagId;
+        }
+        public void Init(IUIData data)
+        {
+            var type = data.CType;
+            if (type != null)
+            {
+                var tagAttr = type.GetAttribute<BindTagAttribute>();
+                if (tagAttr != null)
+                {
+                    TagType = tagAttr.TagType;
+                }
+                var titleAttr = type.GetAttribute<TabTitleAttribute>();
+                if (titleAttr != null)
+                {
+                    Title = titleAttr.Title;
+                }
+            }
         }
         public int PID { get; }
 #if UNITY_EDITOR
@@ -120,9 +149,26 @@ namespace Ux
                 return PID.ToString();
             }
         }
-
+        public string TitleStr
+        {
+            get
+            {
+                if (Title is string) return Title.ToString();
+                if (Title == default) return string.Empty;
+                return Newtonsoft.Json.JsonConvert.SerializeObject(Title);
+            }
+        }
 #endif
-        public int TagId { get; }
-        public string Title { get; }
+        public Type TagType { get; protected set; }
+        public object Title { get; protected set; }
+
+        public virtual bool IsRed()
+        {
+            if (TagType != null)
+            {
+                return TagMgr.Ins.IsRed(TagType);
+            }
+            return false;
+        }
     }
 }

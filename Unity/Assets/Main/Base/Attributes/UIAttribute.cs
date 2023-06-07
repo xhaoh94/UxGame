@@ -14,27 +14,22 @@ namespace Ux
         {
             this.id = id;
         }
-
-        public UIAttribute(int pId, string title, int tagId = 0)
-        {
-            tabData = new UITabData(pId, title, tagId);
-        }
-
-        public UIAttribute(Type pId, string title, int tagId = 0)
-        {
-            tabData = new UITabData(Animator.StringToHash(pId.FullName), title, tagId);
-        }
-
-        public UIAttribute(int id, int pId, string title, int tagId = 0)
+        public UIAttribute(int id, int pId)
         {
             this.id = id;
-            tabData = new UITabData(pId, title, tagId);
+            tabData = new UITabData(pId);
         }
-        public UIAttribute(int id, Type pId, string title, int tagId = 0)
+        public UIAttribute(int id, Type pId)
         {
             this.id = id;
-            tabData = new UITabData(Animator.StringToHash(pId.FullName), title, tagId);
+            tabData = new UITabData(pId.FullName.ToHash());
         }
+
+        public UIAttribute(Type pId)
+        {
+            tabData = new UITabData(pId.FullName.ToHash());
+        }
+
         public UIAttribute(IUITabData tabData)
         {
             this.tabData = tabData;
@@ -84,5 +79,13 @@ namespace Ux
         public Type Component { get; }
     }
 
-
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class TabTitleAttribute : Attribute
+    {
+        public TabTitleAttribute(object title)
+        {
+            this.Title = title;
+        }
+        public object Title { get; }
+    }
 }

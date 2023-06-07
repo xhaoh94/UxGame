@@ -77,21 +77,7 @@ namespace Ux
                 }
             }
 
-            string[] pkgs = null;
-            var pkgsAttr = type.GetAttribute<PackageAttribute>();
-            if (pkgsAttr != null)
-            {
-                pkgs = pkgsAttr.pkgs;
-            }
-
-            string[] lazyloads = null;
-            var resAttr = type.GetAttribute<LazyloadAttribute>();
-            if (resAttr != null)
-            {
-                lazyloads = resAttr.lazyloads;
-            }
-
-            var data = new UIData((int)IDGenerater.GenerateId(), type, pkgs, lazyloads);
+            var data = new UIData((int)IDGenerater.GenerateId(), type);
             UIMgr.Ins.RegisterUI(data);
             return data.ID;
         }

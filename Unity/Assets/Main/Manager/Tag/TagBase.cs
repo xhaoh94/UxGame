@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 
 namespace Ux
 {
@@ -8,9 +10,10 @@ namespace Ux
         private bool _inited;
         private bool _isRed;
         private int _redNum = -1;
-
-        protected object _data;
-        public List<TagBase> _parents;
+        private List<TagBase> _parents;
+        //是否是单例红点
+        private bool _isSingle;
+        private object _data;
 
         /// <summary>
         /// 消耗 如果有消耗会优先判断是否满足消耗，不满足的话是不会走OnCheck的
@@ -40,12 +43,44 @@ namespace Ux
         {
             return _redNum;
         }
-
+        public void AddParent(TagBase parent)
+        {
+            _parents ??= new List<TagBase>();
+            if (!_parents.Contains(parent))
+            {
+                _parents.Add(parent);
+            }
+        }
+        public void RemoveParent(TagBase parent)
+        {
+            if (_parents != null)
+            {
+                _parents.Remove(this);
+                if (_parents.Count == 0 && !_isSingle)
+                {
+                    Release();
+                }
+            }
+        }
         public void Init(int tagId, object args)
         {
             if (this._inited) return;
-            TagId = tagId;
-            _data = args;
+            TagId = tagId;            
+            _data = args;            
+            _isSingle = false;
+            _Init();
+        }
+
+        public void Init(Type type)
+        {
+            if (this._inited) return;
+            TagId = type.FullName.ToHash();            
+            _data = null;            
+            _isSingle = true;
+            _Init();
+        }
+        void _Init()
+        {
             _inited = true;
             var mcs = this.EvtTypes();
             if (mcs is { Count: > 0 })
@@ -64,16 +99,16 @@ namespace Ux
         {
         }
 
-        private long timeKey;
+        private long _timeKey;
 
         protected void _DoMessage()
         {
-            if (timeKey != 0)
+            if (_timeKey != 0)
             {
                 return;
             }
 
-            timeKey = TimeMgr.Ins.DoOnce(0.2f, _Check);
+            _timeKey = TimeMgr.Ins.DoOnce(0.2f, _Check);
         }
 
         private bool isUnLock;
@@ -81,7 +116,7 @@ namespace Ux
 
         private void _Check()
         {
-            timeKey = 0;
+            _timeKey = 0;
 
             // bool b = true;
             //TODO 判断是否功能已解锁
@@ -90,24 +125,24 @@ namespace Ux
             //     CheckRed(false);
             //     return;
             // }
-            
+
             //TODO 判断是否消耗不足
             // if (!b)
             // {
             //     CheckRed(false);
             //     return;
             // }
-            CheckRed(OnCheck());
+            _CheckRed(OnCheck());
         }
 
-        private void CheckRed(bool b)
+        private void _CheckRed(bool b)
         {
             bool isChanged = false;
             if (b != _isRed)
             {
                 isChanged = true;
                 _isRed = b;
-                TagMgr.Ins.UpdateStatusByTag(this);
+                TagMgr.Ins.___UpdateStatusByTag(this);
             }
 
             int num = CheckRedNum();
@@ -115,7 +150,7 @@ namespace Ux
             {
                 isChanged = true;
                 _redNum = num;
-                TagMgr.Ins.UpdateNumByTag(this);
+                TagMgr.Ins.___UpdateNumByTag(this);
             }
 
             if (!isChanged || _parents is not { Count: > 0 }) return;
@@ -136,16 +171,19 @@ namespace Ux
             return _isRed ? 1 : 0;
         }
 
-        public virtual void Clear()
+        public virtual void Release()
         {
-            if (timeKey != 0)
-            {
-                TimeMgr.Ins.RemoveKey(timeKey);
-            }
-
+            TimeMgr.Ins.RemoveAll(this);
             EventMgr.Ins.OffAll(this);
             TagMgr.Ins.Off(this);
             _parents?.Clear();
+            TagId = 0;
+            _timeKey = 0;
+            _redNum = -1;
+            _inited = false;
+            _isRed = false;
+            _data = null;
+            Pool.Push(this);
         }
     }
 }

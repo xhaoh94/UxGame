@@ -158,7 +158,7 @@ namespace Ux
         private readonly Queue<IEventExe> _waitExes = new Queue<IEventExe>();
         private readonly List<IEvent> _waitAdds = new List<IEvent>();
         private readonly List<long> _waitDels = new List<long>();
-        
+
 
 #if UNITY_EDITOR
         private readonly Dictionary<string, EventList> type2editor = new Dictionary<string, EventList>();
@@ -223,13 +223,15 @@ namespace Ux
         private long GetKey(int eType, Delegate action)
         {
             if (action == null) return 0;
-            var key = ((long)eType << 32);
-            key += Math.Abs(action.GetHashCode());
+            long key = 0;
             var target = action.Target;
-            if (target != null)
+            if (target == null)
             {
-                var targetHashCode = Math.Abs((long)target.GetHashCode());
-                key |= targetHashCode;
+                key = IDGenerater.GenerateId(eType, action.GetHashCode());
+            }
+            else
+            {
+                key = IDGenerater.GenerateId(eType, action.GetHashCode(), target.GetHashCode());
             }
 
             return key;
@@ -238,13 +240,15 @@ namespace Ux
         private long GetKey(int eType, FastMethodInfo action)
         {
             if (action == null) return 0;
-            var key = ((long)eType << 32);
-            key += Math.Abs(action.GetHashCode());
+            long key = 0;
             var target = action.Target;
-            if (target != null)
+            if (target == null)
             {
-                var targetHashCode = Math.Abs((long)target.GetHashCode());
-                key |= targetHashCode;
+                key = IDGenerater.GenerateId(eType, action.GetHashCode());
+            }
+            else
+            {
+                key = IDGenerater.GenerateId(eType, action.GetHashCode(), target.GetHashCode());
             }
 
             return key;

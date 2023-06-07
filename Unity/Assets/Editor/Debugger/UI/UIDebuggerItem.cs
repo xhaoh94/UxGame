@@ -93,24 +93,25 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
         {
             _txtParID.style.display = DisplayStyle.Flex;
             _txtParID.SetValueWithoutNotify(data.TabData.PID.ToString());
-            if (data.TabData.TagId == 0)
+            if (data.TabData.TagType == null)
             {
                 _txtParRedPoint.style.display = DisplayStyle.None;
             }
             else
             {
                 _txtParRedPoint.style.display = DisplayStyle.Flex;
-                _txtParRedPoint.SetValueWithoutNotify(data.TabData.TagId.ToString());
+                _txtParRedPoint.SetValueWithoutNotify(data.TabData.TagType.FullName);
             }
 
-            if (string.IsNullOrEmpty(data.TabData.Title))
+            var title = data.TabData.TitleStr;
+            if (string.IsNullOrEmpty(title))
             {
                 _txtParTitle.style.display = DisplayStyle.None;
             }
             else
             {
                 _txtParTitle.style.display = DisplayStyle.Flex;
-                _txtParTitle.SetValueWithoutNotify(data.TabData.Title);
+                _txtParTitle.SetValueWithoutNotify(title);
             }
         }
         else

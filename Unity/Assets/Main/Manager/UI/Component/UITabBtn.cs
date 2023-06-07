@@ -4,11 +4,11 @@ namespace Ux
 {
     public class UITabBtn : UIObject
     {
-        protected IUIData data;
+        protected IUIData Data { get; private set; }
 
         public void InitData(IUIData _data, GObject gObj, UITabFrame parent)
         {
-            data = _data;
+            Data = _data;
             Init(gObj, parent);
             DoShow(true, _data);
         }
@@ -22,7 +22,7 @@ namespace Ux
         }
         void _Dispose_False()
         {
-            OnHideCallBack-= _Dispose_False;
+            OnHideCallBack -= _Dispose_False;
             Dispose(false);
             _Hide();
         }
@@ -34,7 +34,7 @@ namespace Ux
         }
         void _Hide()
         {
-            data = null;
+            Data = null;
             Pool.Push(this);
         }
 

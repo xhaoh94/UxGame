@@ -205,9 +205,11 @@ namespace Ux
         protected override void OnShow(object param)
         {
             base.OnShow(param);
-            string title = data.TabData.Title;
-            if (string.IsNullOrEmpty(title)) return;
-            _item.title = title;
+            if(Data.TabData.Title is string title)
+            {
+                if (string.IsNullOrEmpty(title)) return;
+                _item.title = title;
+            }                                    
         }
 
         protected override void OnDispose()

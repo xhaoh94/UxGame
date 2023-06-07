@@ -15,56 +15,42 @@ namespace Ux
         {
             public UIParse(Type type, int id, IUITabData tabData)
             {
-                id = id == 0 ? Animator.StringToHash(type.FullName) : id;
-                string[] pkgs = null;
-                var pkgsAttr = type.GetAttribute<PackageAttribute>();
-                if (pkgsAttr != null)
-                {
-                    pkgs = pkgsAttr.pkgs;
-                }
-
-                string[] lazyloads = null;
-                var resAttr = type.GetAttribute<LazyloadAttribute>();
-                if (resAttr != null)
-                {
-                    lazyloads = resAttr.lazyloads;
-                }
-
-                data = new UIData(id, type, pkgs, lazyloads, tabData);
+                id = id == 0 ? type.FullName.ToHash() : id;
+                Data = new UIData(id, type, tabData);
             }
 
-            UIData data { get; }
+            UIData Data { get; }
 
             public void Add(Dictionary<int, IUIData> _id2data)
             {
-                if (_id2data.ContainsKey(data.ID))
+                if (_id2data.ContainsKey(Data.ID))
                 {
-                    Log.Error("UIData注册重复了。ID[{0}]", data.ID);
+                    Log.Error("UIData注册重复了。ID[{0}]", Data.ID);
                     return;
                 }
 
-                _id2data.Add(data.ID, data);
+                _id2data.Add(Data.ID, Data);
             }
 
             public void Parse(Dictionary<int, IUIData> _id2data)
             {
-                if (data.TabData == null) return;
+                if (Data.TabData == null) return;
 
-                if (data.TabData.PID == 0)
+                if (Data.TabData.PID == 0)
                 {
-                    Log.Error("UITabData父ID为空。ID[{0}]", data.ID);
+                    Log.Error("UITabData父ID为空。ID[{0}]", Data.ID);
                     return;
                 }
 
-                var pId = data.TabData.PID;
+                var pId = Data.TabData.PID;
                 if (!_id2data.TryGetValue(pId, out var pIData))
                 {
-                    Log.Error("UIData注册的父面板不存在。ID[{0}]", data.ID);
+                    Log.Error("UIData注册的父面板不存在。ID[{0}]", Data.ID);
                     return;
                 }
 
                 var pData = pIData as UIData;
-                pData?.Children.Add(data.ID);
+                pData?.Children.Add(Data.ID);
             }
         }
 
@@ -377,7 +363,7 @@ namespace Ux
             {
                 return id;
             }
-            id = Animator.StringToHash(type.FullName);
+            id = type.FullName.ToHash();
             _typeToId.Add(type, id);
             return id;
         }
@@ -608,7 +594,7 @@ namespace Ux
         {
             bool Func(int id)
             {
-                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => Animator.StringToHash(x) == id) >= 0;
+                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => x.ToHash() == id) >= 0;
             }
             _HideAll(Func);
         }

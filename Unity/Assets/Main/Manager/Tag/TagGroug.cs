@@ -16,59 +16,76 @@ namespace Ux
 
         protected abstract void OnInitChildren();
 
-        protected void AddChild(int tId)
+        /// <summary>
+        /// 添加单例类型的红点子项
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void AddChild<T>() where T : TagBase
         {
             _childs ??= new List<TagBase>();
-            if (_childs.FindIndex(x => x.TagId == tId) >= 0) return;
-            var tag = TagMgr.Ins.GetTag(tId);
+            var tag = TagMgr.Ins.GetTag<T>();
             if (tag == null) return;
+            if (_childs.Contains(tag)) return;
             _AddTag(tag);
         }
-
-        protected void AddChild<T>() where T : TagBase
-        {
-            AddChild(typeof(T).FullName.ToHash());
-        }
-
+        /// <summary>
+        /// 添加动态创建的红点子项
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tId"></param>
+        /// <param name="args"></param>
         public void AddChild<T>(int tId, object args) where T : TagBase
         {
+            tId = (int)IDGenerater.GenerateId(typeof(T).FullName.ToHash(), tId);
             _childs ??= new List<TagBase>();
-            if (_childs.FindIndex(x => x.TagId == tId) >= 0) return;
-            var tt = typeof(T);
-            var tag = (TagBase)Activator.CreateInstance(tt);
+            if (_childs.FindIndex(x => x.TagId == tId) >= 0)
+            {
+                Log.Error($"重复创建动态红点{typeof(T).FullName}-{tId}");
+                return;
+            }
+            var tag = Pool.Get<T>();
             tag.Init(tId, args);
             _AddTag(tag);
         }
 
-        public void RemoveChild(int tId)
+        protected void RemoveChild(int tId)
         {
             if (_childs == null) return;
             var index = _childs.FindIndex(x => x.TagId == tId);
             if (index < 0) return;
-            _childs[index]._parents?.Remove(this);
+            var child = _childs[index];
             _childs.RemoveAt(index);
+            child.RemoveParent(this);
             _DoMessage();
         }
 
+        public void RemoveChild<T>(int tId) where T : TagBase
+        {
+            tId = (int)IDGenerater.GenerateId(typeof(T).FullName.ToHash(), tId);
+            RemoveChild(tId);
+        }
+        public void RemoveChild<T>() where T : TagBase
+        {
+            RemoveChild(typeof(T).FullName.ToHash());
+        }
         public void RemoveAll()
         {
             if (_childs == null) return;
             foreach (var tag in _childs)
             {
-                tag._parents?.Remove(this);
+                tag.RemoveParent(this);
             }
-
             _childs.Clear();
             _DoMessage();
         }
 
-        public override void Clear()
+        public override void Release()
         {
-            base.Clear();
+            base.Release();
             if (_childs == null) return;
             foreach (var tag in _childs)
             {
-                tag.Clear();
+                tag.Release();
             }
 
             _childs.Clear();
@@ -78,22 +95,14 @@ namespace Ux
         private void _AddTag(TagBase tag)
         {
             _childs.Add(tag);
-            tag._parents ??= new List<TagBase>();
-            if (!tag._parents.Contains(this))
-            {
-                tag._parents.Add(this);
-            }
+            tag.AddParent(this);
+            _DoMessage();
         }
 
 
         protected override bool OnCheck()
         {
             return _childs != null && _childs.Select(child => child.IsRed()).Any(b => b);
-        }
-
-        public TagBase Find(int tId)
-        {
-            return Find<TagBase>(tId);
         }
 
         public T Find<T>() where T : TagBase
@@ -104,6 +113,7 @@ namespace Ux
         public T Find<T>(int tId) where T : TagBase
         {
             if (_childs == null) return null;
+            tId = (int)IDGenerater.GenerateId(typeof(T).FullName.ToHash(), tId);
             var index = _childs.FindIndex(x => x.TagId == tId);
             if (index < 0)
                 return null;

@@ -26,7 +26,8 @@ namespace Ux.UI
 
     }
 
-    [UI(typeof(MultipleView), "T1")]
+    [UI(typeof(MultipleView))]
+    [TabTitle("T1")]
     partial class Multiple1TabView
     {
         public override bool IsDestroy => false;
@@ -34,7 +35,8 @@ namespace Ux.UI
         //protected override Transition HideTransition => t1;
     }
 
-    [UI(typeof(MultipleView), "T2")]
+    [UI(typeof(MultipleView))]
+    [TabTitle("T2")]
     partial class Multiple2TabView
     {
         public override bool IsDestroy => false;
@@ -42,7 +44,8 @@ namespace Ux.UI
         //protected override Transition HideTransition => t1;
     }
 
-    [UI(typeof(MultipleView), "T3")]
+    [UI(typeof(MultipleView))]
+    [TabTitle("T3")]
     partial class Multiple3TabView
     {
         public override bool IsDestroy => false;

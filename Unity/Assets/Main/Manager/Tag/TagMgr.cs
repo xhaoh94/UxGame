@@ -1,6 +1,7 @@
 using FairyGUI;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Ux
 {
@@ -11,16 +12,13 @@ namespace Ux
             public TagParse(Type type)
             {
                 this.type = type;
-                tagId = type.FullName.ToHash();
             }
 
             public Type type { get; }
-
-            public int tagId { get; }
         }
 
-        private readonly Dictionary<int, TagBase> _keyToMap = new Dictionary<int, TagBase>();
-        private readonly Dictionary<int, Type> _keyToType = new Dictionary<int, Type>();
+        private readonly Dictionary<Type, TagBase> _keyToMap = new Dictionary<Type, TagBase>();
+        private readonly HashSet<Type> _keyToType = new HashSet<Type>();
 
         private Dictionary<GObject, TagBase> _displayToTag;
         private Dictionary<TagBase, List<GObject>> _tagToDisplay;
@@ -33,13 +31,13 @@ namespace Ux
         {
             foreach (var tag in tags)
             {
-                if (_keyToType.ContainsKey(tag.tagId))
+                var tagId = tag.type.FullName.ToHash();
+                if (_keyToType.Contains(tag.type))
                 {
-                    Log.Error("重负注册单例红点tagId:{1}", tag.tagId);
+                    Log.Error("重复注册单例红点:{1}", tag.type.FullName);
                     continue;
                 }
-
-                _keyToType.Add(tag.tagId, tag.type);
+                _keyToType.Add(tag.type);
             }
         }
 
@@ -47,42 +45,59 @@ namespace Ux
         {
             foreach (var kv in _keyToMap)
             {
-                kv.Value.Clear();
+                kv.Value.Release();
             }
 
             _keyToMap.Clear();
         }
-
-        public bool Check(int tId)
+        /// <summary>
+        /// 是否红点，这个只适用单例类型判断，动态创建的红点需要通过GetTag获得单例红点后，通过Find获取
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public bool IsRed<T>() where T : TagBase
         {
-            var tag = GetTag(tId);
+            return IsRed(typeof(T));
+        }
+        /// <summary>
+        /// 是否红点，这个只适用单例类型判断，动态创建的红点需要通过GetTag获得单例红点后，通过Find获取
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public bool IsRed(Type type)
+        {
+            var tag = GetTag(type);
             return tag != null && tag.IsRed();
         }
-
+        /// <summary>
+        /// 获取单例红点
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public T GetTag<T>() where T : TagBase
         {
-            return GetTag<T>(typeof(T).FullName.ToHash());
+            return _GetTag<T>(typeof(T));
+        }
+        /// <summary>
+        /// 获取单例红点
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public TagBase GetTag(Type type)
+        {
+            return _GetTag<TagBase>(type);
         }
 
-        public TagBase GetTag(int tId)
+        T _GetTag<T>(Type type) where T : TagBase
         {
-            return GetTag<TagBase>(tId);
-        }
-
-        public T GetTag<T>(int tId) where T : TagBase
-        {
-            if (_keyToMap.TryGetValue(tId, out var tag)) return (T)tag;
-            if (_keyToType.TryGetValue(tId, out var tt))
-            {
-                tag = (TagBase)Activator.CreateInstance(tt);
-                tag.Init(tId, null);
-                _keyToMap.Add(tId, tag);
-            }
-            else
+            if (_keyToMap.TryGetValue(type, out var tag)) return (T)tag;
+            if (!_keyToType.Contains(type))
             {
                 return null;
             }
-
+            tag = (TagBase)Pool.Get(type);
+            tag.Init(type);
+            _keyToMap.Add(type, tag);
             return (T)tag;
         }
 
@@ -133,27 +148,18 @@ namespace Ux
 
         public void On<T>(GObject gObj) where T : TagBase
         {
-            On(typeof(T).FullName.ToHash(), gObj);
-        }
-
-        public void On(int tId, GObject gObj)
-        {
             if (gObj == null) return;
-            var tag = GetTag(tId);
+            var tag = GetTag<T>();
             On(tag, gObj);
         }
 
         public void On<T>(GTextField text) where T : TagBase
         {
-            On(typeof(T).FullName.ToHash(), text);
-        }
-
-        public void On(int tId, GTextField text)
-        {
             if (text == null) return;
-            var tag = GetTag(tId);
+            var tag = GetTag<T>();
             On(tag, text);
         }
+
 
         public void Off(GTextField text)
         {
@@ -246,7 +252,7 @@ namespace Ux
             }
         }
 
-        public void UpdateStatusByTag(TagBase tag)
+        public void ___UpdateStatusByTag(TagBase tag)
         {
             if (!_tagToDisplay.TryGetValue(tag, out var list)) return;
             for (int i = list.Count - 1; i >= 0; i--)
@@ -269,7 +275,7 @@ namespace Ux
             }
         }
 
-        public void UpdateNumByTag(TagBase tag)
+        public void ___UpdateNumByTag(TagBase tag)
         {
             if (!_tagToText.TryGetValue(tag, out var list)) return;
             for (int i = list.Count - 1; i >= 0; i--)
