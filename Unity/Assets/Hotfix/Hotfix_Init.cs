@@ -25,6 +25,8 @@ namespace Ux
             GameMain.Machine.AddNode<StateLogin>();
             GameMain.Machine.AddNode<StateGameIn>();
             GameMain.Machine.Enter<StateLogin>();
+
+            Destroy(this);
         }
     }
 
