@@ -1,8 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement style="flex-grow: 1;">
-        <ui:TextField picking-mode="Ignore" label="Key" readonly="true" name="txtKey" style="flex-grow: 0;" />
-        <ui:TextField picking-mode="Ignore" label="Cron表达式" readonly="true" name="txtCorn" style="flex-grow: 0;" />
-        <ui:TextField picking-mode="Ignore" label="触发时间" readonly="true" name="txtTimeDesc" style="flex-grow: 0;" />
-        <ui:TextField picking-mode="Ignore" label="时间戳" readonly="true" name="txtTimeStamp" style="flex-grow: 0;" />
-    </ui:VisualElement>
-</ui:UXML>
