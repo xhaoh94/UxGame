@@ -1,11 +1,8 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
-using System.Collections.Generic;
 using Ux;
-using System.Linq;
-using NUnit.Framework;
 
 public class UIDebuggerWindow : EditorWindow
 {

@@ -1,4 +1,4 @@
-﻿namespace Ux.Main
+﻿namespace Ux
 {
     public enum ConditionType
     {

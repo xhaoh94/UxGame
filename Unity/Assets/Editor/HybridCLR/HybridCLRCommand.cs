@@ -1,14 +1,8 @@
 using HybridCLR.Editor;
-using HybridCLR.Editor.Commands;
-using Ux;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using Ux;
 
 namespace HybridCLR.Commands
 {

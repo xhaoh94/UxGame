@@ -1,10 +1,5 @@
 ﻿using System.Collections.Generic;
-using System;
-using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
 
 public class DebuggerObjectListView<T, V> where T : TemplateContainer, IDebuggerListItem<V>, new()
 {

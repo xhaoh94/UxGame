@@ -1,8 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
 using YooAsset.Editor;
 
 [DisplayName("打包特效纹理（自定义）")]

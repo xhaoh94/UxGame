@@ -1,13 +1,10 @@
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEditor.UIElements;
-using UI.Editor;
-using System;
-using static GluonGui.WorkspaceWindow.Views.Checkin.Operations.CheckinViewDeleteOperation;
-using System.Collections.Generic;
-using static UI.Editor.UIMemberData;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using UI.Editor;
+using UnityEditor;
+using UnityEngine.UIElements;
+using static UI.Editor.UIMemberData;
 
 public class UICodeMemberItem : TemplateContainer
 {

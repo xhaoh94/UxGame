@@ -1,8 +1,8 @@
-using Ux;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ux;
 
 public class EventDebuggerWindow : EditorWindow
 {

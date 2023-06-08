@@ -1,9 +1,9 @@
-using Ux;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ux;
 using static Ux.TimeMgr;
 
 public class TimeDebuggerWindow : EditorWindow

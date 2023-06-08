@@ -1,12 +1,5 @@
-﻿using Sirenix.OdinInspector;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using UI.Editor;
-using UnityEditor;
-using UnityEngine;
 using YooAsset.Editor;
 public class CollectPreloadUI : IFilterRule
 {

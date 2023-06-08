@@ -1,4 +1,3 @@
-using Ux;
 using UnityEngine;
 using Ux.UI;
 
@@ -26,7 +25,7 @@ namespace Ux
             GameMain.Machine.AddNode<StateGameIn>();
             GameMain.Machine.Enter<StateLogin>();
 
-            Destroy(this);
+            Destroy(gameObject);
         }
     }
 

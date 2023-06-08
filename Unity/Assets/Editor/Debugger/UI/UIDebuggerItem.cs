@@ -1,10 +1,6 @@
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 using Ux;
-using System.Linq;
-using System;
 
 public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
 {

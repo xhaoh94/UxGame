@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEngine;
 
 public class UxEditor
 {

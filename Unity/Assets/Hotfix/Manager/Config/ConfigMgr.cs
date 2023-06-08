@@ -1,8 +1,5 @@
 using Bright.Serialization;
 using SimpleJSON;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace Ux

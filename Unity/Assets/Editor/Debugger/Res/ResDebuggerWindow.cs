@@ -1,12 +1,8 @@
-using Ux;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using YooAsset.Editor;
+using Ux;
 
 public class ResDebuggerWindow : EditorWindow
 {
