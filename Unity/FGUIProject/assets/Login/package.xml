@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="wyq0c9jx">
+  <resources>
+    <component id="skmp0" name="LoginView.xml" path="/View/" exported="true"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

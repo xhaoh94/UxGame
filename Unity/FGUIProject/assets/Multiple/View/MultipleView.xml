@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <component id="n0_o244" name="mCommonBg" src="q30y4" fileName="components/CommonBg1.xml" pkg="ex3p2il3" xy="0,0" size="1280,720">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+  </displayList>
+  <transition name="t0">
+    <item time="0" type="XY" target="n0_o244" tween="true" startValue="0,720" endValue="0,0" duration="24"/>
+  </transition>
+  <transition name="t1">
+    <item time="0" type="XY" target="n0_o244" tween="true" startValue="0,0" endValue="0,720" duration="24"/>
+  </transition>
+</component>
