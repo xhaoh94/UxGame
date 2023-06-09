@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-using EventType = Ux.Main.EventType;
 
 namespace Ux
 {
@@ -422,14 +421,14 @@ namespace Ux
                     if (_showed.ContainsKey(uiid))
                     {
                         ui.DoResume(uiid == id ? param : null);
-                        EventMgr.Ins.Send(EventType.UI_RESUME, uiid);
+                        EventMgr.Ins.Send(MainEventType.UI_RESUME, uiid);
                     }
                     else
                     {
                         ui.DoShow(isAnim, uiid == id ? param : null);
                         _showed.Add(uiid, ui);
                         _showing.Remove(uiid);
-                        EventMgr.Ins.Send(EventType.UI_SHOW, uiid);
+                        EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
                     }
                 }
 #if UNITY_EDITOR
@@ -664,7 +663,7 @@ namespace Ux
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
 #endif
-            EventMgr.Ins.Send(EventType.UI_HIDE, id);
+            EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
         }
 
         private void CheckDestroy(IUI ui)

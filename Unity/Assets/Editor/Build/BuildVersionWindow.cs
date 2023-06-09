@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using UI.Editor;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -96,8 +97,6 @@ public class BuildVersionWindow : EditorWindow
     {
         try
         {
-
-
             LoadConfig();
             VisualElement root = rootVisualElement;
 
@@ -553,16 +552,31 @@ public class BuildVersionWindow : EditorWindow
                 break;
         }
         Console.Clear();
-
-        if (!CompileDLL(buildTarget, buildOptions)) return;
-        if (!(await BuildRes(buildTarget))) return;
+        if (!await CompileDLL(buildTarget, buildOptions)) return;
+        if (!await BuildRes(buildTarget)) return;
         if (!BuildExe(buildTarget, buildOptions)) return;
         SaveConfig();
-    }    
-    private bool CompileDLL(BuildTarget buildTarget, BuildOptions buildOptions)
+    }
+
+    private async UniTask<bool> CompileDLL(BuildTarget buildTarget, BuildOptions buildOptions)
     {
         if (_tgCompileDLL.value)
         {
+            Log.Debug("---------------------------------------->生成配置文件Code<---------------------------------------");
+            UniTask ExportConfig()
+            {
+                var configTask = AutoResetUniTaskCompletionSource.Create();
+                BuildConfigSettingData.Export(() =>
+                {
+                    configTask?.TrySetResult();
+                });
+                return configTask.Task;
+            }
+            await ExportConfig();
+
+            Log.Debug("------------------------------------>生成YooAsset UI收集器配置<------------------------------");
+            UIClassifyWindow.CreateYooAssetUIGroup();
+
             if (IsExportExecutable)
             {
                 if (buildTarget != EditorUserBuildSettings.activeBuildTarget &&
@@ -572,24 +586,6 @@ public class BuildVersionWindow : EditorWindow
                     Log.Debug("切换编译平台失败");
                     return false;
                 }
-                //Log.Debug("---------------------------------------->生成补充AOT元数据DLL<---------------------------------------");
-                //if (!HybridCLRCommand.CompileAOTDll(buildTarget, buildOptions)) return false;
-
-                //Log.Debug("---------------------------------------->生成热更DLL<---------------------------------------");
-                //CompileDllCommand.CompileDll(buildTarget);
-                //Il2CppDefGeneratorCommand.GenerateIl2CppDef();
-
-                //Log.Debug("---------------------------------------->生成依赖HotUpdateDlls<---------------------------------------");
-                //LinkGeneratorCommand.GenerateLinkXml(buildTarget);
-
-                //Log.Debug("---------------------------------------->生成裁剪后的aot dll<---------------------------------------");
-                //StripAOTDllCommand.GenerateStripedAOTDlls(buildTarget, EditorUserBuildSettings.selectedBuildTargetGroup);
-
-                //Log.Debug("---------------------------------------->生成桥接函数<---------------------------------------");
-                //// 桥接函数生成依赖于AOT dll，必须保证已经build过，生成AOT dll
-                //MethodBridgeGeneratorCommand.GenerateMethodBridge(buildTarget);
-                //ReversePInvokeWrapperGeneratorCommand.GenerateReversePInvokeWrapper(buildTarget);
-                //AOTReferenceGeneratorCommand.GenerateAOTGenericReference(buildTarget);
 
                 Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
                 PrebuildCommand.GenerateAll();
@@ -631,11 +627,6 @@ public class BuildVersionWindow : EditorWindow
                 }
             }
         }
-        Log.Debug("---------------------------------------->生成配置文件<---------------------------------------");
-        BuildConfigSettingData.Export();
-
-        Log.Debug("---------------------------------------->生成YooAsset UI收集器配置<---------------------------------------");
-        UIClassifyWindow.CreateYooAssetUIGroup();
 
         List<string> packages = new List<string>();
 
@@ -662,17 +653,29 @@ public class BuildVersionWindow : EditorWindow
         if (packages.Count > 0)
         {
             Log.Debug("---------------------------------------->收集着色器变种<---------------------------------------");
+
+            UniTask CollectSVC(string path, string package, int processCapacity)
+            {
+                var index1 = path.LastIndexOf('/');
+                var index2 = path.LastIndexOf('.');
+
+                var name = path.Substring(index1 + 1, index2 - index1 - 1);
+                path = path.Replace(name, $"{package}SVC");
+                var task = AutoResetUniTaskCompletionSource.Create();
+                Action callback = () =>
+                {
+                    task.TrySetResult();
+                };
+                ShaderVariantCollector.Run(path, package, processCapacity, callback);
+                return task.Task;
+            }
+
             string savePath = ShaderVariantCollectorSettingData.Setting.SavePath;
             int processCapacity = ShaderVariantCollectorSettingData.Setting.ProcessCapacity;
             foreach (var package in packages)
             {
                 await CollectSVC(savePath, package, processCapacity);
-            }
-            await OpenBootScene();
-            // 聚焦到游戏窗口
-            EditorTools.FocusUnitySceneWindow();
-
-            await UniTask.Delay(3000);
+            }           
 
             Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
             foreach (var package in packages)
@@ -683,35 +686,10 @@ public class BuildVersionWindow : EditorWindow
         }
         return true;
     }
-    UniTask OpenBootScene()
-    {
-        sceneTask = null;
-        EditorSceneManager.sceneOpened += SceneOpened;
-        sceneTask = AutoResetUniTaskCompletionSource.Create();
-        EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);
-        return sceneTask.Task;
-    }
-    private AutoResetUniTaskCompletionSource sceneTask;
-    void SceneOpened(UnityEngine.SceneManagement.Scene scene, OpenSceneMode mode)
-    {
-        EditorSceneManager.sceneOpened -= SceneOpened;
-        sceneTask?.TrySetResult();
-    }
-    UniTask CollectSVC(string savePath, string package, int processCapacity)
-    {
-        var index1 = savePath.LastIndexOf('/');
-        var index2 = savePath.LastIndexOf('.');
 
-        var name = savePath.Substring(index1 + 1, index2 - index1 - 1);
-        savePath = savePath.Replace(name, $"{package}SVC");
-        var task = AutoResetUniTaskCompletionSource.Create();
-        Action callback = () =>
-        {
-            task.TrySetResult();
-        };
-        ShaderVariantCollector.Run(savePath, package, processCapacity, callback);
-        return task.Task;
-    }
+
+
+
     string OutputRoot
     {
         get
@@ -780,7 +758,7 @@ public class BuildVersionWindow : EditorWindow
             return false;
         }
 
-        //不拷贝link.xml，因为会导致打包的时候，电脑直接关机
+        //不拷贝link.xml，因为会导致无法打包
         //if (IsExportExecutable)
         //{
         //    var tLinkPath = $"{buildPath}/{nowVersion}/link.xml";
@@ -892,6 +870,9 @@ public class BuildVersionWindow : EditorWindow
             item.PlatformConfig.ResVersion = _txtVersion.value;
         }
         Setting?.SaveFile();
+        EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);
+        // 聚焦到游戏窗口
+        EditorTools.FocusUnitySceneWindow();        
     }
 
     #endregion

@@ -9,27 +9,24 @@ namespace Ux
 #endif
         int EType { get; }
     }
-}
 
-namespace Ux.Main
-{
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class EvtAttribute : Attribute, IEvtAttribute
+    public class MainEvtAttribute : Attribute, IEvtAttribute
     {
 #if UNITY_EDITOR
         public string ETypeStr { get; }
 #endif
         public int EType { get; }
 
-        public EvtAttribute(int eType)
+        public MainEvtAttribute(int eType)
         {
             this.EType = eType;
         }
-        public EvtAttribute(EventType eType)
+        public MainEvtAttribute(MainEventType eType)
         {
             this.EType = (int)eType;
 #if UNITY_EDITOR
-            this.ETypeStr = $"Main.{nameof(EventType)}.{eType}";
+            this.ETypeStr = $"Main.{nameof(MainEventType)}.{eType}";
 #endif
         }
 

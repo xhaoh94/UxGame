@@ -1,5 +1,4 @@
-﻿using EventType = Ux.Main.EventType;
-namespace Ux
+﻿namespace Ux
 {
     public class PatchCreateDownloader : PatchStateNode
     {
@@ -22,7 +21,7 @@ namespace Ux
             if (downloader.TotalDownloadCount > 0)
             {
                 Log.Debug($"一共发现了{downloader.TotalDownloadCount}个资源需要更新下载。");                
-                EventMgr.Ins.Send(EventType.FOUND_UPDATE_FILES, downloader);
+                EventMgr.Ins.Send(MainEventType.FOUND_UPDATE_FILES, downloader);
             }
             else
             {

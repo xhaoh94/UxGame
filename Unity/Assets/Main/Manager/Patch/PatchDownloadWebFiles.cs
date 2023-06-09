@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using EventType = Ux.Main.EventType;
 namespace Ux
 {
     public class PatchDownloadWebFiles : PatchStateNode
@@ -22,12 +21,12 @@ namespace Ux
             msg.CurrentDownloadCount = currentDownloadCount;
             msg.TotalDownloadSizeBytes = totalDownloadSizeBytes;
             msg.CurrentDownloadSizeBytes = currentDownloadSizeBytes;
-            EventMgr.Ins.Send(EventType.DOWNLOAD_PROGRESS_UPDATE, msg);
+            EventMgr.Ins.Send(MainEventType.DOWNLOAD_PROGRESS_UPDATE, msg);
         }
         void OnDownloadErrorCallback(string fileName, string error)
         {
             Log.Error($"文件下载失败:{fileName},error:{error}");
-            EventMgr.Ins.Send(EventType.WEBFILE_DOWNLOAD_FAILED, fileName, error, this);
+            EventMgr.Ins.Send(MainEventType.WEBFILE_DOWNLOAD_FAILED, fileName, error, this);
         }
 
         private void BeginDownload(Downloader downloader)

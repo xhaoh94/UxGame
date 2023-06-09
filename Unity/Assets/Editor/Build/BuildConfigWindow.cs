@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-
+using UnityEditor.UIElements;
 public enum ConfGenType
 {
     Bin,
@@ -50,7 +50,7 @@ public class BuildConfigWindow : EditorWindow
     public void CreateGUI()
     {
         try
-        {            
+        {
             var Setting = BuildConfigSettingData.LoadConfig();
             VisualElement root = rootVisualElement;
 
@@ -159,7 +159,7 @@ public class BuildConfigWindow : EditorWindow
 
     void OnBtnExportClick()
     {
-        BuildConfigSettingData.Export();        
+        BuildConfigSettingData.Export();
     }
 
 

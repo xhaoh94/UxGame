@@ -1,4 +1,3 @@
-using Ux;
 using System;
 
 namespace Ux
@@ -6,7 +5,7 @@ namespace Ux
     [Module]
     public class NetModule : ModuleBase<NetModule>
     {
-        [Ux.Main.Evt(Ux.Main.EventType.NET_SOCKET_CODE)]
+        [Evt(MainEventType.NET_SOCKET_CODE)]
         void OnSocketCode(string address, SocketCode code)
         {
             switch (code)
@@ -19,18 +18,18 @@ namespace Ux
                             GameMain.Machine.Enter<StateLogin>();
                         }
                     };
-                    UIMgr.Dialog.SingleBtn("��ʾ", $"���ӳ�ʱ", "ȷ��", callback);
+                    UIMgr.Dialog.SingleBtn("提示", $"链接超时", "确定", callback);
                     break;
                 case SocketCode.Error:
                     Action fn1 = () =>
                     {
-                        //TODO ��������
+                        
                     };
                     Action fn2 = () =>
                     {
                         GameMain.Machine.Enter<StateLogin>();
                     };
-                    UIMgr.Dialog.DoubleBtn("��ʾ", "�������ӶϿ�", "��������", fn1, "ȡ��", fn2);
+                    UIMgr.Dialog.DoubleBtn("提示", "网络断开连接", "重新连接", fn1, "返回登录", fn2);
                     break;
             }
         }

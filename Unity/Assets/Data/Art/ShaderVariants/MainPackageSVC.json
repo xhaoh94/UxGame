@@ -1,6 +1,6 @@
 {
-    "ShaderTotalCount": 13,
-    "VariantTotalCount": 13,
+    "ShaderTotalCount": 15,
+    "VariantTotalCount": 16,
     "ShaderVariantInfos": [
         {
             "AssetPath": "Resources/unity_builtin_extra",
@@ -140,6 +140,36 @@
             "ShaderVariantElements": [
                 {
                     "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Packages/com.unity.render-pipelines.universal/Shaders/Lit.shader",
+            "ShaderName": "Universal Render Pipeline/Lit",
+            "ShaderVariantElements": [
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Data/Art/Shders/CelColorShader.shader",
+            "ShaderName": "ToonLit/Outline",
+            "ShaderVariantElements": [
+                {
+                    "PassType": 13,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 14,
                     "Keywords": [
                         ""
                     ]

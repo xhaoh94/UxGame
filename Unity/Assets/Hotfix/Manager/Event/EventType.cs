@@ -2,6 +2,6 @@
 {
     public enum EventType
     {
-        None = Ux.Main.EventType.Max,        
+        None = MainEventType.Max,        
     }
 }

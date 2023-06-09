@@ -185,7 +185,7 @@ namespace Ux
 
         public void ___RegisterFastMethod(object target)
         {
-            ___RegisterFastMethod(typeof(Main.EvtAttribute), target);
+            ___RegisterFastMethod(typeof(MainEvtAttribute), target);
             if (___hotfixEvtAttribute != null)
             {
                 ___RegisterFastMethod(___hotfixEvtAttribute, target);

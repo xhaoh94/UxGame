@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using YooAsset;
-using EventType = Ux.Main.EventType;
 namespace Ux
 {
     internal class PatchUpdateManifest : PatchStateNode
@@ -30,7 +29,7 @@ namespace Ux
             }
             else
             {
-                EventMgr.Ins.Send(EventType.PATCH_MANIFEST_UPDATE_FAILED);
+                EventMgr.Ins.Send(MainEventType.PATCH_MANIFEST_UPDATE_FAILED);
             }
         }
 
@@ -40,7 +39,7 @@ namespace Ux
             yield return operation;
             if (operation.Status != EOperationStatus.Succeed)
             {
-                Log.Warning(operation.Error);
+                Log.Error(operation.Error);
                 if (IsSucceed) IsSucceed = false;
             }
         }

@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using YooAsset;
-using EventType = Ux.Main.EventType;
 namespace Ux
 {
     internal class PatchUpdateStaticVersion : PatchStateNode
@@ -27,7 +26,7 @@ namespace Ux
             }
             else
             {
-                EventMgr.Ins.Send(EventType.STATIC_VERSION_UPDATE_FAILED);
+                EventMgr.Ins.Send(MainEventType.STATIC_VERSION_UPDATE_FAILED);
             }
         }
 

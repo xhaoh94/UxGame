@@ -1,7 +1,6 @@
 ﻿using System;
 using FairyGUI;
 using UnityEngine;
-using EventType = Ux.Main.EventType;
 
 namespace Ux
 {
@@ -28,7 +27,7 @@ namespace Ux
             bar.min = 0f;
             bar.visible = false;
         }
-        [Main.Evt(EventType.PATCH_STATE_CHANGED)]
+        [MainEvt(MainEventType.PATCH_STATE_CHANGED)]
         void OnStateChanged(string node)
         {
             switch (node)
@@ -51,7 +50,7 @@ namespace Ux
             }
         }
 
-        [Main.Evt(EventType.FOUND_UPDATE_FILES)]
+        [MainEvt(MainEventType.FOUND_UPDATE_FILES)]
         void OnFoundUpdateFiles(Downloader downloader)
         {
             Action callback = () =>
@@ -63,7 +62,7 @@ namespace Ux
             UIMgr.Dialog.SingleBtn("提示", $"下载更新{totalCnt}文件，总大小{totalSizeMB}MB", "确定", callback);
         }
 
-        [Main.Evt(EventType.STATIC_VERSION_UPDATE_FAILED)]
+        [MainEvt(MainEventType.STATIC_VERSION_UPDATE_FAILED)]
         void OnStaticVersionUpdateFailed()
         {
             Action callback = () =>
@@ -73,7 +72,7 @@ namespace Ux
             UIMgr.Dialog.SingleBtn("提示", $"获取资源版本失败，请检测网络状态。", "确定", callback);
         }
 
-        [Main.Evt(EventType.PATCH_MANIFEST_UPDATE_FAILED)]
+        [MainEvt(MainEventType.PATCH_MANIFEST_UPDATE_FAILED)]
         void OnPatchManifestUpdateFailed()
         {
             Action callback = () =>
@@ -83,7 +82,7 @@ namespace Ux
             UIMgr.Dialog.SingleBtn("提示", $"获取补丁清单失败，请检测网络状态。", "确定", callback);
         }
 
-        [Main.Evt(EventType.WEBFILE_DOWNLOAD_FAILED)]
+        [MainEvt(MainEventType.WEBFILE_DOWNLOAD_FAILED)]
         void OnWebFileDownloadFailed(string fileName, string error)
         {
             Action callback = () =>
@@ -93,7 +92,7 @@ namespace Ux
             UIMgr.Dialog.SingleBtn("提示", $"更新失败,可能磁盘空间不足！", "确定", callback);
         }
 
-        [Main.Evt(EventType.DOWNLOAD_PROGRESS_UPDATE)]
+        [MainEvt(MainEventType.DOWNLOAD_PROGRESS_UPDATE)]
         void OnDownloadProgressUpdate(DownloadProgressUpdate message)
         {
             if (!bar.visible) bar.visible = true;

@@ -745,7 +745,7 @@ namespace FairyGUI
 
         void __stageTouchEnd(EventContext context)
         {
-            CheckPopups(false);            
+            CheckPopups(false);
         }
 
         void CheckPopups(bool touchBegin)

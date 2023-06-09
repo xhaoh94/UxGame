@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using EventType = Ux.Main.EventType;
 namespace Ux
 {
     public enum SocketCode
@@ -96,7 +95,7 @@ namespace Ux
 
         protected void OnSocketCode(SocketCode e)
         {
-            EventMgr.Ins.Send(EventType.NET_SOCKET_CODE, Address, e);
+            EventMgr.Ins.Send(MainEventType.NET_SOCKET_CODE, Address, e);
             Dispose();
         }
         public void Connect(Action connectCallback)
@@ -126,7 +125,7 @@ namespace Ux
             IsConnecting = false;
             IsConnected = true;
             _connectCallback?.Invoke();
-            EventMgr.Ins.Send(EventType.NET_CONNECTED, Address);
+            EventMgr.Ins.Send(MainEventType.NET_CONNECTED, Address);
         }
 
         #region 解析消息包
@@ -350,7 +349,7 @@ namespace Ux
             recvBytes.Dispose();
             Address = string.Empty;
             OnDispose();
-            EventMgr.Ins.Send(EventType.NET_DISPOSE, this);
+            EventMgr.Ins.Send(MainEventType.NET_DISPOSE, this);
         }
         protected virtual void OnDispose() { }
     }

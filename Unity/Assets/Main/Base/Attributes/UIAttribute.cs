@@ -2,7 +2,7 @@
 
 namespace Ux
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class UIAttribute : Attribute
     {
         public UIAttribute()
@@ -42,7 +42,7 @@ namespace Ux
         public readonly IUITabData tabData;
     }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class PackageAttribute : Attribute
     {
         public PackageAttribute(params string[] pkgs)
@@ -53,7 +53,7 @@ namespace Ux
         public string[] pkgs { get; }
     }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class LazyloadAttribute : Attribute
     {
         public LazyloadAttribute(params string[] lazyloads)
@@ -63,7 +63,7 @@ namespace Ux
         public string[] lazyloads { get; }
     }
 
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public class UIComponentAttribute : Attribute
     {
         public UIComponentAttribute()
@@ -78,7 +78,7 @@ namespace Ux
         public Type Component { get; }
     }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class TabTitleAttribute : Attribute
     {
         public TabTitleAttribute(object title)

@@ -1,6 +1,6 @@
-namespace Ux.Main
+namespace Ux
 {
-    public enum EventType
+    public enum MainEventType
     {
         Min = 0,
         /// <summary>

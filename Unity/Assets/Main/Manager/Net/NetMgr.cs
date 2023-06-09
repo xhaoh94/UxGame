@@ -2,7 +2,6 @@ using Cysharp.Threading.Tasks;
 using DCET;
 using System;
 using System.Collections.Generic;
-using Ux.Main;
 
 namespace Ux
 {
@@ -89,7 +88,7 @@ namespace Ux
         }
 
 
-        [Main.Evt(EventType.NET_DISPOSE)]
+        [MainEvt(MainEventType.NET_DISPOSE)]
         void OnSocketDispose(ClientSocket clientSocket)
         {
             _clientSockets.Remove(clientSocket);

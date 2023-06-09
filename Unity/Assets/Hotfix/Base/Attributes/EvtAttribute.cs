@@ -9,7 +9,7 @@ namespace Ux
         public string ETypeStr { get; }
 #endif
         public int EType { get; }
-        public EvtAttribute(Ux.Main.EventType eType)
+        public EvtAttribute(MainEventType eType)
         {
             EType = (int)eType;
 #if UNITY_EDITOR

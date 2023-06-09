@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -108,13 +109,13 @@ public class BuildConfigSettingData : ScriptableObject
 
     static readonly string _DOTNET =
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
-    public static void Export()
+    public static void Export(Action cb = null)
     {
         if (Setting == null)
         {
             LoadConfig();
         }
-        new Command(_DOTNET, Setting._GetCommand());
+        new Command(_DOTNET, Setting._GetCommand(), cb);
     }
 
     #region ≥ı ºªØ   

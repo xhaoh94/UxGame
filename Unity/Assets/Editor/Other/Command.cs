@@ -30,7 +30,7 @@ public class Command
 
     public event Action<string> Output = Log.Info;//输出事件
     public event Action<string> Error = Log.Error;//错误事件
-    private event Action _exited;//退出事件
+    private event Action _callback;//退出事件
 
     private bool _run;//循环控制
     private Process _process;//cmd进程
@@ -44,9 +44,9 @@ public class Command
     private byte[] _eTempBuffer;//临时缓冲
     private byte[] _errorBuffer = new byte[_ReadSize];//错误读取缓存区
 
-    public Command(string fileName = "cmd.exe", string argument = "", Action exited = null)
+    public Command(string fileName = "cmd.exe", string argument = "", Action callback = null)
     {
-        _exited = exited;
+        _callback = callback;
         _process = new Process();
         _process.StartInfo.Arguments = argument;
         _process.StartInfo.FileName = fileName;
@@ -54,8 +54,7 @@ public class Command
         _process.StartInfo.RedirectStandardInput = true;//接受来自调用程序的输入信息        
         _process.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
         _process.StartInfo.RedirectStandardError = true;//重定向标准错误输出
-        _process.StartInfo.CreateNoWindow = true;//不显示程序窗口
-        _process.Exited += _Exited;
+        _process.StartInfo.CreateNoWindow = true;//不显示程序窗口        
 
         ReStart();
     }
@@ -83,37 +82,13 @@ public class Command
         _process.StandardInput.AutoFlush = true;
         ReadResult();
         ErrorResult();
-    }
-
-    //退出事件
-    private void _Exited(object sender, EventArgs e)
-    {
-        _exited?.Invoke();
-    }
-
-    /// <summary>
-    /// 执行cmd命令
-    /// </summary>
-    /// <param name="cmd">需要执行的命令</param>
-    public void RunCMD(string cmd)
-    {
-
-        if (!_run)
+        if (_callback != null)
         {
-            if (cmd.Trim().Equals("/restart", StringComparison.CurrentCultureIgnoreCase))
-            {
-                ReStart();
-            }
-            return;
-        }
-        if (_process.HasExited)
-        {
+            _process.WaitForExit();//等待程序执行完退出进程
             Stop();
-            return;
+            _callback?.Invoke();
         }
-        _process.StandardInput.WriteLine(cmd);
     }
-
 
 
     //异步读取输出结果

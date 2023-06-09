@@ -1,7 +1,7 @@
 using System;
 namespace Ux
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class ModuleAttribute : Attribute
     {
         public ModuleAttribute()
