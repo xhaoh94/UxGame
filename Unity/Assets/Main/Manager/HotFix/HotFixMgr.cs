@@ -21,14 +21,12 @@ namespace Ux
             "System.dll",
             "System.Core.dll",
 
-            "AstarPathfindingProject.dll",
-            "Cinemachine.dll",
-            "FairyGUI.dll",
-            "Protobuf-net.dll",
-            "UniTask.dll",
-            "Unity.Main.dll",           
             "YooAsset.dll",
-            "zstring.dll"
+            "UniTask.dll",
+            "Luban.dll",
+            "Unity.InputSystem.dll",
+            "UnityEngine.CoreModule.dll",
+            "Unity.Main.dll",           
         };
 
 

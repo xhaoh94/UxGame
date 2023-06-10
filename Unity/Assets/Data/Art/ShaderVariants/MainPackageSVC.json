@@ -1,6 +1,6 @@
 {
     "ShaderTotalCount": 15,
-    "VariantTotalCount": 16,
+    "VariantTotalCount": 17,
     "ShaderVariantInfos": [
         {
             "AssetPath": "Resources/unity_builtin_extra",
@@ -154,6 +154,14 @@
                     "PassType": 8,
                     "Keywords": [
                         ""
+                    ]
+                },
+                {
+                    "PassType": 13,
+                    "Keywords": [
+                        "_ADDITIONAL_LIGHTS",
+                        "_ADDITIONAL_LIGHT_SHADOWS",
+                        "_MAIN_LIGHT_SHADOWS_CASCADE"
                     ]
                 }
             ]

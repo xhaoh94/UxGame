@@ -1,11 +1,11 @@
 {
   "dependencies": {
-    "com.code-philosophy.hybridclr": {
-      "version": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
+    "com.focus-creative-games.hybridclr_unity": {
+      "version": "2.4.2",
       "depth": 0,
-      "source": "git",
+      "source": "registry",
       "dependencies": {},
-      "hash": "7d58454fddca3ae2fcdd8374311e489343ea80ee"
+      "url": "https://package.openupm.cn"
     },
     "com.greenbamboogames.playablegraphmonitor": {
       "version": "2.5.4",
@@ -15,7 +15,7 @@
       "url": "https://package.openupm.cn"
     },
     "com.tuyoogame.yooasset": {
-      "version": "1.4.14",
+      "version": "1.4.15",
       "depth": 0,
       "source": "registry",
       "dependencies": {

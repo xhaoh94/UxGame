@@ -4,7 +4,7 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 
-namespace DCET
+namespace Ux
 {
     public class WSocket : ClientSocket
     {

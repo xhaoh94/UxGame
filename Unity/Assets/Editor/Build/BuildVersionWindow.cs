@@ -464,25 +464,40 @@ public class BuildVersionWindow : EditorWindow
             }
             return;
         }
-        string content = string.Empty;
-        switch (buildType)
+
+        void Build()
         {
-            case BuildType.ForceRebuild:
-                content = "是否构建【整包】！";
-                break;
-            case BuildType.IncrementalBuild:
-                content = "是否构建【补丁包】！";
-                break;
+            string content = string.Empty;
+            switch (buildType)
+            {
+                case BuildType.ForceRebuild:
+                    content = "是否构建【整包】！";
+                    break;
+                case BuildType.IncrementalBuild:
+                    content = "是否构建【补丁包】！";
+                    break;
+            }
+            if (EditorUtility.DisplayDialog("提示", content, "确定", "取消"))
+            {
+                EditorTools.ClearUnityConsole();
+                EditorApplication.delayCall += ExecuteBuild;
+            }
+            else
+            {
+                Log.Debug("打包已经取消");
+            }
         }
-        if (EditorUtility.DisplayDialog("提示", content, "确定", "取消"))
+
+        // 检测是否有未保存场景
+        if (EditorTools.HasDirtyScenes())
         {
-            EditorTools.ClearUnityConsole();
-            EditorApplication.delayCall += ExecuteBuild;
+            if (EditorUtility.DisplayDialog("提示", $"检测到未保存的场景文件,是否切到Boot场景继续打包？", "确定", "取消"))
+            {
+                Build();
+            }
+            return;
         }
-        else
-        {
-            Log.Debug("打包已经取消");
-        }
+        Build();
     }
 
     void OnClearClick()
@@ -675,7 +690,7 @@ public class BuildVersionWindow : EditorWindow
             foreach (var package in packages)
             {
                 await CollectSVC(savePath, package, processCapacity);
-            }           
+            }
 
             Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
             foreach (var package in packages)
@@ -872,7 +887,7 @@ public class BuildVersionWindow : EditorWindow
         Setting?.SaveFile();
         EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);
         // 聚焦到游戏窗口
-        EditorTools.FocusUnitySceneWindow();        
+        EditorTools.FocusUnitySceneWindow();
     }
 
     #endregion

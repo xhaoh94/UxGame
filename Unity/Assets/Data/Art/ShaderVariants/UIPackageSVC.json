@@ -1,6 +1,6 @@
 {
-    "ShaderTotalCount": 14,
-    "VariantTotalCount": 14,
+    "ShaderTotalCount": 13,
+    "VariantTotalCount": 13,
     "ShaderVariantInfos": [
         {
             "AssetPath": "Resources/unity_builtin_extra",
@@ -142,20 +142,6 @@
                     "PassType": 0,
                     "Keywords": [
                         ""
-                    ]
-                }
-            ]
-        },
-        {
-            "AssetPath": "Packages/com.unity.render-pipelines.universal/Shaders/Lit.shader",
-            "ShaderName": "Universal Render Pipeline/Lit",
-            "ShaderVariantElements": [
-                {
-                    "PassType": 13,
-                    "Keywords": [
-                        "_ADDITIONAL_LIGHTS",
-                        "_ADDITIONAL_LIGHT_SHADOWS",
-                        "_MAIN_LIGHT_SHADOWS_CASCADE"
                     ]
                 }
             ]
