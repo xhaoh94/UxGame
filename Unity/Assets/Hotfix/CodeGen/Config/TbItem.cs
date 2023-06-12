@@ -7,26 +7,25 @@
 //------------------------------------------------------------------------------
 using Bright.Serialization;
 using System.Collections.Generic;
-using SimpleJSON;
-
 
 
 namespace cfg
-{ 
-
-public sealed partial class TbItem
+{
+   
+public partial class TbItem
 {
     private readonly Dictionary<int, Item> _dataMap;
     private readonly List<Item> _dataList;
     
-    public TbItem(JSONNode _json)
+    public TbItem(ByteBuf _buf)
     {
         _dataMap = new Dictionary<int, Item>();
         _dataList = new List<Item>();
         
-        foreach(JSONNode _row in _json.Children)
+        for(int n = _buf.ReadSize() ; n > 0 ; --n)
         {
-            var _v = Item.DeserializeItem(_row);
+            Item _v;
+            _v = Item.DeserializeItem(_buf);
             _dataList.Add(_v);
             _dataMap.Add(_v.Id, _v);
         }
@@ -56,7 +55,6 @@ public sealed partial class TbItem
             v.TranslateText(translator);
         }
     }
-    
     
     partial void PostInit();
     partial void PostResolve();

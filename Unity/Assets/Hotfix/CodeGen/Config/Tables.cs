@@ -6,26 +6,25 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 using Bright.Serialization;
-using SimpleJSON;
+
 
 
 namespace cfg
 { 
-   
-public sealed partial class Tables
+public partial class Tables
 {
     public TbItem TbItem {get; }
     public TbTest TbTest {get; }
 
-    public Tables(System.Func<string, JSONNode> loader)
+    public Tables(System.Func<string, ByteBuf> loader)
     {
         var tables = new System.Collections.Generic.Dictionary<string, object>();
         TbItem = new TbItem(loader("tbitem")); 
         tables.Add("TbItem", TbItem);
         TbTest = new TbTest(loader("tbtest")); 
         tables.Add("TbTest", TbTest);
-        PostInit();
 
+        PostInit();
         TbItem.Resolve(tables); 
         TbTest.Resolve(tables); 
         PostResolve();

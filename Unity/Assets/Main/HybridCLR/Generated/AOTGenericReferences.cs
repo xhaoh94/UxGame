@@ -1,14 +1,18 @@
+using System.Collections.Generic;
 public class AOTGenericReferences : UnityEngine.MonoBehaviour
 {
 
 	// {{ AOT assemblies
-	// Luban.dll
-	// UniTask.dll
-	// Unity.InputSystem.dll
-	// Unity.Main.dll
-	// UnityEngine.CoreModule.dll
-	// YooAsset.dll
-	// mscorlib.dll
+	public static readonly IReadOnlyList<string> PatchedAOTAssemblyList = new List<string>
+	{
+		"Luban.dll",
+		"UniTask.dll",
+		"Unity.InputSystem.dll",
+		"Unity.Main.dll",
+		"UnityEngine.CoreModule.dll",
+		"YooAsset.dll",
+		"mscorlib.dll",
+	};
 	// }}
 
 	// {{ constraint implement type

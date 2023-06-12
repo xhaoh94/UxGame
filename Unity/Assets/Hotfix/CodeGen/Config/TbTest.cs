@@ -7,26 +7,25 @@
 //------------------------------------------------------------------------------
 using Bright.Serialization;
 using System.Collections.Generic;
-using SimpleJSON;
-
 
 
 namespace cfg
-{ 
-
-public sealed partial class TbTest
+{
+   
+public partial class TbTest
 {
     private readonly List<Test> _dataList;
-    
+
     private Dictionary<(int, int), Test> _dataMapUnion;
 
-    public TbTest(JSONNode _json)
+    public TbTest(ByteBuf _buf)
     {
         _dataList = new List<Test>();
         
-        foreach(JSONNode _row in _json.Children)
+        for(int n = _buf.ReadSize() ; n > 0 ; --n)
         {
-            var _v = Test.DeserializeTest(_row);
+            Test _v;
+            _v = Test.DeserializeTest(_buf);
             _dataList.Add(_v);
         }
         _dataMapUnion = new Dictionary<(int, int), Test>();
@@ -36,6 +35,7 @@ public sealed partial class TbTest
         }
         PostInit();
     }
+
 
     public List<Test> DataList => _dataList;
 
@@ -57,7 +57,6 @@ public sealed partial class TbTest
             v.TranslateText(translator);
         }
     }
-
     
     partial void PostInit();
     partial void PostResolve();

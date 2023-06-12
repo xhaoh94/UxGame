@@ -1,5 +1,6 @@
 using Sirenix.OdinInspector;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -11,6 +12,7 @@ using UnityEngine;
 public class BuildConfigSettingData : ScriptableObject
 {
 
+    [CommandPathAttribute]
     [Command(false)]
     [LabelText("Dll")]
     public string DllFile = "../Luban/Tools/Luban.ClientServer/Luban.ClientServer.dll";
@@ -19,18 +21,22 @@ public class BuildConfigSettingData : ScriptableObject
     [HideInInspector]
     public string Job = "cfg --";
 
+    [CommandPathAttribute]
     [Command("--define_file")]
     [LabelText("Root.xml")]
     public string DefineFile = "../Luban/Defines/__root__.xml";
 
+    [CommandPathAttribute]
     [Command("--input_data_dir")]
     [LabelText("配置目录")]
     public string InputDataPath = "../Luban/Datas";
 
+    [CommandPathAttribute]
     [Command("--output_code_dir")]
     [LabelText("导出代码目录")]
     public string OutCodePath = "Assets/Hotfix/CodeGen/Config";
 
+    [CommandPathAttribute]
     [LabelText("导出数据目录")]
     [Command("--output_data_dir")]
     public string OutDataPath = "Assets/Data/Res/Config";
@@ -88,6 +94,12 @@ public class BuildConfigSettingData : ScriptableObject
 
             value = value.Replace(", ", ",");
 
+            var isPath = field_info.GetCustomAttribute<CommandPathAttribute>();
+            if (isPath != null)
+            {
+                value = Path.GetFullPath(value).Replace("\\", "/");
+            }
+
             if (string.IsNullOrEmpty(command.option))
             {
                 sb.Append($" {value} ");
@@ -115,7 +127,7 @@ public class BuildConfigSettingData : ScriptableObject
         {
             LoadConfig();
         }
-        new Command(_DOTNET, Setting._GetCommand(), cb);
+        new Command(_DOTNET, Setting._GetCommand(), true, cb);
     }
 
     #region 初始化   

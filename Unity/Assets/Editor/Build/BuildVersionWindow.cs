@@ -46,7 +46,9 @@ public class BuildVersionWindow : EditorWindow
     [MenuItem("UxGame/构建/本地资源服务器", false, 401)]
     public static void OpenFileServer()
     {
-        new Command("../HFS/hfs.exe");
+        //new Command("../HFS/hfs.exe");
+        new Command(Path.GetFullPath("../HFS/dufs.exe").Replace("\\", "/"),
+            $"-p 0709 {Path.GetFullPath("../Unity/CDN/").Replace("\\", "/")}", false);
     }
 
 

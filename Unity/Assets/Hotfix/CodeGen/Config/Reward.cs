@@ -7,34 +7,23 @@
 //------------------------------------------------------------------------------
 using Bright.Serialization;
 using System.Collections.Generic;
-using SimpleJSON;
-
 
 
 namespace cfg
-{ 
-
+{
 public sealed partial class Reward :  Bright.Config.BeanBase 
 {
-    public Reward(JSONNode _json) 
+    public Reward(ByteBuf _buf) 
     {
-        { if(!_json["id"].IsNumber) { throw new SerializationException(); }  Id = _json["id"]; }
-        { if(!_json["count"].IsNumber) { throw new SerializationException(); }  Count = _json["count"]; }
-        { if(!_json["type"].IsNumber) { throw new SerializationException(); }  Type = (RewardType)_json["type"].AsInt; }
+        Id = _buf.ReadInt();
+        Count = _buf.ReadInt();
+        Type = (RewardType)_buf.ReadInt();
         PostInit();
     }
 
-    public Reward(int id, int count, RewardType type ) 
+    public static Reward DeserializeReward(ByteBuf _buf)
     {
-        this.Id = id;
-        this.Count = count;
-        this.Type = type;
-        PostInit();
-    }
-
-    public static Reward DeserializeReward(JSONNode _json)
-    {
-        return new Reward(_json);
+        return new Reward(_buf);
     }
 
     /// <summary>
@@ -74,4 +63,5 @@ public sealed partial class Reward :  Bright.Config.BeanBase
     partial void PostInit();
     partial void PostResolve();
 }
+
 }

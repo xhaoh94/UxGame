@@ -21,6 +21,14 @@ internal class CommandAttribute : Attribute
     }
 }
 
+[AttributeUsage(AttributeTargets.Field)]
+internal class CommandPathAttribute : Attribute
+{
+    public CommandPathAttribute()
+    {
+
+    }
+}
 /// <summary>
 /// 控制台命令
 /// </summary>
@@ -44,17 +52,22 @@ public class Command
     private byte[] _eTempBuffer;//临时缓冲
     private byte[] _errorBuffer = new byte[_ReadSize];//错误读取缓存区
 
-    public Command(string fileName = "cmd.exe", string argument = "", Action callback = null)
+    bool _isNoWindow;
+    public Command(string fileName = "cmd.exe", string argument = "", bool isNoWindow = true, Action callback = null)
     {
+        _isNoWindow = isNoWindow;
         _callback = callback;
         _process = new Process();
         _process.StartInfo.Arguments = argument;
-        _process.StartInfo.FileName = fileName;
-        _process.StartInfo.UseShellExecute = false;//是否使用操作系统shell启动
-        _process.StartInfo.RedirectStandardInput = true;//接受来自调用程序的输入信息        
-        _process.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
-        _process.StartInfo.RedirectStandardError = true;//重定向标准错误输出
-        _process.StartInfo.CreateNoWindow = true;//不显示程序窗口        
+        _process.StartInfo.FileName = fileName;       
+        if (isNoWindow)
+        {
+            _process.StartInfo.UseShellExecute = false;//是否使用操作系统shell启动
+            _process.StartInfo.RedirectStandardInput = true;//接受来自调用程序的输入信息        
+            _process.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
+            _process.StartInfo.RedirectStandardError = true;//重定向标准错误输出
+            _process.StartInfo.CreateNoWindow = true;//不显示程序窗口        
+        }
 
         ReStart();
     }
@@ -76,12 +89,15 @@ public class Command
     {
         Stop();
         _process.Start();
-        _outStream = _process.StandardOutput.BaseStream;
-        _errorStream = _process.StandardError.BaseStream;
         _run = true;
-        _process.StandardInput.AutoFlush = true;
-        ReadResult();
-        ErrorResult();
+        if (_isNoWindow)
+        {
+            _outStream = _process.StandardOutput.BaseStream;
+            _errorStream = _process.StandardError.BaseStream;
+            _process.StandardInput.AutoFlush = true;
+            ReadResult();
+            ErrorResult();
+        }          
         if (_callback != null)
         {
             _process.WaitForExit();//等待程序执行完退出进程

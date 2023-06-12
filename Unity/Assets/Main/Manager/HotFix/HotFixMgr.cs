@@ -13,22 +13,7 @@ namespace Ux
     {
         public const string HotfixAssemblyName = "Assembly-CSharp";
 
-        public const string HotfixScene = "Hotfix";
-        //AOT 补充元数据dll列表
-        public static List<string> AOTMetaAssemblyNames { get; } = new List<string>()
-        {
-            "mscorlib.dll",
-            "System.dll",
-            "System.Core.dll",
-
-            "YooAsset.dll",
-            "UniTask.dll",
-            "Luban.dll",
-            "Unity.InputSystem.dll",
-            "UnityEngine.CoreModule.dll",
-            "Unity.Main.dll",           
-        };
-
+        public const string HotfixScene = "Hotfix";        
 
         private List<Type> _hotfixTypes;
 
@@ -79,7 +64,7 @@ namespace Ux
             // 热更新dll不缺元数据，不需要补充，如果调用LoadMetadataForAOTAssembly会返回错误
 
             const HomologousImageMode mode = HomologousImageMode.SuperSet;
-            foreach (var aotDllName in AOTMetaAssemblyNames)
+            foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = aotDllName;
                 if (!dllName.EndsWith(".dll"))

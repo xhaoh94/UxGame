@@ -18,5 +18,5 @@ MonoBehaviour:
   InputDataPath: ../Luban/Datas
   OutCodePath: Assets/Hotfix/CodeGen/Config
   OutDataPath: Assets/Data/Res/Config
-  GenType: code_cs_unity_json,data_json
+  GenType: code_cs_unity_bin,data_bin
   ServiceType: client

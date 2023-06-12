@@ -7,34 +7,23 @@
 //------------------------------------------------------------------------------
 using Bright.Serialization;
 using System.Collections.Generic;
-using SimpleJSON;
-
 
 
 namespace cfg
-{ 
-
+{
 public sealed partial class Test :  Bright.Config.BeanBase 
 {
-    public Test(JSONNode _json) 
+    public Test(ByteBuf _buf) 
     {
-        { if(!_json["key1"].IsNumber) { throw new SerializationException(); }  Key1 = _json["key1"]; }
-        { if(!_json["key2"].IsNumber) { throw new SerializationException(); }  Key2 = _json["key2"]; }
-        { var __json0 = _json["rewards"]; if(!__json0.IsArray) { throw new SerializationException(); } Rewards = new System.Collections.Generic.List<Reward>(__json0.Count); foreach(JSONNode __e0 in __json0.Children) { Reward __v0;  { if(!__e0.IsObject) { throw new SerializationException(); }  __v0 = Reward.DeserializeReward(__e0);  }  Rewards.Add(__v0); }   }
+        Key1 = _buf.ReadInt();
+        Key2 = _buf.ReadInt();
+        {int n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);Rewards = new System.Collections.Generic.List<Reward>(n0);for(var i0 = 0 ; i0 < n0 ; i0++) { Reward _e0;  _e0 = Reward.DeserializeReward(_buf); Rewards.Add(_e0);}}
         PostInit();
     }
 
-    public Test(int key1, int key2, System.Collections.Generic.List<Reward> rewards ) 
+    public static Test DeserializeTest(ByteBuf _buf)
     {
-        this.Key1 = key1;
-        this.Key2 = key2;
-        this.Rewards = rewards;
-        PostInit();
-    }
-
-    public static Test DeserializeTest(JSONNode _json)
-    {
-        return new Test(_json);
+        return new Test(_buf);
     }
 
     public int Key1 { get; private set; }
@@ -70,4 +59,5 @@ public sealed partial class Test :  Bright.Config.BeanBase
     partial void PostInit();
     partial void PostResolve();
 }
+
 }

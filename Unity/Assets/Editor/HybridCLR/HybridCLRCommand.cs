@@ -99,7 +99,7 @@ namespace HybridCLR.Commands
                 Directory.CreateDirectory(AotDir);
             }
 
-            foreach (var dll in HotFixMgr.AOTMetaAssemblyNames)
+            foreach (var dll in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = dll;
                 if (!dllName.EndsWith(".dll"))

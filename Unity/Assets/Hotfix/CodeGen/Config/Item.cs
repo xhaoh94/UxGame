@@ -7,54 +7,33 @@
 //------------------------------------------------------------------------------
 using Bright.Serialization;
 using System.Collections.Generic;
-using SimpleJSON;
-
 
 
 namespace cfg
-{ 
-
+{
 public sealed partial class Item :  Bright.Config.BeanBase 
 {
-    public Item(JSONNode _json) 
+    public Item(ByteBuf _buf) 
     {
-        { if(!_json["id"].IsNumber) { throw new SerializationException(); }  Id = _json["id"]; }
-        { if(!_json["name"].IsString) { throw new SerializationException(); }  Name = _json["name"]; }
-        { if(!_json["desc"].IsString) { throw new SerializationException(); }  Desc = _json["desc"]; }
-        { if(!_json["price"].IsNumber) { throw new SerializationException(); }  Price = _json["price"]; }
-        { if(!_json["upgrade_to_item_id"].IsNumber) { throw new SerializationException(); }  UpgradeToItemId = _json["upgrade_to_item_id"]; }
-        { var _j = _json["expire_time"]; if (_j.Tag != JSONNodeType.None && _j.Tag != JSONNodeType.NullValue) { { if(!_j.IsNumber) { throw new SerializationException(); }  ExpireTime = _j; } } else { ExpireTime = null; } }
-        { if(!_json["batch_useable"].IsBoolean) { throw new SerializationException(); }  BatchUseable = _json["batch_useable"]; }
-        { if(!_json["quality"].IsNumber) { throw new SerializationException(); }  Quality = (Quality)_json["quality"].AsInt; }
-        { if(!_json["exchange_stream"].IsObject) { throw new SerializationException(); }  ExchangeStream = ItemExchange.DeserializeItemExchange(_json["exchange_stream"]);  }
-        { if(!_json["rewards_1"].IsObject) { throw new SerializationException(); }  Rewards1 = Reward.DeserializeReward(_json["rewards_1"]);  }
-        { var __json0 = _json["rewards_2"]; if(!__json0.IsArray) { throw new SerializationException(); } Rewards2 = new System.Collections.Generic.List<Reward>(__json0.Count); foreach(JSONNode __e0 in __json0.Children) { Reward __v0;  { if(!__e0.IsObject) { throw new SerializationException(); }  __v0 = Reward.DeserializeReward(__e0);  }  Rewards2.Add(__v0); }   }
-        { var __json0 = _json["exchange_list_1"]; if(!__json0.IsArray) { throw new SerializationException(); } ExchangeList1 = new System.Collections.Generic.List<ItemExchange>(__json0.Count); foreach(JSONNode __e0 in __json0.Children) { ItemExchange __v0;  { if(!__e0.IsObject) { throw new SerializationException(); }  __v0 = ItemExchange.DeserializeItemExchange(__e0);  }  ExchangeList1.Add(__v0); }   }
-        { var __json0 = _json["exchange_list_2"]; if(!__json0.IsArray) { throw new SerializationException(); } ExchangeList2 = new System.Collections.Generic.List<ItemExchange>(__json0.Count); foreach(JSONNode __e0 in __json0.Children) { ItemExchange __v0;  { if(!__e0.IsObject) { throw new SerializationException(); }  __v0 = ItemExchange.DeserializeItemExchange(__e0);  }  ExchangeList2.Add(__v0); }   }
+        Id = _buf.ReadInt();
+        Name = _buf.ReadString();
+        Desc = _buf.ReadString();
+        Price = _buf.ReadInt();
+        UpgradeToItemId = _buf.ReadInt();
+        if(_buf.ReadBool()){ ExpireTime = _buf.ReadLong(); } else { ExpireTime = null; }
+        BatchUseable = _buf.ReadBool();
+        Quality = (Quality)_buf.ReadInt();
+        ExchangeStream = ItemExchange.DeserializeItemExchange(_buf);
+        Rewards1 = Reward.DeserializeReward(_buf);
+        {int n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);Rewards2 = new System.Collections.Generic.List<Reward>(n0);for(var i0 = 0 ; i0 < n0 ; i0++) { Reward _e0;  _e0 = Reward.DeserializeReward(_buf); Rewards2.Add(_e0);}}
+        {int n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);ExchangeList1 = new System.Collections.Generic.List<ItemExchange>(n0);for(var i0 = 0 ; i0 < n0 ; i0++) { ItemExchange _e0;  _e0 = ItemExchange.DeserializeItemExchange(_buf); ExchangeList1.Add(_e0);}}
+        {int n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);ExchangeList2 = new System.Collections.Generic.List<ItemExchange>(n0);for(var i0 = 0 ; i0 < n0 ; i0++) { ItemExchange _e0;  _e0 = ItemExchange.DeserializeItemExchange(_buf); ExchangeList2.Add(_e0);}}
         PostInit();
     }
 
-    public Item(int id, string name, string desc, int price, int upgrade_to_item_id, long? expire_time, bool batch_useable, Quality quality, ItemExchange exchange_stream, Reward rewards_1, System.Collections.Generic.List<Reward> rewards_2, System.Collections.Generic.List<ItemExchange> exchange_list_1, System.Collections.Generic.List<ItemExchange> exchange_list_2 ) 
+    public static Item DeserializeItem(ByteBuf _buf)
     {
-        this.Id = id;
-        this.Name = name;
-        this.Desc = desc;
-        this.Price = price;
-        this.UpgradeToItemId = upgrade_to_item_id;
-        this.ExpireTime = expire_time;
-        this.BatchUseable = batch_useable;
-        this.Quality = quality;
-        this.ExchangeStream = exchange_stream;
-        this.Rewards1 = rewards_1;
-        this.Rewards2 = rewards_2;
-        this.ExchangeList1 = exchange_list_1;
-        this.ExchangeList2 = exchange_list_2;
-        PostInit();
-    }
-
-    public static Item DeserializeItem(JSONNode _json)
-    {
-        return new Item(_json);
+        return new Item(_buf);
     }
 
     /// <summary>
@@ -156,4 +135,5 @@ public sealed partial class Item :  Bright.Config.BeanBase
     partial void PostInit();
     partial void PostResolve();
 }
+
 }

@@ -7,10 +7,10 @@ public class Global
 
     public static string GetHostServerURL()
     {
-        string hostServerIP = "http://127.0.0.1:8080";
+        string hostServerIP = "http://127.0.0.1:0709";
         string runtimePlatform = GetRuntimePlatform();
 
-        return $"{hostServerIP}/CDN/{runtimePlatform}";
+        return $"{hostServerIP}/{runtimePlatform}";
     }
 
     static string GetRuntimePlatform()
