@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 
 [AttributeUsage(AttributeTargets.Field)]
@@ -53,13 +54,19 @@ public class Command
     private byte[] _errorBuffer = new byte[_ReadSize];//错误读取缓存区
 
     bool _isNoWindow;
+    public static Command Run(string fileName = "cmd.exe", string argument = "", bool isNoWindow = true, Action callback = null)
+    {
+        var command = new Command(fileName, argument, isNoWindow, callback);
+        return command;
+    }
     public Command(string fileName = "cmd.exe", string argument = "", bool isNoWindow = true, Action callback = null)
     {
         _isNoWindow = isNoWindow;
         _callback = callback;
         _process = new Process();
         _process.StartInfo.Arguments = argument;
-        _process.StartInfo.FileName = fileName;       
+        _process.StartInfo.FileName = fileName;
+
         if (isNoWindow)
         {
             _process.StartInfo.UseShellExecute = false;//是否使用操作系统shell启动
@@ -97,7 +104,7 @@ public class Command
             _process.StandardInput.AutoFlush = true;
             ReadResult();
             ErrorResult();
-        }          
+        }
         if (_callback != null)
         {
             _process.WaitForExit();//等待程序执行完退出进程

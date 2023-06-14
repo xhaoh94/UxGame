@@ -33,6 +33,7 @@ namespace Ux
         public int Minute => Now.Minute;
 
         public int Second => Now.Second;
+
         public int Millisecond => Now.Millisecond;
     }
 
@@ -59,6 +60,7 @@ namespace Ux
         public int Minute => Now.Minute;
 
         public int Second => Now.Second;
+
         public int Millisecond => Now.Millisecond;
     }
 }

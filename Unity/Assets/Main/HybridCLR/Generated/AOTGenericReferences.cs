@@ -24,14 +24,13 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Singleton<object>
 	// System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>
 	// System.Action<object>
-	// System.Collections.Generic.Dictionary<System.ValueTuple<int,int>,object>
-	// System.Collections.Generic.Dictionary<object,object>
 	// System.Collections.Generic.Dictionary<int,object>
+	// System.Collections.Generic.Dictionary<object,object>
+	// System.Collections.Generic.Dictionary<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.IEnumerable<object>
-	// System.Collections.Generic.IEnumerator<object>
+	// System.Collections.Generic.List<object>
 	// System.Collections.Generic.List<UnityEngine.Vector3>
 	// System.Collections.Generic.List<int>
-	// System.Collections.Generic.List<object>
 	// System.Collections.Generic.List.Enumerator<object>
 	// System.Func<byte>
 	// System.Func<object,object>

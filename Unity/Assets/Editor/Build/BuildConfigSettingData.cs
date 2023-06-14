@@ -127,7 +127,7 @@ public class BuildConfigSettingData : ScriptableObject
         {
             LoadConfig();
         }
-        new Command(_DOTNET, Setting._GetCommand(), true, cb);
+        Command.Run(_DOTNET, Setting._GetCommand(), true, cb);        
     }
 
     #region ≥ı ºªØ   

@@ -123,8 +123,8 @@
             ]
         },
         {
-            "AssetPath": "Packages/com.unity.render-pipelines.universal/Shaders/Utils/Blit.shader",
-            "ShaderName": "Hidden/Universal Render Pipeline/Blit",
+            "AssetPath": "Packages/com.unity.render-pipelines.universal/Shaders/Utils/FallbackError.shader",
+            "ShaderName": "Hidden/Universal Render Pipeline/FallbackError",
             "ShaderVariantElements": [
                 {
                     "PassType": 0,
@@ -135,8 +135,8 @@
             ]
         },
         {
-            "AssetPath": "Packages/com.unity.render-pipelines.universal/Shaders/Utils/FallbackError.shader",
-            "ShaderName": "Hidden/Universal Render Pipeline/FallbackError",
+            "AssetPath": "Packages/com.unity.render-pipelines.universal/Shaders/Utils/CoreBlit.shader",
+            "ShaderName": "Hidden/Universal/CoreBlit",
             "ShaderVariantElements": [
                 {
                     "PassType": 0,
@@ -185,7 +185,7 @@
             ]
         },
         {
-            "AssetPath": "Packages/com.unity.render-pipelines.core/Runtime/FallbackShader.shader",
+            "AssetPath": "Packages/com.unity.render-pipelines.core/Runtime/RenderPipelineResources/FallbackShader.shader",
             "ShaderName": "Hidden/Core/FallbackError",
             "ShaderVariantElements": [
                 {

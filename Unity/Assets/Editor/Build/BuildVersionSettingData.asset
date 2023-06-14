@@ -16,7 +16,7 @@ MonoBehaviour:
   - Name: Config-2023-03-23-39334
     CurPlatform: 1
     PlatformMap:
-    - CompileType: 0
+    - CompileType: 1
       PlatformType: 1
       IsCompileDLL: 1
       EncyptionClassName: EncryptionNone

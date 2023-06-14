@@ -46,8 +46,8 @@ public class BuildVersionWindow : EditorWindow
     [MenuItem("UxGame/构建/本地资源服务器", false, 401)]
     public static void OpenFileServer()
     {
-        //new Command("../HFS/hfs.exe");
-        new Command(Path.GetFullPath("../HFS/dufs.exe").Replace("\\", "/"),
+        //Command.Run("../HFS/hfs.exe");
+        Command.Run(Path.GetFullPath("../HFS/dufs.exe").Replace("\\", "/"),
             $"-p 0709 {Path.GetFullPath("../Unity/CDN/").Replace("\\", "/")}", false);
     }
 
@@ -557,25 +557,16 @@ public class BuildVersionWindow : EditorWindow
     {
         var platformType = SelectItem.CurPlatform;
         BuildTarget buildTarget = GetBuildTarget(platformType);
-        BuildOptions buildOptions = BuildOptions.None;
-        var compileType = (CompileType)_compileType.value;
-        switch (compileType)
-        {
-            case CompileType.Development:
-                buildOptions = BuildOptions.Development | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
-                break;
-            case CompileType.Release:
-                buildOptions = BuildOptions.None;
-                break;
-        }
+       
+        EditorTools.FocusUnityConsoleWindow();
         Console.Clear();
-        if (!await CompileDLL(buildTarget, buildOptions)) return;
+        if (!await CompileDLL(buildTarget)) return;
         if (!await BuildRes(buildTarget)) return;
-        if (!BuildExe(buildTarget, buildOptions)) return;
+        if (!BuildExe(buildTarget)) return;
         SaveConfig();
     }
 
-    private async UniTask<bool> CompileDLL(BuildTarget buildTarget, BuildOptions buildOptions)
+    private async UniTask<bool> CompileDLL(BuildTarget target)
     {
         if (_tgCompileDLL.value)
         {
@@ -596,28 +587,42 @@ public class BuildVersionWindow : EditorWindow
 
             if (IsExportExecutable)
             {
-                if (buildTarget != EditorUserBuildSettings.activeBuildTarget &&
+                if (target != EditorUserBuildSettings.activeBuildTarget &&
                     !EditorUserBuildSettings.SwitchActiveBuildTarget(
-                        BuildPipeline.GetBuildTargetGroup(buildTarget), buildTarget))
+                        BuildPipeline.GetBuildTargetGroup(target), target))
                 {
                     Log.Debug("切换编译平台失败");
                     return false;
                 }
 
-                Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
-                PrebuildCommand.GenerateAll();
+                Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");                
+                var compileType = (CompileType)_compileType.value;
+                CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
+                Il2CppDefGeneratorCommand.GenerateIl2CppDef();
+
+                // 这几个生成依赖HotUpdateDlls
+                LinkGeneratorCommand.GenerateLinkXml(target);
+
+                // 生成裁剪后的aot dll
+                StripAOTDllCommand.GenerateStripedAOTDlls(target, EditorUserBuildSettings.selectedBuildTargetGroup);
+
+                // 桥接函数生成依赖于AOT dll，必须保证已经build过，生成AOT dll
+                MethodBridgeGeneratorCommand.GenerateMethodBridge(target);
+                ReversePInvokeWrapperGeneratorCommand.GenerateReversePInvokeWrapper(target);
+                AOTReferenceGeneratorCommand.GenerateAOTGenericReference(target);
+                //PrebuildCommand.GenerateAll();
 
                 Log.Debug("---------------------------------------->将AOT元数据Dll拷贝到资源打包目录<---------------------------------------");
-                HybridCLRCommand.CopyAOTAssembliesToYooAssetPath(buildTarget);
+                HybridCLRCommand.CopyAOTAssembliesToYooAssetPath(target);
             }
             else
             {
                 Log.Debug("---------------------------------------->生成热更DLL<---------------------------------------");
-                CompileDllCommand.CompileDll(buildTarget);
+                CompileDllCommand.CompileDll(target);
             }
 
             Log.Debug("---------------------------------------->将热更DLL拷贝到资源打包目录<---------------------------------------");
-            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(buildTarget);
+            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);
             Log.Debug("编译热更DLL完毕！");
         }
         return true;
@@ -855,10 +860,22 @@ public class BuildVersionWindow : EditorWindow
             File.Copy(file, desFile, true);
         }
     }
-    private bool BuildExe(BuildTarget buildTarget, BuildOptions buildOptions)
+    private bool BuildExe(BuildTarget buildTarget)
     {
         if (IsExportExecutable)
         {
+            BuildOptions buildOptions = BuildOptions.None;
+            var compileType = (CompileType)_compileType.value;
+            switch (compileType)
+            {
+                case CompileType.Development:
+                    buildOptions = BuildOptions.Development | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
+                    break;
+                case CompileType.Release:
+                    buildOptions = BuildOptions.None;
+                    break;
+            }
+
             BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, buildOptions,
                 Path.Combine(SelectItem.PlatformConfig.ExePath, buildTarget.ToString()), "Game");
             Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
