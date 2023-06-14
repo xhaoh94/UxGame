@@ -111,7 +111,11 @@ public class BuildVersionWindow : EditorWindow
             _listExport = root.Q<ListView>("listExport");
             _listExport.makeItem = MakeExportListViewItem;
             _listExport.bindItem = BindExportListViewItem;
+#if UNITY_2022_1_OR_NEWER
+            _listExport.selectionChanged += OnExportListSelectionChange;
+#else
             _listExport.onSelectionChange += OnExportListSelectionChange;
+#endif
 
             _btnAdd = root.Q<Button>("btnAdd");
             _btnAdd.clicked += OnBtnAddClick;
@@ -901,7 +905,8 @@ public class BuildVersionWindow : EditorWindow
                 Log.Error("打包失败");
                 return false;
             }
-            Log.Debug("完成程序打包");            
+            Log.Debug("完成程序打包");
+            EditorUtility.RevealInFinder(Path.GetFullPath(path));
         }
         return true;
     }
@@ -919,8 +924,7 @@ public class BuildVersionWindow : EditorWindow
             item.PlatformConfig.ResVersion = _txtVersion.value;
         }
         Setting?.SaveFile();
-        EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);                
-        EditorUtility.RevealInFinder(item.PlatformConfig.ExePath);
+        EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);
     }
 
     #endregion
