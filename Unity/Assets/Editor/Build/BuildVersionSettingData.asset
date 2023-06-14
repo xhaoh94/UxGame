@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: BuildVersionSettingData
   m_EditorClassIdentifier: 
   ExportSettings:
-  - Name: Config-2023-03-23-39334
+  - Name: "\u6D4B\u8BD5"
     CurPlatform: 1
     PlatformMap:
-    - CompileType: 1
+    - CompileType: 0
       PlatformType: 1
       IsCompileDLL: 1
       EncyptionClassName: EncryptionNone

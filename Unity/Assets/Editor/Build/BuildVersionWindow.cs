@@ -557,15 +557,33 @@ public class BuildVersionWindow : EditorWindow
     {
         var platformType = SelectItem.CurPlatform;
         BuildTarget buildTarget = GetBuildTarget(platformType);
-       
+
         EditorTools.FocusUnityConsoleWindow();
         Console.Clear();
-        if (!await CompileDLL(buildTarget)) return;
-        if (!await BuildRes(buildTarget)) return;
-        if (!BuildExe(buildTarget)) return;
-        SaveConfig();
+        EditorApplication.LockReloadAssemblies();
+        var succ = await _ExecuteBuild(buildTarget);
+        EditorApplication.UnlockReloadAssemblies();
+        if (succ)
+        {
+            SaveConfig();
+        }
     }
-
+    async UniTask<bool> _ExecuteBuild(BuildTarget buildTarget)
+    {
+        if (!await CompileDLL(buildTarget))
+        {
+            return false;
+        }
+        if (!await BuildRes(buildTarget))
+        {
+            return false;
+        }
+        if (!BuildExe(buildTarget))
+        {
+            return false;
+        }
+        return true;
+    }
     private async UniTask<bool> CompileDLL(BuildTarget target)
     {
         if (_tgCompileDLL.value)
@@ -584,7 +602,7 @@ public class BuildVersionWindow : EditorWindow
 
             Log.Debug("------------------------------------>生成YooAsset UI收集器配置<------------------------------");
             UIClassifyWindow.CreateYooAssetUIGroup();
-
+            var compileType = (CompileType)_compileType.value;
             if (IsExportExecutable)
             {
                 if (target != EditorUserBuildSettings.activeBuildTarget &&
@@ -595,8 +613,7 @@ public class BuildVersionWindow : EditorWindow
                     return false;
                 }
 
-                Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");                
-                var compileType = (CompileType)_compileType.value;
+                Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
                 CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
                 Il2CppDefGeneratorCommand.GenerateIl2CppDef();
 
@@ -618,7 +635,7 @@ public class BuildVersionWindow : EditorWindow
             else
             {
                 Log.Debug("---------------------------------------->生成热更DLL<---------------------------------------");
-                CompileDllCommand.CompileDll(target);
+                CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
             }
 
             Log.Debug("---------------------------------------->将热更DLL拷贝到资源打包目录<---------------------------------------");
@@ -780,7 +797,7 @@ public class BuildVersionWindow : EditorWindow
             return false;
         }
 
-        //不拷贝link.xml，因为会导致无法打包
+        //不拷贝link.xml
         //if (IsExportExecutable)
         //{
         //    var tLinkPath = $"{buildPath}/{nowVersion}/link.xml";
@@ -875,9 +892,8 @@ public class BuildVersionWindow : EditorWindow
                     buildOptions = BuildOptions.None;
                     break;
             }
-
-            BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, buildOptions,
-                Path.Combine(SelectItem.PlatformConfig.ExePath, buildTarget.ToString()), "Game");
+            var path = Path.Combine(SelectItem.PlatformConfig.ExePath, buildTarget.ToString());
+            BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, buildOptions, path, "Game");
             Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
             var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
@@ -885,8 +901,7 @@ public class BuildVersionWindow : EditorWindow
                 Log.Error("打包失败");
                 return false;
             }
-            Log.Debug("完成程序打包");
-            EditorUtility.RevealInFinder($"{SelectItem.PlatformConfig.ExePath}/{buildTarget}/");
+            Log.Debug("完成程序打包");            
         }
         return true;
     }
@@ -904,9 +919,8 @@ public class BuildVersionWindow : EditorWindow
             item.PlatformConfig.ResVersion = _txtVersion.value;
         }
         Setting?.SaveFile();
-        EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);
-        // 聚焦到游戏窗口
-        EditorTools.FocusUnitySceneWindow();
+        EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);                
+        EditorUtility.RevealInFinder(item.PlatformConfig.ExePath);
     }
 
     #endregion
