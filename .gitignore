@@ -11,6 +11,8 @@
 /Unity/Bundles
 /Unity/SimulationBundles
 /Unity/HybridCLRData
+/Unity/Assets/Data/Res/Code
+/Unity/Assets/Data/Res/Config
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
