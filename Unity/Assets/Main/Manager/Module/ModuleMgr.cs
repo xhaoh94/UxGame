@@ -19,29 +19,7 @@ namespace Ux
             public int priority { get; }
 
             public IModule Create()
-            {
-                //    int cnt = 0;
-                //    var type = _type;
-                //    while (true)
-                //    {
-                //        if (type == null) break;
-                //        var _instance = type.GetField("_instance",
-                //            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                //        if (_instance == null)
-                //        {
-                //            type = type.BaseType;
-                //            if (cnt > 10) break;
-                //            cnt++;
-                //        }
-                //        else
-                //        {
-                //            var mol = c
-                //            _instance.SetValue(null, mol);
-                //            return mol;
-                //        }
-                //    }
-                //    return null;
-                //}
+            {               
                 return (IModule)Activator.CreateInstance(_type);
             }
         }

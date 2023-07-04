@@ -24,7 +24,7 @@ public class BuildVersionSettingData : ScriptableObject
 public class BuildExportSetting
 {
     public string Name;
-    public PlatformType CurPlatform = PlatformType.Win64;    
+    public PlatformType CurPlatform = PlatformType.Win64;
     public List<BuildVersionPlatform> PlatformMap = new List<BuildVersionPlatform>();
     public BuildVersionPlatform PlatformConfig => GetPlatformConf(CurPlatform);
     BuildVersionPlatform GetPlatformConf(PlatformType platform)
@@ -74,12 +74,13 @@ public class BuildVersionPlatform
     public CompileType CompileType = CompileType.Development;
     public PlatformType PlatformType = PlatformType.Win64;
     public bool IsCompileDLL = true;
-    public string EncyptionClassName = nameof(EncryptionNone);
+    public string EncyptionClassName = string.Empty;
+    public string SharedPackRule = string.Empty;
     public ECompressOption CompressOption = ECompressOption.LZ4;
     public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
     public EOutputNameStyle NameStyleOption = EOutputNameStyle.HashName;
     public bool IsExportExecutable = true;
-    public string ResVersion = "0.0";
+    public string ResVersion = string.Empty;
     public string BuildTags = "builtin";
     public bool IsCopyTo = false;
     public string BundlePath = "./Bundles";

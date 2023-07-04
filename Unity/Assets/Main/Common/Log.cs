@@ -7,7 +7,7 @@ public static class Log
         UnityEngine.Debug.Log(msg);
     }
 
-    // ReSharper disable Unity.PerformanceAnalysis
+    
     public static void Debug(string msg)
     {
         UnityEngine.Debug.Log(msg);
@@ -23,6 +23,7 @@ public static class Log
             UnityEngine.Debug.Log(msg.ToString());
         }
     }
+
     public static void Info(string msg)
     {
         UnityEngine.Debug.Log(msg);

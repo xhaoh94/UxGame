@@ -30,12 +30,12 @@ namespace Ux.UI
         }
         partial void OnBtnTestClick(EventContext e)
         {
-            UIMgr.Dialog.SingleBtn("提示1", $"获取资源版本失败，请检测网络状态。", "确定", null);
-            UIMgr.Dialog.DoubleBtn("提示2", $"获取资源版本失败，请检测网络状态。", "确定", null, "取消", null);
+            UIMgr.Dialog.SingleBtn("提示1", $"测试弹窗1", "确定", null);
+            UIMgr.Dialog.DoubleBtn("提示2", $"测试弹窗2", "确定", null, "取消", null);
         }
         partial void OnBtnSingleClick(EventContext e)
         {
-            Log.Debug("单击");            
+            Log.Debug("单击");
         }
         partial void OnBtnDoubleDoubleClick(EventContext e)
         {
@@ -44,7 +44,6 @@ namespace Ux.UI
         partial void OnBtnLongClickLongClick(ref bool isBreak)
         {
             Log.Debug("长按");
-            isBreak = false;
         }
         partial void OnBtnBackClick(EventContext e)
         {

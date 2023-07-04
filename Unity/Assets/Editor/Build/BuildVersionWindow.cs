@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using UI.Editor;
 using UnityEditor;
-using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -55,6 +54,8 @@ public class BuildVersionWindow : EditorWindow
 
     private List<Type> _encryptionServicesClassTypes;
     private List<string> _encryptionServicesClassNames;
+    private List<Type> _sharedPackRuleClassTypes;
+    private List<string> _sharedPackRuleClassNames;
     private List<string> _buildPackageNames;
     private BuildVersionSettingData Setting;
     private int _lastModifyExportIndex = 0;
@@ -92,6 +93,7 @@ public class BuildVersionWindow : EditorWindow
     Toggle _tgCompileDLL;
     Toggle _tgClearSandBox;
     PopupField<string> _encryption;
+    PopupField<string> _sharedPackRule;
 
     #endregion
 
@@ -106,6 +108,8 @@ public class BuildVersionWindow : EditorWindow
             visualAsset.CloneTree(root);
             _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
+            _sharedPackRuleClassTypes = GetSharedPackRuleClassTypes();
+            _sharedPackRuleClassNames = _sharedPackRuleClassTypes.Select(t => t.FullName).ToList();
             _buildPackageNames = GetBuildPackageNames();
 
             _listExport = root.Q<ListView>("listExport");
@@ -139,15 +143,20 @@ public class BuildVersionWindow : EditorWindow
                 RefreshWindow();
             });
 
+            //构建版本
+            _txtVersion = _exportElement.Q<TextField>("txtVersion");
+            _txtVersion.isReadOnly = true;
+            _txtVersion.SetEnabled(false);
+
             //编译类型
             _buildType = _exportElement.Q<EnumField>("buildType");
             _buildType.Init(BuildType.IncrementalBuild);
             _buildType.style.width = 500;
             _buildType.RegisterValueChangedCallback(evt =>
             {
-                var resVersion = _txtVersion.value;
+                //var resVersion = _txtVersion.value;
                 RefreshWindow();
-                _txtVersion.SetValueWithoutNotify(resVersion);
+                //_txtVersion.SetValueWithoutNotify(resVersion);
             });
 
             //资源导出路径
@@ -194,13 +203,6 @@ public class BuildVersionWindow : EditorWindow
             _buildPackage.choices = _buildPackageNames;
             _buildPackage.value = -1;
             _buildPackage.style.width = 350;
-
-            //资源版本
-            _txtVersion = _exportElement.Q<TextField>("txtVersion");
-            //_txtVersion.RegisterValueChangedCallback(evt =>
-            //{
-            //    SelectItem.PlatformConfig.ResVersion = evt.newValue;
-            //});        
 
             // 构建管线
             _pipelineType = _exportElement.Q<EnumField>("pipelineType");
@@ -257,6 +259,26 @@ public class BuildVersionWindow : EditorWindow
                 _encryption.style.width = 500;
                 encryptionContainer.Add(_encryption);
             }
+
+            if (_sharedPackRuleClassNames.Count > 0)
+            {
+                _sharedPackRule = new PopupField<string>(_sharedPackRuleClassNames, 0);
+                _sharedPackRule.label = "共享资源的打包规则";
+                _sharedPackRule.style.width = 500;
+                _sharedPackRule.RegisterValueChangedCallback(evt =>
+                {
+                    SelectItem.PlatformConfig.SharedPackRule = evt.newValue;
+                });
+                encryptionContainer.Add(_sharedPackRule);
+            }
+            else
+            {
+                _sharedPackRule = new PopupField<string>();
+                _sharedPackRule.label = "共享资源的打包规则";
+                _sharedPackRule.style.width = 500;
+                encryptionContainer.Add(_sharedPackRule);
+            }
+
 
             _tgExe = _exportElement.Q<Toggle>("tgExe");
             _tgExe.RegisterValueChangedCallback(evt =>
@@ -363,16 +385,17 @@ public class BuildVersionWindow : EditorWindow
     }
     string AddVersion(string version)
     {
+        if (IsExportExecutable || string.IsNullOrEmpty(version))
+        {
+            var dt = DateTime.Now;
+            int totalSecond = dt.Hour * 3600 + dt.Minute * 60 + dt.Second;
+            return $"{dt.ToString("yyMMdd")}{totalSecond}x1";
+        }
+
         try
         {
-            var newVersion = string.Empty;
-            var sz = version.Split('.');
-            for (int i = 0; i < sz.Length - 1; i++)
-            {
-                newVersion += sz[i] + ".";
-            }
-            newVersion += (int.Parse(sz[sz.Length - 1]) + 1).ToString();
-            return newVersion;
+            var sz = version.Split('x');
+            return $"{sz[0]}x{int.Parse(sz[1]) + 1}";
         }
         catch
         {
@@ -404,7 +427,19 @@ public class BuildVersionWindow : EditorWindow
         _compressionType.SetValueWithoutNotify(SelectItem.PlatformConfig.CompressOption);
         _inputBuiltinTags.SetValueWithoutNotify(SelectItem.PlatformConfig.BuildTags);
         _tgCompileDLL.SetValueWithoutNotify(SelectItem.PlatformConfig.IsCompileDLL);
+
+        if (string.IsNullOrEmpty(SelectItem.PlatformConfig.EncyptionClassName) &&
+            _encryptionServicesClassNames.Count > 0)
+        {
+            SelectItem.PlatformConfig.EncyptionClassName = _encryptionServicesClassNames[0];
+        }
         _encryption.SetValueWithoutNotify(SelectItem.PlatformConfig.EncyptionClassName);
+        if (string.IsNullOrEmpty(SelectItem.PlatformConfig.SharedPackRule) &&
+            _sharedPackRuleClassNames.Count > 0)
+        {
+            SelectItem.PlatformConfig.SharedPackRule = _sharedPackRuleClassNames[0];
+        }
+        _sharedPackRule.SetValueWithoutNotify(SelectItem.PlatformConfig.SharedPackRule);
         _tgClearSandBox.SetValueWithoutNotify(SelectItem.PlatformConfig.IsClearSandBox);
         RefreshElement();
     }
@@ -421,6 +456,7 @@ public class BuildVersionWindow : EditorWindow
         _nameStyleType.SetEnabled(IsForceRebuild);
         _compressionType.SetEnabled(IsForceRebuild);
         _encryption.SetEnabled(IsForceRebuild);
+        _sharedPackRule.SetEnabled(IsForceRebuild);
         _inputBuiltinTags.SetEnabled(IsForceRebuild);
         _inputCopyPath.parent.style.display = _tgCopy.value ? DisplayStyle.Flex : DisplayStyle.None;
     }
@@ -429,7 +465,7 @@ public class BuildVersionWindow : EditorWindow
         var dt = DateTime.Now;
         int totalSecond = dt.Hour * 3600 + dt.Minute * 60 + dt.Second;
         var item = new BuildExportSetting();
-        item.Name = $"Config-{dt.ToString("yyyy-MM-dd")}-{totalSecond}";
+        item.Name = $"Build-{dt.ToString("yyyy-MM-dd")}-{totalSecond}";
         Setting.ExportSettings.Add(item);
         OnExportListData();
     }
@@ -590,9 +626,10 @@ public class BuildVersionWindow : EditorWindow
     }
     private async UniTask<bool> CompileDLL(BuildTarget target)
     {
+        HybridCLRCommand.ClearHOTDll();
         if (_tgCompileDLL.value)
         {
-            Log.Debug("---------------------------------------->生成配置文件Code<---------------------------------------");
+            Log.Debug("---------------------------------------->生成配置文件<---------------------------------------");
             UniTask ExportConfig()
             {
                 var configTask = AutoResetUniTaskCompletionSource.Create();
@@ -616,7 +653,7 @@ public class BuildVersionWindow : EditorWindow
                     Log.Debug("切换编译平台失败");
                     return false;
                 }
-
+                HybridCLRCommand.ClearAOTDll();
                 Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
                 CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
                 Il2CppDefGeneratorCommand.GenerateIl2CppDef();
@@ -774,7 +811,7 @@ public class BuildVersionWindow : EditorWindow
         buildParameters.PackageName = packageName;
         buildParameters.PackageVersion = _txtVersion.value;
         buildParameters.VerifyBuildingResult = true;
-        buildParameters.ShareAssetPackRule = new DefaultShareAssetPackRule();
+        buildParameters.SharedPackRule = CreateSharedPackRuleInstance();
         buildParameters.EncryptionServices = CreateEncryptionServicesInstance();
         buildParameters.OutputNameStyle = (EOutputNameStyle)_nameStyleType.value;
         buildParameters.CompressOption = (ECompressOption)_compressionType.value;
@@ -794,6 +831,7 @@ public class BuildVersionWindow : EditorWindow
         }
 
         AssetBundleBuilder builder = new AssetBundleBuilder();
+
         var result = builder.Run(buildParameters);
         if (!result.Success)
         {
@@ -914,7 +952,7 @@ public class BuildVersionWindow : EditorWindow
     #region 初始化   
     void LoadConfig()
     {
-        Setting = SettingTools.GetSingletonAssets<BuildVersionSettingData>("Assets/Editor/Build");
+        Setting = SettingTools.GetSingletonAssets<BuildVersionSettingData>("Assets/Setting/Build");
     }
     void SaveConfig()
     {
@@ -941,20 +979,6 @@ public class BuildVersionWindow : EditorWindow
         return result;
     }
 
-    #endregion
-
-    #region  加密类相关    
-    private int GetEncryptionDefaultIndex(string className)
-    {
-        for (int index = 0; index < _encryptionServicesClassNames.Count; index++)
-        {
-            if (_encryptionServicesClassNames[index] == className)
-            {
-                return index;
-            }
-        }
-        return 0;
-    }
     private IEncryptionServices CreateEncryptionServicesInstance()
     {
         if (_encryption.index < 0)
@@ -962,10 +986,21 @@ public class BuildVersionWindow : EditorWindow
         var classType = _encryptionServicesClassTypes[_encryption.index];
         return (IEncryptionServices)Activator.CreateInstance(classType);
     }
+    private ISharedPackRule CreateSharedPackRuleInstance()
+    {
+        if (_sharedPackRule.index < 0)
+            return null;
+        var classType = _sharedPackRuleClassTypes[_sharedPackRule.index];
+        return (ISharedPackRule)Activator.CreateInstance(classType);
+    }
 
     private static List<Type> GetEncryptionServicesClassTypes()
     {
         return EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
+    }
+    private static List<Type> GetSharedPackRuleClassTypes()
+    {
+        return EditorTools.GetAssignableTypes(typeof(ISharedPackRule));
     }
     #endregion
 

@@ -11,6 +11,7 @@
         <ui:VisualElement name="exportElement" style="flex-grow: 1;">
             <ui:TextField picking-mode="Ignore" label="配置名" name="txtName" />
             <uie:EnumField label="编译平台" name="platformType" />
+            <ui:TextField label="构建版本" name="txtVersion" readonly="true" style="display: flex; visibility: visible; opacity: 1;" />
             <uie:EnumField label="构建类型" name="buildType" />
             <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
                 <ui:TextField picking-mode="Ignore" label="资源文件构建目录" value="filler text" text="./Bundles" name="inputBundlePath" style="flex-grow: 1;" />
@@ -24,12 +25,11 @@
             <ui:Toggle label="清理沙盒缓存" name="tgClearSandBox" style="height: 15px;" />
             <ui:Toggle label="编译热更DLL" name="tgCompileDLL" style="height: 15px;" />
             <uie:MaskField label="构建资源包" choices="System.Collections.Generic.List`1[System.String]" name="buildPackage" />
-            <ui:TextField label="构建版本" name="txtVersion" />
             <uie:EnumField label="构建管线" name="pipelineType" />
             <uie:EnumField label="资源命名格式" name="nameStyleType" style="height: 20px;" />
             <uie:EnumField label="压缩方式" value="Center" name="compressionType" />
             <ui:TextField picking-mode="Ignore" label="首包资源标签" name="inputBuiltinTags" />
-            <ui:VisualElement label="加密方式" name="encryptionContainer" style="height: 24px;" />
+            <ui:VisualElement label="加密方式" name="encryptionContainer" style="height: auto;" />
             <ui:Toggle label="是否生成可执行文件" name="tgExe" />
             <ui:VisualElement name="exeElement" style="background-color: rgba(0, 0, 0, 0);">
                 <ui:VisualElement style="flex-direction: row; flex-grow: 0;">

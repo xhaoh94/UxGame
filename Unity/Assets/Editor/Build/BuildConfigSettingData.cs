@@ -1,9 +1,9 @@
-using Sirenix.OdinInspector;
 using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,7 +14,7 @@ public class BuildConfigSettingData : ScriptableObject
 
     [CommandPathAttribute]
     [Command(false)]
-    [LabelText("Dll")]
+    [InspectorLabel("Dll")]
     public string DllFile = "../Luban/Tools/Luban.ClientServer/Luban.ClientServer.dll";
 
     [Command("--job")]
@@ -23,30 +23,30 @@ public class BuildConfigSettingData : ScriptableObject
 
     [CommandPathAttribute]
     [Command("--define_file")]
-    [LabelText("Root.xml")]
+    [InspectorLabel("Root.xml")]    
     public string DefineFile = "../Luban/Defines/__root__.xml";
 
     [CommandPathAttribute]
     [Command("--input_data_dir")]
-    [LabelText("配置目录")]
+    [InspectorLabel("配置目录")]
     public string InputDataPath = "../Luban/Datas";
 
     [CommandPathAttribute]
     [Command("--output_code_dir")]
-    [LabelText("导出代码目录")]
+    [InspectorLabel("导出代码目录")]
     public string OutCodePath = "Assets/Hotfix/CodeGen/Config";
 
     [CommandPathAttribute]
-    [LabelText("导出数据目录")]
+    [InspectorLabel("导出数据目录")]
     [Command("--output_data_dir")]
     public string OutDataPath = "Assets/Data/Res/Config";
 
     [Command("--gen_types")]
-    [LabelText("生成数据类型")]
+    [InspectorLabel("生成数据类型")]
     public string GenType = "code_cs_unity_bin,data_bin";
 
     [Command("--service")]
-    [LabelText("生成类型")]
+    [InspectorLabel("生成类型")]
     public string ServiceType = "client";
 
 
@@ -133,7 +133,7 @@ public class BuildConfigSettingData : ScriptableObject
     #region 初始化   
     public static BuildConfigSettingData LoadConfig()
     {
-        Setting = SettingTools.GetSingletonAssets<BuildConfigSettingData>("Assets/Editor/Build");
+        Setting = SettingTools.GetSingletonAssets<BuildConfigSettingData>("Assets/Setting/Build");
         return Setting;
     }
     public static void SaveConfig()

@@ -1,5 +1,4 @@
-﻿using Sirenix.OdinInspector;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,19 +10,14 @@ namespace UI.Editor
     {
         [Serializable]
         public class ResClassify
-        {
-            [LabelText("资源包")]
-            public string key;
-            [LabelText("资源标签")]
+        {            
+            public string key;         
             public string value;
-        }
-        [LabelText("UI资源目录")]
+        }        
         public string path = "Assets/Data/Res/UI";
 
-        [InfoBox("不在内置资源或懒加载资源的，都是预加载资源")]
-        [LabelText("内置资源")]
-        public string[] builtins;
-        [LabelText("懒加载资源")]
+        [Header("不在内置资源或懒加载资源的，都是预加载资源")]                
+        public string[] builtins;        
         public ResClassify[] lazyloads;
 
         public static List<string> GetLazyloadsByKeys(UIResClassifySettingData rc, List<string> pkgs)

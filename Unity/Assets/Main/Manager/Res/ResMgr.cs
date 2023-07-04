@@ -16,14 +16,14 @@ namespace Ux
         };
 
         readonly Dictionary<string, ResPackage> _locationToPackage = new Dictionary<string, ResPackage>();
-        public IEnumerator Initialize()
+        public IEnumerator Initialize(EPlayMode playMode)
         {
             // 初始化资源系统
             YooAssets.Initialize();
             // 创建资源包            
             ForEachPackage(x => x.CreatePackage());
             // 初始化资源包
-            yield return ForEachPackage(x => x.Initialize());
+            yield return ForEachPackage(x => x.Initialize(playMode));
 
         }
         public void ForEachPackage(Action<ResPackage> fn)

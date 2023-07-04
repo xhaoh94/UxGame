@@ -111,7 +111,7 @@ namespace UI.Editor
             {
                 if (_ResClassifySettings == null)
                 {
-                    _ResClassifySettings = SettingTools.GetSingletonAssets<UIResClassifySettingData>("Assets/Editor/UI");
+                    _ResClassifySettings = SettingTools.GetSingletonAssets<UIResClassifySettingData>("Assets/Setting/UI");
                 }
                 return _ResClassifySettings;
             }

@@ -31,10 +31,8 @@ namespace Ux
                 YooAssets.SetDefaultPackage(Package);
             }
         }
-        public IEnumerator Initialize()
-        {
-            var playMode = GameMain.Ins.PlayMode;
-
+        public IEnumerator Initialize(EPlayMode playMode)
+        {            
             switch (playMode)
             {
                 // 编辑器模拟模式
@@ -60,7 +58,7 @@ namespace Ux
                     var createParameters = new HostPlayModeParameters
                     {
                         DecryptionServices = new GameDecryptionServices(),
-                        QueryServices = new QueryStreamingAssetsFileServices(),
+                        QueryServices = new GameQueryServices(),
                         DefaultHostServer = Global.GetHostServerURL(),
                         FallbackHostServer = Global.GetHostServerURL()
                     };
@@ -72,14 +70,6 @@ namespace Ux
             }
         }
         #region 加密
-        private class QueryStreamingAssetsFileServices : IQueryServices
-        {
-            public bool QueryStreamingAssets(string fileName)
-            {                
-                string buildinFolderName = YooAssets.GetStreamingAssetBuildinFolderName();
-                return StreamingAssetsHelper.FileExists($"{buildinFolderName}/{fileName}");                
-            }
-        }
         private class GameDecryptionServices : IDecryptionServices
         {
             public ulong LoadFromFileOffset(DecryptFileInfo fileInfo)
@@ -94,7 +84,7 @@ namespace Ux
 
             Stream IDecryptionServices.LoadFromStream(DecryptFileInfo fileInfo)
             {
-                BundleStream bundleStream = new BundleStream(fileInfo.FilePath, FileMode.Open);
+                BundleStream bundleStream = new BundleStream(fileInfo.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 return bundleStream;
             }
 

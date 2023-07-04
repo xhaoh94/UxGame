@@ -1,12 +1,8 @@
-#if UNITY_EDITOR
-using Sirenix.OdinInspector;
-#endif
 using System;
 using System.Collections;
 using System.Threading;
 using UnityEngine;
 using YooAsset;
-using UnityEngine.Profiling;
 
 namespace Ux
 {
@@ -15,11 +11,8 @@ namespace Ux
         public static GameMain Ins { get; private set; }
         public static StateMachine Machine { get; private set; }
 
-        public EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
-
-#if UNITY_EDITOR
-        [LabelText("开启游戏内Debug")]
-#endif
+        [SerializeField]
+        private EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
 
         [SerializeField]
         private bool IngameDebug = true;
@@ -29,11 +22,11 @@ namespace Ux
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
-            }            
+            }
             Ins = this;
+            SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
             zstring.Init(Log.Error);
             Machine = StateMachine.CreateByPool();
-            SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
             DontDestroyOnLoad(gameObject);
             Application.targetFrameRate = 60;
             Application.runInBackground = true;
@@ -47,7 +40,6 @@ namespace Ux
 
 
         IEnumerator Start()
-        //void Start()
         {
 #if !UNITY_EDITOR
             if (PlayMode == EPlayMode.EditorSimulateMode)
@@ -55,16 +47,16 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize();
+            yield return ResMgr.Ins.Initialize(PlayMode);
 
             typeof(GameMain).Assembly.Initialize();
             // 运行补丁流程
-            PatchMgr.Ins.Run(PlayMode);           
+            PatchMgr.Ins.Run(PlayMode);
         }
 
-        
+
         void Update()
-        {            
+        {
 #if UNITY_EDITOR
             if (UnityEditor.EditorApplication.isCompiling)
             {

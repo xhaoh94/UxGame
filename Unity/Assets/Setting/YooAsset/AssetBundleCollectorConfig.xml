@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root Version="2.4">
+  <Common AutoAddressable="True" UniqueBundleName="True" ShowPackageView="True" ShowEditorAlias="False" />
+  <Package PackageName="MainPackage" PackageDesc="主包">
+    <Group GroupActiveRule="EnableGroup" GroupName="Builtin" GroupDesc="内置资源" AssetTags="builtin">
+      <Collector CollectPath="Assets/Data/Res/Code/AOT" CollectGUID="210309f956870ff4ca04bf81d92dd434" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Code/HOT" CollectGUID="95b205c0d1216a345a2e5f51c520b77a" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Scenes/Hotfix.unity" CollectGUID="8637324786e1dda489f776e4e1cf2fed" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackSeparately" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Art/ShaderVariants" CollectGUID="ff5e5c9d0449dbd4f8cef29e9e28fe2d" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackShaderVariants" FilterRule="CollectShaderVariants" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Config" CollectGUID="8f52838e936dc4e42976f151a4bf6d17" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Preload" GroupDesc="预加载" AssetTags="preload">
+      <Collector CollectPath="Assets/Data/Res/Prefab/Map" CollectGUID="81531e71e6b35264bad074572c22b908" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Prefab/Hero" CollectGUID="380af11a1e9ffcb479ee49926358d18c" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Lazyload" GroupDesc="懒加载" AssetTags="lazyload" />
+  </Package>
+  <Package PackageName="UIPackage" PackageDesc="UI包">
+    <Group GroupActiveRule="EnableGroup" GroupName="Builtin" GroupDesc="内置资源" AssetTags="builtin">
+      <Collector CollectPath="Assets/Data/Res/UI/Common" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/UI/Patch" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/UI/Main" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Lazyload" GroupDesc="懒加载资源" AssetTags="lazyload">
+      <Collector CollectPath="Assets/Data/Res/UI/Bag" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="lazyload_bag" />
+      <Collector CollectPath="Assets/Data/Res/UI/Multiple" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="lazyload_multiple" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Preload" GroupDesc="预加载资源" AssetTags="preload">
+      <Collector CollectPath="Assets/Data/Res/UI" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackTopDirectory" FilterRule="CollectPreloadUI" UserData="" AssetTags="" />
+    </Group>
+  </Package>
+</root>

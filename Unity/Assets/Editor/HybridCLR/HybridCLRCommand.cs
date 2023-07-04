@@ -67,7 +67,27 @@ namespace HybridCLR.Commands
         //    PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
         //    //PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, symbols.ToArray());
         //}
-        
+
+        public static void ClearHOTDll()
+        {
+            _Clear(HotDir);
+        }
+        public static void ClearAOTDll()
+        {
+            _Clear(AotDir);
+        }
+        static void _Clear(string path)
+        {
+            if (!Directory.Exists(HotDir))
+            {
+                return;
+            }
+            var directoryInfo = new DirectoryInfo(path);
+            foreach (var file in directoryInfo.GetFiles())
+            {
+                file.Delete();
+            }
+        }
         /// <summary>
         /// 生成AOT元数据DLL
         /// </summary>

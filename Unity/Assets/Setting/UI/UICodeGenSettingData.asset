@@ -1,0 +1,422 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1864b51bae6e73444b69c327d37e7100, type: 3}
+  m_Name: UICodeGenSettingData
+  m_EditorClassIdentifier: 
+  defaultNs: Ux.UI
+  path: Assets/Hotfix/CodeGen/UI
+  ingoreDefault: 1
+  pkgs:
+  - name: Common
+    components:
+    - ID: 3c033b4b-0ac4-44d7-9b57-48fa9f542bb8
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: Common1TabFrame
+      ns: Ux.UI
+      cls: Common1TabFrame
+      ext: Component/TabFrame
+      isExport: 1
+      gList: listTab
+      tabContent: tabContent
+      btnClose: btnClose
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n8
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: tabContent
+        defaultType: GComponent
+        customType: GComponent
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: listTab
+        defaultType: GList
+        customType: GList
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5217\u8868\u70B9\u51FB"
+        evtParam: 
+      - index: 4
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+    - ID: 6a8f29d7-b2d7-4583-b892-097f9acf309d
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: Common2TabFrame
+      ns: Ux.UI
+      cls: Common2TabFrame
+      ext: Component/TabFrame
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: btnClose
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+    - ID: a9765f1e-a40d-436d-b045-733642cf5f96
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonDialog
+      ns: Ux.UI
+      cls: CommonDialog
+      ext: Panel/Dialog
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: txtTitle
+      dialogContent: txtContent
+      dialogBtnClose: btnClose
+      dialogBtn1: btn1
+      dialogBtn2: btn2
+      dialogController: dialogState
+      members:
+      - index: 0
+        name: n4
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: txtTitle
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: txtContent
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: btn1
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 4
+        name: btn2
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 5
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 0
+        name: dialogState
+        defaultType: Controller
+        customType: Controller
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: c35a3de9-985d-4a9c-b5ab-17ee984702e7
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonTabBtn
+      ns: Ux.UI
+      cls: CommonTabBtn
+      ext: Component/TabBtn
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: redPoint
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: 4f861fc2-bb9e-4e36-a424-34a998ba8b4c
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: BtnClose
+      ns: Ux.UI
+      cls: BtnClose
+      ext: FGUI/Button
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: n2
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: n3
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+  - name: Login
+    components:
+    - ID: ab4795af-a4e3-4d1c-956a-ed10fb889af3
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Login
+      resName: LoginView
+      ns: Ux.UI
+      cls: LoginView
+      ext: Panel/View
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: btnLogin
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 3
+        name: inputAcc
+        defaultType: GTextInput
+        customType: GTextInput
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 4
+        name: n4
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 5
+        name: inputPass
+        defaultType: GTextInput
+        customType: GTextInput
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 6
+        name: n6
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 

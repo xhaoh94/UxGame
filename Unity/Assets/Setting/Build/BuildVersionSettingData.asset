@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c6807e422c8ac64fa5a63a608199663, type: 3}
+  m_Name: BuildVersionSettingData
+  m_EditorClassIdentifier: 
+  ExportSettings:
+  - Name: Build-2023-06-30-58580
+    CurPlatform: 1
+    PlatformMap:
+    - CompileType: 0
+      PlatformType: 1
+      IsCompileDLL: 1
+      EncyptionClassName: YooAsset.Editor.EncryptionNone
+      SharedPackRule: YooAsset.Editor.FullRedundancySharedPackRule
+      CompressOption: 2
+      PiplineOption: 1
+      NameStyleOption: 1
+      IsExportExecutable: 1
+      ResVersion: 23063058786x1
+      BuildTags: builtin
+      IsCopyTo: 1
+      BundlePath: ./Bundles
+      ExePath: ./Release
+      CopyPath: ./CDN
+      IsClearSandBox: 1

@@ -5,12 +5,16 @@
 /Unity/[Bb]uilds/
 /Unity/[Ll]ogs/
 /Unity/[Mm]emoryCaptures/
-/Unity/Release
-/Unity/Sandbox
-/Unity/CDN
-/Unity/Bundles
-/Unity/SimulationBundles
-/Unity/HybridCLRData
+/Unity/[Rr]elease
+/Unity/[Ss]andbox
+/Unity/[Cc]DN
+/Unity/[Bb]undles
+/Unity/[Ss]imulationBundles
+/Unity/[Hh]ybridCLRData
+
+/Unity/Assets/Data/Res/Code
+/Unity/Assets/Data/Res/Config
+/Unity/Assets/Hotfix/CodeGen
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta

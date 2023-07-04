@@ -365,14 +365,14 @@ namespace UI.Editor
                 write.StartBlock();
                 foreach (var btn in btns)
                 {
-                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}Click";
+                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}Click";
                     if (btn.customType != btn.defaultType)
                     {
-                        write.Writeln($"{btn.name}.AddClick(e => {fnName}(e));");
+                        write.Writeln($"{btn.name}.AddClick({fnName});");
                     }
                     else
                     {
-                        write.Writeln($"AddClick({btn.name},e => {fnName}(e));");
+                        write.Writeln($"AddClick({btn.name},{fnName});");
                     }
                 }
                 foreach (var btn in dbtns)
@@ -389,14 +389,14 @@ namespace UI.Editor
                         dContent = JsonConvert.DeserializeObject<MemberEvtDouble>(btn.evtParam);
                     }
 
-                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}DoubleClick";
+                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}DoubleClick";
                     if (btn.customType != btn.defaultType)
                     {
-                        write.Writeln($"{btn.name}.AddDoubleClick(e => {fnName}(e), {dContent.dCnt}, {dContent.dGapTime}f);");
+                        write.Writeln($"{btn.name}.AddDoubleClick({fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
                     }
                     else
                     {
-                        write.Writeln($"AddDoubleClick({btn.name},e => {fnName}(e), {dContent.dCnt}, {dContent.dGapTime}f);");
+                        write.Writeln($"AddDoubleClick({btn.name},{fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
                     }
                 }
                 foreach (var btn in longbtns)
@@ -415,49 +415,68 @@ namespace UI.Editor
                         lContent = JsonConvert.DeserializeObject<MemberEvtLong>(btn.evtParam);
                     }
 
-                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongClick";
+                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongClick";
                     if (btn.customType != btn.defaultType)
                     {
-                        write.Writeln($"{btn.name}.AddLongClick({lContent.lFirst}f, () =>");
+                        write.Writeln($"{btn.name}.AddLongClick({lContent.lFirst}f, {fnName}, " +
+                            $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
                     }
                     else
                     {
-                        write.Writeln($"AddLongClick({btn.name},{lContent.lFirst}f, () =>");
+                        write.Writeln($"AddLongClick({btn.name},{lContent.lFirst}f, {fnName}, " +
+                            $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
                     }
-                    write.StartBlock();
-                    write.Writeln("bool b = false;");
-                    write.Writeln($"{fnName}(ref b);");
-                    write.Writeln("return b;");
-                    write.EndBlock(false);
-                    write.Writeln($", {lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});", false);
                 }
                 foreach (var list in lists)
                 {
-                    var fnName = $"On{char.ToUpper(list.name[0])}{list.name.Substring(1)}Item";
-                    write.Writeln($"AddItemClick({list.name},e => {fnName}Click(e));");
-                    write.Writeln($"{list.name}.itemRenderer = (a, b) => {fnName}Renderer(a, b);");
+                    var fnName = $"_On{char.ToUpper(list.name[0])}{list.name.Substring(1)}Item";
+                    write.Writeln($"AddItemClick({list.name},{fnName}Click);");
+                    write.Writeln($"{list.name}.itemRenderer = {fnName}Renderer;");
                 }
                 write.EndBlock();
 
                 foreach (var btn in btns)
                 {
                     var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}Click";
+                    write.Writeln($"void _{fnName}(EventContext e)");
+                    write.StartBlock();
+                    write.Writeln($"{fnName}(e);");
+                    write.EndBlock();
                     write.Writeln($"partial void {fnName}(EventContext e);");
                 }
                 foreach (var btn in dbtns)
                 {
                     var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}DoubleClick";
+                    write.Writeln($"void _{fnName}(EventContext e)");
+                    write.StartBlock();
+                    write.Writeln($"{fnName}(e);");
+                    write.EndBlock();
                     write.Writeln($"partial void {fnName}(EventContext e);");
                 }
                 foreach (var btn in longbtns)
                 {
                     var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongClick";
+                    write.Writeln($"bool _{fnName}()");
+                    write.StartBlock();
+                    write.Writeln("bool b = false;");
+                    write.Writeln($"{fnName}(ref b);");
+                    write.Writeln("return b;");
+                    write.EndBlock();
                     write.Writeln($"partial void {fnName}(ref bool isBreak);");
                 }
                 foreach (var list in lists)
                 {
                     var fnName = $"On{char.ToUpper(list.name[0])}{list.name.Substring(1)}Item";
+                    write.Writeln($"void _{fnName}Click(EventContext e)");
+                    write.StartBlock();
+                    write.Writeln($"{fnName}Click(e);");
+                    write.EndBlock();
                     write.Writeln($"partial void {fnName}Click(EventContext e);");
+
+                    write.Writeln($"void _{fnName}Renderer(int index, GObject item)");
+                    write.StartBlock();
+                    write.Writeln($"{fnName}Renderer(index, item);");
+                    write.EndBlock();
                     write.Writeln($"partial void {fnName}Renderer(int index, GObject item);");
                 }
             }

@@ -1,5 +1,4 @@
 ﻿using FairyGUI;
-using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +12,7 @@ namespace UI.Editor
     public class PkgData
     {
         [HideInInspector]
-        public string name;
-        [LabelText("@name")]
+        public string name;        
         public List<ComponentData> components;
 
         public PkgData(string name)
@@ -46,72 +44,40 @@ namespace UI.Editor
     {
         [HideInInspector]
         public string ID;
-
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("使用全局配置")]
         public bool useGlobal;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("生成路径")]
-        [HideIf("@useGlobal")]
+
         public string path;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("忽略没有命名组件")]
-        [HideIf("@useGlobal")]
+
         public bool ingoreDefault;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("包名")]
+
         public string pkgName;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("组件名")]
+
         public string resName;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("命名空间")]
-        [HideIf("@useGlobal")]
+
         public string ns;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("生成类名")]
+
         public string cls;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("继承类型")]
+
         public string ext;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("是否导出")]
+
         public bool isExport = true;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Tab面板列表")]
-        [ShowIf("@IsTabFrame")]
+
         public string gList;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Tab面板容器")]
-        [ShowIf("@IsTabFrame")]
+
         public string tabContent;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Tab面板关闭按钮")]
-        [ShowIf("@IsTabFrame")]
+
         public string btnClose;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Dialog标题")]
-        [ShowIf("@IsDialog")]
+
         public string dialogTitle;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Dialog文本")]
-        [ShowIf("@IsDialog")]
+
         public string dialogContent;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Dialog关闭按钮")]
-        [ShowIf("@IsDialog")]
+
         public string dialogBtnClose;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Dialog按钮1")]
-        [ShowIf("@IsDialog")]
+
         public string dialogBtn1;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Dialog按钮2")]
-        [ShowIf("@IsDialog")]
+
         public string dialogBtn2;
-        [FoldoutGroup("@resName", expanded: false)]
-        [LabelText("Dialog控制器")]
-        [ShowIf("@IsDialog")]
+
         public string dialogController;   
 
         [HideInInspector]
@@ -358,14 +324,10 @@ namespace UI.Editor
 
     [CreateAssetMenu(fileName = "UICodeGenSettingData", menuName = "Ux/UI/Create CodeGenSettings")]
     public class UICodeGenSettingData : ScriptableObject
-    {
-        [LabelText("命名空间")]
+    {        
         public string defaultNs = "Ux.UI";
-        [LabelText("生成路径")]
-        public string path = "Assets/Hotfix/Manager/UI/CodeGen";
-        [LabelText("是否忽略没有命名组件")]
-        public bool ingoreDefault = true;
-        [LabelText("UI包")]
+        public string path = "Assets/Hotfix/CodeGen/UI";        
+        public bool ingoreDefault = true;        
         public List<PkgData> pkgs;
 
 
@@ -379,7 +341,7 @@ namespace UI.Editor
             if (ins == null)
             {
                 IsDirty = false;
-                ins = SettingTools.GetSingletonAssets<UICodeGenSettingData>("Assets/Editor/UI");
+                ins = SettingTools.GetSingletonAssets<UICodeGenSettingData>("Assets/Setting/UI");
                 freshComDataList.Clear();
             }
         }
