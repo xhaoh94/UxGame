@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace UI.Editor
 {
-    [CreateAssetMenu(fileName = "UIResClassifySettingData", menuName = "Ux/UI/Create ResClassifySettings")]
-    public class UIResClassifySettingData : ScriptableObject
+    [CreateAssetMenu(fileName = "UIClassifySettingData", menuName = "Ux/UI/Create ClassifySettings")]
+    public class UIClassifySettingData : ScriptableObject
     {
         [Serializable]
         public class ResClassify
@@ -20,7 +20,7 @@ namespace UI.Editor
         public string[] builtins;        
         public ResClassify[] lazyloads;
 
-        public static List<string> GetLazyloadsByKeys(UIResClassifySettingData rc, List<string> pkgs)
+        public static List<string> GetLazyloadsByKeys(UIClassifySettingData rc, List<string> pkgs)
         {
             if (pkgs == null || pkgs.Count == 0) return null;
             var r = new List<string>();            

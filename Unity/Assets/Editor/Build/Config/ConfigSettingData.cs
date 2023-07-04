@@ -8,8 +8,8 @@ using UnityEditor;
 using UnityEngine;
 
 
-[CreateAssetMenu(fileName = "BuildConfigSettingData", menuName = "Ux/Config/Create BuildConfigSetting")]
-public class BuildConfigSettingData : ScriptableObject
+[CreateAssetMenu(fileName = "ConfigSettingData", menuName = "Ux/Config/Create ConfigSetting")]
+public class ConfigSettingData : ScriptableObject
 {
 
     [CommandPathAttribute]
@@ -23,7 +23,7 @@ public class BuildConfigSettingData : ScriptableObject
 
     [CommandPathAttribute]
     [Command("--define_file")]
-    [InspectorLabel("Root.xml")]    
+    [InspectorLabel("Root.xml")]
     public string DefineFile = "../Luban/Defines/__root__.xml";
 
     [CommandPathAttribute]
@@ -58,10 +58,10 @@ public class BuildConfigSettingData : ScriptableObject
     {
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
-        Debug.Log($"{nameof(BuildConfigSettingData)}.asset is saved!");
+        Debug.Log($"{nameof(ConfigSettingData)}.asset is saved!");
     }
-    public static BuildConfigSettingData Setting;
-    string _GetCommand()
+    public static ConfigSettingData Setting;
+    public string GetCommand()
     {
         string line_end = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? " ^" : " \\";
 
@@ -119,21 +119,13 @@ public class BuildConfigSettingData : ScriptableObject
         return sb.ToString();
     }
 
-    static readonly string _DOTNET =
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
-    public static void Export(Action cb = null)
+    #region 初始化   
+    public static ConfigSettingData LoadConfig()
     {
         if (Setting == null)
         {
-            LoadConfig();
+            Setting = SettingTools.GetSingletonAssets<ConfigSettingData>("Assets/Setting/Build/Config");
         }
-        Command.Run(_DOTNET, Setting._GetCommand(), true, cb);        
-    }
-
-    #region 初始化   
-    public static BuildConfigSettingData LoadConfig()
-    {
-        Setting = SettingTools.GetSingletonAssets<BuildConfigSettingData>("Assets/Setting/Build");
         return Setting;
     }
     public static void SaveConfig()

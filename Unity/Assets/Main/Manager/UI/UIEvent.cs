@@ -7,8 +7,8 @@ namespace Ux
     public class UIEvent
     {
         private List<EventListener> _listeners;//组件事件        
-        private Dictionary<int, UILongClickEventData> _longClickEvtList;//长按
-        private Dictionary<int, UIDoubleClickEventData> _doubleClickEvtList;//多次点击
+        private Dictionary<int, UILongPressEventData> _longPressEvtList;//长按
+        private Dictionary<int, UIMultipleClickEventData> _mulClickEvtList;//多次点击
 
         public void Release()
         {
@@ -25,48 +25,48 @@ namespace Ux
                 }
                 _listeners.Clear();
             }
-            if (_longClickEvtList != null)
+            if (_longPressEvtList != null)
             {
-                foreach (var kv in _longClickEvtList)
+                foreach (var kv in _longPressEvtList)
                 {
                     kv.Value.Clear();
                 }
-                _longClickEvtList.Clear();
+                _longPressEvtList.Clear();
             }
 
-            if (_doubleClickEvtList != null)
+            if (_mulClickEvtList != null)
             {
-                foreach (var kv in _doubleClickEvtList)
+                foreach (var kv in _mulClickEvtList)
                 {
                     kv.Value.Clear();
                 }
-                _doubleClickEvtList.Clear();
+                _mulClickEvtList.Clear();
             }
         }
 
-        public void AddDoubleClick(GObject gObject, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
+        public void AddMultipleClick(GObject gObject, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
         {
-            _doubleClickEvtList ??= new Dictionary<int, UIDoubleClickEventData>();
-            if (_doubleClickEvtList.ContainsKey(gObject.GetHashCode())) return;
-            var item = Pool.Get<UIDoubleClickEventData>();
+            _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
+            if (_mulClickEvtList.ContainsKey(gObject.GetHashCode())) return;
+            var item = Pool.Get<UIMultipleClickEventData>();
             item.Init(gObject, fn0, clickCnt, gapTime);
-            _doubleClickEvtList.Add(gObject.GetHashCode(), item);
+            _mulClickEvtList.Add(gObject.GetHashCode(), item);
         }
-        public void AddDoubleClick(GObject gObject, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
+        public void AddMultipleClick(GObject gObject, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
         {
-            _doubleClickEvtList ??= new Dictionary<int, UIDoubleClickEventData>();
-            if (_doubleClickEvtList.ContainsKey(gObject.GetHashCode())) return;
-            var item = Pool.Get<UIDoubleClickEventData>();
+            _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
+            if (_mulClickEvtList.ContainsKey(gObject.GetHashCode())) return;
+            var item = Pool.Get<UIMultipleClickEventData>();
             item.Init(gObject, fn1, clickCnt, gapTime);
-            _doubleClickEvtList.Add(gObject.GetHashCode(), item);
+            _mulClickEvtList.Add(gObject.GetHashCode(), item);
         }
-        public void AddLongClick(GObject gObject, Func<bool> fn, float first, float delay, int loop, int holdRangeRadius)
+        public void AddLongPress(GObject gObject, Func<bool> fn, float first, float delay, int loop, int holdRangeRadius)
         {
-            _longClickEvtList ??= new Dictionary<int, UILongClickEventData>();
-            if (_longClickEvtList.ContainsKey(gObject.GetHashCode())) return;
-            var item = Pool.Get<UILongClickEventData>();
+            _longPressEvtList ??= new Dictionary<int, UILongPressEventData>();
+            if (_longPressEvtList.ContainsKey(gObject.GetHashCode())) return;
+            var item = Pool.Get<UILongPressEventData>();
             item.Init(gObject, fn, first, delay, loop, holdRangeRadius);
-            _longClickEvtList.Add(gObject.GetHashCode(), item);
+            _longPressEvtList.Add(gObject.GetHashCode(), item);
         }
         public void AddEvent(EventListener listener, EventCallback1 fn)
         {
@@ -82,7 +82,7 @@ namespace Ux
         }
     }
 
-    public class UIDoubleClickEventData
+    public class UIMultipleClickEventData
     {
         private GObject _target;
         private EventCallback1 _fn1;
@@ -181,7 +181,7 @@ namespace Ux
             }
         }
     }
-    public class UILongClickEventData
+    public class UILongPressEventData
     {
         private GObject _target;
         private Func<bool> _fn;

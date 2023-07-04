@@ -410,19 +410,19 @@ namespace Ux
         /// <summary>
         /// 多次点击事件，注册了多次点击事件，即使是单击也会受到gapTime延时触发
         /// </summary>        
-        protected void AddDoubleClick(GObject gObj, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
+        protected void AddMultipleClick(GObject gObj, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
         {
             if (gObj == null) return;
-            _event?.AddDoubleClick(gObj, fn0, clickCnt, gapTime);
+            _event?.AddMultipleClick(gObj, fn0, clickCnt, gapTime);
         }
 
         /// <summary>
         /// 多次点击事件，注册了多次点击事件，即使是单击也会受到gapTime延时触发
         /// </summary>    
-        protected void AddDoubleClick(GObject gObj, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
+        protected void AddMultipleClick(GObject gObj, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
         {
             if (gObj == null) return;
-            _event?.AddDoubleClick(gObj, fn1, clickCnt, gapTime);
+            _event?.AddMultipleClick(gObj, fn1, clickCnt, gapTime);
         }
 
         /// <summary>
@@ -433,11 +433,11 @@ namespace Ux
         /// <param name="delay">后续触发间隔</param>
         /// <param name="loopCnt">触发次数</param>
         /// <param name="holdRangeRadius">手指触发范围</param>
-        protected void AddLongClick(GObject gObj, Func<bool> fn, float delay = 0.2f, int loopCnt = 0,
+        protected void AddLongPress(GObject gObj, Func<bool> fn, float delay = 0.2f, int loopCnt = 0,
             int holdRangeRadius = 50)
         {
             if (gObj == null) return;
-            _event?.AddLongClick(gObj, fn, -1, delay, loopCnt, holdRangeRadius);
+            _event?.AddLongPress(gObj, fn, -1, delay, loopCnt, holdRangeRadius);
         }
 
         /// <summary>
@@ -449,11 +449,11 @@ namespace Ux
         /// <param name="delay">后续触发间隔</param>
         /// <param name="loopCnt">触发次数</param>
         /// <param name="holdRangeRadius">手指触发范围</param>
-        protected void AddLongClick(GObject gObj, float first, Func<bool> fn, float delay = 0.2f, int loopCnt = 0,
+        protected void AddLongPress(GObject gObj, float first, Func<bool> fn, float delay = 0.2f, int loopCnt = 0,
             int holdRangeRadius = 50)
         {
             if (gObj == null) return;
-            _event?.AddLongClick(gObj, fn, first, delay, loopCnt, holdRangeRadius);
+            _event?.AddLongPress(gObj, fn, first, delay, loopCnt, holdRangeRadius);
         }
 
         protected void AddClick(GObject gObj, EventCallback1 fn)

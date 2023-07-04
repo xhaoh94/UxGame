@@ -201,25 +201,25 @@ namespace Ux
             AddClick(Button, fn1);
         }
 
-        public void AddLongClick(Func<bool> fn, float delay = 0.2f, int loopCnt = 0, int holdRangeRadius = 50)
+        public void AddLongPress(Func<bool> fn, float delay = 0.2f, int loopCnt = 0, int holdRangeRadius = 50)
         {
-            AddLongClick(Button, fn, delay, loopCnt, holdRangeRadius);
+            AddLongPress(Button, fn, delay, loopCnt, holdRangeRadius);
         }
-        public void AddLongClick(float first, Func<bool> fn, float delay = 0.2f, int loopCnt = 0, int holdRangeRadius = 50)
+        public void AddLongPress(float first, Func<bool> fn, float delay = 0.2f, int loopCnt = 0, int holdRangeRadius = 50)
         {
-            AddLongClick(Button, first, fn, delay, loopCnt, holdRangeRadius);
+            AddLongPress(Button, first, fn, delay, loopCnt, holdRangeRadius);
         }
 
-        public void AddDoubleClick(EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.2f)
+        public void AddMultipleClick(EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.2f)
         {
-            AddDoubleClick(Button, fn0, clickCnt, gapTime);
+            AddMultipleClick(Button, fn0, clickCnt, gapTime);
         }
         /// <summary>
         /// 多次点击事件，注册了多次点击事件，即使是单击也会受到gapTime延时触发
         /// </summary>    
-        public void AddDoubleClick(EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.2f)
+        public void AddMultipleClick(EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.2f)
         {
-            AddDoubleClick(Button, fn1, clickCnt, gapTime);
+            AddMultipleClick(Button, fn1, clickCnt, gapTime);
         }
     }
 }

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1c6807e422c8ac64fa5a63a608199663, type: 3}
-  m_Name: BuildVersionSettingData
+  m_Name: VersionSettingData
   m_EditorClassIdentifier: 
   ExportSettings:
   - Name: Build-2023-06-30-58580

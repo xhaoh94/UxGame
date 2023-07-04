@@ -96,7 +96,7 @@ namespace UI.Editor
         {
             UICodeGenSettingData.Load();
             VisualElement root = rootVisualElement;
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/UICodeGenWindow.uxml");
+            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/UI/UICodeGenWindow.uxml");
             visualAsset.CloneTree(root);
             try
             {

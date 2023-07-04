@@ -5,7 +5,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using YooAsset.Editor;
-using static UI.Editor.UIResClassifySettingData;
+using static UI.Editor.UIClassifySettingData;
 
 namespace UI.Editor
 {
@@ -19,6 +19,7 @@ namespace UI.Editor
         }
         public static void CreateYooAssetUIGroup()
         {
+            Log.Debug("------------------------------------>生成YooAsset UI收集器配置<------------------------------");
             var packages = AssetBundleCollectorSettingData.Setting.Packages;
             var package = packages.Find(x => x.PackageName == "UIPackage");
             if (package == null)
@@ -100,18 +101,17 @@ namespace UI.Editor
             preloadGp.Collectors.Add(collectorPreload);
             #endregion
 
-            EditorUtility.SetDirty(ResClassifySettings);
-            UICodeGenWindow.Export();
+            EditorUtility.SetDirty(ResClassifySettings);            
             AssetBundleCollectorSettingData.SaveFile();
         }
-        static UIResClassifySettingData _ResClassifySettings;
-        public static UIResClassifySettingData ResClassifySettings
+        static UIClassifySettingData _ResClassifySettings;
+        public static UIClassifySettingData ResClassifySettings
         {
             get
             {
                 if (_ResClassifySettings == null)
                 {
-                    _ResClassifySettings = SettingTools.GetSingletonAssets<UIResClassifySettingData>("Assets/Setting/UI");
+                    _ResClassifySettings = SettingTools.GetSingletonAssets<UIClassifySettingData>("Assets/Setting/Build/UI");
                 }
                 return _ResClassifySettings;
             }
@@ -123,7 +123,7 @@ namespace UI.Editor
         {
             _ResClassifySettings = null;
             VisualElement root = rootVisualElement;
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/UIClassifyWindow.uxml");
+            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/UI/UIClassifyWindow.uxml");
             visualAsset.CloneTree(root);
             try
             {
@@ -200,6 +200,7 @@ namespace UI.Editor
             ResClassifySettings.builtins = builtins.ToArray();
             ResClassifySettings.lazyloads = lazyloads.ToArray();
             CreateYooAssetUIGroup();
+            UICodeGenWindow.Export();
             if (EditorUtility.DisplayDialog("提示", "创建成功!", "ok"))
             {
                 ResetRc();

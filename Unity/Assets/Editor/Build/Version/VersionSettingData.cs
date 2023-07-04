@@ -4,8 +4,8 @@ using UnityEditor;
 using UnityEngine;
 using YooAsset.Editor;
 
-[CreateAssetMenu(fileName = "BuildVersionSettingData", menuName = "Ux/Build/Create BuildVersionSetting")]
-public class BuildVersionSettingData : ScriptableObject
+[CreateAssetMenu(fileName = "VersionSettingData", menuName = "Ux/Build/Create VersionSetting")]
+public class VersionSettingData : ScriptableObject
 {
     public List<BuildExportSetting> ExportSettings = new List<BuildExportSetting>();
 
@@ -16,7 +16,7 @@ public class BuildVersionSettingData : ScriptableObject
     {
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
-        Debug.Log($"{nameof(BuildVersionSettingData)}.asset is saved!");
+        Debug.Log($"{nameof(VersionSettingData)}.asset is saved!");
     }
 }
 

@@ -341,7 +341,7 @@ namespace UI.Editor
             if (ins == null)
             {
                 IsDirty = false;
-                ins = SettingTools.GetSingletonAssets<UICodeGenSettingData>("Assets/Setting/UI");
+                ins = SettingTools.GetSingletonAssets<UICodeGenSettingData>("Assets/Setting/Build/UI");
                 freshComDataList.Clear();
             }
         }

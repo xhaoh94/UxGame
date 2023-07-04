@@ -33,12 +33,12 @@ public enum PlatformType
     IOS,
     //MacOS,
 }
-public class BuildVersionWindow : EditorWindow
+public class VersionWindow : EditorWindow
 {
     [MenuItem("UxGame/构建/构建打包", false, 400)]
     public static void Build()
     {
-        var window = GetWindow<BuildVersionWindow>("BuildVersionWindow", true);
+        var window = GetWindow<VersionWindow>("VersionWindow", true);
         window.minSize = new Vector2(800, 500);
     }
 
@@ -57,7 +57,7 @@ public class BuildVersionWindow : EditorWindow
     private List<Type> _sharedPackRuleClassTypes;
     private List<string> _sharedPackRuleClassNames;
     private List<string> _buildPackageNames;
-    private BuildVersionSettingData Setting;
+    private VersionSettingData Setting;
     private int _lastModifyExportIndex = 0;
 
     ListView _listExport;
@@ -104,7 +104,7 @@ public class BuildVersionWindow : EditorWindow
             LoadConfig();
             VisualElement root = rootVisualElement;
 
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/BuildVersionWindow.uxml");
+            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Version/VersionWindow.uxml");
             visualAsset.CloneTree(root);
             _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
@@ -629,20 +629,8 @@ public class BuildVersionWindow : EditorWindow
         HybridCLRCommand.ClearHOTDll();
         if (_tgCompileDLL.value)
         {
-            Log.Debug("---------------------------------------->生成配置文件<---------------------------------------");
-            UniTask ExportConfig()
-            {
-                var configTask = AutoResetUniTaskCompletionSource.Create();
-                BuildConfigSettingData.Export(() =>
-                {
-                    configTask?.TrySetResult();
-                });
-                return configTask.Task;
-            }
-            await ExportConfig();
+            await UxEditor.Export(false);            
 
-            Log.Debug("------------------------------------>生成YooAsset UI收集器配置<------------------------------");
-            UIClassifyWindow.CreateYooAssetUIGroup();
             var compileType = (CompileType)_compileType.value;
             if (IsExportExecutable)
             {
@@ -952,7 +940,7 @@ public class BuildVersionWindow : EditorWindow
     #region 初始化   
     void LoadConfig()
     {
-        Setting = SettingTools.GetSingletonAssets<BuildVersionSettingData>("Assets/Setting/Build");
+        Setting = SettingTools.GetSingletonAssets<VersionSettingData>("Assets/Setting/Build/Version");
     }
     void SaveConfig()
     {

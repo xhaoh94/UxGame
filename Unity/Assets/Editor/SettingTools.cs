@@ -11,9 +11,9 @@ public class EditorDefine
     public static readonly Type[] DebuggerWindowTypes =
     {
         typeof(UIDebuggerWindow),
-            typeof(ResDebuggerWindow),
-            typeof(EventDebuggerWindow),
-            typeof(TimeDebuggerWindow),
+        typeof(ResDebuggerWindow),
+        typeof(EventDebuggerWindow),
+        typeof(TimeDebuggerWindow),
     };
 #endif
 }

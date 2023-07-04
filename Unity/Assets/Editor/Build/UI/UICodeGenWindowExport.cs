@@ -106,7 +106,7 @@ namespace UI.Editor
             {
                 Directory.Delete(genPath, true);
             }
-            UIClassifyWindow.CreateYooAssetUIGroup();
+            Export();
         }
         static void OnExport(FairyGUI.UIPackage pkg)
         {
@@ -185,7 +185,7 @@ namespace UI.Editor
                         write.Writeln($"[Package({pkgStr})]");
                     }
 
-                    var lazyloads = UIResClassifySettingData.GetLazyloadsByKeys(UIClassifyWindow.ResClassifySettings, pkgs);
+                    var lazyloads = UIClassifySettingData.GetLazyloadsByKeys(UIClassifyWindow.ResClassifySettings, pkgs);
                     if (lazyloads != null && lazyloads.Count > 0)
                     {
                         string lazyloadStr = string.Empty;
@@ -389,14 +389,14 @@ namespace UI.Editor
                         dContent = JsonConvert.DeserializeObject<MemberEvtDouble>(btn.evtParam);
                     }
 
-                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}DoubleClick";
+                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}MultipleClick";
                     if (btn.customType != btn.defaultType)
                     {
-                        write.Writeln($"{btn.name}.AddDoubleClick({fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
+                        write.Writeln($"{btn.name}.AddMultipleClick({fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
                     }
                     else
                     {
-                        write.Writeln($"AddDoubleClick({btn.name},{fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
+                        write.Writeln($"AddMultipleClick({btn.name},{fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
                     }
                 }
                 foreach (var btn in longbtns)
@@ -415,15 +415,15 @@ namespace UI.Editor
                         lContent = JsonConvert.DeserializeObject<MemberEvtLong>(btn.evtParam);
                     }
 
-                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongClick";
+                    var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongPress";
                     if (btn.customType != btn.defaultType)
                     {
-                        write.Writeln($"{btn.name}.AddLongClick({lContent.lFirst}f, {fnName}, " +
+                        write.Writeln($"{btn.name}.AddLongPress({lContent.lFirst}f, {fnName}, " +
                             $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
                     }
                     else
                     {
-                        write.Writeln($"AddLongClick({btn.name},{lContent.lFirst}f, {fnName}, " +
+                        write.Writeln($"AddLongPress({btn.name},{lContent.lFirst}f, {fnName}, " +
                             $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
                     }
                 }
@@ -445,8 +445,8 @@ namespace UI.Editor
                     write.Writeln($"partial void {fnName}(EventContext e);");
                 }
                 foreach (var btn in dbtns)
-                {
-                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}DoubleClick";
+                {                    
+                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}MultipleClick";
                     write.Writeln($"void _{fnName}(EventContext e)");
                     write.StartBlock();
                     write.Writeln($"{fnName}(e);");
@@ -455,7 +455,7 @@ namespace UI.Editor
                 }
                 foreach (var btn in longbtns)
                 {
-                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongClick";
+                    var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongPress";
                     write.Writeln($"bool _{fnName}()");
                     write.StartBlock();
                     write.Writeln("bool b = false;");

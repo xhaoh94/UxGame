@@ -4,6 +4,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using System.Runtime.InteropServices;
+using Cysharp.Threading.Tasks;
+
 public enum ConfGenType
 {
     Bin,
@@ -14,12 +17,12 @@ public enum ConfServiceType
     Client,
     Server
 }
-public class BuildConfigWindow : EditorWindow
+public class ConfigWindow : EditorWindow
 {
     [MenuItem("UxGame/配置", false, 300)]
-    public static void ShowConfigWindo()
+    public static void ShowConfigWindon()
     {
-        var window = GetWindow<BuildConfigWindow>("BuildConfigWindow", true);
+        var window = GetWindow<ConfigWindow>("ConfigWindow", true);
         window.minSize = new Vector2(800, 500);
     }
 
@@ -51,10 +54,10 @@ public class BuildConfigWindow : EditorWindow
     {
         try
         {
-            var Setting = BuildConfigSettingData.LoadConfig();
+            var Setting = ConfigSettingData.LoadConfig();
             VisualElement root = rootVisualElement;
 
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/BuildConfigWindow.uxml");
+            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Config/ConfigWindow.uxml");
             visualAsset.CloneTree(root);
 
             _txtDllFile = root.Q<TextField>("txtDllFile");
@@ -153,14 +156,35 @@ public class BuildConfigWindow : EditorWindow
 
     private void OnDestroy()
     {
-        BuildConfigSettingData.SaveConfig();
+        ConfigSettingData.SaveConfig();
         AssetDatabase.Refresh();
     }
 
     void OnBtnExportClick()
     {
-        BuildConfigSettingData.Export();
+        Export().Forget();
     }
 
+    static readonly string _DOTNET =
+    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
+    public static async UniTask Export()
+    {
+        var Setting = ConfigSettingData.LoadConfig();
+        if (Setting == null)
+        {
+            return;
+        }
+        Log.Debug("---------------------------------------->生成配置文件<---------------------------------------");
+        UniTask ExportConfig()
+        {
+            var configTask = AutoResetUniTaskCompletionSource.Create();
+            Command.Run(_DOTNET, Setting.GetCommand(), true, () =>
+            {
+                configTask?.TrySetResult();
+            });
+            return configTask.Task;
+        }
+        await ExportConfig();
+    }
 
 }
