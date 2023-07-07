@@ -556,18 +556,20 @@ public class VersionWindow : EditorWindow
                 Directory.Delete(SelectItem.PlatformConfig.CopyPath, true);
                 Log.Debug($"删除拷贝目录：{SelectItem.PlatformConfig.CopyPath}");
             }
-            var sandBoxPath = "./Sandbox";
-            if (EditorTools.DeleteDirectory(sandBoxPath))
+
+            if (EditorTools.DeleteDirectory(SandboxRoot))
             {
-                BuildLogger.Log($"删除沙盒缓存");
+                BuildLogger.Log($"删除沙盒缓存：{SandboxRoot}");
             }
 
             // 删除平台总目录                        
-            if (EditorTools.DeleteDirectory(OutputRoot))
+            if (EditorTools.DeleteDirectory(BuildOutputRoot))
             {
-                Log.Debug($"删除资源目录：{OutputRoot}");
+                Log.Debug($"删除资源目录：{BuildOutputRoot}");
             }
-            AssetBundleBuilderHelper.ClearStreamingAssetsFolder();
+
+            string streamingAssetsRoot = AssetBundleBuilderHelper.GetDefaultStreamingAssetsRoot();
+            EditorTools.ClearFolder(streamingAssetsRoot);
 
             SelectItem.Clear();
             RefreshWindow();
@@ -629,7 +631,7 @@ public class VersionWindow : EditorWindow
         HybridCLRCommand.ClearHOTDll();
         if (_tgCompileDLL.value)
         {
-            await UxEditor.Export(false);            
+            await UxEditor.Export(false);
 
             var compileType = (CompileType)_compileType.value;
             if (IsExportExecutable)
@@ -684,14 +686,14 @@ public class VersionWindow : EditorWindow
 
         if (IsForceRebuild)
         {
-            AssetBundleBuilderHelper.ClearStreamingAssetsFolder();
+            string streamingAssetsRoot = AssetBundleBuilderHelper.GetDefaultStreamingAssetsRoot();
+            EditorTools.ClearFolder(streamingAssetsRoot);
 
             if (_tgClearSandBox.value)
             {
-                var sandBoxPath = "./Sandbox";
-                if (EditorTools.DeleteDirectory(sandBoxPath))
+                if (EditorTools.DeleteDirectory(SandboxRoot))
                 {
-                    BuildLogger.Log($"删除沙盒缓存：{sandBoxPath}");
+                    BuildLogger.Log($"删除沙盒缓存");
                 }
             }
         }
@@ -758,7 +760,7 @@ public class VersionWindow : EditorWindow
 
 
 
-    string OutputRoot
+    string BuildOutputRoot
     {
         get
         {
@@ -766,24 +768,44 @@ public class VersionWindow : EditorWindow
             {
                 return SelectItem.PlatformConfig.BundlePath;
             }
-            return AssetBundleBuilderHelper.GetDefaultOutputRoot();
+            return AssetBundleBuilderHelper.GetDefaultBuildOutputRoot();
         }
     }
+
+    string StreamingAssetsRoot
+    {
+        get
+        {
+            return AssetBundleBuilderHelper.GetDefaultStreamingAssetsRoot();
+        }
+    }
+
+    string SandboxRoot
+    {
+        get
+        {
+            string projectPath = Path.GetDirectoryName(UnityEngine.Application.dataPath);
+            projectPath = PathUtility.RegularPath(projectPath);
+            return PathUtility.Combine(projectPath, YooAssetSettings.DefaultYooFolderName);
+        }
+    }
+
     private bool BuildRes(BuildTarget buildTarget, string packageName)
     {
         if (IsForceRebuild)
         {
             // 删除平台总目录            
-            string platformDirectory = $"{OutputRoot}/{packageName}/{buildTarget}";
+            string platformDirectory = $"{BuildOutputRoot}/{packageName}/{buildTarget}";
             if (EditorTools.DeleteDirectory(platformDirectory))
             {
                 BuildLogger.Log($"删除平台总目录：{platformDirectory}");
             }
         }
 
-        string outputRoot = OutputRoot;
+        string buildOutputRoot = BuildOutputRoot;
         BuildParameters buildParameters = new BuildParameters();
-        buildParameters.OutputRoot = outputRoot;
+        buildParameters.StreamingAssetsRoot = StreamingAssetsRoot;
+        buildParameters.BuildOutputRoot = buildOutputRoot;
         buildParameters.BuildTarget = buildTarget;
         buildParameters.BuildPipeline = (EBuildPipeline)_pipelineType.value;
         if (buildParameters.BuildPipeline == EBuildPipeline.ScriptableBuildPipeline)
@@ -807,12 +829,12 @@ public class VersionWindow : EditorWindow
             ? ECopyBuildinFileOption.OnlyCopyByTags : ECopyBuildinFileOption.None;
         buildParameters.CopyBuildinFileTags = _inputBuiltinTags.value;
 
-
-        string outputDir = "Output";
-        string buildPath = $"{outputRoot}/{buildTarget}/{packageName}";
-        string nowVersion = _txtVersion.value;
-        string lastVersion = string.Empty;
-        var versionFile = $"{buildPath}/{outputDir}/PatchManifest_{packageName}.version";
+        var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
+        var outputDir = "Output";
+        var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
+        var nowVersion = _txtVersion.value;
+        var lastVersion = string.Empty;
+        var versionFile = $"{buildPath}/{outputDir}/{versionFileName}";
         if (File.Exists(versionFile))
         {
             lastVersion = FileUtility.ReadAllText(versionFile);
@@ -839,14 +861,25 @@ public class VersionWindow : EditorWindow
         //        File.Copy(tLinkPath, $"{linkPath}/link.xml", true);
         //    }
         //}
-        string diffPath = string.Empty;
+
+
+
+        var sPath = $"{buildPath}/{nowVersion}";
+
+        var nowJsonFileName = YooAssetSettingsData.GetManifestJsonFileName(packageName, nowVersion);
+        var nowHashFileName = YooAssetSettingsData.GetPackageHashFileName(packageName, nowVersion);
+        var nowBinaryFileName = YooAssetSettingsData.GetManifestBinaryFileName(packageName, nowVersion);
+        var lastBinaryFileName = YooAssetSettingsData.GetManifestBinaryFileName(packageName, lastVersion);
+
+        List<string> files = null;
         if (!string.IsNullOrEmpty(lastVersion))
         {
-            var path1 = $"{buildPath}/{lastVersion}/PatchManifest_{packageName}_{lastVersion}.bytes";
-            var path2 = $"{buildPath}/{nowVersion}/PatchManifest_{packageName}_{nowVersion}.bytes";
+            files = new List<string>();
+            var path1 = $"{buildPath}/{lastVersion}/{lastBinaryFileName}";
+            var path2 = $"{buildPath}/{nowVersion}/{nowBinaryFileName}";
             List<string> changedList = new List<string>();
             PackageCompare.CompareManifest(path1, path2, changedList);
-            diffPath = $"{buildPath}/Difference/{lastVersion}_{nowVersion}";
+            var diffPath = $"{buildPath}/Difference/{lastVersion}_{nowVersion}";
             if (Directory.Exists(diffPath))
             {
                 Directory.Delete(diffPath, true);
@@ -855,58 +888,57 @@ public class VersionWindow : EditorWindow
 
             foreach (var file in changedList)
             {
-                File.Copy($"{buildPath}/{nowVersion}/{file}", $"{diffPath}/{file}", true);
+                var temFile = $"{sPath}/{file}";
+                File.Copy(temFile, $"{diffPath}/{file}", true);
+                files.Add(temFile);
             }
+            files.Add($"{sPath}/{versionFileName}");
+            files.Add($"{sPath}/{nowBinaryFileName}");
+            files.Add($"{sPath}/{nowHashFileName}");
+            //files.Add($"{sPath}/{nowJsonFileName}");               
+        }
 
-            File.Copy($"{buildPath}/{nowVersion}/PatchManifest_{packageName}.version", $"{diffPath}/PatchManifest_{packageName}.version", true);
-            File.Copy($"{buildPath}/{nowVersion}/PatchManifest_{packageName}_{nowVersion}.bytes",
-                $"{diffPath}/PatchManifest_{packageName}_{nowVersion}.bytes", true);
-            File.Copy($"{buildPath}/{nowVersion}/PatchManifest_{packageName}_{nowVersion}.hash",
-              $"{diffPath}/PatchManifest_{packageName}_{nowVersion}.hash", true);
-        }
-        var sPath = diffPath;
-        if (string.IsNullOrEmpty(diffPath))
+        if (files == null)
         {
-            sPath = $"{buildPath}/{nowVersion}";
+            files = Directory.GetFiles(sPath).ToList();
         }
+
+        List<string> desPathList = new List<string>();
         var tPath = $"{buildPath}/{outputDir}";
         if (!Directory.Exists(tPath))
         {
             Directory.CreateDirectory(tPath);
         }
-        var files = Directory.GetFiles(sPath);
-        foreach (var file in files)
+        desPathList.Add(tPath);
+        if (_tgCopy.value && !string.IsNullOrEmpty(SelectItem.PlatformConfig.CopyPath))
         {
-            if (file == "link.xml") { continue; }
-            if (file == "buildlogtep") { continue; }
-            var desFile = file.Replace(sPath, tPath);
-            File.Copy(file, desFile, true);
-        }
-        if (_tgCopy.value)
-        {
-            CopyTo(tPath, buildTarget);
+            tPath = $"{SelectItem.PlatformConfig.CopyPath}/{buildTarget}";
+            if (!Directory.Exists(tPath))
+            {
+                Directory.CreateDirectory(tPath);
+            }
+            desPathList.Add(tPath);
         }
 
-        return true;
-    }
-    private void CopyTo(string sPath, BuildTarget buildTarget)
-    {
-        if (string.IsNullOrEmpty(SelectItem.PlatformConfig.CopyPath))
-        {
-            return;
-        }
-        var tPath = $"{SelectItem.PlatformConfig.CopyPath}/{buildTarget}";
-        if (!Directory.Exists(tPath))
-        {
-            Directory.CreateDirectory(tPath);
-        }
-        var files = Directory.GetFiles(sPath);
+        var reportFileName = YooAssetSettingsData.GetReportFileName(packageName, nowVersion);
         foreach (var file in files)
         {
-            var desFile = file.Replace(sPath, tPath);
-            File.Copy(file, desFile, true);
+            var temFile = PathUtility.RegularPath(file);
+            var index = temFile.LastIndexOf("/");
+            var fileName = temFile.Substring(index + 1);
+            if (fileName == "link.xml") continue;
+            if (fileName == "buildlogtep.json") continue;
+            if (fileName == reportFileName) continue;
+            if (fileName == nowJsonFileName) continue;
+            foreach (var desPath in desPathList)
+            {
+                File.Copy(file, Path.Combine(desPath, fileName), true);
+            }
         }
+        return true;
     }
+
+   
     private bool BuildExe(BuildTarget buildTarget)
     {
         if (IsExportExecutable)

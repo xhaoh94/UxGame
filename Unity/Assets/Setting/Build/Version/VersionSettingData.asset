@@ -18,14 +18,14 @@ MonoBehaviour:
     PlatformMap:
     - CompileType: 0
       PlatformType: 1
-      IsCompileDLL: 1
+      IsCompileDLL: 0
       EncyptionClassName: YooAsset.Editor.EncryptionNone
       SharedPackRule: YooAsset.Editor.FullRedundancySharedPackRule
       CompressOption: 2
       PiplineOption: 1
       NameStyleOption: 1
-      IsExportExecutable: 1
-      ResVersion: 23063058786x1
+      IsExportExecutable: 0
+      ResVersion: 23070760659x2
       BuildTags: builtin
       IsCopyTo: 1
       BundlePath: ./Bundles

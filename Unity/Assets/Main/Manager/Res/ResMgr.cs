@@ -122,10 +122,10 @@ namespace Ux
         /// <param name="sceneMode">场景加载模式</param>
         /// <param name="activateOnLoad">加载完毕时是否主动激活</param>
         /// <param name="priority">优先级</param>
-        public SceneOperationHandle LoadSceneAsync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single, bool activateOnLoad = true, int priority = 100)
+        public SceneOperationHandle LoadSceneAsync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single, bool suspendLoad = false, int priority = 100)
         {
             var package = GetPackageByLocation(location);
-            return package.Package.LoadSceneAsync(location, sceneMode, activateOnLoad, priority);
+            return package.Package.LoadSceneAsync(location, sceneMode, suspendLoad, priority);
         }
         /// <summary>
         /// 同步加载资源对象

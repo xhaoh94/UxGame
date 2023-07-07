@@ -142,7 +142,7 @@ namespace Ux
 #if UNITY_EDITOR
             string directory = Path.GetDirectoryName(UnityEngine.Application.dataPath);
             string projectPath = GetRegularPath(directory);
-            string tempPath = $"{projectPath}/Sandbox/_$temp_check_disk_space.temp";
+            string tempPath = $"{projectPath}/_$temp_check_disk_space.temp";
 #else
             string tempPath = $"{UnityEngine.Application.persistentDataPath}/_$temp_check_disk_space.temp";
 #endif
@@ -172,7 +172,10 @@ namespace Ux
                 Log.Warning(ex.ToString());
                 b = false;
             }
-            File.Delete(tempPath);
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
             return b;
         }
 
