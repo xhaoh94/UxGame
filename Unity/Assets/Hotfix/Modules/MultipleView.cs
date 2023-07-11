@@ -28,6 +28,7 @@ namespace Ux.UI
             TimeMgr.Ins.DoTimer(0.1f, 1, () =>
             {
                 UIMgr.Ins.Show<Multiple1TabView>();
+                UIMgr.Ins.Hide<Multiple1TabView>();
             });
         }
 

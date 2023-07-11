@@ -16,16 +16,22 @@ namespace Ux
         string[] Lazyloads { get; }
         List<int> Children { get; }
         IUITabData TabData { get; }
+
         /// <summary>
-        /// 获取最下层的ID（最底下的父类面板）
+        /// 获取父类面板链
         /// </summary>
         /// <returns></returns>
-        int GetBottomID();
+        List<int> GetParentIDs();
         /// <summary>
-        /// 获取最上层的ID（最上层的子类面板）
+        /// 获取最底下的父类面板
         /// </summary>
         /// <returns></returns>
-        int GetTopID();
+        int GetParentID();
+        /// <summary>
+        /// 获取最上层的子类面板
+        /// </summary>
+        /// <returns></returns>
+        int GetChildID();
     }
 
     public interface IUITabData
@@ -71,7 +77,21 @@ namespace Ux
         public virtual List<int> Children { get; }
         public virtual IUITabData TabData { get; }
 
-        public virtual int GetBottomID()
+        public virtual List<int> GetParentIDs()
+        {
+            List<int> ids = null;
+            IUIData data = this;
+            while (data != null)
+            {
+                if (data.TabData == null) break;
+                if (data.TabData.PID == 0) break;
+                ids ??= new List<int>();
+                ids.Add(data.TabData.PID);
+                data = UIMgr.Ins.GetUIData(data.TabData.PID);
+            }
+            return ids;
+        }
+        public virtual int GetParentID()
         {
             IUIData data = this;
             while (data != null)
@@ -83,7 +103,7 @@ namespace Ux
 
             return data == null ? ID : data.ID;
         }
-        public virtual int GetTopID()
+        public virtual int GetChildID()
         {
             IUIData data = this;
             while (true)

@@ -153,6 +153,9 @@ namespace Ux
         //创建完需要关闭的界面（用于打开界面后正在加载的时候，在其他地方又马上关闭了界面）
         private readonly List<int> _createdDels = new List<int>();
 
+        //等待关闭动画结束后重新打开的列表
+        private readonly List<int> _waitHideAnimComplete = new List<int>();
+
         //界面对应的懒加载标签
         private readonly Dictionary<int, string[]> _idLazyloads = new Dictionary<int, string[]>();
 
@@ -391,7 +394,7 @@ namespace Ux
                 return default;
             }
 
-            var top = data.GetTopID();
+            var top = data.GetChildID();
             if (CheckDownload(top))
             {
                 return default;
@@ -458,7 +461,7 @@ namespace Ux
             var data = GetUIData(id);
             if (data == null)
             {
-                Log.Error("没有找到{0}对应的UIData", id);
+                Log.Error($"没有找到{id}对应的UIData");
                 return false;
             }
 
@@ -469,13 +472,15 @@ namespace Ux
                     //如果在关闭中，等待关闭后再重新打开
                     case UIState.HideAnim:
                     case UIState.Hide:
+                        _waitHideAnimComplete.Add(id);
                         while (true)
                         {
                             await UniTask.Yield();
+                            if (!_waitHideAnimComplete.Contains(id)) return false;
                             if (!_showed.ContainsKey(id)) break;
                         }
                         break;
-                    default:                        
+                    default:
                         return true;
                 }
             }
@@ -488,6 +493,7 @@ namespace Ux
                     await UniTask.Yield();
                     if (_showed.TryGetValue(id, out ui)) break;
                     if (!_showing.Contains(id)) break;
+                    if (_createdDels.Contains(id)) break;
                     if (Time.unscaledTime - time > 5f) break; //超时
                 }
 
@@ -522,7 +528,7 @@ namespace Ux
                 if (_temCacel.TryGetValue(id, out ui))
                 {
                     _temCacel.Remove(id);
-                    var temBottomId = ui.Data.GetBottomID();
+                    var temBottomId = ui.Data.GetParentID();
                     if (_bottomTemCacel.TryGetValue(temBottomId, out var temList))
                     {
                         if (temList.Remove(id))
@@ -609,7 +615,6 @@ namespace Ux
             }
             _HideAll(Func);
         }
-
         public void HideAll(List<Type> ignoreList = null)
         {
             bool Func(int id)
@@ -646,23 +651,35 @@ namespace Ux
                 return;
             }
 
-            if (!_showed.ContainsKey(id))
-            {
-                return;
-            }
-
             if (!_showed.TryGetValue(id, out IUI ui))
             {
                 return;
             }
 
-            var bottom = ui.Data.GetBottomID();
+            if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
+            {
+                if (_waitHideAnimComplete.Contains(id))
+                {
+                    _waitHideAnimComplete.Remove(id);
+                }
+
+                var ids = ui.Data.GetParentIDs();
+                if (ids != null)
+                {
+                    foreach (var tid in ids)
+                    {
+                        if (_waitHideAnimComplete.Contains(tid))
+                        {
+                            _waitHideAnimComplete.Remove(tid);
+                        }
+                    }
+                }
+                return;
+            }
+
+            var bottom = ui.Data.GetParentID();
             if (bottom != 0 && _showed.TryGetValue(bottom, out ui))
             {
-                if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
-                {
-                    return;
-                }
                 ui.DoHide(isAnim);
             }
         }
@@ -681,7 +698,7 @@ namespace Ux
         private void CheckDestroy(IUI ui)
         {
             var id = ui.ID;
-            var bottomID = ui.Data.GetBottomID();
+            var bottomID = ui.Data.GetParentID();
             if (ui.IsDestroy)
             {
                 //存在父界面，且父界面还没关闭，则放入临时缓存中
