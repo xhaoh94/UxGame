@@ -8,6 +8,7 @@ namespace Ux
     {
         public static void Initialize(this Assembly assembly)
         {
+            Log.Debug($"{assembly.FullName} Initialize");
             var mols = new List<ModuleMgr.ModuleParse>();
             var tags = new List<TagMgr.TagParse>();
             var uis = new List<UIMgr.UIParse>();

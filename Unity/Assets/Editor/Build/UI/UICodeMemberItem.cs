@@ -43,7 +43,7 @@ public class UICodeMemberItem : TemplateContainer
     {
         _saveCb = saveCb;
         // 加载布局文件		
-        _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/UI/UICodeMemberItem.uxml");
+        _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/UI/UICodeMemberItem.uxml");
         if (_visualAsset == null)
             return;
 

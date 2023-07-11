@@ -758,8 +758,6 @@ public class VersionWindow : EditorWindow
     }
 
 
-
-
     string BuildOutputRoot
     {
         get

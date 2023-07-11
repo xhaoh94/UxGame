@@ -11,7 +11,11 @@ namespace Ux.UI
     [UI]
     partial class BagWindow
     {
-        protected override UILayer Layer => UILayer.Normal;        
-                
+        protected override UILayer Layer => UILayer.Normal;
+
+        protected override void OnHide()
+        {
+            base.OnHide();
+        }
     }
 }

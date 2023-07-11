@@ -5,6 +5,7 @@ using System.Reflection;
 using FairyGUI;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEditor;
 
 namespace Ux
 {
@@ -16,15 +17,14 @@ namespace Ux
         HideAnim
     }
 
+
+
     public class UIObject
     {
-        CancellationTokenSource _showToken;
-        CancellationTokenSource _hideToken;
-
         private UIEvent _event;
         private List<UIObject> _components;
         public List<UIObject> Components => _components ??= new List<UIObject>();
-        private UIState _state;
+        private UIState _state = UIState.Hide;
 
         public virtual UIState State
         {
@@ -35,7 +35,6 @@ namespace Ux
                 {
                     return state;
                 }
-
                 return _state;
             }
         }
@@ -46,12 +45,12 @@ namespace Ux
         /// <summary>
         /// 显示动效
         /// </summary>
-        protected virtual Transition ShowTransition { get; } = null;
+        protected virtual IUIAnim ShowAnim { get; } = null;
 
         /// <summary>
         /// 关闭动效
         /// </summary>
-        protected virtual Transition HideTransition { get; } = null;
+        protected virtual IUIAnim HideAnim { get; } = null;
 
         protected Action OnShowCallBack;
         protected Action OnHideCallBack;
@@ -186,7 +185,7 @@ namespace Ux
             {
                 var trans = component.GetTransitionAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                MemberInfo info;   
+                MemberInfo info;
                 info = selfType.GetField(trans.name, flag);
                 if (info == null)
                 {
@@ -213,11 +212,15 @@ namespace Ux
 
         public virtual void DoShow(bool isAnim, object param)
         {
-            HideTransition?.Stop();
-            if (isAnim && ShowTransition != null)
+            if (_state == UIState.Show || _state == UIState.ShowAnim)
+            {
+                return;
+            }
+            HideAnim?.Stop();
+            if (isAnim && ShowAnim != null)
             {
                 _state = UIState.ShowAnim;
-                ShowTransition?.Play(() => { _state = UIState.Show; });
+                ShowAnim?.Play(() => { _state = UIState.Show; });
             }
             else
             {
@@ -231,44 +234,28 @@ namespace Ux
             {
                 component.DoShow(isAnim, this);
             }
-
-            _showToken = new CancellationTokenSource();
-            _CheckShow(_showToken.Token).Forget();
+            _CheckShow().Forget();
         }
 
-        async UniTaskVoid _CheckShow(CancellationToken token)
+        async UniTaskVoid _CheckShow()
         {
+            bool isCancel = false;
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
-                await UniTask.Yield(token);
-            if (!token.IsCancellationRequested)
+                await UniTask.Yield();
+
+            if (!isCancel)
             {
-                OnShowTransitionComplete();
+                OnShowAnimComplete();
                 OnAddEvent();
                 OnShowCallBack?.Invoke();
             }
-
-            _showToken = null;
-        }
-
-        void ClearShowToken()
-        {
-            if (_showToken == null) return;
-            _showToken.Cancel();
-            _showToken = null;
-        }
-
-        void ClearHideToken()
-        {
-            if (_hideToken == null) return;
-            _hideToken.Cancel();
-            _hideToken = null;
         }
 
         protected virtual void OnShow(object param)
         {
         }
 
-        protected virtual void OnShowTransitionComplete()
+        protected virtual void OnShowAnimComplete()
         {
         }
 
@@ -282,10 +269,7 @@ namespace Ux
             switch (State)
             {
                 case UIState.Hide:
-                    Log.Error("状态错误，不应该存在Hide状态下调用DoResume方法");
-                    break;
                 case UIState.HideAnim:
-                    ClearHideToken();
                     DoShow(false, param);
                     break;
                 case UIState.Show:
@@ -305,51 +289,51 @@ namespace Ux
         {
         }
 
-
         public virtual void DoHide(bool isAnim)
         {
-            ClearShowToken();
-            ShowTransition?.Stop();
-            if (isAnim && HideTransition != null)
+            if (_state == UIState.Hide || _state == UIState.HideAnim)
+            {
+                return;
+            }
+            ShowAnim?.Stop();
+            if (isAnim && HideAnim != null)
             {
                 _state = UIState.HideAnim;
-                HideTransition?.Play(() => { _state = UIState.Hide; });
+                HideAnim?.Play(() => { _state = UIState.Hide; });
             }
             else
             {
                 _state = UIState.Hide;
             }
 
-            RemoveEvents();
-            RemoveTimers();
             foreach (var component in Components)
             {
                 component.DoHide(isAnim);
             }
-
             OnHide();
-            _hideToken = new CancellationTokenSource();
-            _CheckHide(_hideToken.Token).Forget();
+            _CheckHide().Forget();
         }
 
-        async UniTaskVoid _CheckHide(CancellationToken token)
+        async UniTaskVoid _CheckHide()
         {
+            bool isCancel = false;
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
-                await UniTask.Yield(token);
-            if (!token.IsCancellationRequested)
-            {
-                OnHideTransitionComplete();
-                OnHideCallBack?.Invoke();
-            }
+                await UniTask.Yield();
 
-            _hideToken = null;
+            if (!isCancel)
+            {
+                OnHideAnimComplete();
+                OnHideCallBack?.Invoke();
+                RemoveEvents();
+                RemoveTimers();
+            }
         }
 
         protected virtual void OnHide()
         {
         }
 
-        protected virtual void OnHideTransitionComplete()
+        protected virtual void OnHideAnimComplete()
         {
         }
 
@@ -357,8 +341,6 @@ namespace Ux
         {
             _event.Release();
             _event = null;
-            ClearShowToken();
-            ClearHideToken();
             OnShowCallBack = null;
             OnHideCallBack = null;
             if (_components != null)

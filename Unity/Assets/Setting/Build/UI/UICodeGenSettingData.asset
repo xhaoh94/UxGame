@@ -542,3 +542,125 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
+  - name: Multiple
+    components:
+    - ID: 1d7b8781-21e7-4266-940d-5ff68c856f6d
+      useGlobal: 0
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 0
+      pkgName: Multiple
+      resName: MultipleView
+      ns: Ux.UI
+      cls: MultipleView
+      ext: Panel/View
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: mCommonBg
+        defaultType: GComponent
+        customType: Common1TabFrame
+        pkg: Common
+        res: Common1TabFrame
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 0
+        name: t0
+        defaultType: Transition
+        customType: Transition
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: t1
+        defaultType: Transition
+        customType: Transition
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: b9e7634b-26d8-422e-a1cf-bf6049ad0998
+      useGlobal: 0
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 0
+      pkgName: Multiple
+      resName: Multiple2TabView
+      ns: Ux.UI
+      cls: Multiple2TabView
+      ext: Panel/TabView
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n4
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n3
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 0
+        name: c1
+        defaultType: Controller
+        customType: Controller
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 0
+        name: t0
+        defaultType: Transition
+        customType: Transition
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: t1
+        defaultType: Transition
+        customType: Transition
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 

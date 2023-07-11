@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae4de9cfdb3a7e64785b0cf9b573e99d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlayMode: 2
+  PlayMode: 0
   IngameDebug: 1
 --- !u!4 &563521568
 Transform:
@@ -202,6 +202,7 @@ GameObject:
   - component: {fileID: 1025495835}
   - component: {fileID: 1025495834}
   - component: {fileID: 1025495833}
+  - component: {fileID: 1025495837}
   m_Layer: 0
   m_Name: Stage Camera
   m_TagString: Untagged
@@ -332,3 +333,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &1025495837
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1025495832}
+  m_Enabled: 1

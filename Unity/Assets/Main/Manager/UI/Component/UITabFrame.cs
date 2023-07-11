@@ -1,6 +1,7 @@
 ﻿using FairyGUI;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Ux
 {
@@ -205,11 +206,11 @@ namespace Ux
         protected override void OnShow(object param)
         {
             base.OnShow(param);
-            if(Data.TabData.Title is string title)
+            if (Data.TabData.Title is string title)
             {
                 if (string.IsNullOrEmpty(title)) return;
                 _item.title = title;
-            }                                    
+            }
         }
 
         protected override void OnDispose()

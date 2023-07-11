@@ -11,10 +11,7 @@ namespace Ux.UI
         protected override UILayer Layer => UILayer.Normal;
         protected override void OnShow(object param)
         {
-            base.OnShow(param);
-
-            // AddLongClick(OnLongBagClick, 2f, 0.2f);
-            //AddDoubleClick(OnBagDoubleClick);            
+            base.OnShow(param);           
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
@@ -37,11 +34,11 @@ namespace Ux.UI
         {
             Log.Debug("单击");
         }
-        partial void OnBtnDoubleDoubleClick(EventContext e)
+        partial void OnBtnDoubleMultipleClick(EventContext e)
         {
             Log.Debug("双击");
         }
-        partial void OnBtnLongClickLongClick(ref bool isBreak)
+        partial void OnBtnLongClickLongPress(ref bool isBreak)
         {
             Log.Debug("长按");
         }

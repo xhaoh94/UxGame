@@ -12,4 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70502092a9197de4ab4ed5a650c25d6e, type: 3}
   m_Name: BuildinFileManifest
   m_EditorClassIdentifier: 
-  BuildinFiles: []
+  BuildinFiles:
+  - 3fafd71215e38931c41ce2e5b0b18ea3.bundle
+  - 4ce562afd648c1e6e762e754e6f8de19.bundle
+  - 6f6f4db9c5d7339dc4c6eb321d819e7b.bundle
+  - c27a488318c070b2d9731d6a418efd26.bundle
+  - c63884431fc2432964af8e826d8e862c.bundle
+  - 515c76861e72a03e0e4027b0e8553ab4.bundle
+  - 97008befe00ba381ecf59615883b19dd.bundle
+  - e245b4ef0334461ef38180ed0afe47ca.bundle

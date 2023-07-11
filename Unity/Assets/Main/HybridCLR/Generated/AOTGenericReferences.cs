@@ -19,19 +19,20 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// }} 
 
 	// {{ AOT generic types
-	// Cysharp.Threading.Tasks.UniTask<object>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<object>
+	// Cysharp.Threading.Tasks.UniTask<object>
 	// Singleton<object>
-	// System.Action<object>
 	// System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>
+	// System.Action<object>
 	// System.Collections.Generic.Dictionary<System.ValueTuple<int,int>,object>
-	// System.Collections.Generic.Dictionary<object,object>
 	// System.Collections.Generic.Dictionary<int,object>
+	// System.Collections.Generic.Dictionary<object,object>
 	// System.Collections.Generic.IEnumerable<object>
-	// System.Collections.Generic.List<object>
-	// System.Collections.Generic.List<int>
-	// System.Collections.Generic.List<UnityEngine.Vector3>
+	// System.Collections.Generic.IEnumerator<object>
 	// System.Collections.Generic.List.Enumerator<object>
+	// System.Collections.Generic.List<UnityEngine.Vector3>
+	// System.Collections.Generic.List<int>
+	// System.Collections.Generic.List<object>
 	// System.Func<byte>
 	// System.Func<object,object>
 	// System.Nullable<long>
@@ -48,8 +49,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// string Bright.Common.StringUtil.CollectionToString<object>(System.Collections.Generic.IEnumerable<object>)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<object>(object&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<object>(object&)
 		// object UnityEngine.GameObject.GetComponent<object>()
 		// object UnityEngine.GameObject.GetComponentInChildren<object>()

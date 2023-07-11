@@ -464,8 +464,20 @@ namespace Ux
 
             if (_showed.TryGetValue(id, out var ui))
             {
-                arr.Add(ui);
-                return true;
+                switch (ui.State)
+                {
+                    //如果在关闭中，等待关闭后再重新打开
+                    case UIState.HideAnim:
+                    case UIState.Hide:
+                        while (true)
+                        {
+                            await UniTask.Yield();
+                            if (!_showed.ContainsKey(id)) break;
+                        }
+                        break;
+                    default:                        
+                        return true;
+                }
             }
 
             if (_showing.Contains(id))
@@ -476,7 +488,7 @@ namespace Ux
                     await UniTask.Yield();
                     if (_showed.TryGetValue(id, out ui)) break;
                     if (!_showing.Contains(id)) break;
-                    if (Time.unscaledTime - time > 10f) break; //超时
+                    if (Time.unscaledTime - time > 5f) break; //超时
                 }
 
                 if (ui == null) return false;
@@ -644,13 +656,13 @@ namespace Ux
                 return;
             }
 
-            if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
-            {
-                return;
-            }
             var bottom = ui.Data.GetBottomID();
             if (bottom != 0 && _showed.TryGetValue(bottom, out ui))
             {
+                if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
+                {
+                    return;
+                }
                 ui.DoHide(isAnim);
             }
         }
