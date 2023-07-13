@@ -1,70 +1,50 @@
 ﻿//using System;
-//using System.Buffers;
 //using System.Net;
 //using System.Net.Sockets;
+//using System.Runtime.InteropServices;
+//using System.Text;
 
-//namespace Main
+//namespace Ux
 //{
-//    public class KSocket : ClientSocket, IKcpCallback
+//    public class KSocket_Tem : ClientSocket
 //    {
-//        public PoolSegManager.Kcp kcp { get; }
-//        //public UnSafeSegManager.Kcp kcp { get; }
-//        private readonly int maxSendLen = 2048;
-//        UdpClient client;
-//        IPEndPoint remoteIpEndPoint;
+//        private Socket socket;
+//        private IntPtr kcp;
+//        private IPEndPoint remoteEndPoint;
+//        EndPoint remoteEP2 = new IPEndPoint(IPAddress.Any, 0);
 
-//        public KSocket() : base()
-//        {
-//            kcp = new PoolSegManager.Kcp(2001, this);
-//            //kcp = new UnSafeSegManager.Kcp(2001, this);
-//            kcp.NoDelay(1, 10, 2, 1);
-//            kcp.WndSize(256, 256);
-//            //kcp.SetMtu(512);
-//        }
-//        public override void Connect(string address)
-//        {
-//            var ipAddress = address.Split(':');
-//            remoteIpEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress[0]), int.Parse(ipAddress[1]));
-//            client = new UdpClient();
-//            OnConnect();
-//            StartRecv();
-//        }
+//        private readonly byte[] recvCache = new byte[8192];
+//        private readonly byte[] sendCache = new byte[2048];
 
-//        public override void Update()
+//        private const int maxSendLen = 2048;
+
+//        // KSocket创建的时间
+//        readonly long startTime;
+
+//        // 当前时间 - KSocket创建的时间
+//        public uint TimeNow => (uint)(TimeMgr.Ins.LocalTime.TimeStamp - startTime);
+//        uint nextUpdateTime;
+//        protected override bool IsCheckUpdate
 //        {
-//            base.Update();
-//            if (IsConnected)
+//            get
 //            {
-//                kcp.Update(DateTimeOffset.UtcNow);
-//                int len;
-//                while ((len = kcp.PeekSize()) > 0)
-//                {
-//                    var buffer = new byte[len];
-//                    if (kcp.Recv(buffer) >= 0)
-//                    {
-//                        this.recvBuffer.WriteBytes(buffer, 0, len);
-//                        if (!this.OnParse())
-//                        {
-//                            return;
-//                        }
-//                    }
-//                }
+//                return IsConnecting || base.IsCheckUpdate;
 //            }
 //        }
-
-//        public async void StartRecv()
+//        public KSocket_Tem(string address) : base(address)
 //        {
-//            if (this.IsDisposed)
-//            {
-//                return;
-//            }
-
+//            this.startTime = TimeMgr.Ins.LocalTime.TimeStamp;
+//        }
+//        private static readonly byte[] logBuffer = new byte[1024];
+//#if ENABLE_IL2CPP
+//        [AOT.MonoPInvokeCallback(typeof(KcpOutput))]
+//#endif
+//        private static void KcpLog(IntPtr bytes, int len, IntPtr kcp, IntPtr user)
+//        {
 //            try
 //            {
-//                var result = await client.ReceiveAsync();
-//                remoteIpEndPoint = result.RemoteEndPoint;
-//                kcp.Input(result.Buffer);
-//                StartRecv();
+//                Marshal.Copy(bytes, logBuffer, 0, len);
+//                Log.Info(Encoding.Default.GetString(logBuffer, 0, len));
 //            }
 //            catch (Exception e)
 //            {
@@ -72,55 +52,199 @@
 //            }
 //        }
 
-//        protected override void StartSend()
+
+//        protected override void ToConnect(string address)
 //        {
-//            if (!this.IsConnected)
+//            var ipAddress = address.Split(':');
+//            remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress[0]), int.Parse(ipAddress[1]));
+//            this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+//            var conv = (uint)((ulong)IDGenerater.GenerateId() & uint.MaxValue);
+//            this.kcp = Kcp.KcpCreate(conv, IntPtr.Zero);
+//            Kcp.KcpNodelay(kcp, 1, 10, 2, 1);
+//            Kcp.KcpWndsize(kcp, 256, 256);
+//            //Kcp.KcpSetmtu(kcp, 470); // 默认1400
+//            Kcp.KcpSetminrto(kcp, 30);
+//            Kcp.KcpSetoutput(KcpOutput);
+//            SendHeartbeat();//发送心跳验证是否可以进行网络链接
+//        }
+
+//        protected override void RecvHeartbeat()
+//        {
+//            if (IsConnecting)
 //            {
-//                return;
+//                OnConnect();
 //            }
+//        }
 
-//            // 没有数据需要发送
-//            if (this.sendBuffer.Length == 0)
+
+//#if ENABLE_IL2CPP
+//		[AOT.MonoPInvokeCallback(typeof(KcpOutput))]
+//#endif
+//        private int KcpOutput(IntPtr bytes, int count, IntPtr kcp, IntPtr user)
+//        {
+//            if (this.IsDisposed)
 //            {
-//                this.isSending = false;
-//                return;
+//                return 0;
 //            }
-
-//            this.isSending = true;
-
-//            while (true)
+//            try
 //            {
-//                var sendLen = (int)this.sendBuffer.Length;
-//                if (sendLen == 0)
+//                if (kcp == IntPtr.Zero)
 //                {
-//                    this.isSending = false;
-//                    return;
+//                    return 0;
 //                }
-//                if (sendLen > maxSendLen)
-//                {
-//                    sendLen = maxSendLen;
-//                }
-
-//                byte[] bytes = this.sendBuffer.ReadBytes(sendLen);
 //                try
 //                {
-//                    kcp.Send(bytes);
+//                    if (count == 0)
+//                    {
+//                        Log.Error($"output 0");
+//                        return 0;
+//                    }
+
+//                    Marshal.Copy(bytes, sendCache, 0, count);
+//                    this.socket.SendTo(sendCache, 0, count, SocketFlags.None, this.remoteEndPoint);
 //                }
 //                catch (Exception e)
 //                {
 //                    Log.Error(e);
+//                }
+//            }
+//            catch (Exception e)
+//            {
+//                Log.Error(e);
+//                return count;
+//            }
+
+//            return count;
+//        }
+
+//        protected override void StartSend()
+//        {
+//            try
+//            {
+//                if (this.kcp != IntPtr.Zero)
+//                {
+//                    // 检查等待发送的消息，如果超出最大等待大小，应该断开连接                    
+//                    if (Kcp.KcpWaitsnd(this.kcp) > Kcp.OuterMaxWaitSize)
+//                    {
+//                        Dispose();
+//                        return;
+//                    }
+//                }
+//                this.sendBytes.ReadToKcp(this.kcp, maxSendLen);
+//            }
+//            catch (Exception e)
+//            {
+//                Log.Error(e);
+//            }
+//        }
+
+//        public override void Update()
+//        {
+//            if (this.IsDisposed)
+//            {
+//                return;
+//            }
+//            if (this.kcp == IntPtr.Zero)
+//            {
+//                return;
+//            }
+//            base.Update();
+//            if (IsCheckUpdate)
+//            {
+//                StartRecv();
+//                CheckConnect();
+//            }
+//        }
+
+//        void CheckConnect()
+//        {
+//            if (IsConnecting)
+//            {
+//                if (!this.IsConnected)
+//                {
+//                    // 一定时间后没连接上则退出连接
+//                    if (TimeNow > 10 * 1000)
+//                    {
+//                        this.OnSocketCode(SocketCode.ConnectionTimeout);
+//                        return;
+//                    }
+//                }
+//            }
+//            else
+//            {
+//                //超过心跳一定时间后，没有回应，则判断为断开连接
+//                if (LastRecvTime > 0 && TimeMgr.Ins.TotalTime - LastRecvTime > heartTime + 10)
+//                {
+//                    this.OnSocketCode(SocketCode.Error);
 //                    return;
+//                }
+
+//                var timeNow = TimeNow;
+//                if (nextUpdateTime <= timeNow)
+//                {
+//                    try
+//                    {
+//                        Kcp.KcpUpdate(this.kcp, timeNow);
+//                    }
+//                    catch (Exception e)
+//                    {
+//                        Log.Error(e);
+//                        return;
+//                    }
+//                    nextUpdateTime = Kcp.KcpCheck(this.kcp, timeNow);
 //                }
 //            }
 //        }
 
-//        public void Output(IMemoryOwner<byte> buffer, int avalidLength)
+
+//        void StartRecv()
 //        {
-//            using (buffer)
+//            try
 //            {
-//                var s = buffer.Memory.Span.Slice(0, avalidLength).ToArray();
-//                client.SendAsync(s, s.Length, remoteIpEndPoint);
+//                if (this.IsDisposed)
+//                {
+//                    return;
+//                }
+
+//                if (this.socket == null)
+//                {
+//                    return;
+//                }
+
+//                while (socket != null && this.socket.Available > 0)
+//                {
+//                    int messageLength = this.socket.ReceiveFrom(this.recvCache, ref this.remoteEP2);
+//                    if (messageLength == 0)
+//                    {
+//                        continue;
+//                    }
+//                    Kcp.KcpInput(this.kcp, recvCache, 0, messageLength);
+//                    int len = 0;
+//                    while ((len = Kcp.KcpPeeksize(this.kcp)) > 0)
+//                    {
+//                        this.recvBytes.WriteKcp(this.kcp, len);
+//                        if (!this.OnParse())
+//                        {
+//                            return;
+//                        }
+//                    }
+//                }
 //            }
+//            catch (Exception e)
+//            {
+//                Log.Error(e);
+//            }
+//        }
+
+//        protected override void OnDispose()
+//        {
+//            if (this.kcp != IntPtr.Zero)
+//            {
+//                Kcp.KcpRelease(this.kcp);
+//                this.kcp = IntPtr.Zero;
+//            }
+//            this.socket?.Close();
+//            this.socket = null;
 //        }
 //    }
 //}

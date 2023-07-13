@@ -9,11 +9,11 @@ namespace Ux
     public class KSocket : ClientSocket
     {
         private Socket socket;
-        private IntPtr kcp;
+        private Kcp kcp;
         private IPEndPoint remoteEndPoint;
         EndPoint remoteEP2 = new IPEndPoint(IPAddress.Any, 0);
 
-        private readonly byte[] recvCache = new byte[8192];
+        private readonly byte[] recvCache = new byte[2048];
         private readonly byte[] sendCache = new byte[2048];
 
         private const int maxSendLen = 2048;
@@ -35,23 +35,6 @@ namespace Ux
         {
             this.startTime = TimeMgr.Ins.LocalTime.TimeStamp;
         }
-        private static readonly byte[] logBuffer = new byte[1024];
-#if ENABLE_IL2CPP
-        [AOT.MonoPInvokeCallback(typeof(KcpOutput))]
-#endif
-        private static void KcpLog(IntPtr bytes, int len, IntPtr kcp, IntPtr user)
-        {
-            try
-            {
-                Marshal.Copy(bytes, logBuffer, 0, len);
-                Log.Info(Encoding.Default.GetString(logBuffer, 0, len));
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-            }
-        }
-
 
         protected override void ToConnect(string address)
         {
@@ -59,12 +42,12 @@ namespace Ux
             remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress[0]), int.Parse(ipAddress[1]));
             this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var conv = (uint)((ulong)IDGenerater.GenerateId() & uint.MaxValue);
-            this.kcp = Kcp.KcpCreate(conv, IntPtr.Zero);
-            Kcp.KcpNodelay(kcp, 1, 10, 2, 1);
-            Kcp.KcpWndsize(kcp, 256, 256);
-            //Kcp.KcpSetmtu(kcp, 470); // 默认1400
-            Kcp.KcpSetminrto(kcp, 30);
-            Kcp.KcpSetoutput(KcpOutput);
+            this.kcp = new Kcp(conv, KcpOutput);
+            this.kcp.SetNoDelay(1, 10, 2, true);
+            this.kcp.SetWindowSize(256, 256);
+            this.kcp.SetMtu(470); // 默认1400
+            this.kcp.SetMinrto(30);
+            this.kcp.InitArrayPool(600, 10000);
             SendHeartbeat();//发送心跳验证是否可以进行网络链接
         }
 
@@ -76,32 +59,22 @@ namespace Ux
             }
         }
 
-
-#if ENABLE_IL2CPP
-		[AOT.MonoPInvokeCallback(typeof(KcpOutput))]
-#endif
-        private int KcpOutput(IntPtr bytes, int count, IntPtr kcp, IntPtr user)
+        private void KcpOutput(byte[] bytes, int count)
         {
             if (this.IsDisposed)
             {
-                return 0;
+                return;
             }
             try
             {
-                if (kcp == IntPtr.Zero)
-                {
-                    return 0;
-                }
                 try
                 {
                     if (count == 0)
                     {
                         Log.Error($"output 0");
-                        return 0;
+                        return;
                     }
-
-                    Marshal.Copy(bytes, sendCache, 0, count);
-                    this.socket.SendTo(sendCache, 0, count, SocketFlags.None, this.remoteEndPoint);
+                    this.socket.SendTo(bytes, 0, count, SocketFlags.None, this.remoteEndPoint);
                 }
                 catch (Exception e)
                 {
@@ -111,24 +84,25 @@ namespace Ux
             catch (Exception e)
             {
                 Log.Error(e);
-                return count;
+                return;
             }
 
-            return count;
+            return;
         }
 
         protected override void StartSend()
         {
             try
             {
-                if (this.kcp != IntPtr.Zero)
+                if (this.kcp == null)
                 {
-                    // 检查等待发送的消息，如果超出最大等待大小，应该断开连接                    
-                    if (Kcp.KcpWaitsnd(this.kcp) > Kcp.OuterMaxWaitSize)
-                    {
-                        Dispose();
-                        return;
-                    }
+                    throw new Exception("未初始化KCP服务!");
+                }
+                // 检查等待发送的消息，如果超出最大等待大小，应该断开连接                    
+                if (this.kcp.WaitSnd > Kcp.OuterMaxWaitSize)
+                {
+                    Dispose();
+                    return;
                 }
                 this.sendBytes.ReadToKcp(this.kcp, maxSendLen);
             }
@@ -144,7 +118,7 @@ namespace Ux
             {
                 return;
             }
-            if (this.kcp == IntPtr.Zero)
+            if (this.kcp == null)
             {
                 return;
             }
@@ -184,14 +158,14 @@ namespace Ux
                 {
                     try
                     {
-                        Kcp.KcpUpdate(this.kcp, timeNow);
+                        this.kcp.Update(timeNow);
                     }
                     catch (Exception e)
                     {
                         Log.Error(e);
                         return;
                     }
-                    nextUpdateTime = Kcp.KcpCheck(this.kcp, timeNow);
+                    nextUpdateTime = this.kcp.Check(timeNow);
                 }
             }
         }
@@ -213,15 +187,35 @@ namespace Ux
 
                 while (socket != null && this.socket.Available > 0)
                 {
+                    if (this.IsDisposed)
+                    {
+                        return;
+                    }
+
                     int messageLength = this.socket.ReceiveFrom(this.recvCache, ref this.remoteEP2);
                     if (messageLength == 0)
                     {
                         continue;
                     }
-                    Kcp.KcpInput(this.kcp, recvCache, 0, messageLength);
-                    int len = 0;
-                    while ((len = Kcp.KcpPeeksize(this.kcp)) > 0)
+                    this.kcp.Input(this.recvCache.AsSpan(0, messageLength));                    
+                    
+                    while (true)
                     {
+                        if (this.IsDisposed)
+                        {
+                            return;
+                        }
+
+                        int len = this.kcp.PeekSize();
+                        if (len < 0)
+                        {
+                            break;
+                        }
+                        if (len == 0)
+                        {
+                            this.OnDispose();
+                            return;
+                        }
                         this.recvBytes.WriteKcp(this.kcp, len);
                         if (!this.OnParse())
                         {
@@ -237,14 +231,10 @@ namespace Ux
         }
 
         protected override void OnDispose()
-        {
-            if (this.kcp != IntPtr.Zero)
-            {
-                Kcp.KcpRelease(this.kcp);
-                this.kcp = IntPtr.Zero;
-            }
+        {            
             this.socket?.Close();
             this.socket = null;
+            this.kcp = null;
         }
     }
 }
