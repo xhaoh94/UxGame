@@ -66,7 +66,7 @@ namespace Ux
         }
 
         #region Write
-
+        
         public void WriteBytesTransferred(WebSocketReceiveResult receiveResult)
         {
             WritePosition += receiveResult.Count;
@@ -88,27 +88,7 @@ namespace Ux
             }
 
         }
-        //public int WriteKcp(IntPtr kcp, int count)
-        //{
-        //    int writeLen = 0;
-        //    while (writeLen < count)
-        //    {
-        //        if (WritePosition == ChunkSize)
-        //        {
-        //            Add();
-        //        }
-        //        int temWriteLen = count;
-        //        if (WritePosition + count > ChunkSize)
-        //        {
-        //            temWriteLen = ChunkSize - WritePosition;
-        //        }
-        //        temWriteLen = Kcp.KcpRecv(kcp, LastBuffer, WritePosition, temWriteLen);
-        //        WritePosition += temWriteLen;
-        //        writeLen += temWriteLen;
-        //    }
-        //    return writeLen;
-        //}
-        public int WriteKcp(Kcp kcp, int count)
+        public int WriteKcp(IntPtr kcp, int count)
         {
             int writeLen = 0;
             while (writeLen < count)
@@ -122,7 +102,7 @@ namespace Ux
                 {
                     temWriteLen = ChunkSize - WritePosition;
                 }
-                temWriteLen = kcp.Receive(LastBuffer.AsSpan(WritePosition, temWriteLen));
+                temWriteLen = Kcp.KcpRecv(kcp, LastBuffer, WritePosition, temWriteLen);
                 WritePosition += temWriteLen;
                 writeLen += temWriteLen;
             }
@@ -303,32 +283,7 @@ namespace Ux
             }
         }
 
-        //public void ReadToKcp(IntPtr kcp, int maxSendLen)
-        //{
-        //    var count = (int)Length;
-        //    if (count > maxSendLen)
-        //    {
-        //        count = maxSendLen;
-        //    }
-
-        //    int readLen = 0;
-        //    while (readLen < count)
-        //    {
-        //        if (ReadPosition == ChunkSize)
-        //        {
-        //            Remove();
-        //        }
-        //        int temReadLen = count;
-        //        if (ReadPosition + count > ChunkSize)
-        //        {
-        //            temReadLen = ChunkSize - ReadPosition;
-        //        }
-        //        Kcp.KcpSend(kcp, FirstBuffer, ReadPosition, temReadLen);
-        //        ReadPosition += temReadLen;
-        //        readLen += temReadLen;
-        //    }
-        //}
-        public void ReadToKcp(Kcp kcp, int maxSendLen)
+        public void ReadToKcp(IntPtr kcp, int maxSendLen)
         {
             var count = (int)Length;
             if (count > maxSendLen)
@@ -348,7 +303,7 @@ namespace Ux
                 {
                     temReadLen = ChunkSize - ReadPosition;
                 }
-                kcp.Send(FirstBuffer.AsSpan(ReadPosition, temReadLen));
+                Kcp.KcpSend(kcp, FirstBuffer, ReadPosition, temReadLen);
                 ReadPosition += temReadLen;
                 readLen += temReadLen;
             }
@@ -416,8 +371,7 @@ namespace Ux
                 memoryStream.Write(FirstBuffer, ReadPosition, temReadLen);
                 ReadPosition += temReadLen;
                 readLen += temReadLen;
-            }
-
+            }           
             return count;
         }
 
@@ -445,7 +399,7 @@ namespace Ux
                 readLen += temReadLen;
             }
         }
-
+        
         public void ReadToBytes(byte[] bytes)
         {
             ReadToBytes(bytes, 0, bytes.Length);

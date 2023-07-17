@@ -298,8 +298,9 @@ namespace Ux
             }
             return stream.ReadToUInt64((int)stream.Position);
         }
-        public static object ReadToMessage(this MemoryStream stream, Type type)
+        public static object ReadToMessage(this MemoryStream stream, Type type, int offset)
         {
+            stream.Seek(offset, SeekOrigin.Begin);
             return ProtoBuf.Serializer.Deserialize(type, stream);
         }
 

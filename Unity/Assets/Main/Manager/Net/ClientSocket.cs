@@ -42,7 +42,7 @@ namespace Ux
         protected bool IsConnecting { get; private set; }
         protected bool IsConnected { get; private set; }
         protected bool IsDisposed { get; private set; }
-        protected virtual bool IsCheckUpdate => IsConnected;
+        protected virtual bool IsCheckUpdate => !IsDisposed && IsConnected;
 
         private readonly PacketParser parser;
         protected readonly BytesArray recvBytes = new BytesArray();
@@ -172,7 +172,7 @@ namespace Ux
                             if (type != null)
                             {
                                 recvBytes.ReadToMemoryStream(sendStream, 0, packetSize);
-                                message = sendStream.ReadToMessage(type);
+                                message = sendStream.ReadToMessage(type, 0);
                             }
                             Dispatch(cmd, message);
                             break;
@@ -181,12 +181,13 @@ namespace Ux
                             packetSize -= 4;
                             var rpcId = recvBytes.ReadUInt32();
                             packetSize -= 4;
+
                             if (rpcMethod.TryGetValue(rpcId, out var method))
                             {
                                 if (rpcType.TryGetValue(rpcId, out var rpxType))
                                 {
                                     recvBytes.ReadToMemoryStream(sendStream, 0, packetSize);
-                                    message = sendStream.ReadToMessage(rpxType);
+                                    message = sendStream.ReadToMessage(rpxType, 0);
                                     rpcType.Remove(rpcId);
                                 }
                                 method.TrySetResult(message);
@@ -232,7 +233,7 @@ namespace Ux
 
             if (LastSendTime == 0 || TimeMgr.Ins.TotalTime - LastSendTime > heartTime)
             {
-                this.sendBytes.WriteUInt16(2);
+                this.sendBytes.WriteUInt16(1);
                 this.sendBytes.WriteByte((byte)OpType.H_B_S);
                 isNeedSend = true;
             }
@@ -242,10 +243,6 @@ namespace Ux
 
         public virtual void Update()
         {
-            if (this.IsDisposed)
-            {
-                return;
-            }
             if (IsCheckUpdate)
             {
                 if (isNeedSend && !IsSending)
