@@ -77,7 +77,7 @@ namespace Ux
 
         public void StartRecv()
         {
-            if (!this.recvBytes.WriteSocket(socket, innArgs))
+            if (!this.recvBytes.PushBySocket(socket, innArgs))
             {
                 return;
             }
@@ -103,7 +103,7 @@ namespace Ux
                 return;
             }
 
-            this.recvBytes.WriteBytesTransferred(args);
+            this.recvBytes.PushTransferred(args.BytesTransferred);
 
             if (!this.OnParse())
             {
@@ -122,7 +122,7 @@ namespace Ux
         {
             try
             {
-                if (!this.sendBytes.ReadToSocket(this.socket, this.outArgs))
+                if (!this.sendBytes.PopToSocket(this.socket, this.outArgs))
                 {
                     return;
                 }
@@ -153,7 +153,7 @@ namespace Ux
                 return;
             }
 
-            this.sendBytes.ReadBytesTransferred(args);
+            this.sendBytes.PopTransferred(args.BytesTransferred);
         }
 
         protected override void OnDispose()

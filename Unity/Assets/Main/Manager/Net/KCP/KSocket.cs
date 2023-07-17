@@ -1,20 +1,19 @@
-﻿using System;
+﻿using SJ;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Ux
 {
     public class KSocket : ClientSocket
     {
         private Socket socket;
-        private IntPtr kcp;
+        private Kcp kcp;
         private IPEndPoint remoteEndPoint;
         EndPoint remoteEP2 = new IPEndPoint(IPAddress.Any, 0);
 
         private readonly byte[] recvCache = new byte[2048];
-        private readonly byte[] sendCache = new byte[2048];
 
         private const int maxSendLen = 2048;
 
@@ -43,12 +42,11 @@ namespace Ux
             remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress[0]), int.Parse(ipAddress[1]));
             this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             var conv = (uint)((ulong)IDGenerater.GenerateId() & uint.MaxValue);
-            this.kcp = Kcp.KcpCreate(conv, IntPtr.Zero);
-            Kcp.KcpNodelay(kcp, 1, 10, 2, 1);
-            Kcp.KcpWndsize(kcp, 256, 256);
-            //Kcp.KcpSetmtu(kcp, 470); // 默认1400
-            Kcp.KcpSetminrto(kcp, 30);
-            Kcp.KcpSetoutput(KcpOutput);
+            this.kcp = new Kcp(conv, KcpOutput);
+            kcp.SetNoDelay(1, 10, 2, true);
+            kcp.SetWindowSize(256, 256);
+            //kcp.SetMtu(470); // 默认1400
+            kcp.SetMinrto(30);
             SendHeartbeat();//发送心跳验证是否可以进行网络链接
         }
 
@@ -60,53 +58,46 @@ namespace Ux
             }
         }
 
-
-#if ENABLE_IL2CPP
-		[AOT.MonoPInvokeCallback(typeof(KcpOutput))]
-#endif
-        private int KcpOutput(IntPtr bytes, int count, IntPtr kcp, IntPtr user)
+        private void KcpOutput(byte[] bytes, int count)
         {
             if (this.IsDisposed)
             {
-                return 0;
+                return;
             }
 
-            if (kcp == IntPtr.Zero)
+            if (kcp == null)
             {
-                return 0;
+                return;
             }
             try
             {
                 if (count == 0)
                 {
                     Log.Error($"output 0");
-                    return 0;
+                    return;
                 }
-                Marshal.Copy(bytes, sendCache, 0, count);
-                this.socket.SendTo(sendCache, 0, count, SocketFlags.None, this.remoteEndPoint);
+                this.socket.SendTo(bytes, 0, count, SocketFlags.None, this.remoteEndPoint);
             }
             catch (Exception e)
             {
-                Log.Error(e);                
+                Log.Error(e);
             }
-
-            return count;
         }
 
         protected override void StartSend()
         {
             try
             {
-                if (this.kcp != IntPtr.Zero)
+                if (this.kcp != null)
                 {
                     // 检查等待发送的消息，如果超出最大等待大小，应该断开连接                    
-                    if (Kcp.KcpWaitsnd(this.kcp) > Kcp.OuterMaxWaitSize)
+                    if (this.kcp.WaitSnd > Kcp.OuterMaxWaitSize)
                     {
                         Dispose();
                         return;
                     }
                 }
-                this.sendBytes.ReadToKcp(this.kcp, maxSendLen);
+                this.sendBytes.PopToKcp(this.kcp, maxSendLen);
             }
             catch (Exception e)
             {
@@ -116,7 +107,7 @@ namespace Ux
 
         public override void Update()
         {
-            if (this.kcp == IntPtr.Zero)
+            if (this.kcp == null)
             {
                 return;
             }
@@ -129,14 +120,14 @@ namespace Ux
                 {
                     try
                     {
-                        Kcp.KcpUpdate(this.kcp, timeNow);
+                        this.kcp.Update(timeNow);
                     }
                     catch (Exception e)
                     {
                         Log.Error(e);
                         return;
                     }
-                    nextUpdateTime = Kcp.KcpCheck(this.kcp, timeNow);
+                    nextUpdateTime = this.kcp.Check(timeNow);
                 }
                 CheckConnect();
             }
@@ -147,10 +138,10 @@ namespace Ux
             if (IsConnected)
             {
                 //超过一定时间后，没有回应，则判断为断开连接
-                if (LastRecvTime > 0 && TimeMgr.Ins.TotalTime - LastRecvTime > 8)
+                if (LastRecvTime > 0 && TimeMgr.Ins.TotalTime - LastRecvTime > heartTime + 5)
                 {
-                    this.OnSocketCode(SocketCode.Error);                    
-                }                
+                    this.OnSocketCode(SocketCode.Error);
+                }
             }
             else
             {
@@ -174,11 +165,12 @@ namespace Ux
                     {
                         continue;
                     }
-                    Kcp.KcpInput(this.kcp, recvCache, 0, messageLength);
+                    this.kcp.Input(recvCache.AsSpan(0, messageLength));
                     int len = 0;
-                    while (!IsDisposed && (len = Kcp.KcpPeeksize(this.kcp)) > 0)
+
+                    while (!IsDisposed && (len = this.kcp.PeekSize()) > 0)
                     {
-                        this.recvBytes.WriteKcp(this.kcp, len);
+                        this.recvBytes.PushByKcp(this.kcp, len);
                         if (!this.OnParse())
                         {
                             return;
@@ -194,10 +186,9 @@ namespace Ux
 
         protected override void OnDispose()
         {
-            if (this.kcp != IntPtr.Zero)
+            if (this.kcp != null)
             {
-                Kcp.KcpRelease(this.kcp);
-                this.kcp = IntPtr.Zero;
+                this.kcp = null;
             }
             this.socket?.Close();
             this.socket = null;

@@ -31,7 +31,7 @@ namespace Ux
 
         public string Address { get; private set; }
 
-        //心跳时间
+        //心跳间隔（秒）
         protected readonly int heartTime = 30;
         protected float LastRecvTime { get; private set; }
         protected float LastSendTime { get; private set; }
@@ -45,8 +45,8 @@ namespace Ux
         protected virtual bool IsCheckUpdate => !IsDisposed && IsConnected;
 
         private readonly PacketParser parser;
-        protected readonly BytesArray recvBytes = new BytesArray();
-        protected readonly BytesArray sendBytes = new BytesArray();
+        protected readonly ByteArray recvBytes = new ByteArray();
+        protected readonly ByteArray sendBytes = new ByteArray();
 
         private MemoryStream sendStream;
         private MemoryStream recvStream;
@@ -79,7 +79,7 @@ namespace Ux
 
                         if (parames.Length > 1)
                         {
-                            Log.Error("网络接口：参数不能超过2个");
+                            Log.Error($"网络接口{method.Name}：参数不能超过2个");
                             continue;
                         }
                         if (parames.Length == 1)
@@ -157,7 +157,7 @@ namespace Ux
                         Log.Error("空包？");
                         break;
                     }
-                    var opcode = (OpType)recvBytes.ReadByte();
+                    var opcode = (OpType)recvBytes.PopByte();
                     packetSize -= 1;
                     object message = null;
                     switch (opcode)
@@ -166,28 +166,28 @@ namespace Ux
                             RecvHeartbeat();
                             break;
                         case OpType.C_S_C:
-                            var cmd = recvBytes.ReadUInt32();
+                            var cmd = recvBytes.PopUInt32();
                             packetSize -= 4;
                             var type = FindType(cmd);
                             if (type != null)
                             {
-                                recvBytes.ReadToMemoryStream(sendStream, 0, packetSize);
-                                message = sendStream.ReadToMessage(type, 0);
+                                recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
+                                message = recvStream.ReadToMessage(type, 0);
                             }
                             Dispatch(cmd, message);
                             break;
                         case OpType.RPC_RESPONSE:
-                            cmd = recvBytes.ReadUInt32();
+                            cmd = recvBytes.PopUInt32();
                             packetSize -= 4;
-                            var rpcId = recvBytes.ReadUInt32();
+                            var rpcId = recvBytes.PopUInt32();
                             packetSize -= 4;
 
                             if (rpcMethod.TryGetValue(rpcId, out var method))
                             {
                                 if (rpcType.TryGetValue(rpcId, out var rpxType))
                                 {
-                                    recvBytes.ReadToMemoryStream(sendStream, 0, packetSize);
-                                    message = sendStream.ReadToMessage(rpxType, 0);
+                                    recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
+                                    message = recvStream.ReadToMessage(rpxType, 0);
                                     rpcType.Remove(rpcId);
                                 }
                                 method.TrySetResult(message);
@@ -233,8 +233,8 @@ namespace Ux
 
             if (LastSendTime == 0 || TimeMgr.Ins.TotalTime - LastSendTime > heartTime)
             {
-                this.sendBytes.WriteUInt16(1);
-                this.sendBytes.WriteByte((byte)OpType.H_B_S);
+                this.sendBytes.PushUInt16(1);
+                this.sendBytes.PushByte((byte)OpType.H_B_S);
                 isNeedSend = true;
             }
         }
@@ -290,12 +290,12 @@ namespace Ux
             {
                 throw new Exception("session已经被Dispose了");
             }
-            sendStream.WriteToMessage(message);
+            sendStream.WriteToMessage(message, 0);
             var msgLen = 1 + 4 + sendStream.Length;
-            this.sendBytes.WriteUInt16((ushort)msgLen);
-            this.sendBytes.WriteByte((byte)OpType.C_S_C);
-            this.sendBytes.WriteUInt32(cmd);
-            this.sendBytes.WriteStream(sendStream);
+            this.sendBytes.PushUInt16((ushort)msgLen);
+            this.sendBytes.PushByte((byte)OpType.C_S_C);
+            this.sendBytes.PushUInt32(cmd);
+            this.sendBytes.PushStream(sendStream);
             isNeedSend = true;
         }
         public UniTask<object> Call<TMessage>(uint cmd, object message)
@@ -309,13 +309,13 @@ namespace Ux
             var task = AutoResetUniTaskCompletionSource<object>.Create();
             rpcMethod.Add(rpxID, task);
 
-            sendStream.WriteToMessage(message);
+            sendStream.WriteToMessage(message, 0);
             var msgLen = 1 + 4 + 4 + sendStream.Length;
-            this.sendBytes.WriteUInt16((ushort)msgLen);
-            this.sendBytes.WriteByte((byte)OpType.RPC_REQUIRE);
-            this.sendBytes.WriteUInt32(cmd);
-            this.sendBytes.WriteUInt32(rpxID);
-            this.sendBytes.WriteStream(sendStream);
+            this.sendBytes.PushUInt16((ushort)msgLen);
+            this.sendBytes.PushByte((byte)OpType.RPC_REQUIRE);
+            this.sendBytes.PushUInt32(cmd);
+            this.sendBytes.PushUInt32(rpxID);
+            this.sendBytes.PushStream(sendStream);
             isNeedSend = true;
             return task.Task;
         }

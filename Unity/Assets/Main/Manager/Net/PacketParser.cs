@@ -10,13 +10,13 @@ namespace Ux
 
     public class PacketParser
     {
-        private readonly BytesArray buffer;
+        private readonly ByteArray buffer;
         private int packetSize;
         private ParserState state;
         private bool isOK;
         private readonly int packetSizeLength = 2;
 
-        public PacketParser(BytesArray buffer)
+        public PacketParser(ByteArray buffer)
         {
             this.buffer = buffer;
         }
@@ -40,7 +40,7 @@ namespace Ux
                         }
                         else
                         {
-                            this.packetSize = this.buffer.ReadUInt16();
+                            this.packetSize = this.buffer.PopUInt16();
                             if (this.packetSize > ushort.MaxValue)
                             {
                                 throw new Exception($"recv packet size error: {this.packetSize}");

@@ -46,7 +46,7 @@ namespace Ux
         {
             try
             {
-                await this.sendBytes.ReadToWebSocketAsync(this.webSocket, maxSendLen, cancellationTokenSource.Token);
+                await this.sendBytes.PopToWebSocketAsync(this.webSocket, maxSendLen, cancellationTokenSource.Token);
                 base.CheckSend();
             }
             catch (Exception e)
@@ -70,12 +70,12 @@ namespace Ux
                     WebSocketReceiveResult receiveResult;
                     do
                     {
-                        receiveResult = await this.recvBytes.WriteWebSocketAsync(webSocket, cancellationTokenSource.Token);
+                        receiveResult = await this.recvBytes.PushByWebSocketAsync(webSocket, cancellationTokenSource.Token);
                         if (this.IsDisposed)
                         {
                             return;
                         }
-                        this.recvBytes.WriteBytesTransferred(receiveResult);
+                        this.recvBytes.PushTransferred(receiveResult.Count);
                     }
                     while (!receiveResult.EndOfMessage);
 

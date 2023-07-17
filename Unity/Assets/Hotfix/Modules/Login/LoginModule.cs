@@ -34,9 +34,13 @@ namespace Ux
         public void LoginAccount(string account, string password)
         {
             var data = new pb.C2SLoginGame();
-            data.Account = account;
-            data.Password = password;
-            Send(1000, data);
+
+            for (int i = 0; i < 10; i++)
+            {
+                data.Account = account + i;
+                data.Password = password + i;
+                Send(1000, data);
+            }
         }
 
         [Net(1000)]
