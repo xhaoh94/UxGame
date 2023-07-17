@@ -1,0 +1,14 @@
+syntax ="proto3";
+option go_package = ".;pb";
+
+import "common/errcode.proto";
+
+message G2S_CreateSpace{
+    string spaceid =1;
+}
+message S2G_CreateSpace{
+    ErrCode error=1;
+}
+service ICreateSpace {
+    rpc CreateSpace (G2S_CreateSpace) returns (S2G_CreateSpace) {}
+}
