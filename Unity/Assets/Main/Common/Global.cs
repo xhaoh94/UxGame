@@ -12,6 +12,13 @@ public class Global
 
         return $"{hostServerIP}/{runtimePlatform}";
     }
+    public static string GetFallbackHostServerURL()
+    {
+        string hostServerIP = "http://127.0.0.1:0709";
+        string runtimePlatform = GetRuntimePlatform();
+
+        return $"{hostServerIP}/{runtimePlatform}";
+    }
 
     static string GetRuntimePlatform()
     {

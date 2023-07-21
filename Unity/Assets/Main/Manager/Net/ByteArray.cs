@@ -98,26 +98,26 @@ namespace Ux
             }
 
         }
-        public int PushByKcp(IntPtr kcp, int count)
-        {
-            int len = 0;
-            while (len < count)
-            {
-                if (PushPosition == ChunkSize)
-                {
-                    Add();
-                }
-                int temLen = count;
-                if (PushPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PushPosition;
-                }
-                temLen = Kcp_cpp.KcpRecv(kcp, LastBuffer, PushPosition, temLen);
-                PushPosition += temLen;
-                len += temLen;
-            }
-            return len;
-        }
+        //public int PushByKcp(IntPtr kcp, int count)
+        //{
+        //    int len = 0;
+        //    while (len < count)
+        //    {
+        //        if (PushPosition == ChunkSize)
+        //        {
+        //            Add();
+        //        }
+        //        int temLen = count;
+        //        if (PushPosition + count > ChunkSize)
+        //        {
+        //            temLen = ChunkSize - PushPosition;
+        //        }
+        //        temLen = Kcp_cpp.KcpRecv(kcp, LastBuffer, PushPosition, temLen);
+        //        PushPosition += temLen;
+        //        len += temLen;
+        //    }
+        //    return len;
+        //}
         public int PushByKcp(Kcp kcp, int count)
         {
             int len = 0;
@@ -310,31 +310,31 @@ namespace Ux
                 throw new Exception($"socket set buffer error: {Length}, {PopPosition}, {count}", e);
             }
         }
-        public void PopToKcp(IntPtr kcp, int maxSendLen)
-        {
-            var count = (int)Length;
-            if (count > maxSendLen)
-            {
-                count = maxSendLen;
-            }
+        //public void PopToKcp(IntPtr kcp, int maxSendLen)
+        //{
+        //    var count = (int)Length;
+        //    if (count > maxSendLen)
+        //    {
+        //        count = maxSendLen;
+        //    }
 
-            int len = 0;
-            while (len < count)
-            {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
-                if (PopPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PopPosition;
-                }
-                Kcp_cpp.KcpSend(kcp, FirstBuffer, PopPosition, temLen);
-                PopPosition += temLen;
-                len += temLen;
-            }
-        }
+        //    int len = 0;
+        //    while (len < count)
+        //    {
+        //        if (PopPosition == ChunkSize)
+        //        {
+        //            Remove();
+        //        }
+        //        int temLen = count;
+        //        if (PopPosition + count > ChunkSize)
+        //        {
+        //            temLen = ChunkSize - PopPosition;
+        //        }
+        //        Kcp_cpp.KcpSend(kcp, FirstBuffer, PopPosition, temLen);
+        //        PopPosition += temLen;
+        //        len += temLen;
+        //    }
+        //}
         public void PopToKcp(Kcp kcp, int maxSendLen)
         {
             var count = (int)Length;

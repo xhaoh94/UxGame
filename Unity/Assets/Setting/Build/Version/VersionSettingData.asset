@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VersionSettingData
   m_EditorClassIdentifier: 
   ExportSettings:
-  - Name: Build-2023-06-30-58580
+  - Name: "\u6D4B\u8BD5\u6784\u5EFA"
     CurPlatform: 1
     PlatformMap:
     - CompileType: 0
@@ -25,7 +25,7 @@ MonoBehaviour:
       PiplineOption: 1
       NameStyleOption: 1
       IsExportExecutable: 1
-      ResVersion: 23070760659x3
+      ResVersion: 23072155272x1
       BuildTags: builtin
       IsCopyTo: 1
       BundlePath: ./Bundles

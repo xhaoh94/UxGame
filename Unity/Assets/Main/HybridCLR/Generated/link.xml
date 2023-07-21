@@ -22,6 +22,7 @@
     <type fullname="FairyGUI.GObject" preserve="all" />
     <type fullname="FairyGUI.GTextField" preserve="all" />
     <type fullname="FairyGUI.GTextInput" preserve="all" />
+    <type fullname="FairyGUI.Transition" preserve="all" />
     <type fullname="FairyGUI.Window" preserve="all" />
   </assembly>
   <assembly fullname="Luban">
@@ -76,6 +77,7 @@
     <type fullname="Singleton`1" preserve="all" />
     <type fullname="Ux.AnimComponent" preserve="all" />
     <type fullname="Ux.AssemblyEx" preserve="all" />
+    <type fullname="Ux.ClientSocket" preserve="all" />
     <type fullname="Ux.Entity" preserve="all" />
     <type fullname="Ux.EventMgr" preserve="all" />
     <type fullname="Ux.GameMain" preserve="all" />
@@ -87,6 +89,7 @@
     <type fullname="Ux.IFixedUpdateSystem" preserve="all" />
     <type fullname="Ux.IListenSystem" preserve="all" />
     <type fullname="Ux.IStateNode" preserve="all" />
+    <type fullname="Ux.IUIAnim" preserve="all" />
     <type fullname="Ux.IUIData" preserve="all" />
     <type fullname="Ux.IUITabData" preserve="all" />
     <type fullname="Ux.IUpdateSystem" preserve="all" />
@@ -99,6 +102,7 @@
     <type fullname="Ux.ModuleMgr" preserve="all" />
     <type fullname="Ux.NetAttribute" preserve="all" />
     <type fullname="Ux.NetMgr" preserve="all" />
+    <type fullname="Ux.NetType" preserve="all" />
     <type fullname="Ux.PackageAttribute" preserve="all" />
     <type fullname="Ux.PatchMgr" preserve="all" />
     <type fullname="Ux.ResMgr" preserve="all" />
@@ -124,6 +128,7 @@
     <type fullname="Ux.UITabData" preserve="all" />
     <type fullname="Ux.UITabFrame" preserve="all" />
     <type fullname="Ux.UITabView" preserve="all" />
+    <type fullname="Ux.UITransition" preserve="all" />
     <type fullname="Ux.UIView" preserve="all" />
     <type fullname="Ux.UIWindow" preserve="all" />
   </assembly>
@@ -156,6 +161,9 @@
   </assembly>
   <assembly fullname="YooAssetEx">
     <type fullname="Cysharp.Threading.Tasks.OperationHandleBaseExtensions" preserve="all" />
+  </assembly>
+  <assembly fullname="ZString">
+    <type fullname="Ux.zstring" preserve="all" />
   </assembly>
   <assembly fullname="mscorlib">
     <type fullname="System.Action" preserve="all" />
@@ -214,8 +222,5 @@
     <type fullname="System.Type" preserve="all" />
     <type fullname="System.ValueTuple`2" preserve="all" />
     <type fullname="System.ValueType" preserve="all" />
-  </assembly>
-  <assembly fullname="zstring">
-    <type fullname="Ux.zstring" preserve="all" />
   </assembly>
 </linker>
