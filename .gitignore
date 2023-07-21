@@ -14,8 +14,6 @@
 /Unity/[Yy]oo
 
 /Unity/Assets/Data/Res/Code
-/Unity/Assets/Data/Res/Config
-/Unity/Assets/Hotfix/CodeGen
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta

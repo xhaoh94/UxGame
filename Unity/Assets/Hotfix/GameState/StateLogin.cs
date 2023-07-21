@@ -13,7 +13,7 @@
             UIMgr.Ins.Release();
             ModuleMgr.Ins.Release();
             ModuleMgr.Ins.Create();
-            UIMgr.Ins.Show<UI.LoginView>();            
+            UIMgr.Ins.Show<UI.LoginView>();
         }
         protected override void OnUpdate()
         {

@@ -30,7 +30,7 @@ namespace Ux
         private JSONNode LoadJson(string file)
         {
             var handle = ResMgr.Ins.LoadAssetSync<TextAsset>(GetKey(file));
-            var ta = handle.GetAssetObject<TextAsset>();            
+            var ta = handle.GetAssetObject<TextAsset>();
             return JSON.Parse(ta.text);
         }
 
