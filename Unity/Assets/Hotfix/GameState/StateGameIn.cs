@@ -11,7 +11,7 @@
             var ui = await UIMgr.Ins.Show<UI.MainView>().Task();
             //MapModule.Ins.EnterMap("Map001");
             UIMgr.Ins.Hide<UI.LoginView>();
-            var item = ConfigMgr.Ins.Tables.TbItem.Get(10000);                        
+            var item = ConfigMgr.Ins.Tables.TbItem.Get(10000);
         }
 
         protected override void OnExit()

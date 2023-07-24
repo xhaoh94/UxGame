@@ -11,7 +11,7 @@ namespace Ux.UI
         protected override UILayer Layer => UILayer.Normal;
         protected override void OnShow(object param)
         {
-            base.OnShow(param);           
+            base.OnShow(param);
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
