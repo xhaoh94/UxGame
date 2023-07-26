@@ -1,0 +1,22 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+import "common/common.proto";
+// package pb;
+
+//bcst=30001
+message Bcst_EntityEnter{
+    string spaceid =1;
+    repeated Entity entitys=2;
+}
+//bcst=30002
+message Bcst_EntityLeave{
+    string spaceid =1;
+    repeated string eids=2;
+}
+//bcst=30003
+message Bcst_EntityMove{
+    string spaceid =1;
+    string eid=2;
+    Vector3 position=3;
+}

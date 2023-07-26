@@ -1,0 +1,24 @@
+{
+	"csharp_pbnet":{
+		"protobufNet":"./PbTool/protobuf/protogen.exe",
+		"inPath":"./protofiles/protofile/client",
+		"outPath":"./out/cs"
+	},		
+	"csharp":{		
+		"protoc":"./PbTool/protoc.exe",
+		"inPath":"./protofiles/protofile/client",
+		"outPath":"./out/cs"
+	},		
+	"go":{	
+		"protoc":"./PbTool/protoc.exe",
+		"protocGenGo":"./protoc-gen-go.exe",
+		"inPath":"./protofiles/protofile/server",
+		"outPath":"./out/go"
+	},
+	"ts":{	
+		"inPath":"./protofiles/protofile/client",
+		"outPath":"./out/ts",
+		"createjson":false,
+		"usemodule":true
+	}
+}

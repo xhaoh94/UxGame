@@ -1,0 +1,21 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+// package pb;
+
+
+message Entity{    
+        string id=1;
+        string owner =2;
+        Vector3 position=3;
+        string spaceid=4;
+        string name=5;
+        int32 etype=6;
+}
+
+message Vector3{
+    float x=1;
+    float y=2;
+    float z=3;
+}
+

@@ -1,0 +1,2 @@
+@echo off
+mklink /J pathA pathB

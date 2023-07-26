@@ -1,0 +1,16 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+// package pb;
+
+
+enum ErrCode{    
+    Success=0;
+    UserNotFound=1;
+    PasswordError=2;
+    UserAlready=3;
+    RoleAlready=4;
+    UnKnown=5;
+}
+
+

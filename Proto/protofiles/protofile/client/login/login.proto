@@ -1,0 +1,45 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+// package pb;
+import "common/common.proto";
+import "common/errcode.proto";
+
+//cs=10001
+message C2S_RegisterAccount{
+    string account=1;
+    string password=2;
+}
+//sc=10001
+message S2C_RegisterAccount{
+    ErrCode error=1;
+}
+//cs=10002
+message C2S_LoginGame{
+    string account=1;    
+    string password=2;
+}
+//sc=10002
+message S2C_LoginGame{
+    ErrCode error=1;        
+}
+
+//cs=10003
+message C2S_RoleList{
+}
+
+//sc=10003
+message S2C_RoleList{
+    ErrCode error=1;    
+    repeated Entity role_list=2;
+}
+
+//cs=10004
+message C2S_CreateRole{
+    string name=1;
+}
+//sc=10004
+message S2C_CreateRole{
+    ErrCode error=1;    
+    Entity role=2;
+}
