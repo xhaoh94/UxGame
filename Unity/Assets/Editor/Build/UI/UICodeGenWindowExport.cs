@@ -9,6 +9,7 @@ namespace UI.Editor
     public class WriteData
     {
         string content;
+        bool newLine;
         public WriteData(string _content)
         {
             content = _content;
@@ -20,6 +21,7 @@ namespace UI.Editor
         public void Writeln()
         {
             content += "\n";
+            newLine = true;
         }
         public void Writeln(string add, bool isBlock = true)
         {
@@ -31,6 +33,7 @@ namespace UI.Editor
                 }
             }
             content += add + "\n";
+            newLine = true;
         }
         public void Write(string add, bool isBlock = true)
         {
@@ -47,7 +50,7 @@ namespace UI.Editor
         List<string> block = new List<string>();
         public void StartBlock()
         {
-            Writeln("{");
+            Writeln("{", newLine);
             block.Add("\t");
         }
         public void EndBlock(bool isLn = true)

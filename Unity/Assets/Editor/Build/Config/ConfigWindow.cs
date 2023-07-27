@@ -164,9 +164,7 @@ public class ConfigWindow : EditorWindow
     {
         Export().Forget();
     }
-
-    static readonly string _DOTNET =
-    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
+   
     public static async UniTask Export()
     {
         var Setting = ConfigSettingData.LoadConfig();
@@ -178,7 +176,7 @@ public class ConfigWindow : EditorWindow
         UniTask ExportConfig()
         {
             var configTask = AutoResetUniTaskCompletionSource.Create();
-            Command.Run(_DOTNET, Setting.GetCommand(), true, () =>
+            Command.Run(Command.DOTNET, Setting.GetCommand(), true, () =>
             {
                 configTask?.TrySetResult();
             });

@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+            <ui:TextField picking-mode="Ignore" label="PbTool" value="filler text" name="txtPbTool" readonly="false" style="flex-grow: 1;" />
+            <ui:Button text="选择" display-tooltip-when-elided="true" name="btnPbTool" style="flex-grow: 0;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+            <ui:TextField picking-mode="Ignore" label="Config.json" value="filler text" name="txtConfig" style="flex-grow: 1;" />
+            <ui:Button text="选择" display-tooltip-when-elided="true" name="btnConfig" style="flex-grow: 0;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+            <ui:TextField picking-mode="Ignore" name="txtInPath" label="Proto目录" style="flex-grow: 1;" />
+            <ui:Button text="选择" display-tooltip-when-elided="true" name="btnInPath" style="flex-grow: 0;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+            <ui:TextField picking-mode="Ignore" name="txtOutPath" label="导出目录" style="flex-grow: 1;" />
+            <ui:Button text="选择" display-tooltip-when-elided="true" name="btnOutPath" style="flex-grow: 0;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+            <ui:TextField picking-mode="Ignore" name="txtNamespace" label="命名空间" value="Ux.Pb" style="flex-grow: 1;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="popContainer" />
+    </ui:VisualElement>
+    <ui:Button text="导出" display-tooltip-when-elided="true" name="btnExport" />
+</ui:UXML>
