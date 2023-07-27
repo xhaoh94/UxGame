@@ -2,10 +2,10 @@
 // DO NOT EDIT!
 namespace Pb
 {
-	public enum BCST
+	public static partial class BCST
 	{
-		Bcst_EntityEnter = 30001,
-		Bcst_EntityLeave = 30002,
-		Bcst_EntityMove = 30003,
+		public const uint Bcst_EntityEnter = 30001;
+		public const uint Bcst_EntityLeave = 30002;
+		public const uint Bcst_EntityMove = 30003;
 	}
 }

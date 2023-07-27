@@ -2,12 +2,12 @@
 // DO NOT EDIT!
 namespace Pb
 {
-	public enum CS
+	public static partial class CS
 	{
-		C2S_EnterGame = 10005,
-		C2S_RegisterAccount = 10001,
-		C2S_LoginGame = 10002,
-		C2S_RoleList = 10003,
-		C2S_CreateRole = 10004,
+		public const uint C2S_EnterGame = 10005;
+		public const uint C2S_RegisterAccount = 10001;
+		public const uint C2S_LoginGame = 10002;
+		public const uint C2S_RoleList = 10003;
+		public const uint C2S_CreateRole = 10004;
 	}
 }

@@ -33,31 +33,31 @@ namespace Ux
         }
         public void LoginAccount(string account, string password)
         {
-            //var data = new pb.C2SLoginGame();
+            var data = new Pb.C2SLoginGame();
 
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    data.Account = account + i;
-            //    data.Password = password + i;
-            //    Send(1000, data);
-            //}
+            for (int i = 0; i < 10; i++)
+            {
+                data.Account = account + i;
+                data.Password = password + i;
+                Send(1000, data);
+            }
         }
 
-        //[Net(1000)]
-        //void LoginResult(Pb.S2CLoginGame data)
-        //{
-        //    Log.Debug("返回" + data.Error.ToString());
-        //    GameMain.Machine.Enter<StateGameIn>();
-        //}
+        [Net(1000)]
+        void LoginResult(Pb.S2CLoginGame data)
+        {
+            Log.Debug("返回" + data.Error.ToString());
+            GameMain.Machine.Enter<StateGameIn>();
+        }
 
         public async void LoginAccountRPC(string account, string password)
         {
-            //var data = new pb.C2SLoginGame();
-            //data.Account = account;
-            //data.Password = password;
-            //var response = await Call<pb.S2CLoginGame>(2000, data);
-            //Log.Debug("RPC返回" + response.Error.ToString());
-            //GameMain.Machine.Enter<StateGameIn>();
+            var data = new Pb.C2SLoginGame();
+            data.Account = account;
+            data.Password = password;
+            var response = await Call<Pb.S2CLoginGame>(2000, data);
+            Log.Debug("RPC返回" + response.Error.ToString());
+            GameMain.Machine.Enter<StateGameIn>();
         }
 
 
