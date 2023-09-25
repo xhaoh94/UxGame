@@ -6,7 +6,7 @@ using Ux;
 
 public class ResDebuggerWindow : EditorWindow
 {
-    [MenuItem("UxGame/调试/资源", false, 201)]
+    [MenuItem("UxGame/调试/资源", false, 401)]
     public static void ShowExample()
     {
         var window = GetWindow<ResDebuggerWindow>("资源调试工具", true, EditorDefine.DebuggerWindowTypes);

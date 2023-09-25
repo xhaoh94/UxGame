@@ -78,7 +78,7 @@ namespace HybridCLR.Commands
         }
         static void _Clear(string path)
         {
-            if (!Directory.Exists(HotDir))
+            if (!Directory.Exists(path))
             {
                 return;
             }

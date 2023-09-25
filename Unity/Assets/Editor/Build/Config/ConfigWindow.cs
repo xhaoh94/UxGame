@@ -19,7 +19,7 @@ public enum ConfServiceType
 }
 public class ConfigWindow : EditorWindow
 {
-    [MenuItem("UxGame/≈‰÷√", false, 300)]
+    [MenuItem("UxGame/≈‰÷√", false, 100)]
     public static void ShowConfigWindon()
     {
         var window = GetWindow<ConfigWindow>("ConfigWindow", true);

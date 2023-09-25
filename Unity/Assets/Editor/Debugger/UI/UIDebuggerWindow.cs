@@ -6,7 +6,7 @@ using Ux;
 
 public class UIDebuggerWindow : EditorWindow
 {
-    [MenuItem("UxGame/调试/UI", false, 200)]
+    [MenuItem("UxGame/调试/UI", false, 400)]
     public static void ShowExample()
     {
         var window = GetWindow<UIDebuggerWindow>("UI调试工具", true, EditorDefine.DebuggerWindowTypes);

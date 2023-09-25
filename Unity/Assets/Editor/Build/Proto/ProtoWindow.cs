@@ -9,7 +9,7 @@ using Cysharp.Threading.Tasks;
 
 public class ProtoWindow : EditorWindow
 {
-    [MenuItem("UxGame/Proto", false, 400)]
+    [MenuItem("UxGame/–≠“È", false, 200)]
     public static void ShowConfigWindon()
     {
         var window = GetWindow<ProtoWindow>("ProtoWindow", true);

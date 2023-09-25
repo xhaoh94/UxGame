@@ -13,6 +13,7 @@ public class UxEditor
         UICodeGenWindow.Export();
 
         //TODO 协议文件
+        await ProtoWindow.Export();
 
         //生成配置代码文件
         await ConfigWindow.Export();

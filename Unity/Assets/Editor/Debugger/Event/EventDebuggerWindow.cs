@@ -6,7 +6,7 @@ using Ux;
 
 public class EventDebuggerWindow : EditorWindow
 {
-    [MenuItem("UxGame/调试/事件", false, 202)]
+    [MenuItem("UxGame/调试/事件", false, 402)]
     public static void ShowExample()
     {
         var window = GetWindow<EventDebuggerWindow>("事件调试工具", true, EditorDefine.DebuggerWindowTypes);

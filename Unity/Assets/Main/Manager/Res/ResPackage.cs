@@ -49,6 +49,7 @@ namespace Ux
                 case EPlayMode.OfflinePlayMode:
                     {
                         var createParameters = new OfflinePlayModeParameters();
+                        createParameters.DecryptionServices = new GameDecryptionServices();
                         yield return Package.InitializeAsync(createParameters);
                         break;
                     }
@@ -58,7 +59,8 @@ namespace Ux
                         var createParameters = new HostPlayModeParameters
                         {
                             DecryptionServices = new GameDecryptionServices(),
-                            QueryServices = new GameQueryServices(),
+                            BuildinQueryServices = new GameQueryServices(),
+                            DeliveryQueryServices = new DefaultDeliveryQueryServices(),
                             RemoteServices = new RemoteServices(Global.GetHostServerURL(), Global.GetFallbackHostServerURL())
                         };
                         yield return Package.InitializeAsync(createParameters);
@@ -116,8 +118,24 @@ namespace Ux
             {
                 return 1024;
             }
+        }
 
+        #endregion
 
+        #region 默认的分发资源查询服务
+        /// <summary>
+        /// 默认的分发资源查询服务类
+        /// </summary>
+        private class DefaultDeliveryQueryServices : IDeliveryQueryServices
+        {
+            public DeliveryFileInfo GetDeliveryFileInfo(string packageName, string fileName)
+            {
+                throw new NotImplementedException();
+            }
+            public bool QueryDeliveryFiles(string packageName, string fileName)
+            {
+                return false;
+            }
         }
         #endregion
     }

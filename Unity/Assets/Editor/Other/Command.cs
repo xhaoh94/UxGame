@@ -37,9 +37,7 @@ internal class CommandPathAttribute : Attribute
 public class Command
 {
     public static readonly string DOTNET =
-    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
-
-    private static readonly int _ReadSize = 2048;
+    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";    
 
     public event Action<string> Output = Log.Info;//输出事件
     public event Action<string> Error = Log.Error;//错误事件

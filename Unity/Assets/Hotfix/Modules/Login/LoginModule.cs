@@ -8,6 +8,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Pb;
 
 namespace Ux
 {
@@ -22,14 +23,6 @@ namespace Ux
             //NetMgr.Ins.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
 
             //GameMain.Machine.Enter<StateGameIn>();            
-
-            //var data = new pb.S2CLoginGame();
-            //data.Error = pb.ErrCode.RoleAlready;
-            //var tem = new MemoryStream();
-            //ProtoBuf.Serializer.Serialize(tem, data);
-            //tem.Seek(0, SeekOrigin.Begin);
-            //var obj = ProtoBuf.Serializer.Deserialize(typeof(pb.S2CLoginGame), tem);
-            //Log.Debug(obj);
         }
         public void LoginAccount(string account, string password)
         {
@@ -39,11 +32,11 @@ namespace Ux
             {
                 data.Account = account + i;
                 data.Password = password + i;
-                Send(1000, data);
+                Send(CS.C2S_LoginGame, data);
             }
         }
 
-        [Net(1000)]
+        [Net(SC.S2C_LoginGame)]
         void LoginResult(Pb.S2CLoginGame data)
         {
             Log.Debug("返回" + data.Error.ToString());
@@ -55,7 +48,7 @@ namespace Ux
             var data = new Pb.C2SLoginGame();
             data.Account = account;
             data.Password = password;
-            var response = await Call<Pb.S2CLoginGame>(2000, data);
+            var response = await Call<Pb.S2CLoginGame>(CS.C2S_LoginGame, data);
             Log.Debug("RPC返回" + response.Error.ToString());
             GameMain.Machine.Enter<StateGameIn>();
         }

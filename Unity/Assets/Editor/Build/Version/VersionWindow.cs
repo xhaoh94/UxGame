@@ -35,14 +35,14 @@ public enum PlatformType
 }
 public class VersionWindow : EditorWindow
 {
-    [MenuItem("UxGame/构建/构建打包", false, 400)]
+    [MenuItem("UxGame/构建/构建打包", false, 500)]
     public static void Build()
     {
         var window = GetWindow<VersionWindow>("VersionWindow", true);
         window.minSize = new Vector2(800, 500);
     }
 
-    [MenuItem("UxGame/构建/本地资源服务器", false, 401)]
+    [MenuItem("UxGame/构建/本地资源服务器", false, 501)]
     public static void OpenFileServer()
     {
         //Command.Run("../HFS/hfs.exe");
@@ -627,12 +627,11 @@ public class VersionWindow : EditorWindow
         return true;
     }
     private async UniTask<bool> CompileDLL(BuildTarget target)
-    {
-        HybridCLRCommand.ClearHOTDll();
+    {        
         if (_tgCompileDLL.value)
         {
+            HybridCLRCommand.ClearHOTDll();
             await UxEditor.Export(false);
-
             var compileType = (CompileType)_compileType.value;
             if (IsExportExecutable)
             {
@@ -652,7 +651,7 @@ public class VersionWindow : EditorWindow
                 LinkGeneratorCommand.GenerateLinkXml(target);
 
                 // 生成裁剪后的aot dll
-                StripAOTDllCommand.GenerateStripedAOTDlls(target, EditorUserBuildSettings.selectedBuildTargetGroup);
+                StripAOTDllCommand.GenerateStripedAOTDlls(target);
 
                 // 桥接函数生成依赖于AOT dll，必须保证已经build过，生成AOT dll
                 MethodBridgeGeneratorCommand.GenerateMethodBridge(target);
