@@ -10,12 +10,12 @@ namespace Ux
 
         #region Component
 
-        Entity CreateComponent(Type type, bool isFromPool)
+        Entity _CreateComponent(Type type, bool isFromPool)
         {
             var component = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (component == null) return null;
             component.IsFromPool = isFromPool;
-            component.IsDestroy = false;
+            component.isDestroyed = false;
             component.isDestroying = false;
             component.ID = -1;
 
@@ -57,109 +57,70 @@ namespace Ux
             return (T)AddComponent(typeof(T), a, b, c, d, e, isFromPool);
         }
 
+
         public Entity AddComponent(Type type, bool isFromPool = true)
         {
-            if (TryComponent(type, out var component))
+            if (_TryGetOrAddComponent(type, isFromPool, out var component))
             {
                 return component;
             }
-
-            component = CreateComponent(type, isFromPool);
-            if (!_AddComponent(component))
-            {
-                return null;
-            }
-
-            component._InitSystem();
+            component?._InitSystem();
             return component;
         }
 
         public Entity AddComponent<A>(Type type, A a, bool isFromPool = true)
         {
-            if (TryComponent(type, out var component))
+            if (_TryGetOrAddComponent(type, isFromPool, out var component))
             {
                 return component;
             }
 
-            component = CreateComponent(type, isFromPool);
-            if (!_AddComponent(component))
-            {
-                return null;
-            }
-
-            component._InitSystem(a);
+            component?._InitSystem(a);
             return component;
         }
 
         public Entity AddComponent<A, B>(Type type, A a, B b, bool isFromPool = true)
         {
-            if (TryComponent(type, out var component))
+            if (_TryGetOrAddComponent(type, isFromPool, out var component))
             {
                 return component;
             }
-
-            component = CreateComponent(type, isFromPool);
-            if (!_AddComponent(component))
-            {
-                return null;
-            }
-
-            component._InitSystem(a, b);
+            component?._InitSystem(a, b);
             return component;
         }
 
         public Entity AddComponent<A, B, C>(Type type, A a, B b, C c, bool isFromPool = true)
         {
-            if (TryComponent(type, out var component))
+            if (_TryGetOrAddComponent(type, isFromPool, out var component))
             {
                 return component;
             }
-
-            component = CreateComponent(type, isFromPool);
-            if (!_AddComponent(component))
-            {
-                return null;
-            }
-
-            component._InitSystem(a, b, c);
+            component?._InitSystem(a, b, c);
             return component;
         }
 
         public Entity AddComponent<A, B, C, D>(Type type, A a, B b, C c, D d, bool isFromPool = true)
         {
-            if (TryComponent(type, out var component))
+            if (_TryGetOrAddComponent(type, isFromPool, out var component))
             {
                 return component;
             }
-
-            component = CreateComponent(type, isFromPool);
-            if (!_AddComponent(component))
-            {
-                return null;
-            }
-
-            component._InitSystem(a, b, c, d);
+            component?._InitSystem(a, b, c, d);
             return component;
         }
 
         public Entity AddComponent<A, B, C, D, E>(Type type, A a, B b, C c, D d, E e, bool isFromPool = true)
         {
-            if (TryComponent(type, out var component))
+            if (_TryGetOrAddComponent(type, isFromPool, out var component))
             {
                 return component;
             }
 
-            component = CreateComponent(type, isFromPool);
-            if (!_AddComponent(component))
-            {
-                return null;
-            }
-
-            component._InitSystem(a, b, c, d, e);
+            component?._InitSystem(a, b, c, d, e);
             return component;
         }
 
-        bool TryComponent(Type type, out Entity component)
+        bool _TryGetOrAddComponent(Type type, bool isFromPool, out Entity component)
         {
             if (CheckDestroy())
             {
@@ -169,9 +130,16 @@ namespace Ux
 
             if (_components.TryGetValue(type, out component))
             {
+                Log.Warning("重复添加组件");
                 return true;
             }
 
+            component = _CreateComponent(type, isFromPool);
+            if (!_AddComponent(component))
+            {
+                component = null;
+                return true;
+            }
             return false;
         }
 
@@ -188,7 +156,7 @@ namespace Ux
                 return false;
             }
 
-            if (component.IsDestroy || component.isDestroying)
+            if (component.IsDestroy)
             {
                 Log.Error("添加已销毁的组件");
                 return false;
@@ -211,23 +179,28 @@ namespace Ux
                 return true;
             }
 
-            component._parent?.RemoveComponent(component, false);
+            component._parent?.RemoveComponent(component.GetType(), false);
             component._parent = this;
             _components.Add(component.GetType(), component);
             return true;
         }
 
-        public bool RemoveComponent(Entity component, bool isDestroy = true)
+        public bool RemoveComponent(Entity component)
         {
-            return RemoveComponent(component.GetType(), isDestroy);
+            return RemoveComponent(component.GetType());
         }
 
-        public bool RemoveComponent<T>(bool isDestroy = true) where T : Entity
+        public bool RemoveComponent<T>() where T : Entity
         {
-            return RemoveComponent(typeof(T), isDestroy);
+            return RemoveComponent(typeof(T));
         }
 
-        public bool RemoveComponent(Type type, bool isDestroy = true)
+        public bool RemoveComponent(Type type)
+        {
+            return RemoveComponent(type, true);
+        }
+
+        bool RemoveComponent(Type type, bool isDestroy)
         {
             if (CheckDestroy())
             {
@@ -243,7 +216,6 @@ namespace Ux
 
             return false;
         }
-
 
         public T GetOrAddComponent<T>(bool isFromPool = true) where T : Entity
         {
@@ -294,6 +266,7 @@ namespace Ux
 
             foreach (var entity in _entitys)
             {
+                if (entity.Value.IsDestroy) continue;
                 component = entity.Value.GetComponentInChildren<T>();
                 if (component != null) return component;
             }
@@ -316,6 +289,7 @@ namespace Ux
 
             foreach (var entity in _entitys)
             {
+                if (entity.Value.IsDestroy) continue;
                 component = entity.Value.GetComponentInChildren(type);
                 if (component != null) return component;
             }
@@ -353,6 +327,7 @@ namespace Ux
 
             foreach (var entity in _entitys)
             {
+                if (entity.Value.IsDestroy) continue;
                 entity.Value.GetComponentsInChildren(components, type);
             }
         }
@@ -373,6 +348,7 @@ namespace Ux
 
             foreach (var entity in _entitys)
             {
+                if (entity.Value.IsDestroy) continue;
                 entity.Value.GetComponentsInChildren(components);
             }
         }
@@ -390,9 +366,12 @@ namespace Ux
                 return component;
             }
 
-            if (_parent == null) return null;
-            component = _parent.GetComponentInParent<T>();
-            return component;
+            if (_parent != null && !_parent.IsDestroy)
+            {
+                component = _parent.GetComponentInParent<T>();
+                if (component != null) return component;
+            }
+            return null;
         }
 
         public Entity GetComponentInParent(Type type)
@@ -408,7 +387,7 @@ namespace Ux
                 return component;
             }
 
-            if (_parent != null)
+            if (_parent != null && !_parent.IsDestroy)
             {
                 component = _parent.GetComponentInParent(type);
                 if (component != null) return component;
@@ -445,7 +424,7 @@ namespace Ux
                 components.Add(component);
             }
 
-            if (_parent != null)
+            if (_parent != null && !_parent.IsDestroy)
             {
                 _parent.GetComponentsInParent(components, type);
             }
@@ -465,7 +444,7 @@ namespace Ux
                 components.Add(component);
             }
 
-            if (_parent != null)
+            if (_parent != null && !_parent.IsDestroy)
             {
                 _parent.GetComponentsInParent(components);
             }

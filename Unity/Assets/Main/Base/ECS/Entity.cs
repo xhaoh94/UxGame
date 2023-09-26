@@ -12,7 +12,7 @@ namespace Ux
         static void _DelayInvoke(int max)
         {
             exeNum = 0;
-            while (_delayFn.Count > 0 && (exeNum++) < max) //一帧最多执行200次
+            while (_delayFn.Count > 0 && (exeNum++) < max) //一帧最多执行max次
             {
                 _delayFn.Dequeue()?.Invoke();
             }
@@ -24,9 +24,16 @@ namespace Ux
         }
 
         public long ID { get; private set; }
+        /// <summary>
+        /// 是否从对象池获取
+        /// </summary>
         public bool IsFromPool { get; private set; }
-        public bool IsDestroy { get; private set; }
+        /// <summary>
+        /// 是否已销毁
+        /// </summary>
+        public bool IsDestroy => isDestroyed || isDestroying;
         bool isDestroying;
+        bool isDestroyed;
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
         Entity _parent;
@@ -75,7 +82,7 @@ namespace Ux
         {
             var entity = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (entity == null) return null;
-            entity.IsDestroy = false;
+            entity.isDestroyed = false;
             entity.isDestroying = false;
             entity.IsFromPool = isFromPool;
             entity.ID = IDGenerater.GenerateId();
@@ -95,7 +102,7 @@ namespace Ux
                 return false;
             }
 
-            if (entity.IsDestroy || entity.isDestroying)
+            if (entity.IsDestroy)
             {
                 Log.Error("添加已销毁的组件");
                 return false;
@@ -277,7 +284,11 @@ namespace Ux
             return entity;
         }
 
-        public bool RemoveChild(Entity entity, bool isDestroy = true)
+        public bool RemoveChild(Entity entity)
+        {
+            return RemoveChild(entity, true);
+        }
+        bool RemoveChild(Entity entity, bool isDestroy)
         {
             if (CheckDestroy())
             {
@@ -307,18 +318,78 @@ namespace Ux
 
             return false;
         }
-
-        public List<Entity> GetChilds<TEntity>() where TEntity : Entity
+        public List<Entity> GetChilds(bool isIncludeNested = false)
         {
             if (CheckDestroy())
             {
                 return null;
             }
-
-            _typeToentitys.TryGetValue(typeof(TEntity), out var listData);
+            var listData = new List<Entity>();
+            _GetChilds(listData, isIncludeNested);
             return listData;
         }
-
+        public List<Entity> GetChilds(Type type, bool isIncludeNested = false)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+            var listData = new List<Entity>();
+            _GetChilds(type, listData, isIncludeNested);
+            return listData;
+        }
+        public List<T> GetChilds<T>(bool isIncludeNested = false) where T : Entity
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+            var listData = new List<T>();
+            _GetChilds(listData, isIncludeNested);
+            return listData;
+        }
+        void _GetChilds<T>(List<T> listData, bool isIncludeNested) where T : Entity
+        {
+            if (_typeToentitys.TryGetValue(typeof(T), out var _temList))
+            {
+                foreach (var entity in _temList)
+                {
+                    listData.Add(entity as T);
+                    if (isIncludeNested)
+                    {
+                        entity._GetChilds<T>(listData, isIncludeNested);
+                    }
+                }
+            }
+        }
+        void _GetChilds(Type type, List<Entity> listData, bool isIncludeNested)
+        {
+            if (_typeToentitys.TryGetValue(type, out var _temList))
+            {
+                listData.AddRange(_temList);
+                if (isIncludeNested)
+                {
+                    foreach (var entity in _temList)
+                    {
+                        entity._GetChilds(type, listData, isIncludeNested);
+                    }
+                }
+            }
+        }
+        void _GetChilds(List<Entity> listData, bool isIncludeNested)
+        {
+            foreach (var entityKv in _typeToentitys)
+            {
+                listData.AddRange(entityKv.Value);
+                if (isIncludeNested)
+                {
+                    foreach (var entity in entityKv.Value)
+                    {
+                        entity._GetChilds(listData, isIncludeNested);
+                    }
+                }
+            }
+        }
         #endregion
 
         bool CheckDestroy()
@@ -328,19 +399,12 @@ namespace Ux
                 Log.Error("Entity已销毁");
                 return true;
             }
-
-            if (isDestroying)
-            {
-                Log.Warning("Entity正在销毁中");
-                return true;
-            }
-
             return false;
         }
 
         public void Destroy()
         {
-            if (IsDestroy || isDestroying) return;
+            if (IsDestroy) return;
             if (_parent != null)
             {
                 Parent = null;
@@ -388,9 +452,9 @@ namespace Ux
         {
             OnDestroy();
             ID = 0;
-            IsDestroy = true;
+            isDestroyed = true;
             isDestroying = false;
-            __is_init = false;
+            _is_init = false;
             if (IsFromPool)
             {
                 Pool.Push(this);

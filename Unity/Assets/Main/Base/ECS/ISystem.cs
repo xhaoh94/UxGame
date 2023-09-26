@@ -96,7 +96,7 @@ namespace Ux
             readonly Dictionary<string, List<FastMethodInfo>> _eventRemove =
                 new Dictionary<string, List<FastMethodInfo>>();
 
-            public void Add(Entity entity)
+            public void AddSystem(Entity entity)
             {
                 var key = entity.GetType().FullName;
                 if (string.IsNullOrEmpty(key)) return;
@@ -111,7 +111,7 @@ namespace Ux
                 }
             }
 
-            public void Remove(Entity entity)
+            public void RemoveSystem(Entity entity)
             {
                 var key = entity.GetType().FullName;
                 if (string.IsNullOrEmpty(key)) return;
@@ -126,7 +126,7 @@ namespace Ux
                 }
             }
 
-            public void __Logout(Entity entity)
+            public void Off(Entity entity)
             {
                 var keys = _eventAdd.Keys;
                 foreach (var key in keys)
@@ -165,7 +165,7 @@ namespace Ux
                 }
             }
 
-            public void ___Register(Entity target)
+            public void On(Entity target)
             {
                 var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
                                                           BindingFlags.Public | BindingFlags.NonPublic);
@@ -204,11 +204,11 @@ namespace Ux
 
         Event _event;
 
-        bool __is_init;
+        bool _is_init;
 
         void _InitSystem()
         {
-            if (!__is_init && this is IAwakeSystem awakeSystem)
+            if (!_is_init && this is IAwakeSystem awakeSystem)
             {
                 awakeSystem.OnAwake();
             }
@@ -218,7 +218,7 @@ namespace Ux
 
         void _InitSystem<A>(A a)
         {
-            if (!__is_init && this is IAwakeSystem<A> awakeSystem)
+            if (!_is_init && this is IAwakeSystem<A> awakeSystem)
             {
                 awakeSystem.OnAwake(a);
             }
@@ -228,7 +228,7 @@ namespace Ux
 
         void _InitSystem<A, B>(A a, B b)
         {
-            if (!__is_init && this is IAwakeSystem<A, B> awakeSystem)
+            if (!_is_init && this is IAwakeSystem<A, B> awakeSystem)
             {
                 awakeSystem.OnAwake(a, b);
             }
@@ -238,7 +238,7 @@ namespace Ux
 
         void _InitSystem<A, B, C>(A a, B b, C c)
         {
-            if (!__is_init && this is IAwakeSystem<A, B, C> awakeSystem)
+            if (!_is_init && this is IAwakeSystem<A, B, C> awakeSystem)
             {
                 awakeSystem.OnAwake(a, b, c);
             }
@@ -248,7 +248,7 @@ namespace Ux
 
         void _InitSystem<A, B, C, D>(A a, B b, C c, D d)
         {
-            if (!__is_init && this is IAwakeSystem<A, B, C, D> awakeSystem)
+            if (!_is_init && this is IAwakeSystem<A, B, C, D> awakeSystem)
             {
                 awakeSystem.OnAwake(a, b, c, d);
             }
@@ -258,7 +258,7 @@ namespace Ux
 
         void _InitSystem<A, B, C, D, E>(A a, B b, C c, D d, E e)
         {
-            if (!__is_init && this is IAwakeSystem<A, B, C, D, E> awakeSystem)
+            if (!_is_init && this is IAwakeSystem<A, B, C, D, E> awakeSystem)
             {
                 awakeSystem.OnAwake(a, b, c, d, e);
             }
@@ -293,22 +293,25 @@ namespace Ux
                 EventMgr.Ins.AddQuitCallBack(applicationQuit.OnApplicationQuit);
             }
             var temPar = Parent;
-            temPar?._event?.Add(this);
-
-            if (this is IListenSystem && temPar != null)
+            if (temPar != null)
             {
-                temPar._event ??= new Event();
-                temPar._event?.___Register(this);
+                temPar._event?.AddSystem(this);
+                if (this is IListenSystem)
+                {
+                    temPar._event ??= new Event();
+                    temPar._event.On(this);
+                }
             }
 
-            if (!__is_init)
+
+            if (!_is_init)
             {
                 if (this is IEventSystem)
                 {
                     EventMgr.Ins.___RegisterFastMethod(this);
                 }
 
-                __is_init = true;
+                _is_init = true;
             }
         }
 
@@ -343,10 +346,10 @@ namespace Ux
 
             if (this is IListenSystem)
             {
-                temPar?._event?.__Logout(this);
+                temPar?._event?.Off(this);
             }
 
-            temPar?._event?.Remove(this);
+            temPar?._event?.RemoveSystem(this);
         }
     }
 
