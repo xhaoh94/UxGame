@@ -17,12 +17,12 @@ namespace Ux.UI
 
         partial void OnBtnLoginClick(EventContext e)
         {
-            LoginModule.Instance.Connect(OnConnect);
+            LoginModule.Ins.Connect(OnConnect);
         }
 
         void OnConnect()
         {
-            LoginModule.Instance.LoginAccount(inputAcc.text, inputPass.text);
+            LoginModule.Ins.LoginAccount(inputAcc.text, inputPass.text);
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
         }
     }

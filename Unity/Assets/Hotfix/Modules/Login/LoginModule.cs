@@ -18,11 +18,11 @@ namespace Ux
         public void Connect(Action OnConnect)
         {
             //TCP KCP
-            NetMgr.Ins.Connect(NetType.KCP, "127.0.0.1:10002", OnConnect);
+            //NetMgr.Ins.Connect(NetType.KCP, "127.0.0.1:10002", OnConnect);
             //WebSocket
             //NetMgr.Ins.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
 
-            //GameMain.Machine.Enter<StateGameIn>();            
+            GameMain.Machine.Enter<StateGameIn>();
         }
         public void LoginAccount(string account, string password)
         {

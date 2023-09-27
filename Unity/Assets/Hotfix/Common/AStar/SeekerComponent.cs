@@ -64,7 +64,7 @@ namespace Ux
             // go.transform.localScale = Vector3.one * 0.1f;
         }
 
-        public void OnPathComplete(Path p)
+        void OnPathComplete(Path p)
         {
             if (p.error)
             {

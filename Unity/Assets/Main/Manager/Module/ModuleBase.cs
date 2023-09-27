@@ -11,21 +11,21 @@ namespace Ux
 
     public class ModuleBase<T> : IModule where T : class, new()
     {
-        private static T _instance;
-        public static T Instance
+        private static T _ins;
+        public static T Ins
         {
             get
             {
-                if (_instance == null)
+                if (_ins == null)
                 {
                     throw new Exception($"模块[{typeof(T).Name}]没有被创建，请检查ModuleParse.Create是否有创建");
                 }
-                return _instance;
+                return _ins;
             }
         }
         public ModuleBase()
         {
-            _instance = this as T;
+            _ins = this as T;
         }
         public void Init()
         {
@@ -38,7 +38,7 @@ namespace Ux
             OnRelease();
             EventMgr.Ins.OffAll(this);
             TimeMgr.Ins.RemoveAll(this);
-            _instance = null;
+            _ins = null;
         }
         protected virtual void OnRelease() { }
 

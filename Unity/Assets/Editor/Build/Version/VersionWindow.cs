@@ -783,7 +783,7 @@ public class VersionWindow : EditorWindow
         {
             string projectPath = Path.GetDirectoryName(UnityEngine.Application.dataPath);
             projectPath = PathUtility.RegularPath(projectPath);
-            return PathUtility.Combine(projectPath, YooAssetSettings.DefaultYooFolderName);
+            return PathUtility.Combine(projectPath, YooAssetSettingsData.Setting.DefaultYooFolderName);
         }
     }
 
