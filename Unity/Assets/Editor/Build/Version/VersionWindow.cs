@@ -52,10 +52,7 @@ public class VersionWindow : EditorWindow
 
 
 
-    private List<Type> _encryptionServicesClassTypes;
-    private List<string> _encryptionServicesClassNames;
-    private List<Type> _sharedPackRuleClassTypes;
-    private List<string> _sharedPackRuleClassNames;
+
     private List<string> _buildPackageNames;
     private VersionSettingData Setting;
     private int _lastModifyExportIndex = 0;
@@ -78,24 +75,24 @@ public class VersionWindow : EditorWindow
     #endregion
 
     #region 资源构建    
+    Toolbar _toolbar;
+    VisualElement _container;
+    ToolbarMenu _packageMenu;
+
     TextField _inputBundlePath;
     Button _btnBundlePath;
     Toggle _tgCopy;
     TextField _inputCopyPath;
     Button _btnCopyPath;
-
-    MaskField _buildPackage;
     TextField _txtVersion;
-    EnumField _pipelineType;
-    EnumField _nameStyleType;
-    EnumField _compressionType;
-    TextField _inputBuiltinTags;
     Toggle _tgCompileDLL;
     Toggle _tgClearSandBox;
-    PopupField<string> _encryption;
-    PopupField<string> _sharedPackRule;
 
     #endregion
+
+    MaskField _buildPackage;
+
+    VersionPackageViewer _versionPackage;
 
     public void CreateGUI()
     {
@@ -106,10 +103,9 @@ public class VersionWindow : EditorWindow
 
             var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Version/VersionWindow.uxml");
             visualAsset.CloneTree(root);
-            _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
-            _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
-            _sharedPackRuleClassTypes = GetSharedPackRuleClassTypes();
-            _sharedPackRuleClassNames = _sharedPackRuleClassTypes.Select(t => t.FullName).ToList();
+
+
+            // 检测构建包裹
             _buildPackageNames = GetBuildPackageNames();
 
             _listExport = root.Q<ListView>("listExport");
@@ -134,14 +130,19 @@ public class VersionWindow : EditorWindow
                 SelectItem.Name = evt.newValue;
                 OnExportListData();
             });
+
             _platformType = _exportElement.Q<EnumField>("platformType");
             _platformType.Init(PlatformType.Win64);
             _platformType.style.width = 500;
             _platformType.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.CurPlatform = (PlatformType)_platformType.value;
-                RefreshWindow();
+                SelectItem.PlatformType = (PlatformType)_platformType.value;
             });
+            // 构建包裹
+            _buildPackage = _exportElement.Q<MaskField>("buildPackage");
+            _buildPackage.choices = _buildPackageNames;
+            _buildPackage.value = -1;
+            _buildPackage.style.width = 350;
 
             //构建版本
             _txtVersion = _exportElement.Q<TextField>("txtVersion");
@@ -155,7 +156,7 @@ public class VersionWindow : EditorWindow
             _buildType.RegisterValueChangedCallback(evt =>
             {
                 //var resVersion = _txtVersion.value;
-                RefreshWindow();
+                RefreshView();
                 //_txtVersion.SetValueWithoutNotify(resVersion);
             });
 
@@ -163,7 +164,7 @@ public class VersionWindow : EditorWindow
             _inputBundlePath = _exportElement.Q<TextField>("inputBundlePath");
             _inputBundlePath.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.BundlePath = evt.newValue;
+                SelectItem.BundlePath = evt.newValue;
             });
             _btnBundlePath = _exportElement.Q<Button>("btnBundlePath");
             _btnBundlePath.clicked += OnBtnBundlePathClick;
@@ -172,14 +173,14 @@ public class VersionWindow : EditorWindow
             _tgCopy = _exportElement.Q<Toggle>("tgCopy");
             _tgCopy.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.IsCopyTo = evt.newValue;
+                SelectItem.IsCopyTo = evt.newValue;
                 RefreshElement();
             });
             //拷贝路径
             _inputCopyPath = _exportElement.Q<TextField>("inputCopyPath");
             _inputCopyPath.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.CopyPath = evt.newValue;
+                SelectItem.CopyPath = evt.newValue;
             });
             _btnCopyPath = _exportElement.Q<Button>("btnCopyPath");
             _btnCopyPath.clicked += OnBtnCopyPathClick;
@@ -188,102 +189,20 @@ public class VersionWindow : EditorWindow
             _tgClearSandBox = _exportElement.Q<Toggle>("tgClearSandBox");
             _tgClearSandBox.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.IsClearSandBox = evt.newValue;
+                SelectItem.IsClearSandBox = evt.newValue;
             });
 
             // 是否编译热更DLL
             _tgCompileDLL = _exportElement.Q<Toggle>("tgCompileDLL");
             _tgCompileDLL.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.IsCompileDLL = evt.newValue;
+                SelectItem.IsCompileDLL = evt.newValue;
             });
-
-            // 构建包裹
-            _buildPackage = _exportElement.Q<MaskField>("buildPackage");
-            _buildPackage.choices = _buildPackageNames;
-            _buildPackage.value = -1;
-            _buildPackage.style.width = 350;
-
-            // 构建管线
-            _pipelineType = _exportElement.Q<EnumField>("pipelineType");
-            _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
-            _pipelineType.style.width = 500;
-            _pipelineType.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.PlatformConfig.PiplineOption = (EBuildPipeline)evt.newValue;
-            });
-
-            // 资源命名格式
-            _nameStyleType = _exportElement.Q<EnumField>("nameStyleType");
-            _nameStyleType.Init(EOutputNameStyle.HashName);
-            _nameStyleType.style.width = 500;
-            _nameStyleType.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.PlatformConfig.NameStyleOption = (EOutputNameStyle)evt.newValue;
-            });
-
-            // 压缩方式
-            _compressionType = _exportElement.Q<EnumField>("compressionType");
-            _compressionType.Init(ECompressOption.LZ4);
-            _compressionType.style.width = 500;
-            _compressionType.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.PlatformConfig.CompressOption = (ECompressOption)evt.newValue;
-            });
-
-            // 首包资源标签
-            _inputBuiltinTags = _exportElement.Q<TextField>("inputBuiltinTags");
-            _inputBuiltinTags.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.PlatformConfig.BuildTags = evt.newValue;
-            });
-
-
-            // 加密方法
-            var encryptionContainer = _exportElement.Q("encryptionContainer");
-            if (_encryptionServicesClassNames.Count > 0)
-            {
-                _encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-                _encryption.label = "加密方法";
-                _encryption.style.width = 500;
-                _encryption.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.PlatformConfig.EncyptionClassName = evt.newValue;
-                });
-                encryptionContainer.Add(_encryption);
-            }
-            else
-            {
-                _encryption = new PopupField<string>();
-                _encryption.label = "加密方法";
-                _encryption.style.width = 500;
-                encryptionContainer.Add(_encryption);
-            }
-
-            if (_sharedPackRuleClassNames.Count > 0)
-            {
-                _sharedPackRule = new PopupField<string>(_sharedPackRuleClassNames, 0);
-                _sharedPackRule.label = "共享资源的打包规则";
-                _sharedPackRule.style.width = 500;
-                _sharedPackRule.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.PlatformConfig.SharedPackRule = evt.newValue;
-                });
-                encryptionContainer.Add(_sharedPackRule);
-            }
-            else
-            {
-                _sharedPackRule = new PopupField<string>();
-                _sharedPackRule.label = "共享资源的打包规则";
-                _sharedPackRule.style.width = 500;
-                encryptionContainer.Add(_sharedPackRule);
-            }
-
 
             _tgExe = _exportElement.Q<Toggle>("tgExe");
             _tgExe.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.IsExportExecutable = evt.newValue;
+                SelectItem.IsExportExecutable = evt.newValue;
                 RefreshElement();
             });
             _exeElement = _exportElement.Q<VisualElement>("exeElement");
@@ -291,7 +210,7 @@ public class VersionWindow : EditorWindow
             _inputExePath = _exeElement.Q<TextField>("inputExePath");
             _inputExePath.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.ExePath = evt.newValue;
+                SelectItem.ExePath = evt.newValue;
             });
             _btnExePath = _exeElement.Q<Button>("btnExePath");
             _btnExePath.clicked += OnBtnExePathClick;
@@ -302,17 +221,39 @@ public class VersionWindow : EditorWindow
             _compileType.style.width = 500;
             _compileType.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.PlatformConfig.CompileType = (CompileType)evt.newValue;
+                SelectItem.CompileType = (CompileType)evt.newValue;
             });
 
-            // 构建按钮
+
+            // 构建选中按钮
             var btnBuild = _exportElement.Q<Button>("build");
-            btnBuild.clicked += OnBuildClick;
+            btnBuild.clicked += OnBuildSelectClick;
 
             // 清理按钮
             var btnClear = _exportElement.Q<Button>("clear");
             btnClear.clicked += OnClearClick;
 
+            _toolbar = root.Q<Toolbar>("Toolbar");
+
+            if (_buildPackageNames.Count == 0)
+            {
+                var label = new Label();
+                label.text = "没有发现可构建的资源包";
+                label.style.width = 100;
+                _toolbar.Add(label);
+                return;
+            }
+
+            _packageMenu = new ToolbarMenu();
+            _packageMenu.style.width = 200;
+            foreach (var packageName in _buildPackageNames)
+            {
+                _packageMenu.menu.AppendAction(packageName, PackageMenuAction, PackageMenuFun, packageName);
+            }
+            _toolbar.Add(_packageMenu);
+
+            _container = root.Q("Container");
+            _versionPackage = new VersionPackageViewer(_container);
             OnExportListData();
         }
         catch (Exception ex)
@@ -359,7 +300,7 @@ public class VersionWindow : EditorWindow
             return;
         }
         _lastModifyExportIndex = _listExport.selectedIndex;
-        RefreshWindow();
+        RefreshView();
     }
     private void OnExportListData()
     {
@@ -380,7 +321,7 @@ public class VersionWindow : EditorWindow
         }
         else
         {
-            RefreshWindow();
+            RefreshView();
         }
     }
     string AddVersion(string version)
@@ -405,42 +346,54 @@ public class VersionWindow : EditorWindow
             return asciiEncoding.GetString(bs);
         }
     }
-    void RefreshWindow()
+    private void PackageMenuAction(DropdownMenuAction action)
+    {
+        var packageName = (string)action.userData;
+        if (_packageMenu.text != packageName)
+        {
+            RefreshPackageView(packageName);
+        }
+    }
+    private DropdownMenuAction.Status PackageMenuFun(DropdownMenuAction action)
+    {
+        var packageName = (string)action.userData;
+        if (_packageMenu.text == packageName)
+            return DropdownMenuAction.Status.Checked;
+        else
+            return DropdownMenuAction.Status.Normal;
+    }
+
+    private void RefreshPackageView(string packageName)
     {
         if (SelectItem == null)
         {
-            _exportElement.visible = false;
             return;
         }
-        _exportElement.visible = true;
+        _packageMenu.text = packageName;
+        _versionPackage.RefreshView(SelectItem.GetPackageSetting(packageName));
+    }
+    void RefreshView()
+    {
+        if (SelectItem == null)
+        {
+            _exportElement.style.display = DisplayStyle.None;
+            return;
+        }
+        _exportElement.style.display = DisplayStyle.Flex;        
         _txtName.SetValueWithoutNotify(SelectItem.Name);
-        _platformType.SetValueWithoutNotify(SelectItem.PlatformConfig.PlatformType);
-        _inputExePath.SetValueWithoutNotify(SelectItem.PlatformConfig.ExePath);
-        _compileType.SetValueWithoutNotify(SelectItem.PlatformConfig.CompileType);
-        _inputBundlePath.SetValueWithoutNotify(SelectItem.PlatformConfig.BundlePath);
-        _tgCopy.SetValueWithoutNotify(SelectItem.PlatformConfig.IsCopyTo);
-        _inputCopyPath.SetValueWithoutNotify(SelectItem.PlatformConfig.CopyPath);
-        _tgExe.SetValueWithoutNotify(SelectItem.PlatformConfig.IsExportExecutable);
-        _txtVersion.SetValueWithoutNotify(AddVersion(SelectItem.PlatformConfig.ResVersion));
-        _pipelineType.SetValueWithoutNotify(SelectItem.PlatformConfig.PiplineOption);
-        _nameStyleType.SetValueWithoutNotify(SelectItem.PlatformConfig.NameStyleOption);
-        _compressionType.SetValueWithoutNotify(SelectItem.PlatformConfig.CompressOption);
-        _inputBuiltinTags.SetValueWithoutNotify(SelectItem.PlatformConfig.BuildTags);
-        _tgCompileDLL.SetValueWithoutNotify(SelectItem.PlatformConfig.IsCompileDLL);
+        _platformType.SetValueWithoutNotify(SelectItem.PlatformType);
+        _inputExePath.SetValueWithoutNotify(SelectItem.ExePath);
+        _compileType.SetValueWithoutNotify(SelectItem.CompileType);
+        _inputBundlePath.SetValueWithoutNotify(SelectItem.BundlePath);
+        _tgCopy.SetValueWithoutNotify(SelectItem.IsCopyTo);
+        _inputCopyPath.SetValueWithoutNotify(SelectItem.CopyPath);
+        _tgExe.SetValueWithoutNotify(SelectItem.IsExportExecutable);
+        _txtVersion.SetValueWithoutNotify(AddVersion(SelectItem.ResVersion));
 
-        if (string.IsNullOrEmpty(SelectItem.PlatformConfig.EncyptionClassName) &&
-            _encryptionServicesClassNames.Count > 0)
-        {
-            SelectItem.PlatformConfig.EncyptionClassName = _encryptionServicesClassNames[0];
-        }
-        _encryption.SetValueWithoutNotify(SelectItem.PlatformConfig.EncyptionClassName);
-        if (string.IsNullOrEmpty(SelectItem.PlatformConfig.SharedPackRule) &&
-            _sharedPackRuleClassNames.Count > 0)
-        {
-            SelectItem.PlatformConfig.SharedPackRule = _sharedPackRuleClassNames[0];
-        }
-        _sharedPackRule.SetValueWithoutNotify(SelectItem.PlatformConfig.SharedPackRule);
-        _tgClearSandBox.SetValueWithoutNotify(SelectItem.PlatformConfig.IsClearSandBox);
+        _tgCompileDLL.SetValueWithoutNotify(SelectItem.IsCompileDLL);
+
+        _tgClearSandBox.SetValueWithoutNotify(SelectItem.IsClearSandBox);
+        RefreshPackageView(_buildPackageNames[0]);
         RefreshElement();
     }
 
@@ -452,13 +405,10 @@ public class VersionWindow : EditorWindow
         _exeElement.style.display = IsExportExecutable ? DisplayStyle.Flex : DisplayStyle.None;
         _buildPackage.style.display = IsExportExecutable ? DisplayStyle.None : DisplayStyle.Flex;
         _tgClearSandBox.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
-        _pipelineType.SetEnabled(IsForceRebuild);
-        _nameStyleType.SetEnabled(IsForceRebuild);
-        _compressionType.SetEnabled(IsForceRebuild);
-        _encryption.SetEnabled(IsForceRebuild);
-        _sharedPackRule.SetEnabled(IsForceRebuild);
-        _inputBuiltinTags.SetEnabled(IsForceRebuild);
+
         _inputCopyPath.parent.style.display = _tgCopy.value ? DisplayStyle.Flex : DisplayStyle.None;
+
+        _versionPackage.RefreshElement(IsForceRebuild);
     }
     void OnBtnAddClick()
     {
@@ -482,22 +432,22 @@ public class VersionWindow : EditorWindow
 
     void OnBtnExePathClick()
     {
-        BuildHelper.OpenFolderPanel(SelectItem.PlatformConfig.ExePath, "请选择生成路径", _inputExePath);
+        BuildHelper.OpenFolderPanel(SelectItem.ExePath, "请选择生成路径", _inputExePath);
     }
     void OnBtnBundlePathClick()
     {
-        BuildHelper.OpenFolderPanel(SelectItem.PlatformConfig.BundlePath, "请选择生成路径", _inputBundlePath);
+        BuildHelper.OpenFolderPanel(SelectItem.BundlePath, "请选择生成路径", _inputBundlePath);
     }
     void OnBtnCopyPathClick()
     {
-        BuildHelper.OpenFolderPanel(SelectItem.PlatformConfig.CopyPath, "请选择CDN路径", _inputCopyPath);
+        BuildHelper.OpenFolderPanel(SelectItem.CopyPath, "请选择CDN路径", _inputCopyPath);
     }
 
-    void OnBuildClick()
+    void OnBuildSelectClick()
     {
         var buildType = (BuildType)_buildType.value;
         var resVersion = _txtVersion.value.Trim();
-        var buildResVerion = SelectItem.PlatformConfig.ResVersion.Trim();
+        var buildResVerion = SelectItem.ResVersion.Trim();
         if (string.Compare(resVersion, buildResVerion, true) <= 0)
         {
             if (EditorUtility.DisplayDialog("提示", $"资源版本不可小于当前版本", "确定", "取消"))
@@ -506,7 +456,6 @@ public class VersionWindow : EditorWindow
             }
             return;
         }
-
         void Build()
         {
             string content = string.Empty;
@@ -546,15 +495,15 @@ public class VersionWindow : EditorWindow
     {
         if (EditorUtility.DisplayDialog("提示", $"是否重置构建！\n重置会删除所有构建相关目录！", "确定", "取消"))
         {
-            if (Directory.Exists(SelectItem.PlatformConfig.ExePath))
+            if (Directory.Exists(SelectItem.ExePath))
             {
-                Directory.Delete(SelectItem.PlatformConfig.ExePath, true);
-                Log.Debug($"删除构建目录：{SelectItem.PlatformConfig.ExePath}");
+                Directory.Delete(SelectItem.ExePath, true);
+                Log.Debug($"删除构建目录：{SelectItem.ExePath}");
             }
-            if (Directory.Exists(SelectItem.PlatformConfig.CopyPath))
+            if (Directory.Exists(SelectItem.CopyPath))
             {
-                Directory.Delete(SelectItem.PlatformConfig.CopyPath, true);
-                Log.Debug($"删除拷贝目录：{SelectItem.PlatformConfig.CopyPath}");
+                Directory.Delete(SelectItem.CopyPath, true);
+                Log.Debug($"删除拷贝目录：{SelectItem.CopyPath}");
             }
 
             if (EditorTools.DeleteDirectory(SandboxRoot))
@@ -568,11 +517,10 @@ public class VersionWindow : EditorWindow
                 Log.Debug($"删除资源目录：{BuildOutputRoot}");
             }
 
-            string streamingAssetsRoot = AssetBundleBuilderHelper.GetDefaultStreamingAssetsRoot();
-            EditorTools.ClearFolder(streamingAssetsRoot);
+            EditorTools.ClearFolder(StreamingAssetsRoot);
 
             SelectItem.Clear();
-            RefreshWindow();
+            RefreshView();
             AssetDatabase.Refresh();
             Log.Debug("重置成功");
         }
@@ -597,7 +545,7 @@ public class VersionWindow : EditorWindow
     }
     private async void ExecuteBuild()
     {
-        var platformType = SelectItem.CurPlatform;
+        var platformType = SelectItem.PlatformType;
         BuildTarget buildTarget = GetBuildTarget(platformType);
 
         EditorTools.FocusUnityConsoleWindow();
@@ -616,7 +564,7 @@ public class VersionWindow : EditorWindow
         {
             return false;
         }
-        if (!await BuildRes(buildTarget))
+        if (!BuildRes(buildTarget))
         {
             return false;
         }
@@ -627,7 +575,7 @@ public class VersionWindow : EditorWindow
         return true;
     }
     private async UniTask<bool> CompileDLL(BuildTarget target)
-    {        
+    {
         if (_tgCompileDLL.value)
         {
             HybridCLRCommand.ClearHOTDll();
@@ -674,7 +622,7 @@ public class VersionWindow : EditorWindow
         }
         return true;
     }
-    private async UniTask<bool> BuildRes(BuildTarget buildTarget)
+    private bool BuildRes(BuildTarget buildTarget)
     {
         var packageValue = _buildPackage.value;
         if (packageValue == 0)
@@ -685,8 +633,7 @@ public class VersionWindow : EditorWindow
 
         if (IsForceRebuild)
         {
-            string streamingAssetsRoot = AssetBundleBuilderHelper.GetDefaultStreamingAssetsRoot();
-            EditorTools.ClearFolder(streamingAssetsRoot);
+            EditorTools.ClearFolder(StreamingAssetsRoot);
 
             if (_tgClearSandBox.value)
             {
@@ -721,30 +668,30 @@ public class VersionWindow : EditorWindow
 
         if (packages.Count > 0)
         {
-            Log.Debug("---------------------------------------->收集着色器变种<---------------------------------------");
+            //Log.Debug("---------------------------------------->收集着色器变种<---------------------------------------");
 
-            UniTask CollectSVC(string path, string package, int processCapacity)
-            {
-                var index1 = path.LastIndexOf('/');
-                var index2 = path.LastIndexOf('.');
+            //UniTask CollectSVC(string path, string package, int processCapacity)
+            //{
+            //    var index1 = path.LastIndexOf('/');
+            //    var index2 = path.LastIndexOf('.');
 
-                var name = path.Substring(index1 + 1, index2 - index1 - 1);
-                path = path.Replace(name, $"{package}SVC");
-                var task = AutoResetUniTaskCompletionSource.Create();
-                Action callback = () =>
-                {
-                    task.TrySetResult();
-                };
-                ShaderVariantCollector.Run(path, package, processCapacity, callback);
-                return task.Task;
-            }
+            //    var name = path.Substring(index1 + 1, index2 - index1 - 1);
+            //    path = path.Replace(name, $"{package}SVC");
+            //    var task = AutoResetUniTaskCompletionSource.Create();
+            //    Action callback = () =>
+            //    {
+            //        task.TrySetResult();
+            //    };
+            //    //ShaderVariantCollector.Run(path, package, processCapacity, callback);
+            //    return task.Task;
+            //}
 
-            string savePath = ShaderVariantCollectorSettingData.Setting.SavePath;
-            int processCapacity = ShaderVariantCollectorSettingData.Setting.ProcessCapacity;
-            foreach (var package in packages)
-            {
-                await CollectSVC(savePath, package, processCapacity);
-            }
+            //string savePath = ShaderVariantCollectorSettingData.Setting.SavePath;
+            //int processCapacity = ShaderVariantCollectorSettingData.Setting.ProcessCapacity;
+            //foreach (var package in packages)
+            //{
+            //    await CollectSVC(savePath, package, processCapacity);
+            //}
 
             Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
             foreach (var package in packages)
@@ -761,9 +708,9 @@ public class VersionWindow : EditorWindow
     {
         get
         {
-            if (!string.IsNullOrEmpty(SelectItem.PlatformConfig.BundlePath))
+            if (!string.IsNullOrEmpty(SelectItem.BundlePath))
             {
-                return SelectItem.PlatformConfig.BundlePath;
+                return SelectItem.BundlePath;
             }
             return AssetBundleBuilderHelper.GetDefaultBuildOutputRoot();
         }
@@ -773,7 +720,7 @@ public class VersionWindow : EditorWindow
     {
         get
         {
-            return AssetBundleBuilderHelper.GetDefaultStreamingAssetsRoot();
+            return AssetBundleBuilderHelper.GetStreamingAssetsRoot();
         }
     }
 
@@ -799,32 +746,54 @@ public class VersionWindow : EditorWindow
             }
         }
 
+        var packageSetting = SelectItem.GetPackageSetting(packageName);
+        BuildParameters buildParameters = null;
+        IBuildPipeline pipeline = null;
         string buildOutputRoot = BuildOutputRoot;
-        BuildParameters buildParameters = new BuildParameters();
-        buildParameters.StreamingAssetsRoot = StreamingAssetsRoot;
+        switch (packageSetting.PiplineOption)
+        {
+            case EBuildPipeline.BuiltinBuildPipeline:
+                buildParameters = new BuiltinBuildParameters()
+                {
+                    BuildMode = IsForceRebuild ? EBuildMode.ForceRebuild : EBuildMode.IncrementalBuild,
+                    CompressOption = packageSetting.CompressOption,
+                    
+                };
+                pipeline = new BuiltinBuildPipeline();
+                break;
+            case EBuildPipeline.ScriptableBuildPipeline:
+                buildParameters = new ScriptableBuildParameters()
+                {
+                    BuildMode = EBuildMode.IncrementalBuild,//SBP构建只能用热更模式
+                    CompressOption = packageSetting.CompressOption,                    
+                };
+                pipeline = new ScriptableBuildPipeline();
+                break;
+            case EBuildPipeline.RawFileBuildPipeline:
+                buildParameters = new RawFileBuildParameters()
+                {
+                    BuildMode = EBuildMode.ForceRebuild,//RawFile构建只能用强更模式                    
+                };
+                pipeline = new RawFileBuildPipeline();
+                break;
+            default:
+                Log.Error("未知的构建模式");
+                return false;                
+        }
+
         buildParameters.BuildOutputRoot = buildOutputRoot;
+        buildParameters.BuildinFileRoot = StreamingAssetsRoot;
+        buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
         buildParameters.BuildTarget = buildTarget;
-        buildParameters.BuildPipeline = (EBuildPipeline)_pipelineType.value;
-        if (buildParameters.BuildPipeline == EBuildPipeline.ScriptableBuildPipeline)
-        {
-            buildParameters.SBPParameters = new BuildParameters.SBPBuildParameters();
-            buildParameters.SBPParameters.WriteLinkXML = false;
-            buildParameters.BuildMode = EBuildMode.IncrementalBuild;//SBP构建只能用热更模式
-        }
-        else
-        {
-            buildParameters.BuildMode = IsForceRebuild ? EBuildMode.ForceRebuild : EBuildMode.IncrementalBuild;
-        }
         buildParameters.PackageName = packageName;
         buildParameters.PackageVersion = _txtVersion.value;
         buildParameters.VerifyBuildingResult = true;
-        buildParameters.SharedPackRule = CreateSharedPackRuleInstance();
-        buildParameters.EncryptionServices = CreateEncryptionServicesInstance();
-        buildParameters.OutputNameStyle = (EOutputNameStyle)_nameStyleType.value;
-        buildParameters.CompressOption = (ECompressOption)_compressionType.value;
-        buildParameters.CopyBuildinFileOption = IsForceRebuild
-            ? ECopyBuildinFileOption.OnlyCopyByTags : ECopyBuildinFileOption.None;
-        buildParameters.CopyBuildinFileTags = _inputBuiltinTags.value;
+        //buildParameters.SharedPackRule = CreateSharedPackRuleInstance();        
+        buildParameters.FileNameStyle = packageSetting.NameStyleOption;
+        buildParameters.BuildinFileCopyOption = IsForceRebuild
+            ? EBuildinFileCopyOption.OnlyCopyByTags : EBuildinFileCopyOption.None;
+        buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
+        buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
 
         var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
         var outputDir = "Output";
@@ -837,9 +806,7 @@ public class VersionWindow : EditorWindow
             lastVersion = FileUtility.ReadAllText(versionFile);
         }
 
-        AssetBundleBuilder builder = new AssetBundleBuilder();
-
-        var result = builder.Run(buildParameters);
+        var result = pipeline.Run(buildParameters, true);
         if (!result.Success)
         {
             Log.Error("资源打包失败");
@@ -907,9 +874,9 @@ public class VersionWindow : EditorWindow
             Directory.CreateDirectory(tPath);
         }
         desPathList.Add(tPath);
-        if (_tgCopy.value && !string.IsNullOrEmpty(SelectItem.PlatformConfig.CopyPath))
+        if (_tgCopy.value && !string.IsNullOrEmpty(SelectItem.CopyPath))
         {
-            tPath = $"{SelectItem.PlatformConfig.CopyPath}/{buildTarget}";
+            tPath = $"{SelectItem.CopyPath}/{buildTarget}";
             if (!Directory.Exists(tPath))
             {
                 Directory.CreateDirectory(tPath);
@@ -935,7 +902,7 @@ public class VersionWindow : EditorWindow
         return true;
     }
 
-   
+
     private bool BuildExe(BuildTarget buildTarget)
     {
         if (IsExportExecutable)
@@ -951,7 +918,7 @@ public class VersionWindow : EditorWindow
                     buildOptions = BuildOptions.None;
                     break;
             }
-            var path = Path.Combine(SelectItem.PlatformConfig.ExePath, buildTarget.ToString());
+            var path = Path.Combine(SelectItem.ExePath, buildTarget.ToString());
             BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, buildOptions, path, "Game");
             Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
             var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
@@ -976,7 +943,7 @@ public class VersionWindow : EditorWindow
         var item = SelectItem;
         if (item != null)
         {
-            item.PlatformConfig.ResVersion = _txtVersion.value;
+            item.ResVersion = _txtVersion.value;
         }
         Setting?.SaveFile();
         EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);
@@ -984,7 +951,7 @@ public class VersionWindow : EditorWindow
 
     #endregion
 
-    #region 构建包裹相关
+    //#region 构建包裹相关
     // 构建包裹相关
     private List<string> GetBuildPackageNames()
     {
@@ -996,29 +963,31 @@ public class VersionWindow : EditorWindow
         return result;
     }
 
-    private IEncryptionServices CreateEncryptionServicesInstance()
+    private IEncryptionServices CreateEncryptionServicesInstance(string encyptionClassName)
     {
-        if (_encryption.index < 0)
+        var encryptionClassTypes = EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
+        var classType = encryptionClassTypes.Find(x => x.FullName.Equals(encyptionClassName));
+        if (classType != null)
+            return (IEncryptionServices)Activator.CreateInstance(classType);
+        else
             return null;
-        var classType = _encryptionServicesClassTypes[_encryption.index];
-        return (IEncryptionServices)Activator.CreateInstance(classType);
     }
-    private ISharedPackRule CreateSharedPackRuleInstance()
-    {
-        if (_sharedPackRule.index < 0)
-            return null;
-        var classType = _sharedPackRuleClassTypes[_sharedPackRule.index];
-        return (ISharedPackRule)Activator.CreateInstance(classType);
-    }
+    ////private ISharedPackRule CreateSharedPackRuleInstance()
+    ////{
+    ////    if (_sharedPackRule.index < 0)
+    ////        return null;
+    ////    var classType = _sharedPackRuleClassTypes[_sharedPackRule.index];
+    ////    return (ISharedPackRule)Activator.CreateInstance(classType);
+    ////}
 
-    private static List<Type> GetEncryptionServicesClassTypes()
-    {
-        return EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
-    }
-    private static List<Type> GetSharedPackRuleClassTypes()
-    {
-        return EditorTools.GetAssignableTypes(typeof(ISharedPackRule));
-    }
-    #endregion
+    //private static List<Type> GetEncryptionServicesClassTypes()
+    //{
+    //    return EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
+    //}
+    ////private static List<Type> GetSharedPackRuleClassTypes()
+    ////{
+    ////    return EditorTools.GetAssignableTypes(typeof(ISharedPackRule));
+    ////}
+    //#endregion
 
 }

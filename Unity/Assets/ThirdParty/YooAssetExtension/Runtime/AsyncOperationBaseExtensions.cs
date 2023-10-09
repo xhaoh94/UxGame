@@ -12,12 +12,12 @@ namespace Cysharp.Threading.Tasks
         }
 
         public static UniTask ToUniTask(this AsyncOperationBase handle,
-                                        IProgress<float>        progress = null,
-                                        PlayerLoopTiming        timing   = PlayerLoopTiming.Update)
+                                        IProgress<float> progress = null,
+                                        PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
             ThrowArgumentNullException(handle, nameof(handle));
 
-            if(handle.IsDone)
+            if (handle.IsDone)
             {
                 return UniTask.CompletedTask;
             }
@@ -48,30 +48,30 @@ namespace Cysharp.Threading.Tasks
                 TaskPool.RegisterSizeGetter(typeof(AsyncOperationBaserConfiguredSource), () => pool.Size);
             }
 
-            private readonly Action<AsyncOperationBase>             continuationAction;
-            private          AsyncOperationBase                     handle;
-            private          IProgress<float>                       progress;
-            private          bool                                   completed;
-            private          UniTaskCompletionSourceCore<AsyncUnit> core;
+            private readonly Action<AsyncOperationBase> continuationAction;
+            private AsyncOperationBase handle;
+            private IProgress<float> progress;
+            private bool completed;
+            private UniTaskCompletionSourceCore<AsyncUnit> core;
 
             AsyncOperationBaserConfiguredSource() { continuationAction = Continuation; }
 
             public static IUniTaskSource Create(AsyncOperationBase handle,
-                                                PlayerLoopTiming   timing,
-                                                IProgress<float>   progress,
-                                                out short          token)
+                                                PlayerLoopTiming timing,
+                                                IProgress<float> progress,
+                                                out short token)
             {
-                if(!pool.TryPop(out var result))
+                if (!pool.TryPop(out var result))
                 {
                     result = new AsyncOperationBaserConfiguredSource();
                 }
 
-                result.handle    = handle;
-                result.progress  = progress;
+                result.handle = handle;
+                result.progress = progress;
                 result.completed = false;
                 TaskTracker.TrackActiveTask(result, 3);
 
-                if(progress != null)
+                if (progress != null)
                 {
                     PlayerLoopHelper.AddAction(timing, result);
                 }
@@ -87,14 +87,14 @@ namespace Cysharp.Threading.Tasks
             {
                 handle.Completed -= continuationAction;
 
-                if(completed)
+                if (completed)
                 {
                     TryReturn();
                 }
                 else
                 {
                     completed = true;
-                    if(handle.Status == EOperationStatus.Failed)
+                    if (handle.Status == EOperationStatus.Failed)
                     {
                         core.TrySetException(new Exception(handle.Error));
                     }
@@ -109,7 +109,7 @@ namespace Cysharp.Threading.Tasks
             {
                 TaskTracker.RemoveTracking(this);
                 core.Reset();
-                handle   = default;
+                handle = default;
                 progress = default;
                 return pool.TryPush(this);
             }
@@ -127,13 +127,13 @@ namespace Cysharp.Threading.Tasks
 
             public bool MoveNext()
             {
-                if(completed)
+                if (completed)
                 {
                     TryReturn();
                     return false;
                 }
 
-                if(!handle.IsDone)
+                if (!handle.IsDone)
                 {
                     progress?.Report(handle.Progress);
                 }

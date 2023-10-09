@@ -12,23 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c6807e422c8ac64fa5a63a608199663, type: 3}
   m_Name: VersionSettingData
   m_EditorClassIdentifier: 
-  ExportSettings:
-  - Name: "\u6D4B\u8BD5\u6784\u5EFA"
-    CurPlatform: 1
-    PlatformMap:
-    - CompileType: 0
-      PlatformType: 1
-      IsCompileDLL: 1
-      EncyptionClassName: YooAsset.Editor.EncryptionNone
-      SharedPackRule: YooAsset.Editor.FullRedundancySharedPackRule
-      CompressOption: 2
-      PiplineOption: 1
-      NameStyleOption: 1
-      IsExportExecutable: 1
-      ResVersion: 23072155272x1
-      BuildTags: builtin
-      IsCopyTo: 1
-      BundlePath: ./Bundles
-      ExePath: ./Release
-      CopyPath: ./CDN
-      IsClearSandBox: 1
+  ExportSettings: []

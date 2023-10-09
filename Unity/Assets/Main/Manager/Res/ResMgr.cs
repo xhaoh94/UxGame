@@ -23,8 +23,7 @@ namespace Ux
             // 创建资源包            
             ForEachPackage(x => x.CreatePackage());
             // 初始化资源包
-            yield return ForEachPackage(x => x.Initialize(playMode));
-
+            yield return ForEachPackage(x => x.Initialize(playMode));            
         }
         public void ForEachPackage(Action<ResPackage> fn)
         {
@@ -74,7 +73,7 @@ namespace Ux
         /// 同步加载原生文件
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public RawFileOperationHandle LoadRawFileSync(AssetInfo assetInfo)
+        public RawFileHandle LoadRawFileSync(AssetInfo assetInfo)
         {
             var package = GetPackageByLocation(assetInfo.Address);
             return package.Package.LoadRawFileSync(assetInfo);
@@ -84,7 +83,7 @@ namespace Ux
         /// 同步加载原生文件
         /// </summary>
         /// <param name="location">资源的定位地址</param>
-        public RawFileOperationHandle LoadRawFileSync(string location)
+        public RawFileHandle LoadRawFileSync(string location)
         {
             var package = GetPackageByLocation(location);
             return package.Package.LoadRawFileSync(location);
@@ -94,7 +93,7 @@ namespace Ux
         /// 异步加载原生文件
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public RawFileOperationHandle LoadRawFileAsync(AssetInfo assetInfo)
+        public RawFileHandle LoadRawFileAsync(AssetInfo assetInfo)
         {
             var package = GetPackageByLocation(assetInfo.Address);
             return package.Package.LoadRawFileAsync(assetInfo);
@@ -104,7 +103,7 @@ namespace Ux
         /// 异步加载原生文件
         /// </summary>
         /// <param name="location">资源的定位地址</param>
-        public RawFileOperationHandle LoadRawFileAsync(string location)
+        public RawFileHandle LoadRawFileAsync(string location)
         {
             var package = GetPackageByLocation(location);
             return package.Package.LoadRawFileAsync(location);
@@ -122,7 +121,7 @@ namespace Ux
         /// <param name="sceneMode">场景加载模式</param>
         /// <param name="activateOnLoad">加载完毕时是否主动激活</param>
         /// <param name="priority">优先级</param>
-        public SceneOperationHandle LoadSceneAsync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single, bool suspendLoad = false, int priority = 100)
+        public SceneHandle LoadSceneAsync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single, bool suspendLoad = false, int priority = 100)
         {
             var package = GetPackageByLocation(location);
             return package.Package.LoadSceneAsync(location, sceneMode, suspendLoad, priority);
@@ -132,7 +131,7 @@ namespace Ux
         /// </summary>
         /// <typeparam name="TObject">资源类型</typeparam>
         /// <param name="location">资源的定位地址</param>
-        public AssetOperationHandle LoadAssetSync<TObject>(string location) where TObject : UnityEngine.Object
+        public AssetHandle LoadAssetSync<TObject>(string location) where TObject : UnityEngine.Object
         {
             return LoadAssetSync(location, typeof(TObject));
         }
@@ -142,7 +141,7 @@ namespace Ux
         /// </summary>
         /// <param name="location">资源的定位地址</param>
         /// <param name="type">资源类型</param>
-        public AssetOperationHandle LoadAssetSync(string location, Type type)
+        public AssetHandle LoadAssetSync(string location, Type type)
         {
             var package = GetPackageByLocation(location);
             return package.Package.LoadAssetSync(location, type);
@@ -153,7 +152,7 @@ namespace Ux
 		/// </summary>
 		/// <typeparam name="TObject">资源类型</typeparam>
 		/// <param name="location">资源的定位地址</param>
-		public AssetOperationHandle LoadAssetAsync<TObject>(string location) where TObject : UnityEngine.Object
+		public AssetHandle LoadAssetAsync<TObject>(string location) where TObject : UnityEngine.Object
         {
             return LoadAssetAsync(location, typeof(TObject));
         }
@@ -163,7 +162,7 @@ namespace Ux
         /// </summary>
         /// <param name="location">资源的定位地址</param>
         /// <param name="type">资源类型</param>
-        public AssetOperationHandle LoadAssetAsync(string location, Type type)
+        public AssetHandle LoadAssetAsync(string location, Type type)
         {
             var package = GetPackageByLocation(location);
             return package.Package.LoadAssetAsync(location, type);

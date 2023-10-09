@@ -5,7 +5,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "b024a18ba16cccb7ac3c72cf3ce272ef025eb5e4"
+      "hash": "5c750e9c0280530ca8a3d7be01e229029a1df569"
     },
     "com.greenbamboogames.playablegraphmonitor": {
       "version": "2.5.4",
@@ -15,7 +15,7 @@
       "url": "https://package.openupm.cn"
     },
     "com.tuyoogame.yooasset": {
-      "version": "1.5.6-preview",
+      "version": "2.0.0-preview",
       "depth": 0,
       "source": "registry",
       "dependencies": {

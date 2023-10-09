@@ -12,18 +12,18 @@ namespace Cysharp.Threading.Tasks
 {
     public static class OperationHandleBaseExtensions
     {
-        public static UniTask.Awaiter GetAwaiter(this OperationHandleBase handle)
+        public static UniTask.Awaiter GetAwaiter(this HandleBase handle)
         {
             return ToUniTask(handle).GetAwaiter();
         }
 
-        public static UniTask ToUniTask(this OperationHandleBase handle,
-                                        IProgress<float>         progress = null,
-                                        PlayerLoopTiming         timing   = PlayerLoopTiming.Update)
+        public static UniTask ToUniTask(this HandleBase handle,
+                                        IProgress<float> progress = null,
+                                        PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
             ThrowArgumentNullException(handle, nameof(handle));
 
-            if(!handle.IsValid)
+            if (!handle.IsValid)
             {
                 return UniTask.CompletedTask;
             }
@@ -54,62 +54,74 @@ namespace Cysharp.Threading.Tasks
                 TaskPool.RegisterSizeGetter(typeof(OperationHandleBaserConfiguredSource), () => pool.Size);
             }
 
-            private readonly Action<OperationHandleBase>            continuationAction;
-            private          OperationHandleBase                    handle;
-            private          IProgress<float>                       progress;
-            private          bool                                   completed;
-            private          UniTaskCompletionSourceCore<AsyncUnit> core;
+            private readonly Action<HandleBase> continuationAction;
+            private HandleBase handle;
+            private IProgress<float> progress;
+            private bool completed;
+            private UniTaskCompletionSourceCore<AsyncUnit> core;
 
             OperationHandleBaserConfiguredSource() { continuationAction = Continuation; }
 
-            public static IUniTaskSource Create(OperationHandleBase handle,
-                                                PlayerLoopTiming    timing,
-                                                IProgress<float>    progress,
-                                                out short           token)
+            public static IUniTaskSource Create(HandleBase handle,
+                                                PlayerLoopTiming timing,
+                                                IProgress<float> progress,
+                                                out short token)
             {
-                if(!pool.TryPop(out var result))
+                if (!pool.TryPop(out var result))
                 {
                     result = new OperationHandleBaserConfiguredSource();
                 }
 
-                result.handle    = handle;
-                result.progress  = progress;
+                result.handle = handle;
+                result.progress = progress;
                 result.completed = false;
                 TaskTracker.TrackActiveTask(result, 3);
 
-                if(progress != null)
+                if (progress != null)
                 {
                     PlayerLoopHelper.AddAction(timing, result);
                 }
 
                 // BUG 在 Unity 2020.3.36 版本测试中, IL2Cpp 会报 如下错误
-                // BUG ArgumentException: Incompatible Delegate Types. First is System.Action`1[[YooAsset.AssetOperationHandle, YooAsset, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]] second is System.Action`1[[YooAsset.OperationHandleBase, YooAsset, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
+                // BUG ArgumentException: Incompatible Delegate Types. First is System.Action`1[[YooAsset.AssetHandle, YooAsset, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]] second is System.Action`1[[YooAsset.OperationHandleBase, YooAsset, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]
                 // BUG 也可能报的是 Action '1' Action '1' 的 InvalidCastException
                 // BUG 此处不得不这么修改, 如果后续 Unity 修复了这个问题, 可以恢复之前的写法 
 #if UNITY_2020_BUG
-                switch(handle)
+                switch (handle)
                 {
-                    case AssetOperationHandle asset_handle:
+                    case AssetHandle asset_handle:
                         asset_handle.Completed += result.AssetContinuation;
                         break;
-                    case SceneOperationHandle scene_handle:
+                    case SceneHandle scene_handle:
                         scene_handle.Completed += result.SceneContinuation;
                         break;
-                    case SubAssetsOperationHandle sub_asset_handle:
+                    case SubAssetsHandle sub_asset_handle:
                         sub_asset_handle.Completed += result.SubContinuation;
+                        break;
+                    case RawFileHandle raw_file_handle:
+                        raw_file_handle.Completed += result.RawFileContinuation;
+                        break;
+                    case AllAssetsHandle all_assets_handle:
+                        all_assets_handle.Completed += result.AllAssetsContinuation;
                         break;
                 }
 #else
-                switch(handle)
+                switch (handle)
                 {
-                    case AssetOperationHandle asset_handle:
+                    case AssetHandle asset_handle:
                         asset_handle.Completed += result.continuationAction;
                         break;
-                    case SceneOperationHandle scene_handle:
+                    case SceneHandle scene_handle:
                         scene_handle.Completed += result.continuationAction;
                         break;
-                    case SubAssetsOperationHandle sub_asset_handle:
+                    case SubAssetsHandle sub_asset_handle:
                         sub_asset_handle.Completed += result.continuationAction;
+                        break;
+                    case RawFileHandle raw_file_handle:
+                        raw_file_handle.Completed += result.continuationAction;
+                        break;
+                    case AllAssetsHandle all_assets_handle:
+                        all_assets_handle.Completed += result.continuationAction;
                         break;
                 }
 #endif
@@ -118,35 +130,47 @@ namespace Cysharp.Threading.Tasks
                 return result;
             }
 #if UNITY_2020_BUG
-            private void AssetContinuation(AssetOperationHandle handle)
+            private void AssetContinuation(AssetHandle handle)
             {
                 handle.Completed -= AssetContinuation;
                 BaseContinuation();
             }
 
-            private void SceneContinuation(SceneOperationHandle handle)
+            private void SceneContinuation(SceneHandle handle)
             {
                 handle.Completed -= SceneContinuation;
                 BaseContinuation();
             }
 
-            private void SubContinuation(SubAssetsOperationHandle handle)
+            private void SubContinuation(SubAssetsHandle handle)
             {
                 handle.Completed -= SubContinuation;
+                BaseContinuation();
+            }
+
+            private void RawFileContinuation(RawFileHandle handle)
+            {
+                handle.Completed -= RawFileContinuation;
+                BaseContinuation();
+            }
+
+            private void AllAssetsContinuation(AllAssetsHandle handle)
+            {
+                handle.Completed -= AllAssetsContinuation;
                 BaseContinuation();
             }
 #endif
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void BaseContinuation()
             {
-                if(completed)
+                if (completed)
                 {
                     TryReturn();
                 }
                 else
                 {
                     completed = true;
-                    if(handle.Status == EOperationStatus.Failed)
+                    if (handle.Status == EOperationStatus.Failed)
                     {
                         core.TrySetException(new Exception(handle.LastError));
                     }
@@ -157,18 +181,24 @@ namespace Cysharp.Threading.Tasks
                 }
             }
 
-            private void Continuation(OperationHandleBase _)
+            private void Continuation(HandleBase _)
             {
-                switch(handle)
+                switch (handle)
                 {
-                    case AssetOperationHandle asset_handle:
+                    case AssetHandle asset_handle:
                         asset_handle.Completed -= continuationAction;
                         break;
-                    case SceneOperationHandle scene_handle:
+                    case SceneHandle scene_handle:
                         scene_handle.Completed -= continuationAction;
                         break;
-                    case SubAssetsOperationHandle sub_asset_handle:
+                    case SubAssetsHandle sub_asset_handle:
                         sub_asset_handle.Completed -= continuationAction;
+                        break;
+                    case RawFileHandle raw_file_handle:
+                        raw_file_handle.Completed -= continuationAction;
+                        break;
+                    case AllAssetsHandle all_assets_handle:
+                        all_assets_handle.Completed -= continuationAction;
                         break;
                 }
 
@@ -179,7 +209,7 @@ namespace Cysharp.Threading.Tasks
             {
                 TaskTracker.RemoveTracking(this);
                 core.Reset();
-                handle   = default;
+                handle = default;
                 progress = default;
                 return pool.TryPush(this);
             }
@@ -197,13 +227,13 @@ namespace Cysharp.Threading.Tasks
 
             public bool MoveNext()
             {
-                if(completed)
+                if (completed)
                 {
                     TryReturn();
                     return false;
                 }
 
-                if(handle.IsValid)
+                if (handle.IsValid)
                 {
                     progress?.Report(handle.Progress);
                 }

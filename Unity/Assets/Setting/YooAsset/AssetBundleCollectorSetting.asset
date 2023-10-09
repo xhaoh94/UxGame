@@ -13,14 +13,16 @@ MonoBehaviour:
   m_Name: AssetBundleCollectorSetting
   m_EditorClassIdentifier: 
   ShowPackageView: 1
-  EnableAddressable: 1
-  LocationToLower: 0
-  IncludeAssetGUID: 0
-  UniqueBundleName: 1
   ShowEditorAlias: 0
+  UniqueBundleName: 1
   Packages:
   - PackageName: MainPackage
     PackageDesc: "\u4E3B\u5305"
+    EnableAddressable: 1
+    LocationToLower: 0
+    IncludeAssetGUID: 0
+    IgnoreDefaultType: 1
+    AutoCollectShaders: 1
     Groups:
     - GroupName: Builtin
       GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
@@ -95,6 +97,11 @@ MonoBehaviour:
       Collectors: []
   - PackageName: UIPackage
     PackageDesc: "UI\u5305"
+    EnableAddressable: 0
+    LocationToLower: 0
+    IncludeAssetGUID: 0
+    IgnoreDefaultType: 1
+    AutoCollectShaders: 1
     Groups:
     - GroupName: Builtin
       GroupDesc: "\u5185\u7F6E\u8D44\u6E90"

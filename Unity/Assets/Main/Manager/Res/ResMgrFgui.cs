@@ -44,8 +44,8 @@ namespace Ux
 
         private readonly Dictionary<string, UIPkgRef> _pkgToRef = new Dictionary<string, UIPkgRef>();
 
-        private readonly Dictionary<string, List<AssetOperationHandle>> _pkgToHandles =
-            new Dictionary<string, List<AssetOperationHandle>>();
+        private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles =
+            new Dictionary<string, List<AssetHandle>>();
 
         private readonly Dictionary<string, bool> _pkgToLoading = new Dictionary<string, bool>();
 
@@ -200,7 +200,7 @@ namespace Ux
 
             if (!_pkgToHandles.TryGetValue(pkg, out var handles))
             {
-                handles = new List<AssetOperationHandle>();
+                handles = new List<AssetHandle>();
                 _pkgToHandles.Add(pkg, handles);
             }
 
@@ -254,7 +254,7 @@ namespace Ux
 
             if (!_pkgToHandles.TryGetValue(item.owner.name, out var handles))
             {
-                handles = new List<AssetOperationHandle>();
+                handles = new List<AssetHandle>();
                 _pkgToHandles.Add(item.owner.name, handles);
             }
 

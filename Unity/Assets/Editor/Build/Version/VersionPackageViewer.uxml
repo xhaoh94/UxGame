@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement name="exportElement" style="flex-grow: 1;">
+        <uie:EnumField label="构建管线" name="pipelineType" />
+        <uie:EnumField label="资源命名格式" name="nameStyleType" style="height: 20px;" />
+        <uie:EnumField label="压缩方式" value="Center" name="compressionType" />
+        <ui:TextField picking-mode="Ignore" label="首包资源标签" name="inputBuiltinTags" />
+        <ui:VisualElement label="加密方式" name="encryptionContainer" style="height: auto;" />
+    </ui:VisualElement>
+</ui:UXML>
