@@ -53,20 +53,20 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Art/ShaderVariants
-        CollectorGUID: ff5e5c9d0449dbd4f8cef29e9e28fe2d
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackShaderVariants
-        FilterRuleName: CollectShaderVariants
-        AssetTags: 
-        UserData: 
       - CollectPath: Assets/Data/Res/Config
         CollectorGUID: 8f52838e936dc4e42976f151a4bf6d17
         CollectorType: 0
         AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Data/Art/ShaderVariants
+        CollectorGUID: d24010013d5689846810ce948ba50727
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackShaderVariants
+        FilterRuleName: CollectShaderVariants
         AssetTags: 
         UserData: 
     - GroupName: Preload
@@ -97,9 +97,9 @@ MonoBehaviour:
       Collectors: []
   - PackageName: UIPackage
     PackageDesc: "UI\u5305"
-    EnableAddressable: 0
+    EnableAddressable: 1
     LocationToLower: 0
-    IncludeAssetGUID: 0
+    IncludeAssetGUID: 1
     IgnoreDefaultType: 1
     AutoCollectShaders: 1
     Groups:
@@ -132,8 +132,21 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+    - GroupName: Preload
+      GroupDesc: "\u9884\u52A0\u8F7D"
+      AssetTags: preload
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/Data/Res/UI
+        CollectorGUID: 
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackTopDirectory
+        FilterRuleName: CollectPreloadUI
+        AssetTags: 
+        UserData: 
     - GroupName: Lazyload
-      GroupDesc: "\u61D2\u52A0\u8F7D\u8D44\u6E90"
+      GroupDesc: "\u61D2\u52A0\u8F7D"
       AssetTags: lazyload
       ActiveRuleName: EnableGroup
       Collectors:
@@ -152,17 +165,4 @@ MonoBehaviour:
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: lazyload_multiple
-        UserData: 
-    - GroupName: Preload
-      GroupDesc: "\u9884\u52A0\u8F7D\u8D44\u6E90"
-      AssetTags: preload
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/Data/Res/UI
-        CollectorGUID: 
-        CollectorType: 0
-        AddressRuleName: AddressByFolderAndFileName
-        PackRuleName: PackTopDirectory
-        FilterRuleName: CollectPreloadUI
-        AssetTags: 
         UserData: 

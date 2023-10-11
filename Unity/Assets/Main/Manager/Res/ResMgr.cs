@@ -10,9 +10,10 @@ namespace Ux
     {
         public static readonly ResLazyload Lazyload = new ResLazyload();
 
-        static readonly Dictionary<ResType, ResPackage> _Packages = new Dictionary<ResType, ResPackage>() {
-            { ResType.Main,new ResPackage(ResType.Main,"MainPackage") },
-            { ResType.UI,new ResPackage(ResType.UI,"UIPackage") }
+        static readonly Dictionary<ResType, ResPackage> _Packages = new Dictionary<ResType, ResPackage>()
+        {
+            { ResType.Main,new ResMainPackage() },
+            { ResType.UI,new ResUIPackage() }
         };
 
         readonly Dictionary<string, ResPackage> _locationToPackage = new Dictionary<string, ResPackage>();
@@ -23,7 +24,7 @@ namespace Ux
             // 创建资源包            
             ForEachPackage(x => x.CreatePackage());
             // 初始化资源包
-            yield return ForEachPackage(x => x.Initialize(playMode));            
+            yield return ForEachPackage(x => x.Initialize(playMode));
         }
         public void ForEachPackage(Action<ResPackage> fn)
         {

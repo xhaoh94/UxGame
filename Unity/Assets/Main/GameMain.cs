@@ -47,8 +47,7 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize(PlayMode);
-
+            yield return ResMgr.Ins.Initialize(PlayMode);            
             typeof(GameMain).Assembly.Initialize();
             // 运行补丁流程
             PatchMgr.Ins.Run(PlayMode);

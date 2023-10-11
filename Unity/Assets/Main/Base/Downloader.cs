@@ -14,9 +14,9 @@ namespace Ux
 
         public Downloader(string[] tags)
         {
-            ResMgr.Ins.ForEachPackage(package =>
+            ResMgr.Ins.ForEachPackage(x =>
             {
-                _handles.Add(package.Package.CreateResourceDownloader(tags, Global.DownloadingMaxNum, Global.FailedTryAgain));
+                _handles.Add(x.Package.CreateResourceDownloader(tags, Global.DownloadingMaxNum, Global.FailedTryAgain));
             });
         }
 

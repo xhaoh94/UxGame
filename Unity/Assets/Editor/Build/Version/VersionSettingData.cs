@@ -33,8 +33,8 @@ public class BuildExportSetting
     public string CopyPath = "./CDN";
     public bool IsClearSandBox = true;
     public bool IsExportExecutable = true;
-    public List<BuildPackageSetting> PackageBuilds = new List<BuildPackageSetting>();
     public string ResVersion = string.Empty;
+    public List<BuildPackageSetting> PackageBuilds = new List<BuildPackageSetting>();    
 
     public BuildPackageSetting GetPackageSetting(string pkgName)
     {
@@ -56,9 +56,9 @@ public class BuildExportSetting
 [Serializable]
 public class BuildPackageSetting
 {
+    public bool IsCollectShaderVariant = true;
     public string PackageName = string.Empty;
-    public string EncyptionClassName = string.Empty;
-    //public string SharedPackRule = string.Empty;
+    public string EncyptionClassName = string.Empty;    
     public ECompressOption CompressOption = ECompressOption.LZ4;
     public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
     public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;

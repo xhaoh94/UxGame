@@ -16,6 +16,7 @@ internal class VersionPackageViewer
 
     protected TemplateContainer Root;
     BuildPackageSetting PackageSetting;
+    Toggle _tgCollectSV;
     EnumField _pipelineType;
     EnumField _nameStyleType;
     EnumField _compressionType;
@@ -43,6 +44,11 @@ internal class VersionPackageViewer
         //_sharedPackRuleClassTypes = GetSharedPackRuleClassTypes();
         //_sharedPackRuleClassNames = _sharedPackRuleClassTypes.Select(t => t.FullName).ToList();
 
+        _tgCollectSV = Root.Q<Toggle>("tgCollectSV");
+        _tgCollectSV.RegisterValueChangedCallback(evt =>
+        {
+            PackageSetting.IsCollectShaderVariant = evt.newValue;
+        });
         // 构建管线
         _pipelineType = Root.Q<EnumField>("pipelineType");
         _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
@@ -103,6 +109,7 @@ internal class VersionPackageViewer
     public void RefreshView(BuildPackageSetting packageSetting)
     {
         PackageSetting = packageSetting;
+        _tgCollectSV.SetValueWithoutNotify(packageSetting.IsCollectShaderVariant);
         _pipelineType.SetValueWithoutNotify(PackageSetting.PiplineOption);
         _nameStyleType.SetValueWithoutNotify(PackageSetting.NameStyleOption);
         _compressionType.SetValueWithoutNotify(PackageSetting.CompressOption);

@@ -379,7 +379,7 @@ public class VersionWindow : EditorWindow
             _exportElement.style.display = DisplayStyle.None;
             return;
         }
-        _exportElement.style.display = DisplayStyle.Flex;        
+        _exportElement.style.display = DisplayStyle.Flex;
         _txtName.SetValueWithoutNotify(SelectItem.Name);
         _platformType.SetValueWithoutNotify(SelectItem.PlatformType);
         _inputExePath.SetValueWithoutNotify(SelectItem.ExePath);
@@ -564,7 +564,7 @@ public class VersionWindow : EditorWindow
         {
             return false;
         }
-        if (!BuildRes(buildTarget))
+        if (!await BuildRes(buildTarget))
         {
             return false;
         }
@@ -622,7 +622,7 @@ public class VersionWindow : EditorWindow
         }
         return true;
     }
-    private bool BuildRes(BuildTarget buildTarget)
+    private async UniTask<bool> BuildRes(BuildTarget buildTarget)
     {
         var packageValue = _buildPackage.value;
         if (packageValue == 0)
@@ -668,30 +668,38 @@ public class VersionWindow : EditorWindow
 
         if (packages.Count > 0)
         {
-            //Log.Debug("---------------------------------------->收集着色器变种<---------------------------------------");
+            Log.Debug("---------------------------------------->收集着色器变种<---------------------------------------");
 
-            //UniTask CollectSVC(string path, string package, int processCapacity)
-            //{
-            //    var index1 = path.LastIndexOf('/');
-            //    var index2 = path.LastIndexOf('.');
+            UniTask CollectSVC(string package)
+            {
+                string savePath = ShaderVariantCollectorSetting.GeFileSavePath(package);
+                if (string.IsNullOrEmpty(savePath))
+                {
+                    var index = package.IndexOf("Package");
+                    savePath = $"Assets/Data/Art/ShaderVariants/{package.Substring(0, index)}SV.shadervariants";
+                    ShaderVariantCollectorSetting.SetFileSavePath(package, savePath);
+                }
+                int processCapacity = ShaderVariantCollectorSetting.GeProcessCapacity(package);
+                if (processCapacity <= 0)
+                {
+                    processCapacity = 1000;
+                    ShaderVariantCollectorSetting.SetProcessCapacity(package, processCapacity);
+                }
+                var task = AutoResetUniTaskCompletionSource.Create();
+                Action callback = () =>
+                {
+                    task.TrySetResult();
+                };
+                ShaderVariantCollector.Run(savePath, package, processCapacity, callback);
+                return task.Task;
+            }
 
-            //    var name = path.Substring(index1 + 1, index2 - index1 - 1);
-            //    path = path.Replace(name, $"{package}SVC");
-            //    var task = AutoResetUniTaskCompletionSource.Create();
-            //    Action callback = () =>
-            //    {
-            //        task.TrySetResult();
-            //    };
-            //    //ShaderVariantCollector.Run(path, package, processCapacity, callback);
-            //    return task.Task;
-            //}
-
-            //string savePath = ShaderVariantCollectorSettingData.Setting.SavePath;
-            //int processCapacity = ShaderVariantCollectorSettingData.Setting.ProcessCapacity;
-            //foreach (var package in packages)
-            //{
-            //    await CollectSVC(savePath, package, processCapacity);
-            //}
+            foreach (var package in packages)
+            {
+                var packageSetting = SelectItem.GetPackageSetting(package);
+                if (packageSetting.IsCollectShaderVariant)
+                    await CollectSVC(package);
+            }
 
             Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
             foreach (var package in packages)
@@ -757,7 +765,7 @@ public class VersionWindow : EditorWindow
                 {
                     BuildMode = IsForceRebuild ? EBuildMode.ForceRebuild : EBuildMode.IncrementalBuild,
                     CompressOption = packageSetting.CompressOption,
-                    
+
                 };
                 pipeline = new BuiltinBuildPipeline();
                 break;
@@ -765,7 +773,7 @@ public class VersionWindow : EditorWindow
                 buildParameters = new ScriptableBuildParameters()
                 {
                     BuildMode = EBuildMode.IncrementalBuild,//SBP构建只能用热更模式
-                    CompressOption = packageSetting.CompressOption,                    
+                    CompressOption = packageSetting.CompressOption,
                 };
                 pipeline = new ScriptableBuildPipeline();
                 break;
@@ -778,7 +786,7 @@ public class VersionWindow : EditorWindow
                 break;
             default:
                 Log.Error("未知的构建模式");
-                return false;                
+                return false;
         }
 
         buildParameters.BuildOutputRoot = buildOutputRoot;
@@ -980,14 +988,6 @@ public class VersionWindow : EditorWindow
     ////    return (ISharedPackRule)Activator.CreateInstance(classType);
     ////}
 
-    //private static List<Type> GetEncryptionServicesClassTypes()
-    //{
-    //    return EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
-    //}
-    ////private static List<Type> GetSharedPackRuleClassTypes()
-    ////{
-    ////    return EditorTools.GetAssignableTypes(typeof(ISharedPackRule));
-    ////}
     //#endregion
 
 }
