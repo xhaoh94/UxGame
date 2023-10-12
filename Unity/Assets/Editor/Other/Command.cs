@@ -59,14 +59,14 @@ public class Command
         _callback = callback;
         _process = new Process();
         _process.StartInfo.FileName = fileName;
-        _process.StartInfo.Arguments = argument;
+        _process.StartInfo.Arguments = argument;        
         if (isNoWindow)
         {
             _process.StartInfo.UseShellExecute = false;//是否使用操作系统shell启动
             _process.StartInfo.RedirectStandardInput = true;//接受来自调用程序的输入信息        
             _process.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
             _process.StartInfo.RedirectStandardError = true;//重定向标准错误输出
-            _process.StartInfo.CreateNoWindow = true;//不显示程序窗口        
+            _process.StartInfo.CreateNoWindow = true;//不显示程序窗口            
         }
 
         ReStart();
@@ -95,7 +95,8 @@ public class Command
             _process.StandardInput.AutoFlush = true;
             ReadResult();
             ErrorResult();
-        }
+            Wait();
+        }        
     }
 
     public void Wait()

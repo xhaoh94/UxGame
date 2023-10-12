@@ -27,7 +27,7 @@ namespace Ux
             Entity.Create<World>();                        
         }
 
-        public async void EnterMap(string mapName)
+        public async UniTask EnterMap(string mapName)
         {
             var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
             await handle.ToUniTask();

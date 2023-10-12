@@ -49,6 +49,7 @@
   </assembly>
   <assembly fullname="UniTask">
     <type fullname="Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder" preserve="all" />
+    <type fullname="Cysharp.Threading.Tasks.OperationHandleBaseExtensions" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.PlayerLoopTiming" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTask" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTask/Awaiter" preserve="all" />
@@ -75,21 +76,22 @@
   <assembly fullname="Unity.Main">
     <type fullname="Log" preserve="all" />
     <type fullname="Singleton`1" preserve="all" />
-    <type fullname="Ux.AnimComponent" preserve="all" />
+    <type fullname="Ux.AnimClip" preserve="all" />
+    <type fullname="Ux.AnimMixer" preserve="all" />
+    <type fullname="Ux.AnimNode" preserve="all" />
     <type fullname="Ux.AssemblyEx" preserve="all" />
-    <type fullname="Ux.ClientSocket" preserve="all" />
     <type fullname="Ux.Entity" preserve="all" />
     <type fullname="Ux.EventMgr" preserve="all" />
     <type fullname="Ux.GameMain" preserve="all" />
     <type fullname="Ux.GameObjectEx" preserve="all" />
     <type fullname="Ux.HotFixMgr" preserve="all" />
+    <type fullname="Ux.IApplicationQuitSystem" preserve="all" />
     <type fullname="Ux.IAwakeSystem" preserve="all" />
     <type fullname="Ux.IAwakeSystem`1" preserve="all" />
     <type fullname="Ux.IEvtAttribute" preserve="all" />
     <type fullname="Ux.IFixedUpdateSystem" preserve="all" />
     <type fullname="Ux.IListenSystem" preserve="all" />
     <type fullname="Ux.IStateNode" preserve="all" />
-    <type fullname="Ux.IUIAnim" preserve="all" />
     <type fullname="Ux.IUIData" preserve="all" />
     <type fullname="Ux.IUITabData" preserve="all" />
     <type fullname="Ux.IUpdateSystem" preserve="all" />
@@ -102,16 +104,13 @@
     <type fullname="Ux.ModuleMgr" preserve="all" />
     <type fullname="Ux.NetAttribute" preserve="all" />
     <type fullname="Ux.NetMgr" preserve="all" />
-    <type fullname="Ux.NetType" preserve="all" />
     <type fullname="Ux.PackageAttribute" preserve="all" />
     <type fullname="Ux.PatchMgr" preserve="all" />
     <type fullname="Ux.ResMgr" preserve="all" />
     <type fullname="Ux.SocketCode" preserve="all" />
     <type fullname="Ux.StateMachine" preserve="all" />
     <type fullname="Ux.StateNode" preserve="all" />
-    <type fullname="Ux.TabTitleAttribute" preserve="all" />
     <type fullname="Ux.TagMgr" preserve="all" />
-    <type fullname="Ux.TimeMgr" preserve="all" />
     <type fullname="Ux.UIAttribute" preserve="all" />
     <type fullname="Ux.UIBase" preserve="all" />
     <type fullname="Ux.UIButton" preserve="all" />
@@ -128,12 +127,13 @@
     <type fullname="Ux.UITabData" preserve="all" />
     <type fullname="Ux.UITabFrame" preserve="all" />
     <type fullname="Ux.UITabView" preserve="all" />
-    <type fullname="Ux.UITransition" preserve="all" />
     <type fullname="Ux.UIView" preserve="all" />
     <type fullname="Ux.UIWindow" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.AnimationModule">
     <type fullname="UnityEngine.AnimationClip" preserve="all" />
+    <type fullname="UnityEngine.Animations.AnimationLayerMixerPlayable" preserve="all" />
+    <type fullname="UnityEngine.Animations.AnimationPlayableOutput" preserve="all" />
     <type fullname="UnityEngine.Animator" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.CoreModule">
@@ -142,6 +142,11 @@
     <type fullname="UnityEngine.GameObject" preserve="all" />
     <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
+    <type fullname="UnityEngine.Playables.DirectorUpdateMode" preserve="all" />
+    <type fullname="UnityEngine.Playables.Playable" preserve="all" />
+    <type fullname="UnityEngine.Playables.PlayableExtensions" preserve="all" />
+    <type fullname="UnityEngine.Playables.PlayableGraph" preserve="all" />
+    <type fullname="UnityEngine.Playables.PlayableOutputExtensions" preserve="all" />
     <type fullname="UnityEngine.Quaternion" preserve="all" />
     <type fullname="UnityEngine.Random" preserve="all" />
     <type fullname="UnityEngine.Ray" preserve="all" />
@@ -156,11 +161,8 @@
     <type fullname="UnityEngine.RaycastHit" preserve="all" />
   </assembly>
   <assembly fullname="YooAsset">
-    <type fullname="YooAsset.AssetOperationHandle" preserve="all" />
-    <type fullname="YooAsset.OperationHandleBase" preserve="all" />
-  </assembly>
-  <assembly fullname="YooAssetEx">
-    <type fullname="Cysharp.Threading.Tasks.OperationHandleBaseExtensions" preserve="all" />
+    <type fullname="YooAsset.AssetHandle" preserve="all" />
+    <type fullname="YooAsset.HandleBase" preserve="all" />
   </assembly>
   <assembly fullname="ZString">
     <type fullname="Ux.zstring" preserve="all" />
@@ -170,6 +172,8 @@
     <type fullname="System.Action`1" preserve="all" />
     <type fullname="System.Action`2" preserve="all" />
     <type fullname="System.Action`3" preserve="all" />
+    <type fullname="System.ArgumentException" preserve="all" />
+    <type fullname="System.ArgumentNullException" preserve="all" />
     <type fullname="System.Array" preserve="all" />
     <type fullname="System.Attribute" preserve="all" />
     <type fullname="System.AttributeTargets" preserve="all" />

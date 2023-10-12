@@ -508,7 +508,7 @@ public class VersionWindow : EditorWindow
 
             if (EditorTools.DeleteDirectory(SandboxRoot))
             {
-                BuildLogger.Log($"删除沙盒缓存：{SandboxRoot}");
+                Log.Debug($"删除沙盒缓存：{SandboxRoot}");
             }
 
             // 删除平台总目录                        
@@ -578,6 +578,7 @@ public class VersionWindow : EditorWindow
     {
         if (_tgCompileDLL.value)
         {
+            Log.Debug("---------------------------------------->开始编译DLL<---------------------------------------");
             HybridCLRCommand.ClearHOTDll();
             await UxEditor.Export(false);
             var compileType = (CompileType)_compileType.value;
@@ -586,8 +587,8 @@ public class VersionWindow : EditorWindow
                 if (target != EditorUserBuildSettings.activeBuildTarget &&
                     !EditorUserBuildSettings.SwitchActiveBuildTarget(
                         BuildPipeline.GetBuildTargetGroup(target), target))
-                {
-                    Log.Debug("切换编译平台失败");
+                {                    
+                    Log.Debug("---------------------------------------->切换编译平台失败<---------------------------------------");
                     return false;
                 }
                 HybridCLRCommand.ClearAOTDll();
@@ -617,8 +618,9 @@ public class VersionWindow : EditorWindow
             }
 
             Log.Debug("---------------------------------------->将热更DLL拷贝到资源打包目录<---------------------------------------");
-            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);
-            Log.Debug("编译热更DLL完毕！");
+            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);  
+            
+            Log.Debug("---------------------------------------->完成编译DLL<---------------------------------------");
         }
         return true;
     }
@@ -639,7 +641,7 @@ public class VersionWindow : EditorWindow
             {
                 if (EditorTools.DeleteDirectory(SandboxRoot))
                 {
-                    BuildLogger.Log($"删除沙盒缓存");
+                    Log.Debug("---------------------------------------->删除沙盒缓存<---------------------------------------");                    
                 }
             }
         }
@@ -668,10 +670,9 @@ public class VersionWindow : EditorWindow
 
         if (packages.Count > 0)
         {
-            Log.Debug("---------------------------------------->收集着色器变种<---------------------------------------");
-
             UniTask CollectSVC(string package)
             {
+                Log.Debug($"---------------------------------------->{package}:收集着色器变种<---------------------------------------");
                 string savePath = ShaderVariantCollectorSetting.GeFileSavePath(package);
                 if (string.IsNullOrEmpty(savePath))
                 {
@@ -700,13 +701,13 @@ public class VersionWindow : EditorWindow
                 if (packageSetting.IsCollectShaderVariant)
                     await CollectSVC(package);
             }
-
             Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
             foreach (var package in packages)
             {
+                Log.Debug($"---------------------------------------->{package}:开始构建资源包<---------------------------------------");
                 if (!BuildRes(buildTarget, package)) return false;
             }
-            Log.Debug("完成资源打包");
+            Log.Debug("---------------------------------------->完成资源打包<---------------------------------------");
         }
         return true;
     }
@@ -750,7 +751,7 @@ public class VersionWindow : EditorWindow
             string platformDirectory = $"{BuildOutputRoot}/{packageName}/{buildTarget}";
             if (EditorTools.DeleteDirectory(platformDirectory))
             {
-                BuildLogger.Log($"删除平台总目录：{platformDirectory}");
+                Log.Debug($"删除平台总目录：{platformDirectory}");
             }
         }
 
@@ -817,7 +818,7 @@ public class VersionWindow : EditorWindow
         var result = pipeline.Run(buildParameters, true);
         if (!result.Success)
         {
-            Log.Error("资源打包失败");
+            Log.Error($"{packageName}:构建资源包失败");
             return false;
         }
 
@@ -931,11 +932,11 @@ public class VersionWindow : EditorWindow
             Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
             var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {
-                Log.Error("打包失败");
+            {                
+                Log.Debug("---------------------------------------->打包失败<---------------------------------------");
                 return false;
             }
-            Log.Debug("完成程序打包");
+            Log.Debug("---------------------------------------->完成程序打包<---------------------------------------");            
             EditorUtility.RevealInFinder(Path.GetFullPath(path));
         }
         return true;

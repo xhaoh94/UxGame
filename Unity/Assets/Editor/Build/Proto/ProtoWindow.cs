@@ -146,12 +146,12 @@ public class ProtoWindow : EditorWindow
         Log.Debug("---------------------------------------->生成Proto文件<---------------------------------------");
         UniTask ExportProto()
         {
-            var configTask = AutoResetUniTaskCompletionSource.Create();            
+            var task = AutoResetUniTaskCompletionSource.Create();            
             Command.Run(Command.DOTNET, Setting.GetCommand(), true, () =>
             {
-                configTask?.TrySetResult();
+                task?.TrySetResult();
             });
-            return configTask.Task;
+            return task.Task;
         }
         await ExportProto();
     }

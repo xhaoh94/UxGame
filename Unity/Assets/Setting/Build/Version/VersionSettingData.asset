@@ -13,21 +13,29 @@ MonoBehaviour:
   m_Name: VersionSettingData
   m_EditorClassIdentifier: 
   ExportSettings:
-  - Name: Build-2023-10-11-55622
+  - Name: "\u6D4B\u8BD5\u6784\u5EFA"
     CompileType: 0
     PlatformType: 1
     IsCompileDLL: 1
-    IsCopyTo: 0
+    IsCopyTo: 1
     BundlePath: ./Bundles
     ExePath: ./Release
     CopyPath: ./CDN
     IsClearSandBox: 1
     IsExportExecutable: 1
+    ResVersion: 23101262793x1
     PackageBuilds:
-    - PackageName: MainPackage
+    - IsCollectShaderVariant: 1
+      PackageName: MainPackage
       EncyptionClassName: YooAsset.Editor.EncryptionNone
       CompressOption: 2
       PiplineOption: 1
-      NameStyleOption: 0
+      NameStyleOption: 1
       BuildTags: builtin
-    ResVersion: 
+    - IsCollectShaderVariant: 1
+      PackageName: UIPackage
+      EncyptionClassName: FileStreamEncryption
+      CompressOption: 2
+      PiplineOption: 1
+      NameStyleOption: 1
+      BuildTags: builtin

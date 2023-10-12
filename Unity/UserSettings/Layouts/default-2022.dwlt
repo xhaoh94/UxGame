@@ -338,7 +338,7 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 100}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
-  controlID: 47
+  controlID: 46
 --- !u!114 &15
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -571,7 +571,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 101
+  controlID: 82
 --- !u!114 &25
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -591,8 +591,8 @@ MonoBehaviour:
     y: 0
     width: 448
     height: 947
-  m_MinSize: {x: 276, y: 71}
-  m_MaxSize: {x: 4001, y: 4021}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 37}
   m_Panes:
   - {fileID: 37}
@@ -617,8 +617,8 @@ MonoBehaviour:
     y: 0
     width: 352
     height: 947
-  m_MinSize: {x: 201, y: 221}
-  m_MaxSize: {x: 4001, y: 4021}
+  m_MinSize: {x: 200, y: 200}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 38}
   m_Panes:
   - {fileID: 38}
@@ -705,7 +705,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 1
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: SceneView
+  m_Name: GameView
   m_EditorClassIdentifier: 
   m_Children: []
   m_Position:
@@ -714,17 +714,17 @@ MonoBehaviour:
     y: 0
     width: 1120
     height: 524
-  m_MinSize: {x: 202, y: 221}
-  m_MaxSize: {x: 4002, y: 4021}
-  m_ActualView: {fileID: 39}
+  m_MinSize: {x: 100, y: 100}
+  m_MaxSize: {x: 4000, y: 4000}
+  m_ActualView: {fileID: 35}
   m_Panes:
   - {fileID: 39}
   - {fileID: 34}
   - {fileID: 35}
   - {fileID: 33}
   - {fileID: 31}
-  m_Selected: 0
-  m_LastSelected: 2
+  m_Selected: 2
+  m_LastSelected: 0
 --- !u!114 &31
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -973,7 +973,7 @@ MonoBehaviour:
     m_HSlider: 0
     m_VSlider: 0
     m_IgnoreScrollWheelUntilClicked: 0
-    m_EnableMouseInput: 0
+    m_EnableMouseInput: 1
     m_EnableSliderZoomHorizontal: 0
     m_EnableSliderZoomVertical: 0
     m_UniformScale: 1
@@ -1049,7 +1049,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Main/Manager/Res
+    - Assets/Setting/Build/Proto
     m_Globs: []
     m_OriginalText: 
     m_ImportLogFlags: 0
@@ -1057,16 +1057,16 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Main/Manager/Res
+  - Assets/Setting/Build/Proto
   m_LastFoldersGridSize: 16
   m_LastProjectPath: D:\Project\Unity\UxGame\Unity
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 2}
-    m_SelectedIDs: 607b0000
-    m_LastClickedID: 31584
-    m_ExpandedIDs: 00000000787900007a7900007c7900007e790000807900004e7b000000ca9a3b
+    scrollPos: {x: 0, y: 326}
+    m_SelectedIDs: 56930000
+    m_LastClickedID: 37718
+    m_ExpandedIDs: 000000003a7a00003c7a00003e7a0000187c00001a7c00001c7c0000327c0000527c0000567c00005a7c00005e7c0000627c00000a8600000c8600000e860000329300003493000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1094,7 +1094,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000787900007a7900007c7900007e79000080790000
+    m_ExpandedIDs: 000000003a7a00003c7a00003e7a0000407a0000427a0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1119,8 +1119,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: f8f3ffff
-    m_LastClickedInstanceID: -3080
+    m_SelectedInstanceIDs: 4e790000
+    m_LastClickedInstanceID: 31054
     m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs: c6230000546800000000000020c40000
     m_RenameOverlay:
@@ -1187,7 +1187,7 @@ MonoBehaviour:
   m_ObjectsLockedBeforeSerialization: []
   m_InstanceIDsLockedBeforeSerialization: 
   m_PreviewResizer:
-    m_CachedPref: 406
+    m_CachedPref: -406
     m_ControlHash: -371814159
     m_PrefName: Preview_InspectorPreview
   m_LastInspectedObjectInstanceID: -1
@@ -1234,9 +1234,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: f8f3ffff
+      m_SelectedIDs: 4e790000
       m_LastClickedID: 0
-      m_ExpandedIDs: e0faffff
+      m_ExpandedIDs: 34bdffffb8bfffffccc0ffff12c2ffff36c3ffff36cbffff40cbffffe4f6ffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
