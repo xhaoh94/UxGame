@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: BuildinFileManifest
   m_EditorClassIdentifier: 
   BuildinFiles:
-  - mainpackage_assets_data_res_code_aot.bundle
-  - mainpackage_assets_data_res_code_hot.bundle
-  - mainpackage_assets_data_res_config.bundle
-  - mainpackage_assets_scenes_hotfix.bundle
-  - mainpackage_unityshaders.bundle
-  - uipackage_assets_data_res_ui_common.bundle
-  - uipackage_assets_data_res_ui_main.bundle
-  - uipackage_assets_data_res_ui_patch.bundle
+  - 39cce7c9bef2ca1e6612743e6531f65b.bundle
+  - 55f1215878d10e0741fc3f1eca7d2e2c.bundle
+  - 960e9a937c2bdb4559743cd6a88843c0.bundle
+  - 9fde48e3969b570db7b28e4b84cff376.bundle
+  - df818ff5fdcd67e59c1588f0dfcf3342.bundle
+  - 002e2ea4660b99dd55dfd89557af4073.bundle
+  - 78e9ab5dcfde2452fcfa28625d93df26.bundle
+  - de627a1a1f01bb493d68bfc1f2d86cb7.bundle

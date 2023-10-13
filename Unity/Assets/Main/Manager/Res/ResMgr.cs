@@ -166,6 +166,7 @@ namespace Ux
         public AssetHandle LoadAssetAsync(string location, Type type)
         {
             var package = GetPackageByLocation(location);
+            Log.Debug($"LoadAssetAsync.location[{package}]");
             return package.Package.LoadAssetAsync(location, type);
         }
 

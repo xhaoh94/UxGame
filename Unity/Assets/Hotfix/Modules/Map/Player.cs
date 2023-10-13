@@ -25,6 +25,7 @@ namespace Ux
 
         public void OnAwake(PlayerData a)
         {
+            Log.Debug("EnterMap001-Player.OnAwake");
             playerData = a;
             State = AddComponent<StateComponent>();
             Operate = AddComponent<OperateComponent>();
@@ -35,8 +36,10 @@ namespace Ux
 
         async UniTaskVoid LoadPlayer()
         {
+            Log.Debug("LoadPlayer-LoadAssetAsync");
             var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
             await handle.ToUniTask();
+            Log.Debug("LoadPlayer-InstantiateSync");
             Go = handle.InstantiateSync();
             Go.transform.SetParent(Go.transform);
             Go.transform.position = playerData.pos;

@@ -22,7 +22,7 @@ MonoBehaviour:
     LocationToLower: 0
     IncludeAssetGUID: 0
     IgnoreDefaultType: 1
-    AutoCollectShaders: 1
+    AutoCollectShaders: 0
     Groups:
     - GroupName: Builtin
       GroupDesc: "\u5185\u7F6E\u8D44\u6E90"

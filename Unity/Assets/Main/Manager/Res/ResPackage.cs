@@ -40,7 +40,8 @@ namespace Ux
                     {
                         initializeParameters = new EditorSimulateModeParameters
                         {
-                            SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild(DefaultBuildPipeline.BuiltinBuildPipelineName, Name)
+                            SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild(
+                                DefaultBuildPipeline.ScriptableBuildPipelineName, Name)
                         };
                         break;
                     }
@@ -58,7 +59,7 @@ namespace Ux
                 case EPlayMode.HostPlayMode:
                     {
                         initializeParameters = new HostPlayModeParameters
-                        {
+                        {             
                             DecryptionServices = DecryptionType == null ?
                             null : Activator.CreateInstance(DecryptionType) as IDecryptionServices,
 
@@ -120,7 +121,7 @@ namespace Ux
             }
         }
         #endregion
-                
+
     }
 
     public class ResMainPackage : ResPackage

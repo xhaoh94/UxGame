@@ -29,7 +29,7 @@ public class BuildExportSetting
     public bool IsCompileDLL = true;
     public bool IsCopyTo = false;
     public string BundlePath = "./Bundles";
-    public string ExePath = "./Release";
+    public string ExePath = "./bin";
     public string CopyPath = "./CDN";
     public bool IsClearSandBox = true;
     public bool IsExportExecutable = true;

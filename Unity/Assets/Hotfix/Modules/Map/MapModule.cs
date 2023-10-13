@@ -29,10 +29,13 @@ namespace Ux
 
         public async UniTask EnterMap(string mapName)
         {
+            Log.Debug("EnterMap001-LoadAssetAsync");
             var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
             await handle.ToUniTask();
+            Log.Debug("EnterMap001-InstantiateSync");
             var go = handle.InstantiateSync();
             handle.Release();
+            Log.Debug("EnterMap001-World.Ins.AddChild");
             var newMap = World.Ins.AddChild<Map, GameObject>(go);
             if (map != null)
             {
@@ -40,7 +43,7 @@ namespace Ux
             }
 
             map = newMap;
-
+            Log.Debug("EnterMap001-New PlayerData");
             var pos = new Vector3(UnityEngine.Random.Range(-3, 3), 0.5f, UnityEngine.Random.Range(-3, 3));
             var data = new PlayerData();
             data.id = 1;

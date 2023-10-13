@@ -35,19 +35,25 @@ public enum PlatformType
 }
 public class VersionWindow : EditorWindow
 {
-    [MenuItem("UxGame/构建/构建打包", false, 500)]
+    [MenuItem("UxGame/构建/构建打包", false, 503)]
     public static void Build()
     {
         var window = GetWindow<VersionWindow>("VersionWindow", true);
         window.minSize = new Vector2(800, 500);
     }
 
-    [MenuItem("UxGame/构建/本地资源服务器", false, 501)]
+    [MenuItem("UxGame/构建/本地资源服务器", false, 504)]
     public static void OpenFileServer()
     {
         //Command.Run("../HFS/hfs.exe");
+        var path = Path.GetFullPath("../Unity/CDN/").Replace("\\", "/");
+        if (!Directory.Exists(path))
+        {
+            Log.Error("本地资源服务器，路径不存在");
+            return;
+        }
         Command.Run(Path.GetFullPath("../HFS/dufs.exe").Replace("\\", "/"),
-            $"-p 0709 {Path.GetFullPath("../Unity/CDN/").Replace("\\", "/")}", false);
+            $"-p 0709 {path}", false);
     }
 
 
@@ -587,7 +593,7 @@ public class VersionWindow : EditorWindow
                 if (target != EditorUserBuildSettings.activeBuildTarget &&
                     !EditorUserBuildSettings.SwitchActiveBuildTarget(
                         BuildPipeline.GetBuildTargetGroup(target), target))
-                {                    
+                {
                     Log.Debug("---------------------------------------->切换编译平台失败<---------------------------------------");
                     return false;
                 }
@@ -618,8 +624,8 @@ public class VersionWindow : EditorWindow
             }
 
             Log.Debug("---------------------------------------->将热更DLL拷贝到资源打包目录<---------------------------------------");
-            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);  
-            
+            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);
+
             Log.Debug("---------------------------------------->完成编译DLL<---------------------------------------");
         }
         return true;
@@ -641,7 +647,7 @@ public class VersionWindow : EditorWindow
             {
                 if (EditorTools.DeleteDirectory(SandboxRoot))
                 {
-                    Log.Debug("---------------------------------------->删除沙盒缓存<---------------------------------------");                    
+                    Log.Debug("---------------------------------------->删除沙盒缓存<---------------------------------------");
                 }
             }
         }
@@ -927,16 +933,16 @@ public class VersionWindow : EditorWindow
                     buildOptions = BuildOptions.None;
                     break;
             }
-            var path = Path.Combine(SelectItem.ExePath, buildTarget.ToString());
+            var path = Path.Combine(SelectItem.ExePath, compileType.ToString(), buildTarget.ToString());
             BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, buildOptions, path, "Game");
             Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
             var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {                
+            {
                 Log.Debug("---------------------------------------->打包失败<---------------------------------------");
                 return false;
             }
-            Log.Debug("---------------------------------------->完成程序打包<---------------------------------------");            
+            Log.Debug("---------------------------------------->完成程序打包<---------------------------------------");
             EditorUtility.RevealInFinder(Path.GetFullPath(path));
         }
         return true;
