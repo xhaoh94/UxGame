@@ -33,6 +33,11 @@ namespace Ux
         public IEnumerator Initialize(EPlayMode playMode)
         {
             InitializeParameters initializeParameters = null;
+            IDecryptionServices decryptionServices = null;
+            if (DecryptionType == null)
+            {
+                decryptionServices = Activator.CreateInstance(DecryptionType) as IDecryptionServices;
+            }
             switch (playMode)
             {
                 // 编辑器模拟模式
@@ -50,8 +55,7 @@ namespace Ux
                     {
                         initializeParameters = new OfflinePlayModeParameters()
                         {
-                            DecryptionServices = DecryptionType == null ?
-                            null : Activator.CreateInstance(DecryptionType) as IDecryptionServices,
+                            DecryptionServices = decryptionServices,
                         };
                         break;
                     }
@@ -59,10 +63,8 @@ namespace Ux
                 case EPlayMode.HostPlayMode:
                     {
                         initializeParameters = new HostPlayModeParameters
-                        {             
-                            DecryptionServices = DecryptionType == null ?
-                            null : Activator.CreateInstance(DecryptionType) as IDecryptionServices,
-
+                        {
+                            DecryptionServices = decryptionServices,
                             BuildinQueryServices = new GameQueryServices(),
                             DeliveryQueryServices = new DeliveryQueryServices(),
                             DeliveryLoadServices = new DeliveryLoadServices(),
@@ -75,9 +77,7 @@ namespace Ux
                     {
                         initializeParameters = new WebPlayModeParameters()
                         {
-                            DecryptionServices = DecryptionType == null ?
-                            null : Activator.CreateInstance(DecryptionType) as IDecryptionServices,
-
+                            DecryptionServices = decryptionServices,
                             BuildinQueryServices = new GameQueryServices(),
                             RemoteServices = new RemoteServices(Global.GetHostServerURL(), Global.GetFallbackHostServerURL()),
                         };

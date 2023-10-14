@@ -165,8 +165,7 @@ namespace Ux
         /// <param name="type">资源类型</param>
         public AssetHandle LoadAssetAsync(string location, Type type)
         {
-            var package = GetPackageByLocation(location);
-            Log.Debug($"LoadAssetAsync.location[{package}]");
+            var package = GetPackageByLocation(location);            
             return package.Package.LoadAssetAsync(location, type);
         }
 

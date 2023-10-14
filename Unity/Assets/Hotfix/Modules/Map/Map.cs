@@ -10,18 +10,14 @@ namespace Ux
         public GameObject Go { get; private set; }
         Dictionary<int, Player> players = new Dictionary<int, Player>();
         public void OnAwake(GameObject a)
-        {
-            Log.Debug("EnterMap001-Map.OnAwake");
-            Go = a;
-            Log.Debug("EnterMap001-Map.OnAwake.CameraComponent");
-            Camera = AddComponent<CameraComponent>();
-            Log.Debug("EnterMap001-Map.OnAwake.AStarComponent");
+        {            
+            Go = a;            
+            Camera = AddComponent<CameraComponent>();            
             AddComponent<AStarComponent,AstarPath>(Go.GetOrAddComponent<AstarPath>());
         }
 
         public void AddPlayer(PlayerData playerData)
-        {
-            Log.Debug("EnterMap001-Map.AddPlayer");
+        {            
             var player = AddChild<Player, PlayerData>(playerData);
             players.Add(playerData.id, player);
         }

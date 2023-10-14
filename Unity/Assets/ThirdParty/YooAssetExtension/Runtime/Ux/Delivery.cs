@@ -11,7 +11,7 @@ public class DeliveryQueryServices : IDeliveryQueryServices
 {
     public string GetFilePath(string packageName, string fileName)
     {
-        throw new NotImplementedException();
+        return string.Empty;
     }
 
     public bool Query(string packageName, string fileName)
@@ -24,11 +24,11 @@ public class DeliveryLoadServices : IDeliveryLoadServices
 {
     public AssetBundle LoadAssetBundle(DeliveryFileInfo fileInfo)
     {
-        throw new NotImplementedException();
+        return null;
     }
 
     public AssetBundleCreateRequest LoadAssetBundleAsync(DeliveryFileInfo fileInfo)
     {
-        throw new NotImplementedException();
+        return null;
     }
 }
