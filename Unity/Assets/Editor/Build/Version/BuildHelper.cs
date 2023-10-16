@@ -25,6 +25,37 @@ using UnityEngine.UIElements;
 
 public class BuildHelper
 {
+    public static BuildOptions GetBuildOptions(BuildTarget buildTarget, bool isDevelopment)
+    {
+        BuildOptions options = BuildOptions.BuildScriptsOnly;
+
+        bool development = isDevelopment && EditorUserBuildSettings.development;
+        if (development)
+        {
+            options |= BuildOptions.Development;
+        }
+
+        if (EditorUserBuildSettings.allowDebugging && development)
+        {
+            options |= BuildOptions.AllowDebugging;
+        }
+
+        if (EditorUserBuildSettings.connectProfiler && (development || buildTarget == BuildTarget.WSAPlayer))
+        {
+            options |= BuildOptions.ConnectWithProfiler;
+        }
+
+        if (EditorUserBuildSettings.buildWithDeepProfilingSupport && development)
+        {
+            options |= BuildOptions.EnableDeepProfilingSupport;
+        }
+
+#if UNITY_2021_2_OR_NEWER
+        options |= BuildOptions.CleanBuildCache;
+#endif
+
+        return options;
+    }
     public static BuildPlayerOptions GetBuildPlayerOptions(BuildTarget buildTarget, BuildOptions buildOptions, string exportPath, string name)
     {
         string ex = ".exe";

@@ -33,16 +33,16 @@ public enum PlatformType
     IOS,
     //MacOS,
 }
-public class VersionWindow : EditorWindow
+public partial class VersionWindow : EditorWindow
 {
-    [MenuItem("UxGame/构建/构建打包", false, 503)]
+    [MenuItem("UxGame/构建/构建打包", false, 540)]
     public static void Build()
     {
         var window = GetWindow<VersionWindow>("VersionWindow", true);
         window.minSize = new Vector2(800, 500);
     }
 
-    [MenuItem("UxGame/构建/本地资源服务器", false, 504)]
+    [MenuItem("UxGame/构建/本地资源服务器", false, 541)]
     public static void OpenFileServer()
     {
         //Command.Run("../HFS/hfs.exe");
@@ -91,8 +91,11 @@ public class VersionWindow : EditorWindow
     TextField _inputCopyPath;
     Button _btnCopyPath;
     TextField _txtVersion;
-    Toggle _tgCompileDLL;
     Toggle _tgClearSandBox;
+    Toggle _tgCompileDLL;
+    Toggle _tgCompileUI;
+    Toggle _tgCompileConfig;
+    Toggle _tgCompileProto;
 
     #endregion
 
@@ -200,10 +203,17 @@ public class VersionWindow : EditorWindow
 
             // 是否编译热更DLL
             _tgCompileDLL = _exportElement.Q<Toggle>("tgCompileDLL");
+            _tgCompileDLL.SetValueWithoutNotify(true);
             _tgCompileDLL.RegisterValueChangedCallback(evt =>
             {
-                SelectItem.IsCompileDLL = evt.newValue;
+                RefreshElement();
             });
+            _tgCompileUI = _exportElement.Q<Toggle>("tgCompileUI");
+            _tgCompileUI.SetValueWithoutNotify(true);
+            _tgCompileConfig = _exportElement.Q<Toggle>("tgCompileConfig");
+            _tgCompileConfig.SetValueWithoutNotify(true);
+            _tgCompileProto = _exportElement.Q<Toggle>("tgCompileProto");
+            _tgCompileProto.SetValueWithoutNotify(true);
 
             _tgExe = _exportElement.Q<Toggle>("tgExe");
             _tgExe.RegisterValueChangedCallback(evt =>
@@ -396,8 +406,6 @@ public class VersionWindow : EditorWindow
         _tgExe.SetValueWithoutNotify(SelectItem.IsExportExecutable);
         _txtVersion.SetValueWithoutNotify(AddVersion(SelectItem.ResVersion));
 
-        _tgCompileDLL.SetValueWithoutNotify(SelectItem.IsCompileDLL);
-
         _tgClearSandBox.SetValueWithoutNotify(SelectItem.IsClearSandBox);
         RefreshPackageView(_buildPackageNames[0]);
         RefreshElement();
@@ -413,7 +421,9 @@ public class VersionWindow : EditorWindow
         _tgClearSandBox.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
 
         _inputCopyPath.parent.style.display = _tgCopy.value ? DisplayStyle.Flex : DisplayStyle.None;
-
+        _tgCompileUI.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
+        _tgCompileConfig.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
+        _tgCompileProto.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
         _versionPackage.RefreshElement(IsForceRebuild);
     }
     void OnBtnAddClick()
@@ -495,42 +505,7 @@ public class VersionWindow : EditorWindow
             return;
         }
         Build();
-    }
-
-    void OnClearClick()
-    {
-        if (EditorUtility.DisplayDialog("提示", $"是否重置构建！\n重置会删除所有构建相关目录！", "确定", "取消"))
-        {
-            if (Directory.Exists(SelectItem.ExePath))
-            {
-                Directory.Delete(SelectItem.ExePath, true);
-                Log.Debug($"删除构建目录：{SelectItem.ExePath}");
-            }
-            if (Directory.Exists(SelectItem.CopyPath))
-            {
-                Directory.Delete(SelectItem.CopyPath, true);
-                Log.Debug($"删除拷贝目录：{SelectItem.CopyPath}");
-            }
-
-            if (EditorTools.DeleteDirectory(SandboxRoot))
-            {
-                Log.Debug($"删除沙盒缓存：{SandboxRoot}");
-            }
-
-            // 删除平台总目录                        
-            if (EditorTools.DeleteDirectory(BuildOutputRoot))
-            {
-                Log.Debug($"删除资源目录：{BuildOutputRoot}");
-            }
-
-            EditorTools.ClearFolder(StreamingAssetsRoot);
-
-            SelectItem.Clear();
-            RefreshView();
-            AssetDatabase.Refresh();
-            Log.Debug("重置成功");
-        }
-    }
+    }    
 
     public static BuildTarget GetBuildTarget(PlatformType platformType)
     {
@@ -566,7 +541,7 @@ public class VersionWindow : EditorWindow
     }
     async UniTask<bool> _ExecuteBuild(BuildTarget buildTarget)
     {
-        if (!await CompileDLL(buildTarget))
+        if (!await BuildDLL(buildTarget))
         {
             return false;
         }
@@ -579,375 +554,8 @@ public class VersionWindow : EditorWindow
             return false;
         }
         return true;
-    }
-    private async UniTask<bool> CompileDLL(BuildTarget target)
-    {
-        if (_tgCompileDLL.value)
-        {
-            Log.Debug("---------------------------------------->开始编译DLL<---------------------------------------");
-            HybridCLRCommand.ClearHOTDll();
-            await UxEditor.Export(false);
-            var compileType = (CompileType)_compileType.value;
-            if (IsExportExecutable)
-            {
-                if (target != EditorUserBuildSettings.activeBuildTarget &&
-                    !EditorUserBuildSettings.SwitchActiveBuildTarget(
-                        BuildPipeline.GetBuildTargetGroup(target), target))
-                {
-                    Log.Debug("---------------------------------------->切换编译平台失败<---------------------------------------");
-                    return false;
-                }
-                HybridCLRCommand.ClearAOTDll();
-                Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
-                CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
-                Il2CppDefGeneratorCommand.GenerateIl2CppDef();
-
-                // 这几个生成依赖HotUpdateDlls
-                LinkGeneratorCommand.GenerateLinkXml(target);
-
-                // 生成裁剪后的aot dll
-                StripAOTDllCommand.GenerateStripedAOTDlls(target);
-
-                // 桥接函数生成依赖于AOT dll，必须保证已经build过，生成AOT dll
-                MethodBridgeGeneratorCommand.GenerateMethodBridge(target);
-                ReversePInvokeWrapperGeneratorCommand.GenerateReversePInvokeWrapper(target);
-                AOTReferenceGeneratorCommand.GenerateAOTGenericReference(target);
-                //PrebuildCommand.GenerateAll();
-
-                Log.Debug("---------------------------------------->将AOT元数据Dll拷贝到资源打包目录<---------------------------------------");
-                HybridCLRCommand.CopyAOTAssembliesToYooAssetPath(target);
-            }
-            else
-            {
-                Log.Debug("---------------------------------------->生成热更DLL<---------------------------------------");
-                CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
-            }
-
-            Log.Debug("---------------------------------------->将热更DLL拷贝到资源打包目录<---------------------------------------");
-            HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);
-
-            Log.Debug("---------------------------------------->完成编译DLL<---------------------------------------");
-        }
-        return true;
-    }
-    private async UniTask<bool> BuildRes(BuildTarget buildTarget)
-    {
-        var packageValue = _buildPackage.value;
-        if (packageValue == 0)
-        {
-            Log.Error("没有选中要构建的资源包");
-            return false;
-        }
-
-        if (IsForceRebuild)
-        {
-            EditorTools.ClearFolder(StreamingAssetsRoot);
-
-            if (_tgClearSandBox.value)
-            {
-                if (EditorTools.DeleteDirectory(SandboxRoot))
-                {
-                    Log.Debug("---------------------------------------->删除沙盒缓存<---------------------------------------");
-                }
-            }
-        }
-
-        List<string> packages = new List<string>();
-
-        if (IsExportExecutable || packageValue == -1)
-        {
-            packages.AddRange(_buildPackageNames);
-        }
-        else
-        {
-            var array = Convert.ToString(_buildPackage.value, 2).ToCharArray().Reverse();
-            var pCnt = array.Count();
-            for (int i = 0; i < _buildPackageNames.Count; i++)
-            {
-                if (i < pCnt)
-                {
-                    if (array.ElementAt(i) == '1')
-                    {
-                        packages.Add(_buildPackageNames[i]);
-                    }
-                }
-            }
-        }
-
-        if (packages.Count > 0)
-        {
-            UniTask CollectSVC(string package)
-            {
-                Log.Debug($"---------------------------------------->{package}:收集着色器变种<---------------------------------------");
-                string savePath = ShaderVariantCollectorSetting.GeFileSavePath(package);
-                if (string.IsNullOrEmpty(savePath))
-                {
-                    var index = package.IndexOf("Package");
-                    savePath = $"Assets/Data/Art/ShaderVariants/{package.Substring(0, index)}SV.shadervariants";
-                    ShaderVariantCollectorSetting.SetFileSavePath(package, savePath);
-                }
-                int processCapacity = ShaderVariantCollectorSetting.GeProcessCapacity(package);
-                if (processCapacity <= 0)
-                {
-                    processCapacity = 1000;
-                    ShaderVariantCollectorSetting.SetProcessCapacity(package, processCapacity);
-                }
-                var task = AutoResetUniTaskCompletionSource.Create();
-                Action callback = () =>
-                {
-                    task.TrySetResult();
-                };
-                ShaderVariantCollector.Run(savePath, package, processCapacity, callback);
-                return task.Task;
-            }
-
-            foreach (var package in packages)
-            {
-                var packageSetting = SelectItem.GetPackageSetting(package);
-                if (packageSetting.IsCollectShaderVariant)
-                    await CollectSVC(package);
-            }
-            Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
-            foreach (var package in packages)
-            {
-                Log.Debug($"---------------------------------------->{package}:开始构建资源包<---------------------------------------");
-                if (!BuildRes(buildTarget, package)) return false;
-            }
-            Log.Debug("---------------------------------------->完成资源打包<---------------------------------------");
-        }
-        return true;
-    }
-
-
-    string BuildOutputRoot
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(SelectItem.BundlePath))
-            {
-                return SelectItem.BundlePath;
-            }
-            return AssetBundleBuilderHelper.GetDefaultBuildOutputRoot();
-        }
-    }
-
-    string StreamingAssetsRoot
-    {
-        get
-        {
-            return AssetBundleBuilderHelper.GetStreamingAssetsRoot();
-        }
-    }
-
-    string SandboxRoot
-    {
-        get
-        {
-            string projectPath = Path.GetDirectoryName(UnityEngine.Application.dataPath);
-            projectPath = PathUtility.RegularPath(projectPath);
-            return PathUtility.Combine(projectPath, YooAssetSettingsData.Setting.DefaultYooFolderName);
-        }
-    }
-
-    private bool BuildRes(BuildTarget buildTarget, string packageName)
-    {
-        if (IsForceRebuild)
-        {
-            // 删除平台总目录            
-            string platformDirectory = $"{BuildOutputRoot}/{packageName}/{buildTarget}";
-            if (EditorTools.DeleteDirectory(platformDirectory))
-            {
-                Log.Debug($"删除平台总目录：{platformDirectory}");
-            }
-        }
-
-        var packageSetting = SelectItem.GetPackageSetting(packageName);
-        BuildParameters buildParameters = null;
-        IBuildPipeline pipeline = null;
-        string buildOutputRoot = BuildOutputRoot;
-        switch (packageSetting.PiplineOption)
-        {
-            case EBuildPipeline.BuiltinBuildPipeline:
-                buildParameters = new BuiltinBuildParameters()
-                {
-                    BuildMode = IsForceRebuild ? EBuildMode.ForceRebuild : EBuildMode.IncrementalBuild,
-                    CompressOption = packageSetting.CompressOption,
-
-                };
-                pipeline = new BuiltinBuildPipeline();
-                break;
-            case EBuildPipeline.ScriptableBuildPipeline:
-                buildParameters = new ScriptableBuildParameters()
-                {
-                    BuildMode = EBuildMode.IncrementalBuild,//SBP构建只能用热更模式
-                    CompressOption = packageSetting.CompressOption,
-                };
-                pipeline = new ScriptableBuildPipeline();
-                break;
-            case EBuildPipeline.RawFileBuildPipeline:
-                buildParameters = new RawFileBuildParameters()
-                {
-                    BuildMode = EBuildMode.ForceRebuild,//RawFile构建只能用强更模式                    
-                };
-                pipeline = new RawFileBuildPipeline();
-                break;
-            default:
-                Log.Error("未知的构建模式");
-                return false;
-        }
-
-        buildParameters.BuildOutputRoot = buildOutputRoot;
-        buildParameters.BuildinFileRoot = StreamingAssetsRoot;
-        buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
-        buildParameters.BuildTarget = buildTarget;
-        buildParameters.PackageName = packageName;
-        buildParameters.PackageVersion = _txtVersion.value;
-        buildParameters.VerifyBuildingResult = true;
-        //buildParameters.SharedPackRule = CreateSharedPackRuleInstance();        
-        buildParameters.FileNameStyle = packageSetting.NameStyleOption;
-        buildParameters.BuildinFileCopyOption = IsForceRebuild
-            ? EBuildinFileCopyOption.OnlyCopyByTags : EBuildinFileCopyOption.None;
-        buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
-        buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
-
-        var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
-        var outputDir = "Output";
-        var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
-        var nowVersion = _txtVersion.value;
-        var lastVersion = string.Empty;
-        var versionFile = $"{buildPath}/{outputDir}/{versionFileName}";
-        if (File.Exists(versionFile))
-        {
-            lastVersion = FileUtility.ReadAllText(versionFile);
-        }
-
-        var result = pipeline.Run(buildParameters, true);
-        if (!result.Success)
-        {
-            Log.Error($"{packageName}:构建资源包失败");
-            return false;
-        }
-
-        //不拷贝link.xml
-        //if (IsExportExecutable)
-        //{
-        //    var tLinkPath = $"{buildPath}/{nowVersion}/link.xml";
-        //    if (File.Exists(tLinkPath))
-        //    {
-        //        var linkPath = $"{Application.dataPath}/Main/YooAsset/{packageName}";
-        //        if (!Directory.Exists(linkPath))
-        //            Directory.CreateDirectory(linkPath);
-        //        File.Copy(tLinkPath, $"{linkPath}/link.xml", true);
-        //    }
-        //}
-
-
-
-        var sPath = $"{buildPath}/{nowVersion}";
-
-        var nowJsonFileName = YooAssetSettingsData.GetManifestJsonFileName(packageName, nowVersion);
-        var nowHashFileName = YooAssetSettingsData.GetPackageHashFileName(packageName, nowVersion);
-        var nowBinaryFileName = YooAssetSettingsData.GetManifestBinaryFileName(packageName, nowVersion);
-        var lastBinaryFileName = YooAssetSettingsData.GetManifestBinaryFileName(packageName, lastVersion);
-
-        List<string> files = null;
-        if (!string.IsNullOrEmpty(lastVersion))
-        {
-            files = new List<string>();
-            var path1 = $"{buildPath}/{lastVersion}/{lastBinaryFileName}";
-            var path2 = $"{buildPath}/{nowVersion}/{nowBinaryFileName}";
-            List<string> changedList = new List<string>();
-            PackageCompare.CompareManifest(path1, path2, changedList);
-            var diffPath = $"{buildPath}/Difference/{lastVersion}_{nowVersion}";
-            if (Directory.Exists(diffPath))
-            {
-                Directory.Delete(diffPath, true);
-            }
-            Directory.CreateDirectory(diffPath);
-
-            foreach (var file in changedList)
-            {
-                var temFile = $"{sPath}/{file}";
-                File.Copy(temFile, $"{diffPath}/{file}", true);
-                files.Add(temFile);
-            }
-            files.Add($"{sPath}/{versionFileName}");
-            files.Add($"{sPath}/{nowBinaryFileName}");
-            files.Add($"{sPath}/{nowHashFileName}");
-            //files.Add($"{sPath}/{nowJsonFileName}");               
-        }
-
-        if (files == null)
-        {
-            files = Directory.GetFiles(sPath).ToList();
-        }
-
-        List<string> desPathList = new List<string>();
-        var tPath = $"{buildPath}/{outputDir}";
-        if (!Directory.Exists(tPath))
-        {
-            Directory.CreateDirectory(tPath);
-        }
-        desPathList.Add(tPath);
-        if (_tgCopy.value && !string.IsNullOrEmpty(SelectItem.CopyPath))
-        {
-            tPath = $"{SelectItem.CopyPath}/{buildTarget}";
-            if (!Directory.Exists(tPath))
-            {
-                Directory.CreateDirectory(tPath);
-            }
-            desPathList.Add(tPath);
-        }
-
-        var reportFileName = YooAssetSettingsData.GetReportFileName(packageName, nowVersion);
-        foreach (var file in files)
-        {
-            var temFile = PathUtility.RegularPath(file);
-            var index = temFile.LastIndexOf("/");
-            var fileName = temFile.Substring(index + 1);
-            if (fileName == "link.xml") continue;
-            if (fileName == "buildlogtep.json") continue;
-            if (fileName == reportFileName) continue;
-            if (fileName == nowJsonFileName) continue;
-            foreach (var desPath in desPathList)
-            {
-                File.Copy(file, Path.Combine(desPath, fileName), true);
-            }
-        }
-        return true;
-    }
-
-
-    private bool BuildExe(BuildTarget buildTarget)
-    {
-        if (IsExportExecutable)
-        {
-            BuildOptions buildOptions = BuildOptions.None;
-            var compileType = (CompileType)_compileType.value;
-            switch (compileType)
-            {
-                case CompileType.Development:
-                    buildOptions = BuildOptions.Development | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
-                    break;
-                case CompileType.Release:
-                    buildOptions = BuildOptions.None;
-                    break;
-            }
-            var path = Path.Combine(SelectItem.ExePath, compileType.ToString(), buildTarget.ToString());
-            BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, buildOptions, path, "Game");
-            Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
-            var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
-            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {
-                Log.Debug("---------------------------------------->打包失败<---------------------------------------");
-                return false;
-            }
-            Log.Debug("---------------------------------------->完成程序打包<---------------------------------------");
-            EditorUtility.RevealInFinder(Path.GetFullPath(path));
-        }
-        return true;
-    }
-
+    }    
+    
     #region 初始化   
     void LoadConfig()
     {
@@ -966,35 +574,6 @@ public class VersionWindow : EditorWindow
 
     #endregion
 
-    //#region 构建包裹相关
-    // 构建包裹相关
-    private List<string> GetBuildPackageNames()
-    {
-        List<string> result = new List<string>();
-        foreach (var package in AssetBundleCollectorSettingData.Setting.Packages)
-        {
-            result.Add(package.PackageName);
-        }
-        return result;
-    }
 
-    private IEncryptionServices CreateEncryptionServicesInstance(string encyptionClassName)
-    {
-        var encryptionClassTypes = EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
-        var classType = encryptionClassTypes.Find(x => x.FullName.Equals(encyptionClassName));
-        if (classType != null)
-            return (IEncryptionServices)Activator.CreateInstance(classType);
-        else
-            return null;
-    }
-    ////private ISharedPackRule CreateSharedPackRuleInstance()
-    ////{
-    ////    if (_sharedPackRule.index < 0)
-    ////        return null;
-    ////    var classType = _sharedPackRuleClassTypes[_sharedPackRule.index];
-    ////    return (ISharedPackRule)Activator.CreateInstance(classType);
-    ////}
-
-    //#endregion
 
 }

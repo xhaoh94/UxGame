@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using YooAsset;
 
 namespace Ux
 {
@@ -13,7 +12,7 @@ namespace Ux
     {
         public const string HotfixAssemblyName = "Assembly-CSharp";
 
-        public const string HotfixScene = "Hotfix";        
+        public const string HotfixScene = "Hotfix";
 
         private List<Type> _hotfixTypes;
 
@@ -38,17 +37,18 @@ namespace Ux
 
         public async UniTask Load()
         {
-#if UNITY_EDITOR
-            await UniTask.Yield();
-            Assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
-#else
+#if !UNITY_EDITOR && HOTFIX_CODE
             await LoadMetadataForAOTAssembly();
-            var handle = YooAssets.LoadAssetAsync<TextAsset>(HotfixAssemblyName + ".dll");
+            var handle = ResMgr.Ins.LoadAssetAsync<TextAsset>(HotfixAssemblyName + ".dll");
             await handle.ToUniTask();
             byte[] assBytes = (handle.AssetObject as TextAsset)?.bytes;
-            Assembly = Assembly.Load(assBytes);
+            handle.Release();
+            Assembly = Assembly.Load(assBytes);            
+#else            
+            Assembly = AppDomain.CurrentDomain.GetAssemblies()
+                .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
 #endif
+            await UniTask.Yield();
         }
 
         /// <summary>
@@ -71,8 +71,7 @@ namespace Ux
                 {
                     dllName += ".dll";
                 }
-
-                var handle = YooAssets.LoadAssetAsync<TextAsset>(dllName);
+                var handle = ResMgr.Ins.LoadAssetAsync<TextAsset>(dllName);
                 if (handle == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");
@@ -81,7 +80,7 @@ namespace Ux
                 {
                     await handle.ToUniTask();
                     byte[] assBytes = (handle.AssetObject as TextAsset)?.bytes;
-
+                    handle.Release();
                     // 加载assembly对应的dll，会自动为它hook。一旦aot泛型函数的native函数不存在，用解释器版本代码
                     var err = RuntimeApi.LoadMetadataForAOTAssembly(assBytes, mode);
                     Log.Debug($"LoadMetadataForAOTAssembly:{dllName}. ret:{err}");

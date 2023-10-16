@@ -80,6 +80,7 @@ namespace UI.Editor
     {
         public static void Export()
         {
+            Log.Debug("---------------------------------------->开始生成UI代码文件<---------------------------------------");
             UICodeGenSettingData.Load();
             UIEditorTools.CheckExt();
             FairyGUIEditor.EditorToolSet.LoadPackages();
@@ -88,7 +89,7 @@ namespace UI.Editor
             {
                 OnExport(pkg);
             }
-            Log.Debug("UI代码生成");
+            Log.Debug("---------------------------------------->完成生成UI代码文件<---------------------------------------");            
         }
         void OnBtnGenClick()
         {

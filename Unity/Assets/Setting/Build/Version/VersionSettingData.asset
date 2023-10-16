@@ -14,25 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ExportSettings:
   - Name: "\u6D4B\u8BD5\u6784\u5EFA"
-    CompileType: 0
+    CompileType: 1
     PlatformType: 1
-    IsCompileDLL: 1
     IsCopyTo: 1
     BundlePath: ./Bundles
     ExePath: ./bin
     CopyPath: ./CDN
     IsClearSandBox: 1
     IsExportExecutable: 1
-    ResVersion: 23101358718x1
+    ResVersion: 23101664698x1
     PackageBuilds:
-    - IsCollectShaderVariant: 1
+    - IsCollectShaderVariant: 0
       PackageName: MainPackage
       EncyptionClassName: YooAsset.Editor.EncryptionNone
       CompressOption: 2
       PiplineOption: 1
       NameStyleOption: 0
       BuildTags: builtin
-    - IsCollectShaderVariant: 1
+    - IsCollectShaderVariant: 0
       PackageName: UIPackage
       EncyptionClassName: FileStreamEncryption
       CompressOption: 2

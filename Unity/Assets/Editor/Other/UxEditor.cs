@@ -5,20 +5,29 @@ using UnityEditor.SceneManagement;
 
 public class UxEditor
 {
-    public static async UniTask Export(bool isRefresh = true)
+    public static async UniTask Export(bool _ui = true, bool _config = true, bool _proto = true, bool _isRefresh = true)
     {
-        //生成YooAsset UI收集器配置
-        UIClassifyWindow.CreateYooAssetUIGroup();
-        //生成UI代码文件
-        UICodeGenWindow.Export();
+        if (_ui)
+        {
+            //生成YooAsset UI收集器配置
+            UIClassifyWindow.CreateYooAssetUIGroup();
+            //生成UI代码文件
+            UICodeGenWindow.Export();
+        }
 
-        //TODO 协议文件
-        await ProtoWindow.Export();
+        if (_config)
+        {
+            //生成配置代码文件
+            await ConfigWindow.Export();
+        }
 
-        //生成配置代码文件
-        await ConfigWindow.Export();
+        if (_proto)
+        {
+            //生成协议文件
+            await ProtoWindow.Export();
+        }
 
-        if (isRefresh) AssetDatabase.Refresh();
+        if (_isRefresh) AssetDatabase.Refresh();
     }
 
     [MenuItem("UxGame/初始化", false, 10)]

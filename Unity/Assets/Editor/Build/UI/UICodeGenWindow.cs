@@ -48,7 +48,7 @@ namespace UI.Editor
     public partial class UICodeGenWindow : EditorWindow
     {
 
-        [MenuItem("UxGame/UI/代码生成", false, 301)]
+        [MenuItem("UxGame/构建/UI/代码生成", false, 510)]
         public static void ShowExample()
         {
             var window = GetWindow<UICodeGenWindow>("UICodeGenWindow", true);

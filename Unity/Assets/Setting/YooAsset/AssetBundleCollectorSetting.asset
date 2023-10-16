@@ -20,8 +20,8 @@ MonoBehaviour:
     PackageDesc: "\u4E3B\u5305"
     EnableAddressable: 1
     LocationToLower: 0
-    IncludeAssetGUID: 0
-    IgnoreDefaultType: 1
+    IncludeAssetGUID: 1
+    IgnoreDefaultType: 0
     AutoCollectShaders: 0
     Groups:
     - GroupName: Builtin

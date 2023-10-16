@@ -68,20 +68,6 @@ ShaderVariantCollection:
       variants:
       - keywords: 
         passType: 0
-  - first: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
-    second:
-      variants:
-      - keywords: 
-        passType: 8
-      - keywords: _ADDITIONAL_LIGHTS _ADDITIONAL_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
-        passType: 13
-  - first: {fileID: 4800000, guid: 8f5cdd7bb4699f843b0dfb820608ce66, type: 3}
-    second:
-      variants:
-      - keywords: 
-        passType: 13
-      - keywords: 
-        passType: 14
   - first: {fileID: 4800000, guid: 36e335017ad71d54fbb10842863188ae, type: 3}
     second:
       variants:

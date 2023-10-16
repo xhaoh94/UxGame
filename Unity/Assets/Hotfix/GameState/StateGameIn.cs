@@ -7,8 +7,7 @@
 
         }
         protected override async void OnEnter(object args = null)
-        {
-            Log.Debug("EnterMap001");
+        {            
             //var ui = await UIMgr.Ins.Show<UI.MainView>().Task();
             await MapModule.Ins.EnterMap("Map001");
 

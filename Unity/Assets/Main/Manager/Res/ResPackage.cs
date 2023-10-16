@@ -34,7 +34,7 @@ namespace Ux
         {
             InitializeParameters initializeParameters = null;
             IDecryptionServices decryptionServices = null;
-            if (DecryptionType == null)
+            if (DecryptionType != null)
             {
                 decryptionServices = Activator.CreateInstance(DecryptionType) as IDecryptionServices;
             }

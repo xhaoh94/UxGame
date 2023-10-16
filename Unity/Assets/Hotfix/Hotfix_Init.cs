@@ -21,6 +21,7 @@ namespace Ux
                 return;
             }
 #endif            
+
             Log.Info("启动热更层");
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
             HotFixMgr.Ins.Assembly.Initialize();
@@ -35,17 +36,17 @@ namespace Ux
             Destroy(gameObject);
         }
 
+#if UNITY_EDITOR
         private async void OnApplicationQuit()
         {
-#if UNITY_EDITOR
             if (__CHANGED_BOOT)
             {
                 await Task.Delay(100);
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(UnityEditor.EditorBuildSettings.scenes[0].path, UnityEditor.SceneManagement.OpenSceneMode.Single);
                 UnityEditor.EditorApplication.isPlaying = true;
             }
-#endif
         }
+#endif
     }
 
 }

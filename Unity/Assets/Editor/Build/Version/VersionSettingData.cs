@@ -25,8 +25,7 @@ public class BuildExportSetting
 {
     public string Name;
     public CompileType CompileType = CompileType.Development;
-    public PlatformType PlatformType = PlatformType.Win64;
-    public bool IsCompileDLL = true;
+    public PlatformType PlatformType = PlatformType.Win64;    
     public bool IsCopyTo = false;
     public string BundlePath = "./Bundles";
     public string ExePath = "./bin";

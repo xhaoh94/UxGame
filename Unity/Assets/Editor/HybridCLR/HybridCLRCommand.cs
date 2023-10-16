@@ -1,5 +1,6 @@
 using HybridCLR.Editor;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Ux;
@@ -12,61 +13,77 @@ namespace HybridCLR.Commands
         private const string AotDir = "Assets/Data/Res/Code/AOT";
         private const string ComplileAOTTempPath = "./Release_Temp";
 
-        //[UnityEditor.Callbacks.DidReloadScripts]
-        //private static void OnScriptsReloaded()
-        //{
-        //    var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
-        //    if (dfs.Contains("HOTFIX_CODE"))
-        //    {
-        //        CompileDll(BuildTarget.StandaloneWindows64);
-        //    }
-        //}
-        //[MenuItem("HybridCLR/切换热更模式/开", false, 500)]
-        //public static void OpenHotfixCode()
-        //{
-        //    if (EditorApplication.isPlaying)
-        //    {
-        //        EditorApplication.isPlaying = false;
-        //    }
-        //    if (EditorApplication.isCompiling)
-        //    {
-        //        EditorUtility.DisplayDialog("错误", "编译中，请稍后再尝试！", "ok");
-        //        return;
-        //    }
-        //    var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
-        //    var symbols = dfs.ToList();
-        //    if (symbols.Contains("HOTFIX_CODE"))
-        //    {
-        //        EditorUtility.DisplayDialog("提示", $"当前已是热更模式", "确定");
-        //        return;
-        //    }
-        //    symbols.Add("HOTFIX_CODE");
-        //    PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
-        //}
-        //[MenuItem("HybridCLR/切换热更模式/关", false, 501)]
-        //public static void CloseHotfixCode()
-        //{
-        //    if (EditorApplication.isPlaying)
-        //    {
-        //        EditorApplication.isPlaying = false;
-        //    }
-        //    if (EditorApplication.isCompiling)
-        //    {
-        //        EditorUtility.DisplayDialog("错误", "编译中，请稍后再尝试！", "ok");
-        //        return;
-        //    }
-        //    var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
-        //    //PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone, out var dfs);
-        //    var symbols = dfs.ToList();
-        //    if (!symbols.Contains("HOTFIX_CODE"))
-        //    {
-        //        EditorUtility.DisplayDialog("提示", $"当前已是非热更模式", "确定");
-        //        return;
-        //    }
-        //    symbols.Remove("HOTFIX_CODE");
-        //    PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
-        //    //PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, symbols.ToArray());
-        //}
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void OnScriptsReloaded()
+        {
+            var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
+            var v = dfs.Contains("HOTFIX_CODE");
+            if (v != HybridCLR.Editor.SettingsUtil.Enable)
+            {
+                Log.Error("热更设置与热更宏对应不上，已把热更设置强制于热更宏同步");
+                HybridCLR.Editor.SettingsUtil.Enable = v;
+            }
+        }
+        [MenuItem("HybridCLR/切换热更模式/开", false, 2000)]
+        public static void OpenHotfixCode()
+        {
+            if (EditorApplication.isPlaying)
+            {
+                EditorApplication.isPlaying = false;
+            }
+            if (EditorApplication.isCompiling)
+            {
+                EditorUtility.DisplayDialog("错误", "编译中，请稍后再尝试！", "ok");
+                return;
+            }
+            var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
+            var symbols = dfs.ToList();
+            if (symbols.Contains("HOTFIX_CODE"))
+            {
+                EditorUtility.DisplayDialog("提示", $"当前已是热更模式", "确定");
+                return;
+            }
+            HybridCLR.Editor.SettingsUtil.Enable = true;
+            symbols.Add("HOTFIX_CODE");
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
+        }
+
+        [MenuItem("HybridCLR/切换热更模式/开", true, 2000)]
+        public static bool ValidateOpenHotfixCode()
+        {
+            return !HybridCLR.Editor.SettingsUtil.Enable;
+        }
+
+        [MenuItem("HybridCLR/切换热更模式/关", false, 2001)]
+        public static void CloseHotfixCode()
+        {
+            if (EditorApplication.isPlaying)
+            {
+                EditorApplication.isPlaying = false;
+            }
+            if (EditorApplication.isCompiling)
+            {
+                EditorUtility.DisplayDialog("错误", "编译中，请稍后再尝试！", "ok");
+                return;
+            }
+            var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
+            //PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone, out var dfs);
+            var symbols = dfs.ToList();
+            if (!symbols.Contains("HOTFIX_CODE"))
+            {
+                EditorUtility.DisplayDialog("提示", $"当前已是非热更模式", "确定");
+                return;
+            }
+            HybridCLR.Editor.SettingsUtil.Enable = false;
+            symbols.Remove("HOTFIX_CODE");
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
+            //PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, symbols.ToArray());
+        }
+        [MenuItem("HybridCLR/切换热更模式/关", true, 2001)]
+        public static bool ValidateCloseHotfixCode()
+        {
+            return HybridCLR.Editor.SettingsUtil.Enable;
+        }
 
         public static void ClearHOTDll()
         {
@@ -88,25 +105,8 @@ namespace HybridCLR.Commands
                 file.Delete();
             }
         }
-        /// <summary>
-        /// 生成AOT元数据DLL
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="buildOptions"></param>
-        /// <returns></returns>
-        public static bool CompileAOTDll(BuildTarget target, BuildOptions buildOptions)
-        {
-            var buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(target, buildOptions, ComplileAOTTempPath, "AOT");
+        
 
-            var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
-            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {
-                Debug.LogError("生成AOT补充元数据DLL失败");
-                return false;
-            }
-            Directory.Delete(ComplileAOTTempPath, true);
-            return true;
-        }
         /// <summary>
         /// 将AOT元数据DLL拷贝到资源打包目录
         /// </summary>
