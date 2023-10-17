@@ -23,8 +23,7 @@ namespace Ux
                 Log.Error("没有加载热更DLL");
                 return;
             }
-
-            ResMgr.Ins.UnloadUnusedAssets();
+            
             ResMgr.Ins.LoadSceneAsync(HotfixScene);
         }
 
@@ -45,10 +44,10 @@ namespace Ux
             handle.Release();
             Assembly = Assembly.Load(assBytes);            
 #else            
+            await UniTask.Yield();
             Assembly = AppDomain.CurrentDomain.GetAssemblies()
                 .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
-#endif
-            await UniTask.Yield();
+#endif            
         }
 
         /// <summary>

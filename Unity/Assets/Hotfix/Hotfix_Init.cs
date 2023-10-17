@@ -21,7 +21,7 @@ namespace Ux
                 return;
             }
 #endif            
-
+            ResMgr.Ins.UnloadUnusedAssets();
             Log.Info("启动热更层");
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
             HotFixMgr.Ins.Assembly.Initialize();
