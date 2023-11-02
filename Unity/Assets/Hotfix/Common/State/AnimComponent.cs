@@ -14,9 +14,10 @@ namespace Ux
         private PlayableGraph _graph;
         private AnimationPlayableOutput _output;
         private AnimationLayerMixerPlayable _mixerRoot;
-
+        public Animator Animator { get; private set; }
         public void OnAwake(Animator animator)
         {
+            Animator = animator;
             string name = animator.gameObject.name;
             _graph = PlayableGraph.Create(name);
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);

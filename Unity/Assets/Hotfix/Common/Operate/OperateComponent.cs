@@ -3,6 +3,9 @@ using System.Collections;
 using Pathfinding;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Timeline;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace Ux
 {
@@ -51,6 +54,22 @@ namespace Ux
                         Player.Seeker.StartPath(hitInfo.point);
                     }
                 }
+            }
+        }
+
+        public async void OnKeyAsync(InputAction.CallbackContext context)
+        {
+            if (context.control == Keyboard.current.qKey)
+            {
+                var asset = await SkillMgr.Ins.GetSkillAssetAsync("Skill01");
+                Player.Director.SetPlayableAsset(asset);
+                Player.Director.Play();
+            }
+            else if (context.control == Keyboard.current.eKey)
+            {
+                var asset = await SkillMgr.Ins.GetSkillAssetAsync("Skill02");
+                Player.Director.SetPlayableAsset(asset);
+                Player.Director.Play();
             }
         }
     }

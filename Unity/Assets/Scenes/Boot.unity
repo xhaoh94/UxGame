@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae4de9cfdb3a7e64785b0cf9b573e99d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlayMode: 2
+  PlayMode: 0
   IngameDebug: 1
 --- !u!4 &563521568
 Transform:

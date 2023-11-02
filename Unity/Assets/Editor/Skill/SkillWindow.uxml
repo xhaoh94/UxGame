@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement style="flex-direction: row; flex-grow: 1;">
+        <ui:VisualElement style="width: 200px; flex-grow: 0; background-color: rgb(67, 67, 67); border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px;">
+            <ui:Label text="列表" display-tooltip-when-elided="true" style="background-color: rgb(89, 89, 89); -unity-text-align: upper-center; -unity-font-style: bold; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; font-size: 12px;" />
+            <ui:ListView focusable="true" name="list" item-height="20" virtualization-method="DynamicHeight" style="flex-grow: 1;" />
+            <ui:VisualElement style="height: 20px; flex-direction: row; justify-content: center;">
+                <ui:Button text=" - " display-tooltip-when-elided="true" name="btnRemove" />
+                <ui:Button text=" + " display-tooltip-when-elided="true" name="btnAdd" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="exportElement" style="flex-grow: 1; flex-direction: row; word-spacing: 0;">
+            <ui:VisualElement style="flex-grow: 1; display: flex; visibility: visible; overflow: visible;">
+                <ui:Label text="技能配置" display-tooltip-when-elided="true" enable-rich-text="true" style="background-color: rgb(89, 89, 89); -unity-text-align: upper-center; -unity-font-style: bold; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; font-size: 12px;" />
+                <ui:TextField picking-mode="Ignore" label="技能ID" name="txtName" />
+                <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
+                    <ui:TextField picking-mode="Ignore" label="timeline文件" value="filler text" text="./Bundles" name="inputBundlePath" style="flex-grow: 1;" />
+                    <ui:Button text="选择" display-tooltip-when-elided="true" name="btnBundlePath" style="flex-grow: 0;" />
+                </ui:VisualElement>
+                <ui:Button text="保存" display-tooltip-when-elided="true" name="build" style="height: 50px; background-color: rgb(40, 106, 42); margin-top: 10px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

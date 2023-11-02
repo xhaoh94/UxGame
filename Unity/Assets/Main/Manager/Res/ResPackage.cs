@@ -46,25 +46,21 @@ namespace Ux
                         initializeParameters = new EditorSimulateModeParameters
                         {
                             SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild(
-                                DefaultBuildPipeline.ScriptableBuildPipelineName, Name)
+                                EDefaultBuildPipeline.ScriptableBuildPipeline, Name)
                         };
                         break;
                     }
                 // 单机模式
                 case EPlayMode.OfflinePlayMode:
                     {
-                        initializeParameters = new OfflinePlayModeParameters()
-                        {
-                            DecryptionServices = decryptionServices,
-                        };
+                        initializeParameters = new OfflinePlayModeParameters();
                         break;
                     }
                 // 联机模式
                 case EPlayMode.HostPlayMode:
                     {
                         initializeParameters = new HostPlayModeParameters
-                        {
-                            DecryptionServices = decryptionServices,
+                        {                            
                             BuildinQueryServices = new GameQueryServices(),
                             DeliveryQueryServices = new DeliveryQueryServices(),
                             DeliveryLoadServices = new DeliveryLoadServices(),
@@ -76,8 +72,7 @@ namespace Ux
                 case EPlayMode.WebPlayMode:
                     {
                         initializeParameters = new WebPlayModeParameters()
-                        {
-                            DecryptionServices = decryptionServices,
+                        {                            
                             BuildinQueryServices = new GameQueryServices(),
                             RemoteServices = new RemoteServices(Global.GetHostServerURL(), Global.GetFallbackHostServerURL()),
                         };
@@ -86,6 +81,7 @@ namespace Ux
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            initializeParameters.DecryptionServices = decryptionServices;
             var initializationOperation = Package.InitializeAsync(initializeParameters);
             yield return initializationOperation;
 

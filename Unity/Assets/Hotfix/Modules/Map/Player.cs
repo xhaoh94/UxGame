@@ -3,6 +3,8 @@ using Ux;
 using System.Collections;
 using Pathfinding;
 using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.Timeline;
 
 namespace Ux
 {
@@ -22,6 +24,7 @@ namespace Ux
         public StateComponent State { get; private set; }
         public OperateComponent Operate { get; private set; }
         public SeekerComponent Seeker { get; private set; }
+        public PlayableDirectorComponent Director { get; private set; }
 
         public void OnAwake(PlayerData a)
         {
@@ -48,6 +51,8 @@ namespace Ux
 
             Anim = AddComponent<AnimComponent, Animator>(Go.GetComponentInChildren<Animator>());
             Seeker = AddComponent<SeekerComponent, Seeker>(Go.GetComponent<Seeker>());
+            Director = AddComponent<PlayableDirectorComponent, PlayableDirector>(Go.GetOrAddComponent<PlayableDirector>());
+            Director.SetBinding("Animation Track", Anim.Animator);
         }
 
         protected override void OnDestroy()
@@ -78,7 +83,7 @@ namespace Ux
             get => _rotation;
             set
             {
-                _rotation = value; 
+                _rotation = value;
                 if (Go != null)
                 {
                     Go.transform.rotation = _rotation;

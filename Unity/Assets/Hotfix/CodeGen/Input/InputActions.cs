@@ -46,6 +46,15 @@ namespace Ux
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Key"",
+                    ""type"": ""Button"",
+                    ""id"": ""c8b0d2e6-6e6b-46ad-b881-47cc38f9ea8b"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -235,6 +244,28 @@ namespace Ux
                     ""action"": ""Fire"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1aa600f3-9da8-4a4d-86bd-14736a842532"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Key"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3b852fe6-0ee2-4945-a0bd-49e2cff384b4"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Key"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -306,6 +337,7 @@ namespace Ux
             m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
             m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
             m_Player_Fire = m_Player.FindAction("Fire", throwIfNotFound: true);
+            m_Player_Key = m_Player.FindAction("Key", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -369,12 +401,14 @@ namespace Ux
         private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
         private readonly InputAction m_Player_Move;
         private readonly InputAction m_Player_Fire;
+        private readonly InputAction m_Player_Key;
         public struct PlayerActions
         {
             private @InputActions m_Wrapper;
             public PlayerActions(@InputActions wrapper) { m_Wrapper = wrapper; }
             public InputAction @Move => m_Wrapper.m_Player_Move;
             public InputAction @Fire => m_Wrapper.m_Player_Fire;
+            public InputAction @Key => m_Wrapper.m_Player_Key;
             public InputActionMap Get() { return m_Wrapper.m_Player; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -390,6 +424,9 @@ namespace Ux
                 @Fire.started += instance.OnFire;
                 @Fire.performed += instance.OnFire;
                 @Fire.canceled += instance.OnFire;
+                @Key.started += instance.OnKeyAsync;
+                @Key.performed += instance.OnKeyAsync;
+                @Key.canceled += instance.OnKeyAsync;
             }
 
             private void UnregisterCallbacks(IPlayerActions instance)
@@ -400,6 +437,9 @@ namespace Ux
                 @Fire.started -= instance.OnFire;
                 @Fire.performed -= instance.OnFire;
                 @Fire.canceled -= instance.OnFire;
+                @Key.started -= instance.OnKeyAsync;
+                @Key.performed -= instance.OnKeyAsync;
+                @Key.canceled -= instance.OnKeyAsync;
             }
 
             public void RemoveCallbacks(IPlayerActions instance)
@@ -466,6 +506,7 @@ namespace Ux
         {
             void OnMove(InputAction.CallbackContext context);
             void OnFire(InputAction.CallbackContext context);
+            void OnKeyAsync(InputAction.CallbackContext context);
         }
     }
 }

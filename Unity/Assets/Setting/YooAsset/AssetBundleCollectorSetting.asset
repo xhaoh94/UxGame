@@ -90,6 +90,14 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+      - CollectPath: Assets/Data/Res/Timeline
+        CollectorGUID: de523ac24d0eef34d83b36ad0bf292a6
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
     - GroupName: Lazyload
       GroupDesc: "\u61D2\u52A0\u8F7D"
       AssetTags: lazyload
