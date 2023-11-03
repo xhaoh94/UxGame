@@ -48,6 +48,7 @@ namespace Ux
             Go.transform.position = playerData.pos;
             Map.Camera.SetFollow(Go.transform);
             Map.Camera.SetLookAt(Go.transform);
+            SetMono(Go);
 
             Anim = AddComponent<AnimComponent, Animator>(Go.GetComponentInChildren<Animator>());
             Seeker = AddComponent<SeekerComponent, Seeker>(Go.GetComponent<Seeker>());

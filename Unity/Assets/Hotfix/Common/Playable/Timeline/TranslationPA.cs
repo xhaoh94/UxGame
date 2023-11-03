@@ -12,6 +12,7 @@ namespace Ux
         // Factory method that generates a playable based on this asset
         public override Playable CreatePlayable(PlayableGraph graph, GameObject go)
         {
+            template.SetGameObject(go);
             var playable = ScriptPlayable<TranslationPB>.Create(graph, template);
             return playable;
         }

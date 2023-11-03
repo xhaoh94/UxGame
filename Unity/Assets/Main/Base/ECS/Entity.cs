@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Ux
 {
@@ -22,7 +23,7 @@ namespace Ux
         {
             _DelayInvoke(200);
         }
-
+        public EntityMono EntityMono { get; private set; }
         public long ID { get; private set; }
         /// <summary>
         /// 是否从对象池获取
@@ -37,6 +38,7 @@ namespace Ux
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
         Entity _parent;
+
 
         /// <summary>
         /// 获取父类实体，如果父类是组件的时候，会循环往上获取，直到获取到为实体为止
@@ -89,6 +91,11 @@ namespace Ux
             return entity;
         }
 
+        public void SetMono(GameObject gameObject)
+        {
+            EntityMono = gameObject.GetOrAddComponent<EntityMono>();
+            EntityMono.SetEntity(this);
+        }
         bool _AddChild(Entity entity)
         {
             if (CheckDestroy())
@@ -424,7 +431,11 @@ namespace Ux
             isDestroying = true;
             TimeMgr.Ins.RemoveAll(this);
             EventMgr.Ins.OffAll(this);
-
+            if (EntityMono != null)
+            {
+                EntityMono.SetEntity(null);
+                EntityMono = null;
+            }
             foreach (var entity in _entitys)
             {
                 entity.Value._Destroy(true);
