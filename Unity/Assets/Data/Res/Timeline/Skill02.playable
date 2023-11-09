@@ -236,9 +236,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70d54b49ab6906040baa306da5f8c250, type: 3}
   m_Name: TranslationPA
   m_EditorClassIdentifier: 
-  template:
-    dis: 1
-    time: 10
+  dis: 1
+  time: 10
 --- !u!114 &8649202846147347922
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -12,19 +12,18 @@ namespace Ux
     {
         public float dis;
         public float time;
-        GameObject go;
+        public GameObject go;
         public void SetGameObject(GameObject go)
         {
             this.go = go;
         }
         public override void OnGraphStart(Playable playable)
-        {
-
+        {            
         }
 
         public override void OnGraphStop(Playable playable)
         {
-
+            playable.GetGraph();
         }
         Vector3 target;
         public override void OnBehaviourPlay(Playable playable, FrameData info)

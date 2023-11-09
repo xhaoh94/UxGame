@@ -27,8 +27,7 @@ namespace Ux
         public PlayableDirectorComponent Director { get; private set; }
 
         public void OnAwake(PlayerData a)
-        {
-            Log.Debug("EnterMap001-Player.OnAwake");
+        {            
             playerData = a;
             State = AddComponent<StateComponent>();
             Operate = AddComponent<OperateComponent>();
@@ -38,12 +37,8 @@ namespace Ux
         public Map Map => Parent as Map;
 
         async UniTaskVoid LoadPlayer()
-        {
-            Log.Debug("LoadPlayer-LoadAssetAsync");
-            var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
-            await handle.ToUniTask();
-            Log.Debug("LoadPlayer-InstantiateSync");
-            Go = handle.InstantiateSync();
+        {            
+            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
             Go.transform.SetParent(Go.transform);
             Go.transform.position = playerData.pos;
             Map.Camera.SetFollow(Go.transform);

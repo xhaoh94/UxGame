@@ -78,7 +78,7 @@ namespace Ux
             private Action _fn;
             protected override Delegate Method => _fn;
 
-            public void SetExeFn(Action fn)
+            public void Init(Action fn)
             {
                 _fn = fn;
             }
@@ -101,7 +101,7 @@ namespace Ux
 
             protected override Delegate Method => _fn;
 
-            public void SetExeFn(Action<A> fn, A _a)
+            public void Init(Action<A> fn, A _a)
             {
                 _fn = fn;
                 a = _a;
@@ -126,7 +126,7 @@ namespace Ux
             private B b;
             protected override Delegate Method => _fn;
 
-            public void SetExeFn(Action<A, B> fn, A _a, B _b)
+            public void Init(Action<A, B> fn, A _a, B _b)
             {
                 _fn = fn;
                 a = _a;
@@ -154,7 +154,7 @@ namespace Ux
             private C c;
             protected override Delegate Method => _fn;
 
-            public void SetExeFn(Action<A, B, C> fn, A _a, B _b, C _c)
+            public void Init(Action<A, B, C> fn, A _a, B _b, C _c)
             {
                 _fn = fn;
                 a = _a;
@@ -211,12 +211,12 @@ namespace Ux
                 return 0;
             }
 
-            public bool Init(IHandleExe _exe, long _key, string cron, bool _isLocalTime)
+            public bool Init(IHandleExe _exe, long _key, string _cron, bool _isLocalTime)
             {
                 exe = _exe;
                 Key = _key;
                 isLocalTime = _isLocalTime;
-                _data = CronData.Create(cron);
+                _data = CronData.Create(_cron);
                 var list = _data.GetExeTime((isLocalTime ? Ins.LocalTime : Ins.ServerTime).Now);
                 if (list == null || list.Count == 0)
                 {
@@ -226,7 +226,7 @@ namespace Ux
                 TimeStamp = list[0].ToTimeStamp();
 #if UNITY_EDITOR
                 TimeStampDesc = TimerHelper.TimeStampToString(TimeStamp);
-                Cron = cron;
+                Cron = _cron;
 #endif
                 return true;
             }

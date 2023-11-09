@@ -29,7 +29,6 @@ namespace Ux
 
             readonly Dictionary<string, int> weekStrToNum;
             readonly Dictionary<string, int> monthStrToNum;
-
             public CronUnitParse(CronType _type)
             {
                 type = _type;
@@ -61,6 +60,8 @@ namespace Ux
                     { "NOV", 11 },
                     { "DEC", 12 }
                 };
+                _min = 0;
+                _max = 2099;
             }
 
             public void Parse()
@@ -156,9 +157,10 @@ namespace Ux
                     throw new Exception($"Cron表达式{type}域,'-' 后必须是整数");
                 }
 
-                var tem = temMin;
+
                 if (temMin > temMax)
                 {
+                    var tem = temMin;
                     temMin = temMax;
                     temMax = tem;
                 }
@@ -369,14 +371,13 @@ namespace Ux
                 return true;
             }
 
-            int Min
+            int _min;
+            public int Min
             {
                 get
                 {
                     switch (type)
                     {
-                        case CronType.Year:
-                            return TimeMgr.Ins.ServerTime.Year;
                         case CronType.Week:
                             return 1;
                         case CronType.Month:
@@ -391,18 +392,22 @@ namespace Ux
                             return 0;
                     }
 
-                    return 0;
+                    return _min;
+                }
+                set
+                {
+                    _min = value;
                 }
             }
 
-            int Max
+
+            int _max;
+            public int Max
             {
                 get
                 {
                     switch (type)
                     {
-                        case CronType.Year:
-                            return 2099;
                         case CronType.Week:
                             return 7;
                         case CronType.Month:
@@ -417,7 +422,11 @@ namespace Ux
                             return 59;
                     }
 
-                    return 0;
+                    return _max;
+                }
+                set
+                {
+                    _max = value;
                 }
             }
 
@@ -448,6 +457,7 @@ namespace Ux
             Week = new CronUnitParse(CronType.Week);
             Month = new CronUnitParse(CronType.Month);
             Year = new CronUnitParse(CronType.Year);
+            yearCron = null;
             Parse(cron);
         }
 
@@ -470,7 +480,7 @@ namespace Ux
             (_cacel ?? new Dictionary<string, CronData>()).Add(cron, data);
             return data;
         }
-
+        string yearCron;
         void Parse(string cron)
         {
             try
@@ -492,27 +502,19 @@ namespace Ux
                 Day.Parse(crons[3]);
                 Month.Parse(crons[4]);
                 Week.Parse(crons[5]);
-                if (crons.Length == 6)
+                if (crons.Length > 6)
                 {
-                    Year.Parse();
+                    yearCron = crons[6];
                 }
-                else
-                {
-                    Year.Parse(crons[6]);
-                }
-
-                _isParse = true;
             }
             catch
             {
-                _isParse = false;
                 Log.Error($"解析Cron表达式[{cron}]失败");
             }
         }
 
         public DateTime GetLateTime(DateTime now)
         {
-            if (!_isParse) return default;
             var list = GetExeTime(now);
             if (list == null || list.Count == 0) return default;
             return list[0];
@@ -521,7 +523,22 @@ namespace Ux
         public List<DateTime> GetExeTime(DateTime time, int cnt = 1)
         {
             time = time.AddMilliseconds(1000 - time.Millisecond + 1);
-            if (!_isParse) return null;
+
+            if (!_isParse && Year.Min != time.Year)
+            {
+                Year.Min = time.Year;
+                Year.Max = time.Year + 99;
+                if (string.IsNullOrEmpty(yearCron))
+                {
+                    Year.Parse();
+                }
+                else
+                {
+                    Year.Parse(yearCron);
+                }
+                _isParse = true;
+            }
+
             List<DateTime> nexts = new List<DateTime>();
             for (var i = 0; i < cnt; i++)
             {
@@ -554,48 +571,48 @@ namespace Ux
             switch (special)
             {
                 case "LW":
-                {
-                    var temDay = time.Day;
-                    var c = days - time.Day; //获取最后一天跟当天的差数                            
-                    time = AddDay(time, c);
-                    while (time.GetWeek() == 1 || time.GetWeek() == 7) //周六、日
                     {
-                        time = AddDay(time, -1);
-                    }
+                        var temDay = time.Day;
+                        var c = days - time.Day; //获取最后一天跟当天的差数                            
+                        time = AddDay(time, c);
+                        while (time.GetWeek() == 1 || time.GetWeek() == 7) //周六、日
+                        {
+                            time = AddDay(time, -1);
+                        }
 
-                    return time.Day < temDay ? //日期已经过去了,跳转到下个月1号
-                        ParseDay(AddMonth(time, 1)) : time;
-                }
+                        return time.Day < temDay ? //日期已经过去了,跳转到下个月1号
+                            ParseDay(AddMonth(time, 1)) : time;
+                    }
                 //指定日期超出当月天数,跳转到下个月1号
                 case "W" when specialNum > days:
                     return ParseDay(AddMonth(time, 1));
                 case "W":
-                {
-                    var temDay = time.Day;
-                    add = specialNum - time.Day;
-                    time = AddDay(time, add); //跳到指定日期                            
-                    if (time.GetWeek() == 1) //周日
                     {
-                        if (time.Day < days)
+                        var temDay = time.Day;
+                        add = specialNum - time.Day;
+                        time = AddDay(time, add); //跳到指定日期                            
+                        if (time.GetWeek() == 1) //周日
                         {
-                            time = AddDay(time, 1);
+                            if (time.Day < days)
+                            {
+                                time = AddDay(time, 1);
+                            }
                         }
-                    }
-                    else if (time.GetWeek() == 7) //周六
-                    {
-                        if (time.Day > 1)
+                        else if (time.GetWeek() == 7) //周六
                         {
-                            time = AddDay(time, -1);
+                            if (time.Day > 1)
+                            {
+                                time = AddDay(time, -1);
+                            }
                         }
-                    }
 
-                    if (time.GetWeek() == 1 || time.GetWeek() == 7 || temDay > time.Day) //指定日期小于当前日期，跳下个月
-                    {
-                        return ParseDay(AddMonth(time, 1));
-                    }
+                        if (time.GetWeek() == 1 || time.GetWeek() == 7 || temDay > time.Day) //指定日期小于当前日期，跳下个月
+                        {
+                            return ParseDay(AddMonth(time, 1));
+                        }
 
-                    return time;
-                }
+                        return time;
+                    }
                 case "L":
                     add = days - time.Day; //最后一天
                     time = AddDay(time, add);
@@ -605,7 +622,7 @@ namespace Ux
             add = Day.GetAdd(time.Day, days, false);
             if (add == -1) //后续没有可选择日期，跳下个月
             {
-                return ParseDay(AddMonth(time, 1));
+                return ParseDay(AddMonth(time, 1, Day.values[0]));
             }
 
             time = AddDay(time, add);
@@ -744,7 +761,7 @@ namespace Ux
             return time.AddDays(add);
         }
 
-        DateTime AddMonth(DateTime time, int add)
+        DateTime AddMonth(DateTime time, int add, int day = 1)
         {
             if (add == 0) return time;
             var newMonth = time.Month + add;
@@ -755,7 +772,7 @@ namespace Ux
                 newYear++;
             }
 
-            return new DateTime(newYear, newMonth, 1, Hour.values[0], Minute.values[0], Second.values[0]);
+            return new DateTime(newYear, newMonth, day, Hour.values[0], Minute.values[0], Second.values[0]);
         }
 
         DateTime Check(DateTime time)

@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 
 public readonly struct EventList
@@ -22,4 +23,23 @@ public readonly struct EventList
         return events.Count == 0;
     }
 }
+
+namespace Ux
+{
+    public partial class EventMgr
+    {
+        private readonly Dictionary<string, EventList> type2editor = new Dictionary<string, EventList>();
+
+        public static void __Debugger_Event()
+        {
+            if (UnityEditor.EditorApplication.isPlaying)
+            {
+                __Debugger_CallBack?.Invoke(Ins.type2editor);
+            }
+        }
+
+        public static Action<Dictionary<string, EventList>> __Debugger_CallBack;
+    }
+}
+
 #endif

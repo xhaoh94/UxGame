@@ -26,7 +26,7 @@ namespace Ux
                 var target = path.vectorPath[pathIndex];
                 var dir = target - Player.Postion;
                 var rotation = Quaternion.LookRotation(dir);
-                Player.Rotation = Quaternion.Slerp(Player.Rotation, rotation, Time.fixedDeltaTime * 5f);
+                Player.Rotation = Quaternion.Slerp(Player.Rotation, rotation, Time.fixedDeltaTime * 10f);
                 Player.Postion += dir.normalized * (Time.fixedDeltaTime * 5);
                 if (Vector3.SqrMagnitude(dir) <= 0.1f)
                 {

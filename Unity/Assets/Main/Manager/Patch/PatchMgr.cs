@@ -19,7 +19,7 @@ namespace Ux
                 IsDone = false;
                 _isRun = true;
                 machine = StateMachine.CreateByPool();
-                // 注意：按照先后顺序添加流程节点
+
                 machine.AddNode(new PatchPatchInit());
                 machine.AddNode(new PatchUpdateStaticVersion());
                 machine.AddNode(new PatchUpdateManifest());
@@ -27,7 +27,7 @@ namespace Ux
                 machine.AddNode(new PatchDownloadWebFiles());
                 machine.AddNode(new PatchDone());
                 if (playMode == EPlayMode.EditorSimulateMode)
-                {
+                {                    
                     machine.Enter<PatchDone>();
                 }
                 else

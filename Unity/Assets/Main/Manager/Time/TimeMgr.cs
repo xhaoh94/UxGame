@@ -30,96 +30,72 @@ namespace Ux
             Release
         }
 
-        sealed class HandleMap
+        partial class HandleMap
         {
             readonly TimeType _timeType;
             public HandleMap(TimeType timeType)
             {
                 _timeType = timeType;
             }
-#if UNITY_EDITOR
-            public readonly Dictionary<string, TimeList> desc2editor = new Dictionary<string, TimeList>();
-#endif
-            private readonly List<IHandle> handles = new List<IHandle>();
-            private readonly Dictionary<long, IHandle> handleDic = new Dictionary<long, IHandle>();
-            private readonly Dictionary<int, List<long>> thix2keys = new Dictionary<int, List<long>>();
 
-            readonly List<IHandle> waitAdds = new List<IHandle>();
-            readonly List<IHandle> waitDels = new List<IHandle>();
+            private readonly List<IHandle> _handles = new List<IHandle>();
+            private readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
+            private readonly Dictionary<int, List<long>> _targetkeys = new Dictionary<int, List<long>>();
+
+            readonly List<IHandle> _waitAdds = new List<IHandle>();
+            readonly List<IHandle> _waitDels = new List<IHandle>();
 
             public void Clear()
             {
-                handles.Clear();
-                handleDic.Clear();
-                thix2keys.Clear();
-                waitAdds.Clear();
-                waitDels.Clear();
+                _handles.Clear();
+                _keyHandle.Clear();
+                _targetkeys.Clear();
+                _waitAdds.Clear();
+                _waitDels.Clear();
 #if UNITY_EDITOR
-                desc2editor.Clear();
+                _descEditor.Clear();
 #endif
             }
 
-#if UNITY_EDITOR
-            void __Debugger_Event()
-            {
-                switch (_timeType)
-                {
-                    case TimeType.Time:
-                        __Debugger_Time_Event();
-                        break;
-                    case TimeType.Frame:
-                        __Debugger_Frame_Event();
-                        break;
-                    case TimeType.TimeStamp:
-                        __Debugger_TimeStamp_Event();
-                        break;
-                    case TimeType.Cron:
-                        __Debugger_Cron_Event();
-                        break;
-                }
-            }
-#endif
 
-            private bool needSort;
-#if UNITY_EDITOR
-            bool __isEvent;
-#endif
+            bool _needSort;
+
             public void Run()
             {
-                while (waitDels.Count > 0)
+                while (_waitDels.Count > 0)
                 {
-                    var handle = waitDels[0];
-                    waitDels.RemoveAt(0);
-                    var key = handle.Key;
-                    var target = handle.Target;
-
+                    var handle = _waitDels[0];
+                    _waitDels.RemoveAt(0);                                        
 #if UNITY_EDITOR
                     var exeDesc = handle.MethodName;
-                    if (desc2editor.TryGetValue(exeDesc, out var d2eList))
+                    if (_descEditor.TryGetValue(exeDesc, out var temList))
                     {
-                        if (d2eList.Remove(handle))
+                        if (temList.Remove(handle))
                         {
-                            desc2editor.Remove(exeDesc);
+                            _descEditor.Remove(exeDesc);
                             __Debugger_Event();
                         }
                     }
 #endif
-                    handleDic.Remove(key);
+                    var key = handle.Key;
+                    _keyHandle.Remove(key);
+
+                    var target = handle.Target;
                     if (target != null)
                     {
                         var hashCode = target.GetHashCode();
-                        if (!thix2keys.TryGetValue(hashCode, out var keys)) continue;
+                        if (!_targetkeys.TryGetValue(hashCode, out var keys)) continue;
                         keys.Remove(key);
-                        if (keys.Count == 0) thix2keys.Remove(hashCode);
+                        if (keys.Count == 0) _targetkeys.Remove(hashCode);
                     }
 
                     handle.Release();
-                    handles.Remove(handle);
+                    _handles.Remove(handle);
                 }
 
-                if (needSort)
+                if (_needSort)
                 {
-                    handles.Sort((a, b) => b.Compare(a));
+                    _handles.Sort((a, b) => b.Compare(a));
                 }
 
 #if UNITY_EDITOR
@@ -130,30 +106,31 @@ namespace Ux
 #endif
 
 
-                while (waitAdds.Count > 0)
+                while (_waitAdds.Count > 0)
                 {
-                    var handle = waitAdds[0];
-                    waitAdds.RemoveAt(0);
+                    var handle = _waitAdds[0];
+                    _waitAdds.RemoveAt(0);
                     Sort(handle);
-                    handleDic.Add(handle.Key, handle);
+                    _keyHandle.Add(handle.Key, handle);
                     var target = handle.Target;
 #if UNITY_EDITOR
-                    if (!desc2editor.TryGetValue(handle.MethodName, out var d2eList))
+                    var exeDesc = handle.MethodName;
+                    if (!_descEditor.TryGetValue(exeDesc, out var temList))
                     {
-                        d2eList = new TimeList(handle.MethodName);
-                        desc2editor.Add(handle.MethodName, d2eList);
+                        temList = new TimeList(exeDesc);
+                        _descEditor.Add(exeDesc, temList);
                     }
 
-                    d2eList.Add(handle);
+                    temList.Add(handle);
                     __Debugger_Event();
 #endif
                     if (target != null)
                     {
                         int hashCode = target.GetHashCode();
-                        if (!thix2keys.TryGetValue(hashCode, out var keys))
+                        if (!_targetkeys.TryGetValue(hashCode, out var keys))
                         {
                             keys = new List<long>();
-                            thix2keys.Add(hashCode, keys);
+                            _targetkeys.Add(hashCode, keys);
                         }
 
                         keys.Add(handle.Key);
@@ -165,15 +142,15 @@ namespace Ux
 
             void OnRun()
             {
-                needSort = false;
+                _needSort = false;
 #if UNITY_EDITOR
                 __isEvent = false;
 #endif
-                if (handles.Count <= 0) return;
+                if (_handles.Count <= 0) return;
 
-                for (var i = handles.Count - 1; i >= 0; i--)
+                for (var i = _handles.Count - 1; i >= 0; i--)
                 {
-                    var handler = handles[i];
+                    var handler = _handles[i];
                     switch (handler.Run())
                     {
                         case RunStatus.Wait:
@@ -182,7 +159,7 @@ namespace Ux
 #if UNITY_EDITOR
                             __isEvent = true;
 #endif
-                            needSort = true;
+                            _needSort = true;
                             break;
                         case RunStatus.Done:
                             Remove(handler);
@@ -199,7 +176,7 @@ namespace Ux
             private void Sort(IHandle handle)
             {
                 var stratIndex = 0;
-                var endIndex = handles.Count;
+                var endIndex = _handles.Count;
                 int loopCnt = 0;
                 while (true)
                 {
@@ -208,7 +185,7 @@ namespace Ux
                         int insertIndex = -1;
                         for (var i = stratIndex; i < endIndex; i++)
                         {
-                            if (handle.Compare(handles[i]) >= 0)
+                            if (handle.Compare(_handles[i]) >= 0)
                             {
                                 insertIndex = i;
                                 break;
@@ -217,23 +194,23 @@ namespace Ux
 
                         if (insertIndex != -1)
                         {
-                            handles.Insert(insertIndex, handle);
+                            _handles.Insert(insertIndex, handle);
                         }
                         else
                         {
-                            handles.Add(handle);
+                            _handles.Add(handle);
                         }
 
                         return;
                     }
 
                     var index = stratIndex + ((endIndex - stratIndex) >> 1);
-                    if (handle.Compare(handles[index]) == 0)
+                    if (handle.Compare(_handles[index]) == 0)
                     {
-                        handles.Insert(index, handle);
+                        _handles.Insert(index, handle);
                         return;
                     }
-                    else if (handle.Compare(handles[index]) > 0)
+                    else if (handle.Compare(_handles[index]) > 0)
                     {
                         endIndex = index;
                     }
@@ -243,9 +220,9 @@ namespace Ux
                     }
 
                     loopCnt++;
-                    if (loopCnt > 500)
+                    if (loopCnt > 1000)
                     {
-                        Log.Warning("时间排序循环超出");
+                        Log.Error("时间排序循环超出");
                         break;
                     }
                 }
@@ -253,14 +230,14 @@ namespace Ux
 
             public void Add(IHandle handle)
             {
-                if (waitAdds.Contains(handle)) return;
+                if (_waitAdds.Contains(handle)) return;
                 handle.Status = Status.Normal;
-                waitAdds.Add(handle);
+                _waitAdds.Add(handle);
             }
 
             public bool ContainsKey(long key)
             {
-                var b = handleDic.TryGetValue(key, out var handle) && handle.Status == Status.Normal;
+                var b = _keyHandle.TryGetValue(key, out var handle) && handle.Status == Status.Normal;
                 if (b)
                 {
                     Log.Error("TIME:重复注册 {0}", handle.MethodName);
@@ -269,11 +246,11 @@ namespace Ux
                 return b;
             }
 
-            public void RemoveAll(object thix)
+            public void RemoveAll(object target)
             {
-                if (thix == null) return;
-                int hashCode = thix.GetHashCode();
-                if (!thix2keys.TryGetValue(hashCode, out var keys)) return;
+                if (target == null) return;
+                int hashCode = target.GetHashCode();
+                if (!_targetkeys.TryGetValue(hashCode, out var keys)) return;
                 foreach (var key in keys)
                 {
                     Remove(key);
@@ -282,12 +259,12 @@ namespace Ux
 
             public void Remove(long key)
             {
-                if (!handleDic.TryGetValue(key, out var handle))
+                if (!_keyHandle.TryGetValue(key, out var handle))
                 {
-                    if (waitAdds.Count > 0)
+                    if (_waitAdds.Count > 0)
                     {
-                        var index = waitAdds.FindIndex(x => x.Key == key);
-                        waitAdds.RemoveAt(index);
+                        var index = _waitAdds.FindIndex(x => x.Key == key);
+                        _waitAdds.RemoveAt(index);
                     }
                     return;
                 }
@@ -296,9 +273,9 @@ namespace Ux
 
             void Remove(IHandle handle)
             {
-                if (waitDels.Contains(handle)) return;
+                if (_waitDels.Contains(handle)) return;
                 handle.Status = Status.WaitDel;
-                waitDels.Add(handle);
+                _waitDels.Add(handle);
             }
         }
 
@@ -327,51 +304,7 @@ namespace Ux
             var offset = timeStamp - LocalTime.TimeStamp;
             (ServerTime as ServerTime)?.SetOffset(offset);
         }
-
-        #region 编辑器
-
-#if UNITY_EDITOR
-        public static void __Debugger_Time_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_Time_CallBack?.Invoke(Ins._timer.desc2editor);
-            }
-        }
-
-        public static void __Debugger_Frame_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_Frame_CallBack?.Invoke(Ins._frame.desc2editor);
-            }
-        }
-
-        public static void __Debugger_TimeStamp_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_TimeStamp_CallBack?.Invoke(Ins._timeStamp.desc2editor);
-            }
-        }
-
-        public static void __Debugger_Cron_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_Cron_CallBack?.Invoke(Ins._cron.desc2editor);
-            }
-        }
-
-        public static Action<Dictionary<string, TimeList>> __Debugger_Time_CallBack;
-        public static Action<Dictionary<string, TimeList>> __Debugger_Frame_CallBack;
-        public static Action<Dictionary<string, TimeList>> __Debugger_TimeStamp_CallBack;
-        public static Action<Dictionary<string, TimeList>> __Debugger_Cron_CallBack;
-
-#endif
-
-        #endregion
-
+        
         public void FixedUpdate()
         {
             _fixedUpdate?.Invoke();
@@ -459,12 +392,12 @@ namespace Ux
             _cron.Remove(key);
         }
 
-        public void RemoveAll(object thix)
+        public void RemoveAll(object target)
         {
-            _timer.RemoveAll(thix);
-            _frame.RemoveAll(thix);
-            _timeStamp.RemoveAll(thix);
-            _cron.RemoveAll(thix);
+            _timer.RemoveAll(target);
+            _frame.RemoveAll(target);
+            _timeStamp.RemoveAll(target);
+            _cron.RemoveAll(target);
         }
 
         public void Release()
@@ -499,7 +432,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe>();
-            exe.SetExeFn(action);
+            exe.Init(action);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
@@ -512,7 +445,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe>();
-            exe.SetExeFn(action);
+            exe.Init(action);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
@@ -525,7 +458,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.SetExeFn(action, a);
+            exe.Init(action, a);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
@@ -538,7 +471,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.SetExeFn(action, a);
+            exe.Init(action, a);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
@@ -551,7 +484,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.SetExeFn(action, a, b);
+            exe.Init(action, a, b);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
@@ -564,7 +497,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.SetExeFn(action, a, b);
+            exe.Init(action, a, b);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
@@ -577,7 +510,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.SetExeFn(action, a, b, c);
+            exe.Init(action, a, b, c);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
@@ -590,7 +523,7 @@ namespace Ux
             var handle = CreateHandle<TimeHandle>(out var key, dic, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.SetExeFn(action, a, b, c);
+            exe.Init(action, a, b, c);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
@@ -980,7 +913,7 @@ namespace Ux
             var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe>();
-            exe.SetExeFn(action);
+            exe.Init(action);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
@@ -998,7 +931,7 @@ namespace Ux
             var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.SetExeFn(action, a);
+            exe.Init(action, a);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
@@ -1016,7 +949,7 @@ namespace Ux
             var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.SetExeFn(action, a, b);
+            exe.Init(action, a, b);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
@@ -1035,7 +968,7 @@ namespace Ux
             var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.SetExeFn(action, a, b, c);
+            exe.Init(action, a, b, c);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
@@ -1079,7 +1012,7 @@ namespace Ux
             var handle = CreateHandle<CronHandle>(out var key, _cron, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe>();
-            exe.SetExeFn(action);
+            exe.Init(action);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1097,7 +1030,7 @@ namespace Ux
             var handle = CreateHandle<CronHandle>(out var key, _cron, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.SetExeFn(action, a);
+            exe.Init(action, a);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1115,7 +1048,7 @@ namespace Ux
             var handle = CreateHandle<CronHandle>(out var key, _cron, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.SetExeFn(action, a, b);
+            exe.Init(action, a, b);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1133,7 +1066,7 @@ namespace Ux
             var handle = CreateHandle<CronHandle>(out var key, _cron, action);
             if (handle == default) return 0;
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.SetExeFn(action, a, b, c);
+            exe.Init(action, a, b, c);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;

@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70d54b49ab6906040baa306da5f8c250, type: 3}
   m_Name: TriggerPlayableAsset
   m_EditorClassIdentifier: 
-  template:
-    dis: 1
-    time: 5
+  dis: 1.5
+  time: 20
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

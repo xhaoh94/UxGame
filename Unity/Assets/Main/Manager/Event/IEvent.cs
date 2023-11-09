@@ -49,7 +49,7 @@ namespace Ux
                 }
             }
 
-            public void SetETypeStr(string eTypeStr)
+            public void Init(string eTypeStr)
             {
                 ETypeStr = eTypeStr;
             }
@@ -84,7 +84,7 @@ namespace Ux
 #if UNITY_EDITOR
             public override string MethodName => _method.MethodName;
 #endif
-            public void SetExeFn(long key, int eType, FastMethodInfo method)
+            public void Init(long key, int eType, FastMethodInfo method)
             {
                 Key = key;
                 EType = eType;
@@ -122,7 +122,7 @@ namespace Ux
             public override Delegate Method => _fn;
             Action _fn;
 
-            public void SetExeFn(long key, int eType, Action fn)
+            public void Init(long key, int eType, Action fn)
             {
                 Key = key;
                 EType = eType;
@@ -160,7 +160,7 @@ namespace Ux
             public override Delegate Method => _fn;
             Action<A> _fn;
 
-            public void SetExeFn(long key, int eType, Action<A> fn)
+            public void Init(long key, int eType, Action<A> fn)
             {
                 Key = key;
                 EType = eType;
@@ -198,7 +198,7 @@ namespace Ux
             public override Delegate Method => _fn;
             Action<A, B> _fn;
 
-            public void SetExeFn(long key, int eType, Action<A, B> fn)
+            public void Init(long key, int eType, Action<A, B> fn)
             {
                 Key = key;
                 EType = eType;
@@ -236,7 +236,7 @@ namespace Ux
             public override Delegate Method => _fn;
             Action<A, B, C> _fn;
 
-            public void SetExeFn(long key, int eType, Action<A, B, C> fn)
+            public void Init(long key, int eType, Action<A, B, C> fn)
             {
                 Key = key;
                 EType = eType;

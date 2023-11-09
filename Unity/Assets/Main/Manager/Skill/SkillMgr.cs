@@ -18,9 +18,7 @@ namespace Ux
             {
                 return data;
             }
-            var handle = ResMgr.Ins.LoadAssetAsync<TimelineAsset>(res);
-            await handle.ToUniTask();
-            var asset = handle.AssetObject as TimelineAsset;
+            var asset = await ResMgr.Ins.LoadAssetAsync<TimelineAsset>(res);
 
             data = new SkillAsset(asset);
             resToData[res] = data;

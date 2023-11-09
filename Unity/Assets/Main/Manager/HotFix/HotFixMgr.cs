@@ -23,7 +23,7 @@ namespace Ux
                 Log.Error("没有加载热更DLL");
                 return;
             }
-            
+
             ResMgr.Ins.LoadSceneAsync(HotfixScene);
         }
 
@@ -70,16 +70,14 @@ namespace Ux
                 {
                     dllName += ".dll";
                 }
-                var handle = ResMgr.Ins.LoadAssetAsync<TextAsset>(dllName);
-                if (handle == null)
+                var ta = await ResMgr.Ins.LoadAssetAsync<TextAsset>(dllName);
+                if (ta == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");
                 }
                 else
                 {
-                    await handle.ToUniTask();
-                    byte[] assBytes = (handle.AssetObject as TextAsset)?.bytes;
-                    handle.Release();
+                    byte[] assBytes = ta?.bytes;
                     // 加载assembly对应的dll，会自动为它hook。一旦aot泛型函数的native函数不存在，用解释器版本代码
                     var err = RuntimeApi.LoadMetadataForAOTAssembly(assBytes, mode);
                     Log.Debug($"LoadMetadataForAOTAssembly:{dllName}. ret:{err}");

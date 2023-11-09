@@ -44,10 +44,7 @@ namespace Ux
                 return;
             }
 
-            var handle = ResMgr.Ins.LoadAssetAsync<AnimationClip>(AnimName);
-            await handle.ToUniTask();
-            var clip = handle.GetAssetObject<AnimationClip>();
-            handle.Release();
+            var clip = await ResMgr.Ins.LoadAssetAsync<AnimationClip>(AnimName);
             anim.AddAnimation(AnimName, clip);
             if (Machine.CurrentNode == this)
             {

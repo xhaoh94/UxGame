@@ -24,15 +24,12 @@ namespace Ux
         protected override void OnInit()
         {
             base.OnInit();
-            Entity.Create<World>();                        
+            Entity.Create<World>();
         }
 
         public async UniTask EnterMap(string mapName)
         {            
-            var handle = ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
-            await handle.ToUniTask();            
-            var go = handle.InstantiateSync();
-            handle.Release();            
+            var go =await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);          
             var newMap = World.Ins.AddChild<Map, GameObject>(go);
             if (map != null)
             {

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using YooAsset;
 
 namespace Ux
@@ -18,7 +20,7 @@ namespace Ux
         public abstract Type DecryptionType { get; }
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
-
+        
         public void CreatePackage()
         {
             Package = YooAssets.TryGetPackage(Name);
@@ -60,7 +62,7 @@ namespace Ux
                 case EPlayMode.HostPlayMode:
                     {
                         initializeParameters = new HostPlayModeParameters
-                        {                            
+                        {
                             BuildinQueryServices = new GameQueryServices(),
                             DeliveryQueryServices = new DeliveryQueryServices(),
                             DeliveryLoadServices = new DeliveryLoadServices(),
@@ -72,7 +74,7 @@ namespace Ux
                 case EPlayMode.WebPlayMode:
                     {
                         initializeParameters = new WebPlayModeParameters()
-                        {                            
+                        {
                             BuildinQueryServices = new GameQueryServices(),
                             RemoteServices = new RemoteServices(Global.GetHostServerURL(), Global.GetFallbackHostServerURL()),
                         };
@@ -90,8 +92,7 @@ namespace Ux
             {
                 Log.Warning($"{initializationOperation.Error}");
             }
-        }
-
+        }                      
 
         #region 远端地址
         /// <summary>

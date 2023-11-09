@@ -7,174 +7,16 @@ namespace Ux
 {
     public partial class EventMgr : Singleton<EventMgr>
     {
-        #region Exe
-
-        interface IEventExe
-        {
-            void Exe(ref int exeCnt);
-        }
-
-        readonly struct EventExe : IEventExe
-        {
-            readonly int eType;
-
-            public EventExe(int _eType)
-            {
-                eType = _eType;
-            }
-
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
-                {
-                    var key = keys[i];
-                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
-                    {
-                        aEvent?.Run();
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                    }
-                }
-            }
-        }
-
-        readonly struct EventExe<A> : IEventExe
-        {
-            readonly int eType;
-            readonly A a;
-
-            public EventExe(int _eType, A _a)
-            {
-                eType = _eType;
-                a = _a;
-            }
-
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
-                {
-                    var key = keys[i];
-                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
-                    {
-                        aEvent?.Run(a);
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                    }
-                }
-            }
-        }
-
-        readonly struct EventExe<A, B> : IEventExe
-        {
-            readonly int eType;
-            readonly A a;
-            readonly B b;
-
-            public EventExe(int _eType, A _a, B _b)
-            {
-                eType = _eType;
-                a = _a;
-                b = _b;
-            }
-
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
-                {
-                    var key = keys[i];
-                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
-                    {
-                        aEvent?.Run(a, b);
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                    }
-                }
-            }
-        }
-
-        readonly struct EventExe<A, B, C> : IEventExe
-        {
-            readonly int eType;
-            readonly A a;
-            readonly B b;
-            readonly C c;
-
-            public EventExe(int _eType, A _a, B _b, C _c)
-            {
-                eType = _eType;
-                a = _a;
-                b = _b;
-                c = _c;
-            }
-
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins.eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
-                {
-                    var key = keys[i];
-                    if (!Ins.keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
-                    {
-                        aEvent?.Run(a, b, c);
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                    }
-                }
-            }
-        }
-
-        #endregion
-
         //每帧执行上限-超出上限，下一帧处理
         public const int ExeLimit = 1000;
-        private readonly Dictionary<int, List<long>> eTypeKeys = new Dictionary<int, List<long>>();
-        private readonly Dictionary<long, IEvent> keyEvent = new Dictionary<long, IEvent>();
-        private readonly Dictionary<int, List<long>> targetKeys = new Dictionary<int, List<long>>();
-        private readonly Dictionary<int, List<long>> actionKeys = new Dictionary<int, List<long>>();
+        private readonly Dictionary<long, IEvent> _keyEvent = new Dictionary<long, IEvent>();
+        private readonly Dictionary<int, List<long>> _eTypeKeys = new Dictionary<int, List<long>>();
+        private readonly Dictionary<int, List<long>> _targetKeys = new Dictionary<int, List<long>>();
+        private readonly Dictionary<int, List<long>> _actionKeys = new Dictionary<int, List<long>>();
 
         private readonly Queue<IEventExe> _waitExes = new Queue<IEventExe>();
         private readonly List<IEvent> _waitAdds = new List<IEvent>();
         private readonly List<long> _waitDels = new List<long>();
-
-
-#if UNITY_EDITOR
-        private readonly Dictionary<string, EventList> type2editor = new Dictionary<string, EventList>();
-
-        public static void __Debugger_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_CallBack?.Invoke(Ins.type2editor);
-            }
-        }
-
-        public static Action<Dictionary<string, EventList>> __Debugger_CallBack;
-
-
-#endif
 
         Type ___hotfixEvtAttribute;
 
@@ -205,53 +47,37 @@ namespace Ux
                 {
                     var evtAttr = (IEvtAttribute)attr;
 #if UNITY_EDITOR
-                    if (string.IsNullOrEmpty(evtAttr.ETypeStr))
-                    {
-                        On(evtAttr.EType, fastMethod);
-                    }
-                    else
+                    if (!string.IsNullOrEmpty(evtAttr.ETypeStr))
                     {
                         On(evtAttr.ETypeStr, evtAttr.EType, fastMethod);
+                        continue;
                     }
-#else
-                        On(evtAttr.EType, fastMethod);
 #endif
+                    On(evtAttr.EType, fastMethod);
                 }
             }
         }
-
-        private long GetKey(int eType, Delegate action)
+        private long GetKey(int eType, object action, object target)
         {
-            if (action == null) return 0;
-            long key = 0;
-            var target = action.Target;
             if (target == null)
             {
-                key = IDGenerater.GenerateId(eType, action.GetHashCode());
+                return IDGenerater.GenerateId(eType, action.GetHashCode());
             }
             else
             {
-                key = IDGenerater.GenerateId(eType, action.GetHashCode(), target.GetHashCode());
+                return IDGenerater.GenerateId(eType, action.GetHashCode(), target.GetHashCode());
             }
-
-            return key;
+        }
+        private long GetKey(int eType, Delegate action)
+        {
+            if (action == null) return 0;
+            return GetKey(eType, action, action.Target);
         }
 
         private long GetKey(int eType, FastMethodInfo action)
         {
             if (action == null) return 0;
-            long key = 0;
-            var target = action.Target;
-            if (target == null)
-            {
-                key = IDGenerater.GenerateId(eType, action.GetHashCode());
-            }
-            else
-            {
-                key = IDGenerater.GenerateId(eType, action.GetHashCode(), target.GetHashCode());
-            }
-
-            return key;
+            return GetKey(eType, action.Method, action.Target);
         }
 
         public void Update()
@@ -260,29 +86,29 @@ namespace Ux
             {
                 var key = _waitDels[0];
                 _waitDels.RemoveAt(0);
-                if (!keyEvent.TryGetValue(key, out var evt)) continue;
+                if (!_keyEvent.TryGetValue(key, out var evt)) continue;
                 var eType = evt.EType;
-                var target = evt.Target;
-                var actionHashCode = evt.Method.GetHashCode();
-                if (eTypeKeys.TryGetValue(eType, out var typeKeys))
+                if (_eTypeKeys.TryGetValue(eType, out var typeKeys))
                 {
                     typeKeys.Remove(key);
-                    if (typeKeys.Count == 0) eTypeKeys.Remove(eType);
+                    if (typeKeys.Count == 0) _eTypeKeys.Remove(eType);
                 }
 
-                if (actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                var actionHashCode = evt.Method.GetHashCode();
+                if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
                 {
                     aKeys.Remove(key);
-                    if (aKeys.Count == 0) actionKeys.Remove(actionHashCode);
+                    if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
                 }
 
+                var target = evt.Target;
                 if (target != null)
                 {
                     int hashCode = target.GetHashCode();
-                    if (targetKeys.TryGetValue(hashCode, out var tKeys))
+                    if (_targetKeys.TryGetValue(hashCode, out var tKeys))
                     {
                         tKeys.Remove(key);
-                        if (tKeys.Count == 0) targetKeys.Remove(hashCode);
+                        if (tKeys.Count == 0) _targetKeys.Remove(hashCode);
                     }
                 }
 #if UNITY_EDITOR
@@ -299,22 +125,19 @@ namespace Ux
 #endif
 
                 evt.Release();
-                keyEvent.Remove(key);
+                _keyEvent.Remove(key);
             }
 
             while (_waitAdds.Count > 0)
             {
                 var evt = _waitAdds[0];
                 _waitAdds.RemoveAt(0);
-                keyEvent.Add(evt.Key, evt);
+                _keyEvent.Add(evt.Key, evt);
                 var eType = evt.EType;
-                var key = evt.Key;
-                var target = evt.Target;
-                var actionHashCode = evt.Method.GetHashCode();
-                if (!eTypeKeys.TryGetValue(eType, out var typeKeys))
+                if (!_eTypeKeys.TryGetValue(eType, out var typeKeys))
                 {
                     typeKeys = new List<long>();
-                    eTypeKeys.Add(eType, typeKeys);
+                    _eTypeKeys.Add(eType, typeKeys);
                 }
 
 #if UNITY_EDITOR
@@ -329,37 +152,40 @@ namespace Ux
                 t2eList.Add(evt.MethodName);
                 __Debugger_Event();
 #endif
-
+                var key = evt.Key;
                 if (!typeKeys.Contains(key)) typeKeys.Insert(0, key);
 
-                if (!actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                var actionHashCode = evt.Method.GetHashCode();
+                if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
                 {
                     aKeys = new List<long>();
-                    actionKeys.Add(actionHashCode, aKeys);
+                    _actionKeys.Add(actionHashCode, aKeys);
                 }
 
                 if (!aKeys.Contains(key)) aKeys.Insert(0, key);
 
+                var target = evt.Target;
                 if (target != null)
                 {
                     int hashCode = target.GetHashCode();
-                    if (!targetKeys.TryGetValue(hashCode, out var tKeys))
+                    if (!_targetKeys.TryGetValue(hashCode, out var tKeys))
                     {
                         tKeys = new List<long>();
-                        targetKeys.Add(hashCode, tKeys);
+                        _targetKeys.Add(hashCode, tKeys);
                     }
 
                     if (!tKeys.Contains(key)) tKeys.Insert(0, key);
                 }
             }
 
-            int exeCnt = 0;
-            while (_waitExes.Count > 0 && exeCnt < ExeLimit)
+            _exeCnt = 0;
+            while (_waitExes.Count > 0 && _exeCnt < ExeLimit)
             {
                 var exe = _waitExes.Dequeue();
-                exe.Exe(ref exeCnt);
+                exe.Exe(ref _exeCnt);
             }
         }
+        int _exeCnt = 0;
 
         Action _quitCb;
 
@@ -383,8 +209,8 @@ namespace Ux
             var evtData = _Add(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
-                evtData.SetETypeStr(eTypeStr);
+                evtData.Init(key, eType, action);
+                evtData.Init(eTypeStr);
             }
 
             return key;
@@ -395,8 +221,8 @@ namespace Ux
             var evtData = _Add<EventData>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
-                evtData.SetETypeStr(eTypeStr);
+                evtData.Init(key, eType, action);
+                evtData.Init(eTypeStr);
             }
 
             return key;
@@ -407,8 +233,8 @@ namespace Ux
             var evtData = _Add<EventData<A>>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
-                evtData.SetETypeStr(eTypeStr);
+                evtData.Init(key, eType, action);
+                evtData.Init(eTypeStr);
             }
 
             return key;
@@ -419,8 +245,8 @@ namespace Ux
             var evtData = _Add<EventData<A, B>>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
-                evtData.SetETypeStr(eTypeStr);
+                evtData.Init(key, eType, action);
+                evtData.Init(eTypeStr);
             }
 
             return key;
@@ -431,8 +257,8 @@ namespace Ux
             var evtData = _Add<EventData<A, B, C>>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
-                evtData.SetETypeStr(eTypeStr);
+                evtData.Init(key, eType, action);
+                evtData.Init(eTypeStr);
             }
 
             return key;
@@ -443,7 +269,7 @@ namespace Ux
             var evtData = _Add(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
+                evtData.Init(key, eType, action);
             }
 
             return key;
@@ -454,7 +280,7 @@ namespace Ux
             var evtData = _Add<EventData>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
+                evtData.Init(key, eType, action);
             }
 
             return key;
@@ -465,7 +291,7 @@ namespace Ux
             var evtData = _Add<EventData<A>>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
+                evtData.Init(key, eType, action);
             }
 
             return key;
@@ -476,7 +302,7 @@ namespace Ux
             var evtData = _Add<EventData<A, B>>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
+                evtData.Init(key, eType, action);
             }
 
             return key;
@@ -487,7 +313,7 @@ namespace Ux
             var evtData = _Add<EventData<A, B, C>>(out var key, eType, action);
             if (evtData != default)
             {
-                evtData.SetExeFn(key, eType, action);
+                evtData.Init(key, eType, action);
             }
 
             return key;
@@ -505,7 +331,7 @@ namespace Ux
                 }
             }
 
-            if (keyEvent.ContainsKey(key)) return default;
+            if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
             var evtData = Pool.Get<T>();
             _waitAdds.Add(evtData);
             return evtData;
@@ -612,7 +438,7 @@ namespace Ux
         {
             if (target == null) return;
             int hashCode = target.GetHashCode();
-            if (!targetKeys.TryGetValue(hashCode, out var keys)) return;
+            if (!_targetKeys.TryGetValue(hashCode, out var keys)) return;
             RemoveByKey(keys);
         }
 
@@ -625,7 +451,7 @@ namespace Ux
         private void _Remove(Delegate action)
         {
             var hashCode = action.GetHashCode();
-            if (!actionKeys.TryGetValue(hashCode, out var keys)) return;
+            if (!_actionKeys.TryGetValue(hashCode, out var keys)) return;
             RemoveByKey(keys);
         }
 
@@ -649,7 +475,7 @@ namespace Ux
                 }
             }
 
-            if (!keyEvent.ContainsKey(key)) return;
+            if (!_keyEvent.ContainsKey(key)) return;
             if (_waitDels.Contains(key)) return;
             _waitDels.Add(key);
         }

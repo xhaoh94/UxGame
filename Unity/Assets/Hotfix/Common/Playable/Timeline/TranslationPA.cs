@@ -8,12 +8,16 @@ namespace Ux
     [System.Serializable]
     public class TranslationPA : PlayableAsset
     {
-        public TranslationPB template = new TranslationPB();
-        // Factory method that generates a playable based on this asset
+        public float dis;
+        public float time;
+
         public override Playable CreatePlayable(PlayableGraph graph, GameObject go)
         {
-            template.SetGameObject(go);
-            var playable = ScriptPlayable<TranslationPB>.Create(graph, template);
+            var playable = ScriptPlayable<TranslationPB>.Create(graph);
+            var behaviour = playable.GetBehaviour();
+            behaviour.dis = dis;
+            behaviour.time = time;
+            behaviour.go = go;
             return playable;
         }
     }
