@@ -11,16 +11,18 @@ namespace Ux
     public enum ResType
     {
         Main,//主包
-        UI//UI包
+        UI,//UI包
+        RawFile,//原生文件
     }
     public abstract class ResPackage
     {
         public abstract ResType ResType { get; }
         public abstract string Name { get; }
         public abstract Type DecryptionType { get; }
+        public abstract EDefaultBuildPipeline EDefaultBuildPipeline { get; }
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
-        
+
         public void CreatePackage()
         {
             Package = YooAssets.TryGetPackage(Name);
@@ -47,8 +49,7 @@ namespace Ux
                     {
                         initializeParameters = new EditorSimulateModeParameters
                         {
-                            SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild(
-                                EDefaultBuildPipeline.ScriptableBuildPipeline, Name)
+                            SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild(EDefaultBuildPipeline, Name)
                         };
                         break;
                     }
@@ -92,7 +93,7 @@ namespace Ux
             {
                 Log.Warning($"{initializationOperation.Error}");
             }
-        }                      
+        }
 
         #region 远端地址
         /// <summary>
@@ -126,6 +127,8 @@ namespace Ux
         public override ResType ResType => ResType.Main;
         public override string Name => "MainPackage";
         public override Type DecryptionType => null;
+
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
     }
 
     public class ResUIPackage : ResPackage
@@ -133,5 +136,14 @@ namespace Ux
         public override ResType ResType => ResType.UI;
         public override string Name => "UIPackage";
         public override Type DecryptionType => typeof(FileStreamDecryption);
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
+    }
+
+    public class RawFilePackage : ResPackage
+    {
+        public override ResType ResType => ResType.RawFile;
+        public override string Name => "RawFilePackage";
+        public override Type DecryptionType => null;
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
     }
 }

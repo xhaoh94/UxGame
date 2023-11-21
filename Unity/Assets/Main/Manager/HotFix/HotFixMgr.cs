@@ -14,6 +14,9 @@ namespace Ux
 
         public const string HotfixScene = "Hotfix";
 
+        private const string AotPrefix = "AOT_{0}";
+        private const string HotPrefix = "HOT_{0}";
+
         private List<Type> _hotfixTypes;
 
         public void Init()
@@ -34,27 +37,23 @@ namespace Ux
 
         public Assembly Assembly { get; private set; }
 
-        public async UniTask Load()
+        public void Load()
         {
 #if !UNITY_EDITOR && HOTFIX_CODE
-            await LoadMetadataForAOTAssembly();
-            var handle = ResMgr.Ins.LoadAssetAsync<TextAsset>(HotfixAssemblyName + ".dll");
-            await handle.ToUniTask();
-            byte[] assBytes = (handle.AssetObject as TextAsset)?.bytes;
-            handle.Release();
-            Assembly = Assembly.Load(assBytes);            
+            LoadMetadataForAOTAssembly();
+            var assBytes = ResMgr.Ins.GetRawFileData(string.Format(HotPrefix, $"{HotfixAssemblyName}.dll"));
+            Assembly = Assembly.Load(assBytes);
 #else            
-            await UniTask.Yield();
             Assembly = AppDomain.CurrentDomain.GetAssemblies()
                 .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
-#endif            
+#endif
         }
 
         /// <summary>
         /// 为aot assembly加载原始metadata， 这个代码放aot或者热更新都行。
         /// 一旦加载后，如果AOT泛型函数对应native实现不存在，则自动替换为解释模式执行
         /// </summary>
-        async UniTask LoadMetadataForAOTAssembly()
+        void LoadMetadataForAOTAssembly()
         {
             // 可以加载任意aot assembly的对应的dll。但要求dll必须与unity build过程中生成的裁剪后的dll一致，而不能直接使用原始dll。
             // 我们在BuildProcessor_xxx里添加了处理代码，这些裁剪后的dll在打包时自动被复制到 {项目目录}/HybridCLRData/AssembliesPostIl2CppStrip/{Target} 目录。
@@ -65,19 +64,14 @@ namespace Ux
             const HomologousImageMode mode = HomologousImageMode.SuperSet;
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
-                var dllName = aotDllName;
-                if (!dllName.EndsWith(".dll"))
-                {
-                    dllName += ".dll";
-                }
-                var ta = await ResMgr.Ins.LoadAssetAsync<TextAsset>(dllName);
-                if (ta == null)
+                var dllName = string.Format(AotPrefix, aotDllName);
+                var assBytes = ResMgr.Ins.GetRawFileData(dllName);
+                if (assBytes == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");
                 }
                 else
                 {
-                    byte[] assBytes = ta?.bytes;
                     // 加载assembly对应的dll，会自动为它hook。一旦aot泛型函数的native函数不存在，用解释器版本代码
                     var err = RuntimeApi.LoadMetadataForAOTAssembly(assBytes, mode);
                     Log.Debug($"LoadMetadataForAOTAssembly:{dllName}. ret:{err}");

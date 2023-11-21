@@ -6,13 +6,9 @@ namespace Ux
     {
         protected override void OnEnter(object args)
         {
-            StartAsync().Forget();
-        }
-        private async UniTaskVoid StartAsync()
-        {
             try
             {
-                await HotFixMgr.Ins.Load();
+                HotFixMgr.Ins.Load();
                 HotFixMgr.Ins.Init();
             }
             catch (Exception e)

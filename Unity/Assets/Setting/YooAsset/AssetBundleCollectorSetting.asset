@@ -29,22 +29,6 @@ MonoBehaviour:
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Code/AOT
-        CollectorGUID: 210309f956870ff4ca04bf81d92dd434
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-      - CollectPath: Assets/Data/Res/Code/HOT
-        CollectorGUID: 95b205c0d1216a345a2e5f51c520b77a
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
       - CollectPath: Assets/Scenes/Hotfix.unity
         CollectorGUID: 8637324786e1dda489f776e4e1cf2fed
         CollectorType: 0
@@ -174,3 +158,42 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: lazyload_multiple
         UserData: 
+  - PackageName: RawFilePackage
+    PackageDesc: "\u539F\u751F\u6587\u4EF6"
+    EnableAddressable: 1
+    LocationToLower: 0
+    IncludeAssetGUID: 0
+    IgnoreDefaultType: 1
+    AutoCollectShaders: 1
+    Groups:
+    - GroupName: Builtin
+      GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
+      AssetTags: builtin
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/Data/Res/Code/AOT
+        CollectorGUID: 210309f956870ff4ca04bf81d92dd434
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Data/Res/Code/HOT
+        CollectorGUID: 95b205c0d1216a345a2e5f51c520b77a
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+    - GroupName: Preload
+      GroupDesc: "\u9884\u52A0\u8F7D"
+      AssetTags: preload
+      ActiveRuleName: EnableGroup
+      Collectors: []
+    - GroupName: Lazyload
+      GroupDesc: "\u61D2\u52A0\u8F7D"
+      AssetTags: lazyload
+      ActiveRuleName: EnableGroup
+      Collectors: []
