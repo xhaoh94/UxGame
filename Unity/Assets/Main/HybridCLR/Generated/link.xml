@@ -50,8 +50,6 @@
   <assembly fullname="UniTask">
     <type fullname="Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder" preserve="all" />
-    <type fullname="Cysharp.Threading.Tasks.OperationHandleBaseExtensions" preserve="all" />
-    <type fullname="Cysharp.Threading.Tasks.PlayerLoopTiming" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTask" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTask/Awaiter" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTaskVoid" preserve="all" />
@@ -59,6 +57,7 @@
     <type fullname="Cysharp.Threading.Tasks.UniTask`1/Awaiter" preserve="all" />
   </assembly>
   <assembly fullname="Unity.InputSystem">
+    <type fullname="UnityEngine.InputSystem.Controls.KeyControl" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Controls.Vector2Control" preserve="all" />
     <type fullname="UnityEngine.InputSystem.IInputActionCollection" preserve="all" />
     <type fullname="UnityEngine.InputSystem.IInputActionCollection2" preserve="all" />
@@ -67,9 +66,11 @@
     <type fullname="UnityEngine.InputSystem.InputActionAsset" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputActionMap" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputBinding" preserve="all" />
+    <type fullname="UnityEngine.InputSystem.InputControl" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputControlScheme" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputControl`1" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputDevice" preserve="all" />
+    <type fullname="UnityEngine.InputSystem.Keyboard" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Mouse" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Pointer" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Utilities.ReadOnlyArray`1" preserve="all" />
@@ -82,6 +83,7 @@
     <type fullname="Ux.AnimNode" preserve="all" />
     <type fullname="Ux.AssemblyEx" preserve="all" />
     <type fullname="Ux.Entity" preserve="all" />
+    <type fullname="Ux.EntityMono" preserve="all" />
     <type fullname="Ux.EventMgr" preserve="all" />
     <type fullname="Ux.GameMain" preserve="all" />
     <type fullname="Ux.GameObjectEx" preserve="all" />
@@ -108,6 +110,8 @@
     <type fullname="Ux.PackageAttribute" preserve="all" />
     <type fullname="Ux.PatchMgr" preserve="all" />
     <type fullname="Ux.ResMgr" preserve="all" />
+    <type fullname="Ux.SkillAsset" preserve="all" />
+    <type fullname="Ux.SkillMgr" preserve="all" />
     <type fullname="Ux.SocketCode" preserve="all" />
     <type fullname="Ux.StateMachine" preserve="all" />
     <type fullname="Ux.StateNode" preserve="all" />
@@ -131,6 +135,10 @@
     <type fullname="Ux.UIView" preserve="all" />
     <type fullname="Ux.UIWindow" preserve="all" />
   </assembly>
+  <assembly fullname="Unity.Timeline">
+    <type fullname="UnityEngine.Timeline.TimelineAsset" preserve="all" />
+    <type fullname="UnityEngine.Timeline.TrackAsset" preserve="all" />
+  </assembly>
   <assembly fullname="UnityEngine.AnimationModule">
     <type fullname="UnityEngine.AnimationClip" preserve="all" />
     <type fullname="UnityEngine.Animations.AnimationLayerMixerPlayable" preserve="all" />
@@ -144,10 +152,14 @@
     <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
     <type fullname="UnityEngine.Playables.DirectorUpdateMode" preserve="all" />
+    <type fullname="UnityEngine.Playables.FrameData" preserve="all" />
     <type fullname="UnityEngine.Playables.Playable" preserve="all" />
+    <type fullname="UnityEngine.Playables.PlayableAsset" preserve="all" />
+    <type fullname="UnityEngine.Playables.PlayableBehaviour" preserve="all" />
     <type fullname="UnityEngine.Playables.PlayableExtensions" preserve="all" />
     <type fullname="UnityEngine.Playables.PlayableGraph" preserve="all" />
     <type fullname="UnityEngine.Playables.PlayableOutputExtensions" preserve="all" />
+    <type fullname="UnityEngine.Playables.ScriptPlayable`1" preserve="all" />
     <type fullname="UnityEngine.Quaternion" preserve="all" />
     <type fullname="UnityEngine.Random" preserve="all" />
     <type fullname="UnityEngine.Ray" preserve="all" />
@@ -157,13 +169,12 @@
     <type fullname="UnityEngine.Vector2" preserve="all" />
     <type fullname="UnityEngine.Vector3" preserve="all" />
   </assembly>
+  <assembly fullname="UnityEngine.DirectorModule">
+    <type fullname="UnityEngine.Playables.PlayableDirector" preserve="all" />
+  </assembly>
   <assembly fullname="UnityEngine.PhysicsModule">
     <type fullname="UnityEngine.Physics" preserve="all" />
     <type fullname="UnityEngine.RaycastHit" preserve="all" />
-  </assembly>
-  <assembly fullname="YooAsset">
-    <type fullname="YooAsset.AssetHandle" preserve="all" />
-    <type fullname="YooAsset.HandleBase" preserve="all" />
   </assembly>
   <assembly fullname="ZString">
     <type fullname="Ux.zstring" preserve="all" />
@@ -182,8 +193,10 @@
     <type fullname="System.Boolean" preserve="all" />
     <type fullname="System.Byte" preserve="all" />
     <type fullname="System.Collections.Generic.Dictionary`2" preserve="all" />
+    <type fullname="System.Collections.Generic.Dictionary`2/Enumerator" preserve="all" />
     <type fullname="System.Collections.Generic.IEnumerable`1" preserve="all" />
     <type fullname="System.Collections.Generic.IEnumerator`1" preserve="all" />
+    <type fullname="System.Collections.Generic.KeyValuePair`2" preserve="all" />
     <type fullname="System.Collections.Generic.List`1" preserve="all" />
     <type fullname="System.Collections.Generic.List`1/Enumerator" preserve="all" />
     <type fullname="System.Collections.IEnumerable" preserve="all" />
@@ -201,7 +214,6 @@
     <type fullname="System.Func`2" preserve="all" />
     <type fullname="System.Func`3" preserve="all" />
     <type fullname="System.IDisposable" preserve="all" />
-    <type fullname="System.IProgress`1" preserve="all" />
     <type fullname="System.Int32" preserve="all" />
     <type fullname="System.Nullable`1" preserve="all" />
     <type fullname="System.Object" preserve="all" />

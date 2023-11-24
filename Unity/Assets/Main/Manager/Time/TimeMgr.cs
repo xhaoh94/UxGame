@@ -38,9 +38,9 @@ namespace Ux
                 _timeType = timeType;
             }
 
-            private readonly List<IHandle> _handles = new List<IHandle>();
-            private readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
-            private readonly Dictionary<int, List<long>> _targetkeys = new Dictionary<int, List<long>>();
+            readonly List<IHandle> _handles = new List<IHandle>();
+            readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
+            readonly Dictionary<int, List<long>> _targetkeys = new Dictionary<int, List<long>>();
 
             readonly List<IHandle> _waitAdds = new List<IHandle>();
             readonly List<IHandle> _waitDels = new List<IHandle>();
@@ -65,7 +65,7 @@ namespace Ux
                 while (_waitDels.Count > 0)
                 {
                     var handle = _waitDels[0];
-                    _waitDels.RemoveAt(0);                                        
+                    _waitDels.RemoveAt(0);
 #if UNITY_EDITOR
                     var exeDesc = handle.MethodName;
                     if (_descEditor.TryGetValue(exeDesc, out var temList))
@@ -112,7 +112,7 @@ namespace Ux
                     _waitAdds.RemoveAt(0);
                     Sort(handle);
                     _keyHandle.Add(handle.Key, handle);
-                    var target = handle.Target;
+                    
 #if UNITY_EDITOR
                     var exeDesc = handle.MethodName;
                     if (!_descEditor.TryGetValue(exeDesc, out var temList))
@@ -123,18 +123,7 @@ namespace Ux
 
                     temList.Add(handle);
                     __Debugger_Event();
-#endif
-                    if (target != null)
-                    {
-                        int hashCode = target.GetHashCode();
-                        if (!_targetkeys.TryGetValue(hashCode, out var keys))
-                        {
-                            keys = new List<long>();
-                            _targetkeys.Add(hashCode, keys);
-                        }
-
-                        keys.Add(handle.Key);
-                    }
+#endif 
                 }
 
                 OnRun();
@@ -233,16 +222,24 @@ namespace Ux
                 if (_waitAdds.Contains(handle)) return;
                 handle.Status = Status.Normal;
                 _waitAdds.Add(handle);
+                var target = handle.Target;
+                if (target != null)
+                {
+                    int hashCode = target.GetHashCode();
+                    if (!_targetkeys.TryGetValue(hashCode, out var keys))
+                    {
+                        keys = new List<long>();
+                        _targetkeys.Add(hashCode, keys);
+                    }
+
+                    keys.Add(handle.Key);
+                }
             }
 
             public bool ContainsKey(long key)
             {
                 var b = _keyHandle.TryGetValue(key, out var handle) && handle.Status == Status.Normal;
-                if (b)
-                {
-                    Log.Error("TIME:重复注册 {0}", handle.MethodName);
-                }
-
+                if (!b) b = _waitAdds.Find(x => x.Key == key) != null;
                 return b;
             }
 
@@ -264,7 +261,7 @@ namespace Ux
                     if (_waitAdds.Count > 0)
                     {
                         var index = _waitAdds.FindIndex(x => x.Key == key);
-                        _waitAdds.RemoveAt(index);
+                        if (index >= 0) _waitAdds.RemoveAt(index);
                     }
                     return;
                 }
@@ -304,7 +301,7 @@ namespace Ux
             var offset = timeStamp - LocalTime.TimeStamp;
             (ServerTime as ServerTime)?.SetOffset(offset);
         }
-        
+
         public void FixedUpdate()
         {
             _fixedUpdate?.Invoke();
@@ -361,6 +358,7 @@ namespace Ux
             key = GetKey(action, dic);
             if (dic.ContainsKey(key))
             {
+                Log.Error($"Time重复注册:{action.MethodName()}");
                 return default;
             }
 

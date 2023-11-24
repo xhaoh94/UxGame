@@ -66,7 +66,7 @@ namespace Ux
         public string MethodName
         {
             get
-            {
+            {                
                 if (Target == null)
                     return _methodInfo.ReflectedType != null
                         ? $"静态：{_methodInfo.ReflectedType.FullName}.{_methodInfo.Name}"
@@ -74,7 +74,7 @@ namespace Ux
                 var TargetType = Target.GetType();
                 return TargetType.Name.Contains("<>c")
                     ? $"匿名：{TargetType.FullName}.{_methodInfo.Name}"
-                    : $"类名：{TargetType.FullName}.{_methodInfo.Name}";
+                    : $"方法：{TargetType.FullName}.{_methodInfo.Name}";
             }
         }
 #endif

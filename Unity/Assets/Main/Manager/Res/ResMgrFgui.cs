@@ -47,7 +47,7 @@ namespace Ux
         private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles =
             new Dictionary<string, List<AssetHandle>>();
 
-        private readonly Dictionary<string, bool> _pkgToLoading = new Dictionary<string, bool>();
+        private readonly HashSet<string> _pkgToLoading = new HashSet<string>();
 
         public void RemoveUIPackage(string[] pkgs)
         {
@@ -61,7 +61,7 @@ namespace Ux
             if (pkgs.Length == 0) return;
             foreach (var pkg in pkgs)
             {
-                if (_pkgToLoading.ContainsKey(pkg))
+                if (_pkgToLoading.Contains(pkg))
                 {
                     Log.Warning("卸载正在加载中的包???");
                     continue;
@@ -132,10 +132,10 @@ namespace Ux
 
             foreach (var pkg in tem)
             {
-                if (_pkgToLoading.ContainsKey(pkg)) //已经在加载中了
+                if (_pkgToLoading.Contains(pkg)) //已经在加载中了
                 {
                     //循环等待，直到包加载完成
-                    while (_pkgToLoading.ContainsKey(pkg))
+                    while (_pkgToLoading.Contains(pkg))
                     {
                         await UniTask.Yield();
                     }
@@ -151,7 +151,7 @@ namespace Ux
                 }
                 else
                 {
-                    _pkgToLoading.Add(pkg, true);
+                    _pkgToLoading.Add(pkg);
                     if (!await _ToLoadUIPackage(pkg)) return false;
                 }
             }

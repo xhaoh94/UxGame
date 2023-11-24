@@ -128,17 +128,18 @@ internal class VersionPackageViewer
         //{
         //    SelectItem.PlatformConfig.SharedPackRule = _sharedPackRuleClassNames[0];
         //}
-        //_sharedPackRule.SetValueWithoutNotify(SelectItem.PlatformConfig.SharedPackRule);
+        //_sharedPackRule.SetValueWithoutNotify(SelectItem.PlatformConfig.SharedPackRule);        
     }
 
     public void RefreshElement(bool IsForceRebuild)
     {
-        _pipelineType.SetEnabled(IsForceRebuild);
-        _nameStyleType.SetEnabled(IsForceRebuild);
-        _compressionType.SetEnabled(IsForceRebuild);
-        _encryption.SetEnabled(IsForceRebuild);
+        var b = IsForceRebuild || PackageSetting.New;
+        _pipelineType.SetEnabled(b);
+        _nameStyleType.SetEnabled(b);
+        _compressionType.SetEnabled(b);
+        _encryption.SetEnabled(b);
         //_sharedPackRule.SetEnabled(IsForceRebuild);
-        _inputBuiltinTags.SetEnabled(IsForceRebuild);
+        _inputBuiltinTags.SetEnabled(b);
         RefreshElement();
     }
     void RefreshElement()

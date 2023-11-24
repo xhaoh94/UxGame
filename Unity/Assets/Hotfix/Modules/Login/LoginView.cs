@@ -13,6 +13,7 @@ namespace Ux.UI
         protected override void OnShow(object param)
         {
             base.OnShow(param);
+            TimeMgr.Ins.DoTimer(5, 1, Test);                        
         }
 
         partial void OnBtnLoginClick(EventContext e)
@@ -24,6 +25,11 @@ namespace Ux.UI
         {
             LoginModule.Ins.LoginAccount(inputAcc.text, inputPass.text);
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
+        }
+
+        void Test()
+        {
+
         }
     }
 }

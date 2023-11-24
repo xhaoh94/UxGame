@@ -387,6 +387,7 @@ public partial class VersionWindow : EditorWindow
         }
         _packageMenu.text = packageName;
         _versionPackage.RefreshView(SelectItem.GetPackageSetting(packageName));
+        _versionPackage.RefreshElement(IsForceRebuild);
     }
     void RefreshView()
     {
@@ -505,7 +506,7 @@ public partial class VersionWindow : EditorWindow
             return;
         }
         Build();
-    }    
+    }
 
     public static BuildTarget GetBuildTarget(PlatformType platformType)
     {
@@ -532,12 +533,19 @@ public partial class VersionWindow : EditorWindow
         EditorTools.FocusUnityConsoleWindow();
         Console.Clear();
         EditorApplication.LockReloadAssemblies();
-        var succ = await _ExecuteBuild(buildTarget);
-        EditorApplication.UnlockReloadAssemblies();
-        if (succ)
+        try
         {
-            SaveConfig();
+            var succ = await _ExecuteBuild(buildTarget);
+            if (succ)
+            {
+                SaveConfig();
+            }
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex);
+        }
+        EditorApplication.UnlockReloadAssemblies();
     }
     async UniTask<bool> _ExecuteBuild(BuildTarget buildTarget)
     {
@@ -554,8 +562,8 @@ public partial class VersionWindow : EditorWindow
             return false;
         }
         return true;
-    }    
-    
+    }
+
     #region 初始化   
     void LoadConfig()
     {

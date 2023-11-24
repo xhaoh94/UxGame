@@ -14,6 +14,13 @@ public class VersionSettingData : ScriptableObject
     /// </summary>
     public void SaveFile()
     {
+        foreach (var setting in ExportSettings)
+        {
+            foreach (var pb in setting.PackageBuilds)
+            {
+                pb.New = false;
+            }
+        }
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
         Debug.Log($"{nameof(VersionSettingData)}.asset is saved!");
@@ -25,7 +32,7 @@ public class BuildExportSetting
 {
     public string Name;
     public CompileType CompileType = CompileType.Development;
-    public PlatformType PlatformType = PlatformType.Win64;    
+    public PlatformType PlatformType = PlatformType.Win64;
     public bool IsCopyTo = false;
     public string BundlePath = "./Bundles";
     public string ExePath = "./bin";
@@ -33,7 +40,7 @@ public class BuildExportSetting
     public bool IsClearSandBox = true;
     public bool IsExportExecutable = true;
     public string ResVersion = string.Empty;
-    public List<BuildPackageSetting> PackageBuilds = new List<BuildPackageSetting>();    
+    public List<BuildPackageSetting> PackageBuilds = new List<BuildPackageSetting>();
 
     public BuildPackageSetting GetPackageSetting(string pkgName)
     {
@@ -55,9 +62,10 @@ public class BuildExportSetting
 [Serializable]
 public class BuildPackageSetting
 {
+    public bool New = true;
     public bool IsCollectShaderVariant = true;
     public string PackageName = string.Empty;
-    public string EncyptionClassName = string.Empty;    
+    public string EncyptionClassName = string.Empty;
     public ECompressOption CompressOption = ECompressOption.LZ4;
     public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
     public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;

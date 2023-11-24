@@ -31,23 +31,7 @@ namespace Ux
 #if UNITY_EDITOR
             public string ETypeStr { get; protected set; }
 
-            public virtual string MethodName
-            {
-                get
-                {
-                    if (Target == null)
-                    {
-                        return Method.Method.ReflectedType != null
-                            ? $"静态：{Method.Method.ReflectedType.FullName}.{Method.Method.Name}"
-                            : string.Empty;
-                    }
-
-                    var TargetType = Target.GetType();
-                    return TargetType.Name.Contains("<>c")
-                        ? $"匿名：{TargetType.FullName}.{Method.Method.Name}"
-                        : $"类名：{TargetType.FullName}.{Method.Method.Name}";
-                }
-            }
+            public virtual string MethodName => Method.MethodName();
 
             public void Init(string eTypeStr)
             {

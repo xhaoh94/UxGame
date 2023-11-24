@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using YooAsset;
 
 namespace Ux
@@ -44,6 +40,7 @@ namespace Ux
             }
             switch (playMode)
             {
+#if UNITY_EDITOR
                 // 编辑器模拟模式
                 case EPlayMode.EditorSimulateMode:
                     {
@@ -53,6 +50,7 @@ namespace Ux
                         };
                         break;
                     }
+#endif
                 // 单机模式
                 case EPlayMode.OfflinePlayMode:
                     {

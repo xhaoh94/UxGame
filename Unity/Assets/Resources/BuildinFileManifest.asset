@@ -13,11 +13,17 @@ MonoBehaviour:
   m_Name: BuildinFileManifest
   m_EditorClassIdentifier: 
   BuildinFiles:
-  - 0c2cd7cec908be8164fedf17d3b48273.bundle
   - 39cce7c9bef2ca1e6612743e6531f65b.bundle
-  - 952314ee593bbb161334e8061cdcc00f.bundle
   - 960e9a937c2bdb4559743cd6a88843c0.bundle
-  - 9fde48e3969b570db7b28e4b84cff376.bundle
+  - fe825c9f6dad81b52400051703addd48.bundle
+  - 139287ce1e10ced218cd2049c0d223bc.rawfile
+  - 2400d558b5df57972d9c5e7bd985cfd8.rawfile
+  - 4a065d65014365544895bec02259891f.rawfile
+  - 53415c551ad77fae7cecc78a154f29c8.rawfile
+  - 837028517b9f5439914cb0d3acf8212f.rawfile
+  - abba064f19f36edfc817341f1270f8da.rawfile
+  - e033d52eb970c3566d3a3ef440acf783.rawfile
+  - f31f22a7aae8658f226d636bfe582dda.rawfile
   - 002e2ea4660b99dd55dfd89557af4073.bundle
   - 78e9ab5dcfde2452fcfa28625d93df26.bundle
   - de627a1a1f01bb493d68bfc1f2d86cb7.bundle

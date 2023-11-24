@@ -32,23 +32,7 @@ namespace Ux
             public object Target => Method.Target;
             protected abstract Delegate Method { get; }
 
-            public string MethodName
-            {
-                get
-                {
-                    var target = Method.Target;
-                    if (target == null)
-                    {
-                        return Method.Method.ReflectedType != null
-                            ? $"静态：{Method.Method.ReflectedType.FullName}.{Method.Method.Name}"
-                            : string.Empty;
-                    }
-                    var targetType = target.GetType();
-                    return targetType.Name.Contains("<>c")
-                        ? $"匿名：{targetType.FullName}.{Method.Method.Name}"
-                        : $"类名：{targetType.FullName}.{Method.Method.Name}";
-                }
-            }
+            public string MethodName => Method.MethodName();
 
             public void Run()
             {
