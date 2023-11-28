@@ -8,7 +8,7 @@ namespace Ux
     {
         public CameraComponent Camera { get; private set; }
         public GameObject Go { get; private set; }
-        [EntityViewer()]
+        [EntityViewer("玩家")]
         Dictionary<int, Player> players = new Dictionary<int, Player>();
         public void OnAwake(GameObject a)
         {

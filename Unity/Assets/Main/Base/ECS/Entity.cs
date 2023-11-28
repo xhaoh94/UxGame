@@ -99,7 +99,7 @@ namespace Ux
             entity.GoViewer = new GameObject();
             entity.GoViewer.name = $"{type.Name}_{entity.ID}";
 
-            var eg = entity.GoViewer.AddComponent<EntityEditorViewer>();
+            var eg = entity.GoViewer.AddComponent<EntityViewer>();
             eg.SetEntity(entity);
 #endif
             return entity;

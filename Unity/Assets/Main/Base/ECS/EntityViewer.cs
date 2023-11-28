@@ -76,6 +76,12 @@ namespace Ux
             {
                 return EditorGUILayout.Vector3IntField(tag, vector3Int);
             }
+            else if (v is Quaternion quaternion)
+            {
+                var eulerAngles = EditorGUILayout.Vector3Field(tag, quaternion.eulerAngles);
+                quaternion.eulerAngles = eulerAngles;
+                return quaternion;
+            }
             else if (v is Entity entity)
             {
                 return EditorGUILayout.ObjectField(tag, entity.GoViewer, typeof(GameObject), true);
@@ -113,7 +119,7 @@ namespace Ux
                     for (int i = 0; i < count; i++)
                     {
                         enu.MoveNext();
-                        GUILayout.Toolbar(-1, new[] { "Key", "Vallue" });                        
+                        GUILayout.Toolbar(-1, new[] { "Key", "Vallue" });
                         EditorGUILayout.BeginHorizontal();
                         Parse("", enu.Key);
                         Parse("", enu.Value);
@@ -173,7 +179,7 @@ namespace Ux
         }
 
     }
-    public class EntityEditorViewer : MonoBehaviour
+    public class EntityViewer : MonoBehaviour
     {
         List<EEBase> datas = new List<EEBase>();
 

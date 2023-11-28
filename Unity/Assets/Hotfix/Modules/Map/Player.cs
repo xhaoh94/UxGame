@@ -27,18 +27,18 @@ namespace Ux
         public PlayableDirectorComponent Director { get; private set; }
 
         public void OnAwake(PlayerData a)
-        {            
+        {
             playerData = a;
             State = AddComponent<StateComponent>();
             Operate = AddComponent<OperateComponent>();
-            Postion = a.pos;            
-            LoadPlayer().Forget();            
+            Postion = a.pos;
+            LoadPlayer().Forget();
         }
 
         public Map Map => Parent as Map;
 
         async UniTaskVoid LoadPlayer()
-        {            
+        {
             Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
             Go.transform.SetParent(Go.transform);
             Go.transform.position = Postion;
@@ -75,7 +75,7 @@ namespace Ux
         }
 
         private Quaternion _rotation;
-
+        [EntityViewer("旋转")]
         public Quaternion Rotation
         {
             get => _rotation;
