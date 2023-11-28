@@ -8,17 +8,18 @@ namespace Ux
     {
         public CameraComponent Camera { get; private set; }
         public GameObject Go { get; private set; }
+        [EntityViewer()]
         Dictionary<int, Player> players = new Dictionary<int, Player>();
         public void OnAwake(GameObject a)
-        {            
-            Go = a;            
-            Camera = AddComponent<CameraComponent>();            
+        {
+            Go = a;
+            Camera = AddComponent<CameraComponent>();
             AddComponent<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
         }
 
         public void AddPlayer(PlayerData playerData)
-        {            
-            var player = AddChild<Player, PlayerData>(playerData);
+        {
+            var player = AddChild<Player, PlayerData>(playerData.id, playerData);
             players.Add(playerData.id, player);
         }
 

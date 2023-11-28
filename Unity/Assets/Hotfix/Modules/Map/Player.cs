@@ -31,7 +31,8 @@ namespace Ux
             playerData = a;
             State = AddComponent<StateComponent>();
             Operate = AddComponent<OperateComponent>();
-            LoadPlayer().Forget();
+            Postion = a.pos;            
+            LoadPlayer().Forget();            
         }
 
         public Map Map => Parent as Map;
@@ -40,7 +41,8 @@ namespace Ux
         {            
             Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
             Go.transform.SetParent(Go.transform);
-            Go.transform.position = playerData.pos;
+            Go.transform.position = Postion;
+            Go.transform.rotation = Rotation;
             Map.Camera.SetFollow(Go.transform);
             Map.Camera.SetLookAt(Go.transform);
             SetMono(Go);
@@ -58,7 +60,7 @@ namespace Ux
         }
 
         private Vector3 _postion;
-
+        [EntityViewer("位置")]
         public Vector3 Postion
         {
             get => _postion;

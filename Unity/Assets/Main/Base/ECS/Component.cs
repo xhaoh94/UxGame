@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Ux
 {
@@ -18,7 +19,10 @@ namespace Ux
             component.isDestroyed = false;
             component.isDestroying = false;
             component.ID = -1;
-
+#if UNITY_EDITOR
+            component.GoViewer = new GameObject();
+            component.GoViewer.name = $"{type.Name}";
+#endif
             return component;
         }
 
@@ -182,6 +186,18 @@ namespace Ux
             component._parent?.RemoveComponent(component.GetType(), false);
             component._parent = this;
             _components.Add(component.GetType(), component);
+
+#if UNITY_EDITOR
+            var temParent = component.Parent;
+            var componentContent = temParent?.GoViewer.transform.Find("Components");
+            if (componentContent == null)
+            {
+                componentContent = new GameObject("Components").transform;
+                componentContent.SetParent(temParent?.GoViewer.transform);
+            }
+            component.GoViewer.transform.SetParent(componentContent);
+#endif
+
             return true;
         }
 

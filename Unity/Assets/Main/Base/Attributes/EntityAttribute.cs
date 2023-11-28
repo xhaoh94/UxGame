@@ -8,10 +8,10 @@ namespace Ux
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class ListenAddEntityAttribute : Attribute
     {
-        public Type type;
+        public Type ListenType { get; }
         public ListenAddEntityAttribute(Type type)
         {
-            this.type = type;
+            this.ListenType = type;
         }
     }
     /// <summary>
@@ -20,10 +20,35 @@ namespace Ux
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class ListenRemoveEntityAttribute : Attribute
     {
-        public Type type;
+        public Type ListenType { get; }
         public ListenRemoveEntityAttribute(Type type)
         {
-            this.type = type;
+            this.ListenType = type;
+        }
+    }
+
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+    public class EntityViewerAttribute : Attribute
+    {
+        public string Name { get; }
+        public Action<object> CB { get; }
+        public EntityViewerAttribute()
+        {            
+            CB = null;
+        }
+        public EntityViewerAttribute(string name = "")
+        {
+            Name = name;
+            CB = null;
+        }
+        public EntityViewerAttribute( Action<object> cb)
+        {            
+            CB = cb;
+        }
+        public EntityViewerAttribute(string name , Action<object> cb)
+        {            
+            CB = cb;
         }
     }
 }

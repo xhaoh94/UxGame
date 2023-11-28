@@ -27,11 +27,11 @@
                 <uie:ToolbarButton text="UIData" display-tooltip-when-elided="true" name="TopBar1" style="width: 150px; -unity-text-align: middle-left; flex-grow: 1;" />
             </uie:Toolbar>
             <ui:ListView focusable="true" virtualization-method="DynamicHeight" name="list" style="flex-grow: 1;" />
-            <ui:VisualElement name="vePage" style="flex-direction: row; align-items: center; justify-content: center; display: none; flex-grow: 1; flex-shrink: 0; height: 20px;">
-                <ui:Button text="上一页" display-tooltip-when-elided="true" name="btnLast" />
-                <uie:IntegerField value="1" name="inputPage" />
-                <ui:Label text="/10" display-tooltip-when-elided="true" name="txtPage" />
-                <ui:Button text="下一页" display-tooltip-when-elided="true" name="btnNext" />
+            <ui:VisualElement name="vePage" style="flex-direction: row; align-items: center; justify-content: center; display: flex; flex-grow: 1; flex-shrink: 0; height: 20px;">
+                <ui:Button text="上一页" display-tooltip-when-elided="true" name="btnLast" style="flex-grow: 0;" />
+                <uie:IntegerField value="1" name="inputPage" style="flex-shrink: 1; flex-grow: 0; width: 100px;" />
+                <ui:Label text="/10" display-tooltip-when-elided="true" name="txtPage" style="flex-shrink: 1;" />
+                <ui:Button text="下一页" display-tooltip-when-elided="true" name="btnNext" style="flex-grow: 0;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

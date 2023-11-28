@@ -176,10 +176,10 @@ namespace Ux
                     {
                         var fastMethod = new FastMethodInfo(target, method);
                         if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
-                        if (!_eventAdd.TryGetValue(evtAttr.type.FullName, out var list))
+                        if (!_eventAdd.TryGetValue(evtAttr.ListenType.FullName, out var list))
                         {
                             list = new List<FastMethodInfo>();
-                            _eventAdd.Add(evtAttr.type.FullName, list);
+                            _eventAdd.Add(evtAttr.ListenType.FullName, list);
                         }
 
                         list.Add(fastMethod);
@@ -190,10 +190,10 @@ namespace Ux
                     {
                         var fastMethod = new FastMethodInfo(target, method);
                         if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
-                        if (!_eventRemove.TryGetValue(evtAttr.type.FullName, out var list))
+                        if (!_eventRemove.TryGetValue(evtAttr.ListenType.FullName, out var list))
                         {
                             list = new List<FastMethodInfo>();
-                            _eventRemove.Add(evtAttr.type.FullName, list);
+                            _eventRemove.Add(evtAttr.ListenType.FullName, list);
                         }
 
                         list.Add(fastMethod);

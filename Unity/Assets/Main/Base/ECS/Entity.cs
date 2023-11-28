@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Ux
 {
-
     public abstract partial class Entity
     {
         static readonly Queue<Action> _delayFn = new Queue<Action>();
@@ -23,7 +23,11 @@ namespace Ux
         {
             _DelayInvoke(200);
         }
+#if UNITY_EDITOR
+        public GameObject GoViewer { get; private set; }
+#endif
         public EntityMono EntityMono { get; private set; }
+
         public long ID { get; private set; }
         /// <summary>
         /// 是否从对象池获取
@@ -74,30 +78,54 @@ namespace Ux
         }
 
         #region Entity
-
         public static TEntity Create<TEntity>(bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)Create(typeof(TEntity), isFromPool);
+            return (TEntity)Create(0, typeof(TEntity), isFromPool);
+        }
+        public static TEntity Create<TEntity>(long id, bool isFromPool = true) where TEntity : Entity
+        {
+            return (TEntity)Create(id, typeof(TEntity), isFromPool);
         }
 
-        public static Entity Create(Type type, bool isFromPool = true)
+        public static Entity Create(long id, Type type, bool isFromPool = true)
         {
             var entity = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (entity == null) return null;
             entity.isDestroyed = false;
             entity.isDestroying = false;
             entity.IsFromPool = isFromPool;
-            entity.ID = IDGenerater.GenerateId();
+            entity.ID = id == 0 ? IDGenerater.GenerateId() : id;
+#if UNITY_EDITOR
+            entity.GoViewer = new GameObject();
+            entity.GoViewer.name = $"{type.Name}_{entity.ID}";
+
+            var eg = entity.GoViewer.AddComponent<EntityEditorViewer>();
+            eg.SetEntity(entity);
+#endif
             return entity;
         }
 
         public void SetMono(GameObject gameObject)
         {
             EntityMono = gameObject.GetOrAddComponent<EntityMono>();
-            EntityMono.SetEntity(this);
+#if UNITY_EDITOR
+            EntityMono.SetEntity(this, GoViewer);
+#else
+            EntityMono.SetEntity(this);   
+#endif
         }
         bool _AddChild(Entity entity)
         {
+            if (IsComponent)
+            {
+                var temParent = Parent;
+                if (temParent == null)
+                {
+                    Log.Error("Entity为空，无法添加子Entity");
+                    return false;
+                }
+                return temParent._AddChild(entity);
+            }
             if (CheckDestroy())
             {
                 return false;
@@ -142,8 +170,17 @@ namespace Ux
                 listData = new List<Entity>();
                 _typeToentitys.Add(type, listData);
             }
-
             listData.Add(entity);
+
+#if UNITY_EDITOR
+            var entityContent = GoViewer.transform.Find("Entitys");
+            if (entityContent == null)
+            {
+                entityContent = new GameObject("Entitys").transform;
+                entityContent.SetParent(GoViewer.transform);
+            }
+            entity.GoViewer.transform.SetParent(entityContent);
+#endif
             return true;
         }
 
@@ -188,7 +225,137 @@ namespace Ux
         {
             return (TEntity)AddChild(typeof(TEntity), a, b, c, d, e, isFromPool);
         }
+        public TEntity AddChild<TEntity>(long id, bool isFromPool = true) where TEntity : Entity
+        {
+            return (TEntity)AddChild(id, typeof(TEntity), isFromPool);
+        }
 
+        public TEntity AddChild<TEntity, A>(long id, A a, bool isFromPool = true) where TEntity : Entity
+        {
+            return (TEntity)AddChild(id, typeof(TEntity), a, isFromPool);
+        }
+
+        public TEntity AddChild<TEntity, A, B>(long id, A a, B b, bool isFromPool = true) where TEntity : Entity
+        {
+            return (TEntity)AddChild(id, typeof(TEntity), a, b, isFromPool);
+        }
+
+        public TEntity AddChild<TEntity, A, B, C>(long id, A a, B b, C c, bool isFromPool = true) where TEntity : Entity
+        {
+            return (TEntity)AddChild(id, typeof(TEntity), a, b, c, isFromPool);
+        }
+
+        public TEntity AddChild<TEntity, A, B, C, D>(long id, A a, B b, C c, D d, bool isFromPool = true) where TEntity : Entity
+        {
+            return (TEntity)AddChild(id, typeof(TEntity), a, b, c, d, isFromPool);
+        }
+
+        public TEntity AddChild<TEntity, A, B, C, D, E>(long id, A a, B b, C c, D d, E e, bool isFromPool = true)
+            where TEntity : Entity
+        {
+            return (TEntity)AddChild(id, typeof(TEntity), a, b, c, d, e, isFromPool);
+        }
+        public Entity AddChild(long id, Type type, bool isFromPool = true)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+
+            var entity = Entity.Create(id, type, isFromPool);
+            if (!_AddChild(entity))
+            {
+                return null;
+            }
+
+            entity._InitSystem();
+            return entity;
+        }
+
+        public Entity AddChild<A>(long id, Type type, A a, bool isFromPool = true)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+
+            var entity = Entity.Create(id, type, isFromPool);
+            if (!_AddChild(entity))
+            {
+                return null;
+            }
+
+            entity._InitSystem(a);
+            return entity;
+        }
+
+        public Entity AddChild<A, B>(long id, Type type, A a, B b, bool isFromPool = true)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+
+            var entity = Entity.Create(id, type, isFromPool);
+            if (!_AddChild(entity))
+            {
+                return null;
+            }
+
+            entity._InitSystem(a, b);
+            return entity;
+        }
+
+        public Entity AddChild<A, B, C>(long id, Type type, A a, B b, C c, bool isFromPool = true)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+
+            var entity = Entity.Create(id, type, isFromPool);
+            if (!_AddChild(entity))
+            {
+                return null;
+            }
+
+            entity._InitSystem(a, b, c);
+            return entity;
+        }
+
+        public Entity AddChild<A, B, C, D>(long id, Type type, A a, B b, C c, D d, bool isFromPool = true)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+
+            var entity = Entity.Create(id, type, isFromPool);
+            if (!_AddChild(entity))
+            {
+                return null;
+            }
+
+            entity._InitSystem(a, b, c, d);
+            return entity;
+        }
+
+        public Entity AddChild<A, B, C, D, E>(long id, Type type, A a, B b, C c, D d, E e, bool isFromPool = true)
+        {
+            if (CheckDestroy())
+            {
+                return null;
+            }
+
+            var entity = Entity.Create(id, type, isFromPool);
+            if (!_AddChild(entity))
+            {
+                return null;
+            }
+
+            entity._InitSystem(a, b, c, d, e);
+            return entity;
+        }
         public Entity AddChild(Type type, bool isFromPool = true)
         {
             if (CheckDestroy())
@@ -196,7 +363,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(type, isFromPool);
+            var entity = Entity.Create(0, type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -213,7 +380,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(type, isFromPool);
+            var entity = Entity.Create(0, type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -230,7 +397,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(type, isFromPool);
+            var entity = Entity.Create(0, type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -247,7 +414,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(type, isFromPool);
+            var entity = Entity.Create(0, type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -264,7 +431,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(type, isFromPool);
+            var entity = Entity.Create(0, type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -281,7 +448,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(type, isFromPool);
+            var entity = Entity.Create(0, type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -424,6 +591,9 @@ namespace Ux
 
         void _Destroy(bool isDestroy)
         {
+#if UNITY_EDITOR
+            GoViewer.transform.SetParent(null);
+#endif
             _parent = null;
             _RemoveSystem();
             if (!isDestroy) return;
@@ -433,7 +603,11 @@ namespace Ux
             EventMgr.Ins.OffAll(this);
             if (EntityMono != null)
             {
+#if UNITY_EDITOR
+                EntityMono.SetEntity(null, null);
+#else
                 EntityMono.SetEntity(null);
+#endif
                 EntityMono = null;
             }
             foreach (var entity in _entitys)
@@ -466,6 +640,7 @@ namespace Ux
             isDestroyed = true;
             isDestroying = false;
             _is_init = false;
+            GameObject.Destroy(GoViewer);
             if (IsFromPool)
             {
                 Pool.Push(this);

@@ -18,8 +18,7 @@ namespace Ux
     [Module]
     public class MapModule : ModuleBase<MapModule>
     {
-        private Map map;
-
+        private Map map;        
         //private Player self;
         protected override void OnInit()
         {
@@ -28,15 +27,15 @@ namespace Ux
         }
 
         public async UniTask EnterMap(string mapName)
-        {            
-            var go =await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);          
+        {
+            var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
             var newMap = World.Ins.AddChild<Map, GameObject>(go);
             if (map != null)
             {
                 World.Ins.RemoveChild(map);
             }
 
-            map = newMap;            
+            map = newMap;
             var pos = new Vector3(UnityEngine.Random.Range(-3, 3), 0.5f, UnityEngine.Random.Range(-3, 3));
             var data = new PlayerData();
             data.id = 1;
@@ -48,7 +47,7 @@ namespace Ux
 
         protected override void OnRelease()
         {
-            World.Ins.Destroy();            
+            World.Ins.Destroy();
         }
     }
 }

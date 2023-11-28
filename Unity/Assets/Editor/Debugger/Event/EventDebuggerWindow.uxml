@@ -9,9 +9,9 @@
             <uie:ToolbarButton text="事件" display-tooltip-when-elided="true" name="TopBar1" style="width: 150px; -unity-text-align: middle-left; flex-grow: 1;" />
         </uie:Toolbar>
         <ui:ListView focusable="true" virtualization-method="DynamicHeight" name="list" />
-        <ui:VisualElement name="vePage" style="flex-direction: row; align-items: center; justify-content: center; display: none;">
+        <ui:VisualElement name="vePage" style="flex-direction: row; align-items: center; justify-content: center; display: flex;">
             <ui:Button text="上一页" display-tooltip-when-elided="true" name="btnLast" />
-            <uie:IntegerField value="1" name="inputPage" />
+            <uie:IntegerField value="1" name="inputPage" style="width: 100px;" />
             <ui:Label text="/10" display-tooltip-when-elided="true" name="txtPage" />
             <ui:Button text="下一页" display-tooltip-when-elided="true" name="btnNext" />
         </ui:VisualElement>
