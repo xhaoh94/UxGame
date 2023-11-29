@@ -8,9 +8,10 @@ using UnityEngine.Timeline;
 
 namespace Ux
 {
+    [EEViewer]
     public class PlayerData
     {
-        public int id;
+        public int id;        
         public string name;
         public Vector3 pos;
         public string res;
@@ -19,7 +20,6 @@ namespace Ux
     public class Player : Entity, IAwakeSystem<PlayerData>
     {
         public GameObject Go { get; private set; }
-        PlayerData playerData;
         public AnimComponent Anim { get; private set; }
         public StateComponent State { get; private set; }
         public OperateComponent Operate { get; private set; }
@@ -28,16 +28,15 @@ namespace Ux
 
         public void OnAwake(PlayerData a)
         {
-            playerData = a;
             State = AddComponent<StateComponent>();
             Operate = AddComponent<OperateComponent>();
             Postion = a.pos;
-            LoadPlayer().Forget();
+            LoadPlayer(a).Forget();
         }
 
         public Map Map => Parent as Map;
 
-        async UniTaskVoid LoadPlayer()
+        async UniTaskVoid LoadPlayer(PlayerData playerData)
         {
             Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
             Go.transform.SetParent(Go.transform);
@@ -56,11 +55,10 @@ namespace Ux
         protected override void OnDestroy()
         {
             UnityEngine.Object.Destroy(Go);
-            playerData = null;
         }
 
         private Vector3 _postion;
-        [EntityViewer("位置")]
+        [EEViewer("位置")]
         public Vector3 Postion
         {
             get => _postion;
@@ -75,7 +73,7 @@ namespace Ux
         }
 
         private Quaternion _rotation;
-        [EntityViewer("旋转")]
+        [EEViewer("旋转")]
         public Quaternion Rotation
         {
             get => _rotation;
