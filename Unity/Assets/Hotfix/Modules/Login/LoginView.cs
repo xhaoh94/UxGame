@@ -10,10 +10,19 @@ namespace Ux.UI
     {
         protected override UILayer Layer => UILayer.Normal;
 
-        protected override void OnShow(object param)
+        protected override void OnInit()
         {
-            base.OnShow(param);
-            TimeMgr.Ins.DoTimer(5, 1, Test);                        
+            base.OnInit();
+            TimeMgr.Ins.DoTimer(50, 1, OnConnect);
+            DoTimer(1, 1, ttt);
+        }
+
+        void ttt()
+        {
+            TimeMgr.Ins.DoTimer(5, 1, Test);
+            TimeMgr.Ins.RemoveAll(this);
+            TimeMgr.Ins.DoTimer(10, 1, Test);
+            TimeMgr.Ins.RemoveTimer(Test);
         }
 
         partial void OnBtnLoginClick(EventContext e)

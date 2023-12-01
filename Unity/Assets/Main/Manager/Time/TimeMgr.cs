@@ -109,10 +109,6 @@ namespace Ux
                 while (_waitAdds.Count > 0)
                 {
                     var handle = _waitAdds[0];
-                    _waitAdds.RemoveAt(0);
-                    Sort(handle);
-                    _keyHandle.Add(handle.Key, handle);
-                    
 #if UNITY_EDITOR
                     var exeDesc = handle.MethodName;
                     if (!_descEditor.TryGetValue(exeDesc, out var temList))
@@ -124,6 +120,23 @@ namespace Ux
                     temList.Add(handle);
                     __Debugger_Event();
 #endif 
+
+                    _waitAdds.RemoveAt(0);
+                    Sort(handle);
+                    _keyHandle.Add(handle.Key, handle);
+
+                    var target = handle.Target;
+                    if (target != null)
+                    {
+                        int hashCode = target.GetHashCode();
+                        if (!_targetkeys.TryGetValue(hashCode, out var keys))
+                        {
+                            keys = new List<long>();
+                            _targetkeys.Add(hashCode, keys);
+                        }
+
+                        keys.Add(handle.Key);
+                    }
                 }
 
                 OnRun();
@@ -222,18 +235,6 @@ namespace Ux
                 if (_waitAdds.Contains(handle)) return;
                 handle.Status = Status.Normal;
                 _waitAdds.Add(handle);
-                var target = handle.Target;
-                if (target != null)
-                {
-                    int hashCode = target.GetHashCode();
-                    if (!_targetkeys.TryGetValue(hashCode, out var keys))
-                    {
-                        keys = new List<long>();
-                        _targetkeys.Add(hashCode, keys);
-                    }
-
-                    keys.Add(handle.Key);
-                }
             }
 
             public bool ContainsKey(long key)
@@ -246,6 +247,17 @@ namespace Ux
             public void RemoveAll(object target)
             {
                 if (target == null) return;
+                if (_waitAdds.Count > 0)
+                {
+                    for (int i = _waitAdds.Count - 1; i >= 0; i--)
+                    {
+                        var wa = _waitAdds[i];
+                        if (wa.Target == target)
+                        {
+                            _waitAdds.RemoveAt(i);
+                        }
+                    }
+                }
                 int hashCode = target.GetHashCode();
                 if (!_targetkeys.TryGetValue(hashCode, out var keys)) return;
                 foreach (var key in keys)
@@ -371,14 +383,20 @@ namespace Ux
             if (action == null) return 0;
             long key = 0;
             var target = action.Target;
+            Log.Info(action.MethodName() + "- action:" + action.GetHashCode());
+            Log.Info(action.MethodName() + "- dic:" + dic.GetHashCode());
+
             if (target == null)
             {
-                key = IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode());
+                key =(long) IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode());
             }
             else
             {
-                key = IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), target.GetHashCode());
+                key = (long)IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), target.GetHashCode());
+                Log.Info(action.MethodName() + "- target:" + target.GetHashCode());
             }
+            Log.Info(action.MethodName() + "- key :" + key);
+            Log.Info("----------------------------------");
             return key;
         }
 

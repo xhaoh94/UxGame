@@ -139,6 +139,8 @@ namespace Ux
                     typeKeys = new List<long>();
                     _eTypeKeys.Add(eType, typeKeys);
                 }
+                var key = evt.Key;
+                if (!typeKeys.Contains(key)) typeKeys.Insert(0, key);
 
 #if UNITY_EDITOR
                 var eTypeStr = evt.ETypeStr;
@@ -152,8 +154,7 @@ namespace Ux
                 t2eList.Add(evt.MethodName);
                 __Debugger_Event();
 #endif
-                var key = evt.Key;
-                if (!typeKeys.Contains(key)) typeKeys.Insert(0, key);
+
 
                 var actionHashCode = evt.Method.GetHashCode();
                 if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
@@ -332,9 +333,11 @@ namespace Ux
             }
 
             if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
-            var evtData = Pool.Get<T>();
+            var evtData = _waitAdds.Find(x => x.Key == key);
+            if (evtData != null) return (T)evtData;
+            evtData = Pool.Get<T>();
             _waitAdds.Add(evtData);
-            return evtData;
+            return (T)evtData;
         }
 
         private T _Add<T>(out long key, int eType, Delegate action) where T : IEvent
@@ -437,6 +440,18 @@ namespace Ux
         public void OffAll(object target)
         {
             if (target == null) return;
+            if (_waitAdds.Count > 0)
+            {
+                for (int i = _waitAdds.Count - 1; i >= 0; i--)
+                {
+                    var wa = _waitAdds[i];
+                    if (wa.Target == target)
+                    {
+                        _waitAdds.RemoveAt(i);
+                    }
+                }
+            }
+
             int hashCode = target.GetHashCode();
             if (!_targetKeys.TryGetValue(hashCode, out var keys)) return;
             RemoveByKey(keys);
@@ -451,6 +466,18 @@ namespace Ux
         private void _Remove(Delegate action)
         {
             var hashCode = action.GetHashCode();
+            if (_waitAdds.Count > 0)
+            {
+                for (int i = _waitAdds.Count - 1; i >= 0; i--)
+                {
+                    var wa = _waitAdds[i];
+                    if (wa.Method == action)
+                    {
+                        _waitAdds.RemoveAt(i);
+                    }
+                }
+            }
+
             if (!_actionKeys.TryGetValue(hashCode, out var keys)) return;
             RemoveByKey(keys);
         }
@@ -466,16 +493,19 @@ namespace Ux
         public void RemoveByKey(long key)
         {
             if (key == 0) return;
-            if (_waitAdds.Count > 0)
-            {
-                var addIndex = _waitAdds.FindIndex(x => x.Key == key);
-                if (addIndex >= 0)
-                {
-                    _waitAdds.RemoveAt(addIndex);
-                }
-            }
 
-            if (!_keyEvent.ContainsKey(key)) return;
+            if (!_keyEvent.ContainsKey(key))
+            {
+                if (_waitAdds.Count > 0)
+                {
+                    var addIndex = _waitAdds.FindIndex(x => x.Key == key);
+                    if (addIndex >= 0)
+                    {
+                        _waitAdds.RemoveAt(addIndex);
+                    }
+                }
+                return;
+            }
             if (_waitDels.Contains(key)) return;
             _waitDels.Add(key);
         }
