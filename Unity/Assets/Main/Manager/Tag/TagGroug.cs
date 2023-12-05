@@ -8,6 +8,8 @@ namespace Ux
     {
         protected List<TagBase> _childs;
 
+        protected override IList<int> EvtTypes() { return null; }
+
         protected override void OnInit()
         {
             base.OnInit();
