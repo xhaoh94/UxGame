@@ -19,6 +19,16 @@ namespace Ux
 
         void Awake()
         {
+            int a1 = -655055244;
+            int b1 = -1261172694;
+            int c1 = -1024975302;
+            long key1 = IDGenerater.GenerateId(c1, b1, a1);
+
+            int a2 = 316473566;
+            int b2 = -1261172694;
+            int c2 = -1024975302;
+            long key2 = IDGenerater.GenerateId(c2, b2, a2);
+
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
@@ -47,7 +57,7 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize(PlayMode);            
+            yield return ResMgr.Ins.Initialize(PlayMode);
             typeof(GameMain).Assembly.Initialize();
             // 运行补丁流程
             PatchMgr.Ins.Run(PlayMode);

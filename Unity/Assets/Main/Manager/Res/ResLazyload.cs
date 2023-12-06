@@ -10,11 +10,11 @@ namespace Ux
         {
         }
 
-        public Downloader GetDownloaderByTags(string[] tags)
+        public Downloader GetDownloaderByTags(IList<string> tags)
         {
-            var list = tags.Where(tag => !_loadedAssets.Contains(tag)).ToList();
-            if (list.Count <= 0) return null;            
-            var download = new Downloader(list.ToArray());
+            var list = tags.Where(tag => !_loadedAssets.Contains(tag)).ToArray();
+            if (list.Length <= 0) return null;
+            var download = new Downloader(list);
             if (download.TotalDownloadCount != 0) return download;
             foreach (var tag in list)
             {

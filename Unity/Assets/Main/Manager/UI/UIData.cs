@@ -191,4 +191,71 @@ namespace Ux
             return false;
         }
     }
+
+    public partial class UIMgr
+    {
+        private readonly Dictionary<int, IUIData> _idUIData = new Dictionary<int, IUIData>();
+
+        //动态创建的UI数据
+        private readonly List<int> dymUIData = new List<int>();
+
+        #region UIData
+
+        /// <summary>
+        /// 添加UIData，一般用于动态创建UI界面
+        /// </summary>
+        /// <param name="data"></param>
+        public void AddUIData(IUIData data)
+        {
+            if (IsHasUIData(data.ID))
+            {
+#if UNITY_EDITOR
+                Log.Error("重复注册UI面板:{0}", data.IDStr);
+#else
+                Log.Error("重复注册UI面板:{0}", data.ID);
+#endif
+                return;
+            }
+
+            _idUIData.Add(data.ID, data);
+            dymUIData.Add(data.ID);
+#if UNITY_EDITOR
+            __Debugger_UI_Event();
+#endif
+        }
+
+        /// <summary>
+        /// 移除UIData，一般用于动态创建界面的销毁
+        /// </summary>
+        /// <param name="id"></param>
+        public void RemoveUIData(int id)
+        {
+            if (!_idUIData.Remove(id)) return;
+            dymUIData.Remove(id);
+#if UNITY_EDITOR
+            __Debugger_UI_Event();
+#endif
+        }
+
+        /// <summary>
+        /// 获取已注册的UIData
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public IUIData GetUIData(int id)
+        {
+            if (_idUIData.TryGetValue(id, out var data))
+            {
+                return data;
+            }
+            Log.Error($"没有注册UIID[{id}]");
+            return null;
+        }
+
+        public bool IsHasUIData(int id)
+        {
+            return _idUIData.ContainsKey(id);
+        }
+        #endregion
+    }
 }

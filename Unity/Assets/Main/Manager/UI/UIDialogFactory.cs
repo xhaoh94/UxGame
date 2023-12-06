@@ -76,7 +76,7 @@ namespace Ux
             }
 
             var data = new UIData((int)IDGenerater.GenerateId(), type);
-            UIMgr.Ins.RegisterUI(data);
+            UIMgr.Ins.AddUIData(data);
             return data.ID;
         }
 

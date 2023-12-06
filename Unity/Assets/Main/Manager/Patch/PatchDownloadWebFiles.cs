@@ -34,19 +34,23 @@ namespace Ux
             // 注册下载回调
             downloader.OnDownloadErrorCallback = OnDownloadErrorCallback;
             downloader.OnDownloadProgressCallback = OnDownloadProgressCallback;
-            downloader.Download(DownloadComplete, OnDownloadFail);
+            downloader.BeginDownload(DownloadComplete);
         }
-        private void DownloadComplete()
+        private void DownloadComplete(bool succeed)
         {
-            PatchMgr.Enter<PatchDone>();
-        }
-        private void OnDownloadFail()
-        {
-            Action callback = () =>
+            if (succeed)
             {
-                Application.Quit();
-            };
-            UIMgr.Dialog.SingleBtn("提示", $"磁盘空间不足", "确定", callback);
+                PatchMgr.Enter<PatchDone>();
+            }
+            else
+            {
+                Action callback = () =>
+                {
+                    Application.Quit();
+                };
+                UIMgr.Dialog.SingleBtn("提示", $"资源下载失败，请检查是否磁盘空间不足", "确定", callback);
+            }
+
         }
     }
     public struct DownloadProgressUpdate

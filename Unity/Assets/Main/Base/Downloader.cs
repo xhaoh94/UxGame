@@ -11,7 +11,6 @@ namespace Ux
     public class Downloader
     {
         readonly List<DownloaderOperation> _handles = new List<DownloaderOperation>();
-
         public Downloader(string[] tags)
         {
             ResMgr.Ins.ForEachPackage(x =>
@@ -210,20 +209,40 @@ namespace Ux
                 handle.CancelDownload();
             }
         }
-
-        public void Download(Action end = null, Action fail = null)
+        public void BeginDownload(Action<bool> end = null)
         {
+            if (IsBeginDownload) return;
             // 注意：需要在下载前检测磁盘空间不足
             if (!CheckDiskSpace())
             {
-                fail?.Invoke();
+                end?.Invoke(false);
                 return;
             }
             _Download(end).Forget();
         }
-        async UniTaskVoid _Download(Action end)
+        public void BeginDownload(Action<bool, object> end, object args)
         {
-            if (_handles == null) return;
+            // 注意：需要在下载前检测磁盘空间不足
+            if (!CheckDiskSpace())
+            {
+                end?.Invoke(false, args);
+                return;
+            }
+            _Download(end, args).Forget();
+        }
+        async UniTaskVoid _Download(Action<bool> end)
+        {
+            var succeed = await _Download();
+            end?.Invoke(succeed);
+        }
+        async UniTaskVoid _Download(Action<bool, object> end, object args)
+        {
+            var succeed = await _Download();
+            end?.Invoke(succeed, args);
+        }
+        async UniTask<bool> _Download()
+        {
+            if (_handles == null) return false;
             IsBeginDownload = true;
             foreach (var handle in _handles)
             {
@@ -233,9 +252,9 @@ namespace Ux
                 await handle.ToUniTask();
                 // 检测下载结果
                 if (handle.Status != EOperationStatus.Succeed)
-                    return;
+                    return false;
             }
-            end?.Invoke();
+            return true;
         }
 
         void _OnDownloadProgressCallback(int totalDownloadCount, int currentDownloadCount, long totalDownloadSizeBytes, long currentDownloadSizeBytes)

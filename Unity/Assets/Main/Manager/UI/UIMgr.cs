@@ -8,7 +8,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace Ux
 {
-    public class UIMgr : Singleton<UIMgr>
+    public partial class UIMgr : Singleton<UIMgr>
     {
         public readonly struct UIParse
         {
@@ -68,6 +68,18 @@ namespace Ux
             }
         }
 
+        public readonly struct DownloadData
+        {
+            public DownloadData(int uiid, object param, bool isAnim)
+            {
+                this.UIID = uiid;
+                this.Param = param;
+                this.IsAnim = isAnim;
+            }
+            public int UIID { get; }
+            public object Param { get; }
+            public bool IsAnim { get; }
+        }
         private class WaitDel
         {
             IUI ui;
@@ -128,11 +140,6 @@ namespace Ux
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeToId = new Dictionary<Type, int>();
 
-        private readonly Dictionary<int, IUIData> _idUIData = new Dictionary<int, IUIData>();
-
-        //动态创建的UI数据
-        private readonly List<int> dymUIData = new List<int>();
-
         //界面缓存，关闭不销毁的界面会缓存起来
         private readonly Dictionary<int, IUI> _cacel = new Dictionary<int, IUI>();
 
@@ -157,7 +164,7 @@ namespace Ux
         private readonly List<int> _waitHideAnimComplete = new List<int>();
 
         //界面对应的懒加载标签
-        private readonly Dictionary<int, string[]> _idLazyloads = new Dictionary<int, string[]>();
+        private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
 
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
 
@@ -275,61 +282,6 @@ namespace Ux
 #endif
         }
 
-        /// <summary>
-        /// 注册UI界面，一般用于动态创建UI界面
-        /// </summary>
-        /// <param name="data"></param>
-        public void RegisterUI(IUIData data)
-        {
-            if (HasUIData(data.ID))
-            {
-#if UNITY_EDITOR
-                Log.Error("重复注册UI面板:{0}", data.IDStr);
-#else
-                Log.Error("重复注册UI面板:{0}", data.ID);
-#endif
-                return;
-            }
-
-            _idUIData.Add(data.ID, data);
-            dymUIData.Add(data.ID);
-#if UNITY_EDITOR
-            __Debugger_UI_Event();
-#endif
-        }
-
-        /// <summary>
-        /// 注销UI界面，一般用于动态创建界面的销毁
-        /// </summary>
-        /// <param name="id"></param>
-        public void LogoutUI(int id)
-        {
-            if (!_idUIData.Remove(id)) return;
-            dymUIData.Remove(id);
-#if UNITY_EDITOR
-            __Debugger_UI_Event();
-#endif
-        }
-
-        /// <summary>
-        /// 获取已注册的UIData
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public IUIData GetUIData(int id)
-        {
-            if (_idUIData.TryGetValue(id, out var data))
-            {
-                return data;
-            }
-            Log.Error($"没有注册UIID[{id}]");
-            return null;
-        }
-
-        public bool HasUIData(int id)
-        {
-            return _idUIData.ContainsKey(id);
-        }
 
         public GComponent GetLayer(UILayer layer)
         {
@@ -337,16 +289,17 @@ namespace Ux
             return GRoot.inst;
         }
 
+
+        public T GetUI<T>() where T : IUI
+        {
+            return GetUI<T>(ConverterID(typeof(T)));
+        }
+
         //获取UI
         public T GetUI<T>(int id) where T : IUI
         {
             if (!_showed.ContainsKey(id)) return default(T);
             return (T)_showed[id];
-        }
-
-        public T GetUI<T>() where T : IUI
-        {
-            return GetUI<T>(ConverterID(typeof(T)));
         }
 
         public bool IsShow<T>() where T : UIBase
@@ -395,7 +348,7 @@ namespace Ux
             }
 
             var top = data.GetChildID();
-            if (CheckDownload(top))
+            if (CheckDownload(top, param, isAnim))
             {
                 return default;
             }
@@ -405,7 +358,7 @@ namespace Ux
                 _createdDels.Remove(id);
             }
 
-            var arr = new List<IUI>();
+            var arr = Pool.Get<List<IUI>>();
             var succ = await ToShow(top, arr);
             if (succ)
             {
@@ -416,44 +369,36 @@ namespace Ux
                 }
             }
 
-            if (succ)
+            foreach (var ui in arr)
             {
-                foreach (var ui in arr)
+                var uiid = ui.ID;
+                if (!succ)
                 {
-                    var uiid = ui.ID;
-                    if (_showed.ContainsKey(uiid))
-                    {
-                        ui.DoResume(uiid == id ? param : null);
-                        EventMgr.Ins.Send(MainEventType.UI_RESUME, uiid);
-                    }
-                    else
-                    {
-                        ui.DoShow(isAnim, uiid == id ? param : null);
-                        _showed.Add(uiid, ui);
-                        _showing.Remove(uiid);
-                        EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
-                    }
-                }
-#if UNITY_EDITOR
-                __Debugger_Showing_Event();
-                __Debugger_Showed_Event();
-#endif
-                return (T)_showed[id];
-            }
-            else
-            {
-                foreach (var ui in arr)
-                {
-                    var uiid = ui.ID;
                     CheckDestroy(ui);
                     _showing.Remove(uiid);
+                    continue;
                 }
-#if UNITY_EDITOR
-                __Debugger_Showing_Event();
-                __Debugger_Showed_Event();
-#endif
-                return default;
+
+                if (_showed.ContainsKey(uiid))
+                {
+                    ui.DoResume(uiid == id ? param : null);
+                    EventMgr.Ins.Send(MainEventType.UI_RESUME, uiid);
+                    continue;
+                }
+
+                ui.DoShow(isAnim, uiid == id ? param : null);
+                _showed.Add(uiid, ui);
+                _showing.Remove(uiid);
+                EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
             }
+            arr.Clear();
+            Pool.Push(arr);
+
+#if UNITY_EDITOR
+            __Debugger_Showing_Event();
+            __Debugger_Showed_Event();
+#endif
+            return succ ? (T)_showed[id] : default;
         }
 
         private async UniTask<bool> ToShow(int id, ICollection<IUI> arr)
@@ -589,23 +534,14 @@ namespace Ux
             return ui;
         }
 
-        public void HideAll(List<int> ignoreList = null)
+        public void HideAll(IList<int> ignoreList = null)
         {
             bool Func(int id)
             {
                 return ignoreList is { Count: > 0 } && ignoreList.Contains(id);
             }
 
-            foreach (var id in _showing.Where(id => !Func(id)))
-            {
-                Hide(id, false);
-            }
-
-            var ids = _showed.Keys.ToList();
-            foreach (var id in ids.Where(id => !Func(id)))
-            {
-                Hide(id, false);
-            }
+            _HideAll(Func);
         }
         public void HideAll(List<string> ignoreList = null)
         {
@@ -800,7 +736,7 @@ namespace Ux
             ResMgr.Ins.RemoveUIPackage(data.Pkgs);
             if (ui is UIDialog)
             {
-                LogoutUI(id);
+                RemoveUIData(id);
             }
         }
 
@@ -809,7 +745,7 @@ namespace Ux
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        string[] GetDependenciesLazyload(int id)
+        List<string> GetDependenciesLazyload(int id)
         {
             if (id == 0) return null;
             if (!_idLazyloads.TryGetValue(id, out var lazyloads))
@@ -821,16 +757,16 @@ namespace Ux
                     return null;
                 }
 
-                var temLazyloads = new List<string>();
+                lazyloads = new List<string>();
                 while (data != null)
                 {
                     if (data.Lazyloads != null)
                     {
                         foreach (var lazyload in data.Lazyloads)
                         {
-                            if (!temLazyloads.Contains(lazyload))
+                            if (!lazyloads.Contains(lazyload))
                             {
-                                temLazyloads.Add(lazyload);
+                                lazyloads.Add(lazyload);
                             }
                         }
                     }
@@ -848,14 +784,13 @@ namespace Ux
                     data = GetUIData(data.TabData.PID);
                 }
 
-                lazyloads = temLazyloads.ToArray();
                 _idLazyloads.Add(id, lazyloads);
             }
 
             return lazyloads;
         }
 
-        bool CheckDownload(int id)
+        bool CheckDownload(int id, object param, bool isAnim)
         {
             if (_idDownloader.TryGetValue(id, out var download))
             {
@@ -870,7 +805,7 @@ namespace Ux
             }
 
             var tags = GetDependenciesLazyload(id);
-            if (tags == null || tags.Length == 0) return false;
+            if (tags == null || tags.Count == 0) return false;
             download = ResMgr.Lazyload.GetDownloaderByTags(tags);
             if (download == null) return false;
             Log.Debug($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
@@ -882,112 +817,25 @@ namespace Ux
                 {
                     //TODO 显示下载界面
                     _idDownloader.Add(id, download);
-                    download.Download();
+                    download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
                 },
                 "取消", null);
             return true;
         }
 
-
-#if UNITY_EDITOR
-        public static void __Debugger_Event()
+        void _DownloadComplete(bool succeed, object args)
         {
-            if (UnityEditor.EditorApplication.isPlaying)
+            if (succeed)
             {
-                __Debugger_UI_Event();
-                __Debugger_Showed_Event();
-                __Debugger_Showing_Event();
-                __Debugger_Cacel_Event();
-                __Debugger_TemCacel_Event();
-                __Debugger_WaitDel_Event();
-            }
-        }
-
-        public static void __Debugger_UI_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                var list = new Dictionary<string, IUIData>();
-                foreach (var kv in Ins._idUIData)
+                if (args is DownloadData data)
                 {
-                    list.Add(kv.Value.IDStr, kv.Value);
+                    Show(data.UIID, data.Param, data.IsAnim);
                 }
-                __Debugger_UI_CallBack?.Invoke(list);
             }
-        }
-
-        public static void __Debugger_Showed_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
+            else
             {
-                var list = new List<string>();
-                foreach (var kv in Ins._showed)
-                {
-                    list.Add(kv.Value.IDStr);
-                }
-                __Debugger_Showed_CallBack?.Invoke(list);
+                Log.Error("下载懒加载资源失败");
             }
         }
-
-        public static void __Debugger_Showing_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                var list = new List<string>();
-                foreach (var id in Ins._showing)
-                {
-                    list.Add(Ins.GetUIData(id).IDStr);
-                }
-                __Debugger_Showing_CallBack?.Invoke(list);
-            }
-        }
-
-        public static void __Debugger_Cacel_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                var list = new List<string>();
-                foreach (var kv in Ins._cacel)
-                {
-                    list.Add(kv.Value.IDStr);
-                }
-                __Debugger_Cacel_CallBack?.Invoke(list);
-            }
-        }
-
-        public static void __Debugger_TemCacel_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                var list = new List<string>();
-                foreach (var kv in Ins._temCacel)
-                {
-                    list.Add(kv.Value.IDStr);
-                }
-                __Debugger_TemCacel_CallBack?.Invoke(list);
-            }
-        }
-
-        public static void __Debugger_WaitDel_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                var list = new List<string>();
-                foreach (var kv in Ins._waitDels)
-                {
-                    list.Add(kv.Value.IDStr);
-                }
-                __Debugger_WaitDel_CallBack?.Invoke(list);
-            }
-        }
-
-        public static Action<Dictionary<string, IUIData>> __Debugger_UI_CallBack;
-        public static Action<List<string>> __Debugger_Showed_CallBack;
-        public static Action<List<string>> __Debugger_Showing_CallBack;
-        public static Action<List<string>> __Debugger_Cacel_CallBack;
-        public static Action<List<string>> __Debugger_TemCacel_CallBack;
-        public static Action<List<string>> __Debugger_WaitDel_CallBack;
-
-#endif
     }
 }
