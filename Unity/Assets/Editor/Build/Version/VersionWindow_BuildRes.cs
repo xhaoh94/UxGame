@@ -22,6 +22,13 @@ public partial class VersionWindow
             return AssetBundleBuilderHelper.GetDefaultBuildOutputRoot();
         }
     }
+    string TemBuildOutputRoot
+    {
+        get
+        {
+            return BuildOutputRoot + "_Tem";
+        }
+    }
 
     string StreamingAssetsRoot
     {
@@ -65,6 +72,10 @@ public partial class VersionWindow
             if (EditorTools.DeleteDirectory(BuildOutputRoot))
             {
                 Log.Debug($"删除资源目录：{BuildOutputRoot}");
+            }
+            if (EditorTools.DeleteDirectory(TemBuildOutputRoot))
+            {
+                Log.Debug($"删除临时资源目录：{TemBuildOutputRoot}");
             }
 
             EditorTools.ClearFolder(StreamingAssetsRoot);
@@ -210,8 +221,8 @@ public partial class VersionWindow
                 Log.Error("未知的构建模式");
                 return false;
         }
-        string buildOutputRoot = BuildOutputRoot;
-        var temOutputRoot = buildOutputRoot + "_Tem";
+        var buildOutputRoot = BuildOutputRoot;
+        var temOutputRoot = TemBuildOutputRoot;
         buildParameters.BuildOutputRoot = temOutputRoot;
         buildParameters.BuildinFileRoot = StreamingAssetsRoot;
         buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
