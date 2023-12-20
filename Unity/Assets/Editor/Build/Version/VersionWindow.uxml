@@ -30,6 +30,7 @@
                 </ui:VisualElement>
                 <ui:Toggle label="清理沙盒缓存" name="tgClearSandBox" style="height: 15px;" />
                 <ui:Toggle label="编译热更DLL" name="tgCompileDLL" style="height: 15px;" />
+                <ui:Toggle label="生成AOT" name="tgCompileAot" />
                 <ui:Toggle label="UI代码" name="tgCompileUI" />
                 <ui:Toggle label="配置文件" name="tgCompileConfig" />
                 <ui:Toggle label="协议文件" name="tgCompileProto" />

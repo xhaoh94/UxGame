@@ -10,6 +10,10 @@ namespace Ux
 {
     public partial class UIMgr : Singleton<UIMgr>
     {
+        //显示超时
+        const float _showTimeout = 5f;
+        //待销毁时间
+        const float _waitDelTime = 10f;
         public readonly struct UIParse
         {
             public UIParse(Type type, int id, IUITabData tabData)
@@ -90,7 +94,7 @@ namespace Ux
             public void Init(IUI _ui)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Ins.DoOnce(5, Exe); //5秒后执行删除                
+                timeKey = TimeMgr.Ins.DoOnce(_waitDelTime, Exe); //一段时间后执行删除                
             }
 
             void Release()
@@ -111,9 +115,9 @@ namespace Ux
                 Release();
             }
 
-            public void GetUI(out IUI outUi)
+            public void GetUI(out IUI outUI)
             {
-                outUi = ui;
+                outUI = ui;
                 Dialog._waitDels.Remove(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Release();
@@ -358,18 +362,18 @@ namespace Ux
                 _createdDels.Remove(id);
             }
 
-            var arr = Pool.Get<List<IUI>>();
-            var succ = await ToShow(top, arr);
+            var uis = Pool.Get<List<IUI>>();
+            var succ = await ToShow(top, uis);
             if (succ)
             {
-                foreach (var uiid in arr.Select(ui => ui.ID).Where(uiid => _createdDels.Contains(uiid)))
+                foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _createdDels.Contains(uiid)))
                 {
                     succ = false;
                     _createdDels.Remove(uiid);
                 }
             }
 
-            foreach (var ui in arr)
+            foreach (var ui in uis)
             {
                 var uiid = ui.ID;
                 if (!succ)
@@ -391,8 +395,8 @@ namespace Ux
                 _showing.Remove(uiid);
                 EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
             }
-            arr.Clear();
-            Pool.Push(arr);
+            uis.Clear();
+            Pool.Push(uis);
 
 #if UNITY_EDITOR
             __Debugger_Showing_Event();
@@ -401,7 +405,7 @@ namespace Ux
             return succ ? (T)_showed[id] : default;
         }
 
-        private async UniTask<bool> ToShow(int id, ICollection<IUI> arr)
+        private async UniTask<bool> ToShow(int id, ICollection<IUI> uis)
         {
             var data = GetUIData(id);
             if (data == null)
@@ -439,11 +443,11 @@ namespace Ux
                     if (_showed.TryGetValue(id, out ui)) break;
                     if (!_showing.Contains(id)) break;
                     if (_createdDels.Contains(id)) break;
-                    if (Time.unscaledTime - time > 5f) break; //超时
+                    if (Time.unscaledTime - time > _showTimeout) break; //超时
                 }
 
                 if (ui == null) return false;
-                arr.Add(ui);
+                uis.Add(ui);
                 return true;
             }
 
@@ -454,7 +458,7 @@ namespace Ux
 
             if (data.TabData != null && data.TabData.PID != 0)
             {
-                if (!await ToShow(data.TabData.PID, arr))
+                if (!await ToShow(data.TabData.PID, uis))
                 {
                     _showing.Remove(id);
 #if UNITY_EDITOR
@@ -510,7 +514,7 @@ namespace Ux
                 return false;
             }
 
-            arr.Add(ui);
+            uis.Add(ui);
             return true;
         }
 
@@ -690,9 +694,9 @@ namespace Ux
                 if (_cacel.ContainsKey(id))
                 {
 #if UNITY_EDITOR
-                    Log.Error($"界面[{ui.IDStr}]多次放入待删除列表");
+                    Log.Error($"界面[{ui.IDStr}]多次放入缓存列表");
 #else
-                    Log.Error($"界面[{id}]多次放入待删除列表");
+                    Log.Error($"界面[{id}]多次放入缓存列表");
 #endif                    
                     return;
                 }

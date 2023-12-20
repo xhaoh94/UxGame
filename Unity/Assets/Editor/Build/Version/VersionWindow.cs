@@ -93,6 +93,7 @@ public partial class VersionWindow : EditorWindow
     TextField _txtVersion;
     Toggle _tgClearSandBox;
     Toggle _tgCompileDLL;
+    Toggle _tgCompileAot;
     Toggle _tgCompileUI;
     Toggle _tgCompileConfig;
     Toggle _tgCompileProto;
@@ -208,6 +209,8 @@ public partial class VersionWindow : EditorWindow
             {
                 RefreshElement();
             });
+            _tgCompileAot = _exportElement.Q<Toggle>("tgCompileAot");
+            _tgCompileAot.SetValueWithoutNotify(true);
             _tgCompileUI = _exportElement.Q<Toggle>("tgCompileUI");
             _tgCompileUI.SetValueWithoutNotify(true);
             _tgCompileConfig = _exportElement.Q<Toggle>("tgCompileConfig");
@@ -342,7 +345,7 @@ public partial class VersionWindow : EditorWindow
     }
     string AddVersion(string version)
     {
-        if (IsExportExecutable || string.IsNullOrEmpty(version))
+        if (IsForceRebuild || string.IsNullOrEmpty(version))
         {
             var dt = DateTime.Now;
             int totalSecond = dt.Hour * 3600 + dt.Minute * 60 + dt.Second;
@@ -422,6 +425,7 @@ public partial class VersionWindow : EditorWindow
         _tgClearSandBox.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
 
         _inputCopyPath.parent.style.display = _tgCopy.value ? DisplayStyle.Flex : DisplayStyle.None;
+        _tgCompileAot.style.display = _tgCompileDLL.value && IsExportExecutable ? DisplayStyle.Flex : DisplayStyle.None;
         _tgCompileUI.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
         _tgCompileConfig.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
         _tgCompileProto.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;

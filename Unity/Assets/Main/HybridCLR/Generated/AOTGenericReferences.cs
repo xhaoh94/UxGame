@@ -6,9 +6,11 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	public static readonly IReadOnlyList<string> PatchedAOTAssemblyList = new List<string>
 	{
 		"Luban.dll",
+		"System.Core.dll",
 		"UniTask.dll",
 		"Unity.InputSystem.dll",
 		"Unity.Main.dll",
+		"Unity.VisualScripting.Core.dll",
 		"UnityEngine.CoreModule.dll",
 		"YooAsset.dll",
 		"mscorlib.dll",
@@ -290,12 +292,53 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Comparison<int>
 	// System.Comparison<long>
 	// System.Comparison<object>
+	// System.Func<UnityEngine.Bounds,UnityEngine.Bounds,byte>
+	// System.Func<UnityEngine.Color,UnityEngine.Color,UnityEngine.Color>
+	// System.Func<UnityEngine.Color,UnityEngine.Color,byte>
+	// System.Func<UnityEngine.Color,UnityEngine.Vector4>
+	// System.Func<UnityEngine.Color,float,UnityEngine.Color>
+	// System.Func<UnityEngine.LayerMask,int>
+	// System.Func<UnityEngine.Matrix4x4,UnityEngine.Matrix4x4,UnityEngine.Matrix4x4>
+	// System.Func<UnityEngine.Matrix4x4,UnityEngine.Matrix4x4,byte>
+	// System.Func<UnityEngine.Matrix4x4,UnityEngine.Vector4,UnityEngine.Vector4>
+	// System.Func<UnityEngine.Quaternion,UnityEngine.Quaternion,UnityEngine.Quaternion>
+	// System.Func<UnityEngine.Quaternion,UnityEngine.Quaternion,byte>
+	// System.Func<UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Vector3>
+	// System.Func<UnityEngine.RaycastHit2D,byte>
+	// System.Func<UnityEngine.Rect,UnityEngine.Rect,byte>
+	// System.Func<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene,byte>
+	// System.Func<UnityEngine.Vector2,UnityEngine.Vector2,UnityEngine.Vector2>
+	// System.Func<UnityEngine.Vector2,UnityEngine.Vector2,byte>
+	// System.Func<UnityEngine.Vector2,UnityEngine.Vector2>
+	// System.Func<UnityEngine.Vector2,UnityEngine.Vector3>
+	// System.Func<UnityEngine.Vector2,UnityEngine.Vector4>
+	// System.Func<UnityEngine.Vector2,float,UnityEngine.Vector2>
+	// System.Func<UnityEngine.Vector3,UnityEngine.Vector2>
+	// System.Func<UnityEngine.Vector3,UnityEngine.Vector3,UnityEngine.Vector3>
+	// System.Func<UnityEngine.Vector3,UnityEngine.Vector3,byte>
+	// System.Func<UnityEngine.Vector3,UnityEngine.Vector3>
+	// System.Func<UnityEngine.Vector3,UnityEngine.Vector4>
+	// System.Func<UnityEngine.Vector3,float,UnityEngine.Vector3>
+	// System.Func<UnityEngine.Vector4,UnityEngine.Color>
+	// System.Func<UnityEngine.Vector4,UnityEngine.Vector3>
+	// System.Func<UnityEngine.Vector4,UnityEngine.Vector4,UnityEngine.Vector4>
+	// System.Func<UnityEngine.Vector4,UnityEngine.Vector4,byte>
+	// System.Func<UnityEngine.Vector4,UnityEngine.Vector4>
+	// System.Func<UnityEngine.Vector4,float,UnityEngine.Vector4>
 	// System.Func<byte>
+	// System.Func<float,UnityEngine.Color,UnityEngine.Color>
+	// System.Func<float,UnityEngine.Vector2,UnityEngine.Vector2>
+	// System.Func<float,UnityEngine.Vector3,UnityEngine.Vector3>
+	// System.Func<float,UnityEngine.Vector4,UnityEngine.Vector4>
+	// System.Func<float,float,byte>
+	// System.Func<int,UnityEngine.LayerMask>
 	// System.Func<int,byte>
 	// System.Func<int>
 	// System.Func<object,byte>
 	// System.Func<object,int>
+	// System.Func<object,object,byte>
 	// System.Func<object,object>
+	// System.Linq.Expressions.Expression<object>
 	// System.Nullable<long>
 	// System.Predicate<UnityEngine.InputSystem.InputControlScheme>
 	// System.Predicate<UnityEngine.Vector3>
@@ -322,6 +365,58 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.ValueTuple<byte,byte>
 	// System.ValueTuple<byte,object>
 	// System.ValueTuple<int,int>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Bounds,UnityEngine.Bounds,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Color,UnityEngine.Color,UnityEngine.Color>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Color,UnityEngine.Color,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Color,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Color,float,UnityEngine.Color>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.LayerMask,int>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Matrix4x4,UnityEngine.Matrix4x4,UnityEngine.Matrix4x4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Matrix4x4,UnityEngine.Matrix4x4,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Matrix4x4,UnityEngine.Vector4,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Quaternion,UnityEngine.Quaternion,UnityEngine.Quaternion>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Quaternion,UnityEngine.Quaternion,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.RaycastHit2D,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Rect,UnityEngine.Rect,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector2,UnityEngine.Vector2,UnityEngine.Vector2>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector2,UnityEngine.Vector2,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector2,UnityEngine.Vector2>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector2,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector2,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector2,float,UnityEngine.Vector2>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector3,UnityEngine.Vector2>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector3,UnityEngine.Vector3,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector3,UnityEngine.Vector3,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector3,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector3,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector3,float,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector4,UnityEngine.Color>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector4,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector4,UnityEngine.Vector4,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector4,UnityEngine.Vector4,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector4,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Vector4,float,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<float,UnityEngine.Color,UnityEngine.Color>
+	// Unity.VisualScripting.StaticFunctionInvoker<float,UnityEngine.Vector2,UnityEngine.Vector2>
+	// Unity.VisualScripting.StaticFunctionInvoker<float,UnityEngine.Vector3,UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvoker<float,UnityEngine.Vector4,UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvoker<float,float,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<int,UnityEngine.LayerMask>
+	// Unity.VisualScripting.StaticFunctionInvoker<object,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<object,object,byte>
+	// Unity.VisualScripting.StaticFunctionInvoker<object,object>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.Color>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.LayerMask>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.Matrix4x4>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.Quaternion>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.Vector2>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.Vector3>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<UnityEngine.Vector4>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<byte>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<int>
+	// Unity.VisualScripting.StaticFunctionInvokerBase<object>
 	// UnityEngine.InputSystem.InputBindingComposite<UnityEngine.Vector2>
 	// UnityEngine.InputSystem.InputControl<UnityEngine.Vector2>
 	// UnityEngine.InputSystem.InputProcessor<UnityEngine.Vector2>
@@ -329,6 +424,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray.Enumerator<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.Playables.ScriptPlayable<object>
+	// Ux.EventMgr.<>c__DisplayClass31_0<object>
 	// Ux.EventMgr.EventData<object,object,object>
 	// Ux.EventMgr.EventData<object,object>
 	// Ux.EventMgr.EventData<object>
@@ -342,8 +438,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Ux.ModuleBase<object>
 	// Ux.ResMgr.<LoadAssetAsync>d__27<object>
 	// Ux.StateMachine.<>c__DisplayClass26_0<object>
-	// Ux.UIMgr.<>c__36<object>
-	// Ux.UIMgr.<ShowAsync>d__36<object>
+	// Ux.UIMgr.<>c__39<object>
+	// Ux.UIMgr.<ShowAsync>d__39<object>
 	// Ux.UIMgr.UITask<object>
 	// }}
 
@@ -379,8 +475,10 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// Ux.Entity Ux.Entity.AddChild<UnityEngine.Playables.PlayableGraph,int>(System.Type,UnityEngine.Playables.PlayableGraph,int,bool)
 		// Ux.Entity Ux.Entity.AddChild<UnityEngine.Playables.PlayableGraph,object,object,int>(System.Type,UnityEngine.Playables.PlayableGraph,object,object,int,bool)
 		// Ux.Entity Ux.Entity.AddChild<object>(System.Type,object,bool)
+		// Ux.Entity Ux.Entity.AddChild<object>(long,System.Type,object,bool)
 		// object Ux.Entity.AddChild<object,UnityEngine.Playables.PlayableGraph,int>(UnityEngine.Playables.PlayableGraph,int,bool)
 		// object Ux.Entity.AddChild<object,UnityEngine.Playables.PlayableGraph,object,object,int>(UnityEngine.Playables.PlayableGraph,object,object,int,bool)
+		// object Ux.Entity.AddChild<object,object>(long,object,bool)
 		// object Ux.Entity.AddChild<object,object>(object,bool)
 		// Ux.Entity Ux.Entity.AddComponent<object>(System.Type,object,bool)
 		// object Ux.Entity.AddComponent<object,object>(object,bool)

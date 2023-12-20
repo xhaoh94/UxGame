@@ -14,7 +14,7 @@ namespace Ux.UI
         {
             base.OnInit();
             TimeMgr.Ins.DoTimer(50, 1, OnConnect);
-            DoTimer(1, 1, ttt);
+            TimeMgr.Ins.DoTimer(1, 1, ttt);
         }
 
         void ttt()

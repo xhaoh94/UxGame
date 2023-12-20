@@ -16,7 +16,7 @@ public partial class VersionWindow
             HybridCLRCommand.ClearHOTDll();
             await UxEditor.Export(_tgCompileUI.value, _tgCompileConfig.value, _tgCompileProto.value, false);
             var compileType = (CompileType)_compileType.value;
-            if (IsExportExecutable)
+            if (IsExportExecutable && _tgCompileAot.value)
             {
                 if (target != EditorUserBuildSettings.activeBuildTarget &&
                     !EditorUserBuildSettings.SwitchActiveBuildTarget(

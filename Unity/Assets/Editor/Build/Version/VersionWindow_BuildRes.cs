@@ -44,7 +44,7 @@ public partial class VersionWindow
     void OnClearClick()
     {
         if (EditorUtility.DisplayDialog("提示", $"是否重置构建！\n重置会删除所有构建相关目录！", "确定", "取消"))
-        {  
+        {
             if (Directory.Exists(SelectItem.ExePath))
             {
                 Directory.Delete(SelectItem.ExePath, true);
@@ -179,7 +179,7 @@ public partial class VersionWindow
         var packageSetting = SelectItem.GetPackageSetting(packageName);
         BuildParameters buildParameters = null;
         IBuildPipeline pipeline = null;
-        string buildOutputRoot = BuildOutputRoot;
+
         switch (packageSetting.PiplineOption)
         {
             case EBuildPipeline.BuiltinBuildPipeline:
@@ -210,8 +210,9 @@ public partial class VersionWindow
                 Log.Error("未知的构建模式");
                 return false;
         }
-
-        buildParameters.BuildOutputRoot = buildOutputRoot;
+        string buildOutputRoot = BuildOutputRoot;
+        var temOutputRoot = buildOutputRoot + "_Tem";
+        buildParameters.BuildOutputRoot = temOutputRoot;
         buildParameters.BuildinFileRoot = StreamingAssetsRoot;
         buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
         buildParameters.BuildTarget = buildTarget;
@@ -228,6 +229,7 @@ public partial class VersionWindow
         var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
         var outputDir = "Output";
         var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
+        var temBuildPath = $"{temOutputRoot}/{buildTarget}/{packageName}";
         var nowVersion = _txtVersion.value;
         var lastVersion = string.Empty;
         var versionFile = $"{buildPath}/{outputDir}/{versionFileName}";
@@ -258,7 +260,17 @@ public partial class VersionWindow
 
 
 
-        var sPath = $"{buildPath}/{nowVersion}";
+        var temBuildPathVersion = $"{temBuildPath}/{nowVersion}";
+        var buildPathVersion = $"{buildPath}/{nowVersion}";
+        Directory.CreateDirectory(buildPathVersion);
+        var temfiles = Directory.GetFiles(temBuildPathVersion).ToList();
+        foreach (var file in temfiles)
+        {
+            var temFile = PathUtility.RegularPath(file);
+            var index = temFile.LastIndexOf("/");
+            var fileName = temFile.Substring(index + 1);
+            File.Copy(file, Path.Combine(buildPathVersion, fileName), true);
+        }
 
         var nowJsonFileName = YooAssetSettingsData.GetManifestJsonFileName(packageName, nowVersion);
         var nowHashFileName = YooAssetSettingsData.GetPackageHashFileName(packageName, nowVersion);
@@ -270,7 +282,7 @@ public partial class VersionWindow
         {
             files = new List<string>();
             var path1 = $"{buildPath}/{lastVersion}/{lastBinaryFileName}";
-            var path2 = $"{buildPath}/{nowVersion}/{nowBinaryFileName}";
+            var path2 = $"{temBuildPath}/{nowVersion}/{nowBinaryFileName}";
             List<string> changedList = new List<string>();
             PackageCompare.CompareManifest(path1, path2, changedList);
             var diffPath = $"{buildPath}/Difference/{lastVersion}_{nowVersion}";
@@ -282,19 +294,24 @@ public partial class VersionWindow
 
             foreach (var file in changedList)
             {
-                var temFile = $"{sPath}/{file}";
+                var temFile = $"{temBuildPathVersion}/{file}";
                 File.Copy(temFile, $"{diffPath}/{file}", true);
                 files.Add(temFile);
             }
-            files.Add($"{sPath}/{versionFileName}");
-            files.Add($"{sPath}/{nowBinaryFileName}");
-            files.Add($"{sPath}/{nowHashFileName}");
-            //files.Add($"{sPath}/{nowJsonFileName}");               
+            File.Copy($"{temBuildPathVersion}/{versionFileName}", $"{diffPath}/{versionFileName}", true);
+            File.Copy($"{temBuildPathVersion}/{nowBinaryFileName}", $"{diffPath}/{nowBinaryFileName}", true);
+            File.Copy($"{temBuildPathVersion}/{nowHashFileName}", $"{diffPath}/{nowHashFileName}", true);
+            File.Copy($"{temBuildPathVersion}/{nowJsonFileName}", $"{diffPath}/{nowJsonFileName}", true);
+
+            files.Add($"{temBuildPathVersion}/{versionFileName}");
+            files.Add($"{temBuildPathVersion}/{nowBinaryFileName}");
+            files.Add($"{temBuildPathVersion}/{nowHashFileName}");
+            files.Add($"{temBuildPathVersion}/{nowJsonFileName}");
         }
 
         if (files == null)
         {
-            files = Directory.GetFiles(sPath).ToList();
+            files = temfiles;
         }
 
         List<string> desPathList = new List<string>();
@@ -323,11 +340,16 @@ public partial class VersionWindow
             if (fileName == "link.xml") continue;
             if (fileName == "buildlogtep.json") continue;
             if (fileName == reportFileName) continue;
-            if (fileName == nowJsonFileName) continue;
+            //if (fileName == nowJsonFileName) continue;
             foreach (var desPath in desPathList)
             {
                 File.Copy(file, Path.Combine(desPath, fileName), true);
             }
+        }
+
+        if (Directory.Exists(temOutputRoot))
+        {
+            Directory.Delete(temOutputRoot, true);
         }
         return true;
     }

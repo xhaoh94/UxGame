@@ -640,7 +640,9 @@ namespace Ux
             isDestroyed = true;
             isDestroying = false;
             _is_init = false;
+#if UNITY_EDITOR
             GameObject.Destroy(GoViewer);
+#endif
             if (IsFromPool)
             {
                 Pool.Push(this);
