@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using YooAsset;
 using YooAsset.Editor;
 
 [CreateAssetMenu(fileName = "VersionSettingData", menuName = "Ux/Build/Create VersionSetting")]
@@ -49,6 +50,10 @@ public class BuildExportSetting
         {
             setting = new BuildPackageSetting();
             setting.PackageName = pkgName;
+            setting.PiplineOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageBuildPipeline(pkgName);
+            setting.CompressOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageCompressOption(pkgName, setting.PiplineOption);
+            setting.NameStyleOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageFileNameStyle(pkgName, setting.PiplineOption);
+            setting.EncyptionClassName = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageEncyptionClassName(pkgName, setting.PiplineOption);
             PackageBuilds.Add(setting);
         }
         return setting;
@@ -63,7 +68,7 @@ public class BuildExportSetting
 public class BuildPackageSetting
 {
     public bool New = true;
-    public bool IsCollectShaderVariant = true;
+    public bool IsCollectShaderVariant = false;
     public string PackageName = string.Empty;
     public string EncyptionClassName = string.Empty;
     public ECompressOption CompressOption = ECompressOption.LZ4;
