@@ -153,6 +153,7 @@ namespace Ux
                 if (IsConnected)
                 {
                     SendHeartbeat();
+#if !UNITY_EDITOR
                     if (rpcTime.Count > 0)
                     {
                         foreach (var kv in rpcTime)
@@ -177,6 +178,7 @@ namespace Ux
                             _rpcDels.Clear();
                         }
                     }
+#endif
                 }
             }
         }
@@ -234,7 +236,9 @@ namespace Ux
                             packetSize -= 4;
                             var rpcId = recvBytes.PopUInt32();
                             packetSize -= 4;
+#if !UNITY_EDITOR
                             rpcTime.Remove(rpcId);
+#endif
                             var rpcType = FindRPCType(rpcId);
                             if (rpcType != null)
                             {
@@ -361,7 +365,9 @@ namespace Ux
             this.sendBytes.PushUInt32(rpxID);
             this.sendBytes.PushStream(sendStream);
             isNeedSend = true;
+#if !UNITY_EDITOR
             rpcTime.Add(rpxID, TimeMgr.Ins.TotalTime);
+#endif
             return task.Task;
         }
         #endregion
