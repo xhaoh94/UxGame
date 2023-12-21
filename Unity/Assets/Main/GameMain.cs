@@ -80,8 +80,6 @@ namespace Ux
             {
                 OneThreadSynchronizationContext.Instance.Update();
                 TimeMgr.Ins.Update();
-                EventMgr.Ins.Update();
-                NetMgr.Ins.Update();
                 Entity.Update();
             }
             catch (Exception e)

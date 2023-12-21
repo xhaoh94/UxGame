@@ -18,6 +18,11 @@ namespace Ux
         private readonly List<IEvent> _waitAdds = new List<IEvent>();
         private readonly List<long> _waitDels = new List<long>();
 
+        protected override void OnInit()
+        {
+            TimeMgr.Ins.DoUpdate(_Update);
+        }
+
         Type ___hotfixEvtAttribute;
 
         public void ___SetEvtAttribute<T>() where T : Attribute, IEvtAttribute
@@ -80,7 +85,7 @@ namespace Ux
             return GetKey(eType, action.Method, action.Target);
         }
 
-        public void Update()
+        void _Update()
         {
             while (_waitDels.Count > 0)
             {
@@ -188,20 +193,20 @@ namespace Ux
         }
         int _exeCnt = 0;
 
-        Action _quitCb;
+        Action _quitEvent;
 
-        public void AddQuitCallBack(Action action)
+        public void OnQuit(Action action)
         {
-            _quitCb += action;
+            _quitEvent += action;
         }
-        public void RemoveQuitCallBack(Action action)
+        public void OffQuit(Action action)
         {
-            _quitCb -= action;
+            _quitEvent -= action;
         }
 
         public void OnApplicationQuit()
         {
-            _quitCb?.Invoke();
+            _quitEvent?.Invoke();
         }
 
 #if UNITY_EDITOR

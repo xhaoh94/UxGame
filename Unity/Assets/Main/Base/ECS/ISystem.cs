@@ -290,7 +290,7 @@ namespace Ux
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                EventMgr.Ins.AddQuitCallBack(applicationQuit.OnApplicationQuit);
+                EventMgr.Ins.OnQuit(applicationQuit.OnApplicationQuit);
             }
             var temPar = Parent;
             if (temPar != null)
@@ -334,7 +334,7 @@ namespace Ux
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                EventMgr.Ins.RemoveQuitCallBack(applicationQuit.OnApplicationQuit);
+                EventMgr.Ins.OffQuit(applicationQuit.OnApplicationQuit);
             }
 
             if (this is IRemoveComponentSystem removeComponentSystem)

@@ -14,6 +14,11 @@ namespace Ux
     {
         readonly List<ClientSocket> _clientSockets = new List<ClientSocket>();
         ClientSocket _clientSocket;
+
+        protected override void OnInit()
+        {
+            TimeMgr.Ins.DoUpdate(_Update);
+        }
         /// <summary>
         /// 创建远程服务
         /// </summary>
@@ -68,7 +73,7 @@ namespace Ux
             var response = await _clientSocket.Call<TMessage>(cmd, message);
             return (TMessage)response;
         }
-        public void Update()
+        void _Update()
         {
             foreach (var client in _clientSockets)
             {

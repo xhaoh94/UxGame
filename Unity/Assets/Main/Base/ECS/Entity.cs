@@ -8,8 +8,7 @@ namespace Ux
     public abstract partial class Entity
     {
         static readonly Queue<Action> _delayFn = new Queue<Action>();
-        static int exeNum;
-
+        static int exeNum;        
         static void _DelayInvoke(int max)
         {
             exeNum = 0;
@@ -630,7 +629,7 @@ namespace Ux
                 Pool.Push(_event);
             }
 
-            _delayFn.Enqueue(_DelayDestroy);
+            _delayFn.Enqueue(_DelayDestroy);            
         }
 
         void _DelayDestroy()

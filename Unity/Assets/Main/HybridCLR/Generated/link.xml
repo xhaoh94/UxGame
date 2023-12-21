@@ -65,7 +65,6 @@
     <type fullname="UnityEngine.InputSystem.InputAction/CallbackContext" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputActionAsset" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputActionMap" preserve="all" />
-    <type fullname="UnityEngine.InputSystem.InputActionReference" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputBinding" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputControl" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputControlScheme" preserve="all" />
@@ -142,11 +141,6 @@
     <type fullname="UnityEngine.Timeline.TimelineAsset" preserve="all" />
     <type fullname="UnityEngine.Timeline.TrackAsset" preserve="all" />
   </assembly>
-  <assembly fullname="Unity.VisualScripting.Core">
-    <type fullname="Unity.VisualScripting.InvokerBase" preserve="all" />
-    <type fullname="Unity.VisualScripting.StaticFunctionInvoker`2" preserve="all" />
-    <type fullname="Unity.VisualScripting.StaticFunctionInvoker`3" preserve="all" />
-  </assembly>
   <assembly fullname="UnityEngine.AnimationModule">
     <type fullname="UnityEngine.AnimationClip" preserve="all" />
     <type fullname="UnityEngine.Animations.AnimationLayerMixerPlayable" preserve="all" />
@@ -154,13 +148,9 @@
     <type fullname="UnityEngine.Animator" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.CoreModule">
-    <type fullname="UnityEngine.Bounds" preserve="all" />
     <type fullname="UnityEngine.Camera" preserve="all" />
-    <type fullname="UnityEngine.Color" preserve="all" />
     <type fullname="UnityEngine.Component" preserve="all" />
     <type fullname="UnityEngine.GameObject" preserve="all" />
-    <type fullname="UnityEngine.LayerMask" preserve="all" />
-    <type fullname="UnityEngine.Matrix4x4" preserve="all" />
     <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
     <type fullname="UnityEngine.Playables.DirectorUpdateMode" preserve="all" />
@@ -175,21 +165,14 @@
     <type fullname="UnityEngine.Quaternion" preserve="all" />
     <type fullname="UnityEngine.Random" preserve="all" />
     <type fullname="UnityEngine.Ray" preserve="all" />
-    <type fullname="UnityEngine.Rect" preserve="all" />
-    <type fullname="UnityEngine.SceneManagement.Scene" preserve="all" />
-    <type fullname="UnityEngine.Scripting.PreserveAttribute" preserve="all" />
     <type fullname="UnityEngine.TextAsset" preserve="all" />
     <type fullname="UnityEngine.Time" preserve="all" />
     <type fullname="UnityEngine.Transform" preserve="all" />
     <type fullname="UnityEngine.Vector2" preserve="all" />
     <type fullname="UnityEngine.Vector3" preserve="all" />
-    <type fullname="UnityEngine.Vector4" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.DirectorModule">
     <type fullname="UnityEngine.Playables.PlayableDirector" preserve="all" />
-  </assembly>
-  <assembly fullname="UnityEngine.Physics2DModule">
-    <type fullname="UnityEngine.RaycastHit2D" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.PhysicsModule">
     <type fullname="UnityEngine.Physics" preserve="all" />
@@ -240,7 +223,6 @@
     <type fullname="System.Reflection.ConstructorInfo" preserve="all" />
     <type fullname="System.Reflection.DefaultMemberAttribute" preserve="all" />
     <type fullname="System.Reflection.MethodBase" preserve="all" />
-    <type fullname="System.Reflection.MethodInfo" preserve="all" />
     <type fullname="System.Reflection.ParameterInfo" preserve="all" />
     <type fullname="System.Runtime.CompilerServices.AsyncStateMachineAttribute" preserve="all" />
     <type fullname="System.Runtime.CompilerServices.AsyncVoidMethodBuilder" preserve="all" />
@@ -255,7 +237,6 @@
     <type fullname="System.Security.Permissions.SecurityAction" preserve="all" />
     <type fullname="System.Security.Permissions.SecurityPermissionAttribute" preserve="all" />
     <type fullname="System.Security.UnverifiableCodeAttribute" preserve="all" />
-    <type fullname="System.Single" preserve="all" />
     <type fullname="System.String" preserve="all" />
     <type fullname="System.Type" preserve="all" />
     <type fullname="System.ValueTuple`2" preserve="all" />
