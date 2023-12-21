@@ -19,16 +19,17 @@ namespace Ux
 
         void Awake()
         {
-            int a1 = -655055244;
-            int b1 = -1261172694;
-            int c1 = -1024975302;
+            int a1 = -604752908;
+            int b1 = 1818870784;
+            int c1 = -1098022624;
             long key1 = IDGenerater.GenerateId(c1, b1, a1);
 
-            int a2 = 316473566;
-            int b2 = -1261172694;
-            int c2 = -1024975302;
+            int a2 = -492354658;
+            int b2 = 1818870784;
+            int c2 = -1098022624;
             long key2 = IDGenerater.GenerateId(c2, b2, a2);
 
+            Log.Debug("key1:" + key1 + "key2:" + key2);
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));

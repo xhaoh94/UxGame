@@ -13,17 +13,15 @@ namespace Ux
         }
         public static long GenerateId(int a, int b)
         {
-            return (long)(a > b
+            return a > b
                 ? (b & 0xFFFFFFFFL) | (((long)a & 0x7fffffff) << 32)
-                : (a & 0xFFFFFFFFL) | (((long)b & 0x7fffffff) << 32));
+                : (a & 0xFFFFFFFFL) | (((long)b & 0x7fffffff) << 32);
         }
 
         public static long GenerateId(int a, int b, int c)
-        {            
-            var ab = a > b
-                ? (b & 0xFFFFFFFFL) | (((long)a & 0x7fffffff) << 32)
-                : (a & 0xFFFFFFFFL) | (((long)b & 0x7fffffff) << 32);
-            return (long)(ab | (((long)c & 0x7fffffff) << 32));
+        {
+            var ab = GenerateId(a, b);
+            return (long)(ab | (((long)c & 0x7fffffff) << 32));            
         }
 
         public static Guid NewGuid()
