@@ -26,10 +26,16 @@ namespace Ux
         static uint _rpxOps = 1;
         static uint GetRpxID()
         {
+            if (_rpxOps == uint.MaxValue)
+            {
+                _rpxOps = 0;
+            }
             return _rpxOps++;
         }
 
         public string Address { get; private set; }
+        //RPC响应超时
+        const float RPC_TimeOut = 3f;
 
         //心跳间隔（秒）
         protected readonly int heartTime = 30;
@@ -54,6 +60,8 @@ namespace Ux
 
         Dictionary<uint, AutoResetUniTaskCompletionSource<object>> rpcMethod = new Dictionary<uint, AutoResetUniTaskCompletionSource<object>>();
         Dictionary<uint, Type> rpcType = new Dictionary<uint, Type>();
+        Dictionary<uint, float> rpcTime = new Dictionary<uint, float>();
+        List<uint> _rpcDels = new List<uint>();
         Dictionary<uint, Type> cmdType = new Dictionary<uint, Type>();
         Dictionary<uint, FastMethodInfo> cmdMethod = new Dictionary<uint, FastMethodInfo>();
 
@@ -127,6 +135,51 @@ namespace Ux
             _connectCallback?.Invoke();
             EventMgr.Ins.Send(MainEventType.NET_CONNECTED, Address);
         }
+        public virtual void Update()
+        {
+            if (IsCheckUpdate)
+            {
+                if (isNeedSend && !IsSending)
+                {
+                    try
+                    {
+                        this.OnSend();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
+                    }
+                }
+                if (IsConnected)
+                {
+                    SendHeartbeat();
+                    if (rpcTime.Count > 0)
+                    {
+                        foreach (var kv in rpcTime)
+                        {
+                            if (TimeMgr.Ins.TotalTime - kv.Value >= RPC_TimeOut)
+                            {
+                                _rpcDels.Add(kv.Key);
+                            }
+                        }
+                        if (_rpcDels.Count > 0)
+                        {
+                            foreach (var rpcId in _rpcDels)
+                            {
+                                rpcType.Remove(rpcId);
+                                if (rpcMethod.TryGetValue(rpcId, out var method))
+                                {
+                                    method.TrySetCanceled();
+                                    rpcMethod.Remove(rpcId);
+                                }
+                                rpcTime.Remove(rpcId);
+                            }
+                            _rpcDels.Clear();
+                        }
+                    }
+                }
+            }
+        }
 
         #region 解析消息包
 
@@ -181,18 +234,14 @@ namespace Ux
                             packetSize -= 4;
                             var rpcId = recvBytes.PopUInt32();
                             packetSize -= 4;
-
-                            if (rpcMethod.TryGetValue(rpcId, out var method))
+                            rpcTime.Remove(rpcId);
+                            var rpcType = FindRPCType(rpcId);
+                            if (rpcType != null)
                             {
-                                if (rpcType.TryGetValue(rpcId, out var rpxType))
-                                {
-                                    recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
-                                    message = recvStream.ReadToMessage(rpxType, 0);
-                                    rpcType.Remove(rpcId);
-                                }
-                                method.TrySetResult(message);
-                                rpcMethod.Remove(rpcId);
+                                recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
+                                message = recvStream.ReadToMessage(rpcType, 0);
                             }
+                            DispatchRPC(rpcId, message);
                             break;
                     }
                 }
@@ -204,12 +253,28 @@ namespace Ux
             }
             return true;
         }
-
+        Type FindRPCType(uint rpcId)
+        {
+            if (rpcType.TryGetValue(rpcId, out var type))
+            {
+                rpcType.Remove(rpcId);
+                return type;
+            }
+            return null;
+        }
+        void DispatchRPC(uint rpcId, object message)
+        {
+            if (rpcMethod.TryGetValue(rpcId, out var method))
+            {
+                method.TrySetResult(message);
+                rpcMethod.Remove(rpcId);
+            }
+        }
         Type FindType(uint cmd)
         {
-            if (cmdType.TryGetValue(cmd, out var message))
+            if (cmdType.TryGetValue(cmd, out var type))
             {
-                return message;
+                return type;
             }
             return null;
         }
@@ -241,27 +306,6 @@ namespace Ux
         protected virtual void RecvHeartbeat() { }
         #endregion
 
-        public virtual void Update()
-        {
-            if (IsCheckUpdate)
-            {
-                if (isNeedSend && !IsSending)
-                {
-                    try
-                    {
-                        this.OnSend();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
-                    }
-                }
-                if (IsConnected)
-                {
-                    SendHeartbeat();
-                }
-            }
-        }
 
         #region 发送检测
         void OnSend()
@@ -288,7 +332,7 @@ namespace Ux
         {
             if (this.IsDisposed)
             {
-                throw new Exception("session已经被Dispose了");
+                throw new Exception("Socket已经被Dispose了");
             }
             sendStream.WriteToMessage(message, 0);
             var msgLen = 1 + 4 + sendStream.Length;
@@ -302,7 +346,7 @@ namespace Ux
         {
             if (this.IsDisposed)
             {
-                throw new Exception("session已经被Dispose了");
+                throw new Exception("Socket已经被Dispose了");
             }
             var rpxID = GetRpxID();
             rpcType.Add(rpxID, typeof(TMessage));
@@ -317,6 +361,7 @@ namespace Ux
             this.sendBytes.PushUInt32(rpxID);
             this.sendBytes.PushStream(sendStream);
             isNeedSend = true;
+            rpcTime.Add(rpxID, TimeMgr.Ins.TotalTime);
             return task.Task;
         }
         #endregion
@@ -332,6 +377,8 @@ namespace Ux
             {
                 kv.Value.TrySetCanceled();
             }
+            rpcTime.Clear();
+            _rpcDels.Clear();
             rpcMethod.Clear();
             rpcMethod = null;
             rpcType.Clear();
