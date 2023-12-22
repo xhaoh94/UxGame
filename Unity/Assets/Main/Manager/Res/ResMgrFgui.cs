@@ -174,6 +174,7 @@ namespace Ux
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 #endif
+            
             var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<TextAsset>(resName);
             await handle.ToUniTask();
 #if UNITY_EDITOR

@@ -6,8 +6,11 @@ namespace Ux
 {
     public enum ResType
     {
+        None,
         Main,//主包
+        Code,//代码
         UI,//UI包
+        Config,//配置
         RawFile,//原生文件
     }
     public abstract class ResPackage
@@ -128,7 +131,13 @@ namespace Ux
 
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
     }
-
+    public class ResCodePackage : ResPackage
+    {
+        public override ResType ResType => ResType.Code;
+        public override string Name => "CodePackage";
+        public override Type DecryptionType => null;
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
+    }
     public class ResUIPackage : ResPackage
     {
         public override ResType ResType => ResType.UI;
@@ -136,8 +145,14 @@ namespace Ux
         public override Type DecryptionType => typeof(FileStreamDecryption);
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
     }
-
-    public class RawFilePackage : ResPackage
+    public class ResConfigPackage : ResPackage
+    {
+        public override ResType ResType => ResType.Config;
+        public override string Name => "ConfigPackage";
+        public override Type DecryptionType => null;
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
+    }
+    public class ResRawFilePackage : ResPackage
     {
         public override ResType ResType => ResType.RawFile;
         public override string Name => "RawFilePackage";

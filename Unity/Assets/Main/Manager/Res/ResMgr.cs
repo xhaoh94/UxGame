@@ -12,8 +12,10 @@ namespace Ux
         static readonly Dictionary<ResType, ResPackage> _Packages = new Dictionary<ResType, ResPackage>()
         {
             { ResType.Main,new ResMainPackage() },
+            { ResType.Code,new ResCodePackage() },
             { ResType.UI,new ResUIPackage() },
-            { ResType.RawFile,new RawFilePackage() }
+            { ResType.Config,new ResConfigPackage() },
+            { ResType.RawFile,new ResRawFilePackage() },
         };
 
         readonly Dictionary<string, ResPackage> _locationToPackage = new Dictionary<string, ResPackage>();
@@ -40,7 +42,7 @@ namespace Ux
             yield return _Packages.ForEachValue(fn);
         }
         public ResPackage GetPackage(ResType resType)
-        {
+        {            
             if (_Packages.TryGetValue(resType, out var result))
             {
                 return result;

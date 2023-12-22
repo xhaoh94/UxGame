@@ -41,7 +41,7 @@ namespace Ux
         {
 #if !UNITY_EDITOR && HOTFIX_CODE
             LoadMetadataForAOTAssembly();
-            var assBytes = ResMgr.Ins.GetRawFileData(string.Format(HotPrefix, $"{HotfixAssemblyName}.dll"));
+            var assBytes = ResMgr.Ins.GetRawFileData(string.Format(HotPrefix, $"{HotfixAssemblyName}.dll"), ResType.Code);
             Assembly = Assembly.Load(assBytes);
 #else            
             Assembly = AppDomain.CurrentDomain.GetAssemblies()
@@ -65,7 +65,7 @@ namespace Ux
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = string.Format(AotPrefix, aotDllName);
-                var assBytes = ResMgr.Ins.GetRawFileData(dllName);
+                var assBytes = ResMgr.Ins.GetRawFileData(dllName, ResType.Code);
                 if (assBytes == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");

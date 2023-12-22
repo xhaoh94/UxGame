@@ -10,10 +10,12 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的二进制数据
         /// </summary>
-        public byte[] GetRawFileData(string location)
+        public byte[] GetRawFileData(string location, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(location);
-            using (var handle = package.Package.LoadRawFileSync(location))
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
+            using (var handle = GetPackage(ResType.RawFile).Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileData();
             }
@@ -22,9 +24,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的文本数据
         /// </summary>
-        public string GetRawFileText(string location)
+        public string GetRawFileText(string location, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileText();
@@ -34,9 +38,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的路径
         /// </summary>
-        public string GetRawFilePath(string location)
+        public string GetRawFilePath(string location, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFilePath();
@@ -46,9 +52,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的二进制数据
         /// </summary>
-        public byte[] GetRawFileData(AssetInfo assetInfo)
+        public byte[] GetRawFileData(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(assetInfo.Address)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFileData();
@@ -58,9 +66,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的文本数据
         /// </summary>
-        public string GetRawFileText(AssetInfo assetInfo)
+        public string GetRawFileText(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(assetInfo.Address)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFileText();
@@ -70,9 +80,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的路径
         /// </summary>
-        public string GetRawFilePath(AssetInfo assetInfo)
+        public string GetRawFilePath(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(assetInfo.Address)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFilePath();
@@ -86,9 +98,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的二进制数据
         /// </summary>
-        public async UniTask<byte[]> GetRawFileDataAsync(string location)
+        public async UniTask<byte[]> GetRawFileDataAsync(string location, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -99,9 +113,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的文本数据
         /// </summary>
-        public async UniTask<string> GetRawFileTextAsync(string location)
+        public async UniTask<string> GetRawFileTextAsync(string location, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -112,9 +128,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的路径
         /// </summary>
-        public async UniTask<string> GetRawFilePathAsync(string location)
+        public async UniTask<string> GetRawFilePathAsync(string location, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(location)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -125,9 +143,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的二进制数据
         /// </summary>
-        public async UniTask<byte[]> GetRawFileDataAsync(AssetInfo assetInfo)
+        public async UniTask<byte[]> GetRawFileDataAsync(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(assetInfo.Address)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();
@@ -138,9 +158,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的文本数据
         /// </summary>
-        public async UniTask<string> GetRawFileTextAsync(AssetInfo assetInfo)
+        public async UniTask<string> GetRawFileTextAsync(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(assetInfo.Address)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();
@@ -151,9 +173,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的路径
         /// </summary>
-        public async UniTask<string> GetRawFilePathAsync(AssetInfo assetInfo)
+        public async UniTask<string> GetRawFilePathAsync(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+               ? GetPackageByLocation(assetInfo.Address)
+               : GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();

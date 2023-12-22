@@ -10,27 +10,29 @@ namespace Ux
         /// 同步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public UnityEngine.Object LoadAsset(AssetInfo assetInfo)
+        public UnityEngine.Object LoadAsset(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            return LoadAsset<UnityEngine.Object>(assetInfo);
+            return LoadAsset<UnityEngine.Object>(assetInfo, resType);
         }
 
         /// <summary>
         /// 同步加载资源对象
         /// </summary>
         /// <param name="location">资源的定位地址</param>
-        public UnityEngine.Object LoadAsset(string location)
+        public UnityEngine.Object LoadAsset(string location, ResType resType = ResType.None)
         {
-            return LoadAsset<UnityEngine.Object>(location);
+            return LoadAsset<UnityEngine.Object>(location, resType);
         }
 
         /// <summary>
         /// 同步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public TObject LoadAsset<TObject>(AssetInfo assetInfo) where TObject : UnityEngine.Object
+        public TObject LoadAsset<TObject>(AssetInfo assetInfo, ResType resType = ResType.None) where TObject : UnityEngine.Object
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(assetInfo.Address)
+                : GetPackage(resType);
             var handle = package.Package.LoadAssetSync(assetInfo);
             return _LoadAsset<TObject>(handle);
         }
@@ -40,9 +42,11 @@ namespace Ux
         /// </summary>
         /// <typeparam name="TObject">资源类型</typeparam>
         /// <param name="location">资源的定位地址</param>
-        public TObject LoadAsset<TObject>(string location) where TObject : UnityEngine.Object
+        public TObject LoadAsset<TObject>(string location, ResType resType = ResType.None) where TObject : UnityEngine.Object
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
             var handle = package.Package.LoadAssetSync<TObject>(location);
             return _LoadAsset<TObject>(handle);
         }
@@ -71,18 +75,18 @@ namespace Ux
         /// 异步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public async UniTask<UnityEngine.Object> LoadAssetAsync(AssetInfo assetInfo)
+        public async UniTask<UnityEngine.Object> LoadAssetAsync(AssetInfo assetInfo, ResType resType = ResType.None)
         {
-            return await LoadAssetAsync<UnityEngine.Object>(assetInfo);
+            return await LoadAssetAsync<UnityEngine.Object>(assetInfo, resType);
         }
 
         /// <summary>
         /// 异步加载资源对象
         /// </summary>
         /// <param name="location">资源的定位地址</param>
-        public async UniTask<UnityEngine.Object> LoadAssetAsync(string location)
+        public async UniTask<UnityEngine.Object> LoadAssetAsync(string location, ResType resType = ResType.None)
         {
-            return await LoadAssetAsync<UnityEngine.Object>(location);
+            return await LoadAssetAsync<UnityEngine.Object>(location, resType);
         }
 
 
@@ -90,9 +94,11 @@ namespace Ux
         /// 异步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public async UniTask<TObject> LoadAssetAsync<TObject>(AssetInfo assetInfo) where TObject : UnityEngine.Object
+        public async UniTask<TObject> LoadAssetAsync<TObject>(AssetInfo assetInfo, ResType resType = ResType.None) where TObject : UnityEngine.Object
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(assetInfo.Address)
+                : GetPackage(resType);
             var handle = package.Package.LoadAssetAsync(assetInfo);
             return await _LoadAssetAsync<TObject>(assetInfo.Address, handle);
         }
@@ -102,15 +108,17 @@ namespace Ux
 		/// </summary>
 		/// <typeparam name="TObject">资源类型</typeparam>
 		/// <param name="location">资源的定位地址</param>
-		public async UniTask<TObject> LoadAssetAsync<TObject>(string location) where TObject : UnityEngine.Object
+		public async UniTask<TObject> LoadAssetAsync<TObject>(string location, ResType resType = ResType.None) where TObject : UnityEngine.Object
         {
-            var package = GetPackageByLocation(location);
+            var package = resType == ResType.None
+                ? GetPackageByLocation(location)
+                : GetPackage(resType);
             var handle = package.Package.LoadAssetAsync<TObject>(location);
             return await _LoadAssetAsync<TObject>(location, handle);
         }
 
         async UniTask<TObject> _LoadAssetAsync<TObject>(string location, AssetHandle handle) where TObject : UnityEngine.Object
-        {            
+        {
             await handle.ToUniTask();
             var obj = handle.GetAssetObject<TObject>();
             if (obj is UnityEngine.GameObject)

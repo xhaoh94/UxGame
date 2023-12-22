@@ -288,7 +288,6 @@ namespace Ux
             {
                 evtData.Init(key, eType, action);
             }
-
             return key;
         }
 
@@ -299,7 +298,6 @@ namespace Ux
             {
                 evtData.Init(key, eType, action);
             }
-
             return key;
         }
 
@@ -310,7 +308,6 @@ namespace Ux
             {
                 evtData.Init(key, eType, action);
             }
-
             return key;
         }
 
@@ -321,7 +318,6 @@ namespace Ux
             {
                 evtData.Init(key, eType, action);
             }
-
             return key;
         }
 

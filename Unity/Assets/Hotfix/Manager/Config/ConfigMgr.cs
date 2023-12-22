@@ -29,13 +29,13 @@ namespace Ux
         }
         private JSONNode LoadJson(string file)
         {
-            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetKey(file));            
+            var ta = ResMgr.Ins.LoadAsset<TextAsset>(file, ResType.Config);
             return JSON.Parse(ta.text);
         }
 
         private ByteBuf LoadByteBuf(string file)
         {
-            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetKey(file));            
+            var ta = ResMgr.Ins.LoadAsset<TextAsset>(file, ResType.Config);
             return new ByteBuf(ta.bytes);
         }
     }

@@ -133,36 +133,71 @@ public partial class VersionWindow
 
         if (packages.Count > 0)
         {
-            UniTask CollectSVC(string package)
+            UniTask<bool> CollectSVC(string packageName)
             {
-                Log.Debug($"---------------------------------------->{package}:收集着色器变种<---------------------------------------");
-                string savePath = ShaderVariantCollectorSetting.GeFileSavePath(package);
-                if (string.IsNullOrEmpty(savePath))
-                {
-                    var index = package.IndexOf("Package");
-                    savePath = $"Assets/Data/Art/ShaderVariants/{package.Substring(0, index)}SV.shadervariants";
-                    ShaderVariantCollectorSetting.SetFileSavePath(package, savePath);
-                }
-                int processCapacity = ShaderVariantCollectorSetting.GeProcessCapacity(package);
+                Log.Debug($"---------------------------------------->{packageName}:收集着色器变种<---------------------------------------");
+                var collectPath = $"Assets/Data/Art/ShaderVariants/{packageName}";
+                string savePath = $"{collectPath}/{packageName}SV.shadervariants";
+                ShaderVariantCollectorSetting.SetFileSavePath(packageName, savePath);
+                int processCapacity = ShaderVariantCollectorSetting.GeProcessCapacity(packageName);
                 if (processCapacity <= 0)
                 {
                     processCapacity = 1000;
-                    ShaderVariantCollectorSetting.SetProcessCapacity(package, processCapacity);
+                    ShaderVariantCollectorSetting.SetProcessCapacity(packageName, processCapacity);
                 }
-                var task = AutoResetUniTaskCompletionSource.Create();
+                var task = AutoResetUniTaskCompletionSource<bool>.Create();
                 Action callback = () =>
                 {
-                    task.TrySetResult();
+                    Log.Debug("------------------------------------>生成YooAsset 着色器配置<------------------------------");
+                    var packages = AssetBundleCollectorSettingData.Setting.Packages;
+                    var package = packages.Find(x => x.PackageName == packageName);
+                    bool _IsDirty = false;
+                    if (package != null)
+                    {
+                        var group = package.Groups.Find(x => x.GroupName == "ShaderVariant");
+                        if (group == null)
+                        {
+                            group = new AssetBundleCollectorGroup();
+                            group.AssetTags = "builtin";
+                            group.GroupDesc = "着色器";
+                            group.GroupName = "ShaderVariant";
+                            package.Groups.Add(group);
+                        }                        
+                        var collector = group.Collectors.Find(x => x.CollectPath == collectPath);
+                        if (collector == null)
+                        {
+                            collector = new AssetBundleCollector();
+                            collector.CollectPath = collectPath;
+                            collector.AddressRuleName = nameof(AddressByFileName);
+                            collector.PackRuleName = nameof(PackShaderVariants);
+                            collector.FilterRuleName = nameof(CollectShaderVariants);
+                            group.Collectors.Add(collector);
+                            _IsDirty = true;
+                        }
+                    }
+
+                    task.TrySetResult(_IsDirty);
                 };
-                ShaderVariantCollector.Run(savePath, package, processCapacity, callback);
+                ShaderVariantCollector.Run(savePath, packageName, processCapacity, callback);
                 return task.Task;
             }
 
-            foreach (var package in packages)
+            bool IsDirty = false;
+            foreach (var _packageName in packages)
             {
-                var packageSetting = SelectItem.GetPackageSetting(package);
+                var packageSetting = SelectItem.GetPackageSetting(_packageName);
                 if (packageSetting.IsCollectShaderVariant)
-                    await CollectSVC(package);
+                {
+                    var temb = await CollectSVC(_packageName);
+                    if (temb && !IsDirty)
+                    {
+                        IsDirty = temb;
+                    }
+                }
+            }
+            if (IsDirty)
+            {
+                AssetBundleCollectorSettingData.SaveFile();
             }
             Log.Debug("---------------------------------------->开始资源打包<---------------------------------------");
             foreach (var package in packages)
