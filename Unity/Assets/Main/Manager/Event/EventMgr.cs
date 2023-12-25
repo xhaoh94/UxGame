@@ -8,7 +8,7 @@ namespace Ux
     public partial class EventMgr : Singleton<EventMgr>
     {
         //每帧执行上限-超出上限，下一帧处理
-        public const int ExeLimit = 1000;
+        public const int ExeLimit = 200;
         private readonly Dictionary<long, IEvent> _keyEvent = new Dictionary<long, IEvent>();
         private readonly Dictionary<int, List<long>> _eTypeKeys = new Dictionary<int, List<long>>();
         private readonly Dictionary<int, List<long>> _targetKeys = new Dictionary<int, List<long>>();

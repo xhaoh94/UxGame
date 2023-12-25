@@ -1,89 +1,21 @@
-using System;
+锘縰sing System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Ux
 {
-    public class ExpessionMgr : Singleton<ExpessionMgr>
+    public partial class EvalMgr
     {
-        #region 正则表达式
-        static readonly Regex FnRegex = new Regex(@"(?<fnName>(([0-9]|[a-z]|[A-Z])*))[(](?<varName>((arg#\d)|[0-9]|[a-z]|[A-Z]|[,+\-*/%])*)[)]");
-        static readonly Regex OperatorRegex = new Regex(@"^[-]?(\w)+[(+|\-|*|/|%)](\w)+");
-        static readonly Regex VariableRegex = new Regex(@"^[-]?(\w+)$");
-        static readonly Regex ValueRegex = new Regex(@"^[-]?((\d+\.{1}\d+)|(\d+)$)");
-        static readonly Regex ArgRegex = new Regex(@"^(arg#)[\d]$");
-        static readonly Regex Operator1 = new Regex(@"(?<var1>^[-]?[#\.\d\w]+)(?<tag>[*|/|%])(?<var2>[-]?[#\.\d\w]+)");
-        static readonly Regex Operator2 = new Regex(@"(?<var1>^[-]?[#\.\d\w]+)(?<tag>[+|-])(?<var2>[-]?[#\.\d\w]+)");
-        static readonly string ArgStr = "arg#{0}";
-        #endregion
 
-        #region 静态字典
-
-        static IDictionary<string, double> variables = new Dictionary<string, double>() {
-            { "Pi", Math.PI },
-            { "pi", Math.PI },
-            { "E", Math.E },
-            { "e", Math.E },
-        };
-        static IDictionary<string, Func<double>> nameToVariable = new Dictionary<string, Func<double>>();
-        static IDictionary<string, Func<double[], double>> nameToDoubleFunc = new Dictionary<string, Func<double[], double>>();
-        static IDictionary<string, Func<string[], double>> nameToStringFunc = new Dictionary<string, Func<string[], double>>();
-        static IDictionary<string, Func<double, double>> singleDoubleMath = new Dictionary<string, Func<double, double>>(StringComparer.Ordinal)
-        {
-            { "Abs", Math.Abs },
-            { "abs", Math.Abs },
-            { "Acos", Math.Acos },
-            { "acos", Math.Acos },
-            { "Asin", Math.Asin },
-            { "asin", Math.Asin },
-            { "Atan", Math.Atan },
-            { "atan", Math.Atan },
-            { "Ceiling", Math.Ceiling },
-            { "ceiling", Math.Ceiling },
-            { "Ceil", Math.Ceiling },
-            { "ceil", Math.Ceiling },
-            { "Cos", Math.Cos },
-            { "cos", Math.Cos },
-            { "Cosh", Math.Cosh },
-            { "cosh", Math.Cosh },
-            { "Exp", Math.Exp },
-            { "exp", Math.Exp },
-            { "Floor", Math.Floor },
-            { "floor", Math.Floor },
-            { "Log10", Math.Log10 },
-            { "log10", Math.Log10 },
-            { "Sin", Math.Sin },
-            { "sin", Math.Sin },
-            { "Sinh", Math.Sinh },
-            { "sinh", Math.Sinh },
-            { "Sqrt", Math.Sqrt },
-            { "sqrt", Math.Sqrt },
-            { "Tan", Math.Tan },
-            { "tan", Math.Tan },
-            { "Tanh", Math.Tanh },
-            { "tanh", Math.Tanh },
-            { "Truncate", Math.Truncate },
-            { "truncate", Math.Truncate },
-            { "Round", Math.Round },
-            { "round", Math.Round },
-        };
-
-        static IDictionary<string, MatchData> Operator1Dict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> Operator2Dict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> FnDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> VariableDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> ValueDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> OperatorDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, string[]> ArgDict = new Dictionary<string, string[]>();
-        static IDictionary<string, ArgType> ArgTypeDict = new Dictionary<string, ArgType>();
-        #endregion
-
-        #region Type
-        enum ArgType
-        {
-            Arg,
-            Value,
-        }
+        static IDictionary<string, MatchData> OperatorMdDict = new Dictionary<string, MatchData>();
+        static IDictionary<string, MatchData> Operator1MdDict = new Dictionary<string, MatchData>();
+        static IDictionary<string, MatchData> Operator2MdDict = new Dictionary<string, MatchData>();
+        static IDictionary<string, MatchData> FnMdDict = new Dictionary<string, MatchData>();
+        static IDictionary<string, MatchData> VariableMdDict = new Dictionary<string, MatchData>();
+        static IDictionary<string, MatchData> ValueMdDict = new Dictionary<string, MatchData>();
+        static IDictionary<string, string[]> ArgSplitDict = new Dictionary<string, string[]>();
+        static IDictionary<string, bool> ArgDict = new Dictionary<string, bool>();
+        static IDictionary<string, ValueBool> ValueDict = new Dictionary<string, ValueBool>();
 
         enum OperatorType
         {
@@ -94,7 +26,24 @@ namespace Ux
             Divide,
             Remainder
         }
-
+        struct ValueBool
+        {
+            public ValueBool(string input)
+            {
+                if (ValueRegex.IsMatch(input) && double.TryParse(input, out var _v))
+                {
+                    Value = _v;
+                    IsValue = true;
+                }
+                else
+                {
+                    Value = 0;
+                    IsValue = false;
+                }
+            }
+            public bool IsValue { get; }
+            public double Value { get; }
+        }
         struct MatchData
         {
             public string Value { get; }
@@ -126,26 +75,41 @@ namespace Ux
         {
             public string Key { get; }
             protected MatchData match;
-            protected ExpessionParse expession;
-            public BaseType(string key, ExpessionParse expession, MatchData match)
+            protected EvalParse ep;
+            public BaseType(string key, EvalParse ep, MatchData match)
             {
                 this.Key = key;
-                this.expession = expession;
+                this.ep = ep;
                 this.match = match;
             }
             bool IsArgs(string input)
             {
-                return ArgRegex.IsMatch(input);
+                if (!ArgDict.TryGetValue(input, out var b))
+                {
+                    b = ArgRegex.IsMatch(input);
+                    ArgDict.Add(input, b);
+                }
+                return b;
             }
-            bool IsValue(string input)
+            bool IsValue(string input, ref double value)
             {
-                return ValueRegex.IsMatch(input);
+                if (ValueDict.TryGetValue(input, out var vb))
+                {
+                    vb = new ValueBool(input);
+                    ValueDict.Add(input, vb);
+                }
+                if (vb.IsValue)
+                {
+                    value = vb.Value;
+                    return true;
+                }
+                return false;
             }
             protected double GetValue(string input)
             {
                 if (string.IsNullOrEmpty(input))
                 {
-                    Log.Error(string.Format("公式解析错误:{0}", expession.text));
+                    Log.Error(string.Format("鍏紡瑙ｆ瀽閿欒:{0}", ep.text));
                     return 0;
                 }
                 if (TryGetValue(input, out var value))
@@ -164,12 +128,12 @@ namespace Ux
                 while (cnt < 1000)
                 {
                     cnt++;
-                    if (r <= 1 && TryParse(Operator1Dict, Operator1, ref str, ref v))
+                    if (r <= 1 && TryParse(Operator1MdDict, Operator1, ref str, ref v))
                     {
                         r = 1;
                         continue;
                     }
-                    if (r <= 2 && TryParse(Operator2Dict, Operator2, ref str, ref v))
+                    if (r <= 2 && TryParse(Operator2MdDict, Operator2, ref str, ref v))
                     {
                         r = 2;
                         continue;
@@ -180,7 +144,7 @@ namespace Ux
                 {
                     using (zstring.Block())
                     {
-                        Log.Error(zstring.Format("公式解析错误:{0}", str));
+                        Log.Error(zstring.Format("鍏紡瑙ｆ瀽閿欒:{0}", str));
                     }
                 }
                 return v;
@@ -196,33 +160,16 @@ namespace Ux
                     value = func();
                     return true;
                 }
-                if (ArgTypeDict.TryGetValue(input, out var argType))
-                {
-                    switch (argType)
-                    {
-                        case ArgType.Arg:
-                            value = expession.values[input];
-                            break;
-                        case ArgType.Value:
-                            value = Convert.ToDouble(input);
-                            break;
-                    }
-                    return true;
-                }
+
                 if (IsArgs(input))
                 {
-                    ArgTypeDict.Add(input, ArgType.Arg);
-                    value = expession.values[input];
+                    value = ep.values[input];
                     return true;
                 }
-                if (IsValue(input))
+
+                if (IsValue(input, ref value))
                 {
-                    if (double.TryParse(input, out value))
-                    {
-                        ArgTypeDict.Add(input, ArgType.Value);
-                        return true;
-                    }
-                    Log.Error($"{input} 不是Value类型");
+                    return true;
                 }
                 return false;
             }
@@ -251,12 +198,12 @@ namespace Ux
                 }
                 if (!TryGetValue(match.V1, out var arg1))
                 {
-                    Log.Error($"公式无法获取正确的值{match.V1}");
+                    Log.Error($"鍏紡鏃犳硶鑾峰彇姝ｇ‘鐨勫�納match.V1}");
                     return false;
                 }
                 if (!TryGetValue(match.V2, out var arg2))
                 {
-                    Log.Error($"公式无法获取正确的值{match.V2}");
+                    Log.Error($"鍏紡鏃犳硶鑾峰彇姝ｇ‘鐨勫�納match.V2}");
                     return false;
                 }
                 switch (match.Type)
@@ -277,7 +224,7 @@ namespace Ux
                         v = arg1 - arg2;
                         break;
                     default:
-                        Log.Error($"未知的数学运算符:{match.Type}");
+                        Log.Error($"鏈煡鐨勬暟瀛﹁繍绠楃:{match.Type}");
                         break;
                 }
                 using (zstring.Block())
@@ -291,7 +238,7 @@ namespace Ux
         }
         class FunctionType : BaseType
         {
-            public FunctionType(string key, ExpessionParse expession, MatchData match) : base(key, expession, match)
+            public FunctionType(string key, EvalParse ep, MatchData match) : base(key, ep, match)
             {
             }
             public override double Value
@@ -308,10 +255,10 @@ namespace Ux
                         {
                             return null;
                         }
-                        if (!ArgDict.TryGetValue(content, out var vars))
+                        if (!ArgSplitDict.TryGetValue(content, out var vars))
                         {
                             vars = content.Split(',');
-                            ArgDict.Add(content, vars);
+                            ArgSplitDict.Add(content, vars);
                         }
                         return vars;
                     }
@@ -333,19 +280,19 @@ namespace Ux
                     {
                         return func2.Invoke(Func(match.V1));
                     }
-                    Log.Error($"{match.V2}没有注册解析函数");
+                    Log.Error($"{match.V2}娌℃湁娉ㄥ唽瑙ｆ瀽鍑芥暟");
                     return 0;
                 }
             }
         }
         class VariableType : BaseType
         {
-            public VariableType(string key, ExpessionParse expession, MatchData match) : base(key, expession, match)
+            public VariableType(string key, EvalParse ep, MatchData match) : base(key, ep, match)
             {
             }
             public override double Value => GetValue(match.V1);
         }
-        class ExpessionParse
+        class EvalParse
         {
             public Dictionary<string, double> values = new Dictionary<string, double>();
             public string text;
@@ -353,18 +300,18 @@ namespace Ux
             List<BaseType> _queue = new List<BaseType>();
             string _argValue;
 
-            public ExpessionParse(string _text)
+            public EvalParse(string _text)
             {
                 text = _text;
                 zstring input;
                 using (zstring.Block())
                 {
                     input = _text;
-                    if (_Parse(ValueDict, ValueRegex, 1, ref input))
+                    if (_Parse(ValueMdDict, ValueRegex, 1, ref input))
                     {
                         return;
                     }
-                    if (_Parse(VariableDict, VariableRegex, 1, ref input))
+                    if (_Parse(VariableMdDict, VariableRegex, 1, ref input))
                     {
                         return;
                     }
@@ -402,7 +349,7 @@ namespace Ux
 
             void _ParseFn(int argIndex, ref zstring input)
             {
-                if (!FnDict.TryGetValue(input, out var match))
+                if (!FnMdDict.TryGetValue(input, out var match))
                 {
                     var temMatch = FnRegex.Match(input);
                     if (temMatch == null || !temMatch.Success)
@@ -416,12 +363,12 @@ namespace Ux
                         var value = temMatch.Value;
                         match = new MatchData(temMatch.Value, varName, fnName);
                     }
-                    FnDict.Add(input, match);
+                    FnMdDict.Add(input, match);
                 }
                 argIndex++;
                 if (string.IsNullOrEmpty(match.Value))
                 {
-                    _Parse(OperatorDict, OperatorRegex, argIndex, ref input);
+                    _Parse(OperatorMdDict, OperatorRegex, argIndex, ref input);
                     return;
                 }
 
@@ -470,130 +417,5 @@ namespace Ux
                 }
             }
         }
-        #endregion
-
-        #region 常量
-        /// <summary>
-        /// 设置常量
-        /// </summary>
-        public void AddVariable(string name, double value)
-        {
-            nameToVariable.Remove(name);
-            variables[name] = value;
-        }
-        /// <summary>
-        /// 设置常量
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="func">获取常量函数</param>
-        public void AddVariable(string name, Func<double> func)
-        {
-            variables.Remove(name);
-            nameToVariable[name] = func;
-        }
-
-        public void RemoveVariables(string name)
-        {
-            variables.Remove(name);
-            nameToVariable.Remove(name);
-        }
-        #endregion
-
-        #region 方法
-
-        /// <summary>
-        /// 设置函数
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="func">获取函数</param>
-        public void AddFunction(string name, Func<double[], double> func)
-        {
-            nameToStringFunc.Remove(name);
-            nameToDoubleFunc[name] = func;
-        }
-        /// <summary>
-        /// 设置函数
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="func">获取函数</param>
-        public void AddFunction(string name, Func<string[], double> func)
-        {
-            nameToDoubleFunc.Remove(name);
-            nameToStringFunc[name] = func;
-        }
-        public void RemoveFunction(string name)
-        {
-            nameToDoubleFunc.Remove(name);
-            nameToStringFunc.Remove(name);
-        }
-        #endregion
-
-        Dictionary<string, ExpessionParse> inputToExpssion = new Dictionary<string, ExpessionParse>();
-        protected override void OnInit()
-        {
-            InitGlobalFunc();
-        }
-
-        #region 全局方法
-        void InitGlobalFunc()
-        {
-            AddFunction("Max", Max);
-            AddFunction("max", Max);
-            AddFunction("Min", Min);
-            AddFunction("min", Min);
-            AddFunction("Pow", Pow);
-            AddFunction("pow", Pow);
-        }
-        double Max(double[] objs)
-        {
-            if (objs.Length != 2)
-            {
-                Log.Error("Max 参数错误");
-                return 0;
-            }
-            return Math.Max(objs[0], objs[1]);
-        }
-        double Min(double[] objs)
-        {
-            if (objs.Length != 2)
-            {
-                Log.Error("Min 参数错误");
-                return 0;
-            }
-            return Math.Min(objs[0], objs[1]);
-        }
-        double Pow(double[] objs)
-        {
-            if (objs.Length != 2)
-            {
-                Log.Error("Pow 参数错误");
-                return 0;
-            }
-            return Math.Pow(objs[0], objs[1]);
-        }
-        #endregion
-
-        #region 解析
-        public double Parse(string input)
-        {
-            if (!inputToExpssion.TryGetValue(input, out var e))
-            {
-                e = new ExpessionParse(input);
-                inputToExpssion.Add(input, e);
-            }
-            return e.Value;
-        }
-        public string Desc(string input)
-        {
-            if (!inputToExpssion.TryGetValue(input, out var e))
-            {
-                e = new ExpessionParse(input);
-                inputToExpssion.Add(input, e);
-            }
-            return e.Desc;
-        }
-        #endregion
     }
 }
-
-

@@ -16,8 +16,8 @@ namespace Ux
             var component = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (component == null) return null;
             component.IsFromPool = isFromPool;
-            component.isDestroyed = false;
-            component.isDestroying = false;
+            component._isDestroyed = false;
+            component._isDestroying = false;
             component.ID = -1;
 #if UNITY_EDITOR
             component.GoViewer = new GameObject();

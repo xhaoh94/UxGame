@@ -8,11 +8,11 @@ namespace Ux
     public abstract partial class Entity
     {
         static readonly Queue<Action> _delayFn = new Queue<Action>();
-        static int exeNum;        
+        static int _exeNum;        
         static void _DelayInvoke(int max)
         {
-            exeNum = 0;
-            while (_delayFn.Count > 0 && (exeNum++) < max) //一帧最多执行max次
+            _exeNum = 0;
+            while (_delayFn.Count > 0 && (_exeNum++) < max) //一帧最多执行max次
             {
                 _delayFn.Dequeue()?.Invoke();
             }
@@ -35,9 +35,9 @@ namespace Ux
         /// <summary>
         /// 是否已销毁
         /// </summary>
-        public bool IsDestroy => isDestroyed || isDestroying;
-        bool isDestroying;
-        bool isDestroyed;
+        public bool IsDestroy => _isDestroyed || _isDestroying;
+        bool _isDestroying;
+        bool _isDestroyed;
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
         Entity _parent;
@@ -90,8 +90,8 @@ namespace Ux
         {
             var entity = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (entity == null) return null;
-            entity.isDestroyed = false;
-            entity.isDestroying = false;
+            entity._isDestroyed = false;
+            entity._isDestroying = false;
             entity.IsFromPool = isFromPool;
             entity.ID = id == 0 ? IDGenerater.GenerateId() : id;
 #if UNITY_EDITOR
@@ -597,7 +597,8 @@ namespace Ux
             _RemoveSystem();
             if (!isDestroy) return;
             if (IsDestroy) return;
-            isDestroying = true;
+            _isDestroying = true;
+            OnDestroy();
             TimeMgr.Ins.RemoveAll(this);
             EventMgr.Ins.OffAll(this);
             if (EntityMono != null)
@@ -633,11 +634,10 @@ namespace Ux
         }
 
         void _DelayDestroy()
-        {
-            OnDestroy();
+        {            
             ID = 0;
-            isDestroyed = true;
-            isDestroying = false;
+            _isDestroyed = true;
+            _isDestroying = false;
             _is_init = false;
 #if UNITY_EDITOR
             GameObject.Destroy(GoViewer);
