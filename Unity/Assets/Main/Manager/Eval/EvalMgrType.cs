@@ -15,15 +15,14 @@ namespace Ux
         static IDictionary<string, ArgBool> ArgDict = new Dictionary<string, ArgBool>();
         static IDictionary<string, ValueBool> ValueDict = new Dictionary<string, ValueBool>();
 
-        enum OperatorType
+        static IDictionary<string, Func<double, double, double>> SymbolFnDict = new Dictionary<string, Func<double, double, double>>()
         {
-            None,
-            Add,
-            Subtract,
-            Multiply,
-            Divide,
-            Remainder
-        }
+            {"+",(a,b)=>a+b },
+            {"-",(a,b)=>a-b },
+            {"*",(a,b)=>a*b },
+            {"/",(a,b)=>a/b },
+            {"%",(a,b)=>a%b },
+        };
         struct ArgBool
         {
             public bool IsArg { get; }
@@ -32,14 +31,18 @@ namespace Ux
             public ArgBool(string input)
             {
                 IsArg = ArgRegex.IsMatch(input);
-                IsSymbol = false; ;
-                ArgStr = input;
+                IsSymbol = false;
+                ArgStr = null;
                 if (IsArg)
                 {
                     if (input[0] == '-')
                     {
                         IsSymbol = true;
-                        ArgStr = ArgStr.Substring(1);
+                        ArgStr = input.Substring(1);
+                    }
+                    else
+                    {
+                        ArgStr = input;
                     }
                 }
             }
@@ -50,7 +53,7 @@ namespace Ux
             public double Value { get; }
             public ValueBool(string input)
             {
-                if (ValueRegex.IsMatch(input) && double.TryParse(input, out var _v))
+                if (double.TryParse(input, out var _v))
                 {
                     Value = _v;
                     IsValue = true;
@@ -70,24 +73,12 @@ namespace Ux
             public string V2 { get; }
             public string Data { get; }
 
-            public OperatorType Type { get; }
-
             public MatchData(string v = null, string v1 = null, string v2 = null, string data = null)
             {
                 Value = v;
                 V1 = v1;
                 V2 = v2;
                 Data = data;
-                switch (data)
-                {
-                    case null: Type = OperatorType.None; break;
-                    case "+": Type = OperatorType.Add; break;
-                    case "-": Type = OperatorType.Subtract; break;
-                    case "*": Type = OperatorType.Multiply; break;
-                    case "/": Type = OperatorType.Divide; break;
-                    case "%": Type = OperatorType.Remainder; break;
-                    default: Type = OperatorType.None; break;
-                }
             }
         }
         class BaseType
@@ -223,6 +214,11 @@ namespace Ux
                 {
                     return false;
                 }
+                if (string.IsNullOrEmpty(match.Data))
+                {
+                    Log.Error($"公式运算符为Null:{input}");
+                    return false;
+                }
                 if (!TryGetValue(match.V1, out var arg1))
                 {
                     Log.Error($"公式无法获取正确的值{match.V1}");
@@ -234,27 +230,12 @@ namespace Ux
                     return false;
                 }
 
-                switch (match.Type)
+                if (!SymbolFnDict.TryGetValue(match.Data, out var fn))
                 {
-                    case OperatorType.Remainder:
-                        v = arg1 % arg2;
-                        break;
-                    case OperatorType.Multiply:
-                        v = arg1 * arg2;
-                        break;
-                    case OperatorType.Divide:
-                        v = arg1 / arg2;
-                        break;
-                    case OperatorType.Add:
-                        v = arg1 + arg2;
-                        break;
-                    case OperatorType.Subtract:
-                        v = arg1 - arg2;
-                        break;
-                    default:
-                        Log.Error($"未知的数学运算符:{match.Type}");
-                        break;
+                    Log.Error($"未知的数学运算符:{match.Data}");
+                    return false;
                 }
+                v = fn(arg1, arg2);
                 using (zstring.Block())
                 {
                     input = input.Replace(match.Value, v.ToString());

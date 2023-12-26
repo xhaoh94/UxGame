@@ -20,7 +20,8 @@ namespace Ux
         void Awake()
         {
             EvalMgr.Ins.AddVariable("Temp", 3);
-            var str = "-2+2100-(22*2*(1-2))%Temp";
+            EvalMgr.Ins.AddFunction("TempFunc", (args) => args[0] + args[1]);
+            var str = "TempFunc(-2+2100-(22*2*(1-2))%Temp+TempFunc(1,Temp),-4)";
             var v = EvalMgr.Ins.Parse(str);
             Log.Debug($"{str}:" + v);
 
