@@ -257,7 +257,7 @@ namespace Ux
                 }
                 using (zstring.Block())
                 {
-                    input = input.Replace(match.Value, (zstring)v);
+                    input = input.Replace(match.Value, v.ToString());
                 }
                 return true;
             }

@@ -19,17 +19,11 @@ namespace Ux
 
         void Awake()
         {
-            int a1 = -604752908;
-            int b1 = 1818870784;
-            int c1 = -1098022624;
-            long key1 = IDGenerater.GenerateId(c1, b1, a1);
+            EvalMgr.Ins.AddVariable("Temp", 3);
+            var str = "-2+2100-(22*2*(1-2))%Temp";
+            var v = EvalMgr.Ins.Parse(str);
+            Log.Debug($"{str}:" + v);
 
-            int a2 = -492354658;
-            int b2 = 1818870784;
-            int c2 = -1098022624;
-            long key2 = IDGenerater.GenerateId(c2, b2, a2);
-
-            Log.Debug("key1:" + key1 + "key2:" + key2);
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
@@ -50,19 +44,19 @@ namespace Ux
         }
 
 
-        IEnumerator Start()
-        {
-#if !UNITY_EDITOR
-            if (PlayMode == EPlayMode.EditorSimulateMode)
-                PlayMode = EPlayMode.HostPlayMode;
-#endif
-            Log.Debug($"资源系统运行模式：{PlayMode}");
+        //        IEnumerator Start()
+        //        {
+        //#if !UNITY_EDITOR
+        //            if (PlayMode == EPlayMode.EditorSimulateMode)
+        //                PlayMode = EPlayMode.HostPlayMode;
+        //#endif
+        //            Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize(PlayMode);
-            typeof(GameMain).Assembly.Initialize();
-            // 运行补丁流程
-            PatchMgr.Ins.Run(PlayMode);
-        }
+        //            yield return ResMgr.Ins.Initialize(PlayMode);
+        //            typeof(GameMain).Assembly.Initialize();
+        //            // 运行补丁流程
+        //            PatchMgr.Ins.Run(PlayMode);
+        //        }
 
 
         void Update()
