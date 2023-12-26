@@ -81,12 +81,12 @@ namespace Ux
                 Data = data;
             }
         }
-        class BaseType
+        class VariableType
         {
             public string Key { get; }
             protected MatchData match;
             protected EvalParse ep;
-            public BaseType(string key, EvalParse ep, MatchData match)
+            public VariableType(string key, EvalParse ep, MatchData match)
             {
                 this.Key = key;
                 this.ep = ep;
@@ -243,9 +243,9 @@ namespace Ux
                 return true;
             }
 
-            public virtual double Value => 0;
+            public virtual double Value => GetValue(match.V1);
         }
-        class FunctionType : BaseType
+        class FunctionType : VariableType
         {
             public FunctionType(string key, EvalParse ep, MatchData match) : base(key, ep, match)
             {
@@ -294,19 +294,12 @@ namespace Ux
                 }
             }
         }
-        class VariableType : BaseType
-        {
-            public VariableType(string key, EvalParse ep, MatchData match) : base(key, ep, match)
-            {
-            }
-            public override double Value => GetValue(match.V1);
-        }
         class EvalParse
         {
             public Dictionary<string, double> values = new Dictionary<string, double>();
             public string text;
 
-            List<BaseType> _queue = new List<BaseType>();
+            List<VariableType> _queue = new List<VariableType>();
             string _argValue;
 
             public EvalParse(string _text)
