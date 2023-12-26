@@ -6,13 +6,12 @@ namespace Ux
 {
     public partial class EvalMgr : Singleton<EvalMgr>
     {        
-        static readonly Regex FnRegex = new Regex(@"(?<fnName>(([0-9]|[a-z]|[A-Z])*))[(](?<varName>((arg#\d)|[0-9]|[a-z]|[A-Z]|[,+\-*/%])*)[)]");
-        static readonly Regex OperatorRegex = new Regex(@"^[-]?(\w)+[(+|\-|*|/|%)](\w)+");
-        static readonly Regex VariableRegex = new Regex(@"^[-]?(\w+)$");
+        static readonly Regex FnRegex = new Regex(@"(?<fnName>(([\w]|[\d])*))[(](?<varName>((arg#(\d+))|[\d]|[\w]|[.,+\-*/%])*)[)]");
         static readonly Regex ValueRegex = new Regex(@"^[-]?((\d+\.{1}\d+)|(\d+)$)");
-        static readonly Regex ArgRegex = new Regex(@"^(arg#)[\d]$");
-        static readonly Regex Operator1 = new Regex(@"(?<var1>^[-]?[#\.\d\w]+)(?<tag>[*|/|%])(?<var2>[-]?[#\.\d\w]+)");
-        static readonly Regex Operator2 = new Regex(@"(?<var1>^[-]?[#\.\d\w]+)(?<tag>[+|-])(?<var2>[-]?[#\.\d\w]+)");
+        static readonly Regex ArgRegex = new Regex(@"(^-(arg#)|^arg#)(\d+)$");
+        static readonly Regex VariableRegex = new Regex(@"((arg#\d)|[\d]|[\w]|[.,+\-*/%])+");        
+        static readonly Regex Operator1 = new Regex(@"(?<var1>((^[-]?|)(arg#(\d+))|[.]|[\d]|[\w])+)(?<tag>[*|/|%])(?<var2>([-]?(arg#(\d+))|[.]|[\d]|[\w])+)");
+        static readonly Regex Operator2 = new Regex(@"(?<var1>(^[-]?(arg#(\d+))|[.]|[\d]|[\w])+)(?<tag>[+|-])(?<var2>([-]?(arg#(\d+))|[.]|[\d]|[\w])+)");
         static readonly string ArgStr = "arg#{0}";        
       
         Dictionary<string, EvalParse> inputToExpssion = new Dictionary<string, EvalParse>();

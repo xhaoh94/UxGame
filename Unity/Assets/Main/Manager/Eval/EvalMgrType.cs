@@ -7,14 +7,12 @@ namespace Ux
     public partial class EvalMgr
     {
 
-        static IDictionary<string, MatchData> OperatorMdDict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> Operator1MdDict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> Operator2MdDict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> FnMdDict = new Dictionary<string, MatchData>();
         static IDictionary<string, MatchData> VariableMdDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> ValueMdDict = new Dictionary<string, MatchData>();
         static IDictionary<string, string[]> ArgSplitDict = new Dictionary<string, string[]>();
-        static IDictionary<string, bool> ArgDict = new Dictionary<string, bool>();
+        static IDictionary<string, ArgBool> ArgDict = new Dictionary<string, ArgBool>();
         static IDictionary<string, ValueBool> ValueDict = new Dictionary<string, ValueBool>();
 
         enum OperatorType
@@ -26,8 +24,30 @@ namespace Ux
             Divide,
             Remainder
         }
+        struct ArgBool
+        {
+            public bool IsArg { get; }
+            public bool IsSymbol { get; }
+            public string ArgStr { get; }
+            public ArgBool(string input)
+            {
+                IsArg = ArgRegex.IsMatch(input);
+                IsSymbol = false; ;
+                ArgStr = input;
+                if (IsArg)
+                {
+                    if (input[0] == '-')
+                    {
+                        IsSymbol = true;
+                        ArgStr = ArgStr.Substring(1);
+                    }
+                }
+            }
+        }
         struct ValueBool
         {
+            public bool IsValue { get; }
+            public double Value { get; }
             public ValueBool(string input)
             {
                 if (ValueRegex.IsMatch(input) && double.TryParse(input, out var _v))
@@ -41,8 +61,7 @@ namespace Ux
                     IsValue = false;
                 }
             }
-            public bool IsValue { get; }
-            public double Value { get; }
+
         }
         struct MatchData
         {
@@ -82,18 +101,27 @@ namespace Ux
                 this.ep = ep;
                 this.match = match;
             }
-            bool IsArgs(string input)
+            bool IsArgs(string input, ref double value)
             {
-                if (!ArgDict.TryGetValue(input, out var b))
+                if (!ArgDict.TryGetValue(input, out var ab))
                 {
-                    b = ArgRegex.IsMatch(input);
-                    ArgDict.Add(input, b);
+                    ab = new ArgBool(input);
+                    ArgDict.Add(input, ab);
                 }
-                return b;
+                if (ab.IsArg)
+                {
+                    value = ep.values[ab.ArgStr];
+                    if (ab.IsSymbol)
+                    {
+                        value *= -1;
+                    }
+                    return true;
+                }
+                return false;
             }
             bool IsValue(string input, ref double value)
             {
-                if (ValueDict.TryGetValue(input, out var vb))
+                if (!ValueDict.TryGetValue(input, out var vb))
                 {
                     vb = new ValueBool(input);
                     ValueDict.Add(input, vb);
@@ -161,9 +189,8 @@ namespace Ux
                     return true;
                 }
 
-                if (IsArgs(input))
+                if (IsArgs(input, ref value))
                 {
-                    value = ep.values[input];
                     return true;
                 }
 
@@ -206,6 +233,7 @@ namespace Ux
                     Log.Error($"公式无法获取正确的值{match.V2}");
                     return false;
                 }
+
                 switch (match.Type)
                 {
                     case OperatorType.Remainder:
@@ -307,23 +335,15 @@ namespace Ux
                 using (zstring.Block())
                 {
                     input = _text;
-                    if (_Parse(ValueMdDict, ValueRegex, 1, ref input))
-                    {
-                        return;
-                    }
-                    if (_Parse(VariableMdDict, VariableRegex, 1, ref input))
-                    {
-                        return;
-                    }
                     _ParseFn(0, ref input);
                     _argValue = input.ToString();
                 }
             }
-            bool _Parse(IDictionary<string, MatchData> dict, Regex regex, int argIndex, ref zstring input)
+            void _ParseVar(int argIndex, ref zstring input)
             {
-                if (!dict.TryGetValue(input, out var match))
+                if (!VariableMdDict.TryGetValue(input, out var match))
                 {
-                    var temMatch = regex.Match(input);
+                    var temMatch = VariableRegex.Match(input);
                     if (temMatch == null || !temMatch.Success)
                     {
                         match = new MatchData();
@@ -332,19 +352,17 @@ namespace Ux
                     {
                         match = new MatchData(temMatch.Value, temMatch.Value);
                     }
-                    dict.Add(input, match);
+                    VariableMdDict.Add(input, match);
                 }
 
                 if (string.IsNullOrEmpty(match.Value))
                 {
-                    return false;
+                    return;
                 }
 
                 var argKey = zstring.Format(ArgStr, argIndex);
                 _queue.Add(new VariableType(zstring.Format(ArgStr, argIndex), this, match));
                 input = input.Replace(match.Value, argKey);
-
-                return true;
             }
 
             void _ParseFn(int argIndex, ref zstring input)
@@ -368,7 +386,7 @@ namespace Ux
                 argIndex++;
                 if (string.IsNullOrEmpty(match.Value))
                 {
-                    _Parse(OperatorMdDict, OperatorRegex, argIndex, ref input);
+                    _ParseVar(argIndex, ref input);
                     return;
                 }
 
@@ -383,7 +401,7 @@ namespace Ux
                 }
 
                 input = input.Replace(match.Value, argKey);
-
+                if (input == argKey) return;
                 _ParseFn(argIndex, ref input);
             }
 

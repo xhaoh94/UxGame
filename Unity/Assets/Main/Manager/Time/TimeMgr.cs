@@ -383,8 +383,6 @@ namespace Ux
             if (action == null) return 0;
             long key = 0;
             var target = action.Target;
-            Log.Info(action.MethodName() + "- action:" + action.GetHashCode());
-            Log.Info(action.MethodName() + "- dic:" + dic.GetHashCode());
 
             if (target == null)
             {
@@ -393,10 +391,7 @@ namespace Ux
             else
             {
                 key = (long)IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), target.GetHashCode());
-                Log.Info(action.MethodName() + "- target:" + target.GetHashCode());
             }
-            Log.Info(action.MethodName() + "- key :" + key);
-            Log.Info("----------------------------------");
             return key;
         }
 
