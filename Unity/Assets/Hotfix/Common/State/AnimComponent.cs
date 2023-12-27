@@ -35,7 +35,7 @@ namespace Ux
 
         protected override void OnDestroy()
         {
-            _graph.Destroy();    
+            _graph.Destroy();
             Animator = null;
         }
         /// <summary>
@@ -152,12 +152,14 @@ namespace Ux
             if (layer < 0)
                 throw new System.Exception("动画片段层级不能小于0");
 
-            if (Has(name))
+            var animClipID = name.ToHash();
+            var animClip = GetAnimClip(animClipID);
+            if (animClip != null)
             {
                 Log.Warning($"已存在动画片段: {name}");
                 return false;
             }
-            AddChild<AnimClip, PlayableGraph, string, AnimationClip, int>(name.ToHash(), _graph, name, clip, layer);
+            AddChild<AnimClip, PlayableGraph, string, AnimationClip, int>(animClipID, _graph, name, clip, layer);
             return true;
         }
 
@@ -173,13 +175,13 @@ namespace Ux
                 Log.Warning("移除动画片段，名字为空");
                 return false;
             }
-            if (!Has(name))
+
+            var animClip = GetAnimClip(name);
+            if (animClip == null)
             {
                 Log.Warning($"找不到动画片段 : {name}");
                 return false;
             }
-
-            var animClip = GetAnimClip(name);
             var animMixer = GetAnimMixer(animClip.Layer);
             if (animMixer != null)
                 animMixer.RemoveClip(animClip.Name);
@@ -200,12 +202,21 @@ namespace Ux
                 Log.Warning("是否包含一个动画状态，名字为空");
                 return false;
             }
-            return GetAnimClip(name) != null;
+            var animClip = GetAnimClip(name);
+            if (animClip == null)
+            {
+                return false;
+            }
+            return !animClip.IsDestroy;
         }
 
         private AnimClip GetAnimClip(string name)
         {
-            return GetChild<AnimClip>(name.ToHash());
+            return GetAnimClip(name.ToHash());
+        }
+        private AnimClip GetAnimClip(int clipId)
+        {
+            return GetChild<AnimClip>(clipId);
         }
         private AnimMixer GetAnimMixer(int layer)
         {
@@ -226,7 +237,7 @@ namespace Ux
                     _mixerRoot.SetInputCount(layer + 1);
                 }
             }
-            var animMixer = AddChild<AnimMixer, PlayableGraph>(layer, _graph);            
+            var animMixer = AddChild<AnimMixer, PlayableGraph>(layer, _graph);
             return animMixer;
         }
     }
