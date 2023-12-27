@@ -8,8 +8,8 @@ namespace Ux
 {
     public class AnimComponent : Entity, IAwakeSystem<Animator>, IUpdateSystem, IApplicationQuitSystem
     {
-        public Dictionary<string, AnimClip> _animClips = new Dictionary<string, AnimClip>();
-        public Dictionary<int, AnimMixer> _animMixers = new Dictionary<int, AnimMixer>();
+        private Dictionary<string, AnimClip> _animClips = new Dictionary<string, AnimClip>();
+        private Dictionary<int, AnimMixer> _animMixers = new Dictionary<int, AnimMixer>();
 
         private PlayableGraph _graph;
         private AnimationLayerMixerPlayable _mixerRoot;
