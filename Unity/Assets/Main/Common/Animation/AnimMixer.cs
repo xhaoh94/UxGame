@@ -5,7 +5,7 @@ using UnityEngine.Playables;
 
 namespace Ux
 {
-    public class AnimMixer : AnimNode, IAwakeSystem<PlayableGraph, int>, IUpdateSystem
+    public class AnimMixer : AnimNode, IAwakeSystem<PlayableGraph>, IUpdateSystem
     {
         private const float HIDE_DURATION = 0.25f;
         private readonly List<AnimClip> _animClips = new List<AnimClip>(10);
@@ -15,12 +15,11 @@ namespace Ux
         /// <summary>
         /// 动画层级
         /// </summary>
-        public int Layer { private set; get; }
+        public int Layer => (int)ID;
 
 
-        public void OnAwake(PlayableGraph graph, int layer)
+        public void OnAwake(PlayableGraph graph)
         {
-            Layer = layer;
             _mixer = AnimationMixerPlayable.Create(graph);
             SetSourcePlayable(graph, _mixer);
         }

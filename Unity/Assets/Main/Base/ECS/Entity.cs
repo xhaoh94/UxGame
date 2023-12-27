@@ -79,7 +79,7 @@ namespace Ux
         #region Entity
         public static TEntity Create<TEntity>(bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)Create(0, typeof(TEntity), isFromPool);
+            return (TEntity)Create(IDGenerater.GenerateId(), typeof(TEntity), isFromPool);
         }
         public static TEntity Create<TEntity>(long id, bool isFromPool = true) where TEntity : Entity
         {
@@ -93,7 +93,7 @@ namespace Ux
             entity._isDestroyed = false;
             entity._isDestroying = false;
             entity.IsFromPool = isFromPool;
-            entity.ID = id == 0 ? IDGenerater.GenerateId() : id;
+            entity.ID = id;
 #if UNITY_EDITOR
             entity.GoViewer = new GameObject();
             entity.GoViewer.name = $"{type.Name}_{entity.ID}";
@@ -120,7 +120,7 @@ namespace Ux
                 var temParent = Parent;
                 if (temParent == null)
                 {
-                    Log.Error("Entity为空，无法添加子Entity");
+                    Log.Error("父实体为空，无法添加子实体");
                     return false;
                 }
                 return temParent._AddChild(entity);
@@ -132,7 +132,7 @@ namespace Ux
 
             if (entity == null)
             {
-                Log.Error("Entity为空");
+                Log.Error("实体为空");
                 return false;
             }
 
@@ -150,9 +150,15 @@ namespace Ux
 
             if (entity == this)
             {
-                Log.Error("Entity不可添加自己");
+                Log.Error("不可添加自己");
                 return false;
             }
+            if (_entitys.ContainsKey(entity.ID))
+            {
+                Log.Error($"重复添加实体,ID:{entity.ID}");
+                return false;
+            }
+
 
             if (entity._parent == this)
             {
@@ -362,7 +368,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(0, type, isFromPool);
+            var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -379,7 +385,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(0, type, isFromPool);
+            var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -396,7 +402,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(0, type, isFromPool);
+            var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -413,7 +419,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(0, type, isFromPool);
+            var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -430,7 +436,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(0, type, isFromPool);
+            var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -447,7 +453,7 @@ namespace Ux
                 return null;
             }
 
-            var entity = Entity.Create(0, type, isFromPool);
+            var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
             if (!_AddChild(entity))
             {
                 return null;
@@ -491,8 +497,28 @@ namespace Ux
 
             return false;
         }
+        public T GetChild<T>(long id) where T : Entity
+        {
+            return GetChild(id) as T;
+        }
+        public Entity GetChild(long id)
+        {
+            if (IsComponent)
+            {
+                return Parent?.GetChild(id);
+            }
+            if (_entitys.TryGetValue(id, out var entity))
+            {
+                return entity;
+            }
+            return null;
+        }
         public List<Entity> GetChilds(bool isIncludeNested = false)
         {
+            if (IsComponent)
+            {
+                return Parent?.GetChilds(isIncludeNested);
+            }
             if (CheckDestroy())
             {
                 return null;
@@ -503,6 +529,10 @@ namespace Ux
         }
         public List<Entity> GetChilds(Type type, bool isIncludeNested = false)
         {
+            if (IsComponent)
+            {
+                return Parent?.GetChilds(type, isIncludeNested);
+            }
             if (CheckDestroy())
             {
                 return null;
@@ -513,6 +543,10 @@ namespace Ux
         }
         public List<T> GetChilds<T>(bool isIncludeNested = false) where T : Entity
         {
+            if (IsComponent)
+            {
+                return Parent?.GetChilds<T>(isIncludeNested);
+            }
             if (CheckDestroy())
             {
                 return null;
@@ -571,6 +605,15 @@ namespace Ux
             {
                 Log.Error(GetType().FullName + "已销毁");
                 return true;
+            }
+            if (IsComponent)
+            {
+                var temParent = Parent;
+                if (temParent != null && temParent.IsDestroy)
+                {
+                    Log.Error(temParent.GetType().FullName + "已销毁");
+                    return true;
+                }
             }
             return false;
         }

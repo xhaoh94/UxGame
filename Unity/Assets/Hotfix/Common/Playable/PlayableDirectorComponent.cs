@@ -14,14 +14,14 @@ namespace Ux
         public void OnAwake(PlayableDirector a)
         {
             _director = a;
-            _director.playOnAwake = false;
-            _bingObjs.Clear();
+            _director.playOnAwake = false;            
         }
 
         protected override void OnDestroy()
         {
             _director = null;
             _asset = null;
+            _bingObjs?.Clear();
         }
 
         public void SetPlayableAsset(SkillAsset asset)

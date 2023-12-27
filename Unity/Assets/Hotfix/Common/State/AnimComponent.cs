@@ -8,9 +8,6 @@ namespace Ux
 {
     public class AnimComponent : Entity, IAwakeSystem<Animator>, IUpdateSystem, IApplicationQuitSystem
     {
-        private Dictionary<string, AnimClip> _animClips = new Dictionary<string, AnimClip>();
-        private Dictionary<int, AnimMixer> _animMixers = new Dictionary<int, AnimMixer>();
-
         private PlayableGraph _graph;
         private AnimationLayerMixerPlayable _mixerRoot;
         public Animator Animator { get; private set; }
@@ -38,9 +35,7 @@ namespace Ux
 
         protected override void OnDestroy()
         {
-            _graph.Destroy();
-            _animMixers.Clear();
-            _animClips.Clear();
+            _graph.Destroy();    
             Animator = null;
         }
         /// <summary>
@@ -162,8 +157,7 @@ namespace Ux
                 Log.Warning($"已存在动画片段: {name}");
                 return false;
             }
-            var animClip = AddChild<AnimClip, PlayableGraph, string, AnimationClip, int>(_graph, name, clip, layer);
-            _animClips.Add(name, animClip);
+            AddChild<AnimClip, PlayableGraph, string, AnimationClip, int>(name.ToHash(), _graph, name, clip, layer);
             return true;
         }
 
@@ -190,7 +184,6 @@ namespace Ux
             if (animMixer != null)
                 animMixer.RemoveClip(animClip.Name);
 
-            _animClips.Remove(animClip.Name);
             animClip.Destroy();
             return true;
         }
@@ -207,18 +200,16 @@ namespace Ux
                 Log.Warning("是否包含一个动画状态，名字为空");
                 return false;
             }
-            return _animClips.ContainsKey(name);
+            return GetAnimClip(name) != null;
         }
 
         private AnimClip GetAnimClip(string name)
-        {            
-            _animClips.TryGetValue(name, out var animClip);
-            return animClip;
+        {
+            return GetChild<AnimClip>(name.ToHash());
         }
         private AnimMixer GetAnimMixer(int layer)
-        {            
-            _animMixers.TryGetValue(layer, out var animMixer);
-            return animMixer;
+        {
+            return GetChild<AnimMixer>(layer);
         }
         private AnimMixer CreateAnimMixer(int layer)
         {
@@ -235,8 +226,7 @@ namespace Ux
                     _mixerRoot.SetInputCount(layer + 1);
                 }
             }
-            var animMixer = AddChild<AnimMixer, PlayableGraph, int>(_graph, layer);
-            _animMixers.Add(layer, animMixer);
+            var animMixer = AddChild<AnimMixer, PlayableGraph>(layer, _graph);            
             return animMixer;
         }
     }
