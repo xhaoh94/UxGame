@@ -55,6 +55,11 @@ namespace Ux
         protected override void OnDestroy()
         {
             UnityEngine.Object.Destroy(Go);
+            Anim = null;
+            State = null;
+            Operate = null;
+            Seeker = null;
+            Director = null;
         }
 
         private Vector3 _postion;

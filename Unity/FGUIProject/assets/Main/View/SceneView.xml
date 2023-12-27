@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <component id="n0_rhbc" name="btnMainView" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="188,49">
+      <relation target="" sidePair="left-left,top-top"/>
+      <Button title="MainView"/>
+    </component>
+    <component id="n1_rhbc" name="btnBack" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="51,49" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="返回"/>
+    </component>
+  </displayList>
+</component>

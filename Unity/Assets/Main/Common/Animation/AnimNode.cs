@@ -105,6 +105,7 @@ namespace Ux
 
         protected override void OnDestroy()
         {
+            IsConnect = false;
             if (IsValid)
             {
                 _graph.DestroySubgraph(_source);
@@ -182,6 +183,7 @@ namespace Ux
 
             // 断开
             _graph.Disconnect(_parent, InputPort);
+
             IsConnect = false;
         }
 

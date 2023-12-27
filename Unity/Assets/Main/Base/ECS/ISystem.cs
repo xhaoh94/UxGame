@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -90,16 +91,15 @@ namespace Ux
     {
         class Event
         {
-            readonly Dictionary<string, List<FastMethodInfo>>
-                _eventAdd = new Dictionary<string, List<FastMethodInfo>>();
+            readonly Dictionary<Type, List<FastMethodInfo>>
+                _eventAdd = new Dictionary<Type, List<FastMethodInfo>>();
 
-            readonly Dictionary<string, List<FastMethodInfo>> _eventRemove =
-                new Dictionary<string, List<FastMethodInfo>>();
+            readonly Dictionary<Type, List<FastMethodInfo>> _eventRemove =
+                new Dictionary<Type, List<FastMethodInfo>>();
 
             public void AddSystem(Entity entity)
             {
-                var key = entity.GetType().FullName;
-                if (string.IsNullOrEmpty(key)) return;
+                var key = entity.GetType();
                 if (!_eventAdd.TryGetValue(key, out var list))
                 {
                     return;
@@ -113,8 +113,7 @@ namespace Ux
 
             public void RemoveSystem(Entity entity)
             {
-                var key = entity.GetType().FullName;
-                if (string.IsNullOrEmpty(key)) return;
+                var key = entity.GetType();
                 if (!_eventRemove.TryGetValue(key, out var list))
                 {
                     return;
@@ -125,13 +124,13 @@ namespace Ux
                     method.Invoke(entity);
                 }
             }
-
+            List<Type> _waitDel = new List<Type>();
             public void Off(Entity entity)
             {
-                var keys = _eventAdd.Keys;
-                foreach (var key in keys)
+                _waitDel.Clear();
+                foreach (var kv in _eventAdd)
                 {
-                    var listData = _eventAdd[key];
+                    var listData = kv.Value;
                     for (int i = listData.Count - 1; i >= 0; i--)
                     {
                         if (listData[i].Target == entity)
@@ -142,14 +141,19 @@ namespace Ux
 
                     if (listData.Count == 0)
                     {
-                        _eventAdd.Remove(key);
+                        _waitDel.Add(kv.Key);
                     }
                 }
-
-                keys = _eventRemove.Keys;
-                foreach (var key in keys)
+                foreach (var key in _waitDel)
                 {
-                    var listData = _eventRemove[key];
+                    _eventAdd.Remove(key);
+                }
+
+                _waitDel.Clear();
+
+                foreach (var kv in _eventRemove)
+                {
+                    var listData = kv.Value;
                     for (int i = listData.Count - 1; i >= 0; i--)
                     {
                         if (listData[i].Target == entity)
@@ -160,11 +164,14 @@ namespace Ux
 
                     if (listData.Count == 0)
                     {
-                        _eventRemove.Remove(key);
+                        _waitDel.Add(kv.Key);
                     }
+                }
+                foreach (var key in _waitDel)
+                {
+                    _eventAdd.Remove(key);
                 }
             }
-
             public void On(Entity target)
             {
                 var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
@@ -176,10 +183,10 @@ namespace Ux
                     {
                         var fastMethod = new FastMethodInfo(target, method);
                         if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
-                        if (!_eventAdd.TryGetValue(evtAttr.ListenType.FullName, out var list))
+                        if (!_eventAdd.TryGetValue(evtAttr.ListenType, out var list))
                         {
                             list = new List<FastMethodInfo>();
-                            _eventAdd.Add(evtAttr.ListenType.FullName, list);
+                            _eventAdd.Add(evtAttr.ListenType, list);
                         }
 
                         list.Add(fastMethod);
@@ -190,15 +197,21 @@ namespace Ux
                     {
                         var fastMethod = new FastMethodInfo(target, method);
                         if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
-                        if (!_eventRemove.TryGetValue(evtAttr.ListenType.FullName, out var list))
+                        if (!_eventRemove.TryGetValue(evtAttr.ListenType, out var list))
                         {
                             list = new List<FastMethodInfo>();
-                            _eventRemove.Add(evtAttr.ListenType.FullName, list);
+                            _eventRemove.Add(evtAttr.ListenType, list);
                         }
 
                         list.Add(fastMethod);
                     }
                 }
+            }
+
+            public void Clear()
+            {
+                _eventAdd.Clear();
+                _eventRemove.Clear();
             }
         }
 
@@ -298,7 +311,7 @@ namespace Ux
                 temPar._event?.AddSystem(this);
                 if (this is IListenSystem)
                 {
-                    temPar._event ??= new Event();
+                    temPar._event ??= Pool.Get<Event>();
                     temPar._event.On(this);
                 }
             }
@@ -344,12 +357,15 @@ namespace Ux
 
             var temPar = Parent;
 
-            if (this is IListenSystem)
+            if (temPar != null && !temPar.IsDestroy && temPar._event != null )
             {
-                temPar?._event?.Off(this);
+                if (this is IListenSystem)
+                {
+                    temPar._event.Off(this);
+                }
+                temPar._event.RemoveSystem(this);
             }
 
-            temPar?._event?.RemoveSystem(this);
         }
     }
 

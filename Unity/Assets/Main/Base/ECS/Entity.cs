@@ -8,7 +8,7 @@ namespace Ux
     public abstract partial class Entity
     {
         static readonly Queue<Action> _delayFn = new Queue<Action>();
-        static int _exeNum;        
+        static int _exeNum;
         static void _DelayInvoke(int max)
         {
             _exeNum = 0;
@@ -593,12 +593,14 @@ namespace Ux
 #if UNITY_EDITOR
             GoViewer.transform.SetParent(null);
 #endif
-            _parent = null;
             _RemoveSystem();
-            if (!isDestroy) return;
+            if (!isDestroy)
+            {
+                _parent = null;
+                return;
+            }
             if (IsDestroy) return;
-            _isDestroying = true;
-            OnDestroy();
+            _isDestroying = true;            
             TimeMgr.Ins.RemoveAll(this);
             EventMgr.Ins.OffAll(this);
             if (EntityMono != null)
@@ -615,29 +617,31 @@ namespace Ux
                 entity.Value._Destroy(true);
             }
 
-            _entitys.Clear();
-            _typeToentitys.Clear();
-
             foreach (var component in _components)
             {
                 component.Value._Destroy(true);
             }
 
-            _components.Clear();
-
             if (_event != null)
             {
+                _event.Clear();
                 Pool.Push(_event);
+                _event = null;
             }
 
-            _delayFn.Enqueue(_DelayDestroy);            
+            _delayFn.Enqueue(_DelayDestroy);
         }
 
         void _DelayDestroy()
-        {            
-            ID = 0;
+        {
             _isDestroyed = true;
             _isDestroying = false;
+            OnDestroy();
+            _parent = null;
+            _entitys.Clear();
+            _typeToentitys.Clear();
+            _components.Clear();
+            ID = 0;
             _is_init = false;
 #if UNITY_EDITOR
             GameObject.Destroy(GoViewer);

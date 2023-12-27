@@ -2,6 +2,7 @@
 <packageDescription id="ddmliri8">
   <resources>
     <component id="q30y5" name="MainView.xml" path="/View/" exported="true"/>
+    <component id="rhbc6" name="SceneView.xml" path="/View/" exported="true"/>
   </resources>
   <publish name="Main"/>
 </packageDescription>

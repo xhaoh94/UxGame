@@ -84,5 +84,13 @@ namespace Ux
                 _clipPlayable.SetDuration(b.length);
             }            
         }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Layer = 0;
+            Name = null;
+            Clip = null;            
+        }
     }
 }

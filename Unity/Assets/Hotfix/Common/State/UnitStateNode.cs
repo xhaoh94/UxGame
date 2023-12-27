@@ -32,7 +32,6 @@ namespace Ux
             {
                 Anim?.RemoveAnimation(AnimName);
             }
-
             Anim = null;
         }
 

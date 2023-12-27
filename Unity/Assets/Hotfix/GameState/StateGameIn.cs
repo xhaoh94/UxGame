@@ -7,17 +7,18 @@
 
         }
         protected override async void OnEnter(object args = null)
-        {            
-            var ui = await UIMgr.Ins.Show<UI.MainView>().Task();
-            //await MapModule.Ins.EnterMap("Map001");
-
+        {
+            await MapModule.Ins.EnterMap("Map001");
+            await UIMgr.Ins.Show<UI.SceneView>().Task();
             UIMgr.Ins.Hide<UI.LoginView>();
+
             //var item = ConfigMgr.Ins.Tables.TbItem.Get(10000);
         }
 
         protected override void OnExit()
         {
-            UIMgr.Ins.Hide<UI.MainView>();
+            UIMgr.Ins.Hide<UI.SceneView>();
+            MapModule.Ins.ExitMap();
         }
 
         protected override void OnUpdate()

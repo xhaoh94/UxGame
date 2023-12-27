@@ -37,7 +37,7 @@
     </component>
     <component id="n9_skmp" name="btnBack" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="105,50" size="100,40">
       <relation target="" sidePair="left-left"/>
-      <Button title="返回登录"/>
+      <Button title="返回"/>
     </component>
   </displayList>
 </component>

@@ -44,7 +44,7 @@ namespace Ux.UI
         }
         partial void OnBtnBackClick(EventContext e)
         {
-            GameMain.Machine.Enter<StateLogin>();
+            Hide();
         }
     }
 }

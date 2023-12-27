@@ -36,7 +36,7 @@ namespace Ux
                 if (!IsRun)
                 {
                     IsRun = true;
-                    Player.State.Machine.Enter<StateRun>();
+                    Player?.State.Machine.Enter<StateRun>();
                 }
             }
             else
@@ -44,7 +44,7 @@ namespace Ux
                 if (IsRun)
                 {
                     IsRun = false;
-                    Player.State.Machine.Enter<StateIdle>();
+                    Player?.State.Machine.Enter<StateIdle>();
                     path = null;
                     pathIndex = 0;
                 }

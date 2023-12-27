@@ -24,6 +24,13 @@ namespace Ux
             _mixer = AnimationMixerPlayable.Create(graph);
             SetSourcePlayable(graph, _mixer);
         }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            _isQuiting = false;
+            _animClips.Clear();
+        }
         public virtual void OnUpdate()
         {
             if (IsConnect)

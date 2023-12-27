@@ -8,11 +8,10 @@ namespace Ux
 {
     public class AnimComponent : Entity, IAwakeSystem<Animator>, IUpdateSystem, IApplicationQuitSystem
     {
-        private Dictionary<string, AnimClip> _animClips = new Dictionary<string, AnimClip>();
-        private Dictionary<int, AnimMixer> _animMixers = new Dictionary<int, AnimMixer>();
+        public Dictionary<string, AnimClip> _animClips = new Dictionary<string, AnimClip>();
+        public Dictionary<int, AnimMixer> _animMixers = new Dictionary<int, AnimMixer>();
 
         private PlayableGraph _graph;
-        private AnimationPlayableOutput _output;
         private AnimationLayerMixerPlayable _mixerRoot;
         public Animator Animator { get; private set; }
         public void OnAwake(Animator animator)
@@ -23,7 +22,7 @@ namespace Ux
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
 
             _mixerRoot = AnimationLayerMixerPlayable.Create(_graph);
-            _output = AnimationPlayableOutput.Create(_graph, name, animator);
+            var _output = AnimationPlayableOutput.Create(_graph, name, animator);
             _output.SetSourcePlayable(_mixerRoot);
         }
         public void OnUpdate()
@@ -40,12 +39,16 @@ namespace Ux
         protected override void OnDestroy()
         {
             _graph.Destroy();
+            _animMixers.Clear();
+            _animClips.Clear();
+            Animator = null;
         }
         /// <summary>
 		/// Play the graph
 		/// </summary>
 		public void PlayGraph()
         {
+            if (IsDestroy) return;
             _graph.Play();
         }
 
@@ -54,6 +57,7 @@ namespace Ux
         /// </summary>
         public void StopGraph()
         {
+            if (IsDestroy) return;
             _graph.Stop();
         }
 
@@ -63,6 +67,7 @@ namespace Ux
         /// <param name="name">动画名称</param>
         public bool IsPlaying(string name)
         {
+            if (IsDestroy) return false;
             if (string.IsNullOrEmpty(name))
             {
                 Log.Warning("检测动画是否正在播放，名字为空");
@@ -82,6 +87,7 @@ namespace Ux
         /// <param name="fadeLength">融合时间</param>
         public void Play(string name, float fadeLength = 0.3f)
         {
+            if (IsDestroy) return;
             if (string.IsNullOrEmpty(name))
             {
                 Log.Warning("播放一个动画，名字为空");
@@ -112,6 +118,7 @@ namespace Ux
         /// <param name="name">动画名称</param>
         public void Stop(string name)
         {
+            if (IsDestroy) return;
             if (string.IsNullOrEmpty(name))
             {
                 Log.Warning("停止一个动画，名字为空");
@@ -142,6 +149,7 @@ namespace Ux
         /// <param name="layer">动画层级</param>
         public bool AddAnimation(string name, AnimationClip clip, int layer = 0)
         {
+            if (IsDestroy) return false;
             if (string.IsNullOrEmpty(name))
                 throw new System.ArgumentException("添加一个动画片段，名字为空");
             if (clip == null)
@@ -165,6 +173,7 @@ namespace Ux
 		/// <param name="name">动画名称</param>
 		public bool RemoveAnimation(string name)
         {
+            if (IsDestroy) return false;
             if (string.IsNullOrEmpty(name))
             {
                 Log.Warning("移除动画片段，名字为空");
@@ -181,8 +190,8 @@ namespace Ux
             if (animMixer != null)
                 animMixer.RemoveClip(animClip.Name);
 
-            animClip.Destroy();
             _animClips.Remove(animClip.Name);
+            animClip.Destroy();
             return true;
         }
 
@@ -192,6 +201,7 @@ namespace Ux
 		/// <param name="name">动画名称</param>
 		public bool Has(string name)
         {
+            if (IsDestroy) return false;
             if (string.IsNullOrEmpty(name))
             {
                 Log.Warning("是否包含一个动画状态，名字为空");
@@ -201,12 +211,12 @@ namespace Ux
         }
 
         private AnimClip GetAnimClip(string name)
-        {
+        {            
             _animClips.TryGetValue(name, out var animClip);
             return animClip;
         }
         private AnimMixer GetAnimMixer(int layer)
-        {
+        {            
             _animMixers.TryGetValue(layer, out var animMixer);
             return animMixer;
         }

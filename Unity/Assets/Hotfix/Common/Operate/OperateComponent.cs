@@ -28,7 +28,7 @@ namespace Ux
         protected override void OnDestroy()
         {
             _input?.Disable();
-            _input?.Dispose();
+            _input?.Dispose();            
         }
 
         public void OnMove(InputAction.CallbackContext context)
