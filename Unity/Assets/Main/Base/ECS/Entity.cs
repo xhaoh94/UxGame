@@ -569,7 +569,7 @@ namespace Ux
         {
             if (IsDestroy)
             {
-                Log.Error("Entity已销毁");
+                Log.Error(GetType().FullName + "已销毁");
                 return true;
             }
             return false;
@@ -600,7 +600,7 @@ namespace Ux
                 return;
             }
             if (IsDestroy) return;
-            _isDestroying = true;            
+            _isDestroying = true;
             TimeMgr.Ins.RemoveAll(this);
             EventMgr.Ins.OffAll(this);
             if (EntityMono != null)

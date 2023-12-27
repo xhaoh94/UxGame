@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="1280,720">
+<component size="1280,720" opaque="false">
   <displayList>
     <component id="n0_rhbc" name="btnMainView" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="188,49">
       <relation target="" sidePair="left-left,top-top"/>

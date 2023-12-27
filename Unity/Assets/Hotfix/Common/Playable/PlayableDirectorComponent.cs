@@ -8,74 +8,80 @@ namespace Ux
 {
     public class PlayableDirectorComponent : Entity, IAwakeSystem<PlayableDirector>
     {
-        PlayableDirector director;
-        SkillAsset asset;
-        Dictionary<string, Object> bingObjs;
+        PlayableDirector _director;
+        SkillAsset _asset;
+        Dictionary<string, Object> _bingObjs;
         public void OnAwake(PlayableDirector a)
         {
-            director = a;
-            director.playOnAwake = false;
+            _director = a;
+            _director.playOnAwake = false;
+            _bingObjs.Clear();
         }
 
+        protected override void OnDestroy()
+        {
+            _director = null;
+            _asset = null;
+        }
 
         public void SetPlayableAsset(SkillAsset asset)
         {
-            director.playableAsset = asset.Asset;
-            this.asset = asset;
+            _director.playableAsset = asset.Asset;
+            this._asset = asset;
 
-            if (bingObjs != null)
+            if (_bingObjs != null)
             {
-                foreach (var kv in bingObjs)
+                foreach (var kv in _bingObjs)
                 {
                     var track = GetTrack<TrackAsset>(kv.Key);
                     if (track == null) continue;
-                    director.SetGenericBinding(track, kv.Value);
+                    _director.SetGenericBinding(track, kv.Value);
                 }
             }
         }
 
         public void SetBinding(string trackName, Object o)
         {
-            if (bingObjs == null)
+            if (_bingObjs == null)
             {
-                bingObjs = new Dictionary<string, Object>();
+                _bingObjs = new Dictionary<string, Object>();
             }
-            bingObjs[trackName] = o;
+            _bingObjs[trackName] = o;
 
-            if (asset == null)
+            if (_asset == null)
             {
                 return;
             }
-            var track = asset.GetTrack<TrackAsset>(trackName);
+            var track = _asset.GetTrack<TrackAsset>(trackName);
             if (track == null) return;
-            director.SetGenericBinding(track, o);
+            _director.SetGenericBinding(track, o);
         }
 
         public T GetTrack<T>(string trackName) where T : TrackAsset
         {
-            if (asset == null)
+            if (_asset == null)
             {
                 return null;
             }
-            return asset.GetTrack<T>(trackName);
+            return _asset.GetTrack<T>(trackName);
         }
 
         public T GetClip<T>(string trackName, string clipName) where T : PlayableAsset
         {
-            if (asset == null)
+            if (_asset == null)
             {
                 return null;
             }
-            return asset.GetClip<T>(trackName, clipName);
+            return _asset.GetClip<T>(trackName, clipName);
         }
 
         public void Play()
         {
-            if (asset == null)
+            if (_asset == null)
             {
                 return;
             }
-            director.Play();
+            _director.Play();
         }
     }
 

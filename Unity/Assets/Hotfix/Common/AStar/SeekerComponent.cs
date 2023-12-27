@@ -8,29 +8,38 @@ namespace Ux
 {
     public class SeekerComponent : Entity, IAwakeSystem<Seeker>, IFixedUpdateSystem
     {
-        public Seeker seeker;
+        public Seeker Seeker { get; private set; }
         Player Player => Parent as Player;
-        private Path path;
-        private int pathIndex;
+
+        private Path _path;
+        private int _pathIndex;
         public bool IsRun { get; private set; }
 
         public void OnAwake(Seeker a)
         {
-            seeker = a;
+            Seeker = a;
+        }
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Seeker = null;
+            _path = null;
+            _pathIndex = 0;
+            IsRun = false;
         }
 
         public void OnFixedUpdate()
         {
-            if (path != null && pathIndex < path.vectorPath.Count)
+            if (_path != null && _pathIndex < _path.vectorPath.Count)
             {
-                var target = path.vectorPath[pathIndex];
+                var target = _path.vectorPath[_pathIndex];
                 var dir = target - Player.Postion;
                 var rotation = Quaternion.LookRotation(dir);
                 Player.Rotation = Quaternion.Slerp(Player.Rotation, rotation, Time.fixedDeltaTime * 10f);
                 Player.Postion += dir.normalized * (Time.fixedDeltaTime * 5);
                 if (Vector3.SqrMagnitude(dir) <= 0.1f)
                 {
-                    pathIndex++;
+                    _pathIndex++;
                 }
 
                 if (!IsRun)
@@ -45,15 +54,15 @@ namespace Ux
                 {
                     IsRun = false;
                     Player.State.Machine.Enter<StateIdle>();
-                    path = null;
-                    pathIndex = 0;
+                    _path = null;
+                    _pathIndex = 0;
                 }
             }
         }
 
         public void StartPath(Vector3 target)
         {
-            seeker.StartPath(Player.Go.transform.position, target, OnPathComplete);
+            Seeker.StartPath(Player.Go.transform.position, target, OnPathComplete);
             //
             // if (AstarPath.active == null) return;
             // var p = ABPath.Construct(Player.Go.transform.position, target, OnPathComplete);
@@ -71,8 +80,8 @@ namespace Ux
                 return;
             }
 
-            pathIndex = 0;
-            path = p;
+            _pathIndex = 0;
+            _path = p;
         }
     }
 }

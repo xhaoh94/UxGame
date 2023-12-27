@@ -3,48 +3,21 @@ using Ux;
 using UnityEngine;
 
 namespace Ux
-{
-    public sealed class World : Entity
-    {
-        public static World Ins { get; private set; }
-        private Map map;
-        public World()
-        {
-            Ins = this;
-        }
-
-        public void EnterMap(Map newMap)
-        {
-            if (map != null)
-            {
-                World.Ins.RemoveChild(map);
-            }
-            map = newMap;
-        }
-        public void ExitMap()
-        {
-            if (map != null)
-            {
-                World.Ins.RemoveChild(map);
-            }
-        }
-    }
-
-
+{    
     [Module]
     public class MapModule : ModuleBase<MapModule>
     {
-        protected override void OnInit()
-        {
-            base.OnInit();
-            Entity.Create<World>();
-        }
+        public World World { get; private set; }
 
         public async UniTask EnterMap(string mapName)
         {
+            if (World == null)
+            {
+                World = Entity.Create<World>();
+            }
             var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
-            var map = World.Ins.AddChild<Map, GameObject>(go);
-            World.Ins.EnterMap(map);
+            var map = World.AddChild<Map, GameObject>(go);
+            World.EnterMap(map);
             var pos = new Vector3(UnityEngine.Random.Range(-3, 3), 0.5f, UnityEngine.Random.Range(-3, 3));
             var data = new PlayerData();
             data.id = 1;
@@ -55,12 +28,13 @@ namespace Ux
         }
         public void ExitMap()
         {
-            World.Ins.ExitMap();
+            World.ExitMap();
         }
 
         protected override void OnRelease()
         {
-            World.Ins.Destroy();
+            World.Destroy();
+            World = null;
         }
     }
 }

@@ -13,7 +13,11 @@ namespace Ux
             _astarPath = ap;
             _load().Forget();
         }
-
+        protected override void OnDestroy()
+        {
+            base.OnDestroy(); 
+            _astarPath = null;
+        }
         async UniTaskVoid _load()
         {            
             var ta = await ResMgr.Ins.LoadAssetAsync<TextAsset>("map001graph");                        

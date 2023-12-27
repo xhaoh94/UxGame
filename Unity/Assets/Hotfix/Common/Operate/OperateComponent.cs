@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.Timeline;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using FairyGUI;
 
 namespace Ux
 {
@@ -28,7 +29,7 @@ namespace Ux
         protected override void OnDestroy()
         {
             _input?.Disable();
-            _input?.Dispose();            
+            _input?.Dispose();
         }
 
         public void OnMove(InputAction.CallbackContext context)
@@ -41,6 +42,10 @@ namespace Ux
 
         public void OnFire(InputAction.CallbackContext context)
         {
+            if (Stage.isTouchOnUI)
+            {
+                return;
+            }
             if (context.performed)
             {
                 var pos = Mouse.current.position.ReadValue();
