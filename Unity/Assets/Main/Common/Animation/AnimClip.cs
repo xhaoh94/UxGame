@@ -13,7 +13,7 @@ namespace Ux
         public string Name { get; private set; }
         public AnimationClip Clip { get; private set; }
 
-        private AnimationClipPlayable _clipPlayable;        
+        private AnimationClipPlayable _clipPlayable;
 
         /// <summary>
         /// 动画长度
@@ -69,7 +69,7 @@ namespace Ux
 
         public void OnAwake(PlayableGraph graph, string a, AnimationClip b, int c)
         {
-            
+
             Name = a;
             Clip = b;
             Layer = c;
@@ -82,7 +82,11 @@ namespace Ux
             if (b.wrapMode == WrapMode.Once)
             {
                 _clipPlayable.SetDuration(b.length);
-            }            
+            }
+
+#if UNITY_EDITOR
+            SetViewerName($"{GetType().Name}_{Name}");
+#endif
         }
 
         protected override void OnDestroy()
@@ -90,7 +94,7 @@ namespace Ux
             base.OnDestroy();
             Layer = 0;
             Name = null;
-            Clip = null;            
+            Clip = null;
         }
     }
 }

@@ -8,14 +8,12 @@ namespace Ux
 {
     public abstract class UnitStateNode : StateNode
     {
-        public virtual string AnimName { get; } = null;
-        public Entity Unit { get; private set; }
+        public virtual string AnimName { get; } = null;        
         public AnimComponent Anim { get; private set; }
 
 
         public override void Create(StateMachine machine, object args = null, bool isFromPool = true)
-        {
-            Unit = args as Entity;
+        {            
             base.Create(machine, args, isFromPool);
         }
 
@@ -26,8 +24,7 @@ namespace Ux
         }
 
         protected override void OnRelease()
-        {
-            Unit = null;
+        {            
             if (!string.IsNullOrEmpty(AnimName))
             {
                 Anim?.RemoveAnimation(AnimName);

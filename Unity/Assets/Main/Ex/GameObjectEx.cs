@@ -5,6 +5,18 @@ namespace Ux
 {
     public static class GameObjectEx
     {
+        public static void Visable(this GameObject go, bool b)
+        {
+            if (go.activeInHierarchy != b)
+            {
+                go.SetActive(b);
+            }
+        }
+        public static void SetParent(this GameObject go, Transform parent, bool worldPositionStays = true)
+        {
+            go.transform.SetParent(parent, worldPositionStays);
+        }
+
         public static T Get<T>(this GameObject gameObject, string key) where T : class
         {
             try

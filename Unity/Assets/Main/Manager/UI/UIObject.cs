@@ -16,7 +16,12 @@ namespace Ux
         Hide,
         HideAnim
     }
-
+    public enum UIType
+    {
+        None,
+        Stack,
+        Fixed
+    }
 
 
     public class UIObject
@@ -210,8 +215,14 @@ namespace Ux
         }
 
 
-        public virtual void DoShow(bool isAnim, object param)
+        public virtual void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
         {
+            RemoveTimers();
+            RemoveEvents();
+            EventMgr.Ins.___RegisterFastMethod(this);
+            OnAddEvent();
+            OnShow(param);
+
             if (_state == UIState.Show || _state == UIState.ShowAnim)
             {
                 return;
@@ -225,30 +236,23 @@ namespace Ux
             else
             {
                 _state = UIState.Show;
+                ShowAnim?.SetEnd();
             }
-
-            OnShow(param);            
-
             foreach (var component in Components)
             {
-                component.DoShow(isAnim, this);
+                component.DoShow(isAnim, null, null);
             }
-            _CheckShow().Forget();
+            _CheckShow(showCb, param).Forget();
         }
 
-        async UniTaskVoid _CheckShow()
+        async UniTaskVoid _CheckShow(Action<IUI, object> showCb, object param)
         {
-            bool isCancel = false;
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
                 await UniTask.Yield();
 
-            if (!isCancel)
-            {
-                OnShowAnimComplete();
-                EventMgr.Ins.___RegisterFastMethod(this);
-                OnAddEvent();
-                OnShowCallBack?.Invoke();
-            }
+            OnShowAnimComplete();
+            OnShowCallBack?.Invoke();
+            showCb?.Invoke(this as IUI, param);
         }
 
         protected virtual void OnShow(object param)
@@ -264,32 +268,7 @@ namespace Ux
 
         }
 
-        public virtual void DoResume(object param)
-        {
-            switch (State)
-            {
-                case UIState.Hide:
-                case UIState.HideAnim:
-                    DoShow(false, param);
-                    break;
-                case UIState.Show:
-                case UIState.ShowAnim:
-                default:
-                    OnResume(param);
-                    foreach (var component in Components)
-                    {
-                        component.DoResume(this);
-                    }
-
-                    break;
-            }
-        }
-
-        protected virtual void OnResume(object param)
-        {
-        }
-
-        public virtual void DoHide(bool isAnim)
+        public virtual void DoHide(bool isAnim, bool isStack)
         {
             if (_state == UIState.Hide || _state == UIState.HideAnim)
             {
@@ -308,27 +287,28 @@ namespace Ux
 
             foreach (var component in Components)
             {
-                component.DoHide(isAnim);
+                component.DoHide(isAnim, isStack);
             }
             OnHide();
+            RemoveEvents();
+            RemoveTimers();
             _CheckHide().Forget();
         }
 
         async UniTaskVoid _CheckHide()
         {
-            bool isCancel = false;
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
-                await UniTask.Yield();
-
-            if (!isCancel)
             {
-                OnHideAnimComplete();
-                OnHideCallBack?.Invoke();
-                RemoveEvents();
-                RemoveTimers();
+                await UniTask.Yield();
             }
+            OnHideAnimComplete();
+            OnHideCallBack?.Invoke();
         }
 
+        /// <summary>
+        /// 不要在OnHide ,注册定时器或是监听事件。
+        /// 请在模块监听 MainEventType.UI_HIDE
+        /// </summary>
         protected virtual void OnHide()
         {
         }
@@ -337,7 +317,7 @@ namespace Ux
         {
         }
 
-        public void Dispose(bool isDisposeGObject = true)
+        protected void ToDispose(bool isDisposeGObject = true)
         {
             _event.Release();
             _event = null;
@@ -347,7 +327,7 @@ namespace Ux
             {
                 foreach (var component in _components)
                 {
-                    component.Dispose(isDisposeGObject);
+                    component.ToDispose(isDisposeGObject);
                 }
 
                 _components.Clear();

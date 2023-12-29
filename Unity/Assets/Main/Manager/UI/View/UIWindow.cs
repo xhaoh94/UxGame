@@ -3,9 +3,7 @@
 namespace Ux
 {
     public abstract class UIWindow : UIBase
-    {
-        protected virtual UILayer Layer { get; } = UILayer.Normal;
-
+    {        
         protected Window window
         {
             get
@@ -30,16 +28,6 @@ namespace Ux
                 contentPane = gObject.asCom,
                 modal = IsModal()
             };
-            var layer = UIMgr.Ins.GetLayer(Layer);
-            if (layer == GRoot.inst)
-            {
-                _window.sortingOrder = 0;
-            }
-            else
-            {
-                _window.sortingOrder = layer.sortingOrder + 1;
-            }
-
             return _window;
         }
 

@@ -6,17 +6,20 @@ namespace Ux
     public interface IUI
     {
         UIState State { get; }
+        UIType Type { get; }
 #if UNITY_EDITOR
         string IDStr { get; }
 #endif
         int ID { get; }
         IUIData Data { get; }
         bool IsDestroy { get; }
-        void InitData(IUIData data, Action<IUI> remove);
-        void Dispose(bool isDisposeGObject = true);
-        void DoShow(bool isAnim, object param);
-        void DoResume(object param);
-        void DoHide(bool isAnim);
+        bool Visable { get; set; }
+        void InitData(IUIData data, Action<IUI, bool> hideCb);
+        void Dispose();
+        void SortingOrder();
+        void DoShow(bool isAnim, object param, Action<IUI, object> showCb);
+        void DoHide(bool isAnim, bool isStack);
+
     }
 
     public abstract class UIBase : UIObject, IUI
@@ -24,14 +27,16 @@ namespace Ux
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         public virtual bool IsDestroy => true;
+        public virtual UIType Type => UIType.None;
 
-        Action<IUI> _remove;
-        public virtual void InitData(IUIData data, Action<IUI> remove)
+        Action<IUI, bool> _hideCb;
+        bool _isStack;              
+        public virtual void InitData(IUIData data, Action<IUI, bool> hide)
         {
             Data = data;
-            _remove = remove;
+            _hideCb = hide;            
             Init(CreateObject());
-            OnHideCallBack += _Hide;
+            OnHideCallBack += _Hide;            
         }
 
         public virtual void AddChild(UITabView child) { }
@@ -47,7 +52,20 @@ namespace Ux
 
             return UIPackage.CreateObject(pkg, res);
         }
-
+        public bool Visable
+        {
+            get
+            {
+                return GObject.visible;
+            }
+            set
+            {
+                if (GObject.visible != value)
+                {
+                    GObject.visible = value;
+                }
+            }
+        }
         public int ID => Data.ID;
 #if UNITY_EDITOR
         public string IDStr => Data.IDStr;
@@ -56,7 +74,7 @@ namespace Ux
 
         public virtual void Hide()
         {
-            UIMgr.Ins.Hide(Data.ID);
+            UIMgr.Ins.Hide(Data.ID, true, true);
         }
 
         protected void MakeFullScreen()
@@ -70,23 +88,37 @@ namespace Ux
         }
         protected virtual void OnLayout() { }
 
-        public override void DoShow(bool isAnim, object param)
+        void IUI.SortingOrder()
+        {
+            AddToStage();
+        }
+
+        public override void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
         {
             AddToStage();
             OnLayout();
-            base.DoShow(isAnim, param);
+            base.DoShow(isAnim, param, showCb);
+        }
+
+        public override void DoHide(bool isAnim, bool isStack)
+        {
+            _isStack = isStack;
+            base.DoHide(isAnim, isStack);
         }
 
         private void _Hide()
         {
             RemoveToStage();
-            _remove?.Invoke(this);
+            _hideCb?.Invoke(this, _isStack);
         }
-
+        void IUI.Dispose()
+        {
+            ToDispose(true);
+        }
         protected override void OnDispose()
         {
             Data = null;
-            _remove = null;
+            _hideCb = null;
         }
         protected void SetLayout(UILayout layout, bool restraint = true)
         {
@@ -196,5 +228,6 @@ namespace Ux
             GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
             GObject.RemoveRelation(parent, relation);
         }
+
     }
 }

@@ -9,6 +9,9 @@ namespace Ux
     {
         void Play(Action end);
         void Stop();
+
+        void SetStart();
+        void SetEnd();
     }
 
     public class UITransition : IUIAnim
@@ -25,8 +28,19 @@ namespace Ux
 
         public void Stop()
         {
-            transition.Play(1, 0, transition.totalDuration, transition.totalDuration, null);
-            //transition?.Stop(false,false);            
+            //transition.Play(1, 0, transition.totalDuration, transition.totalDuration, null);            
+            transition?.Stop();
+        }
+
+        public void SetEnd()
+        {
+            transition.Play(1, 0, transition.totalDuration, transition.totalDuration, null);            
+        }
+
+        public void SetStart()
+        {
+            transition?.Play();
+            transition?.Stop(false, false);
         }
     }
 }

@@ -6,6 +6,20 @@ namespace Ux
 {
     public partial class UIMgr
     {
+        struct UIStack
+        {
+            public readonly int ParentID;
+            public int ID;
+            public readonly object Param;
+            public readonly UIType Type;
+            public UIStack(int parentID, int id, object param, UIType type)
+            {
+                ParentID = parentID;
+                ID = id;
+                Param = param;
+                Type = type;
+            }
+        }
         public readonly struct UIParse
         {
             public UIParse(Type type, int id, IUITabData tabData)

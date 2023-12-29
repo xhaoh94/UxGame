@@ -119,6 +119,7 @@ namespace Ux
             UIMgr.Ins.OnLowMemory();
             ResMgr.Ins.OnLowMemory();
             Pool.Clear();
+            UnityPool.Clear();
         }
     }
 }

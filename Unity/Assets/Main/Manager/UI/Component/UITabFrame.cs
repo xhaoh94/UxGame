@@ -71,9 +71,9 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        public override void DoShow(bool isAnim, object param)
+        public override void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
         {
-            base.DoShow(isAnim, param);
+            base.DoShow(isAnim, param, showCb);
             if (__listTab != null && _tabDatas != null)
             {
                 AddItemClick(__listTab, OnTabClick);
@@ -87,10 +87,10 @@ namespace Ux
             Refresh(-1);
         }
 
-        public override void DoHide(bool isAnim)
+        public override void DoHide(bool isAnim, bool isStack)
         {
             HideCurrent(isAnim);
-            base.DoHide(isAnim);
+            base.DoHide(isAnim, isStack);
         }
 
         void _Hide()
@@ -102,7 +102,7 @@ namespace Ux
 
         private void HideCurrent(bool isAnim)
         {
-            SelectItem?.DoHide(isAnim);
+            SelectItem?.DoHide(isAnim, false);
         }
 
         public void AddChild(UITabView tab)

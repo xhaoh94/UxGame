@@ -8,7 +8,7 @@ namespace Ux.UI
     [UI]
     public partial class LoginView
     {
-        protected override UILayer Layer => UILayer.Normal;
+        protected override UILayer Layer => UILayer.Tip;
 
         protected override void OnInit()
         {

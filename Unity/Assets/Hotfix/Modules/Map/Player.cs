@@ -38,13 +38,12 @@ namespace Ux
 
         async UniTaskVoid LoadPlayer(PlayerData playerData)
         {
-            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
-            Go.transform.SetParent(Go.transform);
+            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);            
+            SetMono(Go);            
             Go.transform.position = Postion;
             Go.transform.rotation = Rotation;
             Map.Camera.SetFollow(Go.transform);
             Map.Camera.SetLookAt(Go.transform);
-            SetMono(Go);
 
             Anim = AddComponent<AnimComponent, Animator>(Go.GetComponentInChildren<Animator>());
             Seeker = AddComponent<SeekerComponent, Seeker>(Go.GetComponent<Seeker>());
@@ -53,8 +52,8 @@ namespace Ux
         }
 
         protected override void OnDestroy()
-        {
-            UnityEngine.Object.Destroy(Go);
+        {            
+            UnityPool.Push(Go);
             Anim = null;
             State = null;
             Operate = null;

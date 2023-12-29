@@ -15,7 +15,8 @@ namespace Ux
         }
         protected override void OnDestroy()
         {
-            base.OnDestroy(); 
+            base.OnDestroy();
+            _astarPath.data.OnDestroy();
             _astarPath = null;
         }
         async UniTaskVoid _load()

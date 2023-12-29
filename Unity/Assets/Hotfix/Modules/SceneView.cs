@@ -10,7 +10,8 @@ namespace Ux.UI
     [UI]
     public partial class SceneView
     {
-        protected override UILayer Layer => UILayer.Bottom;
+        protected override UILayer Layer => UILayer.Normal;
+        public override UIType Type => UIType.Fixed;
         partial void OnBtnBackClick(EventContext e)
         {
             GameMain.Machine.Enter<StateLogin>();

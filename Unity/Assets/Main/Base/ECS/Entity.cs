@@ -96,21 +96,48 @@ namespace Ux
             entity.ID = id;
 #if UNITY_EDITOR
             entity.GoViewer = new GameObject();
-            entity.GoViewer.name = $"{type.Name}_{entity.ID}";
-
+            entity.GoViewer.name = $"{type.Name}_{id}";
             var eg = entity.GoViewer.AddComponent<EntityViewer>();
             eg.SetEntity(entity);
 #endif
             return entity;
         }
+#if UNITY_EDITOR
+        protected void SetViewerName(string name)
+        {
+            if (GoViewer != null)
+            {
+                GoViewer.name = name;
+            }
+        }
+#endif
 
-        public void SetMono(GameObject gameObject)
+        public void SetMono(GameObject gameObject, bool isSetParent = true)
         {
             EntityMono = gameObject.GetOrAddComponent<EntityMono>();
 #if UNITY_EDITOR
             EntityMono.SetEntity(this, GoViewer);
+            if (isSetParent)
+            {
+                var assetContent = GoViewer.transform.Find("Asset");
+                if (assetContent == null)
+                {
+                    assetContent = new GameObject("Asset").transform;
+                    assetContent.SetParent(GoViewer.transform);
+                    assetContent.SetAsFirstSibling();
+                }
+                gameObject.SetParent(assetContent);
+            }
 #else
-            EntityMono.SetEntity(this);   
+            EntityMono.SetEntity(this);
+            if (isSetParent)
+            {
+                var temParent = Parent;
+                if (temParent != null && temParent.EntityMono != null)
+                {
+                    gameObject.SetParent(temParent.EntityMono.transform);
+                }
+            }
 #endif
         }
         bool _AddChild(Entity entity)
@@ -183,6 +210,7 @@ namespace Ux
             {
                 entityContent = new GameObject("Entitys").transform;
                 entityContent.SetParent(GoViewer.transform);
+                entityContent.SetAsLastSibling();
             }
             entity.GoViewer.transform.SetParent(entityContent);
 #endif

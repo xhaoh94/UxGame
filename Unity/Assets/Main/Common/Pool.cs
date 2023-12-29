@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 
-public class Pool
+public static class Pool
 {
-    private static readonly Dictionary<Type, Queue<object>> dictionary = new Dictionary<Type, Queue<object>>();
-
+    private static readonly Dictionary<Type, Queue<object>> _dict = new Dictionary<Type, Queue<object>>();
+  
     public static object Get(Type type)
     {
         object obj;
-        if (!dictionary.TryGetValue(type, out Queue<object> queue))
+        if (!_dict.TryGetValue(type, out Queue<object> queue))
         {
             obj = Activator.CreateInstance(type);
         }
@@ -37,15 +37,15 @@ public class Pool
     public static void Push(object obj)
     {
         Type type = obj.GetType();
-        if (!dictionary.TryGetValue(type, out var queue))
+        if (!_dict.TryGetValue(type, out var queue))
         {
             queue = new Queue<object>();
-            dictionary.Add(type, queue);
+            _dict.Add(type, queue);
         }
 #if UNITY_EDITOR
         if (queue.Contains(obj))
         {
-            throw new Exception("对象池重复添加！请检查代码");            
+            throw new Exception("对象池重复添加！请检查代码");
         }
 #endif
         queue.Enqueue(obj);
@@ -53,6 +53,6 @@ public class Pool
 
     public static void Clear()
     {
-        dictionary.Clear();
+        _dict.Clear();
     }
 }

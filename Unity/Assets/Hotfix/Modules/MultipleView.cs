@@ -5,31 +5,26 @@ namespace Ux.UI
     [UI]
     partial class MultipleView
     {
-        //public override bool IsDestroy => false;
-        protected override UILayer Layer => UILayer.Normal;
+        //public override bool IsDestroy => false;        
         protected override IUIAnim ShowAnim => new UITransition(t0);
         protected override IUIAnim HideAnim => new UITransition(t1);
+        public override UIType Type => UIType.Stack;
 
         protected override void OnShow(object param)
         {
             base.OnShow(param);
-            //TimeMgr.Ins.DoTimer(5, 1, () =>
-            //{
-            //    var data = UIMgr.Ins.GetUIData(ID);
-            //    data.Children.Reverse();
-            //    RefreshTab();
-            //    Log.Debug("RefreshTab");
-            //});
+            TimeMgr.Ins.DoTimer(2, 1, () =>
+            {
+                //var data = UIMgr.Ins.GetUIData(ID);
+                //data.Children.Reverse();
+                //RefreshTab();
+                //Log.Debug("RefreshTab");                
+            });
         }
 
         protected override void OnHide()
         {
             base.OnHide();
-            TimeMgr.Ins.DoTimer(0.1f, 1, () =>
-            {
-                UIMgr.Ins.Show<Multiple1TabView>();
-                UIMgr.Ins.Hide<Multiple1TabView>();
-            });
         }
 
     }
@@ -50,6 +45,14 @@ namespace Ux.UI
         public override bool IsDestroy => false;
         protected override IUIAnim ShowAnim => new UITransition(t0);
         protected override IUIAnim HideAnim => new UITransition(t1);
+        protected override void OnShow(object param)
+        {
+            base.OnShow(param);
+            TimeMgr.Ins.DoTimer(2, 1, () =>
+            {
+                UIMgr.Ins.Show<MainView>();
+            });
+        }
     }
 
     [UI(typeof(MultipleView))]

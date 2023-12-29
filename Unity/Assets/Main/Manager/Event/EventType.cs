@@ -44,10 +44,6 @@ namespace Ux
         /// </summary>
         UI_SHOW,
         /// <summary>
-        /// UI界面重置
-        /// </summary>
-        UI_RESUME,
-        /// <summary>
         /// UI界面关闭
         /// </summary>
         UI_HIDE,

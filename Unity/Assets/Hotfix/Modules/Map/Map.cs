@@ -13,6 +13,7 @@ namespace Ux
         public void OnAwake(GameObject a)
         {
             Go = a;
+            SetMono(Go);
             Camera = AddComponent<CameraComponent>();
             AddComponent<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
         }
@@ -25,7 +26,8 @@ namespace Ux
 
         protected override void OnDestroy()
         {
-            UnityEngine.Object.Destroy(Go);
+            UnityPool.Push(Go);
+            //UnityEngine.Object.Destroy(Go);
             players.Clear();
             Camera = null;
         }

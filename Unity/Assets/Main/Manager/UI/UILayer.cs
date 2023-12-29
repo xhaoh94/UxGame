@@ -5,6 +5,7 @@
         Root,
         Bottom,
         Normal,
+        View,
         Tip,
         Top
     }

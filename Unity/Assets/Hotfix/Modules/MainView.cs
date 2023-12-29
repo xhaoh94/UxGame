@@ -8,7 +8,7 @@ namespace Ux.UI
     public partial class MainView
     {
         public override bool IsDestroy => false;
-        protected override UILayer Layer => UILayer.Normal;
+        public override UIType Type => UIType.Stack;
         protected override void OnShow(object param)
         {
             base.OnShow(param);
@@ -19,7 +19,8 @@ namespace Ux.UI
         }
         partial void OnBtnNoneViewClick(EventContext e)
         {
-            UIMgr.Ins.Show<TipView>();
+            //UIMgr.Ins.Show<TipView>();
+            UIMgr.Ins.Show<BagWindow2>();
         }
         partial void OnBtnNoneWindowClick(EventContext e)
         {
@@ -33,6 +34,7 @@ namespace Ux.UI
         partial void OnBtnSingleClick(EventContext e)
         {
             Log.Debug("单击");
+            Hide();
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {

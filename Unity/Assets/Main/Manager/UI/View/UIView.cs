@@ -2,8 +2,7 @@ namespace Ux
 {
     public abstract class UIView : UIBase
     {
-        protected virtual UILayer Layer { get; } = UILayer.Normal;
-
+        protected virtual UILayer Layer { get; } = UILayer.Root;        
         protected override void AddToStage()
         {
             if (GObject == null) return;

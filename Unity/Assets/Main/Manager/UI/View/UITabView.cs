@@ -4,6 +4,11 @@
     {
         public override UIObject Parent => UIMgr.Ins.GetUI<UIBase>(Data.TabData.PID);
 
+        /// <summary>
+        /// 指定这个无效，类型由最上层的父类决定
+        /// </summary>
+        public override UIType Type => UIType.None;
+
         protected override void AddToStage()
         {
             if (GObject == null) return;

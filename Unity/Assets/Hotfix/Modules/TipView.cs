@@ -10,6 +10,7 @@ namespace Ux.UI
     partial class TipView
     {
         protected override UILayer Layer => UILayer.Top;
+        public override UIType Type =>  UIType.Fixed;
         protected override void OnLayout()
         {
             SetLayout(UILayout.Center_Top, true);

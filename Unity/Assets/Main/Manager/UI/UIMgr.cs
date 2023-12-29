@@ -13,9 +13,14 @@ namespace Ux
         //显示超时
         const float _showTimeout = 5f;
         //待销毁时间
-        const float _waitDelTime = 10f;        
+        const float _waitDelTime = 10f;
         //对话弹窗
         public static readonly UIDialogFactory Dialog = new UIDialogFactory();
+
+        /// <summary>
+        /// 界面顺序
+        /// </summary>
+        List<UIStack> _stack = new List<UIStack>();
 
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeToId = new Dictionary<Type, int>();
@@ -41,7 +46,7 @@ namespace Ux
         private readonly List<int> _createdDels = new List<int>();
 
         //等待关闭动画结束后重新打开的列表
-        private readonly List<int> _waitHideAnimComplete = new List<int>();
+        private readonly List<int> _waitHideAnimCompleteReShow = new List<int>();
 
         //界面对应的懒加载标签
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
@@ -53,9 +58,8 @@ namespace Ux
         {
             { UILayer.Root, GRoot.inst },
             { UILayer.Bottom, _CreateLayer(UILayer.Bottom, -100) },
-            { UILayer.Normal, _CreateLayer(UILayer.Normal, 0) },
-            { UILayer.Tip, _CreateLayer(UILayer.Tip, 90) },
-            { UILayer.Top, _CreateLayer(UILayer.Top, 100) }
+            { UILayer.Tip, _CreateLayer(UILayer.Tip, 200) },
+            { UILayer.Top, _CreateLayer(UILayer.Top, 300) }
         };
 
         static GComponent _CreateLayer(UILayer layer, int v)
@@ -225,8 +229,8 @@ namespace Ux
                 return default;
             }
 
-            var top = data.GetChildID();
-            if (CheckDownload(top, param, isAnim))
+            var childID = data.GetChildID();
+            if (CheckDownload(childID, param, isAnim))
             {
                 return default;
             }
@@ -237,7 +241,7 @@ namespace Ux
             }
 
             var uis = Pool.Get<List<IUI>>();
-            var succ = await ToShow(top, uis);
+            var succ = await ToShow(childID, uis);
             if (succ)
             {
                 foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _createdDels.Contains(uiid)))
@@ -259,16 +263,26 @@ namespace Ux
 
                 if (_showed.ContainsKey(uiid))
                 {
-                    ui.DoResume(uiid == id ? param : null);
-                    EventMgr.Ins.Send(MainEventType.UI_RESUME, uiid);
+                    if (uiid == id)
+                    {
+                        ui.DoShow(isAnim, param, _ShowCallBack);
+                    }
                     continue;
                 }
-
-                ui.DoShow(isAnim, uiid == id ? param : null);
+                if (uiid == id)
+                {
+                    ui.DoShow(isAnim, param, _ShowCallBack);
+                }
+                else
+                {
+                    ui.DoShow(isAnim, null, null);
+                }
                 _showed.Add(uiid, ui);
                 _showing.Remove(uiid);
                 EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
+                EventMgr.Ins.Send(MainEventType.UI_SHOW, ui.GetType());
             }
+
             uis.Clear();
             Pool.Push(uis);
 
@@ -288,6 +302,18 @@ namespace Ux
                 return false;
             }
 
+            if (data.TabData != null && data.TabData.PID != 0)
+            {
+                if (!await ToShow(data.TabData.PID, uis))
+                {
+                    _showing.Remove(id);
+#if UNITY_EDITOR
+                    __Debugger_Showing_Event();
+#endif
+                    return false;
+                }
+            }
+
             if (_showed.TryGetValue(id, out var ui))
             {
                 switch (ui.State)
@@ -295,15 +321,20 @@ namespace Ux
                     //如果在关闭中，等待关闭后再重新打开
                     case UIState.HideAnim:
                     case UIState.Hide:
-                        _waitHideAnimComplete.Add(id);
+                        _waitHideAnimCompleteReShow.Add(id);
                         while (true)
                         {
                             await UniTask.Yield();
-                            if (!_waitHideAnimComplete.Contains(id)) return false;
-                            if (!_showed.ContainsKey(id)) break;
+                            if (!_waitHideAnimCompleteReShow.Contains(id)) return false;
+                            if (!_showed.ContainsKey(id))
+                            {
+                                _waitHideAnimCompleteReShow.Remove(id);
+                                break;
+                            }
                         }
                         break;
                     default:
+                        uis.Add(ui);
                         return true;
                 }
             }
@@ -329,18 +360,6 @@ namespace Ux
 #if UNITY_EDITOR
             __Debugger_Showing_Event();
 #endif
-
-            if (data.TabData != null && data.TabData.PID != 0)
-            {
-                if (!await ToShow(data.TabData.PID, uis))
-                {
-                    _showing.Remove(id);
-#if UNITY_EDITOR
-                    __Debugger_Showing_Event();
-#endif
-                    return false;
-                }
-            }
 
             if (_waitDels.TryGetValue(id, out var wd))
             {
@@ -392,6 +411,37 @@ namespace Ux
             return true;
         }
 
+        void _ShowCallBack(IUI ui, object param)
+        {
+            var uiType = ui.Type;
+            if (uiType == UIType.Fixed) return;
+
+            var parentID = ui.Data.GetParentID();
+            if (_stack.Count > 0)
+            {
+                var lastStack = _stack[_stack.Count - 1];
+                if (lastStack.ParentID == parentID)
+                {
+                    lastStack.ID = ui.ID;
+                    return;
+                }
+            }
+            _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
+
+            if (uiType == UIType.Stack)
+            {
+                for (var i = _stack.Count - 2; i >= 0; i--)
+                {
+                    var preStack = _stack[i];
+                    Hide(preStack.ParentID);
+                    if (preStack.Type == UIType.Stack)
+                    {
+                        break;
+                    }
+                }
+            }
+
+        }
         private async UniTask<IUI> CreateUI(IUIData data)
         {
             if (data.Pkgs is { Length: > 0 })
@@ -408,7 +458,7 @@ namespace Ux
                 }
             }
             var ui = (IUI)Activator.CreateInstance(data.CType);
-            ui.InitData(data, Remove);
+            ui.InitData(data, _HideCallBack);
             return ui;
         }
 
@@ -440,6 +490,7 @@ namespace Ux
 
         void _HideAll(Func<int, bool> func)
         {
+            _stack.Clear();
             foreach (var id in _showing.Where(id => !func(id)))
             {
                 Hide(id, false);
@@ -457,7 +508,7 @@ namespace Ux
             Hide(ConverterID(typeof(T)), isAnim);
         }
 
-        public void Hide(int id, bool isAnim = true)
+        public void Hide(int id, bool isAnim = true, bool isStack = false)
         {
             if (_showing.Contains(id))
             {
@@ -472,9 +523,9 @@ namespace Ux
 
             if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
             {
-                if (_waitHideAnimComplete.Contains(id))
+                if (_waitHideAnimCompleteReShow.Contains(id))
                 {
-                    _waitHideAnimComplete.Remove(id);
+                    _waitHideAnimCompleteReShow.Remove(id);
                 }
 
                 var ids = ui.Data.GetParentIDs();
@@ -482,23 +533,56 @@ namespace Ux
                 {
                     foreach (var tid in ids)
                     {
-                        if (_waitHideAnimComplete.Contains(tid))
+                        if (_waitHideAnimCompleteReShow.Contains(tid))
                         {
-                            _waitHideAnimComplete.Remove(tid);
+                            _waitHideAnimCompleteReShow.Remove(tid);
                         }
                     }
                 }
                 return;
             }
 
-            var bottom = ui.Data.GetParentID();
-            if (bottom != 0 && _showed.TryGetValue(bottom, out ui))
+
+            if (_stack.Count > 0)
             {
-                ui.DoHide(isAnim);
+                var lastIndex = _stack.Count - 1;
+                var last = _stack[lastIndex];
+                if (last.ID == id)
+                {
+                    _stack.RemoveAt(lastIndex);
+                }
+            }
+            if (isStack && ui.Type == UIType.Stack)
+            {
+                _backs.Clear();
+                for (int i = _stack.Count - 1; i >= 0; i--)
+                {
+                    var preStack = _stack[i];
+                    if (preStack.Type == UIType.Stack)
+                    {
+                        Show(preStack.ID, preStack.Param, false);
+                        break;
+                    }
+                    else
+                    {
+                        _backs.Push(preStack);
+                    }
+                }
+                while (_backs.Count > 0)
+                {
+                    var preStack = _backs.Pop();
+                    Show(preStack.ID, preStack.Param, false);
+                }
+            }
+
+            var parentID = ui.Data.GetParentID();
+            if (parentID != 0 && _showed.TryGetValue(parentID, out ui))
+            {
+                ui.DoHide(isAnim, isStack);
             }
         }
 
-        private void Remove(IUI ui)
+        private void _HideCallBack(IUI ui, bool isStack)
         {
             var id = ui.ID;
             _showed.Remove(id);
@@ -507,8 +591,9 @@ namespace Ux
             __Debugger_Showed_Event();
 #endif
             EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
+            EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
         }
-
+        Stack<UIStack> _backs = new Stack<UIStack>();
         private void CheckDestroy(IUI ui)
         {
             var id = ui.ID;

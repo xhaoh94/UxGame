@@ -6,10 +6,10 @@ namespace Ux
     [Package("Common")]
     public class UIDialog : UIWindow
     {
-        protected override UILayer Layer => UILayer.Top;
         protected override string PkgName => "Common";
 
         protected override string ResName => "CommonDialog";
+        public override UIType Type => UIType.Fixed;
 
         protected UIDialogFactory.DialogData dialogData;
 
@@ -31,19 +31,19 @@ namespace Ux
             __btnClose = new UIButton(gCom.GetChild("btnClose"), this);
             __btn1 = new UIButton(gCom.GetChild("btn1"), this);
             __btn2 = new UIButton(gCom.GetChild("btn2"), this);
-            __controller= (Controller)gCom.GetController("dialogState");
+            __controller = (Controller)gCom.GetController("dialogState");
         }
 
-        public override void InitData(IUIData data, Action<IUI> remove)
+        public override void InitData(IUIData data, Action<IUI, bool> remove)
         {
             OnHideCallBack += _Hide;
             base.InitData(data, remove);
         }
 
-        public override void DoShow(bool isAnim, object param)
+        public override void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
         {
             dialogData = (UIDialogFactory.DialogData)param;
-            base.DoShow(isAnim, param);
+            base.DoShow(isAnim, param, showCb);
         }
         protected override void OnShow(object param)
         {
@@ -128,6 +128,10 @@ namespace Ux
         private void _Hide()
         {
             dialogData.HideCallBack?.Invoke(this);
+        }
+        public override void Hide()
+        {
+            UIMgr.Ins.Hide(Data.ID, true, false);
         }
     }
 }
