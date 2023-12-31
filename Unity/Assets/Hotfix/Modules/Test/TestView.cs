@@ -1,26 +1,24 @@
 ﻿using FairyGUI;
-using Ux;
-using System.Net;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Ux.UI
 {
     [UI]
-    public partial class MainView
+    public partial class TestView
     {
-        public override bool IsDestroy => false;
+        protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Stack;
-        protected override void OnShow(object param)
-        {
-            base.OnShow(param);
-        }
         partial void OnBtnMultipleClick(EventContext e)
         {
             UIMgr.Ins.Show<MultipleView>();
         }
         partial void OnBtnNoneViewClick(EventContext e)
         {
-            //UIMgr.Ins.Show<TipView>();
-            UIMgr.Ins.Show<BagWindow2>();
+            UIMgr.Ins.Show<TipView>();
         }
         partial void OnBtnNoneWindowClick(EventContext e)
         {
@@ -33,7 +31,7 @@ namespace Ux.UI
         }
         partial void OnBtnSingleClick(EventContext e)
         {
-            Log.Debug("单击"); 
+            Log.Debug("单击");
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {

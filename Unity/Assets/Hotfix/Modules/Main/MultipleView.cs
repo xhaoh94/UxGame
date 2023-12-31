@@ -36,6 +36,10 @@ namespace Ux.UI
         public override bool IsDestroy => false;
         //protected override IUIAnim ShowAnim => new UITransition(t0);
         //protected override IUIAnim HideAnim => new UITransition(t1);
+        partial void OnBtn1Click(EventContext e)
+        {
+            UIMgr.Ins.Show<UI.Stack1View>();
+        }
     }
 
     [UI(typeof(MultipleView))]
@@ -49,6 +53,10 @@ namespace Ux.UI
         {
             base.OnShow(param);
         }
+        partial void OnBtn1Click(EventContext e)
+        {
+            UIMgr.Ins.Show<UI.Stack2View>();
+        }
     }
 
     [UI(typeof(MultipleView))]
@@ -56,5 +64,9 @@ namespace Ux.UI
     partial class Multiple3TabView
     {
         public override bool IsDestroy => false;
+        partial void OnBtn1Click(EventContext e)
+        {
+            UIMgr.Ins.Show<UI.Stack3View>();
+        }
     }
 }

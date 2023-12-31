@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="7vg0rknt">
+  <resources>
+    <component id="q30y5" name="TestView.xml" path="/View/" exported="true"/>
+    <component id="omlm0" name="Stack1View.xml" path="/View/" exported="true"/>
+    <component id="omlm1" name="Stack2View.xml" path="/View/" exported="true"/>
+    <component id="omlm2" name="Stack3View.xml" path="/View/" exported="true"/>
+    <component id="omlm3" name="Stack4View.xml" path="/View/" exported="true"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="1280,720">
   <displayList>
-    <image id="n2_hq6i" name="n2" src="hq6i6" fileName="assets/ui_jchd_xbzp_bg.jpg" xy="124,103"/>
+    <image id="n2_hq6i" name="n2" src="hq6i6" fileName="Asset/ui_jchd_xbzp_bg.jpg" xy="124,103"/>
     <graph id="n0_q30y" name="n0" xy="265,49" size="750,622" type="regular_polygon" sides="3">
       <relation target="" sidePair="center-center,middle-middle"/>
     </graph>
-    <text id="n1_q30y" name="n1" xy="724,312" size="109,54" fontSize="40" text="Test2"/>
+    <text id="n1_q30y" name="n1" xy="724,312" size="110,54" fontSize="40" text="Test2"/>
+    <component id="n3_omlm" name="btn1" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="939,128">
+      <Button title="按钮"/>
+    </component>
   </displayList>
   <transition name="t0">
     <item time="0" type="Size" target="n0_q30y" tween="true" startValue="750,622" endValue="528,328" duration="24"/>

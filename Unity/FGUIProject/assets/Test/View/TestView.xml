@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <graph id="n0_q30y" name="n0" xy="0,0" size="1280,720" type="rect" fillColor="#ff999999">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="n1_q30y" name="n1" xy="618,336" size="79,51" fontSize="38" text="测试">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </text>
+    <component id="n2_q30y" name="btnMultiple" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="107,139" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="多页签界面"/>
+    </component>
+    <component id="n3_q30y" name="btnNoneWindow" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="337,139" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="弹窗"/>
+    </component>
+    <component id="n4_q30y" name="btnNoneView" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="222,139" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="置顶界面"/>
+    </component>
+    <component id="n5_dvaq" name="btnSingle" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="107,241" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="单击"/>
+    </component>
+    <component id="n6_dvaq" name="btnDouble" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="222,241" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="双击"/>
+    </component>
+    <component id="n7_dvaq" name="btnLongClick" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="337,241" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="长按"/>
+    </component>
+    <component id="n8_dvaq" name="btnTest" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="461,139" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="测试"/>
+    </component>
+    <component id="n9_skmp" name="btnBack" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="105,50" size="100,40">
+      <relation target="" sidePair="left-left"/>
+      <Button title="返回"/>
+    </component>
+  </displayList>
+</component>

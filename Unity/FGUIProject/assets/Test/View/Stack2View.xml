@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1280,720">
+  <displayList>
+    <graph id="n5_omlm" name="n5" xy="0,0" size="1280,720" type="rect" fillColor="#ff999999">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="n0_omlm" name="n0" xy="480,132" size="278,167" fontSize="30" align="center" vAlign="middle" autoSize="none" text="stack2"/>
+    <component id="n1_omlm" name="btnBack" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="93,32">
+      <Button title="返回"/>
+    </component>
+    <component id="n2_omlm" name="btn1" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="93,94">
+      <Button title="按钮1"/>
+    </component>
+    <component id="n3_omlm" name="btn3" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="94,145">
+      <Button title="按钮3"/>
+    </component>
+    <component id="n4_omlm" name="btn4" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="94,197">
+      <Button title="按钮4"/>
+    </component>
+  </displayList>
+</component>

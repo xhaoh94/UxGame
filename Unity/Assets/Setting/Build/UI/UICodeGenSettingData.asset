@@ -442,98 +442,18 @@ MonoBehaviour:
       dialogBtn2: 
       dialogController: 
       members:
-      - index: 0
-        name: n0
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
       - index: 1
-        name: n1
-        defaultType: GTextField
-        customType: GTextField
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 2
-        name: btnMultiple
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 3
-        name: btnNoneWindow
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 4
-        name: btnNoneView
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 5
-        name: btnSingle
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 6
-        name: btnDouble
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u591A\u51FB"
-        evtParam: '{"dCnt":2,"dGapTime":0.2}'
-      - index: 7
-        name: btnLongClick
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u957F\u6309"
-        evtParam: '{"lFirst":-1.0,"lGapTime":0.2,"lCnt":0,"lRadius":50.0}'
-      - index: 8
-        name: btnTest
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 9
         name: btnBack
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 0
+        name: btnMainView
         defaultType: GButton
         customType: Btn1
         pkg: Common
@@ -663,4 +583,126 @@ MonoBehaviour:
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u65E0"
+        evtParam: 
+  - name: Test
+    components:
+    - ID: f059f753-f35c-4120-9f46-e40ed6c98b2a
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Test
+      resName: TestView
+      ns: Ux.UI
+      cls: TestView
+      ext: Panel/View
+      isExport: 1
+      gList: 
+      tabContent: 
+      btnClose: 
+      dialogTitle: 
+      dialogContent: 
+      dialogBtnClose: 
+      dialogBtn1: 
+      dialogBtn2: 
+      dialogController: 
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: btnMultiple
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 3
+        name: btnNoneWindow
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 4
+        name: btnNoneView
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 5
+        name: btnSingle
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 6
+        name: btnDouble
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u591A\u51FB"
+        evtParam: '{"dCnt":2,"dGapTime":0.2}'
+      - index: 7
+        name: btnLongClick
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u957F\u6309"
+        evtParam: '{"lFirst":-1.0,"lGapTime":0.2,"lCnt":0,"lRadius":50.0}'
+      - index: 8
+        name: btnTest
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 9
+        name: btnBack
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
         evtParam: 

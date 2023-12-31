@@ -2,7 +2,7 @@
 using FairyGUI;
 namespace Ux.UI
 {
-	[Package("Multiple")]
+	[Package("Multiple","Common")]
 	[Lazyload("lazyload_multiple")]
 	public partial class Multiple2TabView : UITabView
 	{
@@ -14,6 +14,7 @@ namespace Ux.UI
 		protected Controller c1;
 		protected Transition t0;
 		protected Transition t1;
+		protected Btn1 btn1;
 		protected override void CreateChildren()
 		{
 			try
@@ -24,11 +25,21 @@ namespace Ux.UI
 				c1 = gCom.GetControllerAt(0);
 				t0 = gCom.GetTransitionAt(0);
 				t1 = gCom.GetTransitionAt(1);
+				btn1 = new Btn1(gCom.GetChildAt(2), this);
 			}
 			catch (System.Exception e)
 			{
 				 Log.Error(e);
 			}
 		}
+		protected override void OnAddEvent()
+		{
+			AddClick(btn1,_OnBtn1Click);
+		}
+		void _OnBtn1Click(EventContext e)
+		{
+			OnBtn1Click(e);
+		}
+		partial void OnBtn1Click(EventContext e);
 	}
 }

@@ -2,10 +2,13 @@
 <component size="1280,720">
   <controller name="c1" pages="0,,1," selected="0"/>
   <displayList>
-    <image id="n4_hq6i" name="n4" src="hq6i5" fileName="assets/ui_jchd_xglb_bg.jpg" xy="124,102"/>
+    <image id="n4_hq6i" name="n4" src="hq6i5" fileName="Asset/ui_jchd_xglb_bg.jpg" xy="125,102"/>
     <graph id="n3_q30y" name="n3" xy="590,310" size="100,100" type="eclipse">
       <relation target="" sidePair="center-center,middle-middle"/>
     </graph>
+    <component id="n5_omlm" name="btn1" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="921,537">
+      <Button title="按钮"/>
+    </component>
   </displayList>
   <transition name="t0">
     <item time="0" type="XY" target="n3_q30y" tween="true" startValue="287,310" endValue="589,121" duration="12"/>
