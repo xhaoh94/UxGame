@@ -458,7 +458,7 @@ namespace Ux
                 }
             }
             var ui = (IUI)Activator.CreateInstance(data.CType);
-            ui.InitData(data, _HideCallBack, _ShowCallBack);
+            ui.InitData(data, _HideCallBack, _CheckStack, _ShowCallBack);
             return ui;
         }
 
@@ -542,12 +542,19 @@ namespace Ux
                 return;
             }
 
-
+            var parentID = ui.Data.GetParentID();
+            if (parentID != 0 && _showed.TryGetValue(parentID, out ui))
+            {
+                ui.DoHide(isAnim, isStack);
+            }
+        }
+        private void _CheckStack(IUI ui, bool isStack = false)
+        {
             if (_stack.Count > 0)
             {
                 var lastIndex = _stack.Count - 1;
                 var last = _stack[lastIndex];
-                if (last.ID == id)
+                if (last.ID == ui.ID)
                 {
                     _stack.RemoveAt(lastIndex);
 #if UNITY_EDITOR
@@ -577,14 +584,7 @@ namespace Ux
                     Show(preStack.ID, preStack.Param, false);
                 }
             }
-
-            var parentID = ui.Data.GetParentID();
-            if (parentID != 0 && _showed.TryGetValue(parentID, out ui))
-            {
-                ui.DoHide(isAnim);
-            }
         }
-
         private void _HideCallBack(IUI ui)
         {
             var id = ui.ID;

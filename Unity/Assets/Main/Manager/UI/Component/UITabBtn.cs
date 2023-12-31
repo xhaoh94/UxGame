@@ -18,7 +18,7 @@ namespace Ux
             {
                 OnHideCallBack += isDispose ? _Dispose_True : _Dispose_False;
             }
-            DoHide(false);
+            DoHide(false, false);
         }
         void _Dispose_False()
         {

@@ -34,10 +34,10 @@ namespace Ux
             __controller = (Controller)gCom.GetController("dialogState");
         }
 
-        public override void InitData(IUIData data, Action<IUI> hide, Action<IUI, object> show)
+        public override void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object> show)
         {
-            OnHideCallBack += _Hide;            
-            base.InitData(data, hide, show);
+            OnHideCallBack += _Hide;
+            base.InitData(data, hide, stack, show);
         }
 
         public override void DoShow(bool isAnim, int id, object param)
@@ -124,14 +124,14 @@ namespace Ux
         protected override void OnLayout()
         {
             SetLayout(UILayout.Center_Middle);
-        }        
+        }
         private void _Hide()
         {
             dialogData.HideCallBack?.Invoke(this);
         }
         public override void Hide()
         {
-            UIMgr.Ins.Hide(Data.ID, true, false);
+            UIMgr.Ins.Hide(Data.ID, true, Type != UIType.Fixed);
         }
     }
 }

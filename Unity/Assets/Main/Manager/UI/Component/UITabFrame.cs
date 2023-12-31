@@ -73,7 +73,7 @@ namespace Ux
 
         public override void DoShow(bool isAnim, int id, object param)
         {
-            base.DoShow(isAnim,id, param);
+            base.DoShow(isAnim, id, param);
             if (__listTab != null && _tabDatas != null)
             {
                 AddItemClick(__listTab, OnTabClick);
@@ -87,10 +87,10 @@ namespace Ux
             Refresh(-1);
         }
 
-        public override void DoHide(bool isAnim)
+        public override void DoHide(bool isAnim, bool isStack)
         {
-            HideCurrent(isAnim);
-            base.DoHide(isAnim);
+            HideCurrent(isAnim, isStack);
+            base.DoHide(isAnim, isStack);
         }
 
         void _Hide()
@@ -100,9 +100,9 @@ namespace Ux
             SelectItem = null;
         }
 
-        private void HideCurrent(bool isAnim)
+        private void HideCurrent(bool isAnim, bool isStark)
         {
-            SelectItem?.DoHide(isAnim);
+            SelectItem?.DoHide(isAnim, isStark);
         }
 
         public void AddChild(UITabView tab)
@@ -117,9 +117,8 @@ namespace Ux
                 Log.Error("找不到对应的CHILD");
                 return;
             }
-
-            HideCurrent(false);
             __tabContent.AddChild(tab.GObject);
+            HideCurrent(false, false);
             if (index != __listTab.selectedIndex) __listTab.selectedIndex = index;
             SelectItem = tab;
         }

@@ -14,10 +14,10 @@ namespace Ux
         IUIData Data { get; }
         bool IsDestroy { get; }
         bool Visable { get; set; }
-        void InitData(IUIData data, Action<IUI> hideCb, Action<IUI, object> showCb);
+        void InitData(IUIData data, Action<IUI> hideCb, Action<IUI, bool> stackCb, Action<IUI, object> showCb);
         void Dispose();
         void DoShow(bool isAnim, int id, object param);
-        void DoHide(bool isAnim);
+        void DoHide(bool isAnim, bool isStack);
 
     }
 
@@ -30,11 +30,13 @@ namespace Ux
 
         Action<IUI> _hideCb;
         Action<IUI, object> _showCb;
-        public virtual void InitData(IUIData data, Action<IUI> hide, Action<IUI, object> show)
+        Action<IUI, bool> _stackCb;
+        public virtual void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object> show)
         {
             Data = data;
             _hideCb = hide;
             _showCb = show;
+            _stackCb = stack;
             Init(CreateObject());
             OnHideCallBack += _Hide;
             OnShowCallBack += _Show;
@@ -115,9 +117,10 @@ namespace Ux
             }
         }
 
-        public override void DoHide(bool isAnim)
+        public override void DoHide(bool isAnim, bool isStack)
         {
-            base.DoHide(isAnim);
+            base.DoHide(isAnim, isStack);
+            _stackCb?.Invoke(this, isStack);
         }
 
         private void _Hide()
