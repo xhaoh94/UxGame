@@ -4,53 +4,53 @@ namespace Ux
 {
     public static class EventMgrEx
     {
-        public static void On(this EventMgr mgr, EventType eType, Action action)
+        public static void On(this EventMgr mgr, EventType eType, object tag, Action action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, action);
+            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
-            mgr.On((int)eType, action);
+            mgr.On((int)eType,tag, action);
 #endif
         }
-        public static void On<A>(this EventMgr mgr, EventType eType, Action<A> action)
+        public static void On<A>(this EventMgr mgr, EventType eType, object tag, Action<A> action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, action);
+            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
-            mgr.On((int)eType, action);
+            mgr.On((int)eType,tag, action);
 #endif
         }
-        public static void On<A, B>(this EventMgr mgr, EventType eType, Action<A, B> action)
+        public static void On<A, B>(this EventMgr mgr, EventType eType, object tag, Action<A, B> action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, action);
+            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
-            mgr.On((int)eType, action);
+            mgr.On((int)eType,tag, action);
 #endif
         }
-        public static void On<A, B, C>(this EventMgr mgr, EventType eType, Action<A, B, C> action)
+        public static void On<A, B, C>(this EventMgr mgr, EventType eType, object tag, Action<A, B, C> action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, action);
+            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
-            mgr.On((int)eType, action);
+            mgr.On((int)eType,tag, action);
 #endif
         }
-        public static void Off(this EventMgr mgr, EventType eType, Action action)
+        public static void Off(this EventMgr mgr, EventType eType, object tag, Action action)
         {
-            mgr.Off((int)eType, action);
+            mgr.Off((int)eType, tag, action);
         }
-        public static void Off<A>(this EventMgr mgr, EventType eType, Action<A> action)
+        public static void Off<A>(this EventMgr mgr, EventType eType, object tag, Action<A> action)
         {
-            mgr.Off((int)eType, action);
+            mgr.Off((int)eType, tag, action);
         }
-        public static void Off<A, B>(this EventMgr mgr, EventType eType, Action<A, B> action)
+        public static void Off<A, B>(this EventMgr mgr, EventType eType, object tag, Action<A, B> action)
         {
-            mgr.Off((int)eType, action);
+            mgr.Off((int)eType, tag, action);
         }
-        public static void Off<A, B, C>(this EventMgr mgr, EventType eType, Action<A, B, C> action)
+        public static void Off<A, B, C>(this EventMgr mgr, EventType eType, object tag, Action<A, B, C> action)
         {
-            mgr.Off((int)eType, action);
+            mgr.Off((int)eType, tag, action);
         }
         public static void Send(this EventMgr mgr, EventType eType)
         {

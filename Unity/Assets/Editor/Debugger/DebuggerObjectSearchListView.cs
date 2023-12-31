@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 public interface IDebuggerListItem<T>
 {
+    void SetClickEvt(Action<T> action);
     void SetData(T data);
 }
 public class DebuggerObjectSearchListView<T, V> where T : TemplateContainer, IDebuggerListItem<V>, new()

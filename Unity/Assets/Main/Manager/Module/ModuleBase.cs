@@ -36,8 +36,8 @@ namespace Ux
         public void Release()
         {
             OnRelease();
-            EventMgr.Ins.OffAll(this);
-            TimeMgr.Ins.RemoveAll(this);
+            EventMgr.Ins.OffTag(this);
+            TimeMgr.Ins.RemoveTag(this);
             _ins = null;
         }
         protected virtual void OnRelease() { }

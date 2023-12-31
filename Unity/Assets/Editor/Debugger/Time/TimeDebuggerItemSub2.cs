@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 using static Ux.TimeMgr;
@@ -40,7 +41,9 @@ public class TimeDebuggerItemSub2<T> : TemplateContainer, IDebuggerListItem<T>
     {
     }
 
-
+    public virtual void SetClickEvt(Action<T> action)
+    {        
+    }
 }
 
 public class TimeDebuggerItemSub2Cron : TimeDebuggerItemSub2<CronHandle>

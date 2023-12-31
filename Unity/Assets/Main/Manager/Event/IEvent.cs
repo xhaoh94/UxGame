@@ -14,7 +14,7 @@ namespace Ux
 
             long Key { get; }
             int EType { get; }
-            object Target { get; }
+            object Tag { get; }
             Delegate Method { get; }
 #if UNITY_EDITOR
             string ETypeStr { get; }
@@ -26,7 +26,7 @@ namespace Ux
         {
             public long Key { get; protected set; }
             public int EType { get; protected set; }
-            public virtual object Target => Method.Target;
+            public object Tag { get; protected set; }
             public abstract Delegate Method { get; }
 #if UNITY_EDITOR
             public string ETypeStr { get; protected set; }
@@ -50,6 +50,7 @@ namespace Ux
 #if UNITY_EDITOR
                 ETypeStr = string.Empty;
 #endif
+                Tag = null;
                 Key = 0;
                 EType = 0;
                 OnRelease();
@@ -60,8 +61,7 @@ namespace Ux
         }
 
         public sealed class EventFastMethodData : EventBaseData
-        {
-            public override object Target => _method.Target;
+        {            
             public override Delegate Method => _method.Method;
             FastMethodInfo _method;
 
@@ -70,6 +70,7 @@ namespace Ux
 #endif
             public void Init(long key, int eType, FastMethodInfo method)
             {
+                Tag = method.Target;
                 Key = key;
                 EType = eType;
                 _method = method;
@@ -106,8 +107,9 @@ namespace Ux
             public override Delegate Method => _fn;
             Action _fn;
 
-            public void Init(long key, int eType, Action fn)
+            public void Init(long key, int eType, object tag, Action fn)
             {
+                Tag = tag;
                 Key = key;
                 EType = eType;
                 _fn = fn;
@@ -144,8 +146,9 @@ namespace Ux
             public override Delegate Method => _fn;
             Action<A> _fn;
 
-            public void Init(long key, int eType, Action<A> fn)
+            public void Init(long key, int eType, object tag, Action<A> fn)
             {
+                Tag = tag;
                 Key = key;
                 EType = eType;
                 _fn = fn;
@@ -182,8 +185,9 @@ namespace Ux
             public override Delegate Method => _fn;
             Action<A, B> _fn;
 
-            public void Init(long key, int eType, Action<A, B> fn)
+            public void Init(long key, int eType, object tag, Action<A, B> fn)
             {
+                Tag = tag;
                 Key = key;
                 EType = eType;
                 _fn = fn;
@@ -220,8 +224,9 @@ namespace Ux
             public override Delegate Method => _fn;
             Action<A, B, C> _fn;
 
-            public void Init(long key, int eType, Action<A, B, C> fn)
+            public void Init(long key, int eType, object tag, Action<A, B, C> fn)
             {
+                Tag = tag;
                 Key = key;
                 EType = eType;
                 _fn = fn;

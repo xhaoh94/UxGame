@@ -40,7 +40,7 @@ namespace Ux
 
             readonly List<IHandle> _handles = new List<IHandle>();
             readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
-            readonly Dictionary<int, List<long>> _targetkeys = new Dictionary<int, List<long>>();
+            readonly Dictionary<int, List<long>> _tagkeys = new Dictionary<int, List<long>>();
 
             readonly List<IHandle> _waitAdds = new List<IHandle>();
             readonly List<IHandle> _waitDels = new List<IHandle>();
@@ -49,7 +49,7 @@ namespace Ux
             {
                 _handles.Clear();
                 _keyHandle.Clear();
-                _targetkeys.Clear();
+                _tagkeys.Clear();
                 _waitAdds.Clear();
                 _waitDels.Clear();
 #if UNITY_EDITOR
@@ -80,13 +80,13 @@ namespace Ux
                     var key = handle.Key;
                     _keyHandle.Remove(key);
 
-                    var target = handle.Target;
-                    if (target != null)
+                    var tag = handle.Tag;
+                    if (tag != null)
                     {
-                        var hashCode = target.GetHashCode();
-                        if (!_targetkeys.TryGetValue(hashCode, out var keys)) continue;
+                        var hashCode = tag.GetHashCode();
+                        if (!_tagkeys.TryGetValue(hashCode, out var keys)) continue;
                         keys.Remove(key);
-                        if (keys.Count == 0) _targetkeys.Remove(hashCode);
+                        if (keys.Count == 0) _tagkeys.Remove(hashCode);
                     }
 
                     handle.Release();
@@ -125,14 +125,14 @@ namespace Ux
                     Sort(handle);
                     _keyHandle.Add(handle.Key, handle);
 
-                    var target = handle.Target;
-                    if (target != null)
+                    var tag = handle.Tag;
+                    if (tag != null)
                     {
-                        int hashCode = target.GetHashCode();
-                        if (!_targetkeys.TryGetValue(hashCode, out var keys))
+                        int hashCode = tag.GetHashCode();
+                        if (!_tagkeys.TryGetValue(hashCode, out var keys))
                         {
                             keys = new List<long>();
-                            _targetkeys.Add(hashCode, keys);
+                            _tagkeys.Add(hashCode, keys);
                         }
 
                         keys.Add(handle.Key);
@@ -237,29 +237,31 @@ namespace Ux
                 _waitAdds.Add(handle);
             }
 
-            public bool ContainsKey(long key)
+            public IHandle Get(long key)
             {
-                var b = _keyHandle.TryGetValue(key, out var handle) && handle.Status == Status.Normal;
-                if (!b) b = _waitAdds.Find(x => x.Key == key) != null;
-                return b;
+                if (_keyHandle.TryGetValue(key, out var handle) && handle.Status == Status.Normal)
+                {
+                    return handle;
+                }
+                return _waitAdds.Find(x => x.Key == key);
             }
 
-            public void RemoveAll(object target)
+            public void RemoveAll(object tag)
             {
-                if (target == null) return;
+                if (tag == null) return;
                 if (_waitAdds.Count > 0)
                 {
                     for (int i = _waitAdds.Count - 1; i >= 0; i--)
                     {
                         var wa = _waitAdds[i];
-                        if (wa.Target == target)
+                        if (wa.Tag == tag)
                         {
                             _waitAdds.RemoveAt(i);
                         }
                     }
                 }
-                int hashCode = target.GetHashCode();
-                if (!_targetkeys.TryGetValue(hashCode, out var keys)) return;
+                int hashCode = tag.GetHashCode();
+                if (!_tagkeys.TryGetValue(hashCode, out var keys)) return;
                 foreach (var key in keys)
                 {
                     Remove(key);
@@ -365,28 +367,29 @@ namespace Ux
 
         #region Common
 
-        T CreateHandle<T>(out long key, HandleMap dic, Delegate action) where T : IHandle
+        T CreateHandle<T>(out long key, HandleMap dic, Delegate action, object tag) where T : IHandle
         {
-            key = GetKey(action, dic);
-            if (dic.ContainsKey(key))
+            key = GetKey(action, tag, dic);
+            var handle = dic.Get(key);
+            if (handle != null)
             {
-                Log.Error($"Time重复注册:{action.MethodName()}");
-                return default;
+                Log.Warning($"Time重复注册,新回调:{action.MethodName()}->将覆盖老回调:{handle.MethodName}");
+                return (T)handle;
             }
 
-            var handle = Pool.Get<T>();
-            return handle;
+            handle = Pool.Get<T>();
+            return (T)handle;
         }
 
-        private long GetKey(Delegate action, HandleMap dic)
+        private long GetKey(Delegate action, object tag, HandleMap dic)
         {
             if (action == null) return 0;
             long key = 0;
-            var target = action.Target;
+            var target = tag;
 
             if (target == null)
             {
-                key =(long) IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode());
+                key = (long)IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode());
             }
             else
             {
@@ -403,12 +406,12 @@ namespace Ux
             _cron.Remove(key);
         }
 
-        public void RemoveAll(object target)
+        public void RemoveTag(object tag)
         {
-            _timer.RemoveAll(target);
-            _frame.RemoveAll(target);
-            _timeStamp.RemoveAll(target);
-            _cron.RemoveAll(target);
+            _timer.RemoveAll(tag);
+            _frame.RemoveAll(tag);
+            _timeStamp.RemoveAll(tag);
+            _cron.RemoveAll(tag);
         }
 
         public void Release()
@@ -436,105 +439,97 @@ namespace Ux
             return true;
         }
 
-        private long Create(bool useFrame, HandleMap dic, float first, float delay, int repeat, Action action,
+        private long Create(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag, Action action,
             Action complete)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
             var exe = Pool.Get<HandleExe>();
-            exe.Init(action);
+            exe.Init(tag, action);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
         }
 
-        private long Create(bool useFrame, HandleMap dic, float first, float delay, int repeat, Action action,
+        private long Create(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag, Action action,
             Action<object> complete, object completeParam)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
             var exe = Pool.Get<HandleExe>();
-            exe.Init(action);
+            exe.Init(tag, action);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
         }
 
-        private long Create<A>(bool useFrame, HandleMap dic, float first, float delay, int repeat,
+        private long Create<A>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
             Action<A> action, A a, Action complete)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);            
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(action, a);
+            exe.Init(tag, action, a);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
         }
 
-        private long Create<A>(bool useFrame, HandleMap dic, float first, float delay, int repeat,
+        private long Create<A>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
             Action<A> action, A a, Action<object> complete, object completeParam)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);            
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(action, a);
+            exe.Init(tag, action, a);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
         }
 
-        private long Create<A, B>(bool useFrame, HandleMap dic, float first, float delay, int repeat,
+        private long Create<A, B>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
             Action<A, B> action, A a, B b, Action complete)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);            
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(action, a, b);
+            exe.Init(tag, action, a, b);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
         }
 
-        private long Create<A, B>(bool useFrame, HandleMap dic, float first, float delay, int repeat,
+        private long Create<A, B>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
             Action<A, B> action, A a, B b, Action<object> complete, object completeParam)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);            
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(action, a, b);
+            exe.Init(tag, action, a, b);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
         }
 
-        private long Create<A, B, C>(bool useFrame, HandleMap dic, float first, float delay, int repeat,
+        private long Create<A, B, C>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
             Action<A, B, C> action, A a, B b, C c, Action complete)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);            
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(action, a, b, c);
+            exe.Init(tag, action, a, b, c);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete);
             dic.Add(handle);
             return key;
         }
 
-        private long Create<A, B, C>(bool useFrame, HandleMap dic, float first, float delay, int repeat,
+        private long Create<A, B, C>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
             Action<A, B, C> action, A a, B b, C c, Action<object> complete, object completeParam)
         {
             if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);            
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(action, a, b, c);
+            exe.Init(tag, action, a, b, c);
             handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
             dic.Add(handle);
             return key;
@@ -549,9 +544,9 @@ namespace Ux
         /// <param name="delay">延时秒数</param>
         /// <param name="action">调用方法</param>
         /// <returns></returns>
-        public long DoLoop(float delay, Action action)
+        public long DoLoop(float delay, object tag, Action action)
         {
-            return DoTimer(delay, 0, action);
+            return DoTimer(delay, 0, tag, action);
         }
 
         /// <summary>
@@ -561,9 +556,9 @@ namespace Ux
         /// <param name="delay">延时秒数</param>
         /// <param name="action">调用方法</param>        
         /// <returns></returns>
-        public long DoLoop(float first, float delay, Action action)
+        public long DoLoop(float first, float delay, object tag, Action action)
         {
-            return DoTimer(first, delay, 0, action);
+            return DoTimer(first, delay, 0, tag, action);
         }
 
         /// <summary>
@@ -572,9 +567,9 @@ namespace Ux
         /// <param name="delay">延时秒数</param>
         /// <param name="action">调用方法</param>
         /// <returns></returns>
-        public long DoOnce(float delay, Action action)
+        public long DoOnce(float delay, object tag, Action action)
         {
-            return DoTimer(delay, 1, action);
+            return DoTimer(delay, 1, tag, action);
         }
 
         /// <summary>
@@ -585,28 +580,28 @@ namespace Ux
         /// <param name="action">调用方法</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoTimer(float delay, int repeat, Action action,
+        public long DoTimer(float delay, int repeat, object tag, Action action,
             Action complete = null)
         {
-            return Create(false, _timer, -1, delay, repeat, action, complete);
+            return Create(false, _timer, -1, delay, repeat, tag, action, complete);
         }
 
-        public long DoTimer(float firstTime, float delay, int repeat, Action action,
+        public long DoTimer(float firstTime, float delay, int repeat, object tag, Action action,
             Action complete = null)
         {
-            return Create(false, _timer, firstTime, delay, repeat, action, complete);
+            return Create(false, _timer, firstTime, delay, repeat, tag, action, complete);
         }
 
-        public long DoTimer(float delay, int repeat, Action action,
+        public long DoTimer(float delay, int repeat, object tag, Action action,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, -1, delay, repeat, action, complete, completeParam);
+            return Create(false, _timer, -1, delay, repeat, tag, action, complete, completeParam);
         }
 
-        public long DoTimer(float firstTime, float delay, int repeat, Action action,
+        public long DoTimer(float firstTime, float delay, int repeat, object tag, Action action,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, firstTime, delay, repeat, action, complete, completeParam);
+            return Create(false, _timer, firstTime, delay, repeat, tag, action, complete, completeParam);
         }
 
         /// <summary>
@@ -618,28 +613,28 @@ namespace Ux
         /// <param name="a">附加参数</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoTimer<A>(float delay, int repeat, Action<A> action, A a,
+        public long DoTimer<A>(float delay, int repeat, object tag, Action<A> action, A a,
             Action complete = null)
         {
-            return Create(false, _timer, -1, delay, repeat, action, a, complete);
+            return Create(false, _timer, -1, delay, repeat, tag, action, a, complete);
         }
 
-        public long DoTimer<A>(float firstTime, float delay, int repeat, Action<A> action, A a,
+        public long DoTimer<A>(float firstTime, float delay, int repeat, object tag, Action<A> action, A a,
             Action complete = null)
         {
-            return Create(false, _timer, delay, firstTime, repeat, action, a, complete);
+            return Create(false, _timer, delay, firstTime, repeat, tag, action, a, complete);
         }
 
-        public long DoTimer<A>(float delay, int repeat, Action<A> action, A a,
+        public long DoTimer<A>(float delay, int repeat, object tag, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, -1, delay, repeat, action, a, complete, completeParam);
+            return Create(false, _timer, -1, delay, repeat, tag, action, a, complete, completeParam);
         }
 
-        public long DoTimer<A>(float firstTime, float delay, int repeat, Action<A> action, A a,
+        public long DoTimer<A>(float firstTime, float delay, int repeat, object tag, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, delay, firstTime, repeat, action, a, complete, completeParam);
+            return Create(false, _timer, delay, firstTime, repeat, tag, action, a, complete, completeParam);
         }
 
         /// <summary>
@@ -652,28 +647,28 @@ namespace Ux
         /// <param name="b">附加参数</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoTimer<A, B>(float delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoTimer<A, B>(float delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return Create(false, _timer, -1, delay, repeat, action, a, b, complete);
+            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, complete);
         }
 
-        public long DoTimer<A, B>(float firstTime, float delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoTimer<A, B>(float firstTime, float delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return Create(false, _timer, firstTime, delay, repeat, action, a, b, complete);
+            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, complete);
         }
 
-        public long DoTimer<A, B>(float delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoTimer<A, B>(float delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, -1, delay, repeat, action, a, b, complete, completeParam);
+            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, complete, completeParam);
         }
 
-        public long DoTimer<A, B>(float firstTime, float delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoTimer<A, B>(float firstTime, float delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, firstTime, delay, repeat, action, a, b, complete, completeParam);
+            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, complete, completeParam);
         }
 
         /// <summary>
@@ -687,55 +682,55 @@ namespace Ux
         /// <param name="c">附加参数</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoTimer<A, B, C>(float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoTimer<A, B, C>(float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return Create(false, _timer, -1, delay, repeat, action, a, b, c, complete);
+            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, c, complete);
         }
 
-        public long DoTimer<A, B, C>(float firstTime, float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoTimer<A, B, C>(float firstTime, float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return Create(false, _timer, firstTime, delay, repeat, action, a, b, c, complete);
+            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, c, complete);
         }
 
-        public long DoTimer<A, B, C>(float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoTimer<A, B, C>(float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, -1, delay, repeat, action, a, b, c, complete, completeParam);
+            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, c, complete, completeParam);
         }
 
-        public long DoTimer<A, B, C>(float firstTime, float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoTimer<A, B, C>(float firstTime, float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return Create(false, _timer, firstTime, delay, repeat, action, a, b, c, complete, completeParam);
+            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, c, complete, completeParam);
         }
 
-        public void RemoveTimer(Action action)
+        public void RemoveTimer(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timer);
+            var key = GetKey(action, tag, _timer);
             _timer.Remove(key);
         }
 
-        public void RemoveTimer<A>(Action<A> action)
+        public void RemoveTimer<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timer);
+            var key = GetKey(action, tag, _timer);
             _timer.Remove(key);
         }
 
-        public void RemoveTimer<A, B>(Action<A, B> action)
+        public void RemoveTimer<A, B>(object tag, Action<A, B> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timer);
+            var key = GetKey(action, tag, _timer);
             _timer.Remove(key);
         }
 
-        public void RemoveTimer<A, B, C>(Action<A, B, C> action)
+        public void RemoveTimer<A, B, C>(object tag, Action<A, B, C> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timer);
+            var key = GetKey(action, tag, _timer);
             _timer.Remove(key);
         }
 
@@ -751,28 +746,28 @@ namespace Ux
         /// <param name="action">调用方法</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoFrame(int delay, int repeat, Action action,
+        public long DoFrame(int delay, int repeat, object tag, Action action,
             Action complete = null)
         {
-            return Create(true, _frame, -1, delay, repeat, action, complete);
+            return Create(true, _frame, -1, delay, repeat, tag, action, complete);
         }
 
-        public long DoFrame(int first, int delay, int repeat, Action action,
+        public long DoFrame(int first, int delay, int repeat, object tag, Action action,
             Action complete = null)
         {
-            return Create(true, _frame, first, delay, repeat, action, complete);
+            return Create(true, _frame, first, delay, repeat, tag, action, complete);
         }
 
-        public long DoFrame(int delay, int repeat, Action action,
+        public long DoFrame(int delay, int repeat, object tag, Action action,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, -1, delay, repeat, action, complete, completeParam);
+            return Create(true, _frame, -1, delay, repeat, tag, action, complete, completeParam);
         }
 
-        public long DoFrame(int first, int delay, int repeat, Action action,
+        public long DoFrame(int first, int delay, int repeat, object tag, Action action,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, first, delay, repeat, action, complete, completeParam);
+            return Create(true, _frame, first, delay, repeat, tag, action, complete, completeParam);
         }
 
         /// <summary>
@@ -784,28 +779,28 @@ namespace Ux
         /// <param name="a">附加参数</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoFrame<A>(int delay, int repeat, Action<A> action, A a,
+        public long DoFrame<A>(int delay, int repeat, object tag, Action<A> action, A a,
             Action complete = null)
         {
-            return Create(true, _frame, -1, delay, repeat, action, a, complete);
+            return Create(true, _frame, -1, delay, repeat, tag, action, a, complete);
         }
 
-        public long DoFrame<A>(int first, int delay, int repeat, Action<A> action, A a,
+        public long DoFrame<A>(int first, int delay, int repeat, object tag, Action<A> action, A a,
             Action complete = null)
         {
-            return Create(true, _frame, first, delay, repeat, action, a, complete);
+            return Create(true, _frame, first, delay, repeat, tag, action, a, complete);
         }
 
-        public long DoFrame<A>(int delay, int repeat, Action<A> action, A a,
+        public long DoFrame<A>(int delay, int repeat, object tag, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, -1, delay, repeat, action, a, complete, completeParam);
+            return Create(true, _frame, -1, delay, repeat, tag, action, a, complete, completeParam);
         }
 
-        public long DoFrame<A>(int first, int delay, int repeat, Action<A> action, A a,
+        public long DoFrame<A>(int first, int delay, int repeat, object tag, Action<A> action, A a,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, first, delay, repeat, action, a, complete, completeParam);
+            return Create(true, _frame, first, delay, repeat, tag, action, a, complete, completeParam);
         }
 
         /// <summary>
@@ -818,28 +813,28 @@ namespace Ux
         /// <param name="b">附加参数</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoFrame<A, B>(int delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoFrame<A, B>(int delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return Create(true, _frame, -1, delay, repeat, action, a, b, complete);
+            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, complete);
         }
 
-        public long DoFrame<A, B>(int first, int delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoFrame<A, B>(int first, int delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action complete = null)
         {
-            return Create(true, _frame, first, delay, repeat, action, a, b, complete);
+            return Create(true, _frame, first, delay, repeat, tag, action, a, b, complete);
         }
 
-        public long DoFrame<A, B>(int delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoFrame<A, B>(int delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, -1, delay, repeat, action, a, b, complete, completeParam);
+            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, complete, completeParam);
         }
 
-        public long DoFrame<A, B>(int first, int delay, int repeat, Action<A, B> action, A a, B b,
+        public long DoFrame<A, B>(int first, int delay, int repeat, object tag, Action<A, B> action, A a, B b,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, first, delay, repeat, action, a, b, complete, completeParam);
+            return Create(true, _frame, first, delay, repeat, tag, action, a, b, complete, completeParam);
         }
 
         /// <summary>
@@ -853,56 +848,56 @@ namespace Ux
         /// <param name="c">附加参数</param>
         /// <param name="complete">结束回调</param>
         /// <returns></returns>
-        public long DoFrame<A, B, C>(int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoFrame<A, B, C>(int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return Create(true, _frame, -1, delay, repeat, action, a, b, c, complete);
+            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, c, complete);
         }
 
-        public long DoFrame<A, B, C>(int first, int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoFrame<A, B, C>(int first, int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action complete = null)
         {
-            return Create(true, _frame, first, delay, repeat, action, a, b, c, complete);
+            return Create(true, _frame, first, delay, repeat, tag, action, a, b, c, complete);
         }
 
-        public long DoFrame<A, B, C>(int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoFrame<A, B, C>(int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, -1, delay, repeat, action, a, b, c, complete, completeParam);
+            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, c, complete, completeParam);
         }
 
-        public long DoFrame<A, B, C>(int first, int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
+        public long DoFrame<A, B, C>(int first, int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
             Action<object> complete, object completeParam)
         {
-            return Create(true, _frame, first, delay, repeat, action, a, b, c, complete, completeParam);
+            return Create(true, _frame, first, delay, repeat, tag, action, a, b, c, complete, completeParam);
         }
 
 
-        public void RemoveFrame(Action action)
+        public void RemoveFrame(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, _frame);
+            var key = GetKey(action, tag, _frame);
             _frame.Remove(key);
         }
 
-        public void RemoveFrame<A>(Action<A> action)
+        public void RemoveFrame<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _frame);
+            var key = GetKey(action, tag, _frame);
             _frame.Remove(key);
         }
 
-        public void RemoveFrame<A, B>(Action<A, B> action)
+        public void RemoveFrame<A, B>(object tag, Action<A, B> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _frame);
+            var key = GetKey(action, tag, _frame);
             _frame.Remove(key);
         }
 
-        public void RemoveFrame<A, B, C>(Action<A, B, C> action)
+        public void RemoveFrame<A, B, C>(object tag, Action<A, B, C> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _frame);
+            var key = GetKey(action, tag, _frame);
             _frame.Remove(key);
         }
 
@@ -912,104 +907,100 @@ namespace Ux
 
         #region TimeStamp
 
-        public long DoTimeStamp(DateTime dt, Action action, bool isLocalTime = false)
+        public long DoTimeStamp(DateTime dt, object tag, Action action, bool isLocalTime = false)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), action, isLocalTime);
+            return DoTimeStamp(dt.ToTimeStamp(), tag, action, isLocalTime);
         }
 
-        public long DoTimeStamp(long timeStamp, Action action, bool isLocalTime = false)
+        public long DoTimeStamp(long timeStamp, object tag, Action action, bool isLocalTime = false)
         {
             if (action == null) return 0;
             if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);            
             var exe = Pool.Get<HandleExe>();
-            exe.Init(action);
+            exe.Init(tag, action);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
         }
 
-        public long DoTimeStamp<A>(DateTime dt, Action<A> action, A a, bool isLocalTime = false)
+        public long DoTimeStamp<A>(DateTime dt, object tag, Action<A> action, A a, bool isLocalTime = false)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), action, a);
+            return DoTimeStamp(dt.ToTimeStamp(), tag, action, a);
         }
 
-        public long DoTimeStamp<A>(long timeStamp, Action<A> action, A a, bool isLocalTime = false)
+        public long DoTimeStamp<A>(long timeStamp, object tag, Action<A> action, A a, bool isLocalTime = false)
         {
             if (action == null) return 0;
             if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);            
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(action, a);
+            exe.Init(tag, action, a);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
         }
 
-        public long DoTimeStamp<A, B>(DateTime dt, Action<A, B> action, A a, B b, bool isLocalTime = false)
+        public long DoTimeStamp<A, B>(DateTime dt, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), action, a, b, isLocalTime);
+            return DoTimeStamp(dt.ToTimeStamp(), tag, action, a, b, isLocalTime);
         }
 
-        public long DoTimeStamp<A, B>(long timeStamp, Action<A, B> action, A a, B b, bool isLocalTime = false)
+        public long DoTimeStamp<A, B>(long timeStamp, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
         {
             if (action == null) return 0;
             if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);            
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(action, a, b);
+            exe.Init(tag, action, a, b);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
         }
 
-        public long DoTimeStamp<A, B, C>(DateTime dt, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
+        public long DoTimeStamp<A, B, C>(DateTime dt, object tag, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), action, a, b, c, isLocalTime);
+            return DoTimeStamp(dt.ToTimeStamp(), tag, action, a, b, c, isLocalTime);
         }
 
-        public long DoTimeStamp<A, B, C>(long timeStamp, Action<A, B, C> action, A a, B b, C c,
+        public long DoTimeStamp<A, B, C>(long timeStamp, object tag, Action<A, B, C> action, A a, B b, C c,
             bool isLocalTime = false)
         {
             if (action == null) return 0;
             if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);            
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(action, a, b, c);
+            exe.Init(tag, action, a, b, c);
             handle.Init(exe, key, timeStamp, isLocalTime);
             _timeStamp.Add(handle);
             return key;
         }
 
-        public void RemoveTimeStamp(Action action)
+        public void RemoveTimeStamp(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timeStamp);
+            var key = GetKey(action, tag, _timeStamp);
             _timeStamp.Remove(key);
         }
 
-        public void RemoveTimeStamp<A>(Action<A> action)
+        public void RemoveTimeStamp<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timeStamp);
+            var key = GetKey(action, tag, _timeStamp);
             _timeStamp.Remove(key);
         }
 
-        public void RemoveTimeStamp<A, B>(Action<A, B> action)
+        public void RemoveTimeStamp<A, B>(object tag, Action<A, B> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timeStamp);
+            var key = GetKey(action, tag, _timeStamp);
             _timeStamp.Remove(key);
         }
 
-        public void RemoveTimeStamp<A, B, C>(Action<A, B, C> action)
+        public void RemoveTimeStamp<A, B, C>(object tag, Action<A, B, C> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _timeStamp);
+            var key = GetKey(action, tag, _timeStamp);
             _timeStamp.Remove(key);
         }
 
@@ -1017,13 +1008,12 @@ namespace Ux
 
         #region Cron表达式
 
-        public long DoCron(string cron, Action action, bool isLocalTime = false)
+        public long DoCron(string cron, object tag, Action action, bool isLocalTime = false)
         {
             if (action == null) return 0;
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);            
             var exe = Pool.Get<HandleExe>();
-            exe.Init(action);
+            exe.Init(tag, action);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1035,13 +1025,12 @@ namespace Ux
             return key;
         }
 
-        public long DoCron<A>(string cron, Action<A> action, A a, bool isLocalTime = false)
+        public long DoCron<A>(string cron, object tag, Action<A> action, A a, bool isLocalTime = false)
         {
             if (action == null) return 0;
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);            
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(action, a);
+            exe.Init(tag, action, a);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1053,13 +1042,12 @@ namespace Ux
             return key;
         }
 
-        public long DoCron<A, B>(string cron, Action<A, B> action, A a, B b, bool isLocalTime = false)
+        public long DoCron<A, B>(string cron, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
         {
             if (action == null) return 0;
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);            
             var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(action, a, b);
+            exe.Init(tag, action, a, b);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1071,13 +1059,12 @@ namespace Ux
             return key;
         }
 
-        public long DoCron<A, B, C>(string cron, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
+        public long DoCron<A, B, C>(string cron, object tag, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
         {
             if (action == null) return 0;
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action);
-            if (handle == default) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);            
             var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(action, a, b, c);
+            exe.Init(tag, action, a, b, c);
             if (!handle.Init(exe, key, cron, isLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -1089,31 +1076,31 @@ namespace Ux
             return key;
         }
 
-        public void RemoveCron(Action action)
+        public void RemoveCron(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, _cron);
+            var key = GetKey(action, tag, _cron);
             _cron.Remove(key);
         }
 
-        public void RemoveCron<A>(Action<A> action)
+        public void RemoveCron<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _cron);
+            var key = GetKey(action, tag, _cron);
             _cron.Remove(key);
         }
 
-        public void RemoveCron<A, B>(Action<A, B> action)
+        public void RemoveCron<A, B>(object tag, Action<A, B> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _cron);
+            var key = GetKey(action, tag, _cron);
             _cron.Remove(key);
         }
 
-        public void RemoveCron<A, B, C>(Action<A, B, C> action)
+        public void RemoveCron<A, B, C>(object tag, Action<A, B, C> action)
         {
             if (action == null) return;
-            var key = GetKey(action, _cron);
+            var key = GetKey(action, tag, _cron);
             _cron.Remove(key);
         }
 

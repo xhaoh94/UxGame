@@ -64,8 +64,8 @@ namespace Ux
         public void Init(int tagId, object args)
         {
             if (this._inited) return;
-            TagId = tagId;            
-            _data = args;            
+            TagId = tagId;
+            _data = args;
             _isSingle = false;
             _Init();
         }
@@ -73,8 +73,8 @@ namespace Ux
         public void Init(Type type)
         {
             if (this._inited) return;
-            TagId = type.FullName.ToHash();            
-            _data = null;            
+            TagId = type.FullName.ToHash();
+            _data = null;
             _isSingle = true;
             _Init();
         }
@@ -86,7 +86,7 @@ namespace Ux
             {
                 foreach (var mc in mcs)
                 {
-                    EventMgr.Ins.On(mc, _DoMessage);
+                    EventMgr.Ins.On(mc,this, _DoMessage);
                 }
             }
 
@@ -107,7 +107,7 @@ namespace Ux
                 return;
             }
 
-            _timeKey = TimeMgr.Ins.DoOnce(0.2f, _Check);
+            _timeKey = TimeMgr.Ins.DoOnce(0.2f, this, _Check);
         }
 
         private bool isUnLock;
@@ -172,8 +172,8 @@ namespace Ux
 
         public virtual void Release()
         {
-            TimeMgr.Ins.RemoveAll(this);
-            EventMgr.Ins.OffAll(this);
+            TimeMgr.Ins.RemoveTag(this);
+            EventMgr.Ins.OffTag(this);
             TagMgr.Ins.Off(this);
             _parents?.Clear();
             TagId = 0;

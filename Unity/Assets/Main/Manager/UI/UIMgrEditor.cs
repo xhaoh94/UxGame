@@ -20,86 +20,99 @@ namespace Ux
             }
         }
 
+        static Dictionary<string, IUIData> _Debugger_UI_Dict = new Dictionary<string, IUIData>();
         public static void __Debugger_UI_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                var list = new Dictionary<string, IUIData>();
+                _Debugger_UI_Dict.Clear();
                 foreach (var kv in Ins._idUIData)
                 {
-                    list.Add(kv.Value.IDStr, kv.Value);
+                    _Debugger_UI_Dict.Add(kv.Value.IDStr, kv.Value);
                 }
-                __Debugger_UI_CallBack?.Invoke(list);
+                __Debugger_UI_CallBack?.Invoke(_Debugger_UI_Dict);
             }
         }
 
+        static List<string> _Debugger_Showeds = new List<string>();
         public static void __Debugger_Showed_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                var list = new List<string>();
+                _Debugger_Showeds.Clear();
                 foreach (var kv in Ins._showed)
                 {
-                    list.Add(kv.Value.IDStr);
+                    _Debugger_Showeds.Add(kv.Value.IDStr);
                 }
-                __Debugger_Showed_CallBack?.Invoke(list);
+                __Debugger_Showed_CallBack?.Invoke(_Debugger_Showeds);
             }
         }
 
+        public static void __Debugger_Stack_Event()
+        {
+            if (UnityEditor.EditorApplication.isPlaying)
+            {
+                __Debugger_Stack_CallBack?.Invoke(Ins._stack);
+            }
+        }
+        static List<string> _Debugger_Showings = new List<string>();
         public static void __Debugger_Showing_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                var list = new List<string>();
+                _Debugger_Showings.Clear();
                 foreach (var id in Ins._showing)
                 {
-                    list.Add(Ins.GetUIData(id).IDStr);
+                    _Debugger_Showings.Add(Ins.GetUIData(id).IDStr);
                 }
-                __Debugger_Showing_CallBack?.Invoke(list);
+                __Debugger_Showing_CallBack?.Invoke(_Debugger_Showings);
             }
         }
 
+        static List<string> _Debugger_Cacels = new List<string>();
         public static void __Debugger_Cacel_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                var list = new List<string>();
+                _Debugger_Cacels.Clear();
                 foreach (var kv in Ins._cacel)
                 {
-                    list.Add(kv.Value.IDStr);
+                    _Debugger_Cacels.Add(kv.Value.IDStr);
                 }
-                __Debugger_Cacel_CallBack?.Invoke(list);
+                __Debugger_Cacel_CallBack?.Invoke(_Debugger_Cacels);
             }
         }
 
+        static List<string> _Debugger_TemCacels = new List<string>();
         public static void __Debugger_TemCacel_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                var list = new List<string>();
+                _Debugger_TemCacels.Clear();
                 foreach (var kv in Ins._temCacel)
                 {
-                    list.Add(kv.Value.IDStr);
+                    _Debugger_TemCacels.Add(kv.Value.IDStr);
                 }
-                __Debugger_TemCacel_CallBack?.Invoke(list);
+                __Debugger_TemCacel_CallBack?.Invoke(_Debugger_TemCacels);
             }
         }
-
+        static List<string> _Debugger_WaitDels = new List<string>();
         public static void __Debugger_WaitDel_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                var list = new List<string>();
+                _Debugger_WaitDels.Clear();
                 foreach (var kv in Ins._waitDels)
                 {
-                    list.Add(kv.Value.IDStr);
+                    _Debugger_WaitDels.Add(kv.Value.IDStr);
                 }
-                __Debugger_WaitDel_CallBack?.Invoke(list);
+                __Debugger_WaitDel_CallBack?.Invoke(_Debugger_WaitDels);
             }
         }
 
         public static Action<Dictionary<string, IUIData>> __Debugger_UI_CallBack;
         public static Action<List<string>> __Debugger_Showed_CallBack;
+        public static Action<List<UIStack>> __Debugger_Stack_CallBack;
         public static Action<List<string>> __Debugger_Showing_CallBack;
         public static Action<List<string>> __Debugger_Cacel_CallBack;
         public static Action<List<string>> __Debugger_TemCacel_CallBack;

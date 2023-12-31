@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 
 public class DebuggerObjectListView<T, V> where T : TemplateContainer, IDebuggerListItem<V>, new()
 {
     private ListView _list;
-
-    public DebuggerObjectListView(ListView list)
+    Action<V> _clickEvt;
+    public DebuggerObjectListView(ListView list, Action<V> clickEvt = null)
     {
         this._list = list;
+        _clickEvt= clickEvt;
         _list.makeItem = _MakeListItem;
         _list.bindItem = _BindListItem;
     }
@@ -22,7 +24,9 @@ public class DebuggerObjectListView<T, V> where T : TemplateContainer, IDebugger
     }
     VisualElement _MakeListItem()
     {
-        return new T();
+        var t = new T();
+        t.SetClickEvt(_clickEvt);
+        return t;
     }
     void _BindListItem(VisualElement element, int index)
     {

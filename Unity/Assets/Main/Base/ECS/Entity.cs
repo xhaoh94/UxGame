@@ -672,8 +672,8 @@ namespace Ux
             }
             if (IsDestroy) return;
             _isDestroying = true;
-            TimeMgr.Ins.RemoveAll(this);
-            EventMgr.Ins.OffAll(this);
+            TimeMgr.Ins.RemoveTag(this);
+            EventMgr.Ins.OffTag(this);
             if (EntityMono != null)
             {
 #if UNITY_EDITOR

@@ -370,14 +370,7 @@ namespace UI.Editor
                 foreach (var btn in btns)
                 {
                     var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}Click";
-                    if (btn.customType != btn.defaultType)
-                    {
-                        write.Writeln($"{btn.name}.AddClick({fnName});");
-                    }
-                    else
-                    {
-                        write.Writeln($"AddClick({btn.name},{fnName});");
-                    }
+                    write.Writeln($"AddClick({btn.name},{fnName});");
                 }
                 foreach (var btn in dbtns)
                 {
@@ -394,14 +387,7 @@ namespace UI.Editor
                     }
 
                     var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}MultipleClick";
-                    if (btn.customType != btn.defaultType)
-                    {
-                        write.Writeln($"{btn.name}.AddMultipleClick({fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
-                    }
-                    else
-                    {
-                        write.Writeln($"AddMultipleClick({btn.name},{fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
-                    }
+                    write.Writeln($"AddMultipleClick({btn.name},{fnName}, {dContent.dCnt}, {dContent.dGapTime}f);");
                 }
                 foreach (var btn in longbtns)
                 {
@@ -420,16 +406,8 @@ namespace UI.Editor
                     }
 
                     var fnName = $"_On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}LongPress";
-                    if (btn.customType != btn.defaultType)
-                    {
-                        write.Writeln($"{btn.name}.AddLongPress({lContent.lFirst}f, {fnName}, " +
-                            $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
-                    }
-                    else
-                    {
-                        write.Writeln($"AddLongPress({btn.name},{lContent.lFirst}f, {fnName}, " +
-                            $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
-                    }
+                    write.Writeln($"AddLongPress({btn.name},{lContent.lFirst}f, {fnName}, " +
+                                           $"{lContent.lGapTime}f, {lContent.lCnt}, {lContent.lRadius});");
                 }
                 foreach (var list in lists)
                 {

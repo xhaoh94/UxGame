@@ -34,20 +34,20 @@ namespace Ux
             __controller = (Controller)gCom.GetController("dialogState");
         }
 
-        public override void InitData(IUIData data, Action<IUI, bool> remove)
+        public override void InitData(IUIData data, Action<IUI> hide, Action<IUI, object> show)
         {
-            OnHideCallBack += _Hide;
-            base.InitData(data, remove);
+            OnHideCallBack += _Hide;            
+            base.InitData(data, hide, show);
         }
 
-        public override void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
+        public override void DoShow(bool isAnim, int id, object param)
         {
             dialogData = (UIDialogFactory.DialogData)param;
-            base.DoShow(isAnim, param, showCb);
+            base.DoShow(isAnim, id, param);
         }
         protected override void OnShow(object param)
         {
-            __btnClose?.AddClick(Hide);
+            AddClick(__btnClose, Hide);
             foreach (var (paramType, value) in dialogData.Param)
             {
                 switch (paramType)
@@ -62,13 +62,13 @@ namespace Ux
                         if (__btn1 != null) __btn1.text = value.ToString();
                         break;
                     case UIDialogFactory.ParamType.Btn1Fn:
-                        __btn1?.AddClick(OnBtn1Click);
+                        AddClick(__btn1, OnBtn1Click);
                         break;
                     case UIDialogFactory.ParamType.Btn2Title:
                         if (__btn2 != null) __btn2.text = value.ToString();
                         break;
                     case UIDialogFactory.ParamType.Btn2Fn:
-                        __btn2?.AddClick(OnBtn1Click);
+                        AddClick(__btn2, OnBtn1Click);
                         break;
                     case UIDialogFactory.ParamType.Custom:
                         OnParamCustom(value);
@@ -124,7 +124,7 @@ namespace Ux
         protected override void OnLayout()
         {
             SetLayout(UILayout.Center_Middle);
-        }
+        }        
         private void _Hide()
         {
             dialogData.HideCallBack?.Invoke(this);

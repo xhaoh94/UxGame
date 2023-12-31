@@ -1,4 +1,5 @@
 ﻿using FairyGUI;
+using System;
 
 namespace Ux.UI
 {
@@ -13,15 +14,14 @@ namespace Ux.UI
         protected override void OnShow(object param)
         {
             base.OnShow(param);
-            TimeMgr.Ins.DoTimer(2, 1, () =>
+            TimeMgr.Ins.DoTimer(5, 1, this, () =>
             {
                 //var data = UIMgr.Ins.GetUIData(ID);
                 //data.Children.Reverse();
                 //RefreshTab();
-                //Log.Debug("RefreshTab");                
+                Log.Debug("RefreshTab");
             });
         }
-
         protected override void OnHide()
         {
             base.OnHide();
@@ -48,10 +48,6 @@ namespace Ux.UI
         protected override void OnShow(object param)
         {
             base.OnShow(param);
-            TimeMgr.Ins.DoTimer(2, 1, () =>
-            {
-                UIMgr.Ins.Show<MainView>();
-            });
         }
     }
 

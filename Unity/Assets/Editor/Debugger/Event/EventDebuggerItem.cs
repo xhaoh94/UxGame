@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -34,5 +35,10 @@ public class EventDebuggerItem : TemplateContainer, IDebuggerListItem<EventList>
     {
         _txtID.text = data._eventType;
         _list.SetData(data.events);
+    }
+
+    public void SetClickEvt(Action<EventList> action)
+    {
+        
     }
 }

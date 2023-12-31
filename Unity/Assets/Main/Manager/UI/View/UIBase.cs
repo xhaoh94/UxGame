@@ -14,11 +14,10 @@ namespace Ux
         IUIData Data { get; }
         bool IsDestroy { get; }
         bool Visable { get; set; }
-        void InitData(IUIData data, Action<IUI, bool> hideCb);
+        void InitData(IUIData data, Action<IUI> hideCb, Action<IUI, object> showCb);
         void Dispose();
-        void SortingOrder();
-        void DoShow(bool isAnim, object param, Action<IUI, object> showCb);
-        void DoHide(bool isAnim, bool isStack);
+        void DoShow(bool isAnim, int id, object param);
+        void DoHide(bool isAnim);
 
     }
 
@@ -29,14 +28,16 @@ namespace Ux
         public virtual bool IsDestroy => true;
         public virtual UIType Type => UIType.None;
 
-        Action<IUI, bool> _hideCb;
-        bool _isStack;              
-        public virtual void InitData(IUIData data, Action<IUI, bool> hide)
+        Action<IUI> _hideCb;
+        Action<IUI, object> _showCb;
+        public virtual void InitData(IUIData data, Action<IUI> hide, Action<IUI, object> show)
         {
             Data = data;
-            _hideCb = hide;            
+            _hideCb = hide;
+            _showCb = show;
             Init(CreateObject());
-            OnHideCallBack += _Hide;            
+            OnHideCallBack += _Hide;
+            OnShowCallBack += _Show;
         }
 
         public virtual void AddChild(UITabView child) { }
@@ -88,28 +89,41 @@ namespace Ux
         }
         protected virtual void OnLayout() { }
 
-        void IUI.SortingOrder()
+        protected virtual void OnOverwrite(object param)
         {
-            AddToStage();
         }
-
-        public override void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
+        public override void DoShow(bool isAnim, int id, object param)
         {
+            var _state = State;
+            if (_state == UIState.Show || _state == UIState.ShowAnim)
+            {
+                if (id == ID && param != null)
+                {
+                    OnOverwrite(param);
+                }
+                return;
+            }
             AddToStage();
             OnLayout();
-            base.DoShow(isAnim, param, showCb);
+            base.DoShow(isAnim, id, id == ID ? param : null);
+        }
+        private void _Show(int id, object param)
+        {
+            if (id == ID)
+            {
+                _showCb?.Invoke(this, param);
+            }
         }
 
-        public override void DoHide(bool isAnim, bool isStack)
+        public override void DoHide(bool isAnim)
         {
-            _isStack = isStack;
-            base.DoHide(isAnim, isStack);
+            base.DoHide(isAnim);
         }
 
         private void _Hide()
         {
             RemoveToStage();
-            _hideCb?.Invoke(this, _isStack);
+            _hideCb?.Invoke(this);
         }
         void IUI.Dispose()
         {
@@ -119,6 +133,7 @@ namespace Ux
         {
             Data = null;
             _hideCb = null;
+            _showCb = null;
         }
         protected void SetLayout(UILayout layout, bool restraint = true)
         {

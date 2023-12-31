@@ -57,7 +57,7 @@ namespace Ux
         /// </summary>
         protected virtual IUIAnim HideAnim { get; } = null;
 
-        protected Action OnShowCallBack;
+        protected Action<int, object> OnShowCallBack;
         protected Action OnHideCallBack;
 
         protected T ParentAs<T>() where T : UIObject
@@ -215,16 +215,10 @@ namespace Ux
         }
 
 
-        public virtual void DoShow(bool isAnim, object param, Action<IUI, object> showCb)
+        public virtual void DoShow(bool isAnim, int id, object param)
         {
-            RemoveTimers();
-            RemoveEvents();
-            EventMgr.Ins.___RegisterFastMethod(this);
-            OnAddEvent();
-            OnShow(param);
-
             if (_state == UIState.Show || _state == UIState.ShowAnim)
-            {
+            {                
                 return;
             }
             HideAnim?.Stop();
@@ -238,21 +232,24 @@ namespace Ux
                 _state = UIState.Show;
                 ShowAnim?.SetEnd();
             }
+            _RemoveTag();
+            EventMgr.Ins.___RegisterFastMethod(this);
+            OnAddEvent();
+            OnShow(param);
             foreach (var component in Components)
             {
-                component.DoShow(isAnim, null, null);
+                component.DoShow(isAnim, 0, null);
             }
-            _CheckShow(showCb, param).Forget();
+            _CheckShow(id, param).Forget();
         }
 
-        async UniTaskVoid _CheckShow(Action<IUI, object> showCb, object param)
+        async UniTaskVoid _CheckShow(int id, object param)
         {
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
                 await UniTask.Yield();
 
             OnShowAnimComplete();
-            OnShowCallBack?.Invoke();
-            showCb?.Invoke(this as IUI, param);
+            OnShowCallBack?.Invoke(id, param);
         }
 
         protected virtual void OnShow(object param)
@@ -268,7 +265,7 @@ namespace Ux
 
         }
 
-        public virtual void DoHide(bool isAnim, bool isStack)
+        public virtual void DoHide(bool isAnim)
         {
             if (_state == UIState.Hide || _state == UIState.HideAnim)
             {
@@ -287,11 +284,10 @@ namespace Ux
 
             foreach (var component in Components)
             {
-                component.DoHide(isAnim, isStack);
+                component.DoHide(isAnim);
             }
             OnHide();
-            RemoveEvents();
-            RemoveTimers();
+            _RemoveTag();
             _CheckHide().Forget();
         }
 
@@ -346,7 +342,17 @@ namespace Ux
 
 
         #region 事件
+        protected void AddEvent(UIObject gObj, string type, EventCallback1 fn)
+        {
+            if (gObj == null) return;
+            AddEvent(gObj.GObject, type, fn);
+        }
 
+        protected void AddEvent(UIObject gObj, string type, EventCallback0 fn)
+        {
+            if (gObj == null) return;
+            AddEvent(gObj.GObject, type, fn);
+        }
         protected void AddEvent(GObject gObj, string type, EventCallback1 fn)
         {
             if (gObj == null) return;
@@ -368,7 +374,11 @@ namespace Ux
         {
             _event?.AddEvent(listener, fn);
         }
-
+        protected void AddMultipleClick(UIObject gObj, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
+        {
+            if (gObj == null) return;
+            AddMultipleClick(gObj.GObject, fn0, clickCnt, gapTime);
+        }
         /// <summary>
         /// 多次点击事件，注册了多次点击事件，即使是单击也会受到gapTime延时触发
         /// </summary>        
@@ -377,7 +387,11 @@ namespace Ux
             if (gObj == null) return;
             _event?.AddMultipleClick(gObj, fn0, clickCnt, gapTime);
         }
-
+        protected void AddMultipleClick(UIObject gObj, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
+        {
+            if (gObj == null) return;
+            AddMultipleClick(gObj.GObject, fn1, clickCnt, gapTime);
+        }
         /// <summary>
         /// 多次点击事件，注册了多次点击事件，即使是单击也会受到gapTime延时触发
         /// </summary>    
@@ -387,6 +401,12 @@ namespace Ux
             _event?.AddMultipleClick(gObj, fn1, clickCnt, gapTime);
         }
 
+        protected void AddLongPress(UIObject gObj, Func<bool> fn, float delay = 0.2f, int loopCnt = 0,
+       int holdRangeRadius = 50)
+        {
+            if (gObj == null) return;
+            AddLongPress(gObj.GObject, fn, delay, loopCnt, holdRangeRadius);
+        }
         /// <summary>
         /// 长按事件
         /// </summary>
@@ -401,7 +421,12 @@ namespace Ux
             if (gObj == null) return;
             _event?.AddLongPress(gObj, fn, -1, delay, loopCnt, holdRangeRadius);
         }
-
+        protected void AddLongPress(UIObject gObj, float first, Func<bool> fn, float delay = 0.2f, int loopCnt = 0,
+            int holdRangeRadius = 50)
+        {
+            if (gObj == null) return;
+            AddLongPress(gObj.GObject, first, fn, delay, loopCnt, holdRangeRadius);
+        }
         /// <summary>
         /// 长按事件
         /// </summary>
@@ -417,13 +442,21 @@ namespace Ux
             if (gObj == null) return;
             _event?.AddLongPress(gObj, fn, first, delay, loopCnt, holdRangeRadius);
         }
-
+        protected void AddClick(UIObject gObj, EventCallback1 fn)
+        {
+            if (gObj == null) return;
+            AddClick(gObj.GObject, fn);
+        }
         protected void AddClick(GObject gObj, EventCallback1 fn)
         {
             if (gObj == null) return;
             AddEvent(gObj.onClick, fn);
         }
-
+        protected void AddClick(UIObject gObj, EventCallback0 fn)
+        {
+            if (gObj == null) return;
+            AddClick(gObj.GObject, fn);
+        }
         protected void AddClick(GObject gObj, EventCallback0 fn)
         {
             if (gObj == null) return;
@@ -442,480 +475,13 @@ namespace Ux
             AddEvent(gList.onClickItem, fn);
         }
 
-        private void RemoveEvents()
+        #endregion
+
+        private void _RemoveTag()
         {
             _event?.RemoveEvents();
-            EventMgr.Ins.OffAll(this);
+            EventMgr.Ins.OffTag(this);
+            TimeMgr.Ins.RemoveTag(this);
         }
-
-        #endregion
-
-        #region 定时器
-
-        private void RemoveTimers()
-        {
-            TimeMgr.Ins.RemoveAll(this);
-        }
-
-        //#region 定时器 Time
-
-        ///// <summary>
-        ///// 循环回调
-        ///// </summary>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="action">调用方法</param>
-        ///// <returns></returns>
-        //protected long DoLoop(float delay, Action action)
-        //{
-        //    return DoTimer(delay, 0, action);
-        //}
-
-        ///// <summary>
-        ///// 循环回调
-        ///// </summary>
-        ///// <param name="first">第一次触发秒数</param>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="action">调用方法</param>
-        ///// <returns></returns>
-        //protected long DoLoop(float first, float delay, Action action)
-        //{
-        //    return DoTimer(first, delay, 0, action);
-        //}
-
-        ///// <summary>
-        ///// 单次回调
-        ///// </summary>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="action">调用方法</param>
-        ///// <returns></returns>
-        //protected long DoOnce(float delay, Action action)
-        //{
-        //    return DoTimer(delay, 1, action);
-        //}
-
-        ///// <summary>
-        ///// 延时调用
-        ///// </summary>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //protected long DoTimer(float delay, int repeat, Action action,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, complete);
-        //}
-
-        //protected long DoTimer(float first, float delay, int repeat, Action action,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, complete);
-        //}
-
-        //protected long DoTimer(float delay, int repeat, Action action,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, complete, completeParam);
-        //}
-
-        //protected long DoTimer(float first, float delay, int repeat, Action action,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, complete, completeParam);
-        //}
-
-        ///// <summary>
-        ///// 延时调用
-        ///// </summary>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>
-        ///// <param name="a">附加参数</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoTimer<A>(float delay, int repeat, Action<A> action, A a,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, a, complete);
-        //}
-
-        //public long DoTimer<A>(float first, float delay, int repeat, Action<A> action, A a,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, complete);
-        //}
-
-        //public long DoTimer<A>(float delay, int repeat, Action<A> action, A a,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, a, complete, completeParam);
-        //}
-
-        //public long DoTimer<A>(float first, float delay, int repeat, Action<A> action, A a,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, complete, completeParam);
-        //}
-
-        ///// <summary>
-        ///// 延时调用
-        ///// </summary>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>
-        ///// <param name="a">附加参数</param>
-        ///// <param name="b">附加参数</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoTimer<A, B>(float delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, complete);
-        //}
-
-        //public long DoTimer<A, B>(float first, float delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, complete);
-        //}
-
-        //public long DoTimer<A, B>(float delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, complete, completeParam);
-        //}
-
-        //public long DoTimer<A, B>(float first, float delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, complete, completeParam);
-        //}
-
-        ///// <summary>
-        ///// 延时调用
-        ///// </summary>
-        ///// <param name="delay">延时秒数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>        
-        ///// <param name="a">附加参数</param>
-        ///// <param name="b">附加参数</param>
-        ///// <param name="c">附加参数</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoTimer<A, B, C>(float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, c, complete);
-        //}
-
-        //public long DoTimer<A, B, C>(float first, float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, c, complete);
-        //}
-
-        //public long DoTimer<A, B, C>(float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(delay, repeat, action, a, b, c, complete, completeParam);
-        //}
-
-        //public long DoTimer<A, B, C>(float first, float delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoTimer(first, delay, repeat, action, a, b, c, complete, completeParam);
-        //}
-
-        //public void RemoveTimer(Action action)
-        //{
-        //    TimeMgr.Ins.RemoveTimer(action);
-        //}
-
-        //public void RemoveTimer<A>(Action<A> action)
-        //{
-        //    TimeMgr.Ins.RemoveTimer(action);
-        //}
-
-        //public void RemoveTimer<A, B>(Action<A, B> action)
-        //{
-        //    TimeMgr.Ins.RemoveTimer(action);
-        //}
-
-        //public void RemoveTimer<A, B, C>(Action<A, B, C> action)
-        //{
-        //    TimeMgr.Ins.RemoveTimer(action);
-        //}
-
-        //#endregion
-
-        //#region 定时器 Frame
-
-        ///// <summary>
-        ///// 延帧调用
-        ///// </summary>
-        ///// <param name="delay">延时帧数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoFrame(int delay, int repeat, Action action,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, complete);
-        //}
-
-        //public long DoFrame(int first, int delay, int repeat, Action action,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, complete);
-        //}
-
-        //public long DoFrame(int delay, int repeat, Action action,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, complete, completeParam);
-        //}
-
-        //public long DoFrame(int first, int delay, int repeat, Action action,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, complete, completeParam);
-        //}
-
-        ///// <summary>
-        ///// 延帧调用
-        ///// </summary>
-        ///// <param name="delay">延时帧数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>        
-        ///// <param name="a">附加参数</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoFrame<A>(int delay, int repeat, Action<A> action, A a,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, a, complete);
-        //}
-
-        //public long DoFrame<A>(int first, int delay, int repeat, Action<A> action, A a,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, complete);
-        //}
-
-        //public long DoFrame<A>(int delay, int repeat, Action<A> action, A a,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, a, complete, completeParam);
-        //}
-
-        //public long DoFrame<A>(int first, int delay, int repeat, Action<A> action, A a,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, complete, completeParam);
-        //}
-
-        ///// <summary>
-        ///// 延帧调用
-        ///// </summary>
-        ///// <param name="delay">延时帧数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>        
-        ///// <param name="a">附加参数</param>
-        ///// <param name="b">附加参数</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoFrame<A, B>(int delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, complete);
-        //}
-
-        //public long DoFrame<A, B>(int first, int delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, complete);
-        //}
-
-        //public long DoFrame<A, B>(int delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, complete, completeParam);
-        //}
-
-        //public long DoFrame<A, B>(int first, int delay, int repeat, Action<A, B> action, A a, B b,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, complete, completeParam);
-        //}
-
-        ///// <summary>
-        ///// 延帧调用
-        ///// </summary>
-        ///// <param name="delay">延时帧数</param>
-        ///// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        ///// <param name="action">调用方法</param>
-        ///// <param name="a">附加参数</param>
-        ///// <param name="b">附加参数</param>
-        ///// <param name="c">附加参数</param>
-        ///// <param name="complete">结束回调</param>
-        ///// <returns></returns>
-        //public long DoFrame<A, B, C>(int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, c, complete);
-        //}
-
-        //public long DoFrame<A, B, C>(int first, int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action complete = null)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, c, complete);
-        //}
-
-        //public long DoFrame<A, B, C>(int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(delay, repeat, action, a, b, c, complete, completeParam);
-        //}
-
-        //public long DoFrame<A, B, C>(int first, int delay, int repeat, Action<A, B, C> action, A a, B b, C c,
-        //    Action<object> complete, object completeParam)
-        //{
-        //    return TimeMgr.Ins.DoFrame(first, delay, repeat, action, a, b, c, complete, completeParam);
-        //}
-
-
-        //public void RemoveFrame(Action action)
-        //{
-        //    TimeMgr.Ins.RemoveFrame(action);
-        //}
-
-        //public void RemoveFrame<A>(Action<A> action)
-        //{
-        //    TimeMgr.Ins.RemoveFrame(action);
-        //}
-
-        //public void RemoveFrame<A, B>(Action<A, B> action)
-        //{
-        //    TimeMgr.Ins.RemoveFrame(action);
-        //}
-
-        //public void RemoveFrame<A, B, C>(Action<A, B, C> action)
-        //{
-        //    TimeMgr.Ins.RemoveFrame(action);
-        //}
-
-        //#endregion
-
-        //#region 定时器 TimeStamp
-
-        //public long DoTimeStamp(DateTime dt, Action action)
-        //{
-        //    return DoTimeStamp(dt.ToTimeStamp(), action);
-        //}
-
-        //public long DoTimeStamp(long timeStamp, Action action)
-        //{
-        //    return TimeMgr.Ins.DoTimeStamp(timeStamp, action);
-        //}
-
-        //public long DoTimeStamp<A>(DateTime dt, Action<A> action, A a)
-        //{
-        //    return DoTimeStamp(dt.ToTimeStamp(), action, a);
-        //}
-
-        //public long DoTimeStamp<A>(long timeStamp, Action<A> action, A a)
-        //{
-        //    return TimeMgr.Ins.DoTimeStamp(timeStamp, action, a);
-        //}
-
-        //public long DoTimeStamp<A, B>(DateTime dt, Action<A, B> action, A a, B b)
-        //{
-        //    return DoTimeStamp(dt.ToTimeStamp(), action, a, b);
-        //}
-
-        //public long DoTimeStamp<A, B>(long timeStamp, Action<A, B> action, A a, B b)
-        //{
-        //    return TimeMgr.Ins.DoTimeStamp(timeStamp, action, a, b);
-        //}
-
-        //public long DoTimeStamp<A, B, C>(DateTime dt, Action<A, B, C> action, A a, B b, C c)
-        //{
-        //    return DoTimeStamp(dt.ToTimeStamp(), action, a, b, c);
-        //}
-
-        //public long DoTimeStamp<A, B, C>(long timeStamp, Action<A, B, C> action, A a, B b, C c)
-        //{
-        //    return TimeMgr.Ins.DoTimeStamp(timeStamp, action, a, b, c);
-        //}
-
-        //public void RemoveTimeStamp(Action action)
-        //{
-        //    TimeMgr.Ins.RemoveTimeStamp(action);
-        //}
-
-        //public void RemoveTimeStamp<A>(Action<A> action)
-        //{
-        //    TimeMgr.Ins.RemoveTimeStamp(action);
-        //}
-
-        //public void RemoveTimeStamp<A, B>(Action<A, B> action)
-        //{
-        //    TimeMgr.Ins.RemoveTimeStamp(action);
-        //}
-
-        //public void RemoveTimeStamp<A, B, C>(Action<A, B, C> action)
-        //{
-        //    TimeMgr.Ins.RemoveTimeStamp(action);
-        //}
-
-        //#endregion TimeStamp
-
-        //#region 定时器 Cron
-
-        //public long DoCron(string cron, Action action)
-        //{
-        //    return TimeMgr.Ins.DoCron(cron, action);
-        //}
-
-        //public long DoCron<A>(string cron, Action<A> action, A a)
-        //{
-        //    return TimeMgr.Ins.DoCron(cron, action, a);
-        //}
-
-        //public long DoCron<A, B>(string cron, Action<A, B> action, A a, B b)
-        //{
-        //    return TimeMgr.Ins.DoCron(cron, action, a, b);
-        //}
-
-        //public long DoCron<A, B, C>(string cron, Action<A, B, C> action, A a, B b, C c)
-        //{
-        //    return TimeMgr.Ins.DoCron(cron, action, a, b, c);
-        //}
-
-        //public void RemoveCron(Action action)
-        //{
-        //    TimeMgr.Ins.RemoveCron(action);
-        //}
-
-        //public void RemoveCron<A>(Action<A> action)
-        //{
-        //    TimeMgr.Ins.RemoveCron(action);
-        //}
-
-        //public void RemoveCron<A, B>(Action<A, B> action)
-        //{
-        //    TimeMgr.Ins.RemoveCron(action);
-        //}
-
-        //public void RemoveCron<A, B, C>(Action<A, B, C> action)
-        //{
-        //    TimeMgr.Ins.RemoveCron(action);
-        //}
-
-        //#endregion
-
-        #endregion
     }
 }

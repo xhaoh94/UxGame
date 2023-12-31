@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 using static Ux.TimeMgr;
@@ -66,6 +67,9 @@ public class TimeDebuggerItemSub1 : TemplateContainer, IDebuggerListItem<TimeHan
         _lbType.text = data.UseFrame ? "帧" : "秒";
     }
 
-
+    public void SetClickEvt(Action<TimeHandle> action)
+    {
+        
+    }
 }
 

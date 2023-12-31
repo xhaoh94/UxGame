@@ -424,9 +424,9 @@ namespace Ux
                 @Fire.started += instance.OnFire;
                 @Fire.performed += instance.OnFire;
                 @Fire.canceled += instance.OnFire;
-                @Key.started += instance.OnKeyAsync;
-                @Key.performed += instance.OnKeyAsync;
-                @Key.canceled += instance.OnKeyAsync;
+                @Key.started += instance.OnKey;
+                @Key.performed += instance.OnKey;
+                @Key.canceled += instance.OnKey;
             }
 
             private void UnregisterCallbacks(IPlayerActions instance)
@@ -437,9 +437,9 @@ namespace Ux
                 @Fire.started -= instance.OnFire;
                 @Fire.performed -= instance.OnFire;
                 @Fire.canceled -= instance.OnFire;
-                @Key.started -= instance.OnKeyAsync;
-                @Key.performed -= instance.OnKeyAsync;
-                @Key.canceled -= instance.OnKeyAsync;
+                @Key.started -= instance.OnKey;
+                @Key.performed -= instance.OnKey;
+                @Key.canceled -= instance.OnKey;
             }
 
             public void RemoveCallbacks(IPlayerActions instance)
@@ -506,7 +506,7 @@ namespace Ux
         {
             void OnMove(InputAction.CallbackContext context);
             void OnFire(InputAction.CallbackContext context);
-            void OnKeyAsync(InputAction.CallbackContext context);
+            void OnKey(InputAction.CallbackContext context);
         }
     }
 }

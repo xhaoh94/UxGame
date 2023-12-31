@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -40,5 +41,10 @@ public class TimeDebuggerItem<T, V> : TemplateContainer, IDebuggerListItem<TimeL
             listData.Add((V)handle);
         }
         _list.SetData(listData);
+    }
+
+    public void SetClickEvt(Action<TimeList> action)
+    {
+        
     }
 }

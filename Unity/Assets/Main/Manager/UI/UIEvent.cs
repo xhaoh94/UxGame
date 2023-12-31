@@ -155,7 +155,7 @@ namespace Ux
             {
                 if (Time.unscaledTime - _beginTime < _gapTime)
                 {
-                    _timeKey = TimeMgr.Ins.DoOnce(_gapTime, SimulationClick);
+                    _timeKey = TimeMgr.Ins.DoOnce(_gapTime, this, SimulationClick);
                     _firstTime = Time.unscaledTime;
                 }
             }
@@ -259,7 +259,7 @@ namespace Ux
             _startPoint = _target.GlobalToLocal(new Vector2(e.inputEvent.x, e.inputEvent.y));
             _touchId = e.inputEvent.touchId;
             _nowCnt = 0;
-            _timeKey = TimeMgr.Ins.DoLoop(_first, _delay, _Loop);
+            _timeKey = TimeMgr.Ins.DoLoop(_first, _delay, this, _Loop);
         }
 
         private void OnTouchEnd(EventContext e)

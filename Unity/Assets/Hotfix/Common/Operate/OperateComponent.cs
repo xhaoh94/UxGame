@@ -62,7 +62,7 @@ namespace Ux
             }
         }
 
-        public async void OnKeyAsync(InputAction.CallbackContext context)
+        public async void OnKey(InputAction.CallbackContext context)
         {
             if (context.performed)
             {

@@ -265,18 +265,11 @@ namespace Ux
                 {
                     if (uiid == id)
                     {
-                        ui.DoShow(isAnim, param, _ShowCallBack);
+                        ui.DoShow(isAnim, id, param);
                     }
                     continue;
                 }
-                if (uiid == id)
-                {
-                    ui.DoShow(isAnim, param, _ShowCallBack);
-                }
-                else
-                {
-                    ui.DoShow(isAnim, null, null);
-                }
+                ui.DoShow(isAnim, id, uiid == id ? param : null);
                 _showed.Add(uiid, ui);
                 _showing.Remove(uiid);
                 EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
@@ -423,10 +416,17 @@ namespace Ux
                 if (lastStack.ParentID == parentID)
                 {
                     lastStack.ID = ui.ID;
+                    lastStack.Param = param;
+                    _stack[_stack.Count - 1] = lastStack;
                     return;
                 }
             }
+#if UNITY_EDITOR
+            _stack.Add(new UIStack(parentID, ui.IDStr, ui.ID, param, uiType));
+            __Debugger_Stack_Event();
+#else
             _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
+#endif
 
             if (uiType == UIType.Stack)
             {
@@ -458,7 +458,7 @@ namespace Ux
                 }
             }
             var ui = (IUI)Activator.CreateInstance(data.CType);
-            ui.InitData(data, _HideCallBack);
+            ui.InitData(data, _HideCallBack, _ShowCallBack);
             return ui;
         }
 
@@ -550,6 +550,9 @@ namespace Ux
                 if (last.ID == id)
                 {
                     _stack.RemoveAt(lastIndex);
+#if UNITY_EDITOR
+                    __Debugger_Stack_Event();
+#endif
                 }
             }
             if (isStack && ui.Type == UIType.Stack)
@@ -578,11 +581,11 @@ namespace Ux
             var parentID = ui.Data.GetParentID();
             if (parentID != 0 && _showed.TryGetValue(parentID, out ui))
             {
-                ui.DoHide(isAnim, isStack);
+                ui.DoHide(isAnim);
             }
         }
 
-        private void _HideCallBack(IUI ui, bool isStack)
+        private void _HideCallBack(IUI ui)
         {
             var id = ui.ID;
             _showed.Remove(id);
@@ -656,7 +659,7 @@ namespace Ux
                     Log.Error($"界面[{ui.IDStr}]多次放入缓存列表");
 #else
                     Log.Error($"界面[{id}]多次放入缓存列表");
-#endif                    
+#endif
                     return;
                 }
 

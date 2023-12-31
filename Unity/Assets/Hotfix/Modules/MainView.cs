@@ -33,8 +33,7 @@ namespace Ux.UI
         }
         partial void OnBtnSingleClick(EventContext e)
         {
-            Log.Debug("单击");
-            Hide();
+            Log.Debug("单击"); 
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {

@@ -13,17 +13,17 @@ namespace Ux.UI
         protected override void OnInit()
         {
             base.OnInit();
-            TimeMgr.Ins.DoTimer(50, 1, OnConnect);
-            TimeMgr.Ins.DoTimer(1, 1, ttt);
+            //TimeMgr.Ins.DoTimer(50, 1, OnConnect);
+            //TimeMgr.Ins.DoTimer(1, 1, ttt);
         }
 
-        void ttt()
-        {
-            TimeMgr.Ins.DoTimer(5, 1, Test);
-            TimeMgr.Ins.RemoveAll(this);
-            TimeMgr.Ins.DoTimer(10, 1, Test);
-            TimeMgr.Ins.RemoveTimer(Test);
-        }
+        //void ttt()
+        //{
+        //    TimeMgr.Ins.DoTimer(5, 1, Test);
+        //    TimeMgr.Ins.RemoveAll(this);
+        //    TimeMgr.Ins.DoTimer(10, 1, Test);
+        //    TimeMgr.Ins.RemoveTimer(Test);
+        //}
 
         partial void OnBtnLoginClick(EventContext e)
         {

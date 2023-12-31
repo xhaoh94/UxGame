@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 using Ux;
@@ -116,5 +117,10 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
             _txtParRedPoint.style.display = DisplayStyle.None;
             _txtParTitle.style.display = DisplayStyle.None;
         }
+    }
+
+    public void SetClickEvt(Action<IUIData> action)
+    {
+        
     }
 }

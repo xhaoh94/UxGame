@@ -6,19 +6,31 @@ namespace Ux
 {
     public partial class UIMgr
     {
-        struct UIStack
+        public struct UIStack
         {
             public readonly int ParentID;
             public int ID;
-            public readonly object Param;
+            public object Param;
             public readonly UIType Type;
-            public UIStack(int parentID, int id, object param, UIType type)
+#if UNITY_EDITOR
+            public readonly string IDStr;
+            public UIStack(int parentID, string idStr, int id, object param, UIType type)
+            {
+                ParentID = parentID;
+                IDStr = idStr;
+                ID = id;
+                Param = param;
+                Type = type;
+            }
+#else
+          public UIStack(int parentID, int id, object param, UIType type)
             {
                 ParentID = parentID;
                 ID = id;
                 Param = param;
                 Type = type;
             }
+#endif
         }
         public readonly struct UIParse
         {
@@ -100,7 +112,7 @@ namespace Ux
             public void Init(IUI _ui)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Ins.DoOnce(_waitDelTime, Exe); //一段时间后执行删除                
+                timeKey = TimeMgr.Ins.DoOnce(_waitDelTime, this, Exe); //一段时间后执行删除                
             }
 
             void Release()

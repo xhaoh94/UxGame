@@ -10,8 +10,17 @@ namespace Ux
         //每帧执行上限-超出上限，下一帧处理
         public const int ExeLimit = 200;
         private readonly Dictionary<long, IEvent> _keyEvent = new Dictionary<long, IEvent>();
+        /// <summary>
+        /// 事件ID对应的所有IEvent
+        /// </summary>
         private readonly Dictionary<int, List<long>> _eTypeKeys = new Dictionary<int, List<long>>();
-        private readonly Dictionary<int, List<long>> _targetKeys = new Dictionary<int, List<long>>();
+        /// <summary>
+        /// 标签对应的所有IEvent
+        /// </summary>
+        private readonly Dictionary<int, List<long>> _tagKeys = new Dictionary<int, List<long>>();
+        /// <summary>
+        /// 函数对应的所有IEvent
+        /// </summary>
         private readonly Dictionary<int, List<long>> _actionKeys = new Dictionary<int, List<long>>();
 
         private readonly Queue<IEventExe> _waitExes = new Queue<IEventExe>();
@@ -62,21 +71,21 @@ namespace Ux
                 }
             }
         }
-        private long GetKey(int eType, object action, object target)
+        private long GetKey(int eType, object action, object tag)
         {
-            if (target == null)
+            if (tag == null)
             {
                 return IDGenerater.GenerateId(eType, action.GetHashCode());
             }
             else
             {
-                return IDGenerater.GenerateId(eType, action.GetHashCode(), target.GetHashCode());
+                return IDGenerater.GenerateId(eType, action.GetHashCode(), tag.GetHashCode());
             }
         }
-        private long GetKey(int eType, Delegate action)
+        private long GetKey(int eType, object tag, Delegate action)
         {
             if (action == null) return 0;
-            return GetKey(eType, action, action.Target);
+            return GetKey(eType, action, tag);
         }
 
         private long GetKey(int eType, FastMethodInfo action)
@@ -106,14 +115,14 @@ namespace Ux
                     if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
                 }
 
-                var target = evt.Target;
+                var target = evt.Tag;
                 if (target != null)
                 {
                     int hashCode = target.GetHashCode();
-                    if (_targetKeys.TryGetValue(hashCode, out var tKeys))
+                    if (_tagKeys.TryGetValue(hashCode, out var tKeys))
                     {
                         tKeys.Remove(key);
-                        if (tKeys.Count == 0) _targetKeys.Remove(hashCode);
+                        if (tKeys.Count == 0) _tagKeys.Remove(hashCode);
                     }
                 }
 #if UNITY_EDITOR
@@ -170,14 +179,14 @@ namespace Ux
 
                 if (!aKeys.Contains(key)) aKeys.Insert(0, key);
 
-                var target = evt.Target;
+                var target = evt.Tag;
                 if (target != null)
                 {
                     int hashCode = target.GetHashCode();
-                    if (!_targetKeys.TryGetValue(hashCode, out var tKeys))
+                    if (!_tagKeys.TryGetValue(hashCode, out var tKeys))
                     {
                         tKeys = new List<long>();
-                        _targetKeys.Add(hashCode, tKeys);
+                        _tagKeys.Add(hashCode, tKeys);
                     }
 
                     if (!tKeys.Contains(key)) tKeys.Insert(0, key);
@@ -222,48 +231,48 @@ namespace Ux
             return key;
         }
 
-        public long On(string eTypeStr, int eType, Action action)
+        public long On(string eTypeStr, int eType, object tag, Action action)
         {
-            var evtData = _Add<EventData>(out var key, eType, action);
+            var evtData = _Add<EventData>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
                 evtData.Init(eTypeStr);
             }
 
             return key;
         }
 
-        public long On<A>(string eTypeStr, int eType, Action<A> action)
+        public long On<A>(string eTypeStr, int eType, object tag, Action<A> action)
         {
-            var evtData = _Add<EventData<A>>(out var key, eType, action);
+            var evtData = _Add<EventData<A>>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
                 evtData.Init(eTypeStr);
             }
 
             return key;
         }
 
-        public long On<A, B>(string eTypeStr, int eType, Action<A, B> action)
+        public long On<A, B>(string eTypeStr, int eType, object tag, Action<A, B> action)
         {
-            var evtData = _Add<EventData<A, B>>(out var key, eType, action);
+            var evtData = _Add<EventData<A, B>>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
                 evtData.Init(eTypeStr);
             }
 
             return key;
         }
 
-        public long On<A, B, C>(string eTypeStr, int eType, Action<A, B, C> action)
+        public long On<A, B, C>(string eTypeStr, int eType, object tag, Action<A, B, C> action)
         {
-            var evtData = _Add<EventData<A, B, C>>(out var key, eType, action);
+            var evtData = _Add<EventData<A, B, C>>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
                 evtData.Init(eTypeStr);
             }
 
@@ -281,42 +290,42 @@ namespace Ux
             return key;
         }
 
-        public long On(int eType, Action action)
+        public long On(int eType, object tag, Action action)
         {
-            var evtData = _Add<EventData>(out var key, eType, action);
+            var evtData = _Add<EventData>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
             }
             return key;
         }
 
-        public long On<A>(int eType, Action<A> action)
+        public long On<A>(int eType, object tag, Action<A> action)
         {
-            var evtData = _Add<EventData<A>>(out var key, eType, action);
+            var evtData = _Add<EventData<A>>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
             }
             return key;
         }
 
-        public long On<A, B>(int eType, Action<A, B> action)
+        public long On<A, B>(int eType, object tag, Action<A, B> action)
         {
-            var evtData = _Add<EventData<A, B>>(out var key, eType, action);
+            var evtData = _Add<EventData<A, B>>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
             }
             return key;
         }
 
-        public long On<A, B, C>(int eType, Action<A, B, C> action)
+        public long On<A, B, C>(int eType, object tag, Action<A, B, C> action)
         {
-            var evtData = _Add<EventData<A, B, C>>(out var key, eType, action);
+            var evtData = _Add<EventData<A, B, C>>(out var key, eType, tag, action);
             if (evtData != default)
             {
-                evtData.Init(key, eType, action);
+                evtData.Init(key, eType, tag, action);
             }
             return key;
         }
@@ -341,9 +350,9 @@ namespace Ux
             return (T)evtData;
         }
 
-        private T _Add<T>(out long key, int eType, Delegate action) where T : IEvent
+        private T _Add<T>(out long key, int eType, object tag, Delegate action) where T : IEvent
         {
-            key = GetKey(eType, action);
+            key = GetKey(eType, action, tag);
             return _Add<T>(key);
         }
 
@@ -364,9 +373,9 @@ namespace Ux
         /// </summary>
         /// <param name="eType"></param>
         /// <param name="action"></param>
-        public void Off(int eType, Action action)
+        public void Off(int eType, object tag, Action action)
         {
-            _Remove(eType, action);
+            _Remove(eType, tag, action);
         }
 
         /// <summary>
@@ -383,9 +392,9 @@ namespace Ux
         /// </summary>
         /// <param name="eType"></param>
         /// <param name="action"></param>
-        public void Off<A>(int eType, Action<A> action)
+        public void Off<A>(int eType, object tag, Action<A> action)
         {
-            _Remove(eType, action);
+            _Remove(eType, tag, action);
         }
 
         /// <summary>
@@ -402,9 +411,9 @@ namespace Ux
         /// </summary>
         /// <param name="eType"></param>
         /// <param name="action"></param>
-        public void Off<A, B>(int eType, Action<A, B> action)
+        public void Off<A, B>(int eType, object tag, Action<A, B> action)
         {
-            _Remove(eType, action);
+            _Remove(eType, tag, action);
         }
 
         /// <summary>
@@ -421,9 +430,9 @@ namespace Ux
         /// </summary>
         /// <param name="eType"></param>
         /// <param name="action"></param>
-        public void Off<A, B, C>(int eType, Action<A, B, C> action)
+        public void Off<A, B, C>(int eType, object tag, Action<A, B, C> action)
         {
-            _Remove(eType, action);
+            _Remove(eType, tag, action);
         }
 
         /// <summary>
@@ -436,31 +445,31 @@ namespace Ux
         }
 
         /// <summary>
-        /// 删除所有注册此实例的事件
+        /// 删除所有注册此标签的事件
         /// </summary>
-        public void OffAll(object target)
+        public void OffTag(object tag)
         {
-            if (target == null) return;
+            if (tag == null) return;
             if (_waitAdds.Count > 0)
             {
                 for (int i = _waitAdds.Count - 1; i >= 0; i--)
                 {
                     var wa = _waitAdds[i];
-                    if (wa.Target == target)
+                    if (wa.Tag == tag)
                     {
                         _waitAdds.RemoveAt(i);
                     }
                 }
             }
 
-            int hashCode = target.GetHashCode();
-            if (!_targetKeys.TryGetValue(hashCode, out var keys)) return;
+            int hashCode = tag.GetHashCode();
+            if (!_tagKeys.TryGetValue(hashCode, out var keys)) return;
             RemoveByKey(keys);
         }
 
-        private void _Remove(int eType, Delegate action)
+        private void _Remove(int eType, object tag, Delegate action)
         {
-            var key = GetKey(eType, action);
+            var key = GetKey(eType, action, tag);
             RemoveByKey(key);
         }
 

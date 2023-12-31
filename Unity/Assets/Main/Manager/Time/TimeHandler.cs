@@ -15,21 +15,67 @@ namespace Ux
             int Compare(IHandle handle);
             long Key { get; }
             Status Status { get; set; }
-            object Target { get; }
+            object Tag { get; }
             string MethodName { get; }
         }
+        public abstract class HandleBase : IHandle
+        {
+            IHandleExe _exe;
+            protected IHandleExe Exe
+            {
+                get
+                {
+                    return _exe;
+                }
+                set
+                {
+                    if (_exe == value) return;
+                    if (_exe != null)
+                    {
+                        _exe?.Release();
+                    }
+                    _exe = value;
+                }
+            }
 
+            public string MethodName => Exe?.MethodName;
+            public object Tag => Exe?.Tag;
+            public Status Status { get; set; }
+
+            public long Key { get; protected set; }
+
+            public abstract int Compare(IHandle handle);
+
+            public void Release()
+            {
+                if (Status != Status.WaitDel)
+                {
+                    Log.Error("出现非WaitDel状态却执行删除的IHandler {0}", MethodName);
+                    return;
+                }
+                Status = Status.Release;
+                Key = 0;
+                Exe = null;
+                OnRelease();
+                Pool.Push(this);
+            }
+            protected virtual void OnRelease()
+            {
+
+            }
+
+            public abstract RunStatus Run();
+        }
         public interface IHandleExe
         {
-            object Target { get; }
+            object Tag { get; }
             string MethodName { get; }
             void Run();
             void Release();
         }
-
         public abstract class HandleExeBase : IHandleExe
         {
-            public object Target => Method.Target;
+            public virtual object Tag { get; protected set; }
             protected abstract Delegate Method { get; }
 
             public string MethodName => Method.MethodName();
@@ -50,6 +96,7 @@ namespace Ux
 
             public void Release()
             {
+                Tag = null;
                 OnRelease();
                 Pool.Push(this);
             }
@@ -62,8 +109,9 @@ namespace Ux
             private Action _fn;
             protected override Delegate Method => _fn;
 
-            public void Init(Action fn)
+            public void Init(object tag, Action fn)
             {
+                Tag = tag;
                 _fn = fn;
             }
 
@@ -85,8 +133,9 @@ namespace Ux
 
             protected override Delegate Method => _fn;
 
-            public void Init(Action<A> fn, A _a)
+            public void Init(object tag, Action<A> fn, A _a)
             {
+                Tag = tag;
                 _fn = fn;
                 a = _a;
             }
@@ -110,8 +159,9 @@ namespace Ux
             private B b;
             protected override Delegate Method => _fn;
 
-            public void Init(Action<A, B> fn, A _a, B _b)
+            public void Init(object tag, Action<A, B> fn, A _a, B _b)
             {
+                Tag = tag;
                 _fn = fn;
                 a = _a;
                 b = _b;
@@ -138,8 +188,9 @@ namespace Ux
             private C c;
             protected override Delegate Method => _fn;
 
-            public void Init(Action<A, B, C> fn, A _a, B _b, C _c)
+            public void Init(object tag, Action<A, B, C> fn, A _a, B _b, C _c)
             {
+                Tag = tag;
                 _fn = fn;
                 a = _a;
                 b = _b;
@@ -169,14 +220,9 @@ namespace Ux
             bool Init(IHandleExe _exe, long _key, string _cron, bool _isLocalTime);
         }
 
-        public class CronHandle : ICronHandle
+        public class CronHandle : HandleBase, ICronHandle
         {
             bool isLocalTime;
-            IHandleExe exe;
-            public string MethodName => exe.MethodName;
-            public object Target => exe?.Target;
-            public Status Status { get; set; }
-            public long Key { get; private set; }
             public long TimeStamp { get; private set; }
 
 #if UNITY_EDITOR
@@ -185,7 +231,7 @@ namespace Ux
 #endif
             CronData _data;
 
-            public int Compare(IHandle compare)
+            public override int Compare(IHandle compare)
             {
                 if (compare is CronHandle handle)
                 {
@@ -197,7 +243,7 @@ namespace Ux
 
             public bool Init(IHandleExe _exe, long _key, string _cron, bool _isLocalTime)
             {
-                exe = _exe;
+                Exe = _exe;
                 Key = _key;
                 isLocalTime = _isLocalTime;
                 _data = CronData.Create(_cron);
@@ -215,24 +261,15 @@ namespace Ux
                 return true;
             }
 
-            public void Release()
+            protected override void OnRelease()
             {
-                if (Status != Status.WaitDel)
-                {
-                    Log.Error("出现非WaitDel状态却执行删除的TimeHandler {0}", MethodName);
-                    return;
-                }
-
-                Status = Status.Release;
                 isLocalTime = false;
-                Key = 0;
-                exe?.Release();
-                exe = null;
-                Pool.Push(this);
+                TimeStamp = long.MaxValue;
+                _data = default;
             }
 
 
-            public RunStatus Run()
+            public override RunStatus Run()
             {
                 if (Status != Status.Normal)
                 {
@@ -241,7 +278,7 @@ namespace Ux
 
                 IGameTime gameTime = isLocalTime ? Ins.LocalTime : Ins.ServerTime;
                 if (gameTime.TimeStamp < TimeStamp) return RunStatus.Wait;
-                exe?.Run();
+                Exe?.Run();
                 if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
                 {
                     return RunStatus.None;
@@ -270,14 +307,9 @@ namespace Ux
             void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime);
         }
 
-        public class TimeStampHandle : ITimeStampHandle
+        public class TimeStampHandle : HandleBase, ITimeStampHandle
         {
             private bool isLocalTime;
-            protected IHandleExe exe;
-            public string MethodName => exe?.MethodName;
-            public object Target => exe?.Target;
-            public Status Status { get; set; }
-            public long Key { get; private set; }
             public long TimeStamp { get; private set; }
 
 
@@ -287,7 +319,7 @@ namespace Ux
 
             public void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime)
             {
-                exe = _exe;
+                Exe = _exe;
                 Key = _key;
                 TimeStamp = _timeStamp;
                 isLocalTime = _isLocalTime;
@@ -296,7 +328,7 @@ namespace Ux
 #endif
             }
 
-            public int Compare(IHandle compare)
+            public override int Compare(IHandle compare)
             {
                 if (compare is TimeStampHandle handle)
                 {
@@ -306,7 +338,7 @@ namespace Ux
                 return 0;
             }
 
-            public RunStatus Run()
+            public override RunStatus Run()
             {
                 if (Status != Status.Normal)
                 {
@@ -315,7 +347,7 @@ namespace Ux
 
                 if ((isLocalTime ? Ins.LocalTime : Ins.ServerTime).TimeStamp < TimeStamp)
                     return RunStatus.Wait;
-                exe?.Run();
+                Exe?.Run();
                 if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
                 {
                     return RunStatus.None;
@@ -325,20 +357,10 @@ namespace Ux
             }
 
 
-            public void Release()
+            protected override void OnRelease()
             {
-                if (Status != Status.WaitDel)
-                {
-                    Log.Error("出现非WaitDel状态却执行删除的TimeHandler {0}", MethodName);
-                    return;
-                }
-
-                Status = Status.Release;
+                TimeStamp = long.MaxValue;
                 isLocalTime = false;
-                Key = 0;
-                exe?.Release();
-                exe = null;
-                Pool.Push(this);
             }
         }
 
@@ -355,15 +377,8 @@ namespace Ux
                 Action<object> _complete, object _param);
         }
 
-        public class TimeHandle : ITimeHandle
+        public class TimeHandle : HandleBase, ITimeHandle
         {
-            protected IHandleExe exe;
-
-            public string MethodName => exe?.MethodName;
-            public object Target => exe?.Target;
-            public Status Status { get; set; }
-
-            public long Key { get; private set; }
             public float Delay { get; private set; }
             public int Repeat { get; private set; }
             public bool UseFrame { get; private set; }
@@ -378,7 +393,7 @@ namespace Ux
             public void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
                 Action _complete)
             {
-                exe = _exe;
+                Exe = _exe;
                 Key = _key;
                 Delay = _delay;
                 Repeat = _repeat;
@@ -393,7 +408,7 @@ namespace Ux
             public void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
                 Action<object> _complete, object _param)
             {
-                exe = _exe;
+                Exe = _exe;
                 Key = _key;
                 Delay = _delay;
                 Repeat = _repeat;
@@ -406,7 +421,7 @@ namespace Ux
                 ExeTime = UseFrame ? Ins.TotalFrame + addTime : Ins.TotalTime + addTime;
             }
 
-            public int Compare(IHandle compare)
+            public override int Compare(IHandle compare)
             {
                 if (compare is TimeHandle handle)
                 {
@@ -416,7 +431,7 @@ namespace Ux
                 return 0;
             }
 
-            public RunStatus Run()
+            public override RunStatus Run()
             {
                 if (Status != Status.Normal)
                 {
@@ -427,7 +442,7 @@ namespace Ux
                 if (total < ExeTime) return RunStatus.Wait;
                 ExeTime += Delay;
                 ExeCnt++;
-                exe?.Run();
+                Exe?.Run();
                 if (Status != Status.Normal) //以防Run业务逻辑给Release掉了
                 {
                     return RunStatus.None;
@@ -441,21 +456,17 @@ namespace Ux
                 return RunStatus.Done;
             }
 
-            public void Release()
+            protected override void OnRelease()
             {
-                if (Status != Status.WaitDel)
-                {
-                    Log.Error("出现非WaitDel状态却执行删除的TimeHandler {0}", MethodName);
-                    return;
-                }
-
-                Status = Status.Release;
-                Key = 0;
                 _complete1 = null;
-                exe?.Release();
-                exe = null;
+                _complete2 = null;
+                _completeParam = null;
+                Delay = 0;
+                Repeat = 0;
+                UseFrame = false;
+                IsLoop = false;
+                ExeTime = int.MaxValue;
                 ExeCnt = 0;
-                Pool.Push(this);
             }
         }
 

@@ -14,6 +14,7 @@ public class UIDebuggerWindow : EditorWindow
     }
     private DebuggerObjectSearchListView<UIDebuggerItem, IUIData> _listUI;
     private DebuggerStringListView _listShowed;
+    private DebuggerObjectListView<UIDebuggerStackItem, Ux.UIMgr.UIStack> _listStack;
     private DebuggerStringListView _listShowing;
     private DebuggerStringListView _listCacel;
     private DebuggerStringListView _listTemCacel;
@@ -23,6 +24,7 @@ public class UIDebuggerWindow : EditorWindow
     {
         UIMgr.__Debugger_UI_CallBack = OnUpdateUI;
         UIMgr.__Debugger_Showed_CallBack = OnUpdateShowed;
+        UIMgr.__Debugger_Stack_CallBack = OnUpdateStack;
         UIMgr.__Debugger_Showing_CallBack = OnUpdateShowing;
         UIMgr.__Debugger_Cacel_CallBack = OnUpdateCacel;
         UIMgr.__Debugger_TemCacel_CallBack = OnUpdateTemCacel;
@@ -35,6 +37,7 @@ public class UIDebuggerWindow : EditorWindow
 
         _listUI = new DebuggerObjectSearchListView<UIDebuggerItem, IUIData>(root.Q<VisualElement>("veList"), 5);
         _listShowed = new DebuggerStringListView(root.Q<ListView>("listShowed"), OnBtnClick);
+        _listStack = new DebuggerObjectListView<UIDebuggerStackItem, UIMgr.UIStack>(root.Q<ListView>("listStack"), OnBtnClick);
         _listShowing = new DebuggerStringListView(root.Q<ListView>("listShowing"), OnBtnClick);
         _listCacel = new DebuggerStringListView(root.Q<ListView>("listCacel"), OnBtnClick);
         _listTemCacel = new DebuggerStringListView(root.Q<ListView>("listTemCacel"), OnBtnClick);
@@ -46,6 +49,11 @@ public class UIDebuggerWindow : EditorWindow
     {
         _listUI.Search(idStr);
     }
+    private void OnBtnClick(Ux.UIMgr.UIStack data)
+    {
+        _listUI.Search(data.IDStr);
+    }
+
     private void OnUpdateUI(Dictionary<string, IUIData> dict)
     {
         _listUI.SetData(dict);
@@ -53,6 +61,10 @@ public class UIDebuggerWindow : EditorWindow
     private void OnUpdateShowed(List<string> list)
     {
         _listShowed.SetData(list);
+    }
+    private void OnUpdateStack(List<Ux.UIMgr.UIStack> list)
+    {
+        _listStack.SetData(list);
     }
     private void OnUpdateShowing(List<string> list)
     {

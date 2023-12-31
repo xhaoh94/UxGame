@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -63,6 +64,12 @@ public class ResDebuggerItem: TemplateContainer, IDebuggerListItem<UIPkgRef>
             Add(label);
         }
     }
+
+    public void SetClickEvt(Action<UIPkgRef> action)
+    {
+        
+    }
+
     public void SetData(UIPkgRef data)
     {
         var lb0 = this.Q<Label>("Label0");

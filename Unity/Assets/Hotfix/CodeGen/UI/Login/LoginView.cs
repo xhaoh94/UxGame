@@ -27,7 +27,7 @@ namespace Ux.UI
 		}
 		protected override void OnAddEvent()
 		{
-			btnLogin.AddClick(_OnBtnLoginClick);
+			AddClick(btnLogin,_OnBtnLoginClick);
 		}
 		void _OnBtnLoginClick(EventContext e)
 		{
