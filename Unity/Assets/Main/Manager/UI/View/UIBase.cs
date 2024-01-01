@@ -108,7 +108,7 @@ namespace Ux
             }
             AddToStage();
             OnLayout();
-            base.DoShow(isAnim, id, id == ID ? param : null, isStack);
+            base.DoShow(isAnim, id, param, isStack);
         }
         private void _Show(int id, object param, bool isStack)
         {
