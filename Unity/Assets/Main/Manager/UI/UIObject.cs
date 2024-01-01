@@ -57,7 +57,7 @@ namespace Ux
         /// </summary>
         protected virtual IUIAnim HideAnim { get; } = null;
 
-        protected Action<int, object> OnShowCallBack;
+        protected Action<int, object, bool> OnShowCallBack;
         protected Action OnHideCallBack;
 
         protected T ParentAs<T>() where T : UIObject
@@ -215,7 +215,7 @@ namespace Ux
         }
 
 
-        public virtual void DoShow(bool isAnim, int id, object param)
+        public virtual void DoShow(bool isAnim, int id, object param, bool isStack)
         {
             if (_state == UIState.Show || _state == UIState.ShowAnim)
             {
@@ -238,18 +238,18 @@ namespace Ux
             OnShow(param);
             foreach (var component in Components)
             {
-                component.DoShow(isAnim, 0, null);
+                component.DoShow(isAnim, id, param, isStack);
             }
-            _CheckShow(id, param).Forget();
+            _CheckShow(id, param, isStack).Forget();
         }
 
-        async UniTaskVoid _CheckShow(int id, object param)
+        async UniTaskVoid _CheckShow(int id, object param, bool isStack)
         {
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
                 await UniTask.Yield();
 
             OnShowAnimComplete();
-            OnShowCallBack?.Invoke(id, param);
+            OnShowCallBack?.Invoke(id, param, isStack);
         }
 
         protected virtual void OnShow(object param)

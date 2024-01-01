@@ -211,17 +211,23 @@ namespace Ux
 
         public UITask<T> Show<T>(int id, object param = null, bool isAnim = true) where T : IUI
         {
-            var task = ShowAsync<T>(id, param, isAnim);
+            var task = ShowAsync<T>(true, id, param, isAnim);
             return new UITask<T>(task);
         }
 
         public UITask<IUI> Show(int id, object param = null, bool isAnim = true)
         {
-            var task = ShowAsync<IUI>(id, param, isAnim);
+            var task = ShowAsync<IUI>(true, id, param, isAnim);
             return new UITask<IUI>(task);
         }
 
-        private async UniTask<T> ShowAsync<T>(int id, object param = null, bool isAnim = true) where T : IUI
+        UITask<IUI> ShowStack(int id, object param = null)
+        {
+            var task = ShowAsync<IUI>(false, id, param, false);
+            return new UITask<IUI>(task);
+        }
+
+        private async UniTask<T> ShowAsync<T>(bool isStack, int id, object param = null, bool isAnim = true) where T : IUI
         {
             var data = GetUIData(id);
             if (data == null)
@@ -261,15 +267,11 @@ namespace Ux
                     continue;
                 }
 
+                ui.DoShow(isAnim, id, uiid == id ? param : null, isStack);
                 if (_showed.ContainsKey(uiid))
                 {
-                    if (uiid == id)
-                    {
-                        ui.DoShow(isAnim, id, param);
-                    }
                     continue;
                 }
-                ui.DoShow(isAnim, id, uiid == id ? param : null);
                 _showed.Add(uiid, ui);
                 _showing.Remove(uiid);
                 EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
@@ -404,9 +406,10 @@ namespace Ux
             return true;
         }
 
-        void _ShowCallBack(IUI ui, object param)
+        void _ShowCallBack(IUI ui, object param, bool isStack)
         {
             var uiType = ui.Type;
+            if (!isStack) return;
             if (uiType == UIType.Fixed) return;
 
             var parentID = ui.Data.GetParentID();
@@ -433,7 +436,10 @@ namespace Ux
                 for (var i = _stack.Count - 2; i >= 0; i--)
                 {
                     var preStack = _stack[i];
-                    Hide(preStack.ParentID);
+                    if (preStack.ID != ui.ID)
+                    {
+                        Hide(preStack.ParentID);
+                    }
                     if (preStack.Type == UIType.Stack)
                     {
                         break;
@@ -458,7 +464,7 @@ namespace Ux
                 }
             }
             var ui = (IUI)Activator.CreateInstance(data.CType);
-            ui.InitData(data, _HideCallBack, _CheckStack, _ShowCallBack);
+            ui.InitData(data, _HideCallBack, _StackCallBack, _ShowCallBack);
             return ui;
         }
 
@@ -548,7 +554,7 @@ namespace Ux
                 ui.DoHide(isAnim, isStack);
             }
         }
-        private void _CheckStack(IUI ui, bool isStack = false)
+        private void _StackCallBack(IUI ui, bool isStack = false)
         {
             if (_stack.Count > 0)
             {
@@ -570,7 +576,7 @@ namespace Ux
                     var preStack = _stack[i];
                     if (preStack.Type == UIType.Stack)
                     {
-                        Show(preStack.ID, preStack.Param, false);
+                        ShowStack(preStack.ID, preStack.Param);
                         break;
                     }
                     else
@@ -581,7 +587,7 @@ namespace Ux
                 while (_backs.Count > 0)
                 {
                     var preStack = _backs.Pop();
-                    Show(preStack.ID, preStack.Param, false);
+                    ShowStack(preStack.ID, preStack.Param);
                 }
             }
         }

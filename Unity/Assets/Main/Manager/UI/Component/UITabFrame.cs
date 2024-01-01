@@ -71,9 +71,9 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        public override void DoShow(bool isAnim, int id, object param)
+        public override void DoShow(bool isAnim, int id, object param, bool isStack)
         {
-            base.DoShow(isAnim, id, param);
+            base.DoShow(isAnim, id, param, isStack);
             if (__listTab != null && _tabDatas != null)
             {
                 AddItemClick(__listTab, OnTabClick);

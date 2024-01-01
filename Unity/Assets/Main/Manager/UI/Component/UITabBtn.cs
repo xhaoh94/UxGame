@@ -10,7 +10,7 @@ namespace Ux
         {
             Data = _data;
             Init(gObj, parent);
-            DoShow(true, 0, _data);
+            DoShow(true, 0, _data, false);
         }
         public void Release(bool isDispose = false)
         {

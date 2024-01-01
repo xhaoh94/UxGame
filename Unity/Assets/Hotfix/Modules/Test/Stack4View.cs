@@ -18,7 +18,7 @@ namespace Ux.UI
         }
         partial void OnBtn2Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack3View>();
+            UIMgr.Ins.Show<UI.Stack2View>();
         }
         partial void OnBtn3Click(EventContext e)
         {

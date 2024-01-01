@@ -14,9 +14,9 @@ namespace Ux
         IUIData Data { get; }
         bool IsDestroy { get; }
         bool Visable { get; set; }
-        void InitData(IUIData data, Action<IUI> hideCb, Action<IUI, bool> stackCb, Action<IUI, object> showCb);
+        void InitData(IUIData data, Action<IUI> hideCb, Action<IUI, bool> stackCb, Action<IUI, object, bool> showCb);
         void Dispose();
-        void DoShow(bool isAnim, int id, object param);
+        void DoShow(bool isAnim, int id, object param, bool isStack);
         void DoHide(bool isAnim, bool isStack);
 
     }
@@ -29,9 +29,9 @@ namespace Ux
         public virtual UIType Type => UIType.None;
 
         Action<IUI> _hideCb;
-        Action<IUI, object> _showCb;
+        Action<IUI, object, bool> _showCb;
         Action<IUI, bool> _stackCb;
-        public virtual void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object> show)
+        public virtual void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object, bool> show)
         {
             Data = data;
             _hideCb = hide;
@@ -94,7 +94,7 @@ namespace Ux
         protected virtual void OnOverwrite(object param)
         {
         }
-        public override void DoShow(bool isAnim, int id, object param)
+        public override void DoShow(bool isAnim, int id, object param, bool isStack)
         {
             var _state = State;
             if (_state == UIState.Show || _state == UIState.ShowAnim)
@@ -103,17 +103,18 @@ namespace Ux
                 {
                     OnOverwrite(param);
                 }
+                _Show(id, param, isStack);
                 return;
             }
             AddToStage();
             OnLayout();
-            base.DoShow(isAnim, id, id == ID ? param : null);
+            base.DoShow(isAnim, id, id == ID ? param : null, isStack);
         }
-        private void _Show(int id, object param)
+        private void _Show(int id, object param, bool isStack)
         {
             if (id == ID)
             {
-                _showCb?.Invoke(this, param);
+                _showCb?.Invoke(this, param, isStack);
             }
         }
 

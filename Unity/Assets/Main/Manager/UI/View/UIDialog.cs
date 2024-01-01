@@ -34,16 +34,16 @@ namespace Ux
             __controller = (Controller)gCom.GetController("dialogState");
         }
 
-        public override void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object> show)
+        public override void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object, bool> show)
         {
             OnHideCallBack += _Hide;
             base.InitData(data, hide, stack, show);
         }
 
-        public override void DoShow(bool isAnim, int id, object param)
+        public override void DoShow(bool isAnim, int id, object param, bool isStack)
         {
             dialogData = (UIDialogFactory.DialogData)param;
-            base.DoShow(isAnim, id, param);
+            base.DoShow(isAnim, id, param, isStack);
         }
         protected override void OnShow(object param)
         {
