@@ -248,7 +248,16 @@ namespace Ux
             {
                 return data;
             }
-            Log.Error($"没有注册UIID[{id}]");
+#if UNITY_EDITOR
+            if (Ins._idToTypeName.TryGetValue(id, out var tName))
+            {
+                Log.Error($"获取不到UIData[{tName}],请检查是否有注册UI");
+            }
+            else
+            {
+                Log.Error($"获取不到UIData[{id}],请检查是否有注册UI");
+            }
+#endif
             return null;
         }
 

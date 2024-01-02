@@ -1,5 +1,6 @@
 ﻿using FairyGUI;
 using System;
+using static Ux.UIMgr;
 
 namespace Ux
 {
@@ -34,10 +35,10 @@ namespace Ux
             __controller = (Controller)gCom.GetController("dialogState");
         }
 
-        public override void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object, bool> show)
+        public override void InitData(IUIData data, UICallBackData initData)
         {
             OnHideCallBack += _Hide;
-            base.InitData(data, hide, stack, show);
+            base.InitData(data, initData);
         }
 
         public override void DoShow(bool isAnim, int id, object param, bool isStack)
@@ -128,10 +129,6 @@ namespace Ux
         private void _Hide()
         {
             dialogData.HideCallBack?.Invoke(this);
-        }
-        public override void Hide()
-        {
-            UIMgr.Ins.Hide(Data.ID, true, Type != UIType.Fixed);
         }
     }
 }

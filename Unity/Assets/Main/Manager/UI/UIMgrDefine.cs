@@ -6,6 +6,20 @@ namespace Ux
 {
     public partial class UIMgr
     {
+        public readonly struct UICallBackData
+        {
+            public UICallBackData(Action<IUI, object, bool> _showCb, Action<IUI> _hideCb, Action<IUI, bool> _stackCb, Action<int, bool> _backCb)
+            {
+                showCb = _showCb;
+                hideCb = _hideCb;
+                stackCb = _stackCb;
+                backCb = _backCb;
+            }
+            public readonly Action<IUI> hideCb;
+            public readonly Action<IUI, bool> stackCb;
+            public readonly Action<int, bool> backCb;
+            public readonly Action<IUI, object, bool> showCb;
+        }
         public struct UIStack
         {
             public readonly int ParentID;

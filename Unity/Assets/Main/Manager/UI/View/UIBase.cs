@@ -1,5 +1,6 @@
 using FairyGUI;
 using System;
+using static Ux.UIMgr;
 
 namespace Ux
 {
@@ -14,7 +15,7 @@ namespace Ux
         IUIData Data { get; }
         bool IsDestroy { get; }
         bool Visable { get; set; }
-        void InitData(IUIData data, Action<IUI> hideCb, Action<IUI, bool> stackCb, Action<IUI, object, bool> showCb);
+        void InitData(IUIData data, UICallBackData initData);
         void Dispose();
         void DoShow(bool isAnim, int id, object param, bool isStack);
         void DoHide(bool isAnim, bool isStack);
@@ -28,15 +29,11 @@ namespace Ux
         public virtual bool IsDestroy => true;
         public virtual UIType Type => UIType.None;
 
-        Action<IUI> _hideCb;
-        Action<IUI, object, bool> _showCb;
-        Action<IUI, bool> _stackCb;
-        public virtual void InitData(IUIData data, Action<IUI> hide, Action<IUI, bool> stack, Action<IUI, object, bool> show)
+        private UICallBackData? _cbData;
+        public virtual void InitData(IUIData data, UICallBackData initData)
         {
             Data = data;
-            _hideCb = hide;
-            _showCb = show;
-            _stackCb = stack;
+            _cbData = initData;
             Init(CreateObject());
             OnHideCallBack += _Hide;
             OnShowCallBack += _Show;
@@ -77,7 +74,14 @@ namespace Ux
 
         public virtual void Hide()
         {
-            UIMgr.Ins.Hide(Data.ID, true, true);
+            if (_cbData != null)
+            {
+                _cbData.Value.backCb?.Invoke(ID, true);
+            }
+            else
+            {
+                UIMgr.Ins.Hide(ID, true);                
+            }
         }
 
         protected void MakeFullScreen()
@@ -114,20 +118,29 @@ namespace Ux
         {
             if (id == ID)
             {
-                _showCb?.Invoke(this, param, isStack);
+                if (_cbData != null)
+                {
+                    _cbData.Value.showCb?.Invoke(this, param, isStack);
+                }
             }
         }
 
         public override void DoHide(bool isAnim, bool isStack)
         {
             base.DoHide(isAnim, isStack);
-            _stackCb?.Invoke(this, isStack);
+            if (_cbData != null)
+            {
+                _cbData.Value.stackCb?.Invoke(this, isStack);
+            }
         }
 
         private void _Hide()
         {
             RemoveToStage();
-            _hideCb?.Invoke(this);
+            if (_cbData != null)
+            {
+                _cbData.Value.hideCb?.Invoke(this);
+            }
         }
         void IUI.Dispose()
         {
@@ -136,8 +149,7 @@ namespace Ux
         protected override void OnDispose()
         {
             Data = null;
-            _hideCb = null;
-            _showCb = null;
+            _cbData = null;
         }
         protected void SetLayout(UILayout layout, bool restraint = true)
         {

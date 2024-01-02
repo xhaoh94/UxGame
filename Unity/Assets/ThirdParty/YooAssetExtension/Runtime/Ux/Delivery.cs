@@ -14,10 +14,11 @@ public class DeliveryQueryServices : IDeliveryQueryServices
         return string.Empty;
     }
 
-    public bool Query(string packageName, string fileName)
+    public bool Query(string packageName, string fileName, string fileCRC)
     {
         return false;
     }
+
 }
 
 public class DeliveryLoadServices : IDeliveryLoadServices

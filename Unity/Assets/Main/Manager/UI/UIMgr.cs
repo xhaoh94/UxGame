@@ -21,9 +21,13 @@ namespace Ux
         /// 界面顺序
         /// </summary>
         List<UIStack> _stack = new List<UIStack>();
+        Stack<UIStack> _backs = new Stack<UIStack>();
 
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeToId = new Dictionary<Type, int>();
+#if UNITY_EDITOR
+        private readonly Dictionary<int, string> _idToTypeName = new Dictionary<int, string>();
+#endif
 
         //界面缓存，关闭不销毁的界面会缓存起来
         private readonly Dictionary<int, IUI> _cacel = new Dictionary<int, IUI>();
@@ -53,6 +57,7 @@ namespace Ux
 
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
 
+        private readonly UICallBackData _initData;
         //UI层级
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
         {
@@ -80,6 +85,7 @@ namespace Ux
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
+            _initData = new UICallBackData(_ShowCallBack, _HideCallBack, _CheckStack, _HideByStack);
         }
 
         //内存不足时，清理缓存
@@ -202,6 +208,9 @@ namespace Ux
             }
             id = type.FullName.ToHash();
             _typeToId.Add(type, id);
+#if UNITY_EDITOR
+            _idToTypeName.Add(id, type.FullName);
+#endif
             return id;
         }
         public UITask<T> Show<T>(object param = null, bool isAnim = true) where T : IUI
@@ -221,10 +230,52 @@ namespace Ux
             return new UITask<IUI>(task);
         }
 
-        UITask<IUI> ShowStack(int id, object param = null)
+        UITask<IUI> _ShowByStack(int id, object param = null)
         {
             var task = ShowAsync<IUI>(false, id, param, false);
             return new UITask<IUI>(task);
+        }
+        void _ShowCallBack(IUI ui, object param, bool isStack)
+        {
+            var uiType = ui.Type;
+            if (!isStack) return;
+            if (uiType == UIType.Fixed) return;
+
+            var parentID = ui.Data.GetParentID();
+            if (_stack.Count > 0)
+            {
+                var lastStack = _stack[_stack.Count - 1];
+                if (lastStack.ParentID == parentID)
+                {
+                    lastStack.ID = ui.ID;
+                    lastStack.Param = param;
+                    _stack[_stack.Count - 1] = lastStack;
+                    return;
+                }
+            }
+#if UNITY_EDITOR
+            _stack.Add(new UIStack(parentID, ui.IDStr, ui.ID, param, uiType));
+            __Debugger_Stack_Event();
+#else
+            _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
+#endif
+
+            if (uiType == UIType.Stack)
+            {
+                for (var i = _stack.Count - 2; i >= 0; i--)
+                {
+                    var preStack = _stack[i];
+                    if (preStack.ID != ui.ID)
+                    {
+                        Hide(preStack.ParentID);
+                    }
+                    if (preStack.Type == UIType.Stack)
+                    {
+                        break;
+                    }
+                }
+            }
+
         }
 
         private async UniTask<T> ShowAsync<T>(bool isStack, int id, object param = null, bool isAnim = true) where T : IUI
@@ -293,7 +344,6 @@ namespace Ux
             var data = GetUIData(id);
             if (data == null)
             {
-                Log.Error($"没有找到{id}对应的UIData");
                 return false;
             }
 
@@ -406,48 +456,6 @@ namespace Ux
             return true;
         }
 
-        void _ShowCallBack(IUI ui, object param, bool isStack)
-        {
-            var uiType = ui.Type;
-            if (!isStack) return;
-            if (uiType == UIType.Fixed) return;
-
-            var parentID = ui.Data.GetParentID();
-            if (_stack.Count > 0)
-            {
-                var lastStack = _stack[_stack.Count - 1];
-                if (lastStack.ParentID == parentID)
-                {
-                    lastStack.ID = ui.ID;
-                    lastStack.Param = param;
-                    _stack[_stack.Count - 1] = lastStack;
-                    return;
-                }
-            }
-#if UNITY_EDITOR
-            _stack.Add(new UIStack(parentID, ui.IDStr, ui.ID, param, uiType));
-            __Debugger_Stack_Event();
-#else
-            _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
-#endif
-
-            if (uiType == UIType.Stack)
-            {
-                for (var i = _stack.Count - 2; i >= 0; i--)
-                {
-                    var preStack = _stack[i];
-                    if (preStack.ID != ui.ID)
-                    {
-                        Hide(preStack.ParentID);
-                    }
-                    if (preStack.Type == UIType.Stack)
-                    {
-                        break;
-                    }
-                }
-            }
-
-        }
         private async UniTask<IUI> CreateUI(IUIData data)
         {
             if (data.Pkgs is { Length: > 0 })
@@ -464,7 +472,7 @@ namespace Ux
                 }
             }
             var ui = (IUI)Activator.CreateInstance(data.CType);
-            ui.InitData(data, _HideCallBack, _StackCallBack, _ShowCallBack);
+            ui.InitData(data, _initData);
             return ui;
         }
 
@@ -493,7 +501,6 @@ namespace Ux
             }
             _HideAll(Func);
         }
-
         void _HideAll(Func<int, bool> func)
         {
             _stack.Clear();
@@ -508,13 +515,56 @@ namespace Ux
                 Hide(id, false);
             }
         }
-
+        void _HideByStack(int id, bool isAnim)
+        {
+            _Hide(true, id, isAnim);
+        }
+        private void _CheckStack(IUI ui, bool isStack = false)
+        {
+            if (_stack.Count > 0)
+            {
+                var lastIndex = _stack.Count - 1;
+                var last = _stack[lastIndex];
+                if (last.ID == ui.ID)
+                {
+                    _stack.RemoveAt(lastIndex);
+#if UNITY_EDITOR
+                    __Debugger_Stack_Event();
+#endif
+                }
+            }
+            if (isStack && ui.Type == UIType.Stack)
+            {
+                _backs.Clear();
+                for (int i = _stack.Count - 1; i >= 0; i--)
+                {
+                    var preStack = _stack[i];
+                    if (preStack.Type == UIType.Stack)
+                    {
+                        _ShowByStack(preStack.ID, preStack.Param);
+                        break;
+                    }
+                    else
+                    {
+                        _backs.Push(preStack);
+                    }
+                }
+                while (_backs.Count > 0)
+                {
+                    var preStack = _backs.Pop();
+                    _ShowByStack(preStack.ID, preStack.Param);
+                }
+            }
+        }
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
             Hide(ConverterID(typeof(T)), isAnim);
         }
-
-        public void Hide(int id, bool isAnim = true, bool isStack = false)
+        public void Hide(int id, bool isAnim = true)
+        {
+            _Hide(false, id, isAnim);
+        }
+        void _Hide(bool isStack, int id, bool isAnim = true)
         {
             if (_showing.Contains(id))
             {
@@ -554,43 +604,6 @@ namespace Ux
                 ui.DoHide(isAnim, isStack);
             }
         }
-        private void _StackCallBack(IUI ui, bool isStack = false)
-        {
-            if (_stack.Count > 0)
-            {
-                var lastIndex = _stack.Count - 1;
-                var last = _stack[lastIndex];
-                if (last.ID == ui.ID)
-                {
-                    _stack.RemoveAt(lastIndex);
-#if UNITY_EDITOR
-                    __Debugger_Stack_Event();
-#endif
-                }
-            }
-            if (isStack && ui.Type == UIType.Stack)
-            {
-                _backs.Clear();
-                for (int i = _stack.Count - 1; i >= 0; i--)
-                {
-                    var preStack = _stack[i];
-                    if (preStack.Type == UIType.Stack)
-                    {
-                        ShowStack(preStack.ID, preStack.Param);
-                        break;
-                    }
-                    else
-                    {
-                        _backs.Push(preStack);
-                    }
-                }
-                while (_backs.Count > 0)
-                {
-                    var preStack = _backs.Pop();
-                    ShowStack(preStack.ID, preStack.Param);
-                }
-            }
-        }
         private void _HideCallBack(IUI ui)
         {
             var id = ui.ID;
@@ -602,7 +615,6 @@ namespace Ux
             EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
             EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
         }
-        Stack<UIStack> _backs = new Stack<UIStack>();
         private void CheckDestroy(IUI ui)
         {
             var id = ui.ID;
