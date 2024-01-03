@@ -17,12 +17,6 @@ namespace Ux
         //对话弹窗
         public static readonly UIDialogFactory Dialog = new UIDialogFactory();
 
-        /// <summary>
-        /// 界面顺序
-        /// </summary>
-        List<UIStack> _stack = new List<UIStack>();
-        Stack<UIStack> _backs = new Stack<UIStack>();
-
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeToId = new Dictionary<Type, int>();
 #if UNITY_EDITOR

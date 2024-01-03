@@ -8,6 +8,11 @@ namespace Ux
 {
     partial class UIMgr
     {
+        /// <summary>
+        /// 界面顺序
+        /// </summary>
+        List<UIStack> _stack = new List<UIStack>();
+        Stack<UIStack> _backs = new Stack<UIStack>();
         void _ShowCallBack_Stack(IUI ui, object param, bool isStack)
         {
             var uiType = ui.Type;
