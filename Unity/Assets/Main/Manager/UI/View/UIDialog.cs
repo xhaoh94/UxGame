@@ -11,7 +11,7 @@ namespace Ux
 
         protected override string ResName => "CommonDialog";
         public override UIType Type => UIType.Fixed;
-
+        public override UIBlur Blur => UIBlur.None | UIBlur.Blur | UIBlur.Fixed;
         protected UIDialogFactory.DialogData dialogData;
 
         #region 组件

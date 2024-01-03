@@ -9,6 +9,7 @@ namespace Ux.UI
     {
         protected override UILayer Layer => UILayer.Normal;
         public override UIType Type => UIType.Fixed;
+        public override UIBlur Blur => UIBlur.Scene;
         partial void OnBtnBackClick(EventContext e)
         {
             GameMain.Machine.Enter<StateLogin>();

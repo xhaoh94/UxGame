@@ -7,6 +7,11 @@ namespace Ux.UI
     {
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.None;
+
+        protected override void OnShow(object param)
+        {
+            base.OnShow(param);            
+        }
         partial void OnBtn1Click(EventContext e)
         {
             UIMgr.Ins.Show<UI.Stack1View>();
@@ -21,7 +26,7 @@ namespace Ux.UI
         }
         partial void OnBtnBackClick(EventContext e)
         {
-            Hide();
+            Hide();            
         }
     }
 }

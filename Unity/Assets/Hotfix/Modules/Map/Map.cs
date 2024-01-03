@@ -1,6 +1,7 @@
 ﻿using Ux;
 using System.Collections.Generic;
 using UnityEngine;
+using FairyGUI;
 
 namespace Ux
 {
@@ -19,7 +20,7 @@ namespace Ux
         }
 
         public void AddPlayer(PlayerData playerData)
-        {            
+        {
             var player = AddChild<Player, PlayerData>(playerData.id, playerData);
             players.Add(playerData.id, player);
         }

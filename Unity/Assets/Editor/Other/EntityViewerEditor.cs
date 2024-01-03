@@ -4,7 +4,7 @@ using Ux;
 
 [CustomEditor(typeof(Ux.EntityViewer), true)]
 public class EntityViewerEditor : UnityEditor.Editor
-{
+{    
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();

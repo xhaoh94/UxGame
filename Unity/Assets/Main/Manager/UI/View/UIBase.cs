@@ -8,6 +8,7 @@ namespace Ux
     {
         UIState State { get; }
         UIType Type { get; }
+        UIBlur Blur { get; }
 #if UNITY_EDITOR
         string IDStr { get; }
 #endif
@@ -15,6 +16,7 @@ namespace Ux
         IUIData Data { get; }
         bool IsDestroy { get; }
         bool Visable { get; set; }
+        IFilter Filter { get; set; }
         void InitData(IUIData data, UICallBackData initData);
         void Dispose();
         void DoShow(bool isAnim, int id, object param, bool isStack);
@@ -28,6 +30,7 @@ namespace Ux
         protected abstract string ResName { get; }
         public virtual bool IsDestroy => true;
         public virtual UIType Type => UIType.None;
+        public virtual UIBlur Blur => UIBlur.Normal;
 
         private UICallBackData? _cbData;
         public virtual void InitData(IUIData data, UICallBackData initData)
@@ -51,6 +54,20 @@ namespace Ux
             }
 
             return UIPackage.CreateObject(pkg, res);
+        }
+        public IFilter Filter
+        {
+            get
+            {
+                if (GObject == null) return null;
+                return GObject.filter;
+            }
+            set
+            {
+                if (GObject == null) return;
+                GObject.filter = value;
+            }
+
         }
         public bool Visable
         {
@@ -80,7 +97,7 @@ namespace Ux
             }
             else
             {
-                UIMgr.Ins.Hide(ID, true);                
+                UIMgr.Ins.Hide(ID, true);
             }
         }
 
@@ -116,27 +133,25 @@ namespace Ux
         }
         private void _Show(int id, object param, bool isStack)
         {
-            if (id == ID)
+            if (id == ID && _cbData != null)
             {
-                if (_cbData != null)
-                {
-                    _cbData.Value.showCb?.Invoke(this, param, isStack);
-                }
+                _cbData.Value.showCb?.Invoke(this, param, isStack);
             }
         }
 
         public override void DoHide(bool isAnim, bool isStack)
         {
-            base.DoHide(isAnim, isStack);
             if (_cbData != null)
             {
                 _cbData.Value.stackCb?.Invoke(this, isStack);
             }
+            base.DoHide(isAnim, isStack);
         }
 
         private void _Hide()
         {
             RemoveToStage();
+            Filter = null;
             if (_cbData != null)
             {
                 _cbData.Value.hideCb?.Invoke(this);

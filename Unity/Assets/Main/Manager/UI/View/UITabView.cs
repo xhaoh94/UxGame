@@ -4,10 +4,8 @@
     {
         public override UIObject Parent => UIMgr.Ins.GetUI<UIBase>(Data.TabData.PID);
 
-        /// <summary>
-        /// 指定这个无效，类型由最上层的父类决定
-        /// </summary>
-        public override UIType Type => UIType.None;
+        public sealed override UIType Type => ParentAs<UIBase>().Type;
+        public sealed override UIBlur Blur => ParentAs<UIBase>().Blur;
 
         protected override void AddToStage()
         {

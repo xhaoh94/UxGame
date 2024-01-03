@@ -67,6 +67,7 @@ namespace Ux
             { UILayer.Top, _CreateLayer(UILayer.Top, 300) }
         };
 
+
         static GComponent _CreateLayer(UILayer layer, int v)
         {
             var com = new GComponent();
@@ -189,6 +190,11 @@ namespace Ux
             if (!_showed.ContainsKey(id)) return default(T);
             return (T)_showed[id];
         }
+        public IUI GetUI(int id)
+        {
+            if (!_showed.ContainsKey(id)) return null;
+            return _showed[id];
+        }
 
         public bool IsShow<T>() where T : UIBase
         {
@@ -237,45 +243,8 @@ namespace Ux
         }
         void _ShowCallBack(IUI ui, object param, bool isStack)
         {
-            var uiType = ui.Type;
-            if (!isStack) return;
-            if (uiType == UIType.Fixed) return;
-
-            var parentID = ui.Data.GetParentID();
-            if (_stack.Count > 0)
-            {
-                var lastStack = _stack[_stack.Count - 1];
-                if (lastStack.ParentID == parentID)
-                {
-                    lastStack.ID = ui.ID;
-                    lastStack.Param = param;
-                    _stack[_stack.Count - 1] = lastStack;
-                    return;
-                }
-            }
-#if UNITY_EDITOR
-            _stack.Add(new UIStack(parentID, ui.IDStr, ui.ID, param, uiType));
-            __Debugger_Stack_Event();
-#else
-            _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
-#endif
-
-            if (uiType == UIType.Stack)
-            {
-                for (var i = _stack.Count - 2; i >= 0; i--)
-                {
-                    var preStack = _stack[i];
-                    if (preStack.ID != ui.ID)
-                    {
-                        Hide(preStack.ParentID);
-                    }
-                    if (preStack.Type == UIType.Stack)
-                    {
-                        break;
-                    }
-                }
-            }
-
+            _ShowCallBack_Stack(ui, param, isStack);
+            _ShowCallBack_Blur(ui);
         }
 
         private async UniTask<T> ShowAsync<T>(bool isStack, int id, object param = null, bool isAnim = true) where T : IUI
@@ -515,47 +484,7 @@ namespace Ux
                 Hide(id, false);
             }
         }
-        void _HideByStack(int id, bool isAnim)
-        {
-            _Hide(true, id, isAnim);
-        }
-        private void _CheckStack(IUI ui, bool isStack = false)
-        {
-            if (_stack.Count > 0)
-            {
-                var lastIndex = _stack.Count - 1;
-                var last = _stack[lastIndex];
-                if (last.ID == ui.ID)
-                {
-                    _stack.RemoveAt(lastIndex);
-#if UNITY_EDITOR
-                    __Debugger_Stack_Event();
-#endif
-                }
-            }
-            if (isStack && ui.Type == UIType.Stack)
-            {
-                _backs.Clear();
-                for (int i = _stack.Count - 1; i >= 0; i--)
-                {
-                    var preStack = _stack[i];
-                    if (preStack.Type == UIType.Stack)
-                    {
-                        _ShowByStack(preStack.ID, preStack.Param);
-                        break;
-                    }
-                    else
-                    {
-                        _backs.Push(preStack);
-                    }
-                }
-                while (_backs.Count > 0)
-                {
-                    var preStack = _backs.Pop();
-                    _ShowByStack(preStack.ID, preStack.Param);
-                }
-            }
-        }
+
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
             Hide(ConverterID(typeof(T)), isAnim);
@@ -606,14 +535,8 @@ namespace Ux
         }
         private void _HideCallBack(IUI ui)
         {
-            var id = ui.ID;
-            _showed.Remove(id);
-            CheckDestroy(ui);
-#if UNITY_EDITOR
-            __Debugger_Showed_Event();
-#endif
-            EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
-            EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
+            _HideCallBack_Stack(ui);
+            _HideCallBack_Blur(ui);
         }
         private void CheckDestroy(IUI ui)
         {

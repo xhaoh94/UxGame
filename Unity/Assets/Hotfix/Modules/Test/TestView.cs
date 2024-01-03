@@ -12,6 +12,7 @@ namespace Ux.UI
     {
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Stack;
+        public override UIBlur Blur => UIBlur.Blur;
         partial void OnBtnMultipleClick(EventContext e)
         {
             UIMgr.Ins.Show<MultipleView>();

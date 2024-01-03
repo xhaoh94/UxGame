@@ -19,10 +19,34 @@ namespace Ux
     public enum UIType
     {
         None,
-        Stack,
-        Fixed
+        Stack,//会关闭除Fixed之外的界面，放进队列        
+        Fixed,//固定界面,不会进入队列
     }
 
+    //必须是2的n次方,使用方法可 用组合 Blur|Fixed
+    public enum UIBlur
+    {
+        /// <summary>
+        /// 不会模糊其他界面也不会被其他界面模糊
+        /// </summary>
+        None = 0x1,
+        /// <summary>
+        /// 不会模糊其他界面但会被其他界面模糊
+        /// </summary>
+        Normal = 0x2,
+        /// <summary>
+        /// 模糊非固定界面
+        /// </summary>
+        Blur = 0x4,
+        /// <summary>
+        /// 模糊固定界面
+        /// </summary>
+        Fixed = 0x8,
+        /// <summary>
+        /// 模糊场景
+        /// </summary>
+        Scene = 0x10,
+    }
 
     public class UIObject
     {
@@ -329,11 +353,10 @@ namespace Ux
                 _components.Clear();
                 _components = null;
             }
-
+            OnDispose();
             if (isDisposeGObject) GObject?.Dispose();
             GObject = null;
             Parent = null;
-            OnDispose();
         }
 
         protected virtual void OnDispose()

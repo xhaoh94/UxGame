@@ -1,0 +1,112 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Ux
+{
+    partial class UIMgr
+    {
+        void _ShowCallBack_Stack(IUI ui, object param, bool isStack)
+        {
+            var uiType = ui.Type;
+            if (!isStack || uiType == UIType.Fixed)
+            {
+                return;
+            }
+
+            var parentID = ui.Data.GetParentID();
+            if (_stack.Count > 0)
+            {
+                var lastStack = _stack[_stack.Count - 1];
+                if (lastStack.ParentID == parentID)
+                {
+                    lastStack.ID = ui.ID;
+                    lastStack.Param = param;
+                    _stack[_stack.Count - 1] = lastStack;
+                    return;
+                }
+            }
+#if UNITY_EDITOR
+            _stack.Add(new UIStack(parentID, ui.IDStr, ui.ID, param, uiType));
+            __Debugger_Stack_Event();
+#else
+            _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
+#endif
+
+            if (uiType == UIType.Stack)
+            {
+                for (var i = _stack.Count - 2; i >= 0; i--)
+                {
+                    var preStack = _stack[i];
+                    if (preStack.ID != ui.ID)
+                    {
+                        Hide(preStack.ParentID);
+                    }
+                    if (preStack.Type == UIType.Stack)
+                    {
+                        break;
+                    }
+                }
+            }
+
+        }
+
+        void _HideCallBack_Stack(IUI ui)
+        {
+            var id = ui.ID;
+            _showed.Remove(id);
+            CheckDestroy(ui);
+#if UNITY_EDITOR
+            __Debugger_Showed_Event();
+#endif
+            EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
+            EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
+        }
+
+        void _CheckStack(IUI ui, bool isStack = false)
+        {
+            if (_stack.Count > 0)
+            {
+                var lastIndex = _stack.Count - 1;
+                var last = _stack[lastIndex];
+                if (last.ID == ui.ID)
+                {
+                    _stack.RemoveAt(lastIndex);
+#if UNITY_EDITOR
+                    __Debugger_Stack_Event();
+#endif
+                }
+            }
+            if (isStack && ui.Type == UIType.Stack)
+            {
+                _backs.Clear();
+                for (int i = _stack.Count - 1; i >= 0; i--)
+                {
+                    var preStack = _stack[i];
+                    if (preStack.Type == UIType.Stack)
+                    {
+                        _ShowByStack(preStack.ID, preStack.Param);
+                        break;
+                    }
+                    else
+                    {
+                        _backs.Push(preStack);
+                    }
+                }
+                while (_backs.Count > 0)
+                {
+                    var preStack = _backs.Pop();
+                    _ShowByStack(preStack.ID, preStack.Param);
+                }
+            }
+        }
+
+        void _HideByStack(int id, bool isAnim)
+        {
+            _Hide(true, id, isAnim);
+        }
+
+    }
+}

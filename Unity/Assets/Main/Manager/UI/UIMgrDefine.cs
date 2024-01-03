@@ -20,6 +20,26 @@ namespace Ux
             public readonly Action<int, bool> backCb;
             public readonly Action<IUI, object, bool> showCb;
         }
+        public struct UIBlurStack
+        {
+            public readonly UIBlur Blur;
+            public readonly int ID;
+#if UNITY_EDITOR
+            public readonly string IDStr;
+            public UIBlurStack(string idStr, int id, UIBlur blur)
+            {
+                IDStr = idStr;
+                ID = id;
+                Blur = blur;
+            }
+#else
+            public UIBlurStack(int id, UIBlur blur)
+            {
+                ID = id;
+                Blur = blur;
+            }
+#endif
+        }
         public struct UIStack
         {
             public readonly int ParentID;

@@ -35,7 +35,7 @@ namespace Ux.UI
     {
         public override bool IsDestroy => false;
         //protected override IUIAnim ShowAnim => new UITransition(t0);
-        //protected override IUIAnim HideAnim => new UITransition(t1);
+        //protected override IUIAnim HideAnim => new UITransition(t1);        
         partial void OnBtn1Click(EventContext e)
         {
             UIMgr.Ins.Show<UI.Stack1View>();
