@@ -239,7 +239,7 @@ namespace Ux
         }
 
 
-        public virtual void DoShow(bool isAnim, int id, object param, bool isStack)
+        protected virtual void ToShow(bool isAnim, int id, object param, bool isStack)
         {
             if (_state == UIState.Show || _state == UIState.ShowAnim)
             {
@@ -262,7 +262,7 @@ namespace Ux
             OnShow(param);
             foreach (var component in Components)
             {
-                component.DoShow(isAnim, id, param, isStack);
+                component.ToShow(isAnim, id, param, isStack);
             }
             _CheckShow(id, param, isStack).Forget();
         }
@@ -289,7 +289,7 @@ namespace Ux
 
         }
 
-        public virtual void DoHide(bool isAnim, bool isStack)
+        protected virtual void ToHide(bool isAnim, bool isStack)
         {
             if (_state == UIState.Hide || _state == UIState.HideAnim)
             {
@@ -308,7 +308,7 @@ namespace Ux
 
             foreach (var component in Components)
             {
-                component.DoHide(isAnim, isStack);
+                component.ToHide(isAnim, isStack);
             }
             OnHide();
             _RemoveTag();

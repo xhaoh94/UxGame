@@ -41,10 +41,10 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        public override void DoShow(bool isAnim, int id, object param, bool isStack)
+        protected override void ToShow(bool isAnim, int id, object param, bool isStack)
         {
             dialogData = (UIDialogFactory.DialogData)param;
-            base.DoShow(isAnim, id, param, isStack);
+            base.ToShow(isAnim, id, param, isStack);
         }
         protected override void OnShow(object param)
         {

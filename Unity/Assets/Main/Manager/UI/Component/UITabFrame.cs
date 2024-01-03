@@ -11,7 +11,7 @@ namespace Ux
         private Type _tabRenderer;
 
         public int SelectIndex => GetIndex(SelectItem != null ? SelectItem.ID : 0);
-        public UITabView SelectItem { get; private set; }
+        public ITabView SelectItem { get; private set; }
 
         readonly List<UITabBtn> _frameTabs = new List<UITabBtn>();
 
@@ -71,9 +71,9 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        public override void DoShow(bool isAnim, int id, object param, bool isStack)
+        protected override void ToShow(bool isAnim, int id, object param, bool isStack)
         {
-            base.DoShow(isAnim, id, param, isStack);
+            base.ToShow(isAnim, id, param, isStack);
             if (__listTab != null && _tabDatas != null)
             {
                 AddItemClick(__listTab, OnTabClick);
@@ -87,10 +87,10 @@ namespace Ux
             Refresh(-1);
         }
 
-        public override void DoHide(bool isAnim, bool isStack)
+        protected override void ToHide(bool isAnim, bool isStack)
         {
-            HideCurrent(isAnim, isStack);
-            base.DoHide(isAnim, isStack);
+            SelectItem?.DoHide(isAnim, isStack);
+            base.ToHide(isAnim, isStack);
         }
 
         void _Hide()
@@ -100,10 +100,6 @@ namespace Ux
             SelectItem = null;
         }
 
-        private void HideCurrent(bool isAnim, bool isStark)
-        {
-            SelectItem?.DoHide(isAnim, isStark);
-        }
 
         public void AddChild(UITabView tab)
         {
@@ -118,7 +114,7 @@ namespace Ux
                 return;
             }
             __tabContent.AddChild(tab.GObject);
-            HideCurrent(false, false);
+            SelectItem?.HideByTab();
             if (index != __listTab.selectedIndex) __listTab.selectedIndex = index;
             SelectItem = tab;
         }

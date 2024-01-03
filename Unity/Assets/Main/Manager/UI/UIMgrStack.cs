@@ -53,17 +53,6 @@ namespace Ux
 
         }
 
-        void _HideCallBack_Stack(IUI ui)
-        {
-            var id = ui.ID;
-            _showed.Remove(id);
-            CheckDestroy(ui);
-#if UNITY_EDITOR
-            __Debugger_Showed_Event();
-#endif
-            EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
-            EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
-        }
 
         void _CheckStack(IUI ui, bool isStack = false)
         {

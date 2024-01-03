@@ -10,7 +10,7 @@ namespace Ux
         {
             Data = _data;
             Init(gObj, parent);
-            DoShow(true, 0, _data, false);
+            ToShow(true, 0, _data, false);
         }
         public void Release(bool isDispose = false)
         {
@@ -18,7 +18,7 @@ namespace Ux
             {
                 OnHideCallBack += isDispose ? _Dispose_True : _Dispose_False;
             }
-            DoHide(false, false);
+            ToHide(false, false);
         }
         void _Dispose_False()
         {

@@ -473,7 +473,7 @@ namespace UI.Editor
                 write.StartBlock();
                 write.Writeln($"{frame.name}?.Refresh(selectIndex,scrollItToView);");
                 write.EndBlock();
-                write.Writeln($"protected UITabView GetCurrentTab()");
+                write.Writeln($"protected ITabView GetCurrentTab()");
                 write.StartBlock();
                 write.Writeln($"return {frame.name}?.SelectItem;");
                 write.EndBlock();

@@ -34,7 +34,7 @@ namespace Ux.UI
 		{
 			mCommonBg?.Refresh(selectIndex,scrollItToView);
 		}
-		protected UITabView GetCurrentTab()
+		protected ITabView GetCurrentTab()
 		{
 			return mCommonBg?.SelectItem;
 		}

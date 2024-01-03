@@ -535,7 +535,15 @@ namespace Ux
         }
         private void _HideCallBack(IUI ui)
         {
-            _HideCallBack_Stack(ui);
+            var id = ui.ID;
+            _showed.Remove(id);
+            CheckDestroy(ui);
+#if UNITY_EDITOR
+            __Debugger_Showed_Event();
+#endif
+            EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
+            EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
+
             _HideCallBack_Blur(ui);
         }
         private void CheckDestroy(IUI ui)

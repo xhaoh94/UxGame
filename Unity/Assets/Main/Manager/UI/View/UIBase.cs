@@ -115,7 +115,7 @@ namespace Ux
         protected virtual void OnOverwrite(object param)
         {
         }
-        public override void DoShow(bool isAnim, int id, object param, bool isStack)
+        void IUI.DoShow(bool isAnim, int id, object param, bool isStack)
         {
             var _state = State;
             if (_state == UIState.Show || _state == UIState.ShowAnim)
@@ -129,7 +129,7 @@ namespace Ux
             }
             AddToStage();
             OnLayout();
-            base.DoShow(isAnim, id, param, isStack);
+            base.ToShow(isAnim, id, param, isStack);
         }
         private void _Show(int id, object param, bool isStack)
         {
@@ -139,13 +139,13 @@ namespace Ux
             }
         }
 
-        public override void DoHide(bool isAnim, bool isStack)
+        void IUI.DoHide(bool isAnim, bool isStack)
         {
             if (_cbData != null)
             {
                 _cbData.Value.stackCb?.Invoke(this, isStack);
             }
-            base.DoHide(isAnim, isStack);
+            base.ToHide(isAnim, isStack);
         }
 
         private void _Hide()
