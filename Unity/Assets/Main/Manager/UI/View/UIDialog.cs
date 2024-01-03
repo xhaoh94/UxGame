@@ -35,7 +35,7 @@ namespace Ux
             __controller = (Controller)gCom.GetController("dialogState");
         }
 
-        public override void InitData(IUIData data, UICallBackData initData)
+        public override void InitData(IUIData data, CallBackData initData)
         {
             OnHideCallBack += _Hide;
             base.InitData(data, initData);

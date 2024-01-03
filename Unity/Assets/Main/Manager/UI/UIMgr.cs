@@ -57,7 +57,7 @@ namespace Ux
 
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
 
-        private readonly UICallBackData _initData;
+        private readonly CallBackData _initData;
         //UI层级
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
         {
@@ -86,7 +86,7 @@ namespace Ux
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
-            _initData = new UICallBackData(_ShowCallBack, _HideCallBack, _CheckStack, _HideByStack);
+            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _CheckStack, _HideByStack);
         }
 
         //内存不足时，清理缓存

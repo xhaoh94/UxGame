@@ -8,11 +8,13 @@ using UnityEngine.Rendering;
 
 namespace Ux
 {
-    public class Blur
+    public class SceneBlur
     {
 #if UNITY_EDITOR
         public static BlurMono mono;
 #endif
+
+        #region Define
 
         public static bool IsFlag { get; set; }
         static int _blurTimes = 3;
@@ -54,8 +56,9 @@ namespace Ux
         }
 
         public static bool IsChangle { get; set; } = true;
+        #endregion
 
-        public static void SetSceneBlur(bool isFlag)
+        public static void Set(bool isFlag)
         {
 #if UNITY_EDITOR
             if (mono == null)
@@ -65,7 +68,7 @@ namespace Ux
                 mono = go.AddComponent<BlurMono>();
             }
 #endif            
-            Blur.IsFlag = isFlag;
+            SceneBlur.IsFlag = isFlag;
         }
     }
 }

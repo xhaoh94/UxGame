@@ -84,12 +84,12 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
                 ReleaseCacel();
                 return;
             }
-            if (!Ux.Blur.IsFlag)
+            if (!Ux.SceneBlur.IsFlag)
             {
                 ReleaseCacel();
                 return;
             }
-            if (!Ux.Blur.IsChangle && cacel != null)
+            if (!Ux.SceneBlur.IsChangle && cacel != null)
             {
                 context.ExecuteCommandBuffer(cacel);     // 执行commandBuffer里的渲染绘制命令
                 return;
@@ -102,7 +102,7 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
             Render(commandBuffer, ref renderingData);        // 设置渲染函数
             context.ExecuteCommandBuffer(commandBuffer);     // 执行commandBuffer里的渲染绘制命令
             cacel = commandBuffer;
-            Ux.Blur.IsChangle = false;
+            Ux.SceneBlur.IsChangle = false;
         }
 
         #endregion
@@ -117,15 +117,15 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
             int destination02 = tempTexID_02;         // 传入临时贴图ID,作为目标
 
             // 获取参数
-            int gaussianBlurTimes = Ux.Blur.BlurTimes;        // 模糊次数
-            int downsample = Ux.Blur.DownSample;              // 图片放缩程度
+            int gaussianBlurTimes = Ux.SceneBlur.BlurTimes;        // 模糊次数
+            int downsample = Ux.SceneBlur.DownSample;              // 图片放缩程度
             // 计算
             int rtW = cameraData.camera.scaledPixelWidth / downsample;
             int rtH = cameraData.camera.scaledPixelHeight / downsample;
             // 传递参数->材质
-            this.mat.SetFloat("_GaussianBlurRadius", Ux.Blur.BlurRadius);        // 传入模糊半径给材质
-            this.mat.SetFloat("_BlurDepth", Ux.Blur.BlurDepth);        // 传入模糊景深
-            this.mat.SetFloat("_FullBlurValue", Ux.Blur.BlurValue);     // 传入总体模糊程度
+            this.mat.SetFloat("_GaussianBlurRadius", Ux.SceneBlur.BlurRadius);        // 传入模糊半径给材质
+            this.mat.SetFloat("_BlurDepth", Ux.SceneBlur.BlurDepth);        // 传入模糊景深
+            this.mat.SetFloat("_FullBlurValue", Ux.SceneBlur.BlurValue);     // 传入总体模糊程度
 
             // commandBuffer里的渲染指令
             cmd.SetGlobalTexture(mainTexID, source);        // 给材质的MaintexID赋值---将source(RT)的渲染结果作为贴图传给材质-（mainTex只是一张图,RT则还有其他数据）

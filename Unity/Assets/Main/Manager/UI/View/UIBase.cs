@@ -17,7 +17,7 @@ namespace Ux
         bool IsDestroy { get; }
         bool Visable { get; set; }
         IFilter Filter { get; set; }
-        void InitData(IUIData data, UICallBackData initData);
+        void InitData(IUIData data, CallBackData initData);
         void Dispose();
         void DoShow(bool isAnim, int id, object param, bool isStack);
         void DoHide(bool isAnim, bool isStack);
@@ -32,8 +32,8 @@ namespace Ux
         public virtual UIType Type => UIType.None;
         public virtual UIBlur Blur => UIBlur.Normal;
 
-        private UICallBackData? _cbData;
-        public virtual void InitData(IUIData data, UICallBackData initData)
+        private CallBackData? _cbData;
+        public virtual void InitData(IUIData data, CallBackData initData)
         {
             Data = data;
             _cbData = initData;

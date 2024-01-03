@@ -9,14 +9,14 @@ namespace Ux
         /// <summary>
         /// 模糊队列
         /// </summary>
-        List<UIBlurStack> _blurStacks = new List<UIBlurStack>();
+        List<BlurStack> _blurStacks = new List<BlurStack>();
         void _ShowCallBack_Blur(IUI ui)
         {
             if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
 #if UNITY_EDITOR
-            _blurStacks.Add(new UIBlurStack(ui.IDStr, ui.ID, ui.Blur));
+            _blurStacks.Add(new BlurStack(ui.IDStr, ui.ID, ui.Blur));
 #else
-            _blurStacks.Add(new UIBlurStack(ui.ID, ui.Blur));
+            _blurStacks.Add(new BlurStack(ui.ID, ui.Blur));
 #endif
             _FlagBlur();
         }
@@ -34,7 +34,7 @@ namespace Ux
         void _FlagBlur()
         {
             bool flagBlur = false, flagFixed = false, flagScene = false;
-            UIBlurStack? blurStack = null;
+            BlurStack? blurStack = null;
             if (_blurStacks.Count > 0)
             {
                 blurStack = _blurStacks[_blurStacks.Count - 1];
@@ -81,7 +81,7 @@ namespace Ux
                 flagScene = blurStack.Value.Blur.HasFlag(UIBlur.Scene);
             }
 
-            Blur.SetSceneBlur(flagScene);            
+            SceneBlur.Set(flagScene);            
         }
     }
 }

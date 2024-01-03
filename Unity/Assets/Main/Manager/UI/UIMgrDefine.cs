@@ -6,9 +6,9 @@ namespace Ux
 {
     public partial class UIMgr
     {
-        public readonly struct UICallBackData
+        public readonly struct CallBackData
         {
-            public UICallBackData(Action<IUI, object, bool> _showCb, Action<IUI> _hideCb, Action<IUI, bool> _stackCb, Action<int, bool> _backCb)
+            public CallBackData(Action<IUI, object, bool> _showCb, Action<IUI> _hideCb, Action<IUI, bool> _stackCb, Action<int, bool> _backCb)
             {
                 showCb = _showCb;
                 hideCb = _hideCb;
@@ -20,20 +20,20 @@ namespace Ux
             public readonly Action<int, bool> backCb;
             public readonly Action<IUI, object, bool> showCb;
         }
-        public struct UIBlurStack
+        public struct BlurStack
         {
             public readonly UIBlur Blur;
             public readonly int ID;
 #if UNITY_EDITOR
             public readonly string IDStr;
-            public UIBlurStack(string idStr, int id, UIBlur blur)
+            public BlurStack(string idStr, int id, UIBlur blur)
             {
                 IDStr = idStr;
                 ID = id;
                 Blur = blur;
             }
 #else
-            public UIBlurStack(int id, UIBlur blur)
+            public BlurStack(int id, UIBlur blur)
             {
                 ID = id;
                 Blur = blur;

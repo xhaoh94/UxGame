@@ -19,14 +19,14 @@ public class BlurMonoEditor : Editor
         BlurMono blur = target as BlurMono;
 
         serializedObject.Update();
-        Blur.IsFlag = EditorGUILayout.Toggle("是否开启模糊", Blur.IsFlag);
-        if (Blur.IsFlag)
+        SceneBlur.IsFlag = EditorGUILayout.Toggle("是否开启模糊", SceneBlur.IsFlag);
+        if (SceneBlur.IsFlag)
         {
-            Blur.BlurTimes = EditorGUILayout.IntSlider("模糊次数", Blur.BlurTimes, 0, 5);
-            Blur.DownSample = EditorGUILayout.IntSlider("图片缩放程度", Blur.DownSample, 1, 7);
-            Blur.BlurRadius = EditorGUILayout.Slider("模糊半径", Blur.BlurRadius, 0, 5);
-            Blur.BlurDepth = EditorGUILayout.Slider("模糊景深", Blur.BlurDepth, 0, 1);
-            Blur.BlurValue = EditorGUILayout.Slider("总体模糊", Blur.BlurValue, 0, 0.5f);
+            SceneBlur.BlurTimes = EditorGUILayout.IntSlider("模糊次数", SceneBlur.BlurTimes, 0, 5);
+            SceneBlur.DownSample = EditorGUILayout.IntSlider("图片缩放程度", SceneBlur.DownSample, 1, 7);
+            SceneBlur.BlurRadius = EditorGUILayout.Slider("模糊半径", SceneBlur.BlurRadius, 0, 5);
+            SceneBlur.BlurDepth = EditorGUILayout.Slider("模糊景深", SceneBlur.BlurDepth, 0, 1);
+            SceneBlur.BlurValue = EditorGUILayout.Slider("总体模糊", SceneBlur.BlurValue, 0, 0.5f);
         }
     }
 }
