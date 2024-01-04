@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1920
     height: 997
   m_ShowMode: 4
-  m_Title: Project
+  m_Title: Inspector
   m_RootView: {fileID: 27}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -571,7 +571,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 106
+  controlID: 82
 --- !u!114 &25
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -617,8 +617,8 @@ MonoBehaviour:
     y: 0
     width: 400
     height: 947
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 201, y: 221}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 38}
   m_Panes:
   - {fileID: 38}
@@ -1049,7 +1049,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Setting/YooAsset
+    - Assets/Setting/Build/UI
     m_Globs: []
     m_OriginalText: 
     m_ImportLogFlags: 0
@@ -1057,16 +1057,16 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Setting/YooAsset
+  - Assets/Setting/Build/UI
   m_LastFoldersGridSize: 16
   m_LastProjectPath: D:\Project\Unity\UxGame\Unity
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: b4800000
-    m_LastClickedID: 32948
-    m_ExpandedIDs: 00000000ca7b0000cc7b0000ce7b0000d07b0000d27b0000d47b0000d67b0000d87b0000da7b0000dc7b0000de7b0000e07b0000e27b0000e47b0000e67b0000e87b0000ea7b0000ec7b0000ee7b0000f07b0000ae7d0000bc7d000000ca9a3b
+    scrollPos: {x: 0, y: 251}
+    m_SelectedIDs: 4a7d0000
+    m_LastClickedID: 32074
+    m_ExpandedIDs: 00000000207a0000227a0000fc7b0000fe7b0000167c0000247c00002e7c00003c7d000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1094,7 +1094,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000ca7b0000cc7b0000ce7b0000d07b0000d27b0000d47b0000d67b0000d87b0000da7b0000dc7b0000de7b0000e07b0000e27b0000e47b0000e67b0000e87b0000ea7b0000ec7b0000ee7b0000f07b0000
+    m_ExpandedIDs: 00000000207a0000227a0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1125,18 +1125,18 @@ MonoBehaviour:
     m_ExpandedInstanceIDs: c6230000546800000000000020c400004c8a0000a07900002e840000ea800000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: AssetBundleCollectorSetting
-      m_OriginalName: AssetBundleCollectorSetting
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 31356
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 13}
     m_CreateAssetUtility:
@@ -1234,9 +1234,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 7c7a0000
+      m_SelectedIDs: 7c790000
       m_LastClickedID: 0
-      m_ExpandedIDs: c6eeffff
+      m_ExpandedIDs: 72f9ffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 

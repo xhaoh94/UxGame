@@ -18,9 +18,9 @@ namespace Ux
         public static readonly UIDialogFactory Dialog = new UIDialogFactory();
 
         //窗口类型对应的ID
-        private readonly Dictionary<Type, int> _typeToId = new Dictionary<Type, int>();
+        private readonly Dictionary<Type, int> _typeId = new Dictionary<Type, int>();
 #if UNITY_EDITOR
-        private readonly Dictionary<int, string> _idToTypeName = new Dictionary<int, string>();
+        private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
 #endif
 
         //界面缓存，关闭不销毁的界面会缓存起来
@@ -29,7 +29,7 @@ namespace Ux
         //临时界面缓存，关闭销毁的界面，如果父界面没销毁，
         //会临时缓存起来，等父界面关闭了，再销毁
         private readonly Dictionary<int, IUI> _temCacel = new Dictionary<int, IUI>();
-        private readonly Dictionary<int, List<int>> _bottomTemCacel = new Dictionary<int, List<int>>();
+        private readonly Dictionary<int, List<int>> _parentTemCacel = new Dictionary<int, List<int>>();
 
         //正在显示中的ui列表
         private readonly List<int> _showing = new List<int>();
@@ -134,14 +134,14 @@ namespace Ux
         {
             OnLowMemory();
             //清理掉动态创建的UI数据
-            if (dymUIData.Count > 0)
+            if (_dymUIData.Count > 0)
             {
-                foreach (var id in dymUIData)
+                foreach (var id in _dymUIData)
                 {
                     _idUIData.Remove(id);
                 }
 
-                dymUIData.Clear();
+                _dymUIData.Clear();
             }
 
             //清理掉正在下载的资源
@@ -201,14 +201,14 @@ namespace Ux
 
         int ConverterID(Type type)
         {
-            if (_typeToId.TryGetValue(type, out var id))
+            if (_typeId.TryGetValue(type, out var id))
             {
                 return id;
             }
             id = type.FullName.ToHash();
-            _typeToId.Add(type, id);
+            _typeId.Add(type, id);
 #if UNITY_EDITOR
-            _idToTypeName.Add(id, type.FullName);
+            _idTypeName.Add(id, type.FullName);
 #endif
             return id;
         }
@@ -249,7 +249,7 @@ namespace Ux
             }
 
             var childID = data.GetChildID();
-            if (CheckDownload(childID, param, isAnim))
+            if (_CheckDownload(childID, param, isAnim))
             {
                 return default;
             }
@@ -275,7 +275,7 @@ namespace Ux
                 var uiid = ui.ID;
                 if (!succ)
                 {
-                    CheckDestroy(ui);
+                    _CheckDestroy(ui);
                     _showing.Remove(uiid);
                     continue;
                 }
@@ -378,13 +378,13 @@ namespace Ux
                 {
                     _temCacel.Remove(id);
                     var temBottomId = ui.Data.GetParentID();
-                    if (_bottomTemCacel.TryGetValue(temBottomId, out var temList))
+                    if (_parentTemCacel.TryGetValue(temBottomId, out var temList))
                     {
                         if (temList.Remove(id))
                         {
                             if (temList.Count == 0)
                             {
-                                _bottomTemCacel.Remove(temBottomId);
+                                _parentTemCacel.Remove(temBottomId);
                             }
                         }
                     }
@@ -424,12 +424,7 @@ namespace Ux
             {
                 if (!await ResMgr.Ins.LoaUIdPackage(data.Pkgs))
                 {
-#if UNITY_EDITOR
-                    Log.Error($"[{data.IDStr}]包加载错误");
-#else
-                    Log.Error($"[{data.ID}]包加载错误");
-#endif
-
+                    Log.Error($"[{data.Name}]包加载错误");
                     return null;
                 }
             }
@@ -530,7 +525,7 @@ namespace Ux
         {
             var id = ui.ID;
             _showed.Remove(id);
-            CheckDestroy(ui);
+            _CheckDestroy(ui);
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
 #endif
@@ -539,31 +534,26 @@ namespace Ux
 
             _HideCallBack_Blur(ui);
         }
-        private void CheckDestroy(IUI ui)
+        private void _CheckDestroy(IUI ui)
         {
             var id = ui.ID;
-            var bottomID = ui.Data.GetParentID();
+            var parentID = ui.Data.GetParentID();
             if (ui.IsDestroy)
             {
                 //存在父界面，且父界面还没关闭，则放入临时缓存中
-                if (bottomID != id && IsShow(bottomID))
+                if (parentID != id && IsShow(parentID))
                 {
                     if (_temCacel.ContainsKey(id))
                     {
-#if UNITY_EDITOR
-                        Log.Error($"界面[{ui.IDStr}]多次放入临时缓存列表");
-#else
-                        Log.Error($"界面[{id}]多次放入临时缓存列表");
-#endif
-
+                        Log.Error($"界面[{ui.Name}]多次放入临时缓存列表");
                         return;
                     }
 
                     _temCacel.Add(id, ui);
-                    if (!_bottomTemCacel.TryGetValue(bottomID, out var temList))
+                    if (!_parentTemCacel.TryGetValue(parentID, out var temList))
                     {
                         temList = new List<int>();
-                        _bottomTemCacel.Add(bottomID, temList);
+                        _parentTemCacel.Add(parentID, temList);
                     }
 
                     temList.Add(id);
@@ -575,12 +565,7 @@ namespace Ux
                 {
                     if (_waitDels.ContainsKey(id))
                     {
-#if UNITY_EDITOR
-                        Log.Error($"界面[{ui.IDStr}]多次放入待删除列表");
-#else
-                        Log.Error($"界面[{id}]多次放入待删除列表");
-#endif
-
+                        Log.Error($"界面[{ui.Name}]多次放入待删除列表");
                         return;
                     }
 
@@ -597,11 +582,7 @@ namespace Ux
                 //不销毁的界面放进缓存列表
                 if (_cacel.ContainsKey(id))
                 {
-#if UNITY_EDITOR
-                    Log.Error($"界面[{ui.IDStr}]多次放入缓存列表");
-#else
-                    Log.Error($"界面[{id}]多次放入缓存列表");
-#endif
+                    Log.Error($"界面[{ui.Name}]多次放入缓存列表");
                     return;
                 }
 
@@ -612,21 +593,19 @@ namespace Ux
             }
 
             //如果此界面是最底层的界面，则将属于此界面的临时缓存界面从列表清除
-            if (id == bottomID)
+            if (id == parentID)
             {
-                if (_bottomTemCacel.TryGetValue(id, out var temList))
+                if (_parentTemCacel.TryGetValue(id, out var temList) && temList.Count > 0)
                 {
                     foreach (var cacelId in temList)
                     {
                         if (_temCacel.TryGetValue(cacelId, out var temUI))
                         {
                             _temCacel.Remove(cacelId);
-                            CheckDestroy(temUI);
+                            _CheckDestroy(temUI);
                         }
                     }
-
                     temList.Clear();
-                    _bottomTemCacel.Remove(id);
 #if UNITY_EDITOR
                     __Debugger_TemCacel_Event();
 #endif
@@ -653,7 +632,7 @@ namespace Ux
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        List<string> GetDependenciesLazyload(int id)
+        List<string> _GetDependenciesLazyload(int id)
         {
             if (id == 0) return null;
             if (!_idLazyloads.TryGetValue(id, out var lazyloads))
@@ -698,7 +677,7 @@ namespace Ux
             return lazyloads;
         }
 
-        bool CheckDownload(int id, object param, bool isAnim)
+        bool _CheckDownload(int id, object param, bool isAnim)
         {
             if (_idDownloader.TryGetValue(id, out var download))
             {
@@ -712,7 +691,7 @@ namespace Ux
                 return true;
             }
 
-            var tags = GetDependenciesLazyload(id);
+            var tags = _GetDependenciesLazyload(id);
             if (tags == null || tags.Count == 0) return false;
             download = ResMgr.Lazyload.GetDownloaderByTags(tags);
             if (download == null) return false;

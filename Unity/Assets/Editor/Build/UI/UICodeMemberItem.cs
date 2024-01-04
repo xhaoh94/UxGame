@@ -128,39 +128,17 @@ public class UICodeMemberItem : TemplateContainer
 
         if (comData.IsTabFrame)
         {
-            if (data.name == comData.gList ||
-                 data.name == comData.tabContent ||
-                 data.name == comData.btnClose)
+            foreach (var temData in comData.TabViewData)
             {
-                return;
+                if (temData.Name == data.name) return;
             }
         }
 
         if (comData.IsDialog)
         {
-            if (data.name == comData.dialogTitle)
+            foreach (var temData in comData.DialogData)
             {
-                return;
-            }
-            if (data.name == comData.dialogContent)
-            {
-                return;
-            }
-            if (data.name == comData.dialogBtnClose)
-            {
-                return;
-            }
-            if (data.name == comData.dialogBtn1)
-            {
-                return;
-            }
-            if (data.name == comData.dialogBtn2)
-            {
-                return;
-            }
-            if (data.name == comData.dialogController)
-            {
-                return;
+                if (temData.Name == data.name) return;
             }
         }
 

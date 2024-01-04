@@ -28,15 +28,6 @@ MonoBehaviour:
       cls: Common1TabFrame
       ext: Component/TabFrame
       isExport: 1
-      gList: listTab
-      tabContent: tabContent
-      btnClose: btnClose
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n0
@@ -98,15 +89,6 @@ MonoBehaviour:
       cls: Common2TabFrame
       ext: Component/TabFrame
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: btnClose
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n0
@@ -138,15 +120,6 @@ MonoBehaviour:
       cls: CommonDialog
       ext: Panel/Dialog
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: txtTitle
-      dialogContent: txtContent
-      dialogBtnClose: btnClose
-      dialogBtn1: btn1
-      dialogBtn2: btn2
-      dialogController: dialogState
       members:
       - index: 0
         name: n4
@@ -218,6 +191,16 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
+      - index: 6
+        name: checkbox
+        defaultType: GButton
+        customType: CheckBox
+        pkg: Common
+        res: CheckBox
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
     - ID: c35a3de9-985d-4a9c-b5ab-17ee984702e7
       useGlobal: 1
       path: Assets/Hotfix/CodeGen/UI
@@ -228,15 +211,6 @@ MonoBehaviour:
       cls: CommonTabBtn
       ext: Component/TabBtn
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n0
@@ -278,15 +252,6 @@ MonoBehaviour:
       cls: BtnClose
       ext: FGUI/Button
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n0
@@ -340,15 +305,6 @@ MonoBehaviour:
       cls: LoginView
       ext: Panel/View
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n0
@@ -432,15 +388,6 @@ MonoBehaviour:
       cls: MainView
       ext: Panel/View
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 1
         name: btnBack
@@ -474,15 +421,6 @@ MonoBehaviour:
       cls: MultipleView
       ext: Panel/View
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: mCommonBg
@@ -524,15 +462,6 @@ MonoBehaviour:
       cls: Multiple2TabView
       ext: Panel/TabView
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n4
@@ -596,15 +525,6 @@ MonoBehaviour:
       cls: TestView
       ext: Panel/View
       isExport: 1
-      gList: 
-      tabContent: 
-      btnClose: 
-      dialogTitle: 
-      dialogContent: 
-      dialogBtnClose: 
-      dialogBtn1: 
-      dialogBtn2: 
-      dialogController: 
       members:
       - index: 0
         name: n0

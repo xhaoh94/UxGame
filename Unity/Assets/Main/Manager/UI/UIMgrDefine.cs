@@ -140,9 +140,7 @@ namespace Ux
         {
             IUI ui;
             long timeKey;
-#if UNITY_EDITOR
-            public string IDStr => ui.IDStr;
-#endif
+            public string Name => ui.Name;
             public void Init(IUI _ui)
             {
                 ui = _ui;

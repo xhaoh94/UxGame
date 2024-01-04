@@ -12,7 +12,7 @@ namespace UI.Editor
     public class PkgData
     {
         [HideInInspector]
-        public string name;        
+        public string name;
         public List<ComponentData> components;
 
         public PkgData(string name)
@@ -42,6 +42,23 @@ namespace UI.Editor
     [Serializable]
     public class ComponentData
     {
+        public struct CustomData
+        {
+            public string Key;
+            public string Type;
+            public string Name;
+            public CustomData(string key, string type, string name)
+            {
+                Key = key;
+                Type = type;
+                Name = name;
+            }
+
+            public bool IsEquals(UIMemberData data)
+            {
+                return data.defaultType == Type || data.customType == Type;
+            }
+        }
         [HideInInspector]
         public string ID;
         public bool useGlobal;
@@ -62,23 +79,64 @@ namespace UI.Editor
 
         public bool isExport = true;
 
-        public string gList;
+        List<CustomData> _tabViewData;
+        public List<CustomData> TabViewData
+        {
+            get
+            {
+                if (_tabViewData == null)
+                {
+                    _tabViewData = new List<CustomData>()
+                    {
+                        new CustomData("__tabContent","GComponent",string.Empty),
+                        new CustomData("__listTab","GList",string.Empty),
+                        new CustomData("__btnClose","UIButton",string.Empty)
+                    };
+                }
+                return _tabViewData;
+            }
+        }
 
-        public string tabContent;
+        //public string gList;
 
-        public string btnClose;
+        //public string tabContent;
 
-        public string dialogTitle;
+        //public string btnClose;
 
-        public string dialogContent;
+        List<CustomData> _dialogData;
+        public List<CustomData> DialogData
+        {
+            get
+            {
+                if (_dialogData == null)
+                {
+                    _dialogData = new List<CustomData>()
+                    {
+                       new CustomData("__txtTitle","GTextField",string.Empty),
+                       new CustomData("__txtContent","GTextField",string.Empty),
+                       new CustomData("__btnClose","UIButton",string.Empty),
+                       new CustomData("__btn1","UIButton",string.Empty),
+                       new CustomData("__btn2","UIButton",string.Empty),
+                       new CustomData("__checkBox","UIButton",string.Empty),
+                       new CustomData("__controller","Controller",string.Empty),
+                    };
+                }
+                return _dialogData;
+            }
+        }
 
-        public string dialogBtnClose;
+        //public string dialogTitle;
 
-        public string dialogBtn1;
+        //public string dialogContent;
 
-        public string dialogBtn2;
+        //public string dialogBtnClose;
 
-        public string dialogController;   
+        //public string dialogBtn1;
+
+        //public string dialogBtn2;
+
+        //public string dialogController;
+        //public string dialogCheckBox;
 
         [HideInInspector]
         public List<UIMemberData> members = new List<UIMemberData>();
@@ -310,10 +368,11 @@ namespace UI.Editor
                 foreach (var member in members)
                 {
                     if (!member.isCreateVar) continue;
-                    if (member.defaultType == nameof(GList) &&
-                        member.name == data.gList) cnt--;
-                    else if (member.defaultType == nameof(GComponent) &&
-                        member.name == data.tabContent) cnt--;
+                    var temIndex = data.TabViewData.FindIndex(x => x.Name == member.name);
+                    if (temIndex >= 0 && data.TabViewData[temIndex].IsEquals(member))
+                    {
+                        cnt--;
+                    }
                 }
                 return cnt <= 0;
             }
@@ -324,10 +383,10 @@ namespace UI.Editor
 
     [CreateAssetMenu(fileName = "UICodeGenSettingData", menuName = "Ux/UI/Create CodeGenSettings")]
     public class UICodeGenSettingData : ScriptableObject
-    {        
+    {
         public string defaultNs = "Ux.UI";
-        public string path = "Assets/Hotfix/CodeGen/UI";        
-        public bool ingoreDefault = true;        
+        public string path = "Assets/Hotfix/CodeGen/UI";
+        public bool ingoreDefault = true;
         public List<PkgData> pkgs;
 
 
@@ -497,15 +556,6 @@ namespace UI.Editor
             data.cls = com.packageItem.name;
             data.ext = UIEditorTools.CheckExt(com);
             data.isExport = true;
-            data.gList = string.Empty;
-            data.tabContent = string.Empty;
-            data.btnClose = string.Empty;
-            data.dialogTitle= string.Empty;
-            data.dialogContent = string.Empty;
-            data.dialogBtnClose = string.Empty;
-            data.dialogBtn1 = string.Empty;
-            data.dialogBtn2 = string.Empty;
-            data.dialogController = string.Empty;
             return data;
         }
 

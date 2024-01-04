@@ -14,7 +14,7 @@ namespace Ux
         {
             if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
 #if UNITY_EDITOR
-            _blurStacks.Add(new BlurStack(ui.IDStr, ui.ID, ui.Blur));
+            _blurStacks.Add(new BlurStack(ui.Name, ui.ID, ui.Blur));
 #else
             _blurStacks.Add(new BlurStack(ui.ID, ui.Blur));
 #endif

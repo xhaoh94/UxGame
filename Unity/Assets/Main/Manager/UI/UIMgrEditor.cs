@@ -28,7 +28,7 @@ namespace Ux
                 _Debugger_UI_Dict.Clear();
                 foreach (var kv in Ins._idUIData)
                 {
-                    _Debugger_UI_Dict.Add(kv.Value.IDStr, kv.Value);
+                    _Debugger_UI_Dict.Add(kv.Value.Name, kv.Value);
                 }
                 __Debugger_UI_CallBack?.Invoke(_Debugger_UI_Dict);
             }
@@ -42,7 +42,7 @@ namespace Ux
                 _Debugger_Showeds.Clear();
                 foreach (var kv in Ins._showed)
                 {
-                    _Debugger_Showeds.Add(kv.Value.IDStr);
+                    _Debugger_Showeds.Add(kv.Value.Name);
                 }
                 __Debugger_Showed_CallBack?.Invoke(_Debugger_Showeds);
             }
@@ -63,7 +63,7 @@ namespace Ux
                 _Debugger_Showings.Clear();
                 foreach (var id in Ins._showing)
                 {
-                    _Debugger_Showings.Add(Ins.GetUIData(id).IDStr);
+                    _Debugger_Showings.Add(Ins.GetUIData(id).Name);
                 }
                 __Debugger_Showing_CallBack?.Invoke(_Debugger_Showings);
             }
@@ -77,7 +77,7 @@ namespace Ux
                 _Debugger_Cacels.Clear();
                 foreach (var kv in Ins._cacel)
                 {
-                    _Debugger_Cacels.Add(kv.Value.IDStr);
+                    _Debugger_Cacels.Add(kv.Value.Name);
                 }
                 __Debugger_Cacel_CallBack?.Invoke(_Debugger_Cacels);
             }
@@ -91,7 +91,7 @@ namespace Ux
                 _Debugger_TemCacels.Clear();
                 foreach (var kv in Ins._temCacel)
                 {
-                    _Debugger_TemCacels.Add(kv.Value.IDStr);
+                    _Debugger_TemCacels.Add(kv.Value.Name);
                 }
                 __Debugger_TemCacel_CallBack?.Invoke(_Debugger_TemCacels);
             }
@@ -104,7 +104,7 @@ namespace Ux
                 _Debugger_WaitDels.Clear();
                 foreach (var kv in Ins._waitDels)
                 {
-                    _Debugger_WaitDels.Add(kv.Value.IDStr);
+                    _Debugger_WaitDels.Add(kv.Value.Name);
                 }
                 __Debugger_WaitDel_CallBack?.Invoke(_Debugger_WaitDels);
             }

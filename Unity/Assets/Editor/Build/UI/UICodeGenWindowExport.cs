@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static UI.Editor.ComponentData;
 using static UI.Editor.UIMemberData;
 
 namespace UI.Editor
@@ -89,7 +90,7 @@ namespace UI.Editor
             {
                 OnExport(pkg);
             }
-            Log.Debug("---------------------------------------->完成生成UI代码文件<---------------------------------------");            
+            Log.Debug("---------------------------------------->完成生成UI代码文件<---------------------------------------");
         }
         void OnBtnGenClick()
         {
@@ -158,16 +159,20 @@ namespace UI.Editor
                 }
             };
 
-            var glist = comData.gList;
-            var viewStack = comData.tabContent;
-            var btnClose = comData.btnClose;
+            HashSet<string> ignores = new HashSet<string>();
+            bool Func(List<CustomData> listData)
+            {
+                bool b = false;
+                foreach (var temData in comData.DialogData)
+                {
+                    if (string.IsNullOrEmpty(temData.Name)) continue;
+                    write.Writeln($"protected override {temData.Type} {temData.Key} => {temData.Name};");
+                    ignores.Add(temData.Name);
+                    b = true;
+                }
+                return b;
+            }
 
-            var dialogTitle = comData.dialogTitle;
-            var dialogContent = comData.dialogContent;
-            var dialogBtnClose = comData.dialogBtnClose;
-            var dialogBtn1 = comData.dialogBtn1;
-            var dialogBtn2 = comData.dialogBtn2;
-            var dialogController = comData.dialogController;
             switch (ext)
             {
                 case UIExtendPanel.View:
@@ -208,59 +213,17 @@ namespace UI.Editor
                     write.Writeln($"protected override string ResName => \"{com.packageItem.name}\";");
                     if (ext is UIExtendPanel.Dialog)
                     {
-                        foreach (var member in members)
-                        {
-                            if (member.name == dialogTitle)
-                            {
-                                write.Writeln($"protected override GTextField __txtTitle => {member.name};");
-                            }
-                            else if (member.name == dialogContent)
-                            {
-                                write.Writeln($"protected override GTextField __txtContent => {member.name};");
-                            }
-                            else if (member.name == dialogBtnClose)
-                            {
-                                write.Writeln($"protected override UIButton __btnClose => {member.name};");
-                            }
-                            else if (member.name == dialogBtn1)
-                            {
-                                write.Writeln($"protected override UIButton __btn1 => {member.name};");
-                            }
-                            else if (member.name == dialogBtn2)
-                            {
-                                write.Writeln($"protected override UIButton __btn2 => {member.name};");
-                            }
-                            else if (member.name == dialogController)
-                            {
-                                write.Writeln($"protected override Controller __controller => {member.name};");
-                            }
-                        }
+                        Func(comData.DialogData);
                     }
                     write.Writeln();
                     memberVarFn();
                     break;
                 case UIExtendComponent.TabFrame:
                     clsFn();
-                    bool needWriteLn = false;
-                    foreach (var member in members)
+                    if (Func(comData.TabViewData))
                     {
-                        if (member.name == glist)
-                        {
-                            write.Writeln($"protected override GList __listTab => {member.name};");
-                            needWriteLn = true;
-                        }
-                        else if (member.name == viewStack)
-                        {
-                            write.Writeln($"protected override GComponent __tabContent => {member.name};");
-                            needWriteLn = true;
-                        }
-                        else if (member.name == btnClose)
-                        {
-                            write.Writeln($"protected override UIButton __btnClose => {member.name};");
-                            needWriteLn = true;
-                        }
+                        write.Writeln();
                     }
-                    if (needWriteLn) write.Writeln();
                     memberVarFn();
                     write.Writeln($"public {clsName}(GObject gObject,UIObject parent)");
                     write.StartBlock();
@@ -328,13 +291,10 @@ namespace UI.Editor
                         }
                     }
                     if (member.evtType == "无") continue;
+                    if (ignores.Contains(member.name)) continue;
                     switch (member.defaultType)
                     {
                         case nameof(FairyGUI.GButton):
-                            if (member.name == btnClose) continue;
-                            if (member.name == dialogBtnClose) continue;
-                            if (member.name == dialogBtn1) continue;
-                            if (member.name == dialogBtn2) continue;
                             switch (member.evtType)
                             {
                                 case "单击":
@@ -350,7 +310,6 @@ namespace UI.Editor
 
                             break;
                         case nameof(FairyGUI.GList):
-                            if (member.name == glist) continue;
                             lists.Add(member);
                             break;
                     }
@@ -427,7 +386,7 @@ namespace UI.Editor
                     write.Writeln($"partial void {fnName}(EventContext e);");
                 }
                 foreach (var btn in dbtns)
-                {                    
+                {
                     var fnName = $"On{char.ToUpper(btn.name[0])}{btn.name.Substring(1)}MultipleClick";
                     write.Writeln($"void _{fnName}(EventContext e)");
                     write.StartBlock();

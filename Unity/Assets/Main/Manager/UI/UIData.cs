@@ -8,9 +8,7 @@ namespace Ux
     public interface IUIData
     {
         int ID { get; }
-#if UNITY_EDITOR
-        string IDStr { get; }
-#endif
+        string Name { get; }
         Type CType { get; }
         string[] Pkgs { get; }
         string[] Lazyloads { get; }
@@ -43,7 +41,7 @@ namespace Ux
         object Title { get; }
         Type TagType { get; }
 #if UNITY_EDITOR
-        string PIDStr { get; }
+        string PName { get; }
         string TitleStr { get; }
 #endif
         void Init(IUIData data);
@@ -68,9 +66,7 @@ namespace Ux
             tabData?.Init(this);
         }
         public virtual int ID { get; }
-#if UNITY_EDITOR
-        public string IDStr => $"{CType.FullName}_{ID}";
-#endif
+        public string Name => $"{CType.FullName}_{ID}";
         public virtual Type CType { get; }
         public virtual string[] Pkgs { get; }
         public virtual string[] Lazyloads { get; }
@@ -157,14 +153,17 @@ namespace Ux
         }
         public int PID { get; }
 #if UNITY_EDITOR
-        public string PIDStr
+        public string PName
         {
             get
             {
-                var data = UIMgr.Ins.GetUIData(PID);
-                if (data != null)
+                if (PID > 0)
                 {
-                    return data.IDStr;
+                    var data = UIMgr.Ins.GetUIData(PID);
+                    if (data != null)
+                    {
+                        return data.Name;
+                    }
                 }
                 return PID.ToString();
             }
@@ -197,7 +196,7 @@ namespace Ux
         private readonly Dictionary<int, IUIData> _idUIData = new Dictionary<int, IUIData>();
 
         //动态创建的UI数据
-        private readonly List<int> dymUIData = new List<int>();
+        private readonly HashSet<int> _dymUIData = new HashSet<int>();
 
         #region UIData
 
@@ -209,16 +208,11 @@ namespace Ux
         {
             if (IsHasUIData(data.ID))
             {
-#if UNITY_EDITOR
-                Log.Error("重复注册UI面板:{0}", data.IDStr);
-#else
-                Log.Error("重复注册UI面板:{0}", data.ID);
-#endif
+                Log.Error("重复注册UI面板:{0}", data.Name);
                 return;
             }
-
             _idUIData.Add(data.ID, data);
-            dymUIData.Add(data.ID);
+            _dymUIData.Add(data.ID);
 #if UNITY_EDITOR
             __Debugger_UI_Event();
 #endif
@@ -231,7 +225,7 @@ namespace Ux
         public void RemoveUIData(int id)
         {
             if (!_idUIData.Remove(id)) return;
-            dymUIData.Remove(id);
+            _dymUIData.Remove(id);
 #if UNITY_EDITOR
             __Debugger_UI_Event();
 #endif
@@ -249,7 +243,7 @@ namespace Ux
                 return data;
             }
 #if UNITY_EDITOR
-            if (Ins._idToTypeName.TryGetValue(id, out var tName))
+            if (Ins._idTypeName.TryGetValue(id, out var tName))
             {
                 Log.Error($"获取不到UIData[{tName}],请检查是否有注册UI");
             }

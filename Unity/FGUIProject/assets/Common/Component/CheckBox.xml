@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="100,20" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="3"/>
+  <displayList>
+    <graph id="n0_i4ve" name="n0" xy="0,0" size="16,20" touchable="false" type="rect" lineSize="0" fillColor="#fff0f0f0"/>
+    <text id="n4_i4ve" name="n4" xy="0,0" size="16,20" fontSize="13" align="center" vAlign="middle" autoSize="none" text="√">
+      <gearDisplay controller="button" pages="3"/>
+    </text>
+    <text id="n3_i4ve" name="title" xy="16,0" size="84,20" fontSize="12" align="center" vAlign="middle" autoSize="none" singleLine="true" text="111">
+      <relation target="" sidePair="width-width,height-height"/>
+    </text>
+  </displayList>
+  <Button mode="Check"/>
+</component>

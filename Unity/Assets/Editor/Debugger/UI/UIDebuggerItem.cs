@@ -50,7 +50,7 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
 
     public void SetData(IUIData data)
     {
-        var zs = data.IDStr.Split("_");
+        var zs = data.Name.Split("_");
         _txtIDStr.text = $"{zs[1]}";
         //_txtID.SetValueWithoutNotify(zs[1]);
         _txtType.SetValueWithoutNotify(data.CType.FullName);
@@ -89,7 +89,7 @@ public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
         if (data.TabData != null)
         {
             _txtParID.style.display = DisplayStyle.Flex;
-            _txtParID.SetValueWithoutNotify(data.TabData.PID.ToString());
+            _txtParID.SetValueWithoutNotify(data.TabData.PName);
             if (data.TabData.TagType == null)
             {
                 _txtParRedPoint.style.display = DisplayStyle.None;

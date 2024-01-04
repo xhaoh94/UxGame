@@ -22,5 +22,8 @@
     <component id="n6_dvaq" name="btnClose" src="o2441" fileName="Component/BtnClose.xml" xy="426,22">
       <relation target="" sidePair="right-right"/>
     </component>
+    <component id="n7_i4ve" name="checkbox" src="i4ved" fileName="Component/CheckBox.xml" xy="136,266" size="228,20">
+      <Button title="本次登录不提示"/>
+    </component>
   </displayList>
 </component>

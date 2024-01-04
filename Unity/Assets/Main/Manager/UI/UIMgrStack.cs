@@ -34,7 +34,7 @@ namespace Ux
                 }
             }
 #if UNITY_EDITOR
-            _stack.Add(new UIStack(parentID, ui.IDStr, ui.ID, param, uiType));
+            _stack.Add(new UIStack(parentID, ui.Name, ui.ID, param, uiType));
             __Debugger_Stack_Event();
 #else
             _stack.Add(new UIStack(parentID, ui.ID, param, uiType));

@@ -11,9 +11,7 @@ namespace Ux
         UIState State { get; }
         UIType Type { get; }
         UIBlur Blur { get; }
-#if UNITY_EDITOR
-        string IDStr { get; }
-#endif
+        string Name { get; }
         int ID { get; }
         IUIData Data { get; }
         bool IsDestroy { get; }
@@ -129,9 +127,7 @@ namespace Ux
             }
         }
         public int ID => Data.ID;
-#if UNITY_EDITOR
-        public string IDStr => Data.IDStr;
-#endif
+        public string Name => Data.Name;
         public IUIData Data { get; private set; }
 
         protected void Hide()
@@ -190,7 +186,7 @@ namespace Ux
             }
             _ReleaseShowToken();
             _showToken = new CancellationTokenSource();
-            base.ToShow(isAnim, id, param, isStack, _showToken);
+            ToShow(isAnim, id, param, isStack, _showToken);
         }
         private void _Show(int id, object param, bool isStack)
         {
@@ -221,7 +217,7 @@ namespace Ux
             }
             _ReleaseHideToken();
             _hideToken = new CancellationTokenSource();
-            base.ToHide(isAnim, isStack, _hideToken);
+            ToHide(isAnim, isStack, _hideToken);
         }
 
         private void _Hide()

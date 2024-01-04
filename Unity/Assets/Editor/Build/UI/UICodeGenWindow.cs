@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UI.Editor.ComponentData;
 
 namespace UI.Editor
 {
@@ -79,17 +80,20 @@ namespace UI.Editor
         TextField inputClsName;
         DropdownField ddExt;
 
-        TextField inputGList;
-        TextField inputViewStack;
-        TextField inputBtnClose;
+        VisualElement tabViewElement;
+        Dictionary<string, TextField> nameTextField = new Dictionary<string, TextField>();
+        //TextField inputGList;
+        //TextField inputViewStack;
+        //TextField inputBtnClose;
 
-
-        TextField inputDialogTitle;
-        TextField inputDialogContent;
-        TextField inputDialogBtnClose;
-        TextField inputDialogBtn1;
-        TextField inputDialogBtn2;
-        TextField inputDialogController;
+        VisualElement dialogElement;
+        //TextField inputDialogTitle;
+        //TextField inputDialogContent;
+        //TextField inputDialogBtnClose;
+        //TextField inputDialogBtn1;
+        //TextField inputDialogBtn2;
+        //TextField inputDialogController;
+        //TextField inputDialogCheckBox;
 
 
         public void CreateGUI()
@@ -209,26 +213,28 @@ namespace UI.Editor
                 ddExt.index = 0;
                 ddExt.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
 
-                inputGList = root.Q<TextField>("inputGList");
-                inputGList.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputViewStack = root.Q<TextField>("inputViewStack");
-                inputViewStack.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputBtnClose = root.Q<TextField>("inputBtnClose");
-                inputBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
-                inputDialogTitle = root.Q<TextField>("inputDialogTitle");
-                inputDialogTitle.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputDialogContent = root.Q<TextField>("inputDialogContent");
-                inputDialogContent.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputDialogBtnClose = root.Q<TextField>("inputDialogBtnClose");
-                inputDialogBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputDialogBtn1 = root.Q<TextField>("inputDialogBtn1");
-                inputDialogBtn1.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputDialogBtn2 = root.Q<TextField>("inputDialogBtn2");
-                inputDialogBtn2.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputDialogController = root.Q<TextField>("inputDialogController");
-                inputDialogController.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
+                tabViewElement = root.Q<VisualElement>("tabViewElement");
+                //inputGList = root.Q<TextField>("inputGList");
+                //inputGList.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputViewStack = root.Q<TextField>("inputViewStack");
+                //inputViewStack.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputBtnClose = root.Q<TextField>("inputBtnClose");
+                //inputBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                dialogElement = root.Q<VisualElement>("dialogElement");
+                //inputDialogTitle = root.Q<TextField>("inputDialogTitle");
+                //inputDialogTitle.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputDialogContent = root.Q<TextField>("inputDialogContent");
+                //inputDialogContent.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputDialogBtnClose = root.Q<TextField>("inputDialogBtnClose");
+                //inputDialogBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputDialogBtn1 = root.Q<TextField>("inputDialogBtn1");
+                //inputDialogBtn1.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputDialogBtn2 = root.Q<TextField>("inputDialogBtn2");
+                //inputDialogBtn2.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputDialogController = root.Q<TextField>("inputDialogController");
+                //inputDialogController.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                //inputDialogCheckBox = root.Q<TextField>("inputDialogCheckBox");
+                //inputDialogCheckBox.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
 
                 var btnGenSelectItem = root.Q<Button>("btnGenSelectItem");
                 btnGenSelectItem.clicked += OnBtnGenClick;
@@ -325,18 +331,40 @@ namespace UI.Editor
             inputNS_select.SetValueWithoutNotify(data.ns);
             inputClsName.SetValueWithoutNotify(data.cls);
             ddExt.SetValueWithoutNotify(data.ext);
-            inputGList.value = data.gList;
-            inputViewStack.value = data.tabContent;
-            inputBtnClose.value = data.btnClose;
-            inputGList.parent.style.display = data.IsTabFrame ? DisplayStyle.Flex : DisplayStyle.None;
 
-            inputDialogTitle.value = data.dialogTitle;
-            inputDialogContent.value = data.dialogContent;
-            inputDialogBtnClose.value = data.dialogBtnClose;
-            inputDialogBtn1.value = data.dialogBtn1;
-            inputDialogBtn2.value = data.dialogBtn2;
-            inputDialogController.value = data.dialogController;
-            inputDialogTitle.parent.style.display = data.IsDialog ? DisplayStyle.Flex : DisplayStyle.None;
+            if (data.IsTabFrame)
+            {
+                tabViewElement.style.display = DisplayStyle.Flex;
+                CreateText(data.TabViewData, tabViewElement);
+            }
+            else
+            {
+                tabViewElement.style.display = DisplayStyle.None;
+            }
+            if (data.IsDialog)
+            {
+                dialogElement.style.display = DisplayStyle.Flex;
+                CreateText(data.DialogData, dialogElement);
+            }
+            else
+            {
+                dialogElement.style.display = DisplayStyle.None;
+            }
+        }
+        void CreateText(List<CustomData> listData, VisualElement parent)
+        {
+            foreach (var temData in listData)
+            {
+                var key = temData.Key;
+                if (!nameTextField.TryGetValue(key, out var textField))
+                {
+                    textField = new TextField(key);
+                    textField.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                    parent.Add(textField);
+                    nameTextField.Add(key, textField);
+                }
+                textField.value = temData.Name;
+            }
         }
         void SaveSelectItemData()
         {
@@ -360,21 +388,34 @@ namespace UI.Editor
             data.cls = inputClsName.text;
             data.ext = ddExt.value;
             data.isExport = tgExport.value;
-            data.gList = inputGList.value;
-            data.tabContent = inputViewStack.value;
-            data.btnClose = inputBtnClose.value;
 
-            data.dialogTitle = inputDialogTitle.value;
-            data.dialogContent = inputDialogContent.value;
-            data.dialogBtnClose = inputDialogBtnClose.value;
-            data.dialogBtn1 = inputDialogBtn1.value;
-            data.dialogBtn2 = inputDialogBtn2.value;
-            data.dialogController = inputDialogController.value;
+            if (data.IsTabFrame)
+            {
+                FreshDict(data.TabViewData);
+            }
+
+            if (data.IsDialog)
+            {
+                FreshDict(data.DialogData);
+            }
+
             UICodeGenSettingData.SetComponentData(data);
             FreshComponentData();
         }
 
-
+        void FreshDict(List<CustomData> listData)
+        {
+            for (int i = 0; i < listData.Count; i++)
+            {
+                var temData = listData[i];
+                var key = temData.Key;
+                if (nameTextField.TryGetValue(key, out var textField))
+                {
+                    temData.Name = textField.value;
+                    listData[i] = temData;
+                }
+            }
+        }
         private void OnDestroy()
         {
             UICodeGenSettingData.Save();
