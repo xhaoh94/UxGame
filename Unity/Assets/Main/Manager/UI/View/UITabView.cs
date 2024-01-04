@@ -1,8 +1,20 @@
-﻿namespace Ux
+﻿using System.Threading;
+
+namespace Ux
 {
     public interface ITabView : IUI
     {
+        /// <summary>
+        /// 切换标签关闭
+        /// </summary>
         void HideByTab();
+        /// <summary>
+        /// 父类关闭
+        /// </summary>
+        /// <param name="isAnim"></param>
+        /// <param name="isStack"></param>
+        /// <param name="token"></param>
+        void HideByParent(bool isAnim, bool isStack, CancellationTokenSource token);
     }
     public abstract class UITabView : UIBase, ITabView
     {
@@ -40,7 +52,11 @@
 
         void ITabView.HideByTab()
         {
-            ToHide(false, false);
+            ToHide(false, false, null);
+        }
+        void ITabView.HideByParent(bool isAnim, bool isStack, CancellationTokenSource token)
+        {
+            ToHide(isAnim, isStack, token);
         }
     }
 }

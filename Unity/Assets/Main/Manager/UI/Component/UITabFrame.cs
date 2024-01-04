@@ -71,9 +71,9 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        protected override void ToShow(bool isAnim, int id, object param, bool isStack)
+        protected override void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
         {
-            base.ToShow(isAnim, id, param, isStack);
+            base.ToShow(isAnim, id, param, isStack, token);
             if (__listTab != null && _tabDatas != null)
             {
                 AddItemClick(__listTab, OnTabClick);
@@ -87,10 +87,10 @@ namespace Ux
             Refresh(-1);
         }
 
-        protected override void ToHide(bool isAnim, bool isStack)
+        protected override void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
         {
-            SelectItem?.DoHide(isAnim, isStack);
-            base.ToHide(isAnim, isStack);
+            SelectItem?.HideByParent(isAnim, isStack, token);
+            base.ToHide(isAnim, isStack, token);
         }
 
         void _Hide()

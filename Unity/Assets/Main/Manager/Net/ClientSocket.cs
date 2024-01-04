@@ -170,7 +170,7 @@ namespace Ux
                                 rpcType.Remove(rpcId);
                                 if (rpcMethod.TryGetValue(rpcId, out var method))
                                 {
-                                    method.TrySetCanceled();
+                                    method.TrySetException(new Exception("RPC超时"));
                                     rpcMethod.Remove(rpcId);
                                 }
                                 rpcTime.Remove(rpcId);

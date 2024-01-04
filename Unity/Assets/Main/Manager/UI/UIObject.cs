@@ -16,37 +16,6 @@ namespace Ux
         Hide,
         HideAnim
     }
-    public enum UIType
-    {
-        None,
-        Stack,//会关闭除Fixed之外的界面，放进队列        
-        Fixed,//固定界面,不会进入队列
-    }
-
-    //必须是2的n次方,使用方法可 用组合 Blur|Fixed
-    public enum UIBlur
-    {
-        /// <summary>
-        /// 不会模糊其他界面也不会被其他界面模糊
-        /// </summary>
-        None = 0x1,
-        /// <summary>
-        /// 不会模糊其他界面但会被其他界面模糊
-        /// </summary>
-        Normal = 0x2,
-        /// <summary>
-        /// 模糊非固定界面
-        /// </summary>
-        Blur = 0x4,
-        /// <summary>
-        /// 模糊固定界面
-        /// </summary>
-        Fixed = 0x8,
-        /// <summary>
-        /// 模糊场景
-        /// </summary>
-        Scene = 0x10,
-    }
 
     public class UIObject
     {
@@ -239,7 +208,7 @@ namespace Ux
         }
 
 
-        protected virtual void ToShow(bool isAnim, int id, object param, bool isStack)
+        protected virtual void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
         {
             if (_state == UIState.Show || _state == UIState.ShowAnim)
             {
@@ -262,16 +231,29 @@ namespace Ux
             OnShow(param);
             foreach (var component in Components)
             {
-                component.ToShow(isAnim, id, param, isStack);
+                component.ToShow(isAnim, id, param, isStack, token);
             }
-            _CheckShow(id, param, isStack).Forget();
+            _CheckShow(id, param, isStack, token).Forget();
         }
 
-        async UniTaskVoid _CheckShow(int id, object param, bool isStack)
+        async UniTaskVoid _CheckShow(int id, object param, bool isStack, CancellationTokenSource token)
         {
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
-                await UniTask.Yield();
-
+            {
+                if (token != null)
+                {
+                    var isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
+                    if (isCanceled)
+                    {
+                        Log.Debug(GetType().Name + "显示动画取消");
+                        return;
+                    }
+                }
+                else
+                {
+                    await UniTask.Yield();
+                }
+            }
             OnShowAnimComplete();
             OnShowCallBack?.Invoke(id, param, isStack);
         }
@@ -289,7 +271,7 @@ namespace Ux
 
         }
 
-        protected virtual void ToHide(bool isAnim, bool isStack)
+        protected virtual void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
         {
             if (_state == UIState.Hide || _state == UIState.HideAnim)
             {
@@ -308,18 +290,30 @@ namespace Ux
 
             foreach (var component in Components)
             {
-                component.ToHide(isAnim, isStack);
+                component.ToHide(isAnim, isStack, token);
             }
             OnHide();
             _RemoveTag();
-            _CheckHide().Forget();
+            _CheckHide(token).Forget();
         }
 
-        async UniTaskVoid _CheckHide()
+        async UniTaskVoid _CheckHide(CancellationTokenSource token)
         {
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
             {
-                await UniTask.Yield();
+                if (token != null)
+                {
+                    var isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
+                    if (isCanceled)
+                    {
+                        Log.Debug(GetType().Name + "关闭动画取消");
+                        return;
+                    }
+                }
+                else
+                {
+                    await UniTask.Yield();
+                }
             }
             OnHideAnimComplete();
             OnHideCallBack?.Invoke();

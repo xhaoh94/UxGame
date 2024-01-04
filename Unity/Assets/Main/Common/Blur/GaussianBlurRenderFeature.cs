@@ -40,17 +40,17 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
         static readonly int tempTexID_01 = Shader.PropertyToID("_TempGaussianBlurTex_01");     //临时贴图，给个ID
         static readonly int tempTexID_02 = Shader.PropertyToID("_TempGaussianBlurTex_02");     //临时贴图，给个ID
 
-        Material mat;               // 新建材质        
+        Material _mat;               // 新建材质        
 
-        RenderTargetIdentifier currentRT;       // 当前渲染目标(RT)---我们即将绘制的画面
+        RenderTargetIdentifier _currentRT;       // 当前渲染目标(RT)---我们即将绘制的画面
 
-        CommandBuffer cacel;
+        CommandBuffer _cacel;
         void ReleaseCacel()
         {
-            if (cacel != null)
+            if (_cacel != null)
             {
-                CommandBufferPool.Release(cacel);        // 释放commandBuffer
-                cacel = null;
+                CommandBufferPool.Release(_cacel);        // 释放commandBuffer
+                _cacel = null;
             }
         }
 
@@ -58,14 +58,11 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
         public GaussianBlurPass(RenderPassEvent evt, Shader gaussianBlurshader)        // 构造函数输入 RenderPassEvent-渲染事件位置, Pass所使用的Shader;这2个参数会暴露在面板中
         {
             this.renderPassEvent = evt;              //固定写法----设置渲染事件位置 - renderPassEvent 
-            var my_shader = gaussianBlurshader;           //设置shader
-            //shader不存在则返回
-            if (my_shader == null)
-            {
-                Debug.LogError("不存在ColorTint shader");
+            if (gaussianBlurshader == null)
+            {                
                 return;
             }
-            this.mat = CoreUtils.CreateEngineMaterial(gaussianBlurshader);       //新建材质
+            this._mat = CoreUtils.CreateEngineMaterial(gaussianBlurshader);       //新建材质
         }
         #endregion
 
@@ -73,7 +70,7 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)      //固定写法-override void Execute 是父类ScriptableRenderPass的内容   renderingData里面有渲染的结果,所以用ref
         {
             //[判断执行条件:材质是否初始化成功]
-            if (mat == null)        // 若材质初始化失败
+            if (_mat == null)        // 若材质初始化失败
             {
                 Debug.LogError("材质初始化失败!");
                 return;
@@ -89,19 +86,19 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
                 ReleaseCacel();
                 return;
             }
-            if (!Ux.SceneBlur.IsChangle && cacel != null)
+            if (!Ux.SceneBlur.IsChangle && _cacel != null)
             {
-                context.ExecuteCommandBuffer(cacel);     // 执行commandBuffer里的渲染绘制命令
+                context.ExecuteCommandBuffer(_cacel);     // 执行commandBuffer里的渲染绘制命令
                 return;
             }
             ReleaseCacel();
 
-            this.currentRT = renderingData.cameraData.renderer.cameraColorTargetHandle;       //设置当前渲染目标(RT)-先拿到相机的当前RT
+            this._currentRT = renderingData.cameraData.renderer.cameraColorTargetHandle;       //设置当前渲染目标(RT)-先拿到相机的当前RT
             //[开始执行Pass]
             var commandBuffer = CommandBufferPool.Get(k_RenderTag);             //从CommandBufferPool中分配得到commandBuffer(命令缓存区),并设置commandBuffer的Title
             Render(commandBuffer, ref renderingData);        // 设置渲染函数
             context.ExecuteCommandBuffer(commandBuffer);     // 执行commandBuffer里的渲染绘制命令
-            cacel = commandBuffer;
+            _cacel = commandBuffer;
             Ux.SceneBlur.IsChangle = false;
         }
 
@@ -112,7 +109,7 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
         {
             // 传入参数
             ref var cameraData = ref renderingData.cameraData;       // 传入相机参数-大多后处理要用到相机的参数，这里ColorTint没有用到
-            RenderTargetIdentifier source = this.currentRT;         // 传入当前渲染目标RT-与this.currentRT实时关联
+            RenderTargetIdentifier source = this._currentRT;         // 传入当前渲染目标RT-与this.currentRT实时关联
             int destination01 = tempTexID_01;         // 传入临时贴图ID,作为目标
             int destination02 = tempTexID_02;         // 传入临时贴图ID,作为目标
 
@@ -123,9 +120,9 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
             int rtW = cameraData.camera.scaledPixelWidth / downsample;
             int rtH = cameraData.camera.scaledPixelHeight / downsample;
             // 传递参数->材质
-            this.mat.SetFloat("_GaussianBlurRadius", Ux.SceneBlur.BlurRadius);        // 传入模糊半径给材质
-            this.mat.SetFloat("_BlurDepth", Ux.SceneBlur.BlurDepth);        // 传入模糊景深
-            this.mat.SetFloat("_FullBlurValue", Ux.SceneBlur.BlurValue);     // 传入总体模糊程度
+            this._mat.SetFloat("_GaussianBlurRadius", Ux.SceneBlur.BlurRadius);        // 传入模糊半径给材质
+            this._mat.SetFloat("_BlurDepth", Ux.SceneBlur.BlurDepth);        // 传入模糊景深
+            this._mat.SetFloat("_FullBlurValue", Ux.SceneBlur.BlurValue);     // 传入总体模糊程度
 
             // commandBuffer里的渲染指令
             cmd.SetGlobalTexture(mainTexID, source);        // 给材质的MaintexID赋值---将source(RT)的渲染结果作为贴图传给材质-（mainTex只是一张图,RT则还有其他数据）
@@ -147,8 +144,8 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
                 cmd.Blit(source, destination01);                // source传给 destination01
                 for (int i = 0; i < gaussianBlurTimes; i++)        // 执行多次模糊
                 {
-                    cmd.Blit(destination01, destination02, mat, 0);      // destination01执行Mat的Pass0-横模糊,输出给destination02
-                    cmd.Blit(destination02, destination01, mat, 1);      // destination02执行Mat的Pass0-横模糊,输出给destination01
+                    cmd.Blit(destination01, destination02, _mat, 0);      // destination01执行Mat的Pass0-横模糊,输出给destination02
+                    cmd.Blit(destination02, destination01, _mat, 1);      // destination02执行Mat的Pass0-横模糊,输出给destination01
                 }
                 cmd.Blit(destination01, source);    // destination01传给 source
             }

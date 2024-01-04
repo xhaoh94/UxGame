@@ -18,10 +18,10 @@ namespace Ux.UI
             {
                 //var data = UIMgr.Ins.GetUIData(ID);
                 //data.Children.Reverse();
-                //RefreshTab();
-                Log.Debug("RefreshTab");
+                //RefreshTab();                                
             });
         }
+
         protected override void OnHide()
         {
             base.OnHide();
@@ -39,6 +39,8 @@ namespace Ux.UI
         partial void OnBtn1Click(EventContext e)
         {
             UIMgr.Ins.Show<UI.Stack1View>();
+            //UIMgr.Ins.Hide<MultipleView>();
+            //UIMgr.Ins.Show<MultipleView>("222");
         }
     }
 

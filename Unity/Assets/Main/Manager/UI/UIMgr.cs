@@ -44,7 +44,7 @@ namespace Ux
         private readonly List<int> _createdDels = new List<int>();
 
         //等待关闭动画结束后重新打开的列表
-        private readonly List<int> _waitHideAnimCompleteReShow = new List<int>();
+        //private readonly List<int> _waitHideAnimCompleteReShow = new List<int>();
 
         //界面对应的懒加载标签
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
@@ -60,7 +60,6 @@ namespace Ux
             { UILayer.Tip, _CreateLayer(UILayer.Tip, 200) },
             { UILayer.Top, _CreateLayer(UILayer.Top, 300) }
         };
-
 
         static GComponent _CreateLayer(UILayer layer, int v)
         {
@@ -261,7 +260,7 @@ namespace Ux
             }
 
             var uis = Pool.Get<List<IUI>>();
-            var succ = await ToShow(childID, uis);
+            var succ = await ShowAsync(childID, uis);
             if (succ)
             {
                 foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _createdDels.Contains(uiid)))
@@ -302,7 +301,7 @@ namespace Ux
             return succ ? (T)_showed[id] : default;
         }
 
-        private async UniTask<bool> ToShow(int id, ICollection<IUI> uis)
+        private async UniTask<bool> ShowAsync(int id, ICollection<IUI> uis)
         {
             var data = GetUIData(id);
             if (data == null)
@@ -312,7 +311,7 @@ namespace Ux
 
             if (data.TabData != null && data.TabData.PID != 0)
             {
-                if (!await ToShow(data.TabData.PID, uis))
+                if (!await ShowAsync(data.TabData.PID, uis))
                 {
                     _showing.Remove(id);
 #if UNITY_EDITOR
@@ -324,27 +323,27 @@ namespace Ux
 
             if (_showed.TryGetValue(id, out var ui))
             {
-                switch (ui.State)
-                {
-                    //如果在关闭中，等待关闭后再重新打开
-                    case UIState.HideAnim:
-                    case UIState.Hide:
-                        _waitHideAnimCompleteReShow.Add(id);
-                        while (true)
-                        {
-                            await UniTask.Yield();
-                            if (!_waitHideAnimCompleteReShow.Contains(id)) return false;
-                            if (!_showed.ContainsKey(id))
-                            {
-                                _waitHideAnimCompleteReShow.Remove(id);
-                                break;
-                            }
-                        }
-                        break;
-                    default:
-                        uis.Add(ui);
-                        return true;
-                }
+                //switch (ui.State)
+                //{
+                //    //如果在关闭中，等待关闭后再重新打开
+                //    case UIState.HideAnim:
+                //    case UIState.Hide:
+                //        _waitHideAnimCompleteReShow.Add(id);
+                //        while (true)
+                //        {
+                //            await UniTask.Yield();
+                //            if (!_waitHideAnimCompleteReShow.Contains(id)) return false;
+                //            if (!_showed.ContainsKey(id))
+                //            {
+                //                _waitHideAnimCompleteReShow.Remove(id);
+                //                break;
+                //            }
+                //        }
+                //        break;
+                //    default:
+                uis.Add(ui);
+                return true;
+                //}
             }
 
             if (_showing.Contains(id))
@@ -502,22 +501,22 @@ namespace Ux
 
             if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
             {
-                if (_waitHideAnimCompleteReShow.Contains(id))
-                {
-                    _waitHideAnimCompleteReShow.Remove(id);
-                }
+                //if (_waitHideAnimCompleteReShow.Contains(id))
+                //{
+                //    _waitHideAnimCompleteReShow.Remove(id);
+                //}
 
-                var ids = ui.Data.GetParentIDs();
-                if (ids != null)
-                {
-                    foreach (var tid in ids)
-                    {
-                        if (_waitHideAnimCompleteReShow.Contains(tid))
-                        {
-                            _waitHideAnimCompleteReShow.Remove(tid);
-                        }
-                    }
-                }
+                //var ids = ui.Data.GetParentIDs();
+                //if (ids != null)
+                //{
+                //    foreach (var tid in ids)
+                //    {
+                //        if (_waitHideAnimCompleteReShow.Contains(tid))
+                //        {
+                //            _waitHideAnimCompleteReShow.Remove(tid);
+                //        }
+                //    }
+                //}
                 return;
             }
 

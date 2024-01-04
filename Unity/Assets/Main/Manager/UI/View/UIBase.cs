@@ -1,5 +1,7 @@
+using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
+using System.Threading;
 using static Ux.UIMgr;
 
 namespace Ux
@@ -24,6 +26,46 @@ namespace Ux
 
     }
 
+    public enum UIType
+    {
+        /// <summary>
+        /// 不会关闭任何界面，但会被Stack界面关闭（Stack界面关闭的时候，会自动重新打开）
+        /// </summary>
+        None,
+        /// <summary>
+        /// 会关闭除Fixed之外的界面，也会被其他Stack界面关闭（Stack界面关闭的时候，会自动重新打开） 
+        /// </summary>
+        Stack,
+        /// <summary>
+        /// 固定界面,不会关闭其他界面，也不会被其他界面关闭
+        /// </summary>
+        Fixed,
+    }
+
+    //必须是2的n次方,可组合使用 (PS:Blur|Fixed)
+    public enum UIBlur
+    {
+        /// <summary>
+        /// 不会模糊其他界面也不会被其他界面模糊
+        /// </summary>
+        None = 0x1,
+        /// <summary>
+        /// 不会模糊其他界面但会被其他界面模糊
+        /// </summary>
+        Normal = 0x2,
+        /// <summary>
+        /// 模糊非固定界面
+        /// </summary>
+        Blur = 0x4,
+        /// <summary>
+        /// 模糊固定界面
+        /// </summary>
+        Fixed = 0x8,
+        /// <summary>
+        /// 模糊场景
+        /// </summary>
+        Scene = 0x10,
+    }
     public abstract class UIBase : UIObject, IUI
     {
         protected abstract string PkgName { get; }
@@ -31,6 +73,9 @@ namespace Ux
         public virtual bool IsDestroy => true;
         public virtual UIType Type => UIType.None;
         public virtual UIBlur Blur => UIBlur.Normal;
+
+        CancellationTokenSource _showToken;
+        CancellationTokenSource _hideToken;
 
         private CallBackData? _cbData;
         public virtual void InitData(IUIData data, CallBackData initData)
@@ -89,15 +134,19 @@ namespace Ux
 #endif
         public IUIData Data { get; private set; }
 
-        public virtual void Hide()
+        protected void Hide()
+        {
+            Hide(true);
+        }
+        public virtual void Hide(bool isAnim = true)
         {
             if (_cbData != null)
             {
-                _cbData.Value.backCb?.Invoke(ID, true);
+                _cbData.Value.backCb?.Invoke(ID, isAnim);
             }
             else
             {
-                UIMgr.Ins.Hide(ID, true);
+                UIMgr.Ins.Hide(ID, isAnim);
             }
         }
 
@@ -116,20 +165,32 @@ namespace Ux
         {
         }
         void IUI.DoShow(bool isAnim, int id, object param, bool isStack)
-        {
-            var _state = State;
-            if (_state == UIState.Show || _state == UIState.ShowAnim)
+        {            
+            switch (State)
             {
-                if (id == ID && param != null)
-                {
-                    OnOverwrite(param);
-                }
-                _Show(id, param, isStack);
-                return;
+                case UIState.Show:
+                case UIState.ShowAnim:
+                    if (id == ID && param != null)
+                    {
+                        OnOverwrite(param);
+                    }
+                    _Show(id, param, isStack);
+                    return;
+                case UIState.HideAnim:
+                    if (_hideToken != null)
+                    {
+                        _hideToken.Cancel();
+                        _hideToken = null;
+                    }
+                    break;
+                case UIState.Hide:
+                    AddToStage();
+                    OnLayout();
+                    break;
             }
-            AddToStage();
-            OnLayout();
-            base.ToShow(isAnim, id, param, isStack);
+            _ReleaseShowToken();
+            _showToken = new CancellationTokenSource();
+            base.ToShow(isAnim, id, param, isStack, _showToken);
         }
         private void _Show(int id, object param, bool isStack)
         {
@@ -140,12 +201,27 @@ namespace Ux
         }
 
         void IUI.DoHide(bool isAnim, bool isStack)
-        {
+        {            
+            switch (State)
+            {
+                case UIState.Hide:
+                case UIState.HideAnim:
+                    return;
+                case UIState.ShowAnim:
+                    if (_showToken != null)
+                    {
+                        _showToken.Cancel();
+                        _showToken = null;
+                    }
+                    break;
+            }
             if (_cbData != null)
             {
                 _cbData.Value.stackCb?.Invoke(this, isStack);
             }
-            base.ToHide(isAnim, isStack);
+            _ReleaseHideToken();
+            _hideToken = new CancellationTokenSource();
+            base.ToHide(isAnim, isStack, _hideToken);
         }
 
         private void _Hide()
@@ -163,8 +239,26 @@ namespace Ux
         }
         protected override void OnDispose()
         {
+            _ReleaseShowToken();
+            _ReleaseHideToken();
             Data = null;
             _cbData = null;
+        }
+        void _ReleaseShowToken()
+        {
+            if (_showToken != null)
+            {
+                _showToken.Dispose();
+                _showToken = null;
+            }
+        }
+        void _ReleaseHideToken()
+        {
+            if (_hideToken != null)
+            {
+                _hideToken.Dispose();
+                _hideToken = null;
+            }
         }
         protected void SetLayout(UILayout layout, bool restraint = true)
         {
