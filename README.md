@@ -1,9 +1,9 @@
 # U3D+HybridCLR+YooAssate+FGUI 简易框架
 
 #### 介绍
-**UxGame 是一个包含一整套 C#热更和资源热更的简易框架，框架本身基于MVC思想修改，以模块为数据载体，通过事件驱动，可实现模块间高度解耦且开发流程简单易懂** 
+**UxGame 是一个包含一整套 C#热更和资源热更的简易框架** 
 ##
-拥有事件管理器、定时器管理器、红点管理器、UI管理器、编辑器可视化查看、一键打包功能等
+包含事件管理器、定时器管理器、红点管理器、UI管理器、编辑器可视化查看、一键打包功能等
 #### 模块
 模块是单例对象，是数据的存放处，和与Socket交互的地方。继承ModuleBase且挂载Module特性的对象会被作为一个模块。
 
@@ -30,14 +30,14 @@ public class LoginModule : ModuleBase<LoginModule>
     protected override void OnInit()
     {
         base.OnInit();
-        long key = EventMgr.Ins.On(EventType.Test, Test);//监听Test消息类型的消息
+        long key = EventMgr.Ins.On(EventType.Test, this, Test);//监听Test消息类型的消息
         EventMgr.Ins.RemoveByKey(key);//取消此Key的监听事件
-        EventMgr.Ins.Off(EventType.Test, Test);//取消监听Test消息类型的消息
+        EventMgr.Ins.Off(EventType.Test, this, Test);//取消监听Test消息类型的消息
         EventMgr.Ins.OffAll(this);//取消所有此this上的所有监听事件
         EventMgr.Ins.Send(EventType.Test);//派发消息
 
         //如果要监听带参数的，也可以使用泛型监听
-        EventMgr.Ins.On<string>(EventType.Test, TestStr);//监听带参数的消息
+        EventMgr.Ins.On<string>(EventType.Test,this, TestStr);//监听带参数的消息
         EventMgr.Ins.Send(EventType.Test, "test");//带参数的消息派发
     }
     //在模块和UI中，可使用特性快速监听事件，但是此方式注册的事件将无法销毁，是长存的。
@@ -62,18 +62,18 @@ public class LoginModule : ModuleBase<LoginModule>
 
 ```
 //每5秒执行Test方法，执行1次
-long Key = TimeMgr.Ins.DoTimer(5, 1, Test);
+long Key = TimeMgr.Ins.DoTimer(5, 1,this, Test);
 //每5秒执行Test方法，执行10次，执行完毕后触发TestComplete回调
-TimeMgr.Ins.DoTimer(5, 10, Test,TestComplete);
+TimeMgr.Ins.DoTimer(5, 10,this, Test,TestComplete);
 
 //每5帧执行Test方法，执行1次
-TimeMgr.Ins.DoFrame(5, 1, Test);
+TimeMgr.Ins.DoFrame(5, 1,this, Test);
 //每5帧执行Test方法，执行10次，执行完毕后触发TestComplete回调
-TimeMgr.Ins.DoFrame(5, 10, Test,TestComplete);
+TimeMgr.Ins.DoFrame(5, 10, this,Test,TestComplete);
 //达到时间戳后触发
-TimeMgr.Ins.DoTimeStamp(DateTime.Now,  Test);
+TimeMgr.Ins.DoTimeStamp(DateTime.Now, this, Test);
 //基于Cron表达式，监听触发事件
-TimeMgr.Ins.DoCron("0 0/2 * * * ?",  Test);
+TimeMgr.Ins.DoCron("0 0/2 * * * ?", this, Test);
 
 //可以通过注册时返回的Key取消注册
 TimeMgr.Ins.RemoveKey(Key);
@@ -84,7 +84,7 @@ TimeMgr.Ins.RemoveFrame(Test);
 TimeMgr.Ins.RemoveTimeStamp(Test);
 TimeMgr.Ins.RemoveCron(Test);
 
-//取消注册在次对象上的所有定时器,前提是，注册的方法不是静态方法
+//取消注册在次对象上的所有定时器
 TimeMgr.Ins.RemoveAll(this);
 
 
