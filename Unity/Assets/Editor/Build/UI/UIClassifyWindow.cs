@@ -101,7 +101,7 @@ namespace UI.Editor
             preloadGp.Collectors.Add(collectorPreload);
             #endregion
 
-            EditorUtility.SetDirty(ResClassifySettings);            
+            EditorUtility.SetDirty(ResClassifySettings);
             AssetBundleCollectorSettingData.SaveFile();
         }
         static UIClassifySettingData _ResClassifySettings;
@@ -200,8 +200,7 @@ namespace UI.Editor
             ResClassifySettings.builtins = builtins.ToArray();
             ResClassifySettings.lazyloads = lazyloads.ToArray();
             CreateYooAssetUIGroup();
-            UICodeGenWindow.Export();
-            if (EditorUtility.DisplayDialog("提示", "创建成功!", "ok"))
+            if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("提示", "创建成功!", "ok"))
             {
                 ResetRc();
             }

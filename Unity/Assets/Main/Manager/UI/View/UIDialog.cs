@@ -21,7 +21,7 @@ namespace Ux
         protected virtual UIButton __btnClose { get; private set; } = null;
         protected virtual UIButton __btn1 { get; private set; } = null;
         protected virtual UIButton __btn2 { get; private set; } = null;
-        protected virtual UIButton __checkBox { get; private set; } = null;
+        protected virtual UIButton __checkbox { get; private set; } = null;
         protected virtual Controller __controller { get; private set; } = null;
         #endregion
 
@@ -35,7 +35,7 @@ namespace Ux
             __btn1 = new UIButton(gCom.GetChild("btn1"), this);
             __btn2 = new UIButton(gCom.GetChild("btn2"), this);
             __controller = (Controller)gCom.GetController("dialogState");
-            __checkBox= new UIButton(gCom.GetChild("checkbox"), this);
+            __checkbox= new UIButton(gCom.GetChild("checkbox"), this);
         }
 
         public override void InitData(IUIData data, CallBackData initData)
@@ -76,7 +76,7 @@ namespace Ux
                         AddClick(__btn2, OnBtn1Click);
                         break;
                     case UIDialogFactory.ParamType.ChcekBox:
-                        if (__checkBox != null) __checkBox.text = ((UIDialogFactory.DialogCheckBox)value).Desc;
+                        if (__checkbox != null) __checkbox.text = ((UIDialogFactory.DialogCheckBox)value).Desc;
                         break;
                     case UIDialogFactory.ParamType.Custom:
                         OnParamCustom(value);
@@ -135,8 +135,8 @@ namespace Ux
         }
         private void _Hide()
         {
-            if (__checkBox != null
-                && __checkBox.selected
+            if (__checkbox != null
+                && __checkbox.selected
                 && dialogData.Param.TryGetValue(UIDialogFactory.ParamType.ChcekBox, out var obj)
                 && obj is UIDialogFactory.DialogCheckBox checkBox)
             {

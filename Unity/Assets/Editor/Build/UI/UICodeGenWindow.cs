@@ -334,7 +334,6 @@ namespace UI.Editor
 
             if (data.IsTabFrame)
             {
-                tabViewElement.style.display = DisplayStyle.Flex;
                 CreateText(data.TabViewData, tabViewElement);
             }
             else
@@ -343,7 +342,6 @@ namespace UI.Editor
             }
             if (data.IsDialog)
             {
-                dialogElement.style.display = DisplayStyle.Flex;
                 CreateText(data.DialogData, dialogElement);
             }
             else
@@ -353,12 +351,15 @@ namespace UI.Editor
         }
         void CreateText(List<CustomData> listData, VisualElement parent)
         {
+            parent.style.display = DisplayStyle.Flex;
+            var code = parent.GetHashCode();
+
             foreach (var temData in listData)
             {
-                var key = temData.Key;
+                var key = temData.Key + "_" + code;
                 if (!nameTextField.TryGetValue(key, out var textField))
                 {
-                    textField = new TextField(key);
+                    textField = new TextField(temData.Key);
                     textField.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
                     parent.Add(textField);
                     nameTextField.Add(key, textField);
@@ -391,24 +392,25 @@ namespace UI.Editor
 
             if (data.IsTabFrame)
             {
-                FreshDict(data.TabViewData);
+                FreshDict(tabViewElement, data.TabViewData);
             }
 
             if (data.IsDialog)
             {
-                FreshDict(data.DialogData);
+                FreshDict(dialogElement, data.DialogData);
             }
 
             UICodeGenSettingData.SetComponentData(data);
             FreshComponentData();
         }
 
-        void FreshDict(List<CustomData> listData)
+        void FreshDict(VisualElement parent, List<CustomData> listData)
         {
+            var code = parent.GetHashCode();
             for (int i = 0; i < listData.Count; i++)
             {
                 var temData = listData[i];
-                var key = temData.Key;
+                var key = temData.Key + "_" + code;
                 if (nameTextField.TryGetValue(key, out var textField))
                 {
                     temData.Name = textField.value;

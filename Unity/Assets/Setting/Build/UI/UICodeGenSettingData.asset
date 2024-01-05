@@ -18,7 +18,7 @@ MonoBehaviour:
   pkgs:
   - name: Common
     components:
-    - ID: 3c033b4b-0ac4-44d7-9b57-48fa9f542bb8
+    - ID: Common@Common1TabFrame
       useGlobal: 1
       path: Assets/Hotfix/CodeGen/UI
       ingoreDefault: 1
@@ -28,6 +28,17 @@ MonoBehaviour:
       cls: Common1TabFrame
       ext: Component/TabFrame
       isExport: 1
+      _tabViewData:
+      - Key: __tabContent
+        Type: GComponent
+        Name: tabContent
+      - Key: __listTab
+        Type: GList
+        Name: listTab
+      - Key: __btnClose
+        Type: UIButton
+        Name: btnClose
+      _dialogData: []
       members:
       - index: 0
         name: n0
@@ -79,7 +90,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-    - ID: 6a8f29d7-b2d7-4583-b892-097f9acf309d
+    - ID: Common@Common2TabFrame
       useGlobal: 1
       path: Assets/Hotfix/CodeGen/UI
       ingoreDefault: 1
@@ -89,6 +100,17 @@ MonoBehaviour:
       cls: Common2TabFrame
       ext: Component/TabFrame
       isExport: 1
+      _tabViewData:
+      - Key: __tabContent
+        Type: GComponent
+        Name: 
+      - Key: __listTab
+        Type: GList
+        Name: 
+      - Key: __btnClose
+        Type: UIButton
+        Name: btnClose
+      _dialogData: []
       members:
       - index: 0
         name: n0
@@ -110,7 +132,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-    - ID: a9765f1e-a40d-436d-b045-733642cf5f96
+    - ID: Common@CommonDialog
       useGlobal: 1
       path: Assets/Hotfix/CodeGen/UI
       ingoreDefault: 1
@@ -120,6 +142,29 @@ MonoBehaviour:
       cls: CommonDialog
       ext: Panel/Dialog
       isExport: 1
+      _tabViewData: []
+      _dialogData:
+      - Key: __txtTitle
+        Type: GTextField
+        Name: txtTitle
+      - Key: __txtContent
+        Type: GTextField
+        Name: txtContent
+      - Key: __btnClose
+        Type: UIButton
+        Name: btnClose
+      - Key: __btn1
+        Type: UIButton
+        Name: btn1
+      - Key: __btn2
+        Type: UIButton
+        Name: btn2
+      - Key: __checkbox
+        Type: UIButton
+        Name: checkbox
+      - Key: __controller
+        Type: Controller
+        Name: dialogState
       members:
       - index: 0
         name: n4
@@ -181,16 +226,6 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-      - index: 0
-        name: dialogState
-        defaultType: Controller
-        customType: Controller
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
       - index: 6
         name: checkbox
         defaultType: GButton
@@ -201,217 +236,19 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-    - ID: c35a3de9-985d-4a9c-b5ab-17ee984702e7
-      useGlobal: 1
-      path: Assets/Hotfix/CodeGen/UI
-      ingoreDefault: 1
-      pkgName: Common
-      resName: CommonTabBtn
-      ns: Ux.UI
-      cls: CommonTabBtn
-      ext: Component/TabBtn
-      isExport: 1
-      members:
       - index: 0
-        name: n0
-        defaultType: GImage
-        customType: GImage
+        name: dialogState
+        defaultType: Controller
+        customType: Controller
         pkg: 
         res: 
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u65E0"
-        evtParam: 
-      - index: 1
-        name: n1
-        defaultType: GImage
-        customType: GImage
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 3
-        name: redPoint
-        defaultType: GImage
-        customType: GImage
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-    - ID: 4f861fc2-bb9e-4e36-a424-34a998ba8b4c
-      useGlobal: 1
-      path: Assets/Hotfix/CodeGen/UI
-      ingoreDefault: 1
-      pkgName: Common
-      resName: BtnClose
-      ns: Ux.UI
-      cls: BtnClose
-      ext: FGUI/Button
-      isExport: 1
-      members:
-      - index: 0
-        name: n0
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 1
-        name: n1
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 2
-        name: n2
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 3
-        name: n3
-        defaultType: GTextField
-        customType: GTextField
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-  - name: Login
-    components:
-    - ID: ab4795af-a4e3-4d1c-956a-ed10fb889af3
-      useGlobal: 1
-      path: Assets/Hotfix/CodeGen/UI
-      ingoreDefault: 1
-      pkgName: Login
-      resName: LoginView
-      ns: Ux.UI
-      cls: LoginView
-      ext: Panel/View
-      isExport: 1
-      members:
-      - index: 0
-        name: n0
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 1
-        name: n1
-        defaultType: GTextField
-        customType: GTextField
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 2
-        name: btnLogin
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 3
-        name: inputAcc
-        defaultType: GTextInput
-        customType: GTextInput
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 4
-        name: n4
-        defaultType: GTextField
-        customType: GTextField
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 5
-        name: inputPass
-        defaultType: GTextInput
-        customType: GTextInput
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-      - index: 6
-        name: n6
-        defaultType: GTextField
-        customType: GTextField
-        pkg: 
-        res: 
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u65E0"
-        evtParam: 
-  - name: Main
-    components:
-    - ID: 75a2a087-d932-45eb-9435-d87f6ad66879
-      useGlobal: 1
-      path: Assets/Hotfix/CodeGen/UI
-      ingoreDefault: 1
-      pkgName: Main
-      resName: MainView
-      ns: Ux.UI
-      cls: MainView
-      ext: Panel/View
-      isExport: 1
-      members:
-      - index: 1
-        name: btnBack
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
-        evtParam: 
-      - index: 0
-        name: btnMainView
-        defaultType: GButton
-        customType: Btn1
-        pkg: Common
-        res: Btn1
-        isCreateVar: 1
-        isCreateIns: 1
-        evtType: "\u5355\u51FB"
         evtParam: 
   - name: Multiple
     components:
-    - ID: 1d7b8781-21e7-4266-940d-5ff68c856f6d
+    - ID: Multiple@MultipleView
       useGlobal: 0
       path: Assets/Hotfix/CodeGen/UI
       ingoreDefault: 0
@@ -421,6 +258,8 @@ MonoBehaviour:
       cls: MultipleView
       ext: Panel/View
       isExport: 1
+      _tabViewData: []
+      _dialogData: []
       members:
       - index: 0
         name: mCommonBg
@@ -452,7 +291,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
-    - ID: b9e7634b-26d8-422e-a1cf-bf6049ad0998
+    - ID: Multiple@Multiple2TabView
       useGlobal: 0
       path: Assets/Hotfix/CodeGen/UI
       ingoreDefault: 0
@@ -462,6 +301,8 @@ MonoBehaviour:
       cls: Multiple2TabView
       ext: Panel/TabView
       isExport: 1
+      _tabViewData: []
+      _dialogData: []
       members:
       - index: 0
         name: n4
@@ -469,8 +310,8 @@ MonoBehaviour:
         customType: GImage
         pkg: 
         res: 
-        isCreateVar: 1
-        isCreateIns: 1
+        isCreateVar: 0
+        isCreateIns: 0
         evtType: "\u65E0"
         evtParam: 
       - index: 1
@@ -479,9 +320,19 @@ MonoBehaviour:
         customType: GGraph
         pkg: 
         res: 
+        isCreateVar: 0
+        isCreateIns: 0
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: btn1
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
         isCreateVar: 1
         isCreateIns: 1
-        evtType: "\u65E0"
+        evtType: "\u5355\u51FB"
         evtParam: 
       - index: 0
         name: c1
@@ -489,8 +340,8 @@ MonoBehaviour:
         customType: Controller
         pkg: 
         res: 
-        isCreateVar: 1
-        isCreateIns: 1
+        isCreateVar: 0
+        isCreateIns: 0
         evtType: "\u65E0"
         evtParam: 
       - index: 0
@@ -515,7 +366,7 @@ MonoBehaviour:
         evtParam: 
   - name: Test
     components:
-    - ID: f059f753-f35c-4120-9f46-e40ed6c98b2a
+    - ID: Test@TestView
       useGlobal: 1
       path: Assets/Hotfix/CodeGen/UI
       ingoreDefault: 1
@@ -525,6 +376,8 @@ MonoBehaviour:
       cls: TestView
       ext: Panel/View
       isExport: 1
+      _tabViewData: []
+      _dialogData: []
       members:
       - index: 0
         name: n0

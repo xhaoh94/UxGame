@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using static UI.Editor.ComponentData;
 using static UI.Editor.UIMemberData;
 
@@ -79,7 +80,7 @@ namespace UI.Editor
     }
     public partial class UICodeGenWindow
     {
-        public static void Export()
+        public static bool Export()
         {
             Log.Debug("---------------------------------------->开始生成UI代码文件<---------------------------------------");
             UICodeGenSettingData.Load();
@@ -88,19 +89,27 @@ namespace UI.Editor
             List<FairyGUI.UIPackage> pkgs = FairyGUI.UIPackage.GetPackages();
             foreach (var pkg in pkgs)
             {
-                OnExport(pkg);
+                if (!OnExport(pkg))
+                {
+                    return false;
+                }
             }
             Log.Debug("---------------------------------------->完成生成UI代码文件<---------------------------------------");
+            return true;
         }
         void OnBtnGenClick()
         {
             if (selectItem != null)
             {
-                if (UIEditorTools.GetGComBy(selectItem.pi, out var com))
+                if (UIEditorTools.GetGComBy(selectItem.pi, out var com) && OnExport(com))
                 {
-                    OnExport(com);
+                    Log.Debug("UI代码生成");
+                    EditorUtility.DisplayDialog("提示", "导出选中组件成功", "确定");
                 }
-                Log.Debug("UI代码生成");
+                else
+                {
+                    EditorUtility.DisplayDialog("提示", "导出选中组件失败", "确定");
+                }
             }
         }
 
@@ -111,23 +120,34 @@ namespace UI.Editor
             {
                 Directory.Delete(genPath, true);
             }
-            Export();
+            if (Export())
+            {
+                EditorUtility.DisplayDialog("提示", "导出所有组件成功", "确定");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("提示", "导出所有组件失败", "确定");
+            }
         }
-        static void OnExport(FairyGUI.UIPackage pkg)
+        static bool OnExport(FairyGUI.UIPackage pkg)
         {
             var pis = UIEditorTools.GetPackageItems(pkg);
             foreach (var pi in pis)
             {
                 var com = UIEditorTools.GetOrAddGComBy(pi);
-                OnExport(com);
+                if (!OnExport(com))
+                {
+                    return false;
+                }
             }
+            return true;
         }
 
-        static void OnExport(FairyGUI.GComponent com)
+        static bool OnExport(FairyGUI.GComponent com)
         {
             var comData = UICodeGenSettingData.GetOrAddComponentData(com);
-            if (!comData.isExport) return;
-            if (comData.IsExNone) return;
+            if (!comData.isExport) return true;
+            if (comData.IsExNone) return true;
             var ext = comData.Extend;
             var ns = comData.GetNs();
             var clsName = string.IsNullOrEmpty(comData.cls) ? com.packageItem.name : comData.cls;
@@ -135,7 +155,7 @@ namespace UI.Editor
             if (path == string.Empty)
             {
                 Log.Error("导出目录不能为空");
-                return;
+                return false;
             }
             var write = new WriteData();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");
@@ -163,7 +183,7 @@ namespace UI.Editor
             bool Func(List<CustomData> listData)
             {
                 bool b = false;
-                foreach (var temData in comData.DialogData)
+                foreach (var temData in listData)
                 {
                     if (string.IsNullOrEmpty(temData.Name)) continue;
                     write.Writeln($"protected override {temData.Type} {temData.Key} => {temData.Name};");
@@ -272,7 +292,7 @@ namespace UI.Editor
 
                     if (member.customType != member.defaultType)
                     {
-                        if (member.IsTabContent()) frame = member;
+                        if (member.IsTabFrame()) frame = member;
                         write.Writeln($"{member.name} = new {member.customType}(gCom.GetChildAt({member.index}), this);");
                     }
                     else
@@ -448,6 +468,7 @@ namespace UI.Editor
 
             var temPath = $"{path}/{com.packageItem.owner.name}/";
             write.Export(temPath, clsName);
+            return true;
         }
 
 

@@ -9,9 +9,10 @@ namespace Ux.UI
 		protected override string ResName => "CommonDialog";
 		protected override GTextField __txtTitle => txtTitle;
 		protected override GTextField __txtContent => txtContent;
+		protected override UIButton __btnClose => btnClose;
 		protected override UIButton __btn1 => btn1;
 		protected override UIButton __btn2 => btn2;
-		protected override UIButton __btnClose => btnClose;
+		protected override UIButton __checkbox => checkbox;
 		protected override Controller __controller => dialogState;
 
 		protected GTextField txtTitle;
@@ -19,6 +20,7 @@ namespace Ux.UI
 		protected Btn1 btn1;
 		protected Btn1 btn2;
 		protected BtnClose btnClose;
+		protected CheckBox checkbox;
 		protected Controller dialogState;
 		protected override void CreateChildren()
 		{
@@ -30,6 +32,7 @@ namespace Ux.UI
 				btn1 = new Btn1(gCom.GetChildAt(3), this);
 				btn2 = new Btn1(gCom.GetChildAt(4), this);
 				btnClose = new BtnClose(gCom.GetChildAt(5), this);
+				checkbox = new CheckBox(gCom.GetChildAt(6), this);
 				dialogState = gCom.GetControllerAt(0);
 			}
 			catch (System.Exception e)

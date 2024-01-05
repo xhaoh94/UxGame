@@ -22,5 +22,21 @@ namespace Ux.UI
 				 Log.Error(e);
 			}
 		}
+		public override void AddChild(UITabView child)
+		{
+			mCommonBg?.AddChild(child);
+		}
+		protected void RefreshTab(int selectIndex = 0, bool scrollItToView = true)
+		{
+			mCommonBg?.Refresh(selectIndex,scrollItToView);
+		}
+		protected ITabView GetCurrentTab()
+		{
+			return mCommonBg?.SelectItem;
+		}
+		protected void SetTabRenderer<T>() where T : UITabBtn
+		{
+			mCommonBg?.SetTabRenderer<T>();
+		}
 	}
 }

@@ -5,14 +5,17 @@ using UnityEditor.SceneManagement;
 
 public class UxEditor
 {
-    public static async UniTask Export(bool _ui = true, bool _config = true, bool _proto = true, bool _isRefresh = true)
+    public static async UniTask<bool> Export(bool _ui = true, bool _config = true, bool _proto = true, bool _isRefresh = true)
     {
         if (_ui)
         {
             //生成YooAsset UI收集器配置
             UIClassifyWindow.CreateYooAssetUIGroup();
             //生成UI代码文件
-            UICodeGenWindow.Export();
+            if (!UICodeGenWindow.Export())
+            {
+                return false;
+            }
         }
 
         if (_config)
@@ -28,6 +31,8 @@ public class UxEditor
         }
 
         if (_isRefresh) AssetDatabase.Refresh();
+
+        return true;
     }
 
     [MenuItem("UxGame/初始化", false, 10)]

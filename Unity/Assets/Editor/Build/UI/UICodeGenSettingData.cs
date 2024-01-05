@@ -42,6 +42,7 @@ namespace UI.Editor
     [Serializable]
     public class ComponentData
     {
+        [Serializable]
         public struct CustomData
         {
             public string Key;
@@ -56,7 +57,7 @@ namespace UI.Editor
 
             public bool IsEquals(UIMemberData data)
             {
-                return data.defaultType == Type || data.customType == Type;
+                return data.name == Name && (data.defaultType == Type || data.customType == Type);
             }
         }
         [HideInInspector]
@@ -79,6 +80,7 @@ namespace UI.Editor
 
         public bool isExport = true;
 
+        [SerializeField]
         List<CustomData> _tabViewData;
         public List<CustomData> TabViewData
         {
@@ -97,12 +99,7 @@ namespace UI.Editor
             }
         }
 
-        //public string gList;
-
-        //public string tabContent;
-
-        //public string btnClose;
-
+        [SerializeField]
         List<CustomData> _dialogData;
         public List<CustomData> DialogData
         {
@@ -117,7 +114,7 @@ namespace UI.Editor
                        new CustomData("__btnClose","UIButton",string.Empty),
                        new CustomData("__btn1","UIButton",string.Empty),
                        new CustomData("__btn2","UIButton",string.Empty),
-                       new CustomData("__checkBox","UIButton",string.Empty),
+                       new CustomData("__checkbox","UIButton",string.Empty),
                        new CustomData("__controller","Controller",string.Empty),
                     };
                 }
@@ -125,18 +122,6 @@ namespace UI.Editor
             }
         }
 
-        //public string dialogTitle;
-
-        //public string dialogContent;
-
-        //public string dialogBtnClose;
-
-        //public string dialogBtn1;
-
-        //public string dialogBtn2;
-
-        //public string dialogController;
-        //public string dialogCheckBox;
 
         [HideInInspector]
         public List<UIMemberData> members = new List<UIMemberData>();
@@ -356,25 +341,14 @@ namespace UI.Editor
             }
             return Regex.IsMatch(name, "(^n)([0-9]+)$");
         }
-        public bool IsTabContent()
+        public bool IsTabFrame()
         {
             var com = UIEditorTools.GetOrAddGComBy(pkg, res);
             var data = UICodeGenSettingData.GetOrAddComponentData(com);
             var ext = data.Extend;
             if (ext is UIExtendComponent.TabFrame)
             {
-                var members = data.GetMembers();
-                var cnt = 2;
-                foreach (var member in members)
-                {
-                    if (!member.isCreateVar) continue;
-                    var temIndex = data.TabViewData.FindIndex(x => x.Name == member.name);
-                    if (temIndex >= 0 && data.TabViewData[temIndex].IsEquals(member))
-                    {
-                        cnt--;
-                    }
-                }
-                return cnt <= 0;
+                return true;
             }
             return false;
         }
@@ -546,7 +520,7 @@ namespace UI.Editor
             string res = com.packageItem.name;
 
             var data = new ComponentData();
-            data.ID = Guid.NewGuid().ToString();
+            data.ID = $"{pkg}@{res}";
             data.useGlobal = true;
             data.path = CodeGenPath;
             data.ingoreDefault = IngoreDefault;
