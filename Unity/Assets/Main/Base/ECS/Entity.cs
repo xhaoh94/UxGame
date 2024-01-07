@@ -75,7 +75,10 @@ namespace Ux
                 }
             }
         }
-
+        public T ParentAs<T>() where T : Entity
+        {
+            return Parent as T;
+        }
         #region Entity
         public static TEntity Create<TEntity>(bool isFromPool = true) where TEntity : Entity
         {
@@ -119,7 +122,16 @@ namespace Ux
             EntityMono.SetEntity(this, GoViewer);
             if (isSetParent)
             {
-                var assetContent = GoViewer.transform.Find("Asset");
+                Transform assetContent = null;
+                if (IsComponent)
+                {
+                    assetContent = Parent.GoViewer.transform.Find("Asset");
+                }
+                else
+                {
+                    assetContent = GoViewer.transform.Find("Asset");
+                }
+
                 if (assetContent == null)
                 {
                     assetContent = new GameObject("Asset").transform;

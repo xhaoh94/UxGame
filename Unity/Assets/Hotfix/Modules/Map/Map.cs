@@ -8,6 +8,7 @@ namespace Ux
     public class Map : Entity, IAwakeSystem<GameObject>
     {
         public CameraComponent Camera { get; private set; }
+        public FogOfWarComponent FogOfWar => GetComponent<FogOfWarComponent>();
         public GameObject Go { get; private set; }
         [EEViewer("玩家")]
         Dictionary<int, Player> players = new Dictionary<int, Player>();

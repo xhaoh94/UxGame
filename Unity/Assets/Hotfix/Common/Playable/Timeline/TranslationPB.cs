@@ -36,11 +36,11 @@ namespace Ux
             var forward = go.transform.forward.normalized;
             if (time == 0)
             {
-                player.Postion += (forward * dis);
+                player.Position += (forward * dis);
             }
             else
             {
-                target = player.Postion + (forward * dis);
+                target = player.Position + (forward * dis);
             }
         }
 
@@ -58,8 +58,8 @@ namespace Ux
                 if (mono == null) return;
                 var player = mono.GetEntity<Player>();
                 if (player == null) return;
-                var dir = target - player.Postion;
-                player.Postion += dir.normalized * (Time.fixedDeltaTime * time);
+                var dir = target - player.Position;
+                player.Position += dir.normalized * (Time.fixedDeltaTime * time);
                 if (Vector3.SqrMagnitude(dir) <= 0.1f)
                 {
                     target = Vector3.zero;

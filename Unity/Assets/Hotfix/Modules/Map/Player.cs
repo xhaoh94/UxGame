@@ -11,13 +11,13 @@ namespace Ux
     [EEViewer]
     public class PlayerData
     {
-        public int id;        
+        public int id;
         public string name;
         public Vector3 pos;
         public string res;
     }
 
-    public class Player : Entity, IAwakeSystem<PlayerData>
+    public class Player : Entity, IAwakeSystem<PlayerData>, IUnitVision
     {
         public GameObject Go { get; private set; }
         public AnimComponent Anim { get; private set; }
@@ -30,18 +30,19 @@ namespace Ux
         {
             State = AddComponent<StateComponent>();
             Operate = AddComponent<OperateComponent>();
-            Postion = a.pos;
+            Position = a.pos;
             LoadPlayer(a).Forget();
         }
 
-        public Map Map => Parent as Map;
+        public Map Map => ParentAs<Map>();
 
         async UniTaskVoid LoadPlayer(PlayerData playerData)
         {
-            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);            
-            SetMono(Go);            
-            Go.transform.position = Postion;
+            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
+            SetMono(Go);
+            Go.transform.position = Position;
             Go.transform.rotation = Rotation;
+            Go.layer = Layer;
             Map.Camera.SetFollow(Go.transform);
             Map.Camera.SetLookAt(Go.transform);
 
@@ -52,8 +53,9 @@ namespace Ux
         }
 
         protected override void OnDestroy()
-        {            
+        {
             UnityPool.Push(Go);
+            Map.FogOfWar?.RemoveUnit(ID);
             Anim = null;
             State = null;
             Operate = null;
@@ -63,7 +65,7 @@ namespace Ux
 
         private Vector3 _postion;
         [EEViewer("位置")]
-        public Vector3 Postion
+        public Vector3 Position
         {
             get => _postion;
             set
@@ -73,6 +75,7 @@ namespace Ux
                 {
                     Go.transform.position = _postion;
                 }
+                _UpdateFogOfWar();
             }
         }
 
@@ -90,5 +93,41 @@ namespace Ux
                 }
             }
         }
+        #region fogofwar        
+        void _UpdateFogOfWar()
+        {
+            var fogOfWar = Map.FogOfWar;
+            if (fogOfWar != null)
+            {
+                fogOfWar.TerrainGrid.GetData(_postion, out short altitude, out short grassId);
+                var unitVision = GetComponent<UnitVision>();
+                if (unitVision == null)
+                {
+                    unitVision = AddComponent<UnitVision, IUnitVision>(this);
+                }
+                unitVision.UpdateUnit(fogOfWar, _postion);
+                fogOfWar.UpdateUnit(ID, unitVision);
+            }
+        }
+        int _layer;
+        public int Layer
+        {
+            get
+            {
+                return _layer;
+            }
+            set
+            {
+                if (_layer != value)
+                {
+                    _layer = value;
+                    if (Go != null)
+                    {
+                        Go.layer = _layer;
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }

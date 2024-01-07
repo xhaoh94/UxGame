@@ -256,9 +256,10 @@ namespace Ux
             }
 
             if (!_components.TryGetValue(type, out var component)) return null;
-            var getComponentSystem = (IGetComponentSystem)component;
-            getComponentSystem?.OnGetComponent();
-
+            if (component is IGetComponentSystem getComponentSystem)
+            {
+                getComponentSystem?.OnGetComponent();
+            }
             return component;
         }
 

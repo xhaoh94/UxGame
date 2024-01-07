@@ -33,10 +33,10 @@ namespace Ux
             if (_path != null && _pathIndex < _path.vectorPath.Count)
             {
                 var target = _path.vectorPath[_pathIndex];
-                var dir = target - Player.Postion;
+                var dir = target - Player.Position;
                 var rotation = Quaternion.LookRotation(dir);
                 Player.Rotation = Quaternion.Slerp(Player.Rotation, rotation, Time.fixedDeltaTime * 10f);
-                Player.Postion += dir.normalized * (Time.fixedDeltaTime * 5);
+                Player.Position += dir.normalized * (Time.fixedDeltaTime * 5);
                 if (Vector3.SqrMagnitude(dir) <= 0.1f)
                 {
                     _pathIndex++;

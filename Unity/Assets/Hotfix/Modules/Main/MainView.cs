@@ -8,8 +8,7 @@ namespace Ux.UI
     public partial class MainView
     {
         protected override UILayer Layer => UILayer.Normal;
-        public override UIType Type => UIType.Fixed;
-        public override UIBlur Blur => UIBlur.Scene;
+        public override UIType Type => UIType.Fixed;        
         partial void OnBtnBackClick(EventContext e)
         {
             GameMain.Machine.Enter<StateLogin>();

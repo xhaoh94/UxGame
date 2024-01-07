@@ -81,17 +81,17 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
                 ReleaseCacel();
                 return;
             }
-            if (!Ux.SceneBlur.IsFlag)
-            {
-                ReleaseCacel();
-                return;
-            }
-            if (!Ux.SceneBlur.IsChangle && _cacel != null)
-            {
-                context.ExecuteCommandBuffer(_cacel);     // 执行commandBuffer里的渲染绘制命令
-                return;
-            }
-            ReleaseCacel();
+            //if (!Ux.SceneBlur.IsFlag)
+            //{
+            //    ReleaseCacel();
+            //    return;
+            //}
+            //if (!Ux.SceneBlur.IsChangle && _cacel != null)
+            //{
+            //    context.ExecuteCommandBuffer(_cacel);     // 执行commandBuffer里的渲染绘制命令
+            //    return;
+            //}
+            //ReleaseCacel();
 
             this._currentRT = renderingData.cameraData.renderer.cameraColorTargetHandle;       //设置当前渲染目标(RT)-先拿到相机的当前RT
             //[开始执行Pass]
@@ -145,7 +145,7 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
                 for (int i = 0; i < gaussianBlurTimes; i++)        // 执行多次模糊
                 {
                     cmd.Blit(destination01, destination02, _mat, 0);      // destination01执行Mat的Pass0-横模糊,输出给destination02
-                    cmd.Blit(destination02, destination01, _mat, 1);      // destination02执行Mat的Pass0-横模糊,输出给destination01
+                    cmd.Blit(destination02, destination01, _mat, 1);      // destination02执行Mat的Pass0-横模糊,输出给destination01              
                 }
                 cmd.Blit(destination01, source);    // destination01传给 source
             }

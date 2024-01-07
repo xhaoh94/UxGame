@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - Ground
+  - Obstacle
+  - FogOfWar
   layers:
   - Default
   - TransparentFX
@@ -14,8 +16,8 @@ TagManager:
   - UI
   - Ground
   - Obstacle
-  - 
-  - 
+  - FogOfWar
+  - Hidden
   - 
   - 
   - 

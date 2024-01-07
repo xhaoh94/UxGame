@@ -53,7 +53,8 @@ namespace Ux
                 var ray = mapCamera.ScreenPointToRay(pos);
                 if (Physics.Raycast(ray, out var hitInfo))
                 {
-                    if (hitInfo.transform.gameObject.CompareTag("Ground"))
+                    if (hitInfo.transform.gameObject.CompareTag("Ground") ||
+                        hitInfo.transform.gameObject.CompareTag("FogOfWar"))
                     {
                         Log.Debug("点击地板");
                         Player.Seeker.StartPath(hitInfo.point);
