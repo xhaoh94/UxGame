@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace Ux
@@ -74,7 +75,7 @@ namespace Ux
 
         public TerrainGrid TerrainGrid { get { return m_terrainGrid; } }
 
-        readonly Dictionary<long, UnitVision> m_unitDict = new Dictionary<long, UnitVision>();
+        readonly HashSet<UnitVisionConponent> units = new HashSet<UnitVisionConponent>();
 
         #endregion
         Map Map => ParentAs<Map>();
@@ -82,6 +83,7 @@ namespace Ux
         public void OnAwake()
         {
             FogOfWar = new GameObject("FogOfWar");
+            _LoadProfile();
             SetMono(FogOfWar);
             var astar = Map.GetComponent<AStarComponent>();
             var gridGraph = astar.AstarPath.data.gridGraph;
@@ -100,9 +102,15 @@ namespace Ux
             InitBlurCamera();
             InitFOWCamera();
         }
+        void _LoadProfile()
+        {
+            var profile = ResMgr.Ins.LoadAsset<VolumeProfile>("FogOfWarProfile");
+            var volume = FogOfWar.AddComponent<Volume>();
+            volume.profile = profile;
+        }
         void IUpdateSystem.OnUpdate()
         {
-            if (m_unitDict.Count == 0)
+            if (units.Count == 0)
                 return;
 
             //定时更新视野数据
@@ -126,7 +134,7 @@ namespace Ux
         void CalculateVision()
         {
             m_visionGrid.Clear();
-            foreach (var (_, unit) in m_unitDict)
+            foreach (var unit in units)
             {
                 Vector2Int centerTile = WorldPosToTilePos(unit.WorldPos);
 
@@ -197,19 +205,19 @@ namespace Ux
         /// </summary>
         void UpdateVisibles()
         {
-            foreach (var (_, unit) in m_unitDict)
+            foreach (var unit in units)
             {
                 string layerName = IsVisible(m_visionMask, unit) ? Defines.c_LayerDefault : Defines.c_LayerHidden;
-                unit.unit.Layer = LayerMask.NameToLayer(layerName);
+                unit.Unit.Layer = LayerMask.NameToLayer(layerName);
             }
         }
-        public void UpdateUnit(long id, UnitVision unitVision)
+        public void AddUnit(UnitVisionConponent unitVision)
         {
-            m_unitDict[id] = unitVision;
+            units.Add(unitVision);
         }
-        public void RemoveUnit(long id)
+        public void RemoveUnit(UnitVisionConponent unitVision)
         {
-            m_unitDict.Remove(id);
+            units.Remove(unitVision);
         }
         #region 初始化
         void InitRawRenderer()
@@ -257,9 +265,12 @@ namespace Ux
         {
             GameObject go = new GameObject("BlurCamera");
             go.transform.SetParent(FogOfWar.transform);
-            go.AddComponent<Blur>();
+            //go.AddComponent<FogOfWarBlur>();            
 
             Camera cam = go.AddComponent<Camera>();
+            var camData = cam.GetUniversalAdditionalCameraData();
+            camData.SetRenderer(1);
+            camData.renderPostProcessing = true;
 
             cam.cullingMask = LayerMask.GetMask(Defines.c_LayerFogOfWar);
             cam.clearFlags = CameraClearFlags.Depth;
@@ -338,7 +349,7 @@ namespace Ux
         #endregion
 
         #region 方法
-        bool IsVisible(int curtMask, UnitVision unit)
+        bool IsVisible(int curtMask, UnitVisionConponent unit)
         {
             if ((curtMask & unit.Mask) > 0)
                 return true;
@@ -361,7 +372,7 @@ namespace Ux
         /// <summary>
         /// 两点间的视野是否因为地形被阻挡了
         /// </summary>
-        bool IsBlocked(Vector2Int startTile, Vector2Int targetTile, UnitVision unit)
+        bool IsBlocked(Vector2Int startTile, Vector2Int targetTile, UnitVisionConponent unit)
         {
             List<Vector2Int> points = LineByBresenhams(startTile, targetTile);
             for (int i = 0; i < points.Count; i++)

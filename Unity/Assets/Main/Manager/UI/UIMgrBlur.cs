@@ -81,7 +81,11 @@ namespace Ux
                 flagScene = blurStack.Value.Blur.HasFlag(UIBlur.Scene);
             }
 
-            SceneBlur.Set(flagScene);            
+            var camera = GameObject.Find("mapCamera").GetComponent<Camera>();
+            if (camera != null)
+            {
+                Blur.SetCamera(camera, flagScene);
+            }
         }
     }
 }

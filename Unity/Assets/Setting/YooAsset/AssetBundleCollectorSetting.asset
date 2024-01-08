@@ -37,6 +37,14 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+      - CollectPath: Assets/Data/Art/VolumeProfile
+        CollectorGUID: 02f92eb779228844d8b5eed2f2b89f0d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
     - GroupName: Preload
       GroupDesc: "\u9884\u52A0\u8F7D"
       AssetTags: preload

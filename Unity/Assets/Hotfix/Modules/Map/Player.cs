@@ -55,7 +55,6 @@ namespace Ux
         protected override void OnDestroy()
         {
             UnityPool.Push(Go);
-            Map.FogOfWar?.RemoveUnit(ID);
             Anim = null;
             State = null;
             Operate = null;
@@ -100,13 +99,13 @@ namespace Ux
             if (fogOfWar != null)
             {
                 fogOfWar.TerrainGrid.GetData(_postion, out short altitude, out short grassId);
-                var unitVision = GetComponent<UnitVision>();
+                var unitVision = GetComponent<UnitVisionConponent>();
                 if (unitVision == null)
                 {
-                    unitVision = AddComponent<UnitVision, IUnitVision>(this);
+                    unitVision = AddComponent<UnitVisionConponent, IUnitVision>(this);
+                    fogOfWar.AddUnit(unitVision);
                 }
-                unitVision.UpdateUnit(fogOfWar, _postion);
-                fogOfWar.UpdateUnit(ID, unitVision);
+                unitVision.UpdateUnit(_postion);
             }
         }
         int _layer;
@@ -128,6 +127,8 @@ namespace Ux
                 }
             }
         }
+
+        public FogOfWarComponent FogOfWar => Map?.FogOfWar;
         #endregion
     }
 }
