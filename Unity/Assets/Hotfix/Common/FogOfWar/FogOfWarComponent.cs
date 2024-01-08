@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -8,94 +9,110 @@ namespace Ux
 {
     public class FogOfWarComponent : Entity, IAwakeSystem, IUpdateSystem
     {
-        GameObject FogOfWar;
+        public const string LayerDefault = "Default";
+        public const string LayerHidden = "Hidden";
+        public const string LayerFogOfWar = "FogOfWar";
+
+        GameObject _FogOfWar;
         /// <summary>
         /// 地图是否是中心为中心点，还是以左下角
         /// </summary>
+        [EEViewer("起始点是否为中心")]
         bool IsCenter = true;
-        /// <summary>
-        /// 多久更新一遍视野（单位秒）
-        /// </summary>
-        const float c_updateDuration = 0.1f;
-
-        /// <summary>
-        /// 迷雾的平滑速度
-        /// </summary>
-        const float c_smoothSpeed = 5f;
-
         /// <summary>
         /// 当前以什么Mask来查看视野
         /// </summary>
-        [SerializeField]
-        int m_visionMask = 1;
+        [EEViewer("视野Mask")]
+        int _visionMask = 1;
+
+        [EEViewer("已经走过的视野")]
+        bool _wasVision = true;
+
+        /// <summary>
+        /// 多久更新一遍视野（单位秒）
+        /// </summary>
+        const float _updateDuration = 0.1f;
+        float _nextUpdateTime;
+        /// <summary>
+        /// 迷雾的平滑速度
+        /// </summary>
+        const float _smoothSpeed = 5f;
+
 
         /// <summary>
         /// 存放最开始的迷雾信息，用于给摄像机进行二次处理
         /// </summary>
-        MeshRenderer m_rawRenderer;
+        MeshRenderer _rawRenderer;
 
         /// <summary>
         /// 渲染最终的迷雾
         /// 注意要覆盖整个场景
         /// </summary>
-        MeshRenderer m_finalRenderer;
+        MeshRenderer _finalRenderer;
 
         /// <summary>
         /// 存放原始迷雾的贴图
         /// </summary>
-        Texture2D m_fowTex;
+        Texture2D _fowTex;
 
         /// <summary>
         /// 存放视野的具体数据
         /// </summary>
-        VisionGrid m_visionGrid;
+        VisionGrid _visionGrid;
 
         /// <summary>
         /// 存放地形高度等信息
         /// </summary>
-        TerrainGrid m_terrainGrid;
+        TerrainGrid _terrainGrid;
 
         /// <summary>
         /// 当前战争迷雾贴图的颜色信息
         /// </summary>
-        Color[] m_curtColors;
+        Color[] _curtColors;
 
         /// <summary>
         /// 战争迷雾想要过渡到的目标颜色（不直接设置目标颜色是为了有渐变的效果）
         /// </summary>
-        Color[] m_targetColors;
+        Color[] _targetColors;
 
-        float m_nextUpdateTime;
+        readonly HashSet<UnitVisionConponent> _units = new HashSet<UnitVisionConponent>();
 
-        #region get-set        
         public float TileSize { get; private set; } = 1f;
         public int Width { get; private set; } = 200;
-
         public int Height { get; private set; } = 200;
 
-        public TerrainGrid TerrainGrid { get { return m_terrainGrid; } }
+        public TerrainGrid TerrainGrid { get { return _terrainGrid; } }
 
-        readonly HashSet<UnitVisionConponent> units = new HashSet<UnitVisionConponent>();
+        readonly List<Vector2Int> _circleByBoundingCircle = new List<Vector2Int>();
+        readonly List<Vector2Int> _lineByBresenhams = new List<Vector2Int>();
 
-        #endregion
+
         Map Map => ParentAs<Map>();
         Camera mainCamera => Map.Camera.MapCamera;
         public void OnAwake()
         {
-            FogOfWar = new GameObject("FogOfWar");
+            _FogOfWar = new GameObject("FogOfWar");
             _LoadProfile();
-            SetMono(FogOfWar);
+            SetMono(_FogOfWar);
             var astar = Map.GetComponent<AStarComponent>();
             var gridGraph = astar.AstarPath.data.gridGraph;
 
             Width = gridGraph.width;
             Height = gridGraph.Depth;
             TileSize = gridGraph.nodeSize;
-            m_visionGrid = new VisionGrid(Width, Height);
-            m_terrainGrid = new TerrainGrid(this, Width, Height);
-            m_targetColors = new Color[Width * Height];
-            m_curtColors = new Color[Width * Height];
-            m_fowTex = new Texture2D(Width, Height, TextureFormat.Alpha8, false);
+            _visionGrid = new VisionGrid(Width, Height);
+            _terrainGrid = new TerrainGrid(this, Width, Height);
+            _targetColors = new Color[Width * Height];
+            _curtColors = new Color[Width * Height];
+            _fowTex = new Texture2D(Width, Height, TextureFormat.Alpha8, false);
+            for (int i = 0; i < gridGraph.nodes.Length; i++)
+            {
+                var node = gridGraph.nodes[i];
+                if (!node.Walkable)
+                {
+                    _terrainGrid.SetAltitude(i, 2);
+                }
+            }            
 
             InitRawRenderer();
             InitFinalRenderer();
@@ -105,80 +122,74 @@ namespace Ux
         void _LoadProfile()
         {
             var profile = ResMgr.Ins.LoadAsset<VolumeProfile>("FogOfWarProfile");
-            var volume = FogOfWar.AddComponent<Volume>();
+            var volume = _FogOfWar.AddComponent<Volume>();
             volume.profile = profile;
         }
         void IUpdateSystem.OnUpdate()
         {
-            if (units.Count == 0)
+            if (_units.Count == 0)
                 return;
 
             //定时更新视野数据
-            if (Time.time >= m_nextUpdateTime)
+            if (Time.time >= _nextUpdateTime)
             {
-                m_nextUpdateTime = Time.time + c_updateDuration;
-                CalculateVision();
-                UpdateTargetColors(m_visionMask);
+                _nextUpdateTime = Time.time + _updateDuration;
+                _CalculateVision();
+                _UpdateTargetColors(_visionMask);
             }
 
             //判断单位的可见性
-            UpdateVisibles();
+            _UpdateVisibles();
 
             //平滑颜色
-            SmoothColor();
+            _SmoothColor();
         }
         /// <summary>
         /// 计算所有单位的视野数据
         /// </summary>
         /// <param name="units">所有单位的列表</param>
-        void CalculateVision()
+        void _CalculateVision()
         {
-            m_visionGrid.Clear();
-            foreach (var unit in units)
+            _visionGrid.Clear();
+            foreach (var unit in _units)
             {
                 Vector2Int centerTile = WorldPosToTilePos(unit.WorldPos);
-
                 if (IsOutsideMap(centerTile))
                 {
-                    //Debug.LogError($"单位{unit.m_gameObject.name}的格子位置{centerTile}超出了地图范围");
                     continue;
                 }
-
-                List<Vector2Int> tiles = CircleByBoundingCircle(centerTile, unit.Range, TileSize);
-                for (int i = 0; i < tiles.Count; i++)
+                CircleByBoundingCircle(centerTile, unit.Range, TileSize);
+                for (int i = 0; i < _circleByBoundingCircle.Count; i++)
                 {
-                    if (!IsBlocked(centerTile, tiles[i], unit))
-                        m_visionGrid.SetVisible(tiles[i].x, tiles[i].y, unit.Mask);
+                    if (!IsBlocked(centerTile, _circleByBoundingCircle[i], unit))
+                        _visionGrid.SetVisible(_circleByBoundingCircle[i], unit.Mask);
                 }
             }
         }
 
-
-
         /// <summary>
         /// 更新原始迷雾贴图的目标颜色
         /// </summary>
-        void UpdateTargetColors(int entityMask)
+        void _UpdateTargetColors(int entityMask)
         {
-            //var points = getCameraGroundCrossPoint(mainCamera);
+            _GetCameraGroundCrossPoint(mainCamera, out var min, out var max);
 
-            //var min = WorldPosToTilePos(points.minPosition);
-            //var max = WorldPosToTilePos(points.maxPosition);
-
-            //for (int x = min.x; x < max.x; x++)
-            //{
-            //    for (int y = min.y; y < max.y; y++)
-            for (int x = 0; x < Width; x++)
+            for (int x = min.x; x <= max.x; x++)
             {
-                for (int y = 0; y < Height; y++)
+                for (int y = min.y; y <= max.y; y++)
                 {
                     int index = x + y * Width;
-                    m_targetColors[index] = new Color(0, 0, 0, 1);
-
-                    if (m_visionGrid.IsVisible(x, y, entityMask))
-                        m_targetColors[index] = new Color(0, 0, 0, 0);
-                    else if (m_visionGrid.WasVisible(x, y, entityMask))
-                        m_targetColors[index] = new Color(0, 0, 0, 0.4f);
+                    if (_visionGrid.IsVisible(x, y, entityMask))
+                    {
+                        _targetColors[index] = new Color(0, 0, 0, 0);
+                        continue;
+                    }
+                    if (_wasVision && _visionGrid.WasVisible(x, y, entityMask))
+                    {
+                        _targetColors[index] = new Color(0, 0, 0, 0.1f);
+                        continue;
+                    }
+                    _targetColors[index] = new Color(0, 0, 0, 1);
                 }
             }
 
@@ -187,37 +198,37 @@ namespace Ux
             //m_fowTex.Apply(false);
         }
 
-        void SmoothColor()
+        void _SmoothColor()
         {
-            for (int i = 0; i < m_targetColors.Length; i++)
+            for (int i = 0; i < _targetColors.Length; i++)
             {
-                Color target = m_targetColors[i];
-                Color curt = m_curtColors[i];
-                m_curtColors[i] = Color.Lerp(curt, target, c_smoothSpeed * Time.deltaTime);
+                Color target = _targetColors[i];
+                Color curt = _curtColors[i];
+                _curtColors[i] = Color.Lerp(curt, target, _smoothSpeed * Time.deltaTime);
             }
 
-            m_fowTex.SetPixels(m_curtColors);
-            m_fowTex.Apply(false);
+            _fowTex.SetPixels(_curtColors);
+            _fowTex.Apply(false);
         }
 
         /// <summary>
         /// 根据可见性设置渲染层级
         /// </summary>
-        void UpdateVisibles()
+        void _UpdateVisibles()
         {
-            foreach (var unit in units)
+            foreach (var unit in _units)
             {
-                string layerName = IsVisible(m_visionMask, unit) ? Defines.c_LayerDefault : Defines.c_LayerHidden;
+                string layerName = IsVisible(_visionMask, unit) ? LayerDefault : LayerHidden;
                 unit.Unit.Layer = LayerMask.NameToLayer(layerName);
             }
         }
         public void AddUnit(UnitVisionConponent unitVision)
         {
-            units.Add(unitVision);
+            _units.Add(unitVision);
         }
         public void RemoveUnit(UnitVisionConponent unitVision)
         {
-            units.Remove(unitVision);
+            _units.Remove(unitVision);
         }
         #region 初始化
         void InitRawRenderer()
@@ -225,14 +236,14 @@ namespace Ux
             GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = "RawRenderer";
             go.tag = "FogOfWar";
-            go.layer = LayerMask.NameToLayer(Defines.c_LayerFogOfWar);
-            go.transform.SetParent(FogOfWar.transform);
+            go.layer = LayerMask.NameToLayer(LayerFogOfWar);
+            go.transform.SetParent(_FogOfWar.transform);
             go.transform.position = new Vector3(1000, 0, 0);
 
-            m_rawRenderer = go.GetComponent<MeshRenderer>();
-            m_rawRenderer.sharedMaterial = new Material(Shader.Find("Ux/FogOfWar/RawFogOfWar"))
+            _rawRenderer = go.GetComponent<MeshRenderer>();
+            _rawRenderer.sharedMaterial = new Material(Shader.Find("Ux/FogOfWar/RawFogOfWar"))
             {
-                mainTexture = m_fowTex
+                mainTexture = _fowTex
             };
         }
 
@@ -240,13 +251,13 @@ namespace Ux
         {
             GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = "FinalRenderer";
-            go.layer = LayerMask.NameToLayer(Defines.c_LayerFogOfWar);
+            go.layer = LayerMask.NameToLayer(LayerFogOfWar);
             go.tag = "FogOfWar";
 
             Transform trans = go.transform;
-            trans.SetParent(FogOfWar.transform);
-            m_finalRenderer = trans.GetComponent<MeshRenderer>();
-            m_finalRenderer.sharedMaterial = new Material(Shader.Find("Ux/FogOfWar/FinalFogOfWar"));
+            trans.SetParent(_FogOfWar.transform);
+            _finalRenderer = trans.GetComponent<MeshRenderer>();
+            _finalRenderer.sharedMaterial = new Material(Shader.Find("Ux/FogOfWar/FinalFogOfWar"));
 
             //将最终的迷雾覆盖到整张地图
             trans.localScale = new Vector3(Width * TileSize, Height * TileSize, 1);
@@ -264,7 +275,7 @@ namespace Ux
         void InitBlurCamera()
         {
             GameObject go = new GameObject("BlurCamera");
-            go.transform.SetParent(FogOfWar.transform);
+            go.transform.SetParent(_FogOfWar.transform);
             //go.AddComponent<FogOfWarBlur>();            
 
             Camera cam = go.AddComponent<Camera>();
@@ -272,7 +283,7 @@ namespace Ux
             camData.SetRenderer(1);
             camData.renderPostProcessing = true;
 
-            cam.cullingMask = LayerMask.GetMask(Defines.c_LayerFogOfWar);
+            cam.cullingMask = LayerMask.GetMask(LayerFogOfWar);
             cam.clearFlags = CameraClearFlags.Depth;
 
             cam.depth = mainCamera.depth + 1;
@@ -289,9 +300,9 @@ namespace Ux
             rt.wrapMode = TextureWrapMode.Clamp;
 
             cam.targetTexture = rt;
-            m_finalRenderer.sharedMaterial.mainTexture = rt;
+            _finalRenderer.sharedMaterial.mainTexture = rt;
 
-            var pos = m_rawRenderer.transform.position;
+            var pos = _rawRenderer.transform.position;
             cam.transform.position = new Vector3(pos.x, pos.y, pos.z - 1);
             cam.orthographicSize = 0.5f;
             cam.orthographic = true;
@@ -303,9 +314,8 @@ namespace Ux
             Camera cam = go.AddComponent<Camera>();
             var cameraData = cam.GetUniversalAdditionalCameraData();
             cameraData.renderType = CameraRenderType.Overlay;
-            mainCamera.GetUniversalAdditionalCameraData().cameraStack.Add(cam);
 
-            cam.cullingMask = LayerMask.GetMask(Defines.c_LayerFogOfWar);
+            cam.cullingMask = LayerMask.GetMask(LayerFogOfWar);
             cam.clearFlags = CameraClearFlags.Depth;
             var main = mainCamera;
             if (main != null)
@@ -324,22 +334,31 @@ namespace Ux
                 trans.localPosition = Vector3.zero;
                 trans.localScale = Vector3.one;
                 trans.localRotation = Quaternion.identity;
+                main.GetUniversalAdditionalCameraData().cameraStack.Insert(0, cam);
             }
         }
         #endregion
 
         #region 转换
-        public Vector2Int WorldPosToTilePos(Vector2 worldPos)
+        public Vector2Int WorldPosToTilePos(float worldx, float worldy, bool checkRect = false)
         {
-            float offx = 0, offy = 0;
             if (IsCenter)
             {
-                offx = Width / 2;
-                offy = Height / 2;
+                worldx += Width / 2f;
+                worldy += Height / 2f;
             }
-            int x = (int)((worldPos.x + offx) / TileSize);
-            int y = (int)((worldPos.y + offy) / TileSize);
+            int x = Mathf.FloorToInt(worldx / TileSize);
+            int y = Mathf.FloorToInt(worldy / TileSize);
+            if (checkRect)
+            {
+                if (x < 0) x = 0; else if (x > Width) x = Width - 1;
+                if (y < 0) y = 0; else if (y > Height) y = Height - 1;
+            }
             return new Vector2Int(x, y);
+        }
+        public Vector2Int WorldPosToTilePos(Vector2 worldPos)
+        {
+            return WorldPosToTilePos(worldPos.x, worldPos.y);
         }
 
         public Vector2Int WorldPosToTilePos(Vector3 worldPos)
@@ -355,7 +374,7 @@ namespace Ux
                 return true;
 
             Vector2Int tilePos = WorldPosToTilePos(unit.WorldPos);
-            if (m_visionGrid.IsVisible(tilePos, curtMask))
+            if (_visionGrid.IsVisible(tilePos, curtMask))
                 return true;
 
             return false;
@@ -366,7 +385,7 @@ namespace Ux
         bool IsOutsideMap(Vector2Int tilePos)
         {
             return tilePos.x < 0 || tilePos.x >= Width ||
-                        tilePos.y < 0 || tilePos.y > Height;
+                        tilePos.y < 0 || tilePos.y >= Height;
         }
 
         /// <summary>
@@ -374,10 +393,10 @@ namespace Ux
         /// </summary>
         bool IsBlocked(Vector2Int startTile, Vector2Int targetTile, UnitVisionConponent unit)
         {
-            List<Vector2Int> points = LineByBresenhams(startTile, targetTile);
-            for (int i = 0; i < points.Count; i++)
+            LineByBresenhams(startTile, targetTile);
+            for (int i = 0; i < _lineByBresenhams.Count; i++)
             {
-                m_terrainGrid.GetData(points[i], out short altitude, out short grassId);
+                _terrainGrid.GetData(_lineByBresenhams[i], out short altitude, out short grassId);
                 if (altitude > unit.TerrainHeight)
                     return true;
 
@@ -388,10 +407,10 @@ namespace Ux
             return false;
         }
 
-        List<Vector2Int> LineByBresenhams(Vector2Int start, Vector2Int end)
+        void LineByBresenhams(Vector2Int start, Vector2Int end)
         {
             //GC：实际项目使用时最好用Pool来存取
-            List<Vector2Int> result = new List<Vector2Int>();
+            _lineByBresenhams.Clear();
 
             int dx = end.x - start.x;
             int dy = end.y - start.y;
@@ -407,7 +426,7 @@ namespace Ux
             {
                 for (x = start.x; x != end.x; x += ux)
                 {
-                    result.Add(new Vector2Int(x, y));
+                    _lineByBresenhams.Add(new Vector2Int(x, y));
 
                     eps += dy;
                     if ((eps << 1) >= dx)
@@ -421,7 +440,7 @@ namespace Ux
             {
                 for (y = start.y; y != end.y; y += uy)
                 {
-                    result.Add(new Vector2Int(x, y));
+                    _lineByBresenhams.Add(new Vector2Int(x, y));
 
                     eps += dx;
                     if ((eps << 1) >= dy)
@@ -431,8 +450,6 @@ namespace Ux
                     }
                 }
             }
-
-            return result;
         }
 
         /// <summary>
@@ -442,15 +459,14 @@ namespace Ux
         /// <param name="radius">圆的半径</param>
         /// <param name="tileSize">一格的大小</param>
         /// <returns>圆形覆盖的格子</returns>
-        List<Vector2Int> CircleByBoundingCircle(Vector2Int centerTile, float radius, float tileSize)
+        void CircleByBoundingCircle(Vector2Int centerTile, float radius, float tileSize)
         {
             //GC：实际项目使用时最好用Pool来存取
-            List<Vector2Int> result = new List<Vector2Int>();
-
+            _circleByBoundingCircle.Clear();
             int radiusCount = Mathf.CeilToInt(radius / tileSize);
             int sqr = radiusCount * radiusCount;
             int top = centerTile.y + radiusCount;
-            if (top > Height) top = Height;
+            if (top >= Height) top = Height - 1;
             int bottom = centerTile.y - radiusCount;
             if (bottom < 0) bottom = 0;
 
@@ -461,15 +477,13 @@ namespace Ux
                 int left = centerTile.x - dx;
                 if (left < 0) left = 0;
                 int right = centerTile.x + dx;
-                if (right > Width) right = Width;
+                if (right >= Width) right = Width - 1;
                 for (int x = left; x <= right; x++)
-                    result.Add(new Vector2Int(x, y));
+                    _circleByBoundingCircle.Add(new Vector2Int(x, y));
             }
-
-            return result;
         }
 
-        CameraGroundCrossPoint getCameraGroundCrossPoint(Camera camera)
+        void _GetCameraGroundCrossPoint(Camera camera, out Vector2Int min, out Vector2Int max)
         {
             var fov = camera.fieldOfView;//相机的Fov        
             var asp = camera.aspect;
@@ -483,18 +497,21 @@ namespace Ux
             Vector3 f2 = l2w * new Vector3(xf, -yf, 1);
             Vector3 f3 = l2w * new Vector3(xf, yf, 1);
 
-            CameraGroundCrossPoint crossPoint = new CameraGroundCrossPoint();
-            crossPoint.Camera = camera;
             //获取视野与地面的交点，或是远裁剪面垂直投射到地面的交点；
-            crossPoint.LeftBottom = CheckGroundSignPoint(camera, f0);
-            crossPoint.LeftTop = CheckGroundSignPoint(camera, f1);
-            crossPoint.RightBottom = CheckGroundSignPoint(camera, f2);
-            crossPoint.RightTop = CheckGroundSignPoint(camera, f3);
+            var LeftBottom = _CheckGroundSignPoint(camera, f0);
+            var LeftTop = _CheckGroundSignPoint(camera, f1);
+            var RightBottom = _CheckGroundSignPoint(camera, f2);
+            var RightTop = _CheckGroundSignPoint(camera, f3);
 
-            return crossPoint;
+            float minX = Mathf.Min(camera.transform.position.x, Mathf.Min(LeftTop.x, RightTop.x), Mathf.Min(LeftBottom.x, RightBottom.x));
+            float minY = Mathf.Min(camera.transform.position.z, Mathf.Min(LeftTop.z, RightTop.z), Mathf.Min(LeftBottom.z, RightBottom.z));
+            min = WorldPosToTilePos(minX, minY, true);
+            float maxX = Mathf.Max(camera.transform.position.x, Mathf.Max(LeftTop.x, RightTop.x), Mathf.Max(LeftBottom.x, RightBottom.x));
+            float maxY = Mathf.Max(camera.transform.position.z, Mathf.Max(LeftTop.z, RightTop.z), Mathf.Max(LeftBottom.z, RightBottom.z));
+            max = WorldPosToTilePos(maxX, maxY, true);
         }
 
-        Vector3 CheckGroundSignPoint(Camera camera, Vector3 dri)
+        Vector3 _CheckGroundSignPoint(Camera camera, Vector3 dri)
         {
             Vector3 cpt = camera.transform.position;
             Vector3 farPlaneNormal = camera.transform.forward;
@@ -503,7 +520,7 @@ namespace Ux
             float height = 0;
 
             //计算与远裁剪面的交点；
-            var signPoint = GetIntersectWithLineAndPlane(cpt, dri, farPlaneNormal, farPlanePoint);
+            var signPoint = _GetIntersectWithLineAndPlane(cpt, dri, farPlaneNormal, farPlanePoint);
 
             //这里相机先到达了远裁剪面，而没有与地面相交；
             if (signPoint.y > height)
@@ -514,7 +531,7 @@ namespace Ux
             }
             //此时被地面截断；
             Vector3 groundPoint = new Vector3(0, 0, 0);
-            signPoint = GetIntersectWithLineAndPlane(cpt, dri, Vector3.up, groundPoint);
+            signPoint = _GetIntersectWithLineAndPlane(cpt, dri, Vector3.up, groundPoint);
 
             return signPoint;
         }
@@ -527,7 +544,7 @@ namespace Ux
         /// <param name="planeNormal">垂直于平面的的向量</param>
         /// <param name="planePoint">平面上的任意一点</param>
         /// <returns></returns>
-        Vector3 GetIntersectWithLineAndPlane(Vector3 point, Vector3 direct, Vector3 planeNormal, Vector3 planePoint)
+        Vector3 _GetIntersectWithLineAndPlane(Vector3 point, Vector3 direct, Vector3 planeNormal, Vector3 planePoint)
         {
             float d = Vector3.Dot(planePoint - point, planeNormal) / Vector3.Dot(direct.normalized, planeNormal);
             //直线与平面的交点

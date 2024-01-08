@@ -21,10 +21,14 @@ public class TerrainGrid : BaseGrid
         _fogOfWar = fogOfWar;
         m_width = w;
         m_height = h;
-        m_altitudes = new short[(w + 1) * (h + 1)];
-        m_grassIds = new short[(w + 1) * (h + 1)];
+        m_altitudes = new short[w * h];
+        m_grassIds = new short[w * h];
     }
 
+    public void SetAltitude(int index, short a)
+    {
+        m_altitudes[index] = a;
+    }
     public void SetAltitude(int tileX, int tileY, short a)
     {
         int index = Index(tileX, tileY);

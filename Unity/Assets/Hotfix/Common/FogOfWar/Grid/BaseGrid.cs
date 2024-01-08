@@ -12,6 +12,6 @@ public class BaseGrid
 
     protected int Index(int x, int y)
     {
-        return x + y * (m_width + 1);
+        return x + y * m_width;
     }
 }

@@ -19,8 +19,8 @@ public class VisionGrid : BaseGrid
     {
         m_width = w;
         m_height = h;
-        m_values = new int[(w + 1) * (h + 1)];
-        m_visited = new int[(w + 1) * (h + 1)];
+        m_values = new int[w * h];
+        m_visited = new int[w * h];
     }
 
     public void SetVisible(int x, int y, int entityMask)
@@ -28,6 +28,10 @@ public class VisionGrid : BaseGrid
         var index = Index(x, y);
         m_values[index] |= entityMask;
         m_visited[index] |= entityMask;
+    }
+    public void SetVisible(Vector2Int vecInt, int entityMask)
+    {
+        SetVisible(vecInt.x, vecInt.y, entityMask);
     }
 
     public void Clear()
