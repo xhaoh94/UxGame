@@ -27,7 +27,7 @@ namespace Ux
         private readonly List<IEvent> _waitAdds = new List<IEvent>();
         private readonly List<long> _waitDels = new List<long>();
 
-        protected override void OnInit()
+        protected override void OnCreated()
         {
             TimeMgr.Ins.DoUpdate(_Update);
         }

@@ -47,7 +47,10 @@ namespace Ux
         /// UI界面关闭
         /// </summary>
         UI_HIDE,
-
+        /// <summary>
+        /// 战争迷雾初始化
+        /// </summary>
+        FOG_OF_WAR_INIT,
         Max
     }
 }

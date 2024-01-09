@@ -16,6 +16,28 @@ namespace Ux
         {
             go.transform.SetParent(parent, worldPositionStays);
         }
+        public static void SetLayer(this GameObject go, int layer, bool includeChild = true)
+        {
+            go.layer = layer;
+            if (includeChild)
+            {
+                foreach (var tran in go.GetComponentsInChildren<Transform>())
+                {
+                    tran.gameObject.layer = layer;
+                }
+            }
+        }
+        public static void SetTag(this GameObject go, string tag, bool includeChild = true)
+        {
+            go.tag = tag;
+            if (includeChild)
+            {
+                foreach (var tran in go.GetComponentsInChildren<Transform>())
+                {
+                    tran.gameObject.tag = tag;
+                }
+            }
+        }
 
         public static T Get<T>(this GameObject gameObject, string key) where T : class
         {

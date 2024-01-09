@@ -15,9 +15,10 @@ namespace Ux
         public string name;
         public Vector3 pos;
         public string res;
+        public int mask;
     }
 
-    public class Player : Entity, IAwakeSystem<PlayerData>, IUnitVision
+    public class Player : Entity, IAwakeSystem<PlayerData>, IUnitVisionEntity
     {
         public GameObject Go { get; private set; }
         public AnimComponent Anim { get; private set; }
@@ -26,25 +27,34 @@ namespace Ux
         public SeekerComponent Seeker { get; private set; }
         public PlayableDirectorComponent Director { get; private set; }
 
-        public void OnAwake(PlayerData a)
+        PlayerData _playerData;
+        public void OnAwake(PlayerData playerData)
         {
+            _playerData = playerData;
             State = AddComponent<StateComponent>();
-            Operate = AddComponent<OperateComponent>();
-            Position = a.pos;
-            LoadPlayer(a).Forget();
+            if (_playerData.id == 1)
+            {
+                Operate = AddComponent<OperateComponent>();
+            }
+            Position = _playerData.pos;
+            LoadPlayer().Forget();
         }
 
         public Map Map => ParentAs<Map>();
 
-        async UniTaskVoid LoadPlayer(PlayerData playerData)
+        async UniTaskVoid LoadPlayer()
         {
-            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(playerData.res);
+            Go = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
             SetMono(Go);
             Go.transform.position = Position;
             Go.transform.rotation = Rotation;
             Go.layer = Layer;
-            Map.Camera.SetFollow(Go.transform);
-            Map.Camera.SetLookAt(Go.transform);
+
+            if (_playerData.id == 1)
+            {
+                Map.Camera.SetFollow(Go.transform);
+                Map.Camera.SetLookAt(Go.transform);
+            }
 
             Anim = AddComponent<AnimComponent, Animator>(Go.GetComponentInChildren<Animator>());
             Seeker = AddComponent<SeekerComponent, Seeker>(Go.GetComponent<Seeker>());
@@ -95,40 +105,27 @@ namespace Ux
         #region fogofwar        
         void _UpdateFogOfWar()
         {
-            var fogOfWar = Map.FogOfWar;
-            if (fogOfWar != null)
+            var unitVision = GetComponent<UnitVisionComponent>();
+            if (unitVision == null)
             {
-                fogOfWar.TerrainGrid.GetData(_postion, out short altitude, out short grassId);
-                var unitVision = GetComponent<UnitVisionConponent>();
-                if (unitVision == null)
-                {
-                    unitVision = AddComponent<UnitVisionConponent, IUnitVision>(this);
-                    fogOfWar.AddUnit(unitVision);
-                }
-                unitVision.UpdateUnit(_postion);
+                unitVision = AddComponent<UnitVisionComponent, IUnitVisionEntity>(this);
             }
+            unitVision.UpdateUnit();
         }
         int _layer;
         public int Layer
         {
-            get
-            {
-                return _layer;
-            }
+            get => _layer;
             set
             {
                 if (_layer != value)
                 {
                     _layer = value;
-                    if (Go != null)
-                    {
-                        Go.layer = _layer;
-                    }
+                    Go?.SetLayer(_layer);
                 }
             }
         }
-
-        public FogOfWarComponent FogOfWar => Map?.FogOfWar;
+        public int Mask => _playerData.mask;
         #endregion
     }
 }

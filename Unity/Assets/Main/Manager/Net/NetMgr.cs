@@ -15,7 +15,7 @@ namespace Ux
         readonly List<ClientSocket> _clientSockets = new List<ClientSocket>();
         ClientSocket _clientSocket;
 
-        protected override void OnInit()
+        protected override void OnCreated()
         {
             TimeMgr.Ins.DoUpdate(_Update);
         }

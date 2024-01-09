@@ -8,7 +8,7 @@ namespace Ux
     public class Map : Entity, IAwakeSystem<GameObject>
     {
         public CameraComponent Camera { get; private set; }
-        public FogOfWarComponent FogOfWar => GetComponent<FogOfWarComponent>();
+        public AStarComponent AStar { get; private set; }
         public GameObject Go { get; private set; }
         [EEViewer("玩家")]
         Dictionary<int, Player> players = new Dictionary<int, Player>();
@@ -17,7 +17,8 @@ namespace Ux
             Go = a;
             SetMono(Go);
             Camera = AddComponent<CameraComponent>();
-            AddComponent<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
+            AStar = AddComponent<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
+            AddComponent<FogOfWarComponent>();
         }
 
         public void AddPlayer(PlayerData playerData)
@@ -29,9 +30,9 @@ namespace Ux
         protected override void OnDestroy()
         {
             UnityPool.Push(Go);
-            //UnityEngine.Object.Destroy(Go);
             players.Clear();
             Camera = null;
+            AStar = null;
         }
     }
 }

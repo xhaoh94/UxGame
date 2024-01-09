@@ -14,7 +14,7 @@ namespace Ux
         static readonly string ArgStr = "arg#{0}";
 
         Dictionary<string, EvalParse> inputToExpssion = new Dictionary<string, EvalParse>();
-        protected override void OnInit()
+        protected override void OnCreated()
         {
             InitGlobalFunc();
         }
