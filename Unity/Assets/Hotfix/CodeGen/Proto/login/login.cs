@@ -9,35 +9,6 @@
 namespace Pb
 {
 
-    [global::ProtoBuf.ProtoContract(Name = @"C2S_RegisterAccount")]
-    public partial class C2SRegisterAccount : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"account")]
-        [global::System.ComponentModel.DefaultValue("")]
-        public string Account { get; set; } = "";
-
-        [global::ProtoBuf.ProtoMember(2, Name = @"password")]
-        [global::System.ComponentModel.DefaultValue("")]
-        public string Password { get; set; } = "";
-
-    }
-
-    [global::ProtoBuf.ProtoContract(Name = @"S2C_RegisterAccount")]
-    public partial class S2CRegisterAccount : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"error")]
-        public ErrCode Error { get; set; }
-
-    }
-
     [global::ProtoBuf.ProtoContract(Name = @"C2S_LoginGame")]
     public partial class C2SLoginGame : global::ProtoBuf.IExtensible
     {
@@ -65,57 +36,13 @@ namespace Pb
         [global::ProtoBuf.ProtoMember(1, Name = @"error")]
         public ErrCode Error { get; set; }
 
-    }
-
-    [global::ProtoBuf.ProtoContract(Name = @"C2S_RoleList")]
-    public partial class C2SRoleList : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-    }
-
-    [global::ProtoBuf.ProtoContract(Name = @"S2C_RoleList")]
-    public partial class S2CRoleList : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"error")]
-        public ErrCode Error { get; set; }
-
-        [global::ProtoBuf.ProtoMember(2, Name = @"role_list")]
-        public global::System.Collections.Generic.List<Entity> RoleLists { get; } = new global::System.Collections.Generic.List<Entity>();
-
-    }
-
-    [global::ProtoBuf.ProtoContract(Name = @"C2S_CreateRole")]
-    public partial class C2SCreateRole : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"name")]
+        [global::ProtoBuf.ProtoMember(2, Name = @"addr")]
         [global::System.ComponentModel.DefaultValue("")]
-        public string Name { get; set; } = "";
+        public string Addr { get; set; } = "";
 
-    }
-
-    [global::ProtoBuf.ProtoContract(Name = @"S2C_CreateRole")]
-    public partial class S2CCreateRole : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"error")]
-        public ErrCode Error { get; set; }
-
-        [global::ProtoBuf.ProtoMember(2, Name = @"role")]
-        public Entity Role { get; set; }
+        [global::ProtoBuf.ProtoMember(3, Name = @"token")]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string Token { get; set; } = "";
 
     }
 

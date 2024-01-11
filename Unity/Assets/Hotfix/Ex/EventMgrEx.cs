@@ -7,7 +7,7 @@ namespace Ux
         public static void On(this EventMgr mgr, EventType eType, object tag, Action action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
+            (mgr as IEvenEditor).On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
             mgr.On((int)eType,tag, action);
 #endif
@@ -15,7 +15,7 @@ namespace Ux
         public static void On<A>(this EventMgr mgr, EventType eType, object tag, Action<A> action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
+            (mgr as IEvenEditor).On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
             mgr.On((int)eType,tag, action);
 #endif
@@ -23,7 +23,7 @@ namespace Ux
         public static void On<A, B>(this EventMgr mgr, EventType eType, object tag, Action<A, B> action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
+            (mgr as IEvenEditor).On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
             mgr.On((int)eType,tag, action);
 #endif
@@ -31,7 +31,7 @@ namespace Ux
         public static void On<A, B, C>(this EventMgr mgr, EventType eType, object tag, Action<A, B, C> action)
         {
 #if UNITY_EDITOR
-            mgr.On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
+            (mgr as IEvenEditor).On($"Hotfix.{nameof(EventType)}.{eType}", (int)eType, tag, action);
 #else
             mgr.On((int)eType,tag, action);
 #endif
@@ -54,19 +54,19 @@ namespace Ux
         }
         public static void Send(this EventMgr mgr, EventType eType)
         {
-            mgr.Send((int)eType);
+            mgr.Run((int)eType);
         }
         public static void Send<A>(this EventMgr mgr, EventType eType, A a)
         {
-            mgr.Send((int)eType, a);
+            mgr.Run((int)eType, a);
         }
         public static void Send<A, B>(this EventMgr mgr, EventType eType, A a, B b)
         {
-            mgr.Send((int)eType, a, b);
+            mgr.Run((int)eType, a, b);
         }
         public static void Send<A, B, C>(this EventMgr mgr, EventType eType, A a, B b, C c)
         {
-            mgr.Send((int)eType, a, b, c);
+            mgr.Run((int)eType, a, b, c);
         }
 
     }

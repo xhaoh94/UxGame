@@ -16,6 +16,11 @@ namespace Ux
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public WSocket(string address) : base(address) { }
 
+        protected override void ToDisconnect()
+        {
+            base.ToDisconnect();            
+            webSocket.Abort();
+        }
         protected override void ToConnect(string address)
         {
             this.webSocket = new ClientWebSocket();
@@ -41,13 +46,13 @@ namespace Ux
         {
             _SendSync().Forget();
         }
-        protected override void CheckSend() { }
+        
         async UniTaskVoid _SendSync()
         {
             try
             {
                 await this.sendBytes.PopToWebSocketAsync(this.webSocket, maxSendLen, cancellationTokenSource.Token);
-                base.CheckSend();
+                EndSend();
             }
             catch (Exception e)
             {

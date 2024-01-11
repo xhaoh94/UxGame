@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Ux;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Ux
 {
@@ -9,7 +10,7 @@ namespace Ux
     {
         public World World { get; private set; }
 
-        public async UniTask EnterMap(string mapName)
+        public async UniTask EnterMap(string mapName, Pb.S2CEnterMap resp)
         {
             if (World == null)
             {
@@ -20,20 +21,43 @@ namespace Ux
             World.EnterMap(map);
 
             var data = new PlayerData();
-            data.id = 1;
-            data.name = "name_" + data.id;
+            data.data = resp.Self;
+            data.self = true;
+            data.name = "name_" + data.data.roleId;
             data.res = "Hero_CK";
-            data.pos = new Vector3(UnityEngine.Random.Range(-3, 3), 0.5f, UnityEngine.Random.Range(-3, 3));
-            data.mask = 1;
             map.AddPlayer(data);
 
-            var data2 = new PlayerData();
-            data2.id = 2;
-            data2.name = "name_" + data2.id;
-            data2.res = "Hero_CK";
-            data2.pos = new Vector3(UnityEngine.Random.Range(-3, 3), 0.5f, UnityEngine.Random.Range(-3, 3));
-            data2.mask = 4;
-            map.AddPlayer(data2);
+            foreach (var other in resp.Others)
+            {
+                var data2 = new PlayerData();
+                data2.self = false;
+                data2.data = other;
+                data2.name = "name_" + other.roleId;
+                data2.res = "Hero_CK";
+                map.AddPlayer(data2);
+            }
+        }
+
+        public void SendMove(List<Vector3> points)
+        {
+            var req = new Pb.C2SMove();
+            foreach (var point in points)
+            {
+                req.Points.Add(new Pb.Vector3() { X = point.x, Y = point.y, Z = point.z });
+            }
+            NetMgr.Ins.Send(Pb.CS.C2S_Move, req);
+        }
+
+        [Net(Pb.BCST.Bcst_Move)]
+        void _BcstMove(Pb.BcstMove move)
+        {
+            EventMgr.Ins.Send(EventType.EntityMove, move);
+        }
+
+        [Net(Pb.BCST.Bcst_LeaveMap)]
+        void _BcstLeaveMap(Pb.BcstLeaveMap leavMap)
+        {
+
         }
         public void ExitMap()
         {

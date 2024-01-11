@@ -1,0 +1,19 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+import "common/common.proto";
+// package pb;
+
+//bcst=500200001
+message Bcst_EnterMap{
+    Entity role=1;
+}
+//bcst=500200002
+message Bcst_LeaveMap{
+    uint32 roleId=1;
+}
+//bcst=500200003
+message Bcst_Move{
+    uint32 roleId=1;
+    repeated Vector3 points=2;
+}

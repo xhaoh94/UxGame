@@ -1,0 +1,22 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+import "common/common.proto";
+// package pb;
+
+//bcst=99900001
+message Interior_EnterVision{
+    repeated uint32 roles=1;
+    Entity role=2;
+}
+//bcst=99900002
+message Interior_LeaveVision{
+    repeated uint32 roles=1;
+    uint32 roleId=2;
+}
+//bcst=99900003
+message Interior_Move{
+    repeated uint32 roles=1;
+    uint32 roleId=2;
+    repeated Vector3 points=3;
+}

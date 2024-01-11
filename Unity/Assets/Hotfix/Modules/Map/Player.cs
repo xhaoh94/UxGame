@@ -11,11 +11,13 @@ namespace Ux
     [EEViewer]
     public class PlayerData
     {
-        public int id;
+        public bool self;
+        public Pb.Entity data;
+        public uint id => data.roleId;
+        public Vector3 pos => new Vector3(data.Position.X, data.Position.Y, data.Position.Z);
+        public int mask => data.roleMask;
         public string name;
-        public Vector3 pos;
         public string res;
-        public int mask;
     }
 
     public class Player : Entity, IAwakeSystem<PlayerData>, IUnitVisionEntity
@@ -32,7 +34,7 @@ namespace Ux
         {
             _playerData = playerData;
             State = AddComponent<StateComponent>();
-            if (_playerData.id == 1)
+            if (_playerData.self)
             {
                 Operate = AddComponent<OperateComponent>();
             }
@@ -50,7 +52,7 @@ namespace Ux
             Go.transform.rotation = Rotation;
             Go.layer = Layer;
 
-            if (_playerData.id == 1)
+            if (_playerData.self)
             {
                 Map.Camera.SetFollow(Go.transform);
                 Map.Camera.SetLookAt(Go.transform);

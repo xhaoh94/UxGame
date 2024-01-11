@@ -42,14 +42,5 @@ namespace Ux
         }
         protected virtual void OnRelease() { }
 
-
-        protected void Send(uint cmd, object message)
-        {
-            NetMgr.Ins.Send(cmd, message);
-        }
-        protected async UniTask<V> Call<V>(uint cmd, object message)
-        {
-            return await NetMgr.Ins.Call<V>(cmd, message);
-        }
     }
 }

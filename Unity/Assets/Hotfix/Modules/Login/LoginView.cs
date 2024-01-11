@@ -13,17 +13,8 @@ namespace Ux.UI
         protected override void OnInit()
         {
             base.OnInit();
-            //TimeMgr.Ins.DoTimer(50, 1, OnConnect);
-            //TimeMgr.Ins.DoTimer(1, 1, ttt);
         }
 
-        //void ttt()
-        //{
-        //    TimeMgr.Ins.DoTimer(5, 1, Test);
-        //    TimeMgr.Ins.RemoveAll(this);
-        //    TimeMgr.Ins.DoTimer(10, 1, Test);
-        //    TimeMgr.Ins.RemoveTimer(Test);
-        //}
 
         partial void OnBtnLoginClick(EventContext e)
         {
@@ -32,13 +23,9 @@ namespace Ux.UI
 
         void OnConnect()
         {
-            LoginModule.Ins.LoginAccount(inputAcc.text, inputPass.text);
+            LoginModule.Ins.LoginAccount(inputAcc.text, "x", int.Parse(inputPass.text));
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
         }
 
-        void Test()
-        {
-
-        }
     }
 }

@@ -5,13 +5,13 @@ using FairyGUI;
 
 namespace Ux
 {
-    public class Map : Entity, IAwakeSystem<GameObject>
+    public class Map : Entity, IAwakeSystem<GameObject>, IEventSystem
     {
         public CameraComponent Camera { get; private set; }
         public AStarComponent AStar { get; private set; }
         public GameObject Go { get; private set; }
         [EEViewer("玩家")]
-        Dictionary<int, Player> players = new Dictionary<int, Player>();
+        Dictionary<uint, Player> players = new Dictionary<uint, Player>();
         public void OnAwake(GameObject a)
         {
             Go = a;
@@ -25,6 +25,16 @@ namespace Ux
         {
             var player = AddChild<Player, PlayerData>(playerData.id, playerData);
             players.Add(playerData.id, player);
+        }
+
+        [Evt(EventType.EntityMove)]
+        void _OnEntityMove(Pb.BcstMove move)
+        {
+            var player = GetChild<Player>(move.roleId);
+            if (player != null)
+            {
+                player.Seeker.SetPoints(move.Points);
+            }
         }
 
         protected override void OnDestroy()

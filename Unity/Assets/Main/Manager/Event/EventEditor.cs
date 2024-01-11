@@ -26,7 +26,18 @@ public readonly struct EventList
 
 namespace Ux
 {
-    public partial class EventMgr
+    public interface IEvenEditor
+    {
+        long On(string eTypeStr, int eType, FastMethodInfo action);
+
+        long On(string eTypeStr, int eType, object tag, Action action);
+
+        long On<A>(string eTypeStr, int eType, object tag, Action<A> action);
+
+        long On<A, B>(string eTypeStr, int eType, object tag, Action<A, B> action);
+        long On<A, B, C>(string eTypeStr, int eType, object tag, Action<A, B, C> action);
+    }
+    public partial class EventMgr: IEvenEditor
     {
         private readonly Dictionary<string, EventList> type2editor = new Dictionary<string, EventList>();
 

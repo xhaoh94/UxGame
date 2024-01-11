@@ -8,9 +8,12 @@
         }
         protected override async void OnEnter(object args = null)
         {
-            await MapModule.Ins.EnterMap("Map001");
-            await UIMgr.Ins.Show<UI.MainView>().Task();
-            UIMgr.Ins.Hide<UI.LoginView>();
+            if (args is Pb.S2CEnterMap resp)
+            {
+                await MapModule.Ins.EnterMap("Map001", resp);
+                await UIMgr.Ins.Show<UI.MainView>().Task();
+                UIMgr.Ins.Hide<UI.LoginView>();
+            }
 
             //var item = ConfigMgr.Ins.Tables.TbItem.Get(10000);
         }

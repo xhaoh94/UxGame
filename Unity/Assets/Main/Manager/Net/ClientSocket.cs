@@ -103,8 +103,24 @@ namespace Ux
 
         protected void OnSocketCode(SocketCode e)
         {
-            EventMgr.Ins.Send(MainEventType.NET_SOCKET_CODE, Address, e);
+            if (!_activeDisconnect)
+            {
+                EventMgr.Ins.Send(MainEventType.NET_SOCKET_CODE, Address, e);
+            }
             Dispose();
+        }
+        bool _activeDisconnect;
+        public void Disconnect()
+        {
+            if (IsConnected)
+            {
+                _activeDisconnect = true;
+                ToDisconnect();
+            }
+        }
+        protected virtual void ToDisconnect()
+        {
+
         }
         public void Connect(Action connectCallback)
         {
@@ -152,7 +168,10 @@ namespace Ux
                 }
                 if (IsConnected)
                 {
-                    SendHeartbeat();
+                    if (!isNeedSend && !IsSending)
+                    {
+                        SendHeartbeat();
+                    }
 #if !UNITY_EDITOR
                     if (rpcTime.Count > 0)
                     {
@@ -314,17 +333,16 @@ namespace Ux
         #region 发送检测
         void OnSend()
         {
-            LastSendTime = TimeMgr.Ins.TotalTime;
             this.IsSending = true;
+            LastSendTime = TimeMgr.Ins.TotalTime;
             StartSend();
-            CheckSend();
         }
-        protected virtual void CheckSend()
+        protected virtual void EndSend()
         {
+            IsSending = false;
             // 没有数据需要发送
             if (this.sendBytes.Length == 0)
             {
-                IsSending = false;
                 isNeedSend = false;
             }
         }
@@ -337,9 +355,12 @@ namespace Ux
             if (this.IsDisposed)
             {
                 throw new Exception("Socket已经被Dispose了");
-            }
+            }            
             sendStream.WriteToMessage(message, 0);
-            var msgLen = 1 + 4 + sendStream.Length;
+            //因为前面WriteToMessage的时候Seek(0, SeekOrigin.Begin)，            
+            //所以真实长度是Position而不是Length，Length是包含缓存部分的   
+
+            var msgLen = 1 + 4 + sendStream.Position;
             this.sendBytes.PushUInt16((ushort)msgLen);
             this.sendBytes.PushByte((byte)OpType.C_S_C);
             this.sendBytes.PushUInt32(cmd);
@@ -358,7 +379,9 @@ namespace Ux
             rpcMethod.Add(rpxID, task);
 
             sendStream.WriteToMessage(message, 0);
-            var msgLen = 1 + 4 + 4 + sendStream.Length;
+            //因为前面WriteToMessage的时候Seek(0, SeekOrigin.Begin)，            
+            //所以真实长度是Position而不是Length，Length是包含缓存部分的   
+            var msgLen = 1 + 4 + 4 + sendStream.Position;
             this.sendBytes.PushUInt16((ushort)msgLen);
             this.sendBytes.PushByte((byte)OpType.RPC_REQUIRE);
             this.sendBytes.PushUInt32(cmd);
@@ -379,6 +402,7 @@ namespace Ux
             IsConnected = false;
             IsSending = false;
             isNeedSend = false;
+            _activeDisconnect = false;
             foreach (var kv in rpcMethod)
             {
                 kv.Value.TrySetCanceled();

@@ -4,10 +4,9 @@ namespace Pb
 {
 	public static partial class CS
 	{
-		public const uint C2S_EnterGame = 10005;
-		public const uint C2S_RegisterAccount = 10001;
-		public const uint C2S_LoginGame = 10002;
-		public const uint C2S_RoleList = 10003;
-		public const uint C2S_CreateRole = 10004;
+		public const uint C2S_LoginGame = 100100001;
+		public const uint C2S_EnterMap = 100200001;
+		public const uint C2S_LeaveMap = 100200002;
+		public const uint C2S_Move = 100200003;
 	}
 }

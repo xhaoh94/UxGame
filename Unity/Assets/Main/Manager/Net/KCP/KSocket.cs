@@ -35,7 +35,12 @@ namespace Ux
             this.startTime = TimeMgr.Ins.LocalTime.TimeStamp;
         }
 
-
+        protected override void ToDisconnect()
+        {
+            base.ToDisconnect();
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Disconnect(false);
+        }
         protected override void ToConnect(string address)
         {
             var ipAddress = address.Split(':');
@@ -77,6 +82,7 @@ namespace Ux
                     return;
                 }
                 this.socket.SendTo(bytes, 0, count, SocketFlags.None, this.remoteEndPoint);
+                EndSend();
             }
             catch (Exception e)
             {

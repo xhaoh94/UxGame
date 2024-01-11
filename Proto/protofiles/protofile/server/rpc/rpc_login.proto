@@ -2,27 +2,6 @@ syntax ="proto3";
 option go_package = ".;pb";
 import "login/login.proto";
 
-service IRegisterAccount{
-  rpc RegisterAccount (C2S_RegisterAccount) returns (S2C_RegisterAccount) {}
-}
-
 service ILoginGame {
   rpc LoginGame (C2S_LoginGame) returns (S2C_LoginGame) {}
-}
-
-message G2L_RoleList{
-    string account=1;
-}
-
-service IRoleList{
-    rpc RoleList (G2L_RoleList) returns(S2C_RoleList){}
-}
-
-message G2L_CreateRole{
-    string name=1;
-    string account =2;
-}
-
-service ICreateRole{
-  rpc CreateRole (G2L_CreateRole) returns(S2C_CreateRole){}
 }

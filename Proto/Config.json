@@ -1,24 +1,24 @@
 {
 	"csharp_pbnet":{
-		"protobufNet":"./PbTool/protobuf/protogen.exe",
-		"inPath":"./protofiles/protofile/client",
-		"outPath":"./out/cs"
+		"protobuf_net":"./PbTool/protobuf/protogen.exe",
+		"in_path":"./protofiles/protofile/client",
+		"out_path":"./out/cs"
 	},		
 	"csharp":{		
 		"protoc":"./PbTool/protoc.exe",
-		"inPath":"./protofiles/protofile/client",
-		"outPath":"./out/cs"
+		"in_path":"./protofiles/protofile/client",
+		"out_path":"./out/cs"
 	},		
 	"go":{	
 		"protoc":"./PbTool/protoc.exe",
-		"protocGenGo":"./protoc-gen-go.exe",
-		"inPath":"./protofiles/protofile/server",
-		"outPath":"./out/go"
+		"proto_gen_go":"./PbTool/protoc-gen-go.exe",
+		"in_path":"./protofiles/protofile/server",
+		"out_path":"./out/go"
 	},
 	"ts":{	
-		"inPath":"./protofiles/protofile/client",
-		"outPath":"./out/ts",
-		"createjson":false,
+		"in_path":"./protofiles/protofile/client",
+		"out_path":"./out/ts",
+		"create_json":false,
 		"usemodule":true
 	}
 }

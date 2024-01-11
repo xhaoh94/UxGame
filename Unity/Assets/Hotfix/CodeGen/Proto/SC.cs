@@ -4,10 +4,6 @@ namespace Pb
 {
 	public static partial class SC
 	{
-		public const uint S2C_EnterGame = 10005;
-		public const uint S2C_RegisterAccount = 10001;
-		public const uint S2C_LoginGame = 10002;
-		public const uint S2C_RoleList = 10003;
-		public const uint S2C_CreateRole = 10004;
+		public const uint S2C_LoginGame = 100100001;
 	}
 }

@@ -8,5 +8,6 @@ namespace Ux
         {            
             return Animator.StringToHash(str);
         }
+        
     }
 }

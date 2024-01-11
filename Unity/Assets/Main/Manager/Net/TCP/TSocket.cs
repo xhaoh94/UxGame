@@ -37,7 +37,12 @@ namespace Ux
                     throw new Exception($"socket error: {e.LastOperation}");
             }
         }
-
+        protected override void ToDisconnect()
+        {
+            base.ToDisconnect();
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Disconnect(false);
+        }
         protected override void ToConnect(string address)
         {
             var ipAddress = address.Split(':');
@@ -148,16 +153,15 @@ namespace Ux
                 return;
             }
 
-            if (args.BytesTransferred == 0)
+            if (args.BytesTransferred > 0)
             {
-                return;
+                this.sendBytes.PopTransferred(args.BytesTransferred);
             }
-
-            this.sendBytes.PopTransferred(args.BytesTransferred);
+            EndSend();
         }
 
         protected override void OnDispose()
-        {            
+        {
             this.socket?.Close();
             this.innArgs.Dispose();
             this.outArgs.Dispose();
@@ -168,7 +172,6 @@ namespace Ux
 
         private void OnError(SocketError error)
         {
-            Log.Debug("socketerror:" + error);
             switch (error)
             {
                 case SocketError.ConnectionRefused:

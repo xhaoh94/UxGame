@@ -1,0 +1,33 @@
+syntax ="proto3";
+option go_package = ".;pb";
+option csharp_namespace = "Pb";
+import "common/common.proto";
+import "common/errcode.proto";
+
+//cs=100200001
+message C2S_EnterMap{  
+    string account=1;
+    string token=2;
+    int32 mapid=3;
+    int32 roleMask=4;
+}
+
+message S2C_EnterMap{
+    ErrCode error=1;    
+    Entity self=2;    
+    repeated Entity others=3;
+}
+
+//cs=100200002
+message C2S_LeaveMap{   
+    uint32 roleId=1;
+}
+
+message S2C_LeaveMap{
+    ErrCode error=1;    
+}
+
+//cs=100200003
+message C2S_Move{
+    repeated Vector3 points=1;
+}

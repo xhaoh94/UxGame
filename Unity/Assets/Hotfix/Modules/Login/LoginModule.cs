@@ -15,44 +15,47 @@ namespace Ux
     [Module]
     public class LoginModule : ModuleBase<LoginModule>
     {
+        ClientSocket _client;
         public void Connect(Action OnConnect)
         {
-            //TCP KCP
-            //NetMgr.Ins.Connect(NetType.KCP, "127.0.0.1:10002", OnConnect);
+            //   TCP KCP
+            _client = NetMgr.Ins.Connect(NetType.TCP, "127.0.0.1:10002", OnConnect);
             //WebSocket
             //NetMgr.Ins.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
 
-            GameMain.Machine.Enter<StateGameIn>();
+            //GameMain.Machine.Enter<StateGameIn>();
         }
-        public void LoginAccount(string account, string password)
+        string _account;
+        int _mask;
+        public void LoginAccount(string account, string password, int mask)
         {
+            _mask = mask;
             var data = new Pb.C2SLoginGame();
-
-            for (int i = 0; i < 10; i++)
-            {
-                data.Account = account + i;
-                data.Password = password + i;
-                Send(CS.C2S_LoginGame, data);
-            }
+            _account = data.Account = account;
+            data.Password = password;
+            NetMgr.Ins.Send(CS.C2S_LoginGame, data);
         }
 
         [Net(SC.S2C_LoginGame)]
         void LoginResult(Pb.S2CLoginGame data)
         {
-            Log.Debug("返回" + data.Error.ToString());
-            GameMain.Machine.Enter<StateGameIn>();
+            _client.Disconnect();
+            _client = NetMgr.Ins.Connect(NetType.TCP, data.Addr, () =>
+            {
+                _EnterMap(data.Token);
+            });
+            NetMgr.Ins.SetDefaultClient(_client);
         }
-
-        public async void LoginAccountRPC(string account, string password)
+        async void _EnterMap(string token)
         {
-            var data = new Pb.C2SLoginGame();
-            data.Account = account;
-            data.Password = password;
-            var response = await Call<Pb.S2CLoginGame>(CS.C2S_LoginGame, data);
-            Log.Debug("RPC返回" + response.Error.ToString());
-            GameMain.Machine.Enter<StateGameIn>();
+            var data = new Pb.C2SEnterMap();
+            data.Account = _account;
+            data.roleMask = _mask;
+            data.Mapid = 1;
+            data.Token = token;
+            var resp = await NetMgr.Ins.Call<Pb.S2CEnterMap>(CS.C2S_EnterMap, data);
+            GameMain.Machine.Enter<StateGameIn>(resp);
         }
-
 
     }
 }

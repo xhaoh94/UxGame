@@ -4,8 +4,8 @@ namespace Pb
 {
 	public static partial class BCST
 	{
-		public const uint Bcst_EntityEnter = 30001;
-		public const uint Bcst_EntityLeave = 30002;
-		public const uint Bcst_EntityMove = 30003;
+		public const uint Bcst_EnterMap = 500200001;
+		public const uint Bcst_LeaveMap = 500200002;
+		public const uint Bcst_Move = 500200003;
 	}
 }

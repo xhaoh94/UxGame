@@ -11,28 +11,29 @@ namespace Ux
         public Seeker Seeker { get; private set; }
         Player Player => Parent as Player;
 
-        private Path _path;
+        private List<Vector3> _points;
         private int _pathIndex;
         public bool IsRun { get; private set; }
 
         public void OnAwake(Seeker a)
         {
             Seeker = a;
+            _points = new List<Vector3>();
         }
         protected override void OnDestroy()
         {
             base.OnDestroy();
             Seeker = null;
-            _path = null;
+            _points.Clear();
             _pathIndex = 0;
             IsRun = false;
         }
 
         public void OnFixedUpdate()
         {
-            if (_path != null && _pathIndex < _path.vectorPath.Count)
+            if (_pathIndex < _points.Count)
             {
-                var target = _path.vectorPath[_pathIndex];
+                var target = _points[_pathIndex];
                 var dir = target - Player.Position;
                 var rotation = Quaternion.LookRotation(dir);
                 Player.Rotation = Quaternion.Slerp(Player.Rotation, rotation, Time.fixedDeltaTime * 10f);
@@ -54,7 +55,7 @@ namespace Ux
                 {
                     IsRun = false;
                     Player.State.Machine.Enter<StateIdle>();
-                    _path = null;
+                    _points.Clear();
                     _pathIndex = 0;
                 }
             }
@@ -79,9 +80,18 @@ namespace Ux
             {
                 return;
             }
+            MapModule.Ins.SendMove(p.vectorPath);
 
+        }
+
+        public void SetPoints(List<Pb.Vector3> points)
+        {
             _pathIndex = 0;
-            _path = p;
+            _points.Clear();
+            foreach (var point in points)
+            {
+                _points.Add(new Vector3(point.X, point.Y, point.Z));
+            }
         }
     }
 }

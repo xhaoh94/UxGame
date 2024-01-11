@@ -2,6 +2,7 @@
 {
     public enum EventType
     {
-        None = MainEventType.Max,        
+        None = MainEventType.Max,     
+        EntityMove,
     }
 }

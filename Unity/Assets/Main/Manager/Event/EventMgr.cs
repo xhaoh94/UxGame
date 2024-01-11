@@ -63,7 +63,7 @@ namespace Ux
 #if UNITY_EDITOR
                     if (!string.IsNullOrEmpty(evtAttr.ETypeStr))
                     {
-                        On(evtAttr.ETypeStr, evtAttr.EType, fastMethod);
+                        (this as IEvenEditor).On(evtAttr.ETypeStr, evtAttr.EType, fastMethod);
                         continue;
                     }
 #endif
@@ -202,133 +202,7 @@ namespace Ux
         }
         int _exeCnt = 0;
 
-        Action _quitEvent;
 
-        public void OnQuit(Action action)
-        {
-            _quitEvent += action;
-        }
-        public void OffQuit(Action action)
-        {
-            _quitEvent -= action;
-        }
-
-        public void OnApplicationQuit()
-        {
-            _quitEvent?.Invoke();
-        }
-
-#if UNITY_EDITOR
-        public long On(string eTypeStr, int eType, FastMethodInfo action)
-        {
-            var evtData = _Add(out var key, eType, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, action);
-                evtData.Init(eTypeStr);
-            }
-
-            return key;
-        }
-
-        public long On(string eTypeStr, int eType, object tag, Action action)
-        {
-            var evtData = _Add<EventData>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-                evtData.Init(eTypeStr);
-            }
-
-            return key;
-        }
-
-        public long On<A>(string eTypeStr, int eType, object tag, Action<A> action)
-        {
-            var evtData = _Add<EventData<A>>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-                evtData.Init(eTypeStr);
-            }
-
-            return key;
-        }
-
-        public long On<A, B>(string eTypeStr, int eType, object tag, Action<A, B> action)
-        {
-            var evtData = _Add<EventData<A, B>>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-                evtData.Init(eTypeStr);
-            }
-
-            return key;
-        }
-
-        public long On<A, B, C>(string eTypeStr, int eType, object tag, Action<A, B, C> action)
-        {
-            var evtData = _Add<EventData<A, B, C>>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-                evtData.Init(eTypeStr);
-            }
-
-            return key;
-        }
-#endif
-        public long On(int eType, FastMethodInfo action)
-        {
-            var evtData = _Add(out var key, eType, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, action);
-            }
-
-            return key;
-        }
-
-        public long On(int eType, object tag, Action action)
-        {
-            var evtData = _Add<EventData>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-            }
-            return key;
-        }
-
-        public long On<A>(int eType, object tag, Action<A> action)
-        {
-            var evtData = _Add<EventData<A>>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-            }
-            return key;
-        }
-
-        public long On<A, B>(int eType, object tag, Action<A, B> action)
-        {
-            var evtData = _Add<EventData<A, B>>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-            }
-            return key;
-        }
-
-        public long On<A, B, C>(int eType, object tag, Action<A, B, C> action)
-        {
-            var evtData = _Add<EventData<A, B, C>>(out var key, eType, tag, action);
-            if (evtData != default)
-            {
-                evtData.Init(key, eType, tag, action);
-            }
-            return key;
-        }
 
         private T _Add<T>(long key) where T : IEvent
         {
@@ -362,110 +236,7 @@ namespace Ux
             return _Add<EventFastMethodData>(key);
         }
 
-        public void Off(int eType, FastMethodInfo action)
-        {
-            var key = GetKey(eType, action);
-            RemoveByKey(key);
-        }
 
-        /// <summary>
-        /// 删除对应的事件和注册方法
-        /// </summary>
-        /// <param name="eType"></param>
-        /// <param name="action"></param>
-        public void Off(int eType, object tag, Action action)
-        {
-            _Remove(eType, tag, action);
-        }
-
-        /// <summary>
-        /// 删除所有注册此方法的事件
-        /// </summary>
-        /// <param name="action"></param>
-        public void Off(Action action)
-        {
-            _Remove(action);
-        }
-
-        /// <summary>
-        /// 删除对应的事件和注册方法
-        /// </summary>
-        /// <param name="eType"></param>
-        /// <param name="action"></param>
-        public void Off<A>(int eType, object tag, Action<A> action)
-        {
-            _Remove(eType, tag, action);
-        }
-
-        /// <summary>
-        /// 删除所有注册此方法的事件
-        /// </summary>
-        /// <param name="action"></param>
-        public void Off<A>(Action<A> action)
-        {
-            _Remove(action);
-        }
-
-        /// <summary>
-        /// 删除对应的事件和注册方法
-        /// </summary>
-        /// <param name="eType"></param>
-        /// <param name="action"></param>
-        public void Off<A, B>(int eType, object tag, Action<A, B> action)
-        {
-            _Remove(eType, tag, action);
-        }
-
-        /// <summary>
-        /// 删除所有注册此方法的事件
-        /// </summary>
-        /// <param name="action"></param>
-        public void Off<A, B>(Action<A, B> action)
-        {
-            _Remove(action);
-        }
-
-        /// <summary>
-        /// 删除对应的事件和注册方法
-        /// </summary>
-        /// <param name="eType"></param>
-        /// <param name="action"></param>
-        public void Off<A, B, C>(int eType, object tag, Action<A, B, C> action)
-        {
-            _Remove(eType, tag, action);
-        }
-
-        /// <summary>
-        /// 删除所有注册此方法的事件
-        /// </summary>
-        /// <param name="action"></param>
-        public void Off<A, B, C>(Action<A, B, C> action)
-        {
-            _Remove(action);
-        }
-
-        /// <summary>
-        /// 删除所有注册此标签的事件
-        /// </summary>
-        public void OffTag(object tag)
-        {
-            if (tag == null) return;
-            if (_waitAdds.Count > 0)
-            {
-                for (int i = _waitAdds.Count - 1; i >= 0; i--)
-                {
-                    var wa = _waitAdds[i];
-                    if (wa.Tag == tag)
-                    {
-                        _waitAdds.RemoveAt(i);
-                    }
-                }
-            }
-
-            int hashCode = tag.GetHashCode();
-            if (!_tagKeys.TryGetValue(hashCode, out var keys)) return;
-            RemoveByKey(keys);
-        }
 
         private void _Remove(int eType, object tag, Delegate action)
         {
@@ -520,22 +291,22 @@ namespace Ux
             _waitDels.Add(key);
         }
 
-        public void Send(int eType)
+        public void Run(int eType)
         {
             _waitExes.Enqueue(new EventExe(eType));
         }
 
-        public void Send<A>(int eType, A a)
+        public void Run<A>(int eType, A a)
         {
             _waitExes.Enqueue(new EventExe<A>(eType, a));
         }
 
-        public void Send<A, B>(int eType, A a, B b)
+        public void Run<A, B>(int eType, A a, B b)
         {
             _waitExes.Enqueue(new EventExe<A, B>(eType, a, b));
         }
 
-        public void Send<A, B, C>(int eType, A a, B b, C c)
+        public void Run<A, B, C>(int eType, A a, B b, C c)
         {
             _waitExes.Enqueue(new EventExe<A, B, C>(eType, a, b, c));
         }

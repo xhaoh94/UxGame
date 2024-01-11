@@ -18,6 +18,7 @@ namespace Ux
         protected override void OnCreated()
         {
             TimeMgr.Ins.DoUpdate(_Update);
+            EventMgr.Ins.On<ClientSocket>(MainEventType.NET_DISPOSE, this, OnSocketDispose);
         }
         /// <summary>
         /// 创建远程服务
@@ -70,8 +71,19 @@ namespace Ux
         }
         public async UniTask<TMessage> Call<TMessage>(uint cmd, object message)
         {
-            var response = await _clientSocket.Call<TMessage>(cmd, message);
-            return (TMessage)response;
+            try
+            {
+                var response = await _clientSocket.Call<TMessage>(cmd, message);
+                return (TMessage)response;
+            }
+            catch (Exception ex)
+            {
+                if (!(ex is OperationCanceledException))
+                {
+                    Log.Error(ex);
+                }
+                return default(TMessage);
+            }
         }
         void _Update()
         {
@@ -92,7 +104,6 @@ namespace Ux
         }
 
 
-        [MainEvt(MainEventType.NET_DISPOSE)]
         void OnSocketDispose(ClientSocket clientSocket)
         {
             _clientSockets.Remove(clientSocket);
@@ -100,6 +111,6 @@ namespace Ux
             {
                 _clientSocket = null;
             }
-        }       
+        }
     }
 }

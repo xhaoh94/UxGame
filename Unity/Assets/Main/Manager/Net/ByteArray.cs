@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using SJ;
 using System;
 using System.Collections.Generic;
@@ -163,8 +164,10 @@ namespace Ux
         }
         public void PushStream(Stream stream)
         {
+            //因为前面序列化的时候Seek(0, SeekOrigin.Begin)，            
+            //所以真实长度是Position而不是Length，Length是包含之前部分的            
+            int count = (int)stream.Position;
             stream.Seek(0, SeekOrigin.Begin);
-            int count = (int)(stream.Length - stream.Position);
             int len = 0;
             while (len < count)
             {
@@ -295,9 +298,20 @@ namespace Ux
             {
                 count = (int)Length;
             }
-
+            if (count == 0) return true;
             try
             {
+                //var str = "[";
+                //for (var i = PopPosition; i < PopPosition + count; i++)
+                //{
+                //    if (i > PopPosition)
+                //    {
+                //        str += ", ";
+                //    }
+                //    str += FirstBuffer[i].ToString();
+                //}
+                //str += "]";
+                //Log.Debug(str);
                 eventArgs.SetBuffer(FirstBuffer, PopPosition, count);
                 if (socket.SendAsync(eventArgs))
                 {
