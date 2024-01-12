@@ -29,6 +29,7 @@ namespace Ux
 
             foreach (var other in resp.Others)
             {
+                if (other == null) continue;
                 var data2 = new PlayerData();
                 data2.self = false;
                 data2.data = other;

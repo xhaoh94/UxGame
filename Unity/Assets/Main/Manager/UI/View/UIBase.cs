@@ -62,7 +62,7 @@ namespace Ux
         /// <summary>
         /// 模糊场景
         /// </summary>
-        Scene = 0x10,
+        Scene = 0x16,
     }
     public abstract class UIBase : UIObject, IUI
     {

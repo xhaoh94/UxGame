@@ -76,16 +76,16 @@ namespace Ux
             }
 
 
-            if (_blurStacks != null)
+            if (blurStack != null)
             {
                 flagScene = blurStack.Value.Blur.HasFlag(UIBlur.Scene);
             }
 
-            var camera = GameObject.Find("mapCamera").GetComponent<Camera>();
-            if (camera != null)
-            {
-                Blur.SetCamera(camera, flagScene);
-            }
+            //var camera = GameObject.Find("mapCamera").GetComponent<Camera>();
+            //if (camera != null)
+            //{
+            //    Blur.SetCamera(camera, flagScene);
+            //}
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Ux
             var package = resType == ResType.None
                 ? GetPackageByLocation(location)
                 : GetPackage(resType);
-            using (var handle = GetPackage(ResType.RawFile).Package.LoadRawFileSync(location))
+            using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileData();
             }

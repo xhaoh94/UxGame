@@ -1,0 +1,31 @@
+app_id: 3
+app_type: scene
+version: "1.0.0"
+location: true
+interioraddr: "127.0.0.1:30001"
+# outsideaddr:  "127.0.0.1:30002"
+# log_config_path: "./log.yaml"
+
+network:
+    endian: littleEndian       #大小端
+    send_msg_max_len: 0        #发送消息最大长度
+    read_msg_max_len: 0        #读取消息最大长度
+    reconnect_interval: 1      #重连间隔
+    reconnection_max: 3        #重连的最大尝试次数
+    heartbeat: 30              #心跳间隔
+    connect_timeout: 3         #链接超时
+    read_timeout: 35           #读取超时
+
+webSocket:
+    ws_message_type: 2  #使用的消息类型(使用websocket才有效) 1:TextMessage 2:BinaryMessage 8:CloseMessage 9:PingMessage 10:PongMessage 
+    ws_pattern: /
+    ws_path: /
+    ws_scheme: ws
+    ws_certfile: ""
+    ws_keyfile: ""
+
+etcd:
+    etcd_list:                #etcd集
+    - 127.0.0.1:2379 
+    etcd_timeout: 5           #连接超时
+    etcd_lease_time: 5        #续约时间s

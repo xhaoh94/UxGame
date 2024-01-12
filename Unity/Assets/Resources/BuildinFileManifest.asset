@@ -13,19 +13,54 @@ MonoBehaviour:
   m_Name: BuildinFileManifest
   m_EditorClassIdentifier: 
   BuildinFiles:
-  - 39cce7c9bef2ca1e6612743e6531f65b.bundle
-  - 960e9a937c2bdb4559743cd6a88843c0.bundle
-  - fe825c9f6dad81b52400051703addd48.bundle
-  - 139287ce1e10ced218cd2049c0d223bc.rawfile
-  - 2400d558b5df57972d9c5e7bd985cfd8.rawfile
-  - 4a065d65014365544895bec02259891f.rawfile
-  - 53415c551ad77fae7cecc78a154f29c8.rawfile
-  - 60662bd4fe7a57056766d2dbafcd1eba.rawfile
-  - 7f6aac5494a0e262c6702cf485d45537.rawfile
-  - 837028517b9f5439914cb0d3acf8212f.rawfile
-  - bda5cca341ac74198c27811d1037882d.rawfile
-  - c526e71ba50af212c83a8bd52ebc58c3.rawfile
-  - e033d52eb970c3566d3a3ef440acf783.rawfile
-  - 002e2ea4660b99dd55dfd89557af4073.bundle
-  - 78e9ab5dcfde2452fcfa28625d93df26.bundle
-  - de627a1a1f01bb493d68bfc1f2d86cb7.bundle
+  - PackageName: CodePackage
+    FileName: 24e681acec78ff2bc23d2ebe1e96e2dc.rawfile
+    FileCRC32: e5f59f51
+  - PackageName: CodePackage
+    FileName: 419dea29a6a78b2bef4206ce11dbfcbc.rawfile
+    FileCRC32: ecde857e
+  - PackageName: CodePackage
+    FileName: 5908c1968464858e48e4d152dc940c1e.rawfile
+    FileCRC32: ce8c0d22
+  - PackageName: CodePackage
+    FileName: 74d8b62863328ddc78779710ed7b5383.rawfile
+    FileCRC32: 8ca53201
+  - PackageName: CodePackage
+    FileName: 77324f4c4305ace291d82f3b1e934fa3.rawfile
+    FileCRC32: 3ef934d2
+  - PackageName: CodePackage
+    FileName: b9b76877181936148bb9509305d84604.rawfile
+    FileCRC32: 6173579e
+  - PackageName: CodePackage
+    FileName: d42301b2540058b722946edf82e7eed9.rawfile
+    FileCRC32: 1779e8fe
+  - PackageName: CodePackage
+    FileName: e2206327030a343dc1dcb4b4af3ca320.rawfile
+    FileCRC32: 8715ec1f
+  - PackageName: ConfigPackage
+    FileName: 87425efdd0624bcd68b07d7bf074029f.bundle
+    FileCRC32: 57ac8e6b
+  - PackageName: MainPackage
+    FileName: 0e6559b28b05fdaf159735fc0480a166.bundle
+    FileCRC32: c8acc4f3
+  - PackageName: MainPackage
+    FileName: 17f3c964fccebd1fc0839e0911ed56d1.bundle
+    FileCRC32: 2fdeabd7
+  - PackageName: MainPackage
+    FileName: d827b17ed68e8ff0667a2b581a54725a.bundle
+    FileCRC32: bb5e6deb
+  - PackageName: RawFilePackage
+    FileName: 43041a569ea761c3660f02bb98d40278.bundle
+    FileCRC32: 2a46613b
+  - PackageName: UIPackage
+    FileName: 197ecf24533a098ce57ed221eb552a93.bundle
+    FileCRC32: ffa5a190
+  - PackageName: UIPackage
+    FileName: 2c30cb8b995e6907547653a18cf793ee.bundle
+    FileCRC32: 6126c33f
+  - PackageName: UIPackage
+    FileName: 78e9ab5dcfde2452fcfa28625d93df26.bundle
+    FileCRC32: 97598825
+  - PackageName: UIPackage
+    FileName: d522851218053ac67bafbb76558bd2e6.bundle
+    FileCRC32: 4fd20838
