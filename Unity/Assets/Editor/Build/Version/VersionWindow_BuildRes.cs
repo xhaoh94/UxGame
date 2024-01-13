@@ -162,7 +162,7 @@ public partial class VersionWindow
                             group.GroupDesc = "着色器";
                             group.GroupName = "ShaderVariant";
                             package.Groups.Add(group);
-                        }                        
+                        }
                         var collector = group.Collectors.Find(x => x.CollectPath == collectPath);
                         if (collector == null)
                         {
@@ -223,6 +223,28 @@ public partial class VersionWindow
         }
 
         var packageSetting = SelectItem.GetPackageSetting(packageName);
+
+        var buildOutputRoot = BuildOutputRoot;
+        var temOutputRoot = TemBuildOutputRoot;
+        var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
+        var outputDir = "Output";
+        var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
+        var temBuildPath = $"{temOutputRoot}/{buildTarget}/{packageName}";
+        var nowVersion = _txtVersion.value;
+        var lastVersion = string.Empty;
+        var versionFile = $"{buildPath}/{outputDir}/{versionFileName}";
+        if (File.Exists(versionFile))
+        {
+            lastVersion = FileUtility.ReadAllText(versionFile);
+        }
+
+        if (lastVersion == nowVersion)
+        {
+            nowVersion = AddVersion(lastVersion);
+            _txtVersion.SetValueWithoutNotify(nowVersion);
+            Log.Warning("版本号无更新，将进行自动更新！");
+        }
+
         BuildParameters buildParameters = null;
         IBuildPipeline pipeline = null;
 
@@ -256,14 +278,13 @@ public partial class VersionWindow
                 Log.Error("未知的构建模式");
                 return false;
         }
-        var buildOutputRoot = BuildOutputRoot;
-        var temOutputRoot = TemBuildOutputRoot;
+
         buildParameters.BuildOutputRoot = temOutputRoot;
         buildParameters.BuildinFileRoot = StreamingAssetsRoot;
         buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
         buildParameters.BuildTarget = buildTarget;
         buildParameters.PackageName = packageName;
-        buildParameters.PackageVersion = _txtVersion.value;
+        buildParameters.PackageVersion = nowVersion;
         buildParameters.VerifyBuildingResult = true;
         //buildParameters.SharedPackRule = CreateSharedPackRuleInstance();        
         buildParameters.FileNameStyle = packageSetting.NameStyleOption;
@@ -272,21 +293,16 @@ public partial class VersionWindow
         buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
         buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
 
-        var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
-        var outputDir = "Output";
-        var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
-        var temBuildPath = $"{temOutputRoot}/{buildTarget}/{packageName}";
-        var nowVersion = _txtVersion.value;
-        var lastVersion = string.Empty;
-        var versionFile = $"{buildPath}/{outputDir}/{versionFileName}";
-        if (File.Exists(versionFile))
-        {
-            lastVersion = FileUtility.ReadAllText(versionFile);
-        }
+
 
         var result = pipeline.Run(buildParameters, true);
         if (!result.Success)
         {
+            var temVersion = FileUtility.ReadAllText(versionFile);
+            if (temVersion == nowVersion)//构建失败了，但是YooAsset却把版本号给修改了,这时候需要把版本号回滚一下
+            {
+                File.WriteAllText(versionFile, lastVersion, System.Text.Encoding.UTF8);
+            }
             Log.Error($"{packageName}:构建资源包失败");
             return false;
         }

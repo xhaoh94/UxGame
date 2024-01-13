@@ -36,7 +36,7 @@ namespace Ux
         /// 是否开启已走过视野
         /// </summary>
         bool _wasVision = true;
-        float _wasVisionAlpha = 0.2f;
+        float _wasVisionAlpha = 0.3f;
         /// <summary>
         /// 多久更新一遍视野（单位秒）
         /// </summary>

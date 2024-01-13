@@ -10,15 +10,21 @@ namespace Ux.UI
 
 		protected Btn1 btnLogin;
 		protected GTextInput inputAcc;
-		protected GTextInput inputPass;
+		protected SingleBtn camp1;
+		protected SingleBtn camp2;
+		protected SingleBtn camp3;
+		protected Controller camp;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
 				btnLogin = new Btn1(gCom.GetChildAt(2), this);
-				inputAcc = (GTextInput)gCom.GetChildAt(3);
-				inputPass = (GTextInput)gCom.GetChildAt(5);
+				inputAcc = (GTextInput)gCom.GetChildAt(4);
+				camp1 = new SingleBtn(gCom.GetChildAt(6), this);
+				camp2 = new SingleBtn(gCom.GetChildAt(7), this);
+				camp3 = new SingleBtn(gCom.GetChildAt(8), this);
+				camp = gCom.GetControllerAt(0);
 			}
 			catch (System.Exception e)
 			{

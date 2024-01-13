@@ -1,6 +1,6 @@
 {
-    "ShaderTotalCount": 16,
-    "VariantTotalCount": 18,
+    "ShaderTotalCount": 18,
+    "VariantTotalCount": 20,
     "ShaderVariantInfos": [
         {
             "AssetPath": "Resources/unity_builtin_extra",
@@ -218,6 +218,32 @@
                 },
                 {
                     "PassType": 14,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Data/Art/Shders/FogOfWar/FinalFogOfWar.shader",
+            "ShaderName": "Ux/FogOfWar/FinalFogOfWar",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Data/Art/Shders/FogOfWar/RawFogOfWar.shader",
+            "ShaderName": "Ux/FogOfWar/RawFogOfWar",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
                     "Keywords": [
                         ""
                     ]

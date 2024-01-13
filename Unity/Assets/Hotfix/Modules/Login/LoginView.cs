@@ -2,6 +2,7 @@ using FairyGUI;
 using Ux;
 using System;
 using System.Diagnostics;
+using UnityEngine;
 
 namespace Ux.UI
 {
@@ -23,7 +24,8 @@ namespace Ux.UI
 
         void OnConnect()
         {
-            LoginModule.Ins.LoginAccount(inputAcc.text, "x", int.Parse(inputPass.text));
+            int mask =(int) Mathf.Pow(2, camp.selectedIndex);
+            LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask);
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
         }
 

@@ -110,7 +110,7 @@ namespace Ux
             var unitVision = GetComponent<UnitVisionComponent>();
             if (unitVision == null)
             {
-                unitVision = AddComponent<UnitVisionComponent, IUnitVisionEntity>(this);
+                unitVision = AddComponent<UnitVisionComponent, IUnitVisionEntity, PlayerData>(this, _playerData);
             }
             unitVision.UpdateUnit();
         }

@@ -142,8 +142,7 @@ public partial class VersionWindow : EditorWindow
             });
 
             _platformType = _exportElement.Q<EnumField>("platformType");
-            _platformType.Init(PlatformType.Win64);
-            _platformType.style.width = 500;
+            _platformType.Init(PlatformType.Win64);            
             _platformType.RegisterValueChangedCallback(evt =>
             {
                 SelectItem.PlatformType = (PlatformType)_platformType.value;
@@ -151,8 +150,7 @@ public partial class VersionWindow : EditorWindow
             // 构建包裹
             _buildPackage = _exportElement.Q<MaskField>("buildPackage");
             _buildPackage.choices = _buildPackageNames;
-            _buildPackage.value = -1;
-            _buildPackage.style.width = 350;
+            _buildPackage.value = -1;            
 
             //构建版本
             _txtVersion = _exportElement.Q<TextField>("txtVersion");
@@ -161,8 +159,7 @@ public partial class VersionWindow : EditorWindow
 
             //编译类型
             _buildType = _exportElement.Q<EnumField>("buildType");
-            _buildType.Init(BuildType.IncrementalBuild);
-            _buildType.style.width = 500;
+            _buildType.Init(BuildType.IncrementalBuild);            
             _buildType.RegisterValueChangedCallback(evt =>
             {
                 //var resVersion = _txtVersion.value;
@@ -236,8 +233,7 @@ public partial class VersionWindow : EditorWindow
 
             //编译类型
             _compileType = _exeElement.Q<EnumField>("compileType");
-            _compileType.Init(CompileType.Development);
-            _compileType.style.width = 500;
+            _compileType.Init(CompileType.Development);            
             _compileType.RegisterValueChangedCallback(evt =>
             {
                 SelectItem.CompileType = (CompileType)evt.newValue;
@@ -264,7 +260,7 @@ public partial class VersionWindow : EditorWindow
             }
 
             _packageMenu = new ToolbarMenu();
-            _packageMenu.style.width = 200;
+            //_packageMenu.style.width = 200;
             foreach (var packageName in _buildPackageNames)
             {
                 _packageMenu.menu.AppendAction(packageName, PackageMenuAction, PackageMenuFun, packageName);
@@ -537,6 +533,11 @@ public partial class VersionWindow : EditorWindow
         EditorTools.FocusUnityConsoleWindow();
         Console.Clear();
         EditorApplication.LockReloadAssemblies();
+        if (EditorApplication.isCompiling)
+        {
+            Log.Error("请等待编译完成后再导出");
+            return;
+        }
         try
         {
             var succ = await _ExecuteBuild(buildTarget);

@@ -479,3 +479,108 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
+  - name: Login
+    components:
+    - ID: Login@LoginView
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Login
+      resName: LoginView
+      ns: Ux.UI
+      cls: LoginView
+      ext: Panel/View
+      isExport: 1
+      _tabViewData: []
+      _dialogData: []
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: btnLogin
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 3
+        name: inputAcc
+        defaultType: GTextInput
+        customType: GTextInput
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 4
+        name: n4
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 5
+        name: camp1
+        defaultType: GButton
+        customType: SingleBtn
+        pkg: Common
+        res: SingleBtn
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 6
+        name: camp2
+        defaultType: GButton
+        customType: SingleBtn
+        pkg: Common
+        res: SingleBtn
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 7
+        name: camp3
+        defaultType: GButton
+        customType: SingleBtn
+        pkg: Common
+        res: SingleBtn
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 0
+        name: camp
+        defaultType: Controller
+        customType: Controller
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 

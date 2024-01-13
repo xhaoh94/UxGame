@@ -51,8 +51,7 @@ internal class VersionPackageViewer
         });
         // 构建管线
         _pipelineType = Root.Q<EnumField>("pipelineType");
-        _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
-        _pipelineType.style.width = 500;
+        _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);        
         _pipelineType.RegisterValueChangedCallback(evt =>
         {
             PackageSetting.PiplineOption = (EBuildPipeline)evt.newValue;
@@ -61,8 +60,7 @@ internal class VersionPackageViewer
 
         // 资源命名格式
         _nameStyleType = Root.Q<EnumField>("nameStyleType");
-        _nameStyleType.Init(EFileNameStyle.HashName);
-        _nameStyleType.style.width = 500;
+        _nameStyleType.Init(EFileNameStyle.HashName);        
         _nameStyleType.RegisterValueChangedCallback(evt =>
         {
             PackageSetting.NameStyleOption = (EFileNameStyle)evt.newValue;
@@ -70,8 +68,7 @@ internal class VersionPackageViewer
 
         // 压缩方式
         _compressionType = Root.Q<EnumField>("compressionType");
-        _compressionType.Init(ECompressOption.LZ4);
-        _compressionType.style.width = 500;
+        _compressionType.Init(ECompressOption.LZ4);        
         _compressionType.RegisterValueChangedCallback(evt =>
         {
             PackageSetting.CompressOption = (ECompressOption)evt.newValue;
@@ -90,8 +87,7 @@ internal class VersionPackageViewer
         if (_encryptionServicesClassNames.Count > 0)
         {
             _encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-            _encryption.label = "加密方法";
-            _encryption.style.width = 500;
+            _encryption.label = "加密方法";            
             _encryption.RegisterValueChangedCallback(evt =>
             {
                 PackageSetting.EncyptionClassName = evt.newValue;
@@ -101,8 +97,7 @@ internal class VersionPackageViewer
         else
         {
             _encryption = new PopupField<string>();
-            _encryption.label = "加密方法";
-            _encryption.style.width = 500;
+            _encryption.label = "加密方法";            
             encryptionContainer.Add(_encryption);
         }
     }

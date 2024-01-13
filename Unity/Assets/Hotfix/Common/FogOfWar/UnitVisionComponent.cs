@@ -13,7 +13,7 @@ namespace Ux
     /// 通常每个单位有一个对应的单位视野
     /// 部分复杂单位，如建筑，会有多个单位视野
     /// </summary>
-    public class UnitVisionComponent : Entity, IAwakeSystem<IUnitVisionEntity>, IEventSystem, IUnitVision
+    public class UnitVisionComponent : Entity, IAwakeSystem<IUnitVisionEntity, PlayerData>, IEventSystem, IUnitVision
     {
         public int Layer { set { _entity.Layer = value; } }
         /// <summary>
@@ -25,7 +25,7 @@ namespace Ux
         /// <summary>
         /// 视野范围
         /// </summary>
-        public float Radius { get; private set; } = 3;
+        public float Radius { get; private set; } = 5;
 
         /// <summary>
         /// 单位的所在海拔，用于阻挡视线
@@ -44,15 +44,20 @@ namespace Ux
         IUnitVisionEntity _entity;
 
 
-        void IAwakeSystem<IUnitVisionEntity>.OnAwake(IUnitVisionEntity a)
+        void IAwakeSystem<IUnitVisionEntity, PlayerData>.OnAwake(IUnitVisionEntity a, PlayerData b)
         {
             _entity = a;
             FogOfWarMgr.Ins.AddUnit(this);
+
+            if (b.self)
+            {
+                FogOfWarMgr.Ins.SetVisionMask(_entity.Mask);
+            }
         }
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            FogOfWarMgr.Ins.RemoveUnit(this);            
+            FogOfWarMgr.Ins.RemoveUnit(this);
             Radius = 3;
             Altitude = 0;
             GrassId = 0;

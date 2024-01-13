@@ -8,7 +8,7 @@ namespace Ux
 {
     partial class FogOfWarMgr
     {
-        public bool IsVisible(IUnitVision unit, bool checkWasVisible = false)
+        public bool IsVisible(IUnitVision unit)
         {
             if ((_visionMask & unit.Mask) > 0)
                 return true;
@@ -16,7 +16,7 @@ namespace Ux
             var index = Index(unit.TilePos);
             if (IsVisible(index, _visionMask))
                 return true;
-            if (checkWasVisible && WasVisible(index, _visionMask))
+            if (_wasVision && WasVisible(index, _visionMask))
                 return true;
 
             return false;

@@ -1,3 +1,4 @@
+development: true  #开发者模式
 app_id: 1
 app_type: login
 version: "1.0.0"
@@ -18,9 +19,9 @@ network:
     read_msg_max_len: 0        #读取消息最大长度
     reconnect_interval: 1      #重连间隔
     reconnection_max: 3        #重连的最大尝试次数
-    heartbeat: 30              #心跳间隔
-    connect_timeout: 3         #链接超时
-    read_timeout: 35           #读取超时
+    heartbeat: 30              #心跳间隔 (开发者模式下不生效)
+    connect_timeout: 3         #链接超时 (使用Tcp生效)
+    read_timeout: 35           #读取超时 (开发者模式下不生效)
 
 webSocket:
     ws_message_type: 2  #使用的消息类型(使用websocket才有效) 1:TextMessage 2:BinaryMessage 8:CloseMessage 9:PingMessage 10:PongMessage 

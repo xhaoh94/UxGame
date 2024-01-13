@@ -1,4 +1,3 @@
-log_development: true  #开发者模式                  
 log_level: debug       #panic,fatal,error,warn,info,debug
 log_max_size: 128      #每个日志文件保存的最大尺寸 单位：M
 log_max_backups: 30    #日志文件最多保存多少个备份
