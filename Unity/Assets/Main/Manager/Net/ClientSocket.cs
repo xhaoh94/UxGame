@@ -38,7 +38,7 @@ namespace Ux
         const float RPC_TimeOut = 3f;
 
         //心跳间隔（秒）
-        protected readonly int heartTime = 300;
+        protected readonly int heartTime = 30;
         protected float LastRecvTime { get; private set; }
         protected float LastSendTime { get; private set; }
 
