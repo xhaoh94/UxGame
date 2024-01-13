@@ -12,6 +12,7 @@ namespace Ux
         const string LayerDefault = "Default";
         const string LayerHidden = "Hidden";
         const string LayerFogOfWar = "FogOfWar";
+        const string Prefab = "FogOfWar";
 
         bool _init;
         public bool IsInit => _init;
@@ -130,9 +131,13 @@ namespace Ux
 
         public void Init(int width, int height, float size)
         {
+            if (_mainCamera == null)
+            {
+                Log.Error("需要先设置相机");
+                return;
+            }
             _init = true;
-            _FogOfWar = new GameObject("FogOfWar");
-            _LoadProfile();
+            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>(Prefab);
 
             Width = width;
             Height = height;
@@ -155,9 +160,10 @@ namespace Ux
             _init = false;
             _units.Clear();
             TimeMgr.Ins.RemoveUpdate(_Update);
+            _mainCamera = null;
             if (_FogOfWar != null)
             {
-                UnityEngine.Object.Destroy(_FogOfWar);
+                UnityPool.Push(Prefab, _FogOfWar);
                 _FogOfWar = null;
             }
         }
@@ -175,31 +181,14 @@ namespace Ux
         #region 初始化
         void _InitRawRenderer()
         {
-            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = "RawRenderer";
-            go.tag = "FogOfWar";
-            go.layer = LayerMask.NameToLayer(LayerFogOfWar);
-            go.transform.SetParent(_FogOfWar.transform);
-            go.transform.position = new Vector3(1000, 0, 0);
-
-            _rawRenderer = go.GetComponent<MeshRenderer>();
-            _rawRenderer.sharedMaterial = new Material(Shader.Find("Ux/FogOfWar/RawFogOfWar"))
-            {
-                mainTexture = _fowTex
-            };
+            _rawRenderer = _FogOfWar.transform.Find("RawRenderer").GetComponent<MeshRenderer>();
+            _rawRenderer.sharedMaterial.mainTexture = _fowTex;
         }
 
         void _InitFinalRenderer()
         {
-            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = "FinalRenderer";
-            go.layer = LayerMask.NameToLayer(LayerFogOfWar);
-            go.tag = "FogOfWar";
-
-            Transform trans = go.transform;
-            trans.SetParent(_FogOfWar.transform);
+            Transform trans = _FogOfWar.transform.Find("FinalRenderer");
             _finalRenderer = trans.GetComponent<MeshRenderer>();
-            _finalRenderer.sharedMaterial = new Material(Shader.Find("Ux/FogOfWar/FinalFogOfWar"));
 
             //将最终的迷雾覆盖到整张地图
             trans.localScale = new Vector3(Width * TileSize, Height * TileSize, 1);
@@ -216,17 +205,7 @@ namespace Ux
 
         void _InitBlurCamera()
         {
-            GameObject go = new GameObject("BlurCamera");
-            go.transform.SetParent(_FogOfWar.transform);
-            //go.AddComponent<FogOfWarBlur>();            
-
-            Camera cam = go.AddComponent<Camera>();
-            var camData = cam.GetUniversalAdditionalCameraData();
-            camData.SetRenderer(1);
-            camData.renderPostProcessing = true;
-
-            cam.cullingMask = LayerMask.GetMask(LayerFogOfWar);
-            cam.clearFlags = CameraClearFlags.Depth;
+            Camera cam = _FogOfWar.transform.Find("BlurCamera").GetComponent<Camera>();
 
             cam.depth = _mainCamera.depth + 1;
             cam.useOcclusionCulling = false;
@@ -258,7 +237,7 @@ namespace Ux
             cameraData.renderType = CameraRenderType.Overlay;
 
             cam.cullingMask = LayerMask.GetMask(LayerFogOfWar);
-            cam.clearFlags = CameraClearFlags.Depth;
+            //cam.clearFlags = CameraClearFlags.Depth;
             if (_mainCamera != null)
             {
                 //cam.depth = _mainCamera.depth + 1;
@@ -267,8 +246,8 @@ namespace Ux
                 cam.farClipPlane = _mainCamera.farClipPlane;
                 cam.rect = _mainCamera.rect;
                 cam.useOcclusionCulling = false;
-                cam.allowHDR = false;
-                cam.allowMSAA = false;
+                cam.allowHDR = _mainCamera.allowHDR;
+                cam.allowMSAA = _mainCamera.allowMSAA;
 
                 var trans = cam.transform;
                 trans.SetParent(_mainCamera.transform);
@@ -326,12 +305,6 @@ namespace Ux
         #endregion
 
         #region 私有方法
-        void _LoadProfile()
-        {
-            var profile = ResMgr.Ins.LoadAsset<VolumeProfile>("FogOfWarProfile");
-            var volume = _FogOfWar.AddComponent<Volume>();
-            volume.profile = profile;
-        }
         void _Update()
         {
             if (!_init) return;

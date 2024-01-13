@@ -38,7 +38,7 @@ namespace Ux
         const float RPC_TimeOut = 3f;
 
         //心跳间隔（秒）
-        protected readonly int heartTime = 30;
+        protected readonly int heartTime = 300;
         protected float LastRecvTime { get; private set; }
         protected float LastSendTime { get; private set; }
 
@@ -223,58 +223,54 @@ namespace Ux
                     return false;
                 }
 
-                try
+                var packetSize = this.parser.PacketSize();
+                if (packetSize == 0)
                 {
-                    var packetSize = this.parser.PacketSize();
-                    if (packetSize == 0)
-                    {
-                        Log.Error("空包？");
-                        break;
-                    }
-                    var opcode = (OpType)recvBytes.PopByte();
-                    packetSize -= 1;
-                    object message = null;
-                    switch (opcode)
-                    {
-                        case OpType.H_B_R:
-                            RecvHeartbeat();
-                            break;
-                        case OpType.C_S_C:
-                            var cmd = recvBytes.PopUInt32();
-                            packetSize -= 4;
-                            var type = FindType(cmd);
-                            if (type != null)
-                            {
-                                recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
-                                message = recvStream.ReadToMessage(type, 0);
-                            }
-                            Dispatch(cmd, message);
-                            break;
-                        case OpType.RPC_RESPONSE:
-                            cmd = recvBytes.PopUInt32();
-                            packetSize -= 4;
-                            var rpcId = recvBytes.PopUInt32();
-                            packetSize -= 4;
-#if !UNITY_EDITOR
-                            rpcTime.Remove(rpcId);
-#endif
-                            var rpcType = FindRPCType(rpcId);
-                            if (rpcType != null)
-                            {
-                                recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
-                                message = recvStream.ReadToMessage(rpcType, 0);
-                            }
-                            DispatchRPC(rpcId, message);
-                            break;
-                    }
+                    Log.Error("空包？");
+                    break;
                 }
-                catch (Exception ee)
+                var opcode = (OpType)recvBytes.PopByte();
+                packetSize -= 1;
+                object message = null;
+                switch (opcode)
                 {
-                    Log.Error(ee);
-                    Dispose();
+                    case OpType.H_B_R:
+                        RecvHeartbeat();
+                        break;
+                    case OpType.C_S_C:
+                        var cmd = recvBytes.PopUInt32();
+                        packetSize -= 4;
+                        message = ReadToMessage(FindType(cmd), packetSize);
+                        Dispatch(cmd, message);
+                        break;
+                    case OpType.RPC_RESPONSE:
+                        cmd = recvBytes.PopUInt32();
+                        packetSize -= 4;
+                        var rpcId = recvBytes.PopUInt32();
+                        packetSize -= 4;
+#if !UNITY_EDITOR
+                        rpcTime.Remove(rpcId);
+#endif
+                        message = ReadToMessage(FindRPCType(rpcId), packetSize);
+                        DispatchRPC(rpcId, message);
+                        break;
                 }
             }
             return true;
+        }
+        object ReadToMessage(Type type, int packetSize)
+        {
+            if (packetSize > 0)
+            {
+                if (type != null)
+                {
+                    recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
+                    return recvStream.ReadToMessage(type, 0);
+                }
+                //就算没注册对应的类型，也需要把剩余的数据去除，不然会一直缓存着
+                recvBytes.PopTransferred(packetSize);
+            }
+            return null;
         }
         Type FindRPCType(uint rpcId)
         {
@@ -289,7 +285,14 @@ namespace Ux
         {
             if (rpcMethod.TryGetValue(rpcId, out var method))
             {
-                method.TrySetResult(message);
+                try
+                {
+                    method.TrySetResult(message);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
                 rpcMethod.Remove(rpcId);
             }
         }
@@ -306,7 +309,14 @@ namespace Ux
         {
             if (cmdMethod.TryGetValue(cmd, out var method))
             {
-                method.Invoke(message);
+                try
+                {
+                    method.Invoke(message);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
             }
         }
         #endregion
@@ -355,7 +365,7 @@ namespace Ux
             if (this.IsDisposed)
             {
                 throw new Exception("Socket已经被Dispose了");
-            }            
+            }
             sendStream.WriteToMessage(message, 0);
             //因为前面WriteToMessage的时候Seek(0, SeekOrigin.Begin)，            
             //所以真实长度是Position而不是Length，Length是包含缓存部分的   

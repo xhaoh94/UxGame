@@ -4,5 +4,7 @@
     {
         None = MainEventType.Max,     
         EntityMove,
+        EntityEnterVision,
+        EntityLeaveVision,
     }
 }

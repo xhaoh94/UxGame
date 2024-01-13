@@ -6,6 +6,16 @@ namespace Ux
 {
     public partial class UIMgr
     {
+        Camera _mainCamera;
+        /// <summary>
+        /// 设置场景相机，场景模糊会以此相机为后处理
+        /// </summary>
+        /// <param name="mainCamera">相机</param>
+        public void SetSceneCamera(Camera mainCamera)
+        {
+            _mainCamera = mainCamera;
+        }
+
         /// <summary>
         /// 模糊队列
         /// </summary>
@@ -75,17 +85,14 @@ namespace Ux
                 ui.Filter = new FairyGUI.BlurFilter();
             }
 
-
-            if (blurStack != null)
+            if (_mainCamera != null)
             {
-                flagScene = blurStack.Value.Blur.HasFlag(UIBlur.Scene);
+                if (blurStack != null)
+                {
+                    flagScene = blurStack.Value.Blur.HasFlag(UIBlur.Scene);
+                }
+                Blur.SetCamera(_mainCamera, flagScene);
             }
-
-            //var camera = GameObject.Find("mapCamera").GetComponent<Camera>();
-            //if (camera != null)
-            //{
-            //    Blur.SetCamera(camera, flagScene);
-            //}
         }
     }
 }

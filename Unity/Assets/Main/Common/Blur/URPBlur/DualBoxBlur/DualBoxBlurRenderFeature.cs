@@ -7,6 +7,7 @@ using UnityEngine.Rendering.Universal;
 public class DualBoxBlurRenderFeature : ScriptableRendererFeature
 {
     public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;      // 设置Pass渲染的位置-初始值
+    public Shader shader;
     public class DualBoxBlurPass : ScriptableRenderPass
     {
         internal static readonly int BlurOffset = Shader.PropertyToID("_BlurOffset");
@@ -20,13 +21,13 @@ public class DualBoxBlurRenderFeature : ScriptableRendererFeature
         Level[] m_Pyramid;
         const int k_MaxPyramidSize = 16;
 
-        public DualBoxBlurPass(RenderPassEvent evt)
+        public DualBoxBlurPass(RenderPassEvent evt, Shader shader)
         {
             renderPassEvent = evt;
-            Shader dualBoxBlurShader = Shader.Find("Ux/URP_PostProcessing/DualBoxBlur");
-            if (dualBoxBlurShader)
+            //Shader dualBoxBlurShader = Shader.Find("Ux/URP_PostProcessing/DualBoxBlur");
+            if (shader)
             {
-                _dualBoxBlurMat = CoreUtils.CreateEngineMaterial(dualBoxBlurShader);
+                _dualBoxBlurMat = CoreUtils.CreateEngineMaterial(shader);
             }
 
             m_Pyramid = new Level[k_MaxPyramidSize];
@@ -130,7 +131,7 @@ public class DualBoxBlurRenderFeature : ScriptableRendererFeature
 
     public override void Create()
     {
-        _dualBoxBlurPass = new DualBoxBlurPass(renderPassEvent);
+        _dualBoxBlurPass = new DualBoxBlurPass(renderPassEvent, shader);
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)

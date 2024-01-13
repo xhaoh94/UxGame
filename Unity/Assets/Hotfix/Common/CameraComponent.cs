@@ -14,6 +14,7 @@ namespace Ux
         {
             MapCamera = GameObject.Find("mapCamera").GetComponent<Camera>();
             MapVCamear = GameObject.Find("mapVCam").GetComponent<CinemachineVirtualCamera>();
+            UIMgr.Ins.SetSceneCamera(MapCamera);
             //MapCamera.GetUniversalAdditionalCameraData().cameraStack.Add(FairyGUI.StageCamera.main);            
         }
 
@@ -24,6 +25,14 @@ namespace Ux
         public void SetLookAt(Transform follow)
         {
             MapVCamear.LookAt = follow;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            MapCamera = null;
+            MapVCamear = null;
+            UIMgr.Ins.SetSceneCamera(null);
         }
     }
 }

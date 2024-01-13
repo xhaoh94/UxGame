@@ -38,8 +38,8 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - VUI
+  - Hidden VUI
   m_SortingLayers:
   - name: Default
     uniqueID: 0

@@ -502,7 +502,15 @@ namespace Ux
             entity._InitSystem(a, b, c, d, e);
             return entity;
         }
-
+        public bool RemoveChild(long cid)
+        {
+            var child=GetChild(cid);
+            if(child == null)
+            {
+                return true;
+            }
+            return RemoveChild(child);
+        }
         public bool RemoveChild(Entity entity)
         {
             return RemoveChild(entity, true);

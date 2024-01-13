@@ -22,7 +22,7 @@ MonoBehaviour:
     CopyPath: ./CDN
     IsClearSandBox: 1
     IsExportExecutable: 1
-    ResVersion: 24011259599x1
+    ResVersion: 24011353993x1
     PackageBuilds:
     - New: 0
       IsCollectShaderVariant: 1
@@ -33,19 +33,19 @@ MonoBehaviour:
       NameStyleOption: 0
       BuildTags: builtin
     - New: 0
-      IsCollectShaderVariant: 1
-      PackageName: UIPackage
-      EncyptionClassName: FileStreamEncryption
-      CompressOption: 2
-      PiplineOption: 1
-      NameStyleOption: 0
-      BuildTags: builtin
-    - New: 0
       IsCollectShaderVariant: 0
       PackageName: CodePackage
       EncyptionClassName: YooAsset.Editor.EncryptionNone
       CompressOption: 2
       PiplineOption: 2
+      NameStyleOption: 0
+      BuildTags: builtin
+    - New: 0
+      IsCollectShaderVariant: 1
+      PackageName: UIPackage
+      EncyptionClassName: FileStreamEncryption
+      CompressOption: 2
+      PiplineOption: 1
       NameStyleOption: 0
       BuildTags: builtin
     - New: 0

@@ -36,6 +36,21 @@ namespace Ux
                 player.Seeker.SetPoints(move.Points);
             }
         }
+        [Evt(EventType.EntityEnterVision)]
+        void _OnEntityEnterVision(Pb.BcstEnterMap param)
+        {
+            var data = new PlayerData();
+            data.data = param.Role;
+            data.self = false;
+            data.name = "name_" + data.data.roleId;
+            data.res = "Hero_CK";
+            AddPlayer(data);
+        }
+        [Evt(EventType.EntityLeaveVision)]
+        void _OnEntityLeaveVision(Pb.BcstLeaveMap param)
+        {
+            RemoveChild(param.roleId);  
+        }
 
         protected override void OnDestroy()
         {

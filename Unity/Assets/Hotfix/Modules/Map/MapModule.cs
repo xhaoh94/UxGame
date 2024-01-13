@@ -50,15 +50,22 @@ namespace Ux
         }
 
         [Net(Pb.BCST.Bcst_Move)]
-        void _BcstMove(Pb.BcstMove move)
+        void _BcstMove(Pb.BcstMove param)
         {
-            EventMgr.Ins.Send(EventType.EntityMove, move);
+            EventMgr.Ins.Send(EventType.EntityMove, param);
+        }
+
+        [Net(Pb.BCST.Bcst_EnterMap)]
+        void _BcstLeaveMap(Pb.BcstEnterMap param)
+        {
+            EventMgr.Ins.Send(EventType.EntityEnterVision, param);
+            
         }
 
         [Net(Pb.BCST.Bcst_LeaveMap)]
-        void _BcstLeaveMap(Pb.BcstLeaveMap leavMap)
+        void _BcstLeaveMap(Pb.BcstLeaveMap param)
         {
-
+            EventMgr.Ins.Send(EventType.EntityLeaveVision, param);
         }
         public void ExitMap()
         {

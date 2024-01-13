@@ -37,11 +37,11 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Art/VolumeProfile
-        CollectorGUID: 02f92eb779228844d8b5eed2f2b89f0d
+      - CollectPath: Assets/Data/Res/Prefab/FogOfWar
+        CollectorGUID: 03ba04db73f99bd42b2378dbe96da11b
         CollectorType: 0
         AddressRuleName: AddressByFileName
-        PackRuleName: PackSeparately
+        PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 

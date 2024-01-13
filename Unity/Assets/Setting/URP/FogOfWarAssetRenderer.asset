@@ -70,3 +70,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   renderPassEvent: 550
+  shader: {fileID: 4800000, guid: 0e801a6cc5322f54aa1de3550972be40, type: 3}
