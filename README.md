@@ -313,5 +313,5 @@ UIMgr.Ins.RegisterUI(data3);
 
 <details> <summary>多人游戏</summary>
 配合[gox](http://https://gitee.com/xhaoh94/gox)实现的多人联机demo
-![输入图片说明](Snipaste_2024-01-14_14-54-39.png)
+[输入链接说明](http://![输入图片说明](Server/Snipaste_2024-01-14_14-54-39.png))
 </details>
