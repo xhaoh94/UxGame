@@ -311,3 +311,7 @@ UIMgr.Ins.RegisterUI(data3);
 ![输入图片说明](https://foruda.gitee.com/images/1701758936441914665/075764cc_2080624.png "屏幕截图")
 </details>
 
+<details> <summary>多人游戏</summary>
+配合[gox](http://https://gitee.com/xhaoh94/gox)实现的多人联机demo
+![输入图片说明](Snipaste_2024-01-14_14-54-39.png)
+</details>
