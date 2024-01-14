@@ -312,6 +312,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Ux.EventMgr.EventExe<object>
 	// Ux.IAwakeSystem<UnityEngine.Playables.PlayableGraph,object,object,int>
 	// Ux.IAwakeSystem<UnityEngine.Playables.PlayableGraph>
+	// Ux.IAwakeSystem<object,object>
 	// Ux.IAwakeSystem<object>
 	// Ux.ModuleBase<object>
 	// Ux.StateMachine.<>c__DisplayClass26_0<object>
@@ -361,7 +362,9 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// object Ux.Entity.AddChild<object,UnityEngine.Playables.PlayableGraph>(long,UnityEngine.Playables.PlayableGraph,bool)
 		// object Ux.Entity.AddChild<object,object>(long,object,bool)
 		// object Ux.Entity.AddChild<object,object>(object,bool)
+		// Ux.Entity Ux.Entity.AddComponent<object,object>(System.Type,object,object,bool)
 		// Ux.Entity Ux.Entity.AddComponent<object>(System.Type,object,bool)
+		// object Ux.Entity.AddComponent<object,object,object>(object,object,bool)
 		// object Ux.Entity.AddComponent<object,object>(object,bool)
 		// object Ux.Entity.AddComponent<object>(bool)
 		// object Ux.Entity.Create<object>(bool)
@@ -370,6 +373,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// object Ux.Entity.ParentAs<object>()
 		// System.Void Ux.Entity._InitSystem<UnityEngine.Playables.PlayableGraph,object,object,int>(UnityEngine.Playables.PlayableGraph,object,object,int)
 		// System.Void Ux.Entity._InitSystem<UnityEngine.Playables.PlayableGraph>(UnityEngine.Playables.PlayableGraph)
+		// System.Void Ux.Entity._InitSystem<object,object>(object,object)
 		// System.Void Ux.Entity._InitSystem<object>(object)
 		// object Ux.EntityMono.GetEntity<object>()
 		// System.Void Ux.EventMgr.Off<object,object,object>(int,object,System.Action<object,object,object>)
