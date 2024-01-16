@@ -18,6 +18,7 @@ namespace Ux
 
         private readonly Queue<byte[]> caches = new Queue<byte[]>();
 
+        Dictionary<int, byte[]> bytesDict = new Dictionary<int, byte[]>();
 
         int PushPosition;
         int PopPosition;
@@ -401,21 +402,14 @@ namespace Ux
             }
         }
 
-        public int PopToMemoryStream(MemoryStream memoryStream, int offset, int count)
+        public void PopToMemoryStream(MemoryStream memoryStream, int offset, int count)
         {
-            memoryStream.Seek(offset, SeekOrigin.Begin);
-            memoryStream.SetLength(count);
-
-            if (memoryStream.Capacity < offset + count)
+            if (count > Length)
             {
-                throw new Exception($"bufferList length < coutn, buffer length: {memoryStream.Capacity} {offset} {count}");
+                throw new Exception($"bufferList length < count, {Length} {count}");
             }
 
-            long length = Length;
-            if (length < count)
-            {
-                count = (int)length;
-            }
+            memoryStream.SetLength(offset + count);
 
             int len = 0;
             while (len < count)
@@ -430,24 +424,18 @@ namespace Ux
                     temLen = ChunkSize - PopPosition;
                 }
                 memoryStream.Seek(len + offset, SeekOrigin.Begin);
-                //for (int i = 0; i < temReadLen; i++)
-                //{                    
-                //    memoryStream.WriteByte(FirstBuffer[ReadPosition + i]);
-                //}
                 memoryStream.Write(FirstBuffer, PopPosition, temLen);
                 PopPosition += temLen;
                 len += temLen;
             }
-            return count;
         }
 
-        public void PopToStream(Stream stream, int count)
+        public void PopToStream(Stream stream, int offset, int count)
         {
             if (count > Length)
             {
                 throw new Exception($"bufferList length < count, {Length} {count}");
             }
-
             int len = 0;
             while (len < count)
             {
@@ -460,6 +448,7 @@ namespace Ux
                 {
                     temLen = ChunkSize - PopPosition;
                 }
+                stream.Seek(len + offset, SeekOrigin.Begin);
                 stream.Write(FirstBuffer, PopPosition, temLen);
                 PopPosition += temLen;
                 len += temLen;
@@ -501,7 +490,11 @@ namespace Ux
 
         public byte[] PopBytes(int count)
         {
-            var bytes = new byte[count];
+            if (!bytesDict.TryGetValue(count, out var bytes))
+            {
+                bytes = new byte[count];
+                bytesDict.Add(count, bytes);
+            }
             PopToBytes(bytes, 0, count);
             return bytes;
         }
