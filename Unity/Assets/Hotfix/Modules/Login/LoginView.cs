@@ -25,7 +25,7 @@ namespace Ux.UI
         void OnConnect()
         {
             int mask =(int) Mathf.Pow(2, camp.selectedIndex);
-            LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask);
+            LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask).Forget();
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
         }
 

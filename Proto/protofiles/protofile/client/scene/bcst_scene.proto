@@ -5,15 +5,21 @@ import "common/common.proto";
 // package pb;
 
 //bcst=999900001
-message Bcst_EnterMap{
+message Bcst_UnitIntoView{
     Entity role=1;
 }
 //bcst=999900002
-message Bcst_LeaveMap{
+message Bcst_UnitOutofView{
     uint32 roleId=1;
 }
 //bcst=999900003
-message Bcst_Move{
+message Bcst_UnitMove{
     uint32 roleId=1;
-    repeated Vector3 points=2;
+    int32 pointIndex=2;
+    repeated Vector3 points=3;
+}
+//bcst=999900004
+message Bcst_UnitUpdatePosition{
+    uint32 roleId=1;
+    Vector3 point=2;
 }

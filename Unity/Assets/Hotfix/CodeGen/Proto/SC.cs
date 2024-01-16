@@ -4,6 +4,5 @@ namespace Pb
 {
 	public static partial class SC
 	{
-		public const uint S2C_LoginGame = 100100001;
 	}
 }

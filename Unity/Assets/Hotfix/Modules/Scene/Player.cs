@@ -42,7 +42,7 @@ namespace Ux
             LoadPlayer().Forget();
         }
 
-        public Map Map => ParentAs<Map>();
+        public Scene Map => ParentAs<Scene>();
 
         async UniTaskVoid LoadPlayer()
         {

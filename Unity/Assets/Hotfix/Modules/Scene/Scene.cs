@@ -5,7 +5,7 @@ using FairyGUI;
 
 namespace Ux
 {
-    public class Map : Entity, IAwakeSystem<GameObject>, IEventSystem
+    public class Scene : Entity, IAwakeSystem<GameObject>, IEventSystem
     {
         public CameraComponent Camera { get; private set; }
         public AStarComponent AStar { get; private set; }
@@ -27,17 +27,27 @@ namespace Ux
             players.Add(playerData.id, player);
         }
 
-        [Evt(EventType.EntityMove)]
-        void _OnEntityMove(Pb.BcstMove move)
+        [Evt(EventType.UNIT_MOVE)]
+        void _OnUnitMove(Pb.BcstUnitMove param)
         {
-            var player = GetChild<Player>(move.roleId);
+            var player = GetChild<Player>(param.roleId);
             if (player != null)
             {
-                player.Seeker.SetPoints(move.Points);
+                player.Seeker.SetPoints(param.Points, param.pointIndex);
             }
         }
-        [Evt(EventType.EntityEnterVision)]
-        void _OnEntityEnterVision(Pb.BcstEnterMap param)
+        [Evt(EventType.UNIT_UPDATE_POSITION)]
+        void _OnUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
+        {
+            var player = GetChild<Player>(param.roleId);
+            if (player != null)
+            {
+                player.Position = new Vector3(param.Point.X, param.Point.Y, param.Point.Z);
+            }
+        }
+
+        [Evt(EventType.UNIT_INTO_VIEW)]
+        void _OnUnitIntoView(Pb.BcstUnitIntoView param)
         {
             var data = new PlayerData();
             data.data = param.Role;
@@ -46,10 +56,10 @@ namespace Ux
             data.res = "Hero_CK";
             AddPlayer(data);
         }
-        [Evt(EventType.EntityLeaveVision)]
-        void _OnEntityLeaveVision(Pb.BcstLeaveMap param)
+        [Evt(EventType.UNIT_OUTOF_VIEW)]
+        void _OnUnitOutofView(Pb.BcstUnitOutofView param)
         {
-            RemoveChild(param.roleId);  
+            RemoveChild(param.roleId);
         }
 
         protected override void OnDestroy()

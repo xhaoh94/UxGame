@@ -5,25 +5,25 @@ import "common/common.proto";
 import "common/errcode.proto";
 
 //cs=100200001
-message C2S_EnterMap{  
+message C2S_EnterScene{  
     string account=1;
     string token=2;
-    int32 mapid=3;
+    int32 Sceneid=3;
     int32 roleMask=4;
 }
 
-message S2C_EnterMap{
+message S2C_EnterScene{
     ErrCode error=1;    
     Entity self=2;    
     repeated Entity others=3;
 }
 
 //cs=100200002
-message C2S_LeaveMap{   
+message C2S_LeaveScene{   
     uint32 roleId=1;
 }
 
-message S2C_LeaveMap{
+message S2C_LeaveScene{
     ErrCode error=1;    
 }
 

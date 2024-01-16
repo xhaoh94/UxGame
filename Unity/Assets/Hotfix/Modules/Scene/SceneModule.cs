@@ -6,19 +6,23 @@ using System.Collections.Generic;
 namespace Ux
 {
     [Module]
-    public class MapModule : ModuleBase<MapModule>
+    public class SceneModule : ModuleBase<SceneModule>
     {
         public World World { get; private set; }
-
-        public async UniTask EnterMap(string mapName, Pb.S2CEnterMap resp)
+        protected override void OnRelease()
+        {
+            World.Destroy();
+            World = null;
+        }
+        public async UniTask EnterScene(string mapName, Pb.S2CEnterScene resp)
         {
             if (World == null)
             {
                 World = Entity.Create<World>();
             }
             var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
-            var map = World.AddChild<Map, GameObject>(go);
-            World.EnterMap(map);
+            var map = World.AddChild<Scene, GameObject>(go);
+            World.EnterScene(map);
 
             var data = new PlayerData();
             data.data = resp.Self;
@@ -39,6 +43,12 @@ namespace Ux
             }
         }
 
+        public void LeaveScene()
+        {
+            World.LeaveScene();
+        }
+
+        #region ÍøÂçÇëÇó
         public void SendMove(List<Vector3> points)
         {
             var req = new Pb.C2SMove();
@@ -48,34 +58,34 @@ namespace Ux
             }
             NetMgr.Ins.Send(Pb.CS.C2S_Move, req);
         }
+        #endregion
 
-        [Net(Pb.BCST.Bcst_Move)]
-        void _BcstMove(Pb.BcstMove param)
-        {
-            EventMgr.Ins.Send(EventType.EntityMove, param);
-        }
+        #region ÍøÂç¹ã²¥
 
-        [Net(Pb.BCST.Bcst_EnterMap)]
-        void _BcstLeaveMap(Pb.BcstEnterMap param)
+
+        [Net(Pb.BCST.Bcst_UnitIntoView)]
+        void _BcstUnitIntoView(Pb.BcstUnitIntoView param)
         {
-            EventMgr.Ins.Send(EventType.EntityEnterVision, param);
-            
+            EventMgr.Ins.Send(EventType.UNIT_INTO_VIEW, param);
         }
 
-        [Net(Pb.BCST.Bcst_LeaveMap)]
-        void _BcstLeaveMap(Pb.BcstLeaveMap param)
+        [Net(Pb.BCST.Bcst_UnitOutofView)]
+        void _BcstUnitOutofView(Pb.BcstUnitOutofView param)
         {
-            EventMgr.Ins.Send(EventType.EntityLeaveVision, param);
-        }
-        public void ExitMap()
-        {
-            World.ExitMap();
+            EventMgr.Ins.Send(EventType.UNIT_OUTOF_VIEW, param);
         }
 
-        protected override void OnRelease()
+        [Net(Pb.BCST.Bcst_UnitMove)]
+        void _BcstUnitMove(Pb.BcstUnitMove param)
         {
-            World.Destroy();
-            World = null;
+            EventMgr.Ins.Send(EventType.UNIT_MOVE, param);
         }
+
+        [Net(Pb.BCST.Bcst_UnitUpdatePosition)]
+        void _BcstUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
+        {
+            EventMgr.Ins.Send(EventType.UNIT_UPDATE_POSITION, param);
+        }
+        #endregion
     }
 }

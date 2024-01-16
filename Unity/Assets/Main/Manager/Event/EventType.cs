@@ -2,7 +2,7 @@ namespace Ux
 {
     public enum MainEventType
     {
-        Min = 0,
+        MIN = 0,
         /// <summary>
         /// 网络注销
         /// </summary>
@@ -51,6 +51,6 @@ namespace Ux
         /// 战争迷雾初始化
         /// </summary>
         FOG_OF_WAR_INIT,
-        Max
+        MAX
     }
 }

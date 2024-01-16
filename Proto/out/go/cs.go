@@ -4,7 +4,7 @@ package pb
 
 const (
 	CMD_C2S_LoginGame uint32 = 100100001
-	CMD_C2S_EnterMap uint32 = 100200001
-	CMD_C2S_LeaveMap uint32 = 100200002
+	CMD_C2S_EnterScene uint32 = 100200001
+	CMD_C2S_LeaveScene uint32 = 100200002
 	CMD_C2S_Move uint32 = 100200003
 )

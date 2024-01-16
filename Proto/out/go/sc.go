@@ -3,5 +3,4 @@
 package pb
 
 const (
-	CMD_S2C_LoginGame uint32 = 100100001
 )

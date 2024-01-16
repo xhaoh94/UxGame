@@ -9,53 +9,75 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using Pb;
+using Cysharp.Threading.Tasks;
 
 namespace Ux
 {
     [Module]
     public class LoginModule : ModuleBase<LoginModule>
     {
-        ClientSocket _client;
         public void Connect(Action OnConnect)
         {
             //   TCP KCP
-            _client = NetMgr.Ins.Connect(NetType.TCP, "127.0.0.1:10002", OnConnect);
+            NetMgr.Ins.Connect(NetType.TCP, "127.0.0.1:10002", OnConnect);
             //WebSocket
             //NetMgr.Ins.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
 
             //GameMain.Machine.Enter<StateGameIn>();
         }
-        string _account;
-        int _mask;
-        public void LoginAccount(string account, string password, int mask)
+        struct LoginReslut
         {
-            _mask = mask;
-            var data = new Pb.C2SLoginGame();
-            _account = data.Account = account;
-            data.Password = password;
-            NetMgr.Ins.Send(CS.C2S_LoginGame, data);
+            public int mask;
+            public string account;
+            public string token;
+        }
+        public async UniTaskVoid LoginAccount(string account, string password, int mask)
+        {
+            var c2slogin = new Pb.C2SLoginGame()
+            {
+                Account = account,
+                Password = password
+            };
+            //请求登录获取Gate服务器登录Token
+            var s2clogin = await NetMgr.Ins.Call<Pb.S2CLoginGame>(CS.C2S_LoginGame, c2slogin);
+            if (s2clogin == null)
+            {
+                Log.Error("请求登录失败");
+                return;
+            }
+            if (s2clogin.Error == Pb.ErrCode.UnKnown)
+            {
+                Log.Error("请求登录失败");
+                return;
+            }
+            //断开与Login服务器的Socket
+            NetMgr.Ins.Disconnect();
+            //链接Gate服务器
+            NetMgr.Ins.Connect(NetType.TCP, s2clogin.Addr, () =>
+            {
+                _EnterMap(new LoginReslut
+                {
+                    mask = mask,
+                    account = account,
+                    token = s2clogin.Token,
+                }).Forget();
+            });
         }
 
-        [Net(SC.S2C_LoginGame)]
-        void LoginResult(Pb.S2CLoginGame data)
+        async UniTaskVoid _EnterMap(LoginReslut login)
         {
-            _client.Disconnect();
-            _client = NetMgr.Ins.Connect(NetType.TCP, data.Addr, () =>
+            var data = new Pb.C2SEnterScene();
+            data.Account = login.account;
+            data.roleMask = login.mask;
+            data.Sceneid = 1;
+            data.Token = login.token;
+            var resp = await NetMgr.Ins.Call<Pb.S2CEnterScene>(CS.C2S_EnterScene, data);
+            if (resp.Error == Pb.ErrCode.UnKnown)
             {
-                _EnterMap(data.Token);
-            });
-            NetMgr.Ins.SetDefaultClient(_client);
-        }
-        async void _EnterMap(string token)
-        {
-            var data = new Pb.C2SEnterMap();
-            data.Account = _account;
-            data.roleMask = _mask;
-            data.Mapid = 1;
-            data.Token = token;
-            var resp = await NetMgr.Ins.Call<Pb.S2CEnterMap>(CS.C2S_EnterMap, data);
+                Log.Error("请求进入场景失败");
+                return;
+            }
             GameMain.Machine.Enter<StateGameIn>(resp);
         }
-
     }
 }

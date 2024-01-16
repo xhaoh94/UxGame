@@ -5,8 +5,8 @@ namespace Pb
 	public static partial class CS
 	{
 		public const uint C2S_LoginGame = 100100001;
-		public const uint C2S_EnterMap = 100200001;
-		public const uint C2S_LeaveMap = 100200002;
+		public const uint C2S_EnterScene = 100200001;
+		public const uint C2S_LeaveScene = 100200002;
 		public const uint C2S_Move = 100200003;
 	}
 }

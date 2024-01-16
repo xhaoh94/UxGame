@@ -58,8 +58,29 @@ namespace Ux
         public ClientSocket Connect(NetType netType, string address, Action connectCallback)
         {
             var clientSocket = Create(netType, address);
-            clientSocket?.Connect(connectCallback);
+            clientSocket.SetConnectCallback(connectCallback);
+            clientSocket?.Connect();
             return clientSocket;
+        }
+        /// <summary>
+        /// 连接远程服务
+        /// </summary>
+        public ClientSocket Connect(NetType netType, string address, Action<object> connectCallback, object param)
+        {
+            var clientSocket = Create(netType, address);
+            clientSocket.SetConnectCallback(connectCallback, param);
+            clientSocket?.Connect();
+            return clientSocket;
+        }
+        public void Disconnect(ClientSocket socket = null)
+        {
+            if (socket == null) socket = _clientSocket;
+            if (socket == null) return;
+            socket.Disconnect();
+            if (socket == _clientSocket)
+            {
+                _clientSocket = null;
+            }
         }
         public void SetDefaultClient(ClientSocket clientSocket)
         {

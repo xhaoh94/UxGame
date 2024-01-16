@@ -8,27 +8,27 @@ namespace Ux
 {
     public class World : Entity
     {
-        private Map map;
+        public Scene NowScene { get; private set; }
 
-        public void EnterMap(Map newMap)
+        public void EnterScene(Scene newScene)
         {
-            if (map != null)
+            if (NowScene != null)
             {
-                RemoveChild(map);
+                RemoveChild(NowScene);
             }
-            map = newMap;
+            NowScene = newScene;
         }
-        public void ExitMap()
+        public void LeaveScene()
         {
-            if (map != null)
+            if (NowScene != null)
             {
-                RemoveChild(map);
+                RemoveChild(NowScene);
             }
         }
 
         protected override void OnDestroy()
         {
-            map = null;
+            NowScene = null;
         }
     }
 

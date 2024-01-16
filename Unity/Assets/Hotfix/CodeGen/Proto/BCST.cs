@@ -4,8 +4,9 @@ namespace Pb
 {
 	public static partial class BCST
 	{
-		public const uint Bcst_EnterMap = 999900001;
-		public const uint Bcst_LeaveMap = 999900002;
-		public const uint Bcst_Move = 999900003;
+		public const uint Bcst_UnitIntoView = 999900001;
+		public const uint Bcst_UnitOutofView = 999900002;
+		public const uint Bcst_UnitMove = 999900003;
+		public const uint Bcst_UnitUpdatePosition = 999900004;
 	}
 }

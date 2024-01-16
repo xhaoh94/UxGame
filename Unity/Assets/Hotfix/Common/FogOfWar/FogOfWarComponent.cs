@@ -7,7 +7,7 @@ namespace Ux
 {
     public class FogOfWarComponent : Entity, IAwakeSystem
     {
-        Map Map => ParentAs<Map>();
+        Scene Map => ParentAs<Scene>();
         void IAwakeSystem.OnAwake()
         {
             _UpdateCamera();

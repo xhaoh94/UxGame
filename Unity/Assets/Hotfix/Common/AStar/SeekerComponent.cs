@@ -80,13 +80,13 @@ namespace Ux
             {
                 return;
             }
-            MapModule.Ins.SendMove(p.vectorPath);
+            SceneModule.Ins.SendMove(p.vectorPath);
 
         }
 
-        public void SetPoints(List<Pb.Vector3> points)
+        public void SetPoints(List<Pb.Vector3> points, int moveIndex)
         {
-            _pathIndex = 0;
+            _pathIndex = moveIndex;
             _points.Clear();
             foreach (var point in points)
             {

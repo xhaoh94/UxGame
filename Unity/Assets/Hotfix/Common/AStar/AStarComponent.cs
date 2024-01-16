@@ -9,7 +9,7 @@ namespace Ux
     {
         public bool IsLoadComplete { get; private set; }
         public AstarPath AstarPath { get; private set; }
-        Map Map => Parent as Map;
+        Scene Map => Parent as Scene;
         public void OnAwake(AstarPath ap)
         {
             AstarPath = ap;

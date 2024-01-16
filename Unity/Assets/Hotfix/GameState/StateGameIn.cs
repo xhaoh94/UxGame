@@ -8,9 +8,9 @@
         }
         protected override async void OnEnter(object args = null)
         {
-            if (args is Pb.S2CEnterMap resp)
+            if (args is Pb.S2CEnterScene resp)
             {
-                await MapModule.Ins.EnterMap("Map001", resp);
+                await SceneModule.Ins.EnterScene("Map001", resp);
                 await UIMgr.Ins.Show<UI.MainView>().Task();
                 UIMgr.Ins.Hide<UI.LoginView>();
             }
@@ -21,7 +21,7 @@
         protected override void OnExit()
         {
             UIMgr.Ins.Hide<UI.MainView>();
-            MapModule.Ins.ExitMap();
+            SceneModule.Ins.LeaveScene();
         }
 
         protected override void OnUpdate()

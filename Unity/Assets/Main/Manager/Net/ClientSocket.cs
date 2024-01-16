@@ -66,6 +66,8 @@ namespace Ux
         Dictionary<uint, FastMethodInfo> cmdMethod = new Dictionary<uint, FastMethodInfo>();
 
         Action _connectCallback;
+        Action<object> _connect1Callback;
+        object _connect1Param;
 
         public ClientSocket(string address)
         {
@@ -122,7 +124,19 @@ namespace Ux
         {
 
         }
-        public void Connect(Action connectCallback)
+        public void SetConnectCallback(Action connectCallback)
+        {
+            _connectCallback = connectCallback;
+            _connect1Callback = null;
+            _connect1Param = null;
+        }
+        public void SetConnectCallback(Action<object> connectCallback, object param)
+        {
+            _connect1Callback = connectCallback;
+            _connect1Param = param;
+            _connectCallback = null;
+        }
+        public void Connect()
         {
             if (string.IsNullOrEmpty(Address))
             {
@@ -139,7 +153,7 @@ namespace Ux
                 Log.Warning("Socket 已连接");
                 return;
             }
-            _connectCallback = connectCallback;
+
             IsConnecting = true;
             ToConnect(Address);
         }
@@ -149,6 +163,7 @@ namespace Ux
             IsConnecting = false;
             IsConnected = true;
             _connectCallback?.Invoke();
+            _connect1Callback?.Invoke(_connect1Param);
             EventMgr.Ins.Send(MainEventType.NET_CONNECTED, Address);
         }
         public virtual void Update()

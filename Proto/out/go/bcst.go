@@ -3,7 +3,8 @@
 package pb
 
 const (
-	CMD_Bcst_EnterMap uint32 = 999900001
-	CMD_Bcst_LeaveMap uint32 = 999900002
-	CMD_Bcst_Move uint32 = 999900003
+	CMD_Bcst_UnitIntoView uint32 = 999900001
+	CMD_Bcst_UnitOutofView uint32 = 999900002
+	CMD_Bcst_UnitMove uint32 = 999900003
+	CMD_Bcst_UnitUpdatePosition uint32 = 999900004
 )

@@ -68,7 +68,6 @@ func (m *C2S_LoginGame) GetPassword() string {
 	return ""
 }
 
-//sc=100100001
 type S2C_LoginGame struct {
 	Error                ErrCode  `protobuf:"varint,1,opt,name=error,proto3,enum=ErrCode" json:"error,omitempty"`
 	Addr                 string   `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`
