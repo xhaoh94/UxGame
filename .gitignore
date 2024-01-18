@@ -15,6 +15,7 @@
 /Unity/[Bb]in
 
 /Unity/Assets/StreamingAssets/[Yy]oo
+/Unity/Assets/StreamingAssets/[Yy]oo.meta
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
