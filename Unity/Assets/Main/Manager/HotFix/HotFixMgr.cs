@@ -10,7 +10,13 @@ namespace Ux
 {
     public class HotFixMgr : Singleton<HotFixMgr>
     {
-        public const string HotfixAssemblyName = "Assembly-CSharp";
+        //public const string HotfixBaseAssemblyName = "Unity.HotfixBase";
+        //public const string HotfixAssemblyName = "Assembly-CSharp";
+        //热更DLL，注意顺序
+        public readonly string[] HotfixAssembly = new string[2] {
+            "Unity.HotfixBase",
+            "Assembly-CSharp"
+        };
 
         public const string HotfixScene = "Hotfix";
 
@@ -21,7 +27,7 @@ namespace Ux
 
         public void Init()
         {
-            if (Assembly == null)
+            if (Assemblys == null && Assemblys.Count == 0)
             {
                 Log.Error("没有加载热更DLL");
                 return;
@@ -30,22 +36,23 @@ namespace Ux
             ResMgr.Ins.LoadSceneAsync(HotfixScene);
         }
 
-        public List<Type> GetHotfixTypes()
-        {
-            return _hotfixTypes ??= Assembly.GetTypes().ToList();
-        }
-
-        public Assembly Assembly { get; private set; }
+        public List<Assembly> Assemblys { get; private set; } = new List<Assembly>();
 
         public void Load()
         {
 #if !UNITY_EDITOR && HOTFIX_CODE
             LoadMetadataForAOTAssembly();
-            var assBytes = ResMgr.Ins.GetRawFileData(string.Format(HotPrefix, $"{HotfixAssemblyName}.dll"), ResType.Code);
-            Assembly = Assembly.Load(assBytes);
-#else            
-            Assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .First(assembly => assembly.GetName().Name == HotfixAssemblyName);
+            foreach (var hotfixName in HotfixAssembly)
+            {
+                var assBytes = ResMgr.Ins.GetRawFileData(string.Format(HotPrefix, $"{hotfixName}.dll"), ResType.Code);
+                Assemblys.Add(Assembly.Load(assBytes));
+            }
+#else
+            foreach (var hotfixName in HotfixAssembly)
+            {
+                Assemblys.Add(AppDomain.CurrentDomain.GetAssemblies()
+                .First(assembly => assembly.GetName().Name == hotfixName));
+            }
 #endif
         }
 

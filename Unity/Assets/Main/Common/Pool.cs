@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Ux;
 
 public static class Pool
 {
     private static readonly Dictionary<Type, Queue<object>> _dict = new Dictionary<Type, Queue<object>>();
-  
     public static object Get(Type type)
     {
         object obj;

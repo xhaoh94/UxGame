@@ -1,105 +1,94 @@
 ﻿using System;
-using FairyGUI;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Ux
 {
-    [UI]
-    [Package("Patch")]
-    public partial class PatchView : UIView
+    public partial class PatchView : MonoBehaviour
     {
-        protected override UILayer Layer => UILayer.Normal;
+        [SerializeField] Slider barHotfix;
+        [SerializeField] Text txtStatus;
 
-        protected override string PkgName => "Patch";
+        [SerializeField] GameObject goTip;
+        [SerializeField] Button btnClose;
+        [SerializeField] Button btnHotfix;
+        [SerializeField] Text txtBtnHotfix;
+        [SerializeField] Text txtHotfix;
 
-        protected override string ResName => "PatchView";
-
-        public override bool IsDestroy => true;
-
-        GProgressBar bar;
-        GTextField txt;
-
-        protected override void OnShow(object param)
+        public static PatchView Show()
         {
-            base.OnShow(param);
-            txt.text = "游戏初始化";
-            bar.max = 1f;
-            bar.min = 0f;
-            bar.visible = false;
+            var go = ResMgr.Ins.LoadAsset<GameObject>("PatchView", ResType.Main);
+            return go.GetComponent<PatchView>();
         }
-        [MainEvt(MainEventType.PATCH_STATE_CHANGED)]
-        void OnStateChanged(string node)
+        public void Hide()
+        {
+
+        }
+        private void Awake()
+        {
+            txtStatus.text = "游戏初始化";
+            barHotfix.maxValue = 1f;
+            barHotfix.minValue = 0f;
+            barHotfix.gameObject.Visable(false);
+            goTip.Visable(false);
+        }
+
+        public void OnStateChanged(string node)
         {
             switch (node)
             {
                 case nameof(PatchUpdateStaticVersion):
-                    txt.text = "获取资源版本.";
+                    txtStatus.text = "获取资源版本.";
                     break;
                 case nameof(PatchUpdateManifest):
-                    txt.text = "获取补丁清单.";
+                    txtStatus.text = "获取补丁清单.";
                     break;
                 case nameof(PatchCreateDownloader):
-                    txt.text = "获取更新文件.";
+                    txtStatus.text = "获取更新文件.";
                     break;
                 case nameof(PatchDownloadWebFiles):
-                    txt.text = "下载补丁清单.";
+                    txtStatus.text = "下载补丁清单.";
                     break;
                 case nameof(PatchDone):
-                    txt.text = "下载完成.";
+                    txtStatus.text = "下载完成.";
                     break;
             }
         }
 
-        [MainEvt(MainEventType.FOUND_UPDATE_FILES)]
-        void OnFoundUpdateFiles(Downloader downloader)
+        public void ShowTip(string content, string btnTitle, Action callback)
         {
-            Action callback = () =>
+            txtBtnHotfix.text = btnTitle;
+            txtHotfix.text = content;
+            goTip.Visable(true);
+            btnHotfix.onClick.RemoveAllListeners();
+            btnHotfix.onClick.AddListener(() =>
             {
-                PatchMgr.Ins.Enter<PatchDownloadWebFiles>(downloader);
-            };
+                callback?.Invoke();
+                goTip.Visable(false);
+            });
+        }
+
+        public void OnFoundUpdateFiles(Downloader downloader)
+        {
             string totalSizeMB = downloader.TotalSizeMB.ToString("f1");
             int totalCnt = downloader.TotalDownloadCount;
-            UIMgr.Dialog.SingleBtn("提示", $"下载更新{totalCnt}文件，总大小{totalSizeMB}MB", "确定", callback);
-        }
 
-        [MainEvt(MainEventType.STATIC_VERSION_UPDATE_FAILED)]
-        void OnStaticVersionUpdateFailed()
-        {
-            Action callback = () =>
+            ShowTip($"下载更新{totalCnt}文件，总大小{totalSizeMB}MB", "更新", () =>
             {
-                PatchMgr.Ins.Enter<PatchUpdateStaticVersion>();
-            };
-            UIMgr.Dialog.SingleBtn("提示", $"获取资源版本失败，请检测网络状态。", "确定", callback);
+                PatchMgr.Ins.Enter<PatchDownloadWebFiles>(downloader);
+            });
         }
 
-        [MainEvt(MainEventType.PATCH_MANIFEST_UPDATE_FAILED)]
-        void OnPatchManifestUpdateFailed()
+        public void OnDownloadProgressUpdate(DownloadProgressUpdate message)
         {
-            Action callback = () =>
-            {
-                PatchMgr.Ins.Enter<PatchUpdateManifest>();
-            };
-            UIMgr.Dialog.SingleBtn("提示", $"获取补丁清单失败，请检测网络状态。", "确定", callback);
-        }
-
-        [MainEvt(MainEventType.WEBFILE_DOWNLOAD_FAILED)]
-        void OnWebFileDownloadFailed(string fileName, string error)
-        {
-            Action callback = () =>
-            {
-                Application.Quit();
-            };
-            UIMgr.Dialog.SingleBtn("提示", $"更新失败,可能磁盘空间不足！", "确定", callback);
-        }
-
-        [MainEvt(MainEventType.DOWNLOAD_PROGRESS_UPDATE)]
-        void OnDownloadProgressUpdate(DownloadProgressUpdate message)
-        {
-            if (!bar.visible) bar.visible = true;
-            bar.value = (double)message.CurrentDownloadCount / message.TotalDownloadCount;
+            barHotfix.gameObject.Visable(true);
+            barHotfix.value = (float)message.CurrentDownloadCount / message.TotalDownloadCount;
             string currentSizeMB = (message.CurrentDownloadSizeBytes / 1048576f).ToString("f1");
             string totalSizeMB = (message.TotalDownloadSizeBytes / 1048576f).ToString("f1");
-            txt.text = $"{message.CurrentDownloadCount}/{message.TotalDownloadCount} {currentSizeMB}MB/{totalSizeMB}MB";
+            txtStatus.text = $"{message.CurrentDownloadCount}/{message.TotalDownloadCount} {currentSizeMB}MB/{totalSizeMB}MB";
         }
+
+
     }
 }

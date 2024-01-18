@@ -532,12 +532,12 @@ public partial class VersionWindow : EditorWindow
 
         EditorTools.FocusUnityConsoleWindow();
         Console.Clear();
-        EditorApplication.LockReloadAssemblies();
         if (EditorApplication.isCompiling)
-        {
+        {            
             Log.Error("请等待编译完成后再导出");
             return;
         }
+        EditorApplication.LockReloadAssemblies();
         try
         {
             var succ = await _ExecuteBuild(buildTarget);

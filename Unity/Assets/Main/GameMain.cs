@@ -9,6 +9,7 @@ namespace Ux
     public class GameMain : MonoBehaviour
     {
         public static GameMain Ins { get; private set; }
+
         public static StateMachine Machine { get; private set; }
 
         [SerializeField]
@@ -19,17 +20,11 @@ namespace Ux
 
         void Awake()
         {
-            EvalMgr.Ins.AddVariable("Temp", 3);
-            EvalMgr.Ins.AddFunction("TempFunc", (args) => args[0] + args[1]);
-            var str = "TempFunc(-2+2100-(22*2*(1-2))%Temp+TempFunc(1,Temp),-4)";
-            var v = EvalMgr.Ins.Parse(str);
-            Log.Debug($"{str}:" + v);
-
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
             }
-            Ins = this;
+            Ins = this;            
             SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
             zstring.Init(Log.Error);
             Machine = StateMachine.CreateByPool();
@@ -53,13 +48,20 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize(PlayMode);
-            typeof(GameMain).Assembly.Initialize();
+            yield return ResMgr.Ins.Initialize(PlayMode);            
             // 运行补丁流程
             PatchMgr.Ins.Run(PlayMode);
         }
 
-
+        public void AddUpdate(Action action)
+        {
+            _update += action;
+        }
+        public void RemoveUpdate(Action action)
+        {
+            _update -= action;
+        }
+        Action _update;
         void Update()
         {
 #if UNITY_EDITOR
@@ -72,10 +74,8 @@ namespace Ux
             }
 #endif
             try
-            {
-                OneThreadSynchronizationContext.Instance.Update();
-                TimeMgr.Ins.Update();
-                Entity.Update();
+            {                                             
+                _update?.Invoke();
             }
             catch (Exception e)
             {
@@ -83,43 +83,72 @@ namespace Ux
             }
         }
 
-
+        public void AddLateUpdate(Action action)
+        {
+            _lateUpdate += action;
+        }
+        public void RemoveLateUpdate(Action action)
+        {
+            _lateUpdate -= action;
+        }
+        Action _lateUpdate;
         void LateUpdate()
         {
             try
-            {
-                TimeMgr.Ins.LateUpdate();
+            {                
+                _lateUpdate?.Invoke();
             }
             catch (Exception e)
             {
                 Log.Error(e);
             }
         }
-
+        public void AddFixedUpdate(Action action)
+        {
+            _fixedUpdate += action;
+        }
+        public void RemoveFixedUpdate(Action action)
+        {
+            _fixedUpdate -= action;
+        }
+        Action _fixedUpdate;
         private void FixedUpdate()
         {
             try
-            {
-                TimeMgr.Ins.FixedUpdate();
+            {                
+                _fixedUpdate?.Invoke();
             }
             catch (Exception e)
             {
                 Log.Error(e);
             }
         }
-
-        private void OnApplicationQuit()
+        public void AddQuit(Action action)
         {
-            EventMgr.Ins.OnApplicationQuit();
+            _quit += action;
+        }
+        public void RemoveQuit(Action action)
+        {
+            _quit -= action;
+        }
+        Action _quit;
+        private void OnApplicationQuit()
+        {            
+            _quit?.Invoke();
         }
 
-
-        void OnLowMemory()
+        public void AddLowMemory(Action action)
         {
-            UIMgr.Ins.OnLowMemory();
+            _lowMemory += action;
+        }        
+
+        Action _lowMemory;
+        void OnLowMemory()
+        {            
             ResMgr.Ins.OnLowMemory();
             Pool.Clear();
             UnityPool.Clear();
+            _lowMemory?.Invoke();
         }
     }
 }

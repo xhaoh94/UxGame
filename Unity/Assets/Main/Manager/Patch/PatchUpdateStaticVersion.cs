@@ -26,7 +26,7 @@ namespace Ux
             }
             else
             {
-                EventMgr.Ins.Send(MainEventType.STATIC_VERSION_UPDATE_FAILED);
+                PatchMgr.Ins.OnStaticVersionUpdateFailed();                
             }
         }
 

@@ -29,7 +29,7 @@ namespace Ux
             }
             else
             {
-                EventMgr.Ins.Send(MainEventType.PATCH_MANIFEST_UPDATE_FAILED);
+                PatchMgr.Ins.OnPatchManifestUpdateFailed();                
             }
         }
 

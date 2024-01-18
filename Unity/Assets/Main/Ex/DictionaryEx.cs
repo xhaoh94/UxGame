@@ -31,7 +31,8 @@ namespace Ux
             }
         }
 
-        public static IEnumerator ForEachKey<TKey, TValue>(this Dictionary<TKey, TValue> dict, FuncEx<TKey, bool, IEnumerator> fn)
+        public static IEnumerator ForEachKey<TKey, TValue>(this Dictionary<TKey, TValue> dict,
+            FuncEx<TKey, bool, IEnumerator> fn)
         {
             if (dict.Count == 0) yield break;
             foreach (var _key in dict.Keys)

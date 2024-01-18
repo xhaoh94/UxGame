@@ -13,7 +13,12 @@ namespace Ux
 
         private Action a;
 
-        public void Update()
+        public OneThreadSynchronizationContext()
+        {
+            GameMain.Ins.AddUpdate(_Update);
+        }
+
+        void _Update()
         {
             while (true)
             {

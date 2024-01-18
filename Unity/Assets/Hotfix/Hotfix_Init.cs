@@ -24,11 +24,16 @@ namespace Ux
             ResMgr.Ins.UnloadUnusedAssets();
             Log.Info("启动热更层");
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
-            HotFixMgr.Ins.Assembly.Initialize();
+            HotFixMgr.Ins.Assemblys.ForEach(assembly =>
+            {
+                assembly.Initialize();
+            });
 
             PatchMgr.Ins.Done();
-            UIMgr.Dialog.SetDefalutType<CommonDialog>();
             ConfigMgr.Ins.Init();
+            UIMgr.Ins.OnLowMemory();
+            UIMgr.Dialog.SetDefalutType<CommonDialog>();
+
             GameMain.Machine.AddNode<StateLogin>();
             GameMain.Machine.AddNode<StateGameIn>();
             GameMain.Machine.Enter<StateLogin>();

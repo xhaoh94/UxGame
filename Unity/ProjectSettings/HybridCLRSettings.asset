@@ -16,8 +16,25 @@ MonoBehaviour:
   useGlobalIl2cpp: 0
   hybridclrRepoURL: https://gitee.com/focus-creative-games/hybridclr
   il2cppPlusRepoURL: https://gitee.com/focus-creative-games/il2cpp_plus
-  hotUpdateAssemblyDefinitions: []
+  hotUpdateAssemblyDefinitions:
+  - {fileID: 5897886265953266890, guid: e34a5702dd353724aa315fb8011f08c3, type: 3}
+  - {fileID: 5897886265953266890, guid: 644002850b3c12e408b65b147d1e75e4, type: 3}
+  - {fileID: 5897886265953266890, guid: f51ebe6a0ceec4240a699833d6309b23, type: 3}
+  - {fileID: 5897886265953266890, guid: 6dfc3c22992393248b61b0baca052ed6, type: 3}
+  - {fileID: 5897886265953266890, guid: 13ba8ce62aa80c74598530029cb2d649, type: 3}
+  - {fileID: 5897886265953266890, guid: 5363eb4d8498800449c726f377bbf107, type: 3}
+  - {fileID: 5897886265953266890, guid: 75469ad4d38634e559750d17036d5f7c, type: 3}
+  - {fileID: 5897886265953266890, guid: efa45043feb7e4147a305b73b5cea642, type: 3}
+  - {fileID: 5897886265953266890, guid: 15fc0a57446b3144c949da3e2b9737a9, type: 3}
+  - {fileID: 5897886265953266890, guid: df380645f10b7bc4b97d4f5eb6303d95, type: 3}
+  - {fileID: 5897886265953266890, guid: 21a53c7b08471df4188fff9eaf4302b3, type: 3}
+  - {fileID: 5897886265953266890, guid: 82ec0e8773f450143b231c1eec20bee3, type: 3}
+  - {fileID: 5897886265953266890, guid: 4c08018525673e94593f41c1055e54c6, type: 3}
+  - {fileID: 5897886265953266890, guid: f06555f75b070af458a003d92f9efb00, type: 3}
+  - {fileID: 5897886265953266890, guid: 6055be8ebefd69e48b49212b09b47b2f, type: 3}
+  - {fileID: 5897886265953266890, guid: ae9ca77e35f86d1479599c3cabc73746, type: 3}
   hotUpdateAssemblies:
+  - Unity.HotfixBase
   - Assembly-CSharp
   preserveHotUpdateAssemblies: []
   hotUpdateDllCompileOutputRootDir: HybridCLRData/HotUpdateDlls

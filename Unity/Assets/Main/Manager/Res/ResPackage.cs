@@ -21,7 +21,6 @@ namespace Ux
         public abstract EDefaultBuildPipeline EDefaultBuildPipeline { get; }
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
-
         public void CreatePackage()
         {
             Package = YooAssets.TryGetPackage(Name);
