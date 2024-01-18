@@ -245,7 +245,7 @@ namespace Ux
 
         #region Pop
 
-        public async UniTask PopTransferred(int count, Func<int, int, Task> action = null)
+        public void PopTransferred(int count, Action<int, int> action = null)
         {
             int len = 0;
             while (len < count)
@@ -255,11 +255,7 @@ namespace Ux
                 {
                     temLen = ChunkSize - PopPosition;
                 }
-                var task = action?.Invoke(len, temLen);
-                if (task != null)
-                {
-                    await task;
-                }
+                action?.Invoke(len, temLen);
                 PopPosition += temLen;
                 len += temLen;
             }
@@ -332,10 +328,10 @@ namespace Ux
             PopTransferred(count, (len, temLen) =>
             {
                 kcp.Send(FirstBuffer.AsSpan(PopPosition, temLen));
-                return null;
-            }).Forget();
+            });
         }
 
+        List<UniTask> _websockets;
         public async UniTask PopToWebSocketAsync(WebSocket webSocket, int maxSendLen, CancellationToken token)
         {
             var count = (int)Length;
@@ -343,12 +339,18 @@ namespace Ux
             {
                 count = maxSendLen;
             }
-
-            await PopTransferred(count, (len, temLen) =>
+            if (_websockets == null)
             {
-                return webSocket.SendAsync(new ArraySegment<byte>(FirstBuffer, PopPosition, temLen),
+                _websockets = new List<UniTask>();
+            }
+            _websockets.Clear();
+            PopTransferred(count, (len, temLen) =>
+            {
+                var task = webSocket.SendAsync(new ArraySegment<byte>(FirstBuffer, PopPosition, temLen),
                     WebSocketMessageType.Binary, true, token);
+                _websockets.Add(task.AsUniTask());
             });
+            await UniTask.WhenAll(_websockets);
         }
 
         public void PopToMemoryStream(MemoryStream memoryStream, int offset, int count)
@@ -364,8 +366,7 @@ namespace Ux
             {
                 memoryStream.Seek(len + offset, SeekOrigin.Begin);
                 memoryStream.Write(FirstBuffer, PopPosition, temLen);
-                return null;
-            }).Forget();
+            });
         }
 
         public void PopToStream(Stream stream, int offset, int count)
@@ -379,8 +380,7 @@ namespace Ux
             {
                 stream.Seek(len + offset, SeekOrigin.Begin);
                 stream.Write(FirstBuffer, PopPosition, temLen);
-                return null;
-            }).Forget();
+            });
         }
 
         public void PopToBytes(byte[] bytes)
@@ -400,8 +400,7 @@ namespace Ux
             PopTransferred(count, (len, temLen) =>
             {
                 Array.Copy(FirstBuffer, PopPosition, bytes, len + index, temLen);
-                return null;
-            }).Forget();
+            });
         }
 
         public byte[] PopBytes(int count)

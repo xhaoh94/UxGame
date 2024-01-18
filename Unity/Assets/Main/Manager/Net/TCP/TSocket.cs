@@ -163,7 +163,7 @@ namespace Ux
 
             if (args.BytesTransferred > 0)
             {
-                this.sendBytes.PopTransferred(args.BytesTransferred).Forget();
+                this.sendBytes.PopTransferred(args.BytesTransferred);
                 EndSend();
             }
         }
