@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ux
 {
@@ -14,16 +16,40 @@ namespace Ux
     {
         public const int ChunkSize = 8192;
 
-        private readonly Queue<byte[]> buffers = new Queue<byte[]>();
+        readonly Queue<byte[]> _buffers = new Queue<byte[]>();
 
-        private readonly Queue<byte[]> caches = new Queue<byte[]>();
+        readonly Queue<byte[]> _caches = new Queue<byte[]>();
 
-        Dictionary<int, byte[]> bytesDict = new Dictionary<int, byte[]>();
+        readonly Dictionary<int, byte[]> _bytesDict = new Dictionary<int, byte[]>();
 
-        int PushPosition;
-        int PopPosition;
+        int _PushPosition;
+        int PushPosition
+        {
+            get => _PushPosition;
+            set
+            {
+                _PushPosition = value;
+                if (_PushPosition == ChunkSize)
+                {
+                    Add();
+                }
+            }
+        }
+        int _PopPosition;
+        int PopPosition
+        {
+            get => _PopPosition;
+            set
+            {
+                _PopPosition = value;
+                if (_PopPosition == ChunkSize)
+                {
+                    Remove();
+                }
+            }
+        }
         byte[] LastBuffer { get; set; }
-        byte[] FirstBuffer => buffers.Peek();
+        byte[] FirstBuffer => _buffers.Peek();
 
         public ByteArray()
         {
@@ -35,13 +61,13 @@ namespace Ux
             get
             {
                 int c;
-                if (buffers.Count == 0)
+                if (_buffers.Count == 0)
                 {
                     c = 0;
                 }
                 else
                 {
-                    c = (buffers.Count - 1) * ChunkSize + (PushPosition - PopPosition);
+                    c = (_buffers.Count - 1) * ChunkSize + (PushPosition - PopPosition);
                 }
                 return c;
             }
@@ -49,40 +75,37 @@ namespace Ux
 
         void Add()
         {
-            var buffer = caches.Count > 0 ? caches.Dequeue() : new byte[ChunkSize];
-            buffers.Enqueue(buffer);
+            var buffer = _caches.Count > 0 ? _caches.Dequeue() : new byte[ChunkSize];
+            _buffers.Enqueue(buffer);
             LastBuffer = buffer;
-            PushPosition = 0;
+            _PushPosition = 0;
         }
         void Remove()
         {
-            caches.Enqueue(buffers.Dequeue());
-            PopPosition = 0;
+            _caches.Enqueue(_buffers.Dequeue());
+            _PopPosition = 0;
         }
 
         public void Dispose()
         {
-            buffers.Clear();
-            caches.Clear();
-            PushPosition = 0;
-            PopPosition = 0;
+            _buffers.Clear();
+            _caches.Clear();
+            _PopPosition = 0;
+            _PopPosition = 0;
         }
 
         #region Push
-        public void PushTransferred(int count)
+        public void PushTransferred(int count, Action<int, int> action = null)
         {
             int len = 0;
             while (len < count)
             {
-                if (PushPosition == ChunkSize)
-                {
-                    Add();
-                }
-                int temLen = count;
-                if (PushPosition + count > ChunkSize)
+                int temLen = count - len;
+                if (PushPosition + temLen > ChunkSize)
                 {
                     temLen = ChunkSize - PushPosition;
                 }
+                action?.Invoke(len, temLen);
                 PushPosition += temLen;
                 len += temLen;
             }
@@ -122,46 +145,26 @@ namespace Ux
         //}
         public int PushByKcp(Kcp kcp, int count)
         {
-            int len = 0;
-            while (len < count)
+            PushTransferred(count, (len, temLen) =>
             {
-                if (PushPosition == ChunkSize)
-                {
-                    Add();
-                }
-                int temLen = count;
-                if (PushPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PushPosition;
-                }
                 kcp.Receive(LastBuffer.AsSpan(PushPosition, temLen));
-                PushPosition += temLen;
-                len += temLen;
-            }
-            return len;
+            });
+            return count;
         }
         public bool PushBySocket(Socket socket, SocketAsyncEventArgs eventArgs)
         {
-            if (eventArgs == null)
-            {
-                return false;
-            }
-
             var count = ChunkSize - PushPosition;
-
             try
             {
                 eventArgs.SetBuffer(LastBuffer, PushPosition, count);
-                if (socket.ReceiveAsync(eventArgs))
-                {
-                    return false;
-                }
-                return true;
             }
             catch (Exception e)
             {
                 throw new Exception($"socket set buffer error: {Length}, {PushPosition}, {count}", e);
             }
+            //返回True则挂起走异步OnRecvComplete。
+            //返回False则是同步，不会触发OnRecvComplete。
+            return socket.ReceiveAsync(eventArgs);
         }
         public void PushStream(Stream stream)
         {
@@ -169,41 +172,17 @@ namespace Ux
             //所以真实长度是Position而不是Length，Length是包含之前部分的            
             int count = (int)stream.Position;
             stream.Seek(0, SeekOrigin.Begin);
-            int len = 0;
-            while (len < count)
+            PushTransferred(count, (len, temLen) =>
             {
-                if (PushPosition == ChunkSize)
-                {
-                    Add();
-                }
-                int temLen = count;
-                if (PushPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PushPosition;
-                }
                 stream.Read(LastBuffer, PushPosition, temLen);
-                PushPosition += temLen;
-                len += temLen;
-            }
+            });
         }
         public void PushBytes(byte[] bytes, int index, int count)
         {
-            int len = 0;
-            while (len < count)
+            PushTransferred(count, (len, temLen) =>
             {
-                if (PushPosition == ChunkSize)
-                {
-                    Add();
-                }
-                int temLen = count;
-                if (PushPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PushPosition;
-                }
                 Array.Copy(bytes, len + index, LastBuffer, PushPosition, temLen);
-                PushPosition += temLen;
-                len += temLen;
-            }
+            });
         }
         public void PushBytes(byte[] bytes)
         {
@@ -211,10 +190,6 @@ namespace Ux
         }
         public void PushByte(byte v)
         {
-            if (PushPosition == ChunkSize)
-            {
-                Add();
-            }
             LastBuffer[PushPosition] = v;
             PushPosition += 1;
         }
@@ -269,37 +244,35 @@ namespace Ux
 
 
         #region Pop
-        public void PopTransferred(int count)
+
+        public async UniTask PopTransferred(int count, Func<int, int, Task> action = null)
         {
             int len = 0;
             while (len < count)
             {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
+                int temLen = count - len;
                 if (PopPosition + count > ChunkSize)
                 {
                     temLen = ChunkSize - PopPosition;
+                }
+                var task = action?.Invoke(len, temLen);
+                if (task != null)
+                {
+                    await task;
                 }
                 PopPosition += temLen;
                 len += temLen;
             }
         }
+
         public bool PopToSocket(Socket socket, SocketAsyncEventArgs eventArgs)
         {
-            if (eventArgs == null)
-            {
-                return false;
-            }
-
             var count = ChunkSize - PopPosition;
             if (count > Length)
             {
                 count = (int)Length;
             }
-            if (count == 0) return true;
+
             try
             {
                 //var str = "[";
@@ -314,16 +287,14 @@ namespace Ux
                 //str += "]";
                 //Log.Debug(str);
                 eventArgs.SetBuffer(FirstBuffer, PopPosition, count);
-                if (socket.SendAsync(eventArgs))
-                {
-                    return false;
-                }
-                return true;
             }
             catch (Exception e)
             {
                 throw new Exception($"socket set buffer error: {Length}, {PopPosition}, {count}", e);
             }
+            //返回True则挂起走异步OnSendComplete。
+            //返回False则是同步，不会触发OnSendComplete。
+            return socket.SendAsync(eventArgs);
         }
         //public void PopToKcp(IntPtr kcp, int maxSendLen)
         //{
@@ -358,22 +329,11 @@ namespace Ux
                 count = maxSendLen;
             }
 
-            int len = 0;
-            while (len < count)
+            PopTransferred(count, (len, temLen) =>
             {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
-                if (PopPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PopPosition;
-                }
                 kcp.Send(FirstBuffer.AsSpan(PopPosition, temLen));
-                PopPosition += temLen;
-                len += temLen;
-            }
+                return null;
+            }).Forget();
         }
 
         public async UniTask PopToWebSocketAsync(WebSocket webSocket, int maxSendLen, CancellationToken token)
@@ -384,22 +344,11 @@ namespace Ux
                 count = maxSendLen;
             }
 
-            int len = 0;
-            while (len < count)
+            await PopTransferred(count, (len, temLen) =>
             {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
-                if (PopPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PopPosition;
-                }
-                await webSocket.SendAsync(new ArraySegment<byte>(FirstBuffer, PopPosition, temLen), WebSocketMessageType.Binary, true, token);
-                PopPosition += temLen;
-                len += temLen;
-            }
+                return webSocket.SendAsync(new ArraySegment<byte>(FirstBuffer, PopPosition, temLen),
+                    WebSocketMessageType.Binary, true, token);
+            });
         }
 
         public void PopToMemoryStream(MemoryStream memoryStream, int offset, int count)
@@ -411,23 +360,12 @@ namespace Ux
 
             memoryStream.SetLength(offset + count);
 
-            int len = 0;
-            while (len < count)
+            PopTransferred(count, (len, temLen) =>
             {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
-                if (PopPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PopPosition;
-                }
                 memoryStream.Seek(len + offset, SeekOrigin.Begin);
                 memoryStream.Write(FirstBuffer, PopPosition, temLen);
-                PopPosition += temLen;
-                len += temLen;
-            }
+                return null;
+            }).Forget();
         }
 
         public void PopToStream(Stream stream, int offset, int count)
@@ -436,23 +374,13 @@ namespace Ux
             {
                 throw new Exception($"bufferList length < count, {Length} {count}");
             }
-            int len = 0;
-            while (len < count)
+            stream.SetLength(offset + count);
+            PopTransferred(count, (len, temLen) =>
             {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
-                if (PopPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PopPosition;
-                }
                 stream.Seek(len + offset, SeekOrigin.Begin);
                 stream.Write(FirstBuffer, PopPosition, temLen);
-                PopPosition += temLen;
-                len += temLen;
-            }
+                return null;
+            }).Forget();
         }
 
         public void PopToBytes(byte[] bytes)
@@ -469,31 +397,19 @@ namespace Ux
             {
                 throw new Exception($"bufferList length < count, {Length} {count}");
             }
-
-            int len = 0;
-            while (len < count)
+            PopTransferred(count, (len, temLen) =>
             {
-                if (PopPosition == ChunkSize)
-                {
-                    Remove();
-                }
-                int temLen = count;
-                if (PopPosition + count > ChunkSize)
-                {
-                    temLen = ChunkSize - PopPosition;
-                }
                 Array.Copy(FirstBuffer, PopPosition, bytes, len + index, temLen);
-                PopPosition += temLen;
-                len += temLen;
-            }
+                return null;
+            }).Forget();
         }
 
         public byte[] PopBytes(int count)
         {
-            if (!bytesDict.TryGetValue(count, out var bytes))
+            if (!_bytesDict.TryGetValue(count, out var bytes))
             {
                 bytes = new byte[count];
-                bytesDict.Add(count, bytes);
+                _bytesDict.Add(count, bytes);
             }
             PopToBytes(bytes, 0, count);
             return bytes;
@@ -504,11 +420,9 @@ namespace Ux
             {
                 throw new Exception($"bufferList length < 0, {Length}");
             }
-            if (PopPosition == ChunkSize)
-            {
-                Remove();
-            }
-            return FirstBuffer[PopPosition++];
+            var result = FirstBuffer[PopPosition];
+            PopPosition++;
+            return result;
         }
         public short PopInt16()
         {
@@ -518,9 +432,9 @@ namespace Ux
             }
             if (ChunkSize - PopPosition >= 2)
             {
-                var index = PopPosition;
+                var result = BitConverter.ToInt16(FirstBuffer, PopPosition);
                 PopPosition += 2;
-                return BitConverter.ToInt16(FirstBuffer, index);
+                return result;
             }
             else
             {
@@ -536,9 +450,9 @@ namespace Ux
             }
             if (ChunkSize - PopPosition >= 2)
             {
-                var index = PopPosition;
+                var result = BitConverter.ToUInt16(FirstBuffer, PopPosition);
                 PopPosition += 2;
-                return BitConverter.ToUInt16(FirstBuffer, index);
+                return result;
             }
             else
             {
@@ -554,9 +468,9 @@ namespace Ux
             }
             if (ChunkSize - PopPosition >= 4)
             {
-                var index = PopPosition;
+                var result = BitConverter.ToInt32(FirstBuffer, PopPosition);
                 PopPosition += 4;
-                return BitConverter.ToInt32(FirstBuffer, index);
+                return result;
             }
             else
             {
@@ -572,9 +486,9 @@ namespace Ux
             }
             if (ChunkSize - PopPosition >= 4)
             {
-                var index = PopPosition;
+                var result = BitConverter.ToUInt32(FirstBuffer, PopPosition);
                 PopPosition += 4;
-                return BitConverter.ToUInt32(FirstBuffer, index);
+                return result;
             }
             else
             {
@@ -590,9 +504,9 @@ namespace Ux
             }
             if (ChunkSize - PopPosition >= 8)
             {
-                var index = PopPosition;
+                var result = BitConverter.ToInt64(FirstBuffer, PopPosition);
                 PopPosition += 8;
-                return BitConverter.ToInt64(FirstBuffer, index);
+                return result;
             }
             else
             {
@@ -608,9 +522,9 @@ namespace Ux
             }
             if (ChunkSize - PopPosition >= 8)
             {
-                var index = PopPosition;
+                var result = BitConverter.ToUInt64(FirstBuffer, PopPosition);
                 PopPosition += 8;
-                return BitConverter.ToUInt64(FirstBuffer, index);
+                return result;
             }
             else
             {

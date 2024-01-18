@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Net;
+using Cysharp.Threading.Tasks;
 
 namespace Ux
 {
@@ -82,14 +83,22 @@ namespace Ux
 
         public void StartRecv()
         {
-            if (!this.recvBytes.PushBySocket(socket, innArgs))
+            while (true)
             {
-                return;
-            }
-            OnRecvComplete(this.innArgs);
-        }
+                if (socket == null)
+                {
+                    return;
+                }
 
-        private void OnRecvComplete(object o)
+                if (this.recvBytes.PushBySocket(socket, innArgs))
+                {
+                    return;
+                }
+
+                _HandleRecv(innArgs);
+            }
+        }
+        private void _HandleRecv(object o)
         {
             if (this.socket == null)
             {
@@ -110,16 +119,15 @@ namespace Ux
 
             this.recvBytes.PushTransferred(args.BytesTransferred);
 
-            if (!this.OnParse())
-            {
-                return;
-            }
-
+            this.OnParse();
+        }
+        private void OnRecvComplete(object o)
+        {
+            _HandleRecv(o);
             if (this.socket == null)
             {
                 return;
             }
-
             this.StartRecv();
         }
 
@@ -127,7 +135,7 @@ namespace Ux
         {
             try
             {
-                if (!this.sendBytes.PopToSocket(this.socket, this.outArgs))
+                if (this.sendBytes.PopToSocket(this.socket, this.outArgs))
                 {
                     return;
                 }
@@ -155,9 +163,9 @@ namespace Ux
 
             if (args.BytesTransferred > 0)
             {
-                this.sendBytes.PopTransferred(args.BytesTransferred);
+                this.sendBytes.PopTransferred(args.BytesTransferred).Forget();
+                EndSend();
             }
-            EndSend();
         }
 
         protected override void OnDispose()
