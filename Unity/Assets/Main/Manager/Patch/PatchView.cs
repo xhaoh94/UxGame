@@ -1,6 +1,7 @@
 ﻿using System;
-using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace Ux
@@ -19,12 +20,17 @@ namespace Ux
         public static PatchView Show()
         {
             var go = ResMgr.Ins.LoadAsset<GameObject>("PatchView", ResType.Main);
+            if (EventSystem.current == null)
+            {
+                var es = new GameObject("EventSystem");
+                es.AddComponent<EventSystem>();
+                es.AddComponent<InputSystemUIInputModule>();
+                es.AddComponent<BaseInput>();
+                es.SetParent(go.transform);
+            }
             return go.GetComponent<PatchView>();
         }
-        public void Hide()
-        {
 
-        }
         private void Awake()
         {
             txtStatus.text = "游戏初始化";

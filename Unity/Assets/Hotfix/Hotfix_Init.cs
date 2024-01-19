@@ -21,15 +21,19 @@ namespace Ux
                 return;
             }
 #endif            
-            ResMgr.Ins.UnloadUnusedAssets();
             Log.Info("启动热更层");
+
+            PatchMgr.Ins.Done();
+
+            ResMgr.Ins.UnloadUnusedAssets();
+            
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
             HotFixMgr.Ins.Assemblys.ForEach(assembly =>
             {
                 assembly.Initialize();
             });
 
-            PatchMgr.Ins.Done();
+            
             ConfigMgr.Ins.Init();
             UIMgr.Ins.OnLowMemory();
             UIMgr.Dialog.SetDefalutType<CommonDialog>();

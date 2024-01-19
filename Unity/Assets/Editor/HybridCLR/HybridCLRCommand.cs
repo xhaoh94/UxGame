@@ -1,4 +1,8 @@
 using HybridCLR.Editor;
+using HybridCLR.Editor.AOT;
+using HybridCLR.Editor.Meta;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -105,12 +109,12 @@ namespace HybridCLR.Commands
                 file.Delete();
             }
         }
-        
+
 
         /// <summary>
         /// 将AOT元数据DLL拷贝到资源打包目录
         /// </summary>
-        /// <param name="target"></param>
+        /// <param name="target"></param>       
         public static void CopyAOTAssembliesToYooAssetPath(BuildTarget target)
         {
             string aotDllDir = SettingsUtil.GetAssembliesPostIl2CppStripDir(target);
@@ -118,8 +122,29 @@ namespace HybridCLR.Commands
             {
                 Directory.CreateDirectory(AotDir);
             }
+            var gs = SettingsUtil.HybridCLRSettings;
+            var hotUpdateDllNames = SettingsUtil.HotUpdateAssemblyNamesExcludePreserved;
+            List<string> codes = new List<string>();
+            using (AssemblyReferenceDeepCollector collector = new AssemblyReferenceDeepCollector(MetaUtil.CreateHotUpdateAndAOTAssemblyResolver(target, hotUpdateDllNames), hotUpdateDllNames))
+            {
+                var analyzer = new Analyzer(new Analyzer.Options
+                {
+                    MaxIterationCount = Math.Min(20, gs.maxGenericReferenceIteration),
+                    Collector = collector,
+                });
 
-            foreach (var dll in AOTGenericReferences.PatchedAOTAssemblyList)
+                analyzer.Run();
+                var types = analyzer.AotGenericTypes.ToList();
+                var methods = analyzer.AotGenericMethods.ToList();
+                var modules = new HashSet<dnlib.DotNet.ModuleDef>(
+                    types.Select(t => t.Type.Module).Concat(methods.Select(m => m.Method.Module))).ToList();
+                foreach (var module in modules)
+                {
+                    codes.Add(module.Name);
+                }
+            }
+
+            foreach (var dll in codes)
             {
                 var dllName = dll;
                 if (!dllName.EndsWith(".dll"))
@@ -142,6 +167,7 @@ namespace HybridCLR.Commands
         /// 将热更DLL拷贝到资源打包目录
         /// </summary>
         /// <param name="target"></param>
+
         public static void CopyHotUpdateAssembliesToYooAssetPath(BuildTarget target)
         {
             if (!Directory.Exists(HotDir))

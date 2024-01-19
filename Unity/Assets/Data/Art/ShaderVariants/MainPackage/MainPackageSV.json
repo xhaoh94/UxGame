@@ -193,6 +193,19 @@
             ]
         },
         {
+            "AssetPath": "Packages/com.unity.render-pipelines.core/Runtime/RenderPipelineResources/FallbackShader.shader",
+            "ShaderName": "Hidden/Core/FallbackError",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
             "AssetPath": "Assets/Data/Art/Shders/Model/CelColorShader.shader",
             "ShaderName": "ToonLit/Outline",
             "ShaderVariantCount": 2,
@@ -205,19 +218,6 @@
                 },
                 {
                     "PassType": 14,
-                    "Keywords": [
-                        ""
-                    ]
-                }
-            ]
-        },
-        {
-            "AssetPath": "Packages/com.unity.render-pipelines.core/Runtime/RenderPipelineResources/FallbackShader.shader",
-            "ShaderName": "Hidden/Core/FallbackError",
-            "ShaderVariantCount": 1,
-            "ShaderVariantElements": [
-                {
-                    "PassType": 0,
                     "Keywords": [
                         ""
                     ]

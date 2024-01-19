@@ -6,6 +6,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	public static readonly IReadOnlyList<string> PatchedAOTAssemblyList = new List<string>
 	{
 		"Luban.dll",
+		"Protobuf-net.dll",
+		"System.Core.dll",
 		"UniTask.dll",
 		"Unity.InputSystem.dll",
 		"Unity.Main.dll",
@@ -19,281 +21,653 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// }} 
 
 	// {{ AOT generic types
+	// Cysharp.Threading.Tasks.AutoResetUniTaskCompletionSource.<>c<object>
+	// Cysharp.Threading.Tasks.AutoResetUniTaskCompletionSource<object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<object,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<object,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<object,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<object,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<object>
+	// Cysharp.Threading.Tasks.CompilerServices.IStateMachineRunnerPromise<byte>
 	// Cysharp.Threading.Tasks.CompilerServices.IStateMachineRunnerPromise<object>
 	// Cysharp.Threading.Tasks.ITaskPoolNode<object>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,byte>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,object>>
+	// Cysharp.Threading.Tasks.IUniTaskSource<byte>
 	// Cysharp.Threading.Tasks.IUniTaskSource<object>
 	// Cysharp.Threading.Tasks.TaskPool<object>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,byte>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,object>>
+	// Cysharp.Threading.Tasks.UniTask.Awaiter<byte>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<object>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,byte>>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<System.ValueTuple<byte,object>>
+	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<byte>
 	// Cysharp.Threading.Tasks.UniTask.IsCanceledSource<object>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,byte>>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<System.ValueTuple<byte,object>>
+	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<byte>
 	// Cysharp.Threading.Tasks.UniTask.MemoizeSource<object>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,byte>>
 	// Cysharp.Threading.Tasks.UniTask<System.ValueTuple<byte,object>>
+	// Cysharp.Threading.Tasks.UniTask<byte>
 	// Cysharp.Threading.Tasks.UniTask<object>
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<Cysharp.Threading.Tasks.AsyncUnit>
+	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<byte>
+	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<object>
 	// Singleton<object>
+	// System.Action<Cysharp.Threading.Tasks.UniTask>
 	// System.Action<System.DateTime>
 	// System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>
+	// System.Action<UnityEngine.Vector2Int>
 	// System.Action<UnityEngine.Vector3>
+	// System.Action<Ux.ConditionMgr.ConditionParse>
+	// System.Action<Ux.ModuleMgr.ModuleParse>
+	// System.Action<Ux.TagMgr.TagParse>
+	// System.Action<Ux.UIMgr.BlurStack>
+	// System.Action<Ux.UIMgr.UIParse>
+	// System.Action<Ux.UIMgr.UIStack>
+	// System.Action<byte,object>
+	// System.Action<int,byte>
+	// System.Action<int,int>
+	// System.Action<int,object,byte>
 	// System.Action<int>
 	// System.Action<long>
+	// System.Action<object,byte>
+	// System.Action<object,int>
+	// System.Action<object,object,byte>
 	// System.Action<object,object,object>
 	// System.Action<object,object>
 	// System.Action<object>
+	// System.Action<uint>
+	// System.ArraySegment.Enumerator<byte>
+	// System.ArraySegment<byte>
+	// System.ByReference<byte>
+	// System.Collections.Generic.ArraySortHelper<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.ArraySortHelper<System.DateTime>
+	// System.Collections.Generic.ArraySortHelper<UnityEngine.Vector2Int>
 	// System.Collections.Generic.ArraySortHelper<UnityEngine.Vector3>
+	// System.Collections.Generic.ArraySortHelper<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.ArraySortHelper<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.ArraySortHelper<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.ArraySortHelper<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.ArraySortHelper<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.ArraySortHelper<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.ArraySortHelper<int>
 	// System.Collections.Generic.ArraySortHelper<long>
 	// System.Collections.Generic.ArraySortHelper<object>
+	// System.Collections.Generic.ArraySortHelper<uint>
+	// System.Collections.Generic.Comparer<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.Comparer<System.DateTime>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// System.Collections.Generic.Comparer<System.ValueTuple<byte,byte>>
 	// System.Collections.Generic.Comparer<System.ValueTuple<byte,object>>
+	// System.Collections.Generic.Comparer<UnityEngine.Vector2Int>
 	// System.Collections.Generic.Comparer<UnityEngine.Vector3>
+	// System.Collections.Generic.Comparer<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.Comparer<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.Comparer<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.Comparer<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.Comparer<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.Comparer<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.Comparer<byte>
 	// System.Collections.Generic.Comparer<int>
 	// System.Collections.Generic.Comparer<long>
 	// System.Collections.Generic.Comparer<object>
+	// System.Collections.Generic.Comparer<uint>
 	// System.Collections.Generic.Dictionary.Enumerator<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.Dictionary.Enumerator<int,object>
 	// System.Collections.Generic.Dictionary.Enumerator<long,object>
 	// System.Collections.Generic.Dictionary.Enumerator<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.Dictionary.Enumerator<object,Ux.CronData>
+	// System.Collections.Generic.Dictionary.Enumerator<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.Dictionary.Enumerator<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.Dictionary.Enumerator<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.Dictionary.Enumerator<object,double>
 	// System.Collections.Generic.Dictionary.Enumerator<object,int>
 	// System.Collections.Generic.Dictionary.Enumerator<object,object>
+	// System.Collections.Generic.Dictionary.Enumerator<uint,float>
 	// System.Collections.Generic.Dictionary.Enumerator<uint,object>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<int,object>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<long,object>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,Ux.CronData>
+	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,double>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,int>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<object,object>
+	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<uint,float>
 	// System.Collections.Generic.Dictionary.KeyCollection.Enumerator<uint,object>
 	// System.Collections.Generic.Dictionary.KeyCollection<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.Dictionary.KeyCollection<int,object>
 	// System.Collections.Generic.Dictionary.KeyCollection<long,object>
 	// System.Collections.Generic.Dictionary.KeyCollection<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.Dictionary.KeyCollection<object,Ux.CronData>
+	// System.Collections.Generic.Dictionary.KeyCollection<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.Dictionary.KeyCollection<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.Dictionary.KeyCollection<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.Dictionary.KeyCollection<object,double>
 	// System.Collections.Generic.Dictionary.KeyCollection<object,int>
 	// System.Collections.Generic.Dictionary.KeyCollection<object,object>
+	// System.Collections.Generic.Dictionary.KeyCollection<uint,float>
 	// System.Collections.Generic.Dictionary.KeyCollection<uint,object>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<int,object>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<long,object>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,Ux.CronData>
+	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,double>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,int>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<object,object>
+	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<uint,float>
 	// System.Collections.Generic.Dictionary.ValueCollection.Enumerator<uint,object>
 	// System.Collections.Generic.Dictionary.ValueCollection<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.Dictionary.ValueCollection<int,object>
 	// System.Collections.Generic.Dictionary.ValueCollection<long,object>
 	// System.Collections.Generic.Dictionary.ValueCollection<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.Dictionary.ValueCollection<object,Ux.CronData>
+	// System.Collections.Generic.Dictionary.ValueCollection<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.Dictionary.ValueCollection<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.Dictionary.ValueCollection<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.Dictionary.ValueCollection<object,double>
 	// System.Collections.Generic.Dictionary.ValueCollection<object,int>
 	// System.Collections.Generic.Dictionary.ValueCollection<object,object>
+	// System.Collections.Generic.Dictionary.ValueCollection<uint,float>
 	// System.Collections.Generic.Dictionary.ValueCollection<uint,object>
 	// System.Collections.Generic.Dictionary<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.Dictionary<int,object>
 	// System.Collections.Generic.Dictionary<long,object>
 	// System.Collections.Generic.Dictionary<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.Dictionary<object,Ux.CronData>
+	// System.Collections.Generic.Dictionary<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.Dictionary<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.Dictionary<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.Dictionary<object,double>
 	// System.Collections.Generic.Dictionary<object,int>
 	// System.Collections.Generic.Dictionary<object,object>
+	// System.Collections.Generic.Dictionary<uint,float>
 	// System.Collections.Generic.Dictionary<uint,object>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,byte>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<byte,object>>
 	// System.Collections.Generic.EqualityComparer<System.ValueTuple<int,int>>
 	// System.Collections.Generic.EqualityComparer<UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.EqualityComparer<Ux.CronData>
+	// System.Collections.Generic.EqualityComparer<Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.EqualityComparer<Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.EqualityComparer<Ux.EvalMgr.ValueBool>
 	// System.Collections.Generic.EqualityComparer<byte>
+	// System.Collections.Generic.EqualityComparer<double>
+	// System.Collections.Generic.EqualityComparer<float>
 	// System.Collections.Generic.EqualityComparer<int>
 	// System.Collections.Generic.EqualityComparer<long>
 	// System.Collections.Generic.EqualityComparer<object>
 	// System.Collections.Generic.EqualityComparer<uint>
+	// System.Collections.Generic.HashSet.Enumerator<int>
+	// System.Collections.Generic.HashSet.Enumerator<object>
+	// System.Collections.Generic.HashSet<int>
+	// System.Collections.Generic.HashSet<object>
+	// System.Collections.Generic.HashSetEqualityComparer<int>
+	// System.Collections.Generic.HashSetEqualityComparer<object>
+	// System.Collections.Generic.ICollection<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<System.ValueTuple<int,int>,object>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<int,object>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<long,object>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,UnityEngine.Playables.PlayableBinding>>
+	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,Ux.CronData>>
+	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ArgBool>>
+	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.MatchData>>
+	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ValueBool>>
+	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,double>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,int>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<object,object>>
+	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<uint,float>>
 	// System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<uint,object>>
 	// System.Collections.Generic.ICollection<System.DateTime>
+	// System.Collections.Generic.ICollection<UnityEngine.Vector2Int>
 	// System.Collections.Generic.ICollection<UnityEngine.Vector3>
+	// System.Collections.Generic.ICollection<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.ICollection<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.ICollection<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.ICollection<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.ICollection<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.ICollection<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.ICollection<int>
 	// System.Collections.Generic.ICollection<long>
 	// System.Collections.Generic.ICollection<object>
+	// System.Collections.Generic.ICollection<uint>
+	// System.Collections.Generic.IComparer<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.IComparer<System.DateTime>
+	// System.Collections.Generic.IComparer<UnityEngine.Vector2Int>
 	// System.Collections.Generic.IComparer<UnityEngine.Vector3>
+	// System.Collections.Generic.IComparer<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.IComparer<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.IComparer<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.IComparer<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.IComparer<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.IComparer<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.IComparer<int>
 	// System.Collections.Generic.IComparer<long>
 	// System.Collections.Generic.IComparer<object>
+	// System.Collections.Generic.IComparer<uint>
+	// System.Collections.Generic.IDictionary<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.IDictionary<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.IDictionary<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.IDictionary<object,double>
+	// System.Collections.Generic.IDictionary<object,object>
+	// System.Collections.Generic.IEnumerable<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.ValueTuple<int,int>,object>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<int,object>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<long,object>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,UnityEngine.Playables.PlayableBinding>>
+	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,Ux.CronData>>
+	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ArgBool>>
+	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.MatchData>>
+	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ValueBool>>
+	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,double>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,int>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>
+	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<uint,float>>
 	// System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<uint,object>>
 	// System.Collections.Generic.IEnumerable<System.DateTime>
+	// System.Collections.Generic.IEnumerable<UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.IEnumerable<UnityEngine.Vector2Int>
 	// System.Collections.Generic.IEnumerable<UnityEngine.Vector3>
+	// System.Collections.Generic.IEnumerable<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.IEnumerable<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.IEnumerable<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.IEnumerable<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.IEnumerable<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.IEnumerable<Ux.UIMgr.UIStack>
+	// System.Collections.Generic.IEnumerable<byte>
 	// System.Collections.Generic.IEnumerable<int>
 	// System.Collections.Generic.IEnumerable<long>
 	// System.Collections.Generic.IEnumerable<object>
+	// System.Collections.Generic.IEnumerable<uint>
+	// System.Collections.Generic.IEnumerator<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<System.ValueTuple<int,int>,object>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<int,object>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<long,object>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,UnityEngine.Playables.PlayableBinding>>
+	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,Ux.CronData>>
+	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ArgBool>>
+	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.MatchData>>
+	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ValueBool>>
+	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,double>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,int>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<object,object>>
+	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<uint,float>>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<uint,object>>
 	// System.Collections.Generic.IEnumerator<System.DateTime>
+	// System.Collections.Generic.IEnumerator<UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.IEnumerator<UnityEngine.Vector2Int>
 	// System.Collections.Generic.IEnumerator<UnityEngine.Vector3>
+	// System.Collections.Generic.IEnumerator<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.IEnumerator<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.IEnumerator<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.IEnumerator<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.IEnumerator<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.IEnumerator<Ux.UIMgr.UIStack>
+	// System.Collections.Generic.IEnumerator<byte>
 	// System.Collections.Generic.IEnumerator<int>
 	// System.Collections.Generic.IEnumerator<long>
 	// System.Collections.Generic.IEnumerator<object>
+	// System.Collections.Generic.IEnumerator<uint>
 	// System.Collections.Generic.IEqualityComparer<System.ValueTuple<int,int>>
 	// System.Collections.Generic.IEqualityComparer<int>
 	// System.Collections.Generic.IEqualityComparer<long>
 	// System.Collections.Generic.IEqualityComparer<object>
 	// System.Collections.Generic.IEqualityComparer<uint>
+	// System.Collections.Generic.IList<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.IList<System.DateTime>
+	// System.Collections.Generic.IList<UnityEngine.Vector2Int>
 	// System.Collections.Generic.IList<UnityEngine.Vector3>
+	// System.Collections.Generic.IList<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.IList<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.IList<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.IList<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.IList<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.IList<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.IList<int>
 	// System.Collections.Generic.IList<long>
 	// System.Collections.Generic.IList<object>
+	// System.Collections.Generic.IList<uint>
 	// System.Collections.Generic.KeyValuePair<System.ValueTuple<int,int>,object>
 	// System.Collections.Generic.KeyValuePair<int,object>
 	// System.Collections.Generic.KeyValuePair<long,object>
 	// System.Collections.Generic.KeyValuePair<object,UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.KeyValuePair<object,Ux.CronData>
+	// System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.KeyValuePair<object,Ux.EvalMgr.ValueBool>
+	// System.Collections.Generic.KeyValuePair<object,double>
 	// System.Collections.Generic.KeyValuePair<object,int>
 	// System.Collections.Generic.KeyValuePair<object,object>
+	// System.Collections.Generic.KeyValuePair<uint,float>
 	// System.Collections.Generic.KeyValuePair<uint,object>
+	// System.Collections.Generic.List.Enumerator<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.List.Enumerator<System.DateTime>
+	// System.Collections.Generic.List.Enumerator<UnityEngine.Vector2Int>
 	// System.Collections.Generic.List.Enumerator<UnityEngine.Vector3>
+	// System.Collections.Generic.List.Enumerator<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.List.Enumerator<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.List.Enumerator<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.List.Enumerator<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.List.Enumerator<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.List.Enumerator<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.List.Enumerator<int>
 	// System.Collections.Generic.List.Enumerator<long>
 	// System.Collections.Generic.List.Enumerator<object>
+	// System.Collections.Generic.List.Enumerator<uint>
+	// System.Collections.Generic.List<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.List<System.DateTime>
+	// System.Collections.Generic.List<UnityEngine.Vector2Int>
 	// System.Collections.Generic.List<UnityEngine.Vector3>
+	// System.Collections.Generic.List<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.List<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.List<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.List<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.List<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.List<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.List<int>
 	// System.Collections.Generic.List<long>
 	// System.Collections.Generic.List<object>
+	// System.Collections.Generic.List<uint>
+	// System.Collections.Generic.ObjectComparer<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.Generic.ObjectComparer<System.DateTime>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,byte>>
 	// System.Collections.Generic.ObjectComparer<System.ValueTuple<byte,object>>
+	// System.Collections.Generic.ObjectComparer<UnityEngine.Vector2Int>
 	// System.Collections.Generic.ObjectComparer<UnityEngine.Vector3>
+	// System.Collections.Generic.ObjectComparer<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.Generic.ObjectComparer<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.Generic.ObjectComparer<Ux.TagMgr.TagParse>
+	// System.Collections.Generic.ObjectComparer<Ux.UIMgr.BlurStack>
+	// System.Collections.Generic.ObjectComparer<Ux.UIMgr.UIParse>
+	// System.Collections.Generic.ObjectComparer<Ux.UIMgr.UIStack>
 	// System.Collections.Generic.ObjectComparer<byte>
 	// System.Collections.Generic.ObjectComparer<int>
 	// System.Collections.Generic.ObjectComparer<long>
 	// System.Collections.Generic.ObjectComparer<object>
+	// System.Collections.Generic.ObjectComparer<uint>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,byte>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<byte,object>>
 	// System.Collections.Generic.ObjectEqualityComparer<System.ValueTuple<int,int>>
 	// System.Collections.Generic.ObjectEqualityComparer<UnityEngine.Playables.PlayableBinding>
+	// System.Collections.Generic.ObjectEqualityComparer<Ux.CronData>
+	// System.Collections.Generic.ObjectEqualityComparer<Ux.EvalMgr.ArgBool>
+	// System.Collections.Generic.ObjectEqualityComparer<Ux.EvalMgr.MatchData>
+	// System.Collections.Generic.ObjectEqualityComparer<Ux.EvalMgr.ValueBool>
 	// System.Collections.Generic.ObjectEqualityComparer<byte>
+	// System.Collections.Generic.ObjectEqualityComparer<double>
+	// System.Collections.Generic.ObjectEqualityComparer<float>
 	// System.Collections.Generic.ObjectEqualityComparer<int>
 	// System.Collections.Generic.ObjectEqualityComparer<long>
 	// System.Collections.Generic.ObjectEqualityComparer<object>
 	// System.Collections.Generic.ObjectEqualityComparer<uint>
+	// System.Collections.Generic.Queue.Enumerator<int>
 	// System.Collections.Generic.Queue.Enumerator<object>
+	// System.Collections.Generic.Queue<int>
 	// System.Collections.Generic.Queue<object>
+	// System.Collections.Generic.Stack.Enumerator<Ux.UIMgr.UIStack>
+	// System.Collections.Generic.Stack<Ux.UIMgr.UIStack>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.ObjectModel.ReadOnlyCollection<System.DateTime>
+	// System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Vector2Int>
 	// System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Vector3>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Ux.ConditionMgr.ConditionParse>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Ux.ModuleMgr.ModuleParse>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Ux.TagMgr.TagParse>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Ux.UIMgr.BlurStack>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Ux.UIMgr.UIParse>
+	// System.Collections.ObjectModel.ReadOnlyCollection<Ux.UIMgr.UIStack>
 	// System.Collections.ObjectModel.ReadOnlyCollection<int>
 	// System.Collections.ObjectModel.ReadOnlyCollection<long>
 	// System.Collections.ObjectModel.ReadOnlyCollection<object>
+	// System.Collections.ObjectModel.ReadOnlyCollection<uint>
+	// System.Comparison<Cysharp.Threading.Tasks.UniTask>
 	// System.Comparison<System.DateTime>
+	// System.Comparison<UnityEngine.Vector2Int>
 	// System.Comparison<UnityEngine.Vector3>
+	// System.Comparison<Ux.ConditionMgr.ConditionParse>
+	// System.Comparison<Ux.ModuleMgr.ModuleParse>
+	// System.Comparison<Ux.TagMgr.TagParse>
+	// System.Comparison<Ux.UIMgr.BlurStack>
+	// System.Comparison<Ux.UIMgr.UIParse>
+	// System.Comparison<Ux.UIMgr.UIStack>
 	// System.Comparison<int>
 	// System.Comparison<long>
 	// System.Comparison<object>
+	// System.Comparison<uint>
+	// System.Dynamic.Utils.CacheDict.Entry<object,object>
+	// System.Dynamic.Utils.CacheDict<object,object>
+	// System.EventHandler<object>
+	// System.Func<byte,byte>
 	// System.Func<byte>
+	// System.Func<double,double,double>
+	// System.Func<double,double>
+	// System.Func<double>
+	// System.Func<int,byte>
 	// System.Func<int>
 	// System.Func<object,byte>
+	// System.Func<object,double>
+	// System.Func<object,int>
+	// System.Func<object,object,byte,object,object>
+	// System.Func<object,object,object>
 	// System.Func<object,object>
+	// System.Func<object>
+	// System.Linq.Buffer<object>
+	// System.Linq.Enumerable.Iterator<byte>
+	// System.Linq.Enumerable.Iterator<int>
+	// System.Linq.Enumerable.Iterator<object>
+	// System.Linq.Enumerable.WhereArrayIterator<int>
+	// System.Linq.Enumerable.WhereEnumerableIterator<byte>
+	// System.Linq.Enumerable.WhereEnumerableIterator<int>
+	// System.Linq.Enumerable.WhereListIterator<int>
+	// System.Linq.Enumerable.WhereSelectArrayIterator<object,byte>
+	// System.Linq.Enumerable.WhereSelectArrayIterator<object,int>
+	// System.Linq.Enumerable.WhereSelectEnumerableIterator<object,byte>
+	// System.Linq.Enumerable.WhereSelectEnumerableIterator<object,int>
+	// System.Linq.Enumerable.WhereSelectListIterator<object,byte>
+	// System.Linq.Enumerable.WhereSelectListIterator<object,int>
+	// System.Linq.Expressions.Expression<object>
+	// System.Nullable<Ux.UIMgr.BlurStack>
+	// System.Nullable<Ux.UIMgr.CallBackData>
 	// System.Nullable<long>
+	// System.Predicate<Cysharp.Threading.Tasks.UniTask>
 	// System.Predicate<System.DateTime>
 	// System.Predicate<UnityEngine.InputSystem.InputControlScheme>
+	// System.Predicate<UnityEngine.Vector2Int>
 	// System.Predicate<UnityEngine.Vector3>
+	// System.Predicate<Ux.ConditionMgr.ConditionParse>
+	// System.Predicate<Ux.ModuleMgr.ModuleParse>
+	// System.Predicate<Ux.TagMgr.TagParse>
+	// System.Predicate<Ux.UIMgr.BlurStack>
+	// System.Predicate<Ux.UIMgr.UIParse>
+	// System.Predicate<Ux.UIMgr.UIStack>
 	// System.Predicate<int>
 	// System.Predicate<long>
 	// System.Predicate<object>
+	// System.Predicate<uint>
+	// System.ReadOnlySpan.Enumerator<byte>
+	// System.ReadOnlySpan<byte>
 	// System.Runtime.CompilerServices.ConditionalWeakTable.CreateValueCallback<object,object>
 	// System.Runtime.CompilerServices.ConditionalWeakTable.Enumerator<object,object>
 	// System.Runtime.CompilerServices.ConditionalWeakTable<object,object>
+	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<object>
+	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<object>
+	// System.Runtime.CompilerServices.ReadOnlyCollectionBuilder.Enumerator<object>
+	// System.Runtime.CompilerServices.ReadOnlyCollectionBuilder<object>
+	// System.Runtime.CompilerServices.TaskAwaiter<object>
+	// System.Runtime.CompilerServices.TrueReadOnlyCollection<object>
+	// System.Span.Enumerator<byte>
+	// System.Span<byte>
+	// System.Threading.Tasks.ContinuationTaskFromResultTask<object>
+	// System.Threading.Tasks.Task<object>
+	// System.Threading.Tasks.TaskFactory.<>c__DisplayClass35_0<object>
+	// System.Threading.Tasks.TaskFactory<object>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>
+	// System.ValueTuple<byte,System.ValueTuple<byte,byte>>
 	// System.ValueTuple<byte,System.ValueTuple<byte,object>>
+	// System.ValueTuple<byte,byte>
 	// System.ValueTuple<byte,object>
 	// System.ValueTuple<int,int>
 	// UnityEngine.InputSystem.InputBindingComposite<UnityEngine.Vector2>
@@ -303,44 +677,58 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray.Enumerator<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.Playables.ScriptPlayable<object>
-	// Ux.EventMgr.<>c__DisplayClass23_0<object>
-	// Ux.EventMgr.EventData<object,object,object>
-	// Ux.EventMgr.EventData<object,object>
-	// Ux.EventMgr.EventData<object>
-	// Ux.EventMgr.EventExe<object,object,object>
-	// Ux.EventMgr.EventExe<object,object>
-	// Ux.EventMgr.EventExe<object>
-	// Ux.IAwakeSystem<UnityEngine.Playables.PlayableGraph,object,object,int>
-	// Ux.IAwakeSystem<UnityEngine.Playables.PlayableGraph>
-	// Ux.IAwakeSystem<object,object>
-	// Ux.IAwakeSystem<object>
-	// Ux.ModuleBase<object>
 	// Ux.StateMachine.<>c__DisplayClass26_0<object>
-	// Ux.TimeMgr.HandleExe<object,object,object>
-	// Ux.TimeMgr.HandleExe<object,object>
-	// Ux.TimeMgr.HandleExe<object>
-	// Ux.UIMgr.UITask<object>
 	// }}
 
 	public void RefMethods()
 	{
 		// string Bright.Common.StringUtil.CollectionToString<object>(System.Collections.Generic.IEnumerable<object>)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,object>(System.Runtime.CompilerServices.TaskAwaiter&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,object>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,object>(System.Runtime.CompilerServices.TaskAwaiter<object>&,object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<object>(object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.NetMgr.<Call>d__10<object>>(Ux.NetMgr.<Call>d__10<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<object>(object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__27<object>>(Ux.ResMgr.<LoadAssetAsync>d__27<object>&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.UIMgr.<ShowAsync>d__38<object>>(Ux.UIMgr.<ShowAsync>d__38<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<object>(object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,object>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,object>(System.Runtime.CompilerServices.TaskAwaiter&,object&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<object>(object&)
 		// object Pool.Get<object>()
 		// object Pool.Get<object>(System.Type)
+		// System.Void ProtoBuf.Serializer.Serialize<object>(System.IO.Stream,object)
 		// object System.Activator.CreateInstance<object>()
+		// object[] System.Array.Empty<object>()
+		// System.Collections.ObjectModel.ReadOnlyCollection<object> System.Dynamic.Utils.CollectionExtensions.ToReadOnly<object>(System.Collections.Generic.IEnumerable<object>)
+		// bool System.Linq.Enumerable.Any<byte>(System.Collections.Generic.IEnumerable<byte>,System.Func<byte,bool>)
+		// bool System.Linq.Enumerable.Any<object>(System.Collections.Generic.IEnumerable<object>)
+		// object System.Linq.Enumerable.ElementAt<object>(System.Collections.Generic.IEnumerable<object>,int)
+		// System.Collections.Generic.IEnumerable<byte> System.Linq.Enumerable.Select<object,byte>(System.Collections.Generic.IEnumerable<object>,System.Func<object,byte>)
+		// System.Collections.Generic.IEnumerable<int> System.Linq.Enumerable.Select<object,int>(System.Collections.Generic.IEnumerable<object>,System.Func<object,int>)
+		// object[] System.Linq.Enumerable.ToArray<object>(System.Collections.Generic.IEnumerable<object>)
+		// System.Collections.Generic.List<int> System.Linq.Enumerable.ToList<int>(System.Collections.Generic.IEnumerable<int>)
+		// System.Collections.Generic.IEnumerable<int> System.Linq.Enumerable.Where<int>(System.Collections.Generic.IEnumerable<int>,System.Func<int,bool>)
+		// System.Collections.Generic.IEnumerable<byte> System.Linq.Enumerable.Iterator<object>.Select<byte>(System.Func<object,byte>)
+		// System.Collections.Generic.IEnumerable<int> System.Linq.Enumerable.Iterator<object>.Select<int>(System.Func<object,int>)
+		// System.Linq.Expressions.Expression<object> System.Linq.Expressions.Expression.Lambda<object>(System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression[])
+		// System.Linq.Expressions.Expression<object> System.Linq.Expressions.Expression.Lambda<object>(System.Linq.Expressions.Expression,bool,System.Collections.Generic.IEnumerable<System.Linq.Expressions.ParameterExpression>)
+		// System.Linq.Expressions.Expression<object> System.Linq.Expressions.Expression.Lambda<object>(System.Linq.Expressions.Expression,string,bool,System.Collections.Generic.IEnumerable<System.Linq.Expressions.ParameterExpression>)
+		// System.Span<byte> System.MemoryExtensions.AsSpan<byte>(byte[],int,int)
+		// object System.Reflection.CustomAttributeExtensions.GetCustomAttribute<object>(System.Reflection.MemberInfo)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<object>(object&)
 		// System.Void* Unity.Collections.LowLevel.Unsafe.UnsafeUtility.AddressOf<UnityEngine.Vector2>(UnityEngine.Vector2&)
 		// int Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf<UnityEngine.Vector2>()
+		// object UnityEngine.Component.GetComponent<object>()
 		// object UnityEngine.GameObject.AddComponent<object>()
 		// object UnityEngine.GameObject.GetComponent<object>()
 		// object UnityEngine.GameObject.GetComponentInChildren<object>()
@@ -350,116 +738,35 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// UnityEngine.Vector2 UnityEngine.InputSystem.InputActionState.ReadValue<UnityEngine.Vector2>(int,int,bool)
 		// UnityEngine.Playables.PlayableGraph UnityEngine.Playables.PlayableExtensions.GetGraph<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// int UnityEngine.Playables.PlayableExtensions.GetInputCount<UnityEngine.Animations.AnimationLayerMixerPlayable>(UnityEngine.Animations.AnimationLayerMixerPlayable)
+		// int UnityEngine.Playables.PlayableExtensions.GetInputCount<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable)
+		// float UnityEngine.Playables.PlayableExtensions.GetInputWeight<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int)
+		// UnityEngine.Playables.PlayState UnityEngine.Playables.PlayableExtensions.GetPlayState<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// double UnityEngine.Playables.PlayableExtensions.GetSpeed<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// double UnityEngine.Playables.PlayableExtensions.GetTime<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// bool UnityEngine.Playables.PlayableExtensions.IsDone<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// bool UnityEngine.Playables.PlayableExtensions.IsValid<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// System.Void UnityEngine.Playables.PlayableExtensions.Pause<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// System.Void UnityEngine.Playables.PlayableExtensions.Play<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetDone<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,bool)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetDuration<UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationClipPlayable,double)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputCount<UnityEngine.Animations.AnimationLayerMixerPlayable>(UnityEngine.Animations.AnimationLayerMixerPlayable,int)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputCount<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable,int)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputWeight<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int,float)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetSpeed<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,double)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetTime<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,double)
+		// bool UnityEngine.Playables.PlayableGraph.Connect<UnityEngine.Playables.Playable,UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int,UnityEngine.Playables.Playable,int)
+		// System.Void UnityEngine.Playables.PlayableGraph.DestroySubgraph<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// System.Void UnityEngine.Playables.PlayableGraph.Disconnect<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int)
 		// int UnityEngine.Playables.PlayableOutputExtensions.GetSourceOutputPort<UnityEngine.Animations.AnimationPlayableOutput>(UnityEngine.Animations.AnimationPlayableOutput)
 		// System.Void UnityEngine.Playables.PlayableOutputExtensions.SetSourcePlayable<UnityEngine.Animations.AnimationPlayableOutput,UnityEngine.Animations.AnimationLayerMixerPlayable>(UnityEngine.Animations.AnimationPlayableOutput,UnityEngine.Animations.AnimationLayerMixerPlayable)
 		// System.Void Ux.DictionaryEx.ForEachValue<object,object>(System.Collections.Generic.Dictionary<object,object>,System.Action<object>)
-		// Ux.Entity Ux.Entity.AddChild<UnityEngine.Playables.PlayableGraph,object,object,int>(long,System.Type,UnityEngine.Playables.PlayableGraph,object,object,int,bool)
-		// Ux.Entity Ux.Entity.AddChild<UnityEngine.Playables.PlayableGraph>(long,System.Type,UnityEngine.Playables.PlayableGraph,bool)
-		// Ux.Entity Ux.Entity.AddChild<object>(System.Type,object,bool)
-		// Ux.Entity Ux.Entity.AddChild<object>(long,System.Type,object,bool)
-		// object Ux.Entity.AddChild<object,UnityEngine.Playables.PlayableGraph,object,object,int>(long,UnityEngine.Playables.PlayableGraph,object,object,int,bool)
-		// object Ux.Entity.AddChild<object,UnityEngine.Playables.PlayableGraph>(long,UnityEngine.Playables.PlayableGraph,bool)
-		// object Ux.Entity.AddChild<object,object>(long,object,bool)
-		// object Ux.Entity.AddChild<object,object>(object,bool)
-		// Ux.Entity Ux.Entity.AddComponent<object,object>(System.Type,object,object,bool)
-		// Ux.Entity Ux.Entity.AddComponent<object>(System.Type,object,bool)
-		// object Ux.Entity.AddComponent<object,object,object>(object,object,bool)
-		// object Ux.Entity.AddComponent<object,object>(object,bool)
-		// object Ux.Entity.AddComponent<object>(bool)
-		// object Ux.Entity.Create<object>(bool)
-		// object Ux.Entity.GetChild<object>(long)
-		// object Ux.Entity.GetComponent<object>()
-		// object Ux.Entity.ParentAs<object>()
-		// System.Void Ux.Entity._InitSystem<UnityEngine.Playables.PlayableGraph,object,object,int>(UnityEngine.Playables.PlayableGraph,object,object,int)
-		// System.Void Ux.Entity._InitSystem<UnityEngine.Playables.PlayableGraph>(UnityEngine.Playables.PlayableGraph)
-		// System.Void Ux.Entity._InitSystem<object,object>(object,object)
-		// System.Void Ux.Entity._InitSystem<object>(object)
-		// object Ux.EntityMono.GetEntity<object>()
-		// System.Void Ux.EventMgr.Off<object,object,object>(int,object,System.Action<object,object,object>)
-		// System.Void Ux.EventMgr.Off<object,object>(int,object,System.Action<object,object>)
-		// System.Void Ux.EventMgr.Off<object>(int,object,System.Action<object>)
-		// long Ux.EventMgr.On<object,object,object>(int,object,System.Action<object,object,object>)
-		// long Ux.EventMgr.On<object,object>(int,object,System.Action<object,object>)
-		// long Ux.EventMgr.On<object>(int,object,System.Action<object>)
-		// System.Void Ux.EventMgr.Run<object,object,object>(int,object,object,object)
-		// System.Void Ux.EventMgr.Run<object,object>(int,object,object)
-		// System.Void Ux.EventMgr.Run<object>(int,object)
-		// object Ux.EventMgr._Add<object>(long&,int,object,System.Delegate)
-		// object Ux.EventMgr._Add<object>(long)
-		// System.Void Ux.EventMgr.___SetEvtAttribute<object>()
 		// object Ux.GameObjectEx.GetOrAddComponent<object>(UnityEngine.GameObject)
-		// System.Void Ux.MainEventMgrEx.Off<object,object,object>(Ux.EventMgr,Ux.MainEventType,object,System.Action<object,object,object>)
-		// System.Void Ux.MainEventMgrEx.Off<object,object>(Ux.EventMgr,Ux.MainEventType,object,System.Action<object,object>)
-		// System.Void Ux.MainEventMgrEx.Off<object>(Ux.EventMgr,Ux.MainEventType,object,System.Action<object>)
-		// System.Void Ux.MainEventMgrEx.On<object,object,object>(Ux.EventMgr,Ux.MainEventType,object,System.Action<object,object,object>)
-		// System.Void Ux.MainEventMgrEx.On<object,object>(Ux.EventMgr,Ux.MainEventType,object,System.Action<object,object>)
-		// System.Void Ux.MainEventMgrEx.On<object>(Ux.EventMgr,Ux.MainEventType,object,System.Action<object>)
-		// Cysharp.Threading.Tasks.UniTask<object> Ux.NetMgr.Call<object>(uint,object)
 		// object Ux.ResMgr.LoadAsset<object>(string,Ux.ResType)
 		// Cysharp.Threading.Tasks.UniTask<object> Ux.ResMgr.LoadAssetAsync<object>(string,Ux.ResType)
 		// object Ux.ResMgr._LoadAsset<object>(string,YooAsset.AssetHandle)
-		// object Ux.SkillAsset.GetClip<object>(string,string)
-		// object Ux.SkillAsset.GetTrack<object>(string)
 		// System.Void Ux.StateMachine.AddNode<object>(object,bool)
 		// System.Void Ux.StateMachine.Enter<object>(object)
 		// System.Void Ux.StateMachine.ForEach<object>(System.Action<object>)
-		// long Ux.TimeMgr.Create<object,object,object>(bool,Ux.TimeMgr.HandleMap,float,float,int,object,System.Action<object,object,object>,object,object,object,System.Action)
-		// long Ux.TimeMgr.Create<object,object,object>(bool,Ux.TimeMgr.HandleMap,float,float,int,object,System.Action<object,object,object>,object,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.Create<object,object>(bool,Ux.TimeMgr.HandleMap,float,float,int,object,System.Action<object,object>,object,object,System.Action)
-		// long Ux.TimeMgr.Create<object,object>(bool,Ux.TimeMgr.HandleMap,float,float,int,object,System.Action<object,object>,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.Create<object>(bool,Ux.TimeMgr.HandleMap,float,float,int,object,System.Action<object>,object,System.Action)
-		// long Ux.TimeMgr.Create<object>(bool,Ux.TimeMgr.HandleMap,float,float,int,object,System.Action<object>,object,System.Action<object>,object)
-		// object Ux.TimeMgr.CreateHandle<object>(long&,Ux.TimeMgr.HandleMap,System.Delegate,object)
-		// long Ux.TimeMgr.DoCron<object,object,object>(string,object,System.Action<object,object,object>,object,object,object,bool)
-		// long Ux.TimeMgr.DoCron<object,object>(string,object,System.Action<object,object>,object,object,bool)
-		// long Ux.TimeMgr.DoCron<object>(string,object,System.Action<object>,object,bool)
-		// long Ux.TimeMgr.DoFrame<object,object,object>(int,int,int,object,System.Action<object,object,object>,object,object,object,System.Action)
-		// long Ux.TimeMgr.DoFrame<object,object,object>(int,int,int,object,System.Action<object,object,object>,object,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoFrame<object,object,object>(int,int,object,System.Action<object,object,object>,object,object,object,System.Action)
-		// long Ux.TimeMgr.DoFrame<object,object,object>(int,int,object,System.Action<object,object,object>,object,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoFrame<object,object>(int,int,int,object,System.Action<object,object>,object,object,System.Action)
-		// long Ux.TimeMgr.DoFrame<object,object>(int,int,int,object,System.Action<object,object>,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoFrame<object,object>(int,int,object,System.Action<object,object>,object,object,System.Action)
-		// long Ux.TimeMgr.DoFrame<object,object>(int,int,object,System.Action<object,object>,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoFrame<object>(int,int,int,object,System.Action<object>,object,System.Action)
-		// long Ux.TimeMgr.DoFrame<object>(int,int,int,object,System.Action<object>,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoFrame<object>(int,int,object,System.Action<object>,object,System.Action)
-		// long Ux.TimeMgr.DoFrame<object>(int,int,object,System.Action<object>,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoTimeStamp<object,object,object>(long,object,System.Action<object,object,object>,object,object,object,bool)
-		// long Ux.TimeMgr.DoTimeStamp<object,object>(long,object,System.Action<object,object>,object,object,bool)
-		// long Ux.TimeMgr.DoTimeStamp<object>(long,object,System.Action<object>,object,bool)
-		// long Ux.TimeMgr.DoTimer<object,object,object>(float,float,int,object,System.Action<object,object,object>,object,object,object,System.Action)
-		// long Ux.TimeMgr.DoTimer<object,object,object>(float,float,int,object,System.Action<object,object,object>,object,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoTimer<object,object,object>(float,int,object,System.Action<object,object,object>,object,object,object,System.Action)
-		// long Ux.TimeMgr.DoTimer<object,object,object>(float,int,object,System.Action<object,object,object>,object,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoTimer<object,object>(float,float,int,object,System.Action<object,object>,object,object,System.Action)
-		// long Ux.TimeMgr.DoTimer<object,object>(float,float,int,object,System.Action<object,object>,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoTimer<object,object>(float,int,object,System.Action<object,object>,object,object,System.Action)
-		// long Ux.TimeMgr.DoTimer<object,object>(float,int,object,System.Action<object,object>,object,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoTimer<object>(float,float,int,object,System.Action<object>,object,System.Action)
-		// long Ux.TimeMgr.DoTimer<object>(float,float,int,object,System.Action<object>,object,System.Action<object>,object)
-		// long Ux.TimeMgr.DoTimer<object>(float,int,object,System.Action<object>,object,System.Action)
-		// long Ux.TimeMgr.DoTimer<object>(float,int,object,System.Action<object>,object,System.Action<object>,object)
-		// System.Void Ux.TimeMgr.RemoveCron<object,object,object>(object,System.Action<object,object,object>)
-		// System.Void Ux.TimeMgr.RemoveCron<object,object>(object,System.Action<object,object>)
-		// System.Void Ux.TimeMgr.RemoveCron<object>(object,System.Action<object>)
-		// System.Void Ux.TimeMgr.RemoveFrame<object,object,object>(object,System.Action<object,object,object>)
-		// System.Void Ux.TimeMgr.RemoveFrame<object,object>(object,System.Action<object,object>)
-		// System.Void Ux.TimeMgr.RemoveFrame<object>(object,System.Action<object>)
-		// System.Void Ux.TimeMgr.RemoveTimeStamp<object,object,object>(object,System.Action<object,object,object>)
-		// System.Void Ux.TimeMgr.RemoveTimeStamp<object,object>(object,System.Action<object,object>)
-		// System.Void Ux.TimeMgr.RemoveTimeStamp<object>(object,System.Action<object>)
-		// System.Void Ux.TimeMgr.RemoveTimer<object,object,object>(object,System.Action<object,object,object>)
-		// System.Void Ux.TimeMgr.RemoveTimer<object,object>(object,System.Action<object,object>)
-		// System.Void Ux.TimeMgr.RemoveTimer<object>(object,System.Action<object>)
-		// System.Void Ux.UIDialogFactory.SetDefalutType<object>()
-		// System.Void Ux.UIMgr.Hide<object>(bool)
-		// Ux.UIMgr.UITask<object> Ux.UIMgr.Show<object>(int,object,bool)
-		// Ux.UIMgr.UITask<object> Ux.UIMgr.Show<object>(object,bool)
-		// Cysharp.Threading.Tasks.UniTask<object> Ux.UIMgr.ShowAsync<object>(bool,int,object,bool)
-		// object Ux.UIObject.ObjAs<object>()
-		// System.Void Ux.UITabFrame.SetTabRenderer<object>()
 		// object YooAsset.AssetHandle.GetAssetObject<object>()
 		// YooAsset.AssetHandle YooAsset.ResourcePackage.LoadAssetSync<object>(string)
 		// string string.Join<object>(string,System.Collections.Generic.IEnumerable<object>)

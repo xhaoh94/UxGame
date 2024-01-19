@@ -16,7 +16,7 @@ namespace Ux
         private EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
 
         [SerializeField]
-        private bool IngameDebug = true;
+        bool IngameDebug = true;
 
         void Awake()
         {
@@ -25,7 +25,6 @@ namespace Ux
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
             }
             Ins = this;            
-            SynchronizationContext.SetSynchronizationContext(OneThreadSynchronizationContext.Instance);
             zstring.Init(Log.Error);
             Machine = StateMachine.CreateByPool();
             DontDestroyOnLoad(gameObject);
@@ -48,7 +47,7 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize(PlayMode);            
+            yield return ResMgr.Ins.Initialize(PlayMode);
             // 运行补丁流程
             PatchMgr.Ins.Run(PlayMode);
         }
@@ -74,7 +73,7 @@ namespace Ux
             }
 #endif
             try
-            {                                             
+            {
                 _update?.Invoke();
             }
             catch (Exception e)
@@ -95,7 +94,7 @@ namespace Ux
         void LateUpdate()
         {
             try
-            {                
+            {
                 _lateUpdate?.Invoke();
             }
             catch (Exception e)
@@ -115,7 +114,7 @@ namespace Ux
         private void FixedUpdate()
         {
             try
-            {                
+            {
                 _fixedUpdate?.Invoke();
             }
             catch (Exception e)
@@ -133,22 +132,15 @@ namespace Ux
         }
         Action _quit;
         private void OnApplicationQuit()
-        {            
+        {
             _quit?.Invoke();
         }
 
-        public void AddLowMemory(Action action)
-        {
-            _lowMemory += action;
-        }        
-
-        Action _lowMemory;
         void OnLowMemory()
-        {            
+        {
             ResMgr.Ins.OnLowMemory();
             Pool.Clear();
             UnityPool.Clear();
-            _lowMemory?.Invoke();
         }
     }
 }

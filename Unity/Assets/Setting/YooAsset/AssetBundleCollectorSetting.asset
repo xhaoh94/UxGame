@@ -53,6 +53,14 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+      - CollectPath: Assets/Data/Res/Texture
+        CollectorGUID: 44c4d93bd00271241a1cffdca263e47b
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
     - GroupName: Preload
       GroupDesc: "\u9884\u52A0\u8F7D"
       AssetTags: preload

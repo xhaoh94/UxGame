@@ -1,9 +1,6 @@
-using System;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,31 +10,25 @@ public class ProtoSettingData : ScriptableObject
 {
 
     [CommandPathAttribute]
-    [Command(false)]
-    [InspectorLabel("PbTool")]
+    [Command(false)]    
     public string PbTool = "../Proto/PbTool/PbTool.dll";
 
     [CommandPathAttribute]
-    [Command("-config")]
-    [InspectorLabel("配置目录")]
+    [Command("-config")]    
     public string Config = "../Proto/Config.json";   
 
     [CommandPathAttribute]
-    [Command("-inpath")]
-    [InspectorLabel("配置目录")]
+    [Command("-inpath")]    
     public string InPath = "../Proto/protofiles/protofile/client";
 
     [CommandPathAttribute]
-    [Command("-outpath")]
-    [InspectorLabel("导出代码目录")]
+    [Command("-outpath")]    
     public string OutPath = "Assets/Hotfix/CodeGen/Proto";
 
-    [Command("-type")]
-    [InspectorLabel("Type")]
+    [Command("-type")]    
     public string Type = "csharp_pbnet";
 
-    [Command("-namespace")]
-    [InspectorLabel("命名空间")]
+    [Command("-namespace")]    
     public string NameSpace = "Ux.Pb";
 
 

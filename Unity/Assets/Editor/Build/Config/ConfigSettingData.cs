@@ -1,9 +1,7 @@
-using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,8 +11,7 @@ public class ConfigSettingData : ScriptableObject
 {
 
     [CommandPathAttribute]
-    [Command(false)]
-    [InspectorLabel("Dll")]
+    [Command(false)]   
     public string DllFile = "../Luban/Tools/Luban.ClientServer/Luban.ClientServer.dll";
 
     [Command("--job")]
@@ -22,31 +19,25 @@ public class ConfigSettingData : ScriptableObject
     public string Job = "cfg --";
 
     [CommandPathAttribute]
-    [Command("--define_file")]
-    [InspectorLabel("Root.xml")]
+    [Command("--define_file")]    
     public string DefineFile = "../Luban/Defines/__root__.xml";
 
     [CommandPathAttribute]
-    [Command("--input_data_dir")]
-    [InspectorLabel("配置目录")]
+    [Command("--input_data_dir")]    
     public string InputDataPath = "../Luban/Datas";
 
     [CommandPathAttribute]
-    [Command("--output_code_dir")]
-    [InspectorLabel("导出代码目录")]
+    [Command("--output_code_dir")]    
     public string OutCodePath = "Assets/Hotfix/CodeGen/Config";
 
-    [CommandPathAttribute]
-    [InspectorLabel("导出数据目录")]
+    [CommandPathAttribute]    
     [Command("--output_data_dir")]
     public string OutDataPath = "Assets/Data/Res/Config";
 
-    [Command("--gen_types")]
-    [InspectorLabel("生成数据类型")]
+    [Command("--gen_types")]    
     public string GenType = "code_cs_unity_bin,data_bin";
 
-    [Command("--service")]
-    [InspectorLabel("生成类型")]
+    [Command("--service")]    
     public string ServiceType = "client";
 
 

@@ -537,6 +537,7 @@ public partial class VersionWindow : EditorWindow
             Log.Error("请等待编译完成后再导出");
             return;
         }
+       
         EditorApplication.LockReloadAssemblies();
         try
         {
