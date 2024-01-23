@@ -21,12 +21,12 @@ namespace Ux
             msg.CurrentDownloadCount = currentDownloadCount;
             msg.TotalDownloadSizeBytes = totalDownloadSizeBytes;
             msg.CurrentDownloadSizeBytes = currentDownloadSizeBytes;
-            PatchMgr.View?.OnDownloadProgressUpdate(msg);
+            PatchMgr.View.OnDownloadProgressUpdate(msg);
         }
         void OnDownloadErrorCallback(string fileName, string error)
         {
             Log.Error($"文件下载失败:{fileName},error:{error}");
-            PatchMgr.Ins.OnWebFileDownloadFailed(fileName, error);
+            PatchMgr.OnWebFileDownloadFailed(fileName, error);
         }
 
         private void BeginDownload(Downloader downloader)
@@ -44,13 +44,8 @@ namespace Ux
             }
             else
             {
-                Action callback = () =>
-                {
-                    Application.Quit();
-                };
-                PatchMgr.View.ShowTip("资源下载失败，请检查是否磁盘空间不足", "确定", callback);
+                PatchMgr.DownloadCompleteFailed();
             }
-
         }
     }
     public struct DownloadProgressUpdate

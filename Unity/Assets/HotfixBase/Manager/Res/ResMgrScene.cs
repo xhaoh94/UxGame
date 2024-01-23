@@ -14,7 +14,7 @@ namespace Ux
         /// <param name="priority">优先级</param>
         public SceneHandle LoadSceneAsync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single, bool suspendLoad = false, uint priority = 100)
         {
-            var package = GetPackageByLocation(location);
+            var package = YooMgr.Ins.GetPackageByLocation(location);
             return package.Package.LoadSceneAsync(location, sceneMode, suspendLoad, priority);
         }
         /// <summary>
@@ -26,7 +26,7 @@ namespace Ux
         /// <param name="priority">优先级</param>
         public SceneHandle LoadSceneAsync(AssetInfo assetInfo, LoadSceneMode sceneMode = LoadSceneMode.Single, bool suspendLoad = false, uint priority = 100)
         {
-            var package = GetPackageByLocation(assetInfo.Address);
+            var package = YooMgr.Ins.GetPackageByLocation(assetInfo.Address);
             return package.Package.LoadSceneAsync(assetInfo, sceneMode, suspendLoad, priority);
         }        
     }

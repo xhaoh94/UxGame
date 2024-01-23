@@ -20,9 +20,9 @@ namespace Ux
         {
             IsSucceed = true;
             // 强制卸载所有资源
-            ResMgr.Ins.ForceUnloadAllAssets();
+            YooMgr.Ins.ForceUnloadAllAssets();
             // 更新补丁清单
-            yield return ResMgr.Ins.ForEachPackage(UpdateManifestAsync);
+            yield return YooMgr.Ins.ForEachPackage(UpdateManifestAsync);
             if (IsSucceed)
             {
                 PatchMgr.Enter<PatchCreateDownloader>();
@@ -33,7 +33,7 @@ namespace Ux
             }
         }
 
-        IEnumerator UpdateManifestAsync(ResPackage package)
+        IEnumerator UpdateManifestAsync(YooPackage package)
         {
             var operation = package.Package.UpdatePackageManifestAsync(package.Version);
             yield return operation;

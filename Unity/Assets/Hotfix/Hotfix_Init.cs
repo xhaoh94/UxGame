@@ -25,7 +25,7 @@ namespace Ux
 
             PatchMgr.Ins.Done();
 
-            ResMgr.Ins.UnloadUnusedAssets();
+            YooMgr.Ins.UnloadUnusedAssets();
             
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
             HotFixMgr.Ins.Assemblys.ForEach(assembly =>
@@ -33,6 +33,7 @@ namespace Ux
                 assembly.Initialize();
             });
 
+            UnityPool.Init();
             
             ConfigMgr.Ins.Init();
             UIMgr.Ins.OnLowMemory();

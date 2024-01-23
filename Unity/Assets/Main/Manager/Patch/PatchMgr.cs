@@ -23,7 +23,6 @@ namespace Ux
                 _isRun = true;
                 machine = StateMachine.CreateByPool();
 
-                //machine.AddNode(new PatchPatchInit());
                 machine.AddNode(new PatchUpdateStaticVersion());
                 machine.AddNode(new PatchUpdateManifest());
                 machine.AddNode(new PatchCreateDownloader());
@@ -49,10 +48,8 @@ namespace Ux
             _isRun = false;
             machine.Release();
             machine = null;
-            if (View != null)
-            {
-                UnityEngine.Object.Destroy(View.gameObject);
-            }
+            PatchView.Hide();
+            View = null;
             IsDone = true;
         }
 
@@ -86,6 +83,26 @@ namespace Ux
                 Application.Quit();
             };
             View.ShowTip($"更新失败,可能磁盘空间不足！", "确定", callback);
+        }
+        public void DownloadCompleteFailed()
+        {
+            Action callback = () =>
+            {
+                Application.Quit();
+            };
+            View.ShowTip("资源下载失败，请检查是否磁盘空间不足", "确定", callback);
+        }
+
+        public void OnFoundUpdateFiles(Downloader downloader)
+        {
+            string totalSizeMB = downloader.TotalSizeMB.ToString("f1");
+            int totalCnt = downloader.TotalDownloadCount;
+
+            Action callback = () =>
+            {
+                PatchMgr.Ins.Enter<PatchDownloadWebFiles>(downloader);
+            };
+            View.ShowTip($"下载更新{totalCnt}文件，总大小{totalSizeMB}MB", "更新", callback);
         }
     }
 }

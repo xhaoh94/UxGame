@@ -4,7 +4,7 @@ using YooAsset;
 
 namespace Ux
 {
-    public enum ResType
+    public enum YooType
     {
         None,
         Main,//主包
@@ -13,9 +13,9 @@ namespace Ux
         Config,//配置
         RawFile,//原生文件
     }
-    public abstract class ResPackage
+    public abstract class YooPackage
     {
-        public abstract ResType ResType { get; }
+        public abstract YooType YooType { get; }
         public abstract string Name { get; }
         public abstract Type DecryptionType { get; }
         public abstract EDefaultBuildPipeline EDefaultBuildPipeline { get; }
@@ -26,7 +26,7 @@ namespace Ux
             Package = YooAssets.TryGetPackage(Name);
             if (Package == null)
                 Package = YooAssets.CreatePackage(Name);
-            if (ResType.Main == ResType)
+            if (YooType.Main == YooType)
             {
                 // 设置该资源包为默认的资源包
                 YooAssets.SetDefaultPackage(Package);
@@ -122,38 +122,38 @@ namespace Ux
 
     }
 
-    public class ResMainPackage : ResPackage
+    public class YooMainPackage : YooPackage
     {
-        public override ResType ResType => ResType.Main;
+        public override YooType YooType => YooType.Main;
         public override string Name => "MainPackage";
         public override Type DecryptionType => null;
 
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
     }
-    public class ResCodePackage : ResPackage
+    public class YooCodePackage : YooPackage
     {
-        public override ResType ResType => ResType.Code;
+        public override YooType YooType => YooType.Code;
         public override string Name => "CodePackage";
         public override Type DecryptionType => null;
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
     }
-    public class ResUIPackage : ResPackage
+    public class YooUIPackage : YooPackage
     {
-        public override ResType ResType => ResType.UI;
+        public override YooType YooType => YooType.UI;
         public override string Name => "UIPackage";
         public override Type DecryptionType => typeof(FileStreamDecryption);
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
     }
-    public class ResConfigPackage : ResPackage
+    public class YooConfigPackage : YooPackage
     {
-        public override ResType ResType => ResType.Config;
+        public override YooType YooType => YooType.Config;
         public override string Name => "ConfigPackage";
         public override Type DecryptionType => null;
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
     }
-    public class ResRawFilePackage : ResPackage
+    public class YooRawFilePackage : YooPackage
     {
-        public override ResType ResType => ResType.RawFile;
+        public override YooType YooType => YooType.RawFile;
         public override string Name => "RawFilePackage";
         public override Type DecryptionType => null;
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;

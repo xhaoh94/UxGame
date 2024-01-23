@@ -5,20 +5,18 @@ using YooAsset;
 
 namespace Ux
 {
-    public partial class ResMgr : Singleton<ResMgr>
+    public partial class YooMgr : Singleton<YooMgr>
     {
-        public static readonly ResLazyload Lazyload = new ResLazyload();
-
-        static readonly Dictionary<ResType, ResPackage> _Packages = new Dictionary<ResType, ResPackage>()
+        static readonly Dictionary<YooType, YooPackage> _Packages = new Dictionary<YooType, YooPackage>()
         {
-            { ResType.Main,new ResMainPackage() },
-            { ResType.Code,new ResCodePackage() },
-            { ResType.UI,new ResUIPackage() },
-            { ResType.Config,new ResConfigPackage() },
-            { ResType.RawFile,new ResRawFilePackage() },
+            { YooType.Main,new YooMainPackage() },
+            { YooType.Code,new YooCodePackage() },
+            { YooType.UI,new YooUIPackage() },
+            { YooType.Config,new YooConfigPackage() },
+            { YooType.RawFile,new YooRawFilePackage() },
         };
 
-        readonly Dictionary<string, ResPackage> _locationToPackage = new Dictionary<string, ResPackage>();
+        readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();
 
         public IEnumerator Initialize(EPlayMode playMode)
         {
@@ -29,20 +27,20 @@ namespace Ux
             // 初始化资源包
             yield return ForEachPackage(x => x.Initialize(playMode));
         }
-        public void ForEachPackage(Action<ResPackage> fn)
+        public void ForEachPackage(Action<YooPackage> fn)
         {
             _Packages.ForEachValue(fn);
         }
-        public void ForEachPackage(Func<ResPackage, bool> fn)
+        public void ForEachPackage(Func<YooPackage, bool> fn)
         {
             _Packages.ForEachValue(fn);
         }
-        public IEnumerator ForEachPackage(Func<ResPackage, IEnumerator> fn)
+        public IEnumerator ForEachPackage(Func<YooPackage, IEnumerator> fn)
         {
             yield return _Packages.ForEachValue(fn);
         }
-        public ResPackage GetPackage(ResType resType)
-        {            
+        public YooPackage GetPackage(YooType resType)
+        {
             if (_Packages.TryGetValue(resType, out var result))
             {
                 return result;
@@ -50,7 +48,7 @@ namespace Ux
             throw new Exception($"GetAssetsPackage:AssetsType[{resType}]资源包不存在");
         }
 
-        public ResPackage GetPackageByLocation(string location)
+        public YooPackage GetPackageByLocation(string location)
         {
             if (!_locationToPackage.ContainsKey(location))
             {

@@ -423,7 +423,7 @@ namespace Ux
         {
             if (data.Pkgs is { Length: > 0 })
             {
-                if (!await ResMgr.Ins.LoaUIdPackage(data.Pkgs))
+                if (!await LoaUIdPackage(data.Pkgs))
                 {
                     Log.Error($"[{data.Name}]包加载错误");
                     return null;
@@ -621,7 +621,7 @@ namespace Ux
             var data = GetUIData(id);
             if (data == null) return;
             if (data.Pkgs == null || data.Pkgs.Length == 0) return;
-            ResMgr.Ins.RemoveUIPackage(data.Pkgs);
+            RemoveUIPackage(data.Pkgs);
             if (ui is UIDialog)
             {
                 RemoveUIData(id);

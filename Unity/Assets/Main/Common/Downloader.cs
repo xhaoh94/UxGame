@@ -13,7 +13,7 @@ namespace Ux
         readonly List<DownloaderOperation> _handles = new List<DownloaderOperation>();
         public Downloader(string[] tags)
         {
-            ResMgr.Ins.ForEachPackage(x =>
+            YooMgr.Ins.ForEachPackage(x =>
             {                
                 _handles.Add(x.Package.CreateResourceDownloader(tags, Global.DownloadingMaxNum, Global.FailedTryAgain));
             });

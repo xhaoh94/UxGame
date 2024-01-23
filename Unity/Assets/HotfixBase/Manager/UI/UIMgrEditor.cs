@@ -110,6 +110,15 @@ namespace Ux
             }
         }
 
+        
+        public static void __Debugger_Pkg_Event()
+        {
+            if (UnityEditor.EditorApplication.isPlaying)
+            {
+                __Debugger_Pkg_CallBack?.Invoke(Ins._pkgToRef);
+            }
+        }
+        
         public static Action<Dictionary<string, IUIData>> __Debugger_UI_CallBack;
         public static Action<List<string>> __Debugger_Showed_CallBack;
         public static Action<List<UIStack>> __Debugger_Stack_CallBack;
@@ -117,6 +126,7 @@ namespace Ux
         public static Action<List<string>> __Debugger_Cacel_CallBack;
         public static Action<List<string>> __Debugger_TemCacel_CallBack;
         public static Action<List<string>> __Debugger_WaitDel_CallBack;
+        public static Action<Dictionary<string, UIPkgRef>> __Debugger_Pkg_CallBack;
 
     }
 }

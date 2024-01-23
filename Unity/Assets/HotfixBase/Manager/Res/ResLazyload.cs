@@ -3,6 +3,10 @@ using System.Linq;
 
 namespace Ux
 {
+    public partial class ResMgr
+    {
+        public static readonly ResLazyload Lazyload = new ResLazyload();
+    }
     public class ResLazyload
     {
         readonly HashSet<string> _loadedAssets = new HashSet<string>();

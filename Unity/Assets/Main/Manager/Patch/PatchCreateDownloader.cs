@@ -21,7 +21,7 @@
             if (downloader.TotalDownloadCount > 0)
             {
                 Log.Debug($"一共发现了{downloader.TotalDownloadCount}个资源需要更新下载。");
-                PatchMgr.View?.OnFoundUpdateFiles(downloader);
+                PatchMgr.OnFoundUpdateFiles(downloader);
             }
             else
             {

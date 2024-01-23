@@ -33,7 +33,8 @@ namespace Ux
                 return;
             }
 
-            ResMgr.Ins.LoadSceneAsync(HotfixScene);
+            YooMgr.Ins.GetPackage(YooType.Main).Package.
+                LoadSceneAsync(HotfixScene);
         }
 
         public List<Assembly> Assemblys { get; private set; } = new List<Assembly>();
@@ -72,7 +73,11 @@ namespace Ux
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = string.Format(AotPrefix, aotDllName);
-                var assBytes = ResMgr.Ins.GetRawFileData(dllName, ResType.Code);
+                byte[] assBytes = null;
+                using (var handle = YooMgr.Ins.GetPackage(YooType.Code).Package.LoadRawFileSync(dllName))
+                {
+                    assBytes = handle.GetRawFileData();
+                }
                 if (assBytes == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");

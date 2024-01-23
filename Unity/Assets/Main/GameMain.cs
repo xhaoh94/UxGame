@@ -47,7 +47,7 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return ResMgr.Ins.Initialize(PlayMode);
+            yield return YooMgr.Ins.Initialize(PlayMode);
             // 运行补丁流程
             PatchMgr.Ins.Run(PlayMode);
         }
@@ -136,11 +136,20 @@ namespace Ux
             _quit?.Invoke();
         }
 
+        public void AddLowMemory(Action action)
+        {
+            _lowMemory += action;
+        }
+        public void RemoveLowMemory(Action action)
+        {
+            _lowMemory -= action;
+        }
+        Action _lowMemory;
         void OnLowMemory()
         {
-            ResMgr.Ins.OnLowMemory();
-            Pool.Clear();
-            UnityPool.Clear();
+            YooMgr.Ins.OnLowMemory();
+            Pool.Clear();            
+            _lowMemory?.Invoke();
         }
     }
 }

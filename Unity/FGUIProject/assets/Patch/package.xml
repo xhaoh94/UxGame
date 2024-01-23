@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<packageDescription id="f5dmtgm9">
-  <resources>
-    <component id="oylhd" name="PatchBar.xml" path="/Component/"/>
-    <component id="oylha" name="PatchView.xml" path="/View/" exported="true"/>
-  </resources>
-  <publish name=""/>
-</packageDescription>

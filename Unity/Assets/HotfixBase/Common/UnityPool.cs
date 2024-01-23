@@ -10,6 +10,10 @@ public static class UnityPool
 {
     private static readonly Dictionary<string, Queue<UnityEngine.Object>> _unity = new Dictionary<string, Queue<UnityEngine.Object>>();
     static Transform _pool_content;
+    public static void Init()
+    {
+        GameMain.Ins.AddLowMemory(Clear);
+    }
     public static UnityEngine.Object Get(string location)
     {
         if (!_unity.TryGetValue(location, out var queue) || queue.Count == 0)
@@ -62,6 +66,12 @@ public static class UnityPool
 #endif
         if (obj is GameObject go)
         {
+            //var entityMono = go.GetComponent<EntityMono>();
+            //if (entityMono != null)
+            //{
+            //    UnityEngine.Object.Destroy(entityMono);
+            //}
+
 #if UNITY_EDITOR
             if (_pool_content == null)
             {

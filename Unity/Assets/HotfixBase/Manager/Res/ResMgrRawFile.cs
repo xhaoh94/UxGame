@@ -10,11 +10,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的二进制数据
         /// </summary>
-        public byte[] GetRawFileData(string location, ResType resType = ResType.None)
+        public byte[] GetRawFileData(string location, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileData();
@@ -24,11 +24,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的文本数据
         /// </summary>
-        public string GetRawFileText(string location, ResType resType = ResType.None)
+        public string GetRawFileText(string location, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileText();
@@ -38,11 +38,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的路径
         /// </summary>
-        public string GetRawFilePath(string location, ResType resType = ResType.None)
+        public string GetRawFilePath(string location, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFilePath();
@@ -52,11 +52,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的二进制数据
         /// </summary>
-        public byte[] GetRawFileData(AssetInfo assetInfo, ResType resType = ResType.None)
+        public byte[] GetRawFileData(AssetInfo assetInfo, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(assetInfo.Address)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFileData();
@@ -66,11 +66,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的文本数据
         /// </summary>
-        public string GetRawFileText(AssetInfo assetInfo, ResType resType = ResType.None)
+        public string GetRawFileText(AssetInfo assetInfo, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(assetInfo.Address)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFileText();
@@ -80,11 +80,11 @@ namespace Ux
         /// <summary>
         /// 获取原生文件的路径
         /// </summary>
-        public string GetRawFilePath(AssetInfo assetInfo, ResType resType = ResType.None)
+        public string GetRawFilePath(AssetInfo assetInfo, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(assetInfo.Address)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFilePath();
@@ -98,11 +98,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的二进制数据
         /// </summary>
-        public async UniTask<byte[]> GetRawFileDataAsync(string location, ResType resType = ResType.None)
+        public async UniTask<byte[]> GetRawFileDataAsync(string location, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -113,11 +113,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的文本数据
         /// </summary>
-        public async UniTask<string> GetRawFileTextAsync(string location, ResType resType = ResType.None)
+        public async UniTask<string> GetRawFileTextAsync(string location, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -128,11 +128,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的路径
         /// </summary>
-        public async UniTask<string> GetRawFilePathAsync(string location, ResType resType = ResType.None)
+        public async UniTask<string> GetRawFilePathAsync(string location, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(location)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(location)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -143,11 +143,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的二进制数据
         /// </summary>
-        public async UniTask<byte[]> GetRawFileDataAsync(AssetInfo assetInfo, ResType resType = ResType.None)
+        public async UniTask<byte[]> GetRawFileDataAsync(AssetInfo assetInfo, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(assetInfo.Address)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();
@@ -158,11 +158,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的文本数据
         /// </summary>
-        public async UniTask<string> GetRawFileTextAsync(AssetInfo assetInfo, ResType resType = ResType.None)
+        public async UniTask<string> GetRawFileTextAsync(AssetInfo assetInfo, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(assetInfo.Address)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();
@@ -173,11 +173,11 @@ namespace Ux
         /// <summary>
         /// 异步获取原生文件的路径
         /// </summary>
-        public async UniTask<string> GetRawFilePathAsync(AssetInfo assetInfo, ResType resType = ResType.None)
+        public async UniTask<string> GetRawFilePathAsync(AssetInfo assetInfo, YooType resType = YooType.None)
         {
-            var package = resType == ResType.None
-               ? GetPackageByLocation(assetInfo.Address)
-               : GetPackage(resType);
+            var package = resType == YooType.None
+               ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+               : YooMgr.Ins.GetPackage(resType);
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();

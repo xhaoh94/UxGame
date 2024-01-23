@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using YooAsset;
 
 namespace Ux
 {
@@ -17,18 +18,31 @@ namespace Ux
         [SerializeField] Text txtBtnHotfix;
         [SerializeField] Text txtHotfix;
 
+        static AssetHandle handle;
+        static GameObject view;
         public static PatchView Show()
         {
-            var go = ResMgr.Ins.LoadAsset<GameObject>("PatchView", ResType.Main);
+            handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync("PatchView");
+            view = handle.InstantiateSync();
             if (EventSystem.current == null)
             {
                 var es = new GameObject("EventSystem");
                 es.AddComponent<EventSystem>();
                 es.AddComponent<InputSystemUIInputModule>();
                 es.AddComponent<BaseInput>();
-                es.SetParent(go.transform);
+                es.SetParent(view.transform);
             }
-            return go.GetComponent<PatchView>();
+            return view.GetComponent<PatchView>();
+        }
+        public static void Hide()
+        {
+            if (handle != null)
+            {
+                handle.Dispose();
+                handle = null;
+            }
+            UnityEngine.Object.Destroy(view);
+            view = null;
         }
 
         private void Awake()
@@ -40,7 +54,8 @@ namespace Ux
             goTip.Visable(false);
         }
 
-        public void OnStateChanged(string node)
+
+        public void OnStatusChanged(string node)
         {
             switch (node)
             {
@@ -62,7 +77,7 @@ namespace Ux
             }
         }
 
-        public void ShowTip(string content, string btnTitle, Action callback)
+        public void ShowTip(string content, string btnTitle, Action callback, Action closeCb = null)
         {
             txtBtnHotfix.text = btnTitle;
             txtHotfix.text = content;
@@ -73,16 +88,11 @@ namespace Ux
                 callback?.Invoke();
                 goTip.Visable(false);
             });
-        }
-
-        public void OnFoundUpdateFiles(Downloader downloader)
-        {
-            string totalSizeMB = downloader.TotalSizeMB.ToString("f1");
-            int totalCnt = downloader.TotalDownloadCount;
-
-            ShowTip($"下载更新{totalCnt}文件，总大小{totalSizeMB}MB", "更新", () =>
+            btnClose.onClick.RemoveAllListeners();
+            btnClose.onClick.AddListener(() =>
             {
-                PatchMgr.Ins.Enter<PatchDownloadWebFiles>(downloader);
+                closeCb?.Invoke();
+                goTip.Visable(false);
             });
         }
 

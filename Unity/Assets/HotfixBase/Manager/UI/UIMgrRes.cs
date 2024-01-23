@@ -38,9 +38,8 @@ namespace Ux
         }
     }
 
-    public partial class ResMgr
+    public partial class UIMgr
     {
-        #region FGUI
 
         private readonly Dictionary<string, UIPkgRef> _pkgToRef = new Dictionary<string, UIPkgRef>();
 
@@ -91,7 +90,7 @@ namespace Ux
             }
 
 #if UNITY_EDITOR
-            __Debugger_Event();
+            __Debugger_Pkg_Event();
 #endif
         }
 
@@ -125,7 +124,7 @@ namespace Ux
             if (tem is not { Count: > 0 })
             {
 #if UNITY_EDITOR
-                __Debugger_Event();
+                __Debugger_Pkg_Event();
 #endif
                 return true;
             }
@@ -157,7 +156,7 @@ namespace Ux
             }
 
 #if UNITY_EDITOR
-            __Debugger_Event();
+            __Debugger_Pkg_Event();
 #endif
             return true;
         }
@@ -174,8 +173,8 @@ namespace Ux
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 #endif
-            
-            var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<TextAsset>(resName);
+
+            var handle = YooMgr.Ins.GetPackage(YooType.UI).Package.LoadAssetAsync<TextAsset>(resName);
             await handle.ToUniTask();
 #if UNITY_EDITOR
             sw.Stop();
@@ -229,7 +228,7 @@ namespace Ux
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 #endif
-            var handle = GetPackage(ResType.UI).Package.LoadAssetAsync<Texture>(resName);
+            var handle = YooMgr.Ins.GetPackage(YooType.UI).Package.LoadAssetAsync<Texture>(resName);
             await handle.ToUniTask();
 #if UNITY_EDITOR
             sw.Stop();
@@ -262,22 +261,5 @@ namespace Ux
             handles.Add(handle);
         }
 
-        #endregion
-
-        #region 编辑器
-
-#if UNITY_EDITOR
-        public static void __Debugger_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_CallBack?.Invoke(Ins._pkgToRef);
-            }
-        }
-
-        public static Action<Dictionary<string, UIPkgRef>> __Debugger_CallBack;
-#endif
-
-        #endregion
     }
 }

@@ -19,18 +19,18 @@ public class ResDebuggerWindow : EditorWindow
    
     private void OnDestroy()
     {
-        ResMgr.__Debugger_CallBack = null;        
+        UIMgr.__Debugger_Pkg_CallBack = null;        
     }
     public void CreateGUI()
     {
-        ResMgr.__Debugger_CallBack = OnUpdateData;
+        UIMgr.__Debugger_Pkg_CallBack = OnUpdateData;
         VisualElement root = rootVisualElement;
         var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Res/ResDebuggerWindow.uxml");
         if (visualAsset == null) return;
         visualAsset.CloneTree(root);
 
         _listPackageRef = new DebuggerObjectSearchListView<ResDebuggerItem,UIPkgRef>(root.Q<VisualElement>("veList"));
-        ResMgr.__Debugger_Event();
+        UIMgr.__Debugger_Pkg_Event();
     }
    
     private void OnUpdateData(Dictionary<string, UIPkgRef> dict)

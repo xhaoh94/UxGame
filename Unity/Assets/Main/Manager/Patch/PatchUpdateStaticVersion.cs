@@ -19,7 +19,7 @@ namespace Ux
         {
             IsSucceed = true;
             // 更新资源版本号
-            yield return ResMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
+            yield return YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
             if (IsSucceed)
             {
                 PatchMgr.Enter<PatchUpdateManifest>();
@@ -30,7 +30,7 @@ namespace Ux
             }
         }
 
-        IEnumerator UpdateStaticVersionAsync(ResPackage package)
+        IEnumerator UpdateStaticVersionAsync(YooPackage package)
         {
             var operation = package.Package.UpdatePackageVersionAsync();
             yield return operation;

@@ -3,14 +3,14 @@ using YooAsset;
 
 namespace Ux
 {
-    public partial class ResMgr
+    public partial class ResMgr : Singleton<ResMgr>
     {
         #region 同步
         /// <summary>
         /// 同步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public UnityEngine.Object LoadAsset(AssetInfo assetInfo, ResType resType = ResType.None)
+        public UnityEngine.Object LoadAsset(AssetInfo assetInfo, YooType resType = YooType.None)
         {
             return LoadAsset<UnityEngine.Object>(assetInfo, resType);
         }
@@ -19,7 +19,7 @@ namespace Ux
         /// 同步加载资源对象
         /// </summary>
         /// <param name="location">资源的定位地址</param>
-        public UnityEngine.Object LoadAsset(string location, ResType resType = ResType.None)
+        public UnityEngine.Object LoadAsset(string location, YooType resType = YooType.None)
         {
             return LoadAsset<UnityEngine.Object>(location, resType);
         }
@@ -28,16 +28,16 @@ namespace Ux
         /// 同步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public TObject LoadAsset<TObject>(AssetInfo assetInfo, ResType resType = ResType.None) where TObject : UnityEngine.Object
+        public TObject LoadAsset<TObject>(AssetInfo assetInfo, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
             var obj = UnityPool.Get(assetInfo.Address);
             if (obj != null)
             {
                 return obj as TObject;
             }
-            var package = resType == ResType.None
-                ? GetPackageByLocation(assetInfo.Address)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+                : YooMgr.Ins.GetPackage(resType);
             var handle = package.Package.LoadAssetSync(assetInfo);
             return _LoadAsset<TObject>(assetInfo.Address, handle);
         }
@@ -47,16 +47,16 @@ namespace Ux
         /// </summary>
         /// <typeparam name="TObject">资源类型</typeparam>
         /// <param name="location">资源的定位地址</param>
-        public TObject LoadAsset<TObject>(string location, ResType resType = ResType.None) where TObject : UnityEngine.Object
+        public TObject LoadAsset<TObject>(string location, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
             var obj = UnityPool.Get(location);
             if (obj != null)
             {
                 return obj as TObject;
             }
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             var handle = package.Package.LoadAssetSync<TObject>(location);
             return _LoadAsset<TObject>(location, handle);
         }
@@ -85,7 +85,7 @@ namespace Ux
         /// 异步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public async UniTask<UnityEngine.Object> LoadAssetAsync(AssetInfo assetInfo, ResType resType = ResType.None)
+        public async UniTask<UnityEngine.Object> LoadAssetAsync(AssetInfo assetInfo, YooType resType = YooType.None)
         {
             return await LoadAssetAsync<UnityEngine.Object>(assetInfo, resType);
         }
@@ -94,7 +94,7 @@ namespace Ux
         /// 异步加载资源对象
         /// </summary>
         /// <param name="location">资源的定位地址</param>
-        public async UniTask<UnityEngine.Object> LoadAssetAsync(string location, ResType resType = ResType.None)
+        public async UniTask<UnityEngine.Object> LoadAssetAsync(string location, YooType resType = YooType.None)
         {
             return await LoadAssetAsync<UnityEngine.Object>(location, resType);
         }
@@ -104,16 +104,16 @@ namespace Ux
         /// 异步加载资源对象
         /// </summary>
         /// <param name="assetInfo">资源信息</param>
-        public async UniTask<TObject> LoadAssetAsync<TObject>(AssetInfo assetInfo, ResType resType = ResType.None) where TObject : UnityEngine.Object
+        public async UniTask<TObject> LoadAssetAsync<TObject>(AssetInfo assetInfo, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
             var obj = UnityPool.Get(assetInfo.Address);
             if (obj != null)
             {
                 return obj as TObject;
             }
-            var package = resType == ResType.None
-                ? GetPackageByLocation(assetInfo.Address)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
+                : YooMgr.Ins.GetPackage(resType);
             var handle = package.Package.LoadAssetAsync(assetInfo);
             return await _LoadAssetAsync<TObject>(assetInfo.Address, handle);
         }
@@ -123,16 +123,16 @@ namespace Ux
 		/// </summary>
 		/// <typeparam name="TObject">资源类型</typeparam>
 		/// <param name="location">资源的定位地址</param>
-		public async UniTask<TObject> LoadAssetAsync<TObject>(string location, ResType resType = ResType.None) where TObject : UnityEngine.Object
+		public async UniTask<TObject> LoadAssetAsync<TObject>(string location, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
             var obj = UnityPool.Get(location);
             if (obj != null)
             {
                 return obj as TObject;
             }
-            var package = resType == ResType.None
-                ? GetPackageByLocation(location)
-                : GetPackage(resType);
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
             var handle = package.Package.LoadAssetAsync<TObject>(location);
             return await _LoadAssetAsync<TObject>(location, handle);
         }
