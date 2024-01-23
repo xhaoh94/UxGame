@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Threading;
 using UnityEngine;
 using YooAsset;
 
@@ -24,7 +22,7 @@ namespace Ux
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
             }
-            Ins = this;            
+            Ins = this;
             zstring.Init(Log.Error);
             Machine = StateMachine.CreateByPool();
             DontDestroyOnLoad(gameObject);
@@ -39,7 +37,7 @@ namespace Ux
         }
 
 
-        IEnumerator Start()
+        void Start()
         {
 #if !UNITY_EDITOR
             if (PlayMode == EPlayMode.EditorSimulateMode)
@@ -47,7 +45,6 @@ namespace Ux
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
-            yield return YooMgr.Ins.Initialize(PlayMode);
             // 运行补丁流程
             PatchMgr.Ins.Run(PlayMode);
         }
@@ -148,7 +145,7 @@ namespace Ux
         void OnLowMemory()
         {
             YooMgr.Ins.OnLowMemory();
-            Pool.Clear();            
+            Pool.Clear();
             _lowMemory?.Invoke();
         }
     }

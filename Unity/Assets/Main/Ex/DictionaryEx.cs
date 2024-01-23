@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -30,6 +31,14 @@ namespace Ux
                 yield return fn.Invoke(_key);
             }
         }
+        public static async UniTask ForEachKey<TKey, TValue>(this Dictionary<TKey, TValue> dict, Func<TKey, UniTask> fn)
+        {
+            if (dict.Count == 0) return;
+            foreach (var _key in dict.Keys)
+            {
+                await fn.Invoke(_key);
+            }
+        }
 
         public static IEnumerator ForEachKey<TKey, TValue>(this Dictionary<TKey, TValue> dict,
             FuncEx<TKey, bool, IEnumerator> fn)
@@ -38,6 +47,16 @@ namespace Ux
             foreach (var _key in dict.Keys)
             {
                 yield return fn.Invoke(_key, out var isBreak);
+                if (isBreak) break;
+            }
+        }
+        public static async UniTask ForEachKey<TKey, TValue>(this Dictionary<TKey, TValue> dict,
+            FuncEx<TKey, bool, UniTask> fn)
+        {
+            if (dict.Count == 0) return;
+            foreach (var _key in dict.Keys)
+            {
+                await fn.Invoke(_key, out var isBreak);
                 if (isBreak) break;
             }
         }
@@ -65,6 +84,14 @@ namespace Ux
                 yield return fn.Invoke(_value);
             }
         }
+        public static async UniTask ForEachValue<TKey, TValue>(this Dictionary<TKey, TValue> dict, Func<TValue, UniTask> fn)
+        {
+            if (dict.Count == 0) return;
+            foreach (var _value in dict.Values)
+            {
+                await fn.Invoke(_value);
+            }
+        }
         public static IEnumerator ForEachValue<TKey, TValue>(this Dictionary<TKey, TValue> dict, FuncEx<TValue, bool, IEnumerator> fn)
         {
             if (dict.Count == 0) yield break;
@@ -74,6 +101,14 @@ namespace Ux
                 if (isBreak) break;
             }
         }
-
+        public static async UniTask ForEachValue<TKey, TValue>(this Dictionary<TKey, TValue> dict, FuncEx<TValue, bool, UniTask> fn)
+        {
+            if (dict.Count == 0) return;
+            foreach (var _value in dict.Values)
+            {
+                await fn.Invoke(_value, out var isBreak);
+                if (isBreak) break;
+            }
+        }
     }
 }

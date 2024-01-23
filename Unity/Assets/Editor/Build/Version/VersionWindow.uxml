@@ -43,7 +43,7 @@
                 <ui:Button text="开始打包" display-tooltip-when-elided="true" name="build" style="height: 50px; background-color: rgb(40, 106, 42); margin-top: 10px;" />
                 <ui:Button text="重置打包" display-tooltip-when-elided="true" name="clear" style="height: 50px; background-color: rgb(137, 40, 32); margin-top: 10px;" />
             </ui:VisualElement>
-            <ui:VisualElement style="flex-grow: 0; width: auto; flex-shrink: 1;">
+            <ui:VisualElement style="flex-grow: 0; width: 300px; flex-shrink: 1;">
                 <ui:Label text="资源包设置" display-tooltip-when-elided="true" style="background-color: rgb(89, 89, 89); -unity-text-align: upper-center; -unity-font-style: bold; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; font-size: 12px;" />
                 <uie:Toolbar name="Toolbar" style="display: flex; flex-direction: row;" />
                 <ui:VisualElement name="Container" />

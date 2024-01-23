@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Collections;
 using YooAsset;
 namespace Ux
 {
@@ -6,7 +8,7 @@ namespace Ux
     {
         protected override void OnEnter(object args)
         {
-            GameMain.Ins.StartCoroutine(UpdateManifest());
+            UpdateManifest().Forget();
         }
         protected override void OnUpdate()
         {
@@ -16,27 +18,36 @@ namespace Ux
         }
 
         bool IsSucceed;
-        private IEnumerator UpdateManifest()
+        private async UniTaskVoid UpdateManifest()
         {
             IsSucceed = true;
             // 强制卸载所有资源
             YooMgr.Ins.ForceUnloadAllAssets();
             // 更新补丁清单
-            yield return YooMgr.Ins.ForEachPackage(UpdateManifestAsync);
+            await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);
             if (IsSucceed)
             {
                 PatchMgr.Enter<PatchCreateDownloader>();
             }
             else
             {
-                PatchMgr.Ins.OnPatchManifestUpdateFailed();                
+                OnPatchManifestUpdateFailed();
             }
         }
 
-        IEnumerator UpdateManifestAsync(YooPackage package)
+        void OnPatchManifestUpdateFailed()
+        {
+            Action callback = () =>
+            {
+                PatchMgr.Ins.Enter<PatchUpdateManifest>();
+            };
+            PatchMgr.View.ShowMessageBox($"获取补丁清单失败，请检测网络状态。", "确定", callback);
+        }
+
+        async UniTask UpdateManifestAsync(YooPackage package)
         {
             var operation = package.Package.UpdatePackageManifestAsync(package.Version);
-            yield return operation;
+            await operation;
             if (operation.Status != EOperationStatus.Succeed)
             {
                 Log.Error(operation.Error);

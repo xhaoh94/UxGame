@@ -27,6 +27,7 @@ namespace Ux
 
         public void Init()
         {
+            Load();
             if (Assemblys == null && Assemblys.Count == 0)
             {
                 Log.Error("没有加载热更DLL");
@@ -39,14 +40,23 @@ namespace Ux
 
         public List<Assembly> Assemblys { get; private set; } = new List<Assembly>();
 
-        public void Load()
+        void Load()
         {
 #if !UNITY_EDITOR && HOTFIX_CODE
             LoadMetadataForAOTAssembly();
             foreach (var hotfixName in HotfixAssembly)
             {
-                var assBytes = ResMgr.Ins.GetRawFileData(string.Format(HotPrefix, $"{hotfixName}.dll"), ResType.Code);
-                Assemblys.Add(Assembly.Load(assBytes));
+                byte[] assBytes = null;
+                using (var handle = YooMgr.Ins.GetPackage(YooType.Code).Package.LoadRawFileSync(string.Format(HotPrefix, $"{hotfixName}.dll")))
+                {
+                    assBytes = handle.GetRawFileData();
+                    if (assBytes == null)
+                    {
+                        Log.Error($"HotFixMgr.Load 加载失败:{hotfixName}");
+                        continue;
+                    }
+                    Assemblys.Add(Assembly.Load(assBytes));
+                }
             }
 #else
             foreach (var hotfixName in HotfixAssembly)
@@ -81,13 +91,11 @@ namespace Ux
                 if (assBytes == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");
+                    continue;
                 }
-                else
-                {
-                    // 加载assembly对应的dll，会自动为它hook。一旦aot泛型函数的native函数不存在，用解释器版本代码
-                    var err = RuntimeApi.LoadMetadataForAOTAssembly(assBytes, mode);
-                    Log.Debug($"LoadMetadataForAOTAssembly:{dllName}. ret:{err}");
-                }
+                // 加载assembly对应的dll，会自动为它hook。一旦aot泛型函数的native函数不存在，用解释器版本代码
+                var err = RuntimeApi.LoadMetadataForAOTAssembly(assBytes, mode);
+                Log.Debug($"LoadMetadataForAOTAssembly:{dllName}. ret:{err}");
             }
         }
     }

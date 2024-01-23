@@ -26,7 +26,11 @@ namespace Ux
         void OnDownloadErrorCallback(string fileName, string error)
         {
             Log.Error($"文件下载失败:{fileName},error:{error}");
-            PatchMgr.OnWebFileDownloadFailed(fileName, error);
+            Action callback = () =>
+            {
+                Application.Quit();
+            };
+            PatchMgr.View.ShowMessageBox($"更新失败,可能磁盘空间不足！", "确定", callback);
         }
 
         private void BeginDownload(Downloader downloader)
@@ -44,8 +48,16 @@ namespace Ux
             }
             else
             {
-                PatchMgr.DownloadCompleteFailed();
+                DownloadCompleteFailed();
             }
+        }
+        private void DownloadCompleteFailed()
+        {
+            Action callback = () =>
+            {
+                Application.Quit();
+            };
+            PatchMgr.View.ShowMessageBox("资源下载失败，请检查是否磁盘空间不足", "确定", callback);
         }
     }
     public struct DownloadProgressUpdate

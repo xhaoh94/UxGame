@@ -7,8 +7,7 @@ namespace Ux
         protected override void OnEnter(object args)
         {
             try
-            {
-                HotFixMgr.Ins.Load();
+            {                
                 HotFixMgr.Ins.Init();
             }
             catch (Exception e)

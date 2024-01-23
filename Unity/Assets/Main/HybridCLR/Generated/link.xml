@@ -17,6 +17,7 @@
     <type fullname="FairyGUI.BlurFilter" preserve="all" />
     <type fullname="FairyGUI.ButtonMode" preserve="all" />
     <type fullname="FairyGUI.Controller" preserve="all" />
+    <type fullname="FairyGUI.DestroyMethod" preserve="all" />
     <type fullname="FairyGUI.EventCallback0" preserve="all" />
     <type fullname="FairyGUI.EventCallback1" preserve="all" />
     <type fullname="FairyGUI.EventContext" preserve="all" />
@@ -24,7 +25,6 @@
     <type fullname="FairyGUI.EventListener" preserve="all" />
     <type fullname="FairyGUI.GButton" preserve="all" />
     <type fullname="FairyGUI.GComponent" preserve="all" />
-    <type fullname="FairyGUI.GGraph" preserve="all" />
     <type fullname="FairyGUI.GImage" preserve="all" />
     <type fullname="FairyGUI.GList" preserve="all" />
     <type fullname="FairyGUI.GObject" preserve="all" />
@@ -37,6 +37,7 @@
     <type fullname="FairyGUI.InputEvent" preserve="all" />
     <type fullname="FairyGUI.ListItemRenderer" preserve="all" />
     <type fullname="FairyGUI.NAudioClip" preserve="all" />
+    <type fullname="FairyGUI.PackageItem" preserve="all" />
     <type fullname="FairyGUI.PlayCompleteCallback" preserve="all" />
     <type fullname="FairyGUI.ProgressTitleType" preserve="all" />
     <type fullname="FairyGUI.RelationType" preserve="all" />
@@ -46,6 +47,7 @@
     <type fullname="FairyGUI.UIContentScaler" preserve="all" />
     <type fullname="FairyGUI.UIContentScaler/ScreenMatchMode" preserve="all" />
     <type fullname="FairyGUI.UIPackage" preserve="all" />
+    <type fullname="FairyGUI.UIPackage/LoadResourceAsync" preserve="all" />
     <type fullname="FairyGUI.Utils.ByteBuffer" preserve="all" />
     <type fullname="FairyGUI.Window" preserve="all" />
   </assembly>
@@ -72,6 +74,7 @@
   <assembly fullname="System">
     <type fullname="System.CodeDom.Compiler.GeneratedCodeAttribute" preserve="all" />
     <type fullname="System.Collections.Generic.Queue`1" preserve="all" />
+    <type fullname="System.Collections.Generic.Queue`1/Enumerator" preserve="all" />
     <type fullname="System.Collections.Generic.Stack`1" preserve="all" />
     <type fullname="System.ComponentModel.DefaultValueAttribute" preserve="all" />
     <type fullname="System.ComponentModel.EditorBrowsableAttribute" preserve="all" />
@@ -115,10 +118,13 @@
     <type fullname="System.Linq.Expressions.UnaryExpression" preserve="all" />
   </assembly>
   <assembly fullname="UniTask">
+    <type fullname="Cysharp.Threading.Tasks.AsyncOperationBaseExtensions" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.AutoResetUniTaskCompletionSource`1" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder`1" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder" preserve="all" />
+    <type fullname="Cysharp.Threading.Tasks.OperationHandleBaseExtensions" preserve="all" />
+    <type fullname="Cysharp.Threading.Tasks.PlayerLoopTiming" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTask" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTask/Awaiter" preserve="all" />
     <type fullname="Cysharp.Threading.Tasks.UniTaskExtensions" preserve="all" />
@@ -152,7 +158,6 @@
     <type fullname="Microsoft.IO.RecyclableMemoryStreamManager" preserve="all" />
     <type fullname="Pool" preserve="all" />
     <type fullname="Singleton`1" preserve="all" />
-    <type fullname="UnityPool" preserve="all" />
     <type fullname="Ux.Blur" preserve="all" />
     <type fullname="Ux.Downloader" preserve="all" />
     <type fullname="Ux.GameMain" preserve="all" />
@@ -161,11 +166,11 @@
     <type fullname="Ux.IStateNode" preserve="all" />
     <type fullname="Ux.OneThreadSynchronizationContext" preserve="all" />
     <type fullname="Ux.PatchMgr" preserve="all" />
-    <type fullname="Ux.ResLazyload" preserve="all" />
-    <type fullname="Ux.ResMgr" preserve="all" />
-    <type fullname="Ux.ResType" preserve="all" />
     <type fullname="Ux.StateMachine" preserve="all" />
     <type fullname="Ux.StateNode" preserve="all" />
+    <type fullname="Ux.YooMgr" preserve="all" />
+    <type fullname="Ux.YooPackage" preserve="all" />
+    <type fullname="Ux.YooType" preserve="all" />
   </assembly>
   <assembly fullname="Unity.RenderPipelines.Universal.Runtime">
     <type fullname="UnityEngine.Rendering.Universal.CameraExtensions" preserve="all" />
@@ -215,6 +220,7 @@
     <type fullname="UnityEngine.RenderTexture" preserve="all" />
     <type fullname="UnityEngine.RenderTextureFormat" preserve="all" />
     <type fullname="UnityEngine.Renderer" preserve="all" />
+    <type fullname="UnityEngine.SceneManagement.LoadSceneMode" preserve="all" />
     <type fullname="UnityEngine.SystemInfo" preserve="all" />
     <type fullname="UnityEngine.TextAsset" preserve="all" />
     <type fullname="UnityEngine.Texture" preserve="all" />
@@ -235,6 +241,17 @@
   <assembly fullname="UnityEngine.PhysicsModule">
     <type fullname="UnityEngine.Physics" preserve="all" />
     <type fullname="UnityEngine.RaycastHit" preserve="all" />
+  </assembly>
+  <assembly fullname="YooAsset">
+    <type fullname="YooAsset.AssetHandle" preserve="all" />
+    <type fullname="YooAsset.AssetInfo" preserve="all" />
+    <type fullname="YooAsset.AsyncOperationBase" preserve="all" />
+    <type fullname="YooAsset.EOperationStatus" preserve="all" />
+    <type fullname="YooAsset.HandleBase" preserve="all" />
+    <type fullname="YooAsset.InstantiateOperation" preserve="all" />
+    <type fullname="YooAsset.RawFileHandle" preserve="all" />
+    <type fullname="YooAsset.ResourcePackage" preserve="all" />
+    <type fullname="YooAsset.SceneHandle" preserve="all" />
   </assembly>
   <assembly fullname="ZString">
     <type fullname="Ux.zstring" preserve="all" />
@@ -295,6 +312,7 @@
     <type fullname="System.IO.MemoryStream" preserve="all" />
     <type fullname="System.IO.SeekOrigin" preserve="all" />
     <type fullname="System.IO.Stream" preserve="all" />
+    <type fullname="System.IProgress`1" preserve="all" />
     <type fullname="System.Int16" preserve="all" />
     <type fullname="System.Int32" preserve="all" />
     <type fullname="System.Int64" preserve="all" />

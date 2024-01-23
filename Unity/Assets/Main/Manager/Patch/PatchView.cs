@@ -12,18 +12,20 @@ namespace Ux
         [SerializeField] Slider barHotfix;
         [SerializeField] Text txtStatus;
 
-        [SerializeField] GameObject goTip;
+        [SerializeField] GameObject messageBox;
         [SerializeField] Button btnClose;
         [SerializeField] Button btnHotfix;
         [SerializeField] Text txtBtnHotfix;
         [SerializeField] Text txtHotfix;
 
-        static AssetHandle handle;
         static GameObject view;
-        public static PatchView Show()
+        public static PatchView Show(EPlayMode playMode)
         {
-            handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync("PatchView");
-            view = handle.InstantiateSync();
+            if (playMode == EPlayMode.EditorSimulateMode)
+            {
+                return null;
+            }
+            view = Instantiate(Resources.Load<GameObject>("Patch/PatchView"));
             if (EventSystem.current == null)
             {
                 var es = new GameObject("EventSystem");
@@ -36,13 +38,11 @@ namespace Ux
         }
         public static void Hide()
         {
-            if (handle != null)
+            if (view != null)
             {
-                handle.Dispose();
-                handle = null;
+                UnityEngine.Object.Destroy(view);
+                view = null;
             }
-            UnityEngine.Object.Destroy(view);
-            view = null;
         }
 
         private void Awake()
@@ -51,7 +51,7 @@ namespace Ux
             barHotfix.maxValue = 1f;
             barHotfix.minValue = 0f;
             barHotfix.gameObject.Visable(false);
-            goTip.Visable(false);
+            messageBox.Visable(false);
         }
 
 
@@ -77,22 +77,22 @@ namespace Ux
             }
         }
 
-        public void ShowTip(string content, string btnTitle, Action callback, Action closeCb = null)
+        public void ShowMessageBox(string content, string btnTitle, Action callback, Action closeCb = null)
         {
             txtBtnHotfix.text = btnTitle;
             txtHotfix.text = content;
-            goTip.Visable(true);
+            messageBox.Visable(true);
             btnHotfix.onClick.RemoveAllListeners();
             btnHotfix.onClick.AddListener(() =>
             {
                 callback?.Invoke();
-                goTip.Visable(false);
+                messageBox.Visable(false);
             });
             btnClose.onClick.RemoveAllListeners();
             btnClose.onClick.AddListener(() =>
             {
                 closeCb?.Invoke();
-                goTip.Visable(false);
+                messageBox.Visable(false);
             });
         }
 

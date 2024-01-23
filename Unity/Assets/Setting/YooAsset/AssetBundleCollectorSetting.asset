@@ -45,14 +45,6 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/Prefab/Patch
-        CollectorGUID: 768d53e5adebee440bae77b8369d6645
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
       - CollectPath: Assets/Data/Res/Texture
         CollectorGUID: 44c4d93bd00271241a1cffdca263e47b
         CollectorType: 0
@@ -151,14 +143,6 @@ MonoBehaviour:
       ActiveRuleName: EnableGroup
       Collectors:
       - CollectPath: Assets/Data/Res/UI/Common
-        CollectorGUID: 
-        CollectorType: 0
-        AddressRuleName: AddressByFolderAndFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-      - CollectPath: Assets/Data/Res/UI/Patch
         CollectorGUID: 
         CollectorType: 0
         AddressRuleName: AddressByFolderAndFileName

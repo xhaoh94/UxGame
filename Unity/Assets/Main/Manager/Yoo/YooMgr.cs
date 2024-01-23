@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,14 +19,14 @@ namespace Ux
 
         readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();
 
-        public IEnumerator Initialize(EPlayMode playMode)
+        public async UniTask Initialize(EPlayMode playMode)
         {
             // 初始化资源系统
             YooAssets.Initialize();
             // 创建资源包            
             ForEachPackage(x => x.CreatePackage());
             // 初始化资源包
-            yield return ForEachPackage(x => x.Initialize(playMode));
+            await ForEachPackage(x => x.Initialize(playMode));
         }
         public void ForEachPackage(Action<YooPackage> fn)
         {
@@ -38,6 +39,10 @@ namespace Ux
         public IEnumerator ForEachPackage(Func<YooPackage, IEnumerator> fn)
         {
             yield return _Packages.ForEachValue(fn);
+        }
+        public async UniTask ForEachPackage(Func<YooPackage, UniTask> fn)
+        {
+            await _Packages.ForEachValue(fn);
         }
         public YooPackage GetPackage(YooType resType)
         {

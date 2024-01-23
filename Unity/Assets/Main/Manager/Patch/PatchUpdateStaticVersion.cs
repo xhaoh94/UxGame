@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Collections;
 using YooAsset;
 namespace Ux
 {
@@ -6,7 +8,7 @@ namespace Ux
     {
         protected override void OnEnter(object args = null)
         {
-            GameMain.Ins.StartCoroutine(GetStaticVersion());
+            GetStaticVersion().Forget();
         }
         protected override void OnUpdate()
         {
@@ -15,28 +17,37 @@ namespace Ux
         {
         }
         bool IsSucceed;
-        private IEnumerator GetStaticVersion()
+        async UniTaskVoid GetStaticVersion()
         {
             IsSucceed = true;
             // 更新资源版本号
-            yield return YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
+            await YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
             if (IsSucceed)
             {
                 PatchMgr.Enter<PatchUpdateManifest>();
             }
             else
             {
-                PatchMgr.Ins.OnStaticVersionUpdateFailed();                
+                OnStaticVersionUpdateFailed();
             }
         }
 
-        IEnumerator UpdateStaticVersionAsync(YooPackage package)
+        void OnStaticVersionUpdateFailed()
+        {
+            Action callback = () =>
+            {
+                PatchMgr.Ins.Enter<PatchUpdateStaticVersion>();
+            };
+            PatchMgr.View.ShowMessageBox($"获取资源版本失败，请检测网络状态。", "确定", callback);
+        }
+
+        async UniTask UpdateStaticVersionAsync(YooPackage package)
         {
             var operation = package.Package.UpdatePackageVersionAsync();
-            yield return operation;
+            await operation;
             if (operation.Status == EOperationStatus.Succeed)
             {
-                Log.Debug($"{Name}:资源版本 : {operation.PackageVersion}");
+                Log.Debug($"{package.Name}:资源版本 : {operation.PackageVersion}");
                 package.Version = operation.PackageVersion;
             }
             else

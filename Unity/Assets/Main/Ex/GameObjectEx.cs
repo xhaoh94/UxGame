@@ -7,7 +7,7 @@ namespace Ux
     {
         public static void Visable(this GameObject go, bool b)
         {
-            if (go.activeInHierarchy != b)
+            if (go != null && go.activeInHierarchy != b)
             {
                 go.SetActive(b);
             }

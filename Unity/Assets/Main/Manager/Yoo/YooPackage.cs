@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using YooAsset;
 
@@ -32,7 +33,7 @@ namespace Ux
                 YooAssets.SetDefaultPackage(Package);
             }
         }
-        public IEnumerator Initialize(EPlayMode playMode)
+        public async UniTask Initialize(EPlayMode playMode)
         {
             InitializeParameters initializeParameters = null;
             IDecryptionServices decryptionServices = null;
@@ -86,7 +87,7 @@ namespace Ux
             }
             initializeParameters.DecryptionServices = decryptionServices;
             var initializationOperation = Package.InitializeAsync(initializeParameters);
-            yield return initializationOperation;
+            await initializationOperation;
 
             // 如果初始化失败弹出提示界面
             if (initializationOperation.Status != EOperationStatus.Succeed)

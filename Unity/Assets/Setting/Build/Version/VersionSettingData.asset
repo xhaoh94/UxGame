@@ -22,15 +22,15 @@ MonoBehaviour:
     CopyPath: ./CDN
     IsClearSandBox: 1
     IsExportExecutable: 1
-    ResVersion: 24011950282x1
+    ResVersion: 24012359850x6
     PackageBuilds:
     - New: 0
-      IsCollectShaderVariant: 1
+      IsCollectShaderVariant: 0
       PackageName: MainPackage
       EncyptionClassName: YooAsset.Editor.EncryptionNone
       CompressOption: 2
       PiplineOption: 1
-      NameStyleOption: 0
+      NameStyleOption: 2
       BuildTags: builtin
     - New: 0
       IsCollectShaderVariant: 0

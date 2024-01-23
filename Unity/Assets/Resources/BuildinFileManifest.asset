@@ -14,65 +14,62 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BuildinFiles:
   - PackageName: CodePackage
-    FileName: 183dd0b8572aa60c3349319e64b3407c.rawfile
-    FileCRC32: 139af514
+    FileName: 008ac0e282fc4dd758055d36367d10b3.rawfile
+    FileCRC32: c86dfaaf
   - PackageName: CodePackage
-    FileName: 1a36a36d4763244fbae46f294dbf2ed4.rawfile
-    FileCRC32: b07afb2b
-  - PackageName: CodePackage
-    FileName: 33c76f0e3d301809e8d8878307944198.rawfile
-    FileCRC32: 24be4b9b
+    FileName: 186d3e3bc90561f72ab082b6aebeda65.rawfile
+    FileCRC32: 33419ad2
   - PackageName: CodePackage
     FileName: 3b07bcaec665369fdd03d8674ec13edf.rawfile
     FileCRC32: fc485040
   - PackageName: CodePackage
-    FileName: 90f0c462aa86249ac6f12fad9d825d5c.rawfile
-    FileCRC32: 15dd3e15
+    FileName: 3d892cda32a18db79a6a095d262e5ee6.rawfile
+    FileCRC32: 64e410c8
   - PackageName: CodePackage
-    FileName: 944bdc408a5db677e697d32112b5dd96.rawfile
-    FileCRC32: 45dcaaf2
+    FileName: 5ac2fabbc965111c24e342afa49923c9.rawfile
+    FileCRC32: b186655f
   - PackageName: CodePackage
-    FileName: a2424d9d271cc36494eb331340e33304.rawfile
-    FileCRC32: dac37be0
+    FileName: a005d6213318c45b61cf23b4c018eb29.rawfile
+    FileCRC32: 6bf13338
+  - PackageName: CodePackage
+    FileName: ad55c572cedfabc970704ebfa9676ee7.rawfile
+    FileCRC32: 7f258343
+  - PackageName: CodePackage
+    FileName: c27a5734a293197c24830b9c89176c0b.rawfile
+    FileCRC32: 1eb87cdc
   - PackageName: CodePackage
     FileName: dbc857f83ccd2a069f30728c849b6756.rawfile
     FileCRC32: 6088ce42
   - PackageName: CodePackage
-    FileName: e9d49a838a06188fffbe566857369ee8.rawfile
-    FileCRC32: b3dfb39b
+    FileName: ea5f59ed943d95146e13bc806f762a3a.rawfile
+    FileCRC32: 77af52e6
   - PackageName: CodePackage
-    FileName: ee979f4d55b73977ed49a4e68b5098ff.rawfile
-    FileCRC32: cacfd84d
-  - PackageName: CodePackage
-    FileName: fd828aef9382dd74c7a138eeabd7811e.rawfile
-    FileCRC32: 6329d1a4
+    FileName: f47a1dd0ee1de9c2e4b5b833be15e5e9.rawfile
+    FileCRC32: 6f8c5ef3
   - PackageName: ConfigPackage
     FileName: 87425efdd0624bcd68b07d7bf074029f.bundle
     FileCRC32: 57ac8e6b
   - PackageName: MainPackage
-    FileName: 2b6530293ea24da6f92b8c54f6af364e.bundle
-    FileCRC32: af2be6b8
-  - PackageName: MainPackage
-    FileName: 362195eab3b02940a8b9af9b18309451.bundle
-    FileCRC32: 6e7c79cc
-  - PackageName: MainPackage
-    FileName: 3dda0f52700d81e4e152ee0905953af1.bundle
-    FileCRC32: be806414
-  - PackageName: MainPackage
-    FileName: ccea02b787d007214c7cb89bc53ab288.bundle
-    FileCRC32: 1c67ed3f
-  - PackageName: MainPackage
-    FileName: cea0255b7a9301844a670e0c943d35aa.bundle
+    FileName: mainpackage_assets_data_res_prefab_fogofwar_cea0255b7a9301844a670e0c943d35aa.bundle
     FileCRC32: c08298b8
+  - PackageName: MainPackage
+    FileName: mainpackage_assets_data_res_prefab_patch_e74303844d70635f56a67e214b4523bd.bundle
+    FileCRC32: 6e45c10c
+  - PackageName: MainPackage
+    FileName: mainpackage_assets_data_res_texture_2cf9fc74b55dc7bb66083907f4d89f43.bundle
+    FileCRC32: ec14c69a
+  - PackageName: MainPackage
+    FileName: mainpackage_assets_scenes_hotfix_0e6559b28b05fdaf159735fc0480a166.bundle
+    FileCRC32: c8acc4f3
+  - PackageName: MainPackage
+    FileName: mainpackage_unityshaders_d0a136a50f7b3227a13b5c729bdc07b4.bundle
+    FileCRC32: ec401b0f
   - PackageName: RawFilePackage
     FileName: 43041a569ea761c3660f02bb98d40278.bundle
     FileCRC32: 2a46613b
   - PackageName: UIPackage
     FileName: 197ecf24533a098ce57ed221eb552a93.bundle
     FileCRC32: ffa5a190
-  - PackageName: UIPackage
-    FileName: 78e9ab5dcfde2452fcfa28625d93df26.bundle
-    FileCRC32: 97598825
   - PackageName: UIPackage
     FileName: c5a85c99f8e840d881e0b771afeb3d05.bundle
     FileCRC32: 31f9bb2f

@@ -16,8 +16,8 @@ MonoBehaviour:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
   m_RendererFeatures:
-  - {fileID: 5244475392579530212}
-  m_RendererFeatureMap: e4edfa47951ec848
+  - {fileID: 5314796814531890227}
+  m_RendererFeatureMap: 330c8d378bf3c149
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -56,23 +56,7 @@ MonoBehaviour:
   m_CopyDepthMode: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 1
---- !u!114 &947247571318840813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 15c893e3d9f802243a2664d8949875ce, type: 3}
-  m_Name: GaussianBlurPass_TecrayC
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  settings:
-    my_RenderPassEvent: 550
-    my_Shader: {fileID: 4800000, guid: fe018251aec3ef9499dba4894f6e5469, type: 3}
---- !u!114 &5244475392579530212
+--- !u!114 &5314796814531890227
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
