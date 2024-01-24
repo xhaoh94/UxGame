@@ -7,7 +7,12 @@ namespace Ux
 {
     public abstract partial class Entity
     {
-        static readonly Queue<Action> _delayFn = new Queue<Action>();
+        struct DelayFn
+        {
+            public Action delayFn;
+            public int farme;
+        }
+        static readonly Queue<DelayFn> _delayFn = new Queue<DelayFn>();
         static bool _isRunning = false;
         static void _DelayInvoke()
         {
@@ -15,20 +20,26 @@ namespace Ux
             var max = 200;
             while (_delayFn.Count > 0 && (_exeNum++) < max) //一帧最多执行max次
             {
-                _delayFn.Dequeue()?.Invoke();
+                var fn = _delayFn.Peek();
+                //放进来后下一帧再销毁，以免同帧下销毁时，业务逻辑报错
+                if (fn.farme >= TimeMgr.Ins.TotalFrame) break;
+                _delayFn.Dequeue().delayFn.Invoke();
             }
         }
         static void EnqueueDelay(Action fn)
         {
-            _delayFn.Enqueue(fn);
+            _delayFn.Enqueue(new DelayFn() { delayFn = fn, farme = TimeMgr.Ins.TotalFrame });
             if (!_isRunning)
             {
                 _isRunning = true;
-                GameMain.Ins.AddUpdate(_DelayInvoke);
+                GameMain.Ins.AddLateUpdate(_DelayInvoke);
             }
         }
 
+
+
 #if UNITY_EDITOR
+        const string _PoolTag = "ECS_EMPTY_GO_VIEWER";
         public GameObject GoViewer { get; private set; }
 #endif
         public EntityMono EntityMono { get; private set; }
@@ -103,8 +114,12 @@ namespace Ux
             entity._isDestroying = false;
             entity.IsFromPool = isFromPool;
             entity.ID = id;
-#if UNITY_EDITOR
-            entity.GoViewer = new GameObject();
+#if UNITY_EDITOR            
+            entity.GoViewer = UnityPool.Get<GameObject>(_PoolTag);
+            if (entity.GoViewer == null)
+            {
+                entity.GoViewer = new GameObject();
+            }
             entity.GoViewer.name = $"{type.Name}_{id}";
             var eg = entity.GoViewer.AddComponent<EntityViewer>();
             eg.SetEntity(entity);
@@ -742,7 +757,11 @@ namespace Ux
             ID = 0;
             _is_init = false;
 #if UNITY_EDITOR
-            GameObject.Destroy(GoViewer);
+            if (GoViewer != null)
+            {
+                UnityPool.Push(_PoolTag, GoViewer);
+                GoViewer = null;
+            }
 #endif
             if (IsFromPool)
             {

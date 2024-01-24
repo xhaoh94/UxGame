@@ -15,11 +15,5 @@
             ModuleMgr.Ins.Create();
             UIMgr.Ins.Show<UI.LoginView>();
         }
-        protected override void OnUpdate()
-        {
-        }
-        protected override void OnExit()
-        {            
-        }
     }
 }

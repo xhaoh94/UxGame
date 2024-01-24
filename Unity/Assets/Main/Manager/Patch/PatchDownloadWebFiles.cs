@@ -8,12 +8,6 @@ namespace Ux
         {
             BeginDownload((Downloader)args);
         }
-        protected override void OnUpdate()
-        {
-        }
-        protected override void OnExit()
-        {
-        }
         void OnDownloadProgressCallback(int totalDownloadCount, int currentDownloadCount, long totalDownloadSizeBytes, long currentDownloadSizeBytes)
         {
             DownloadProgressUpdate msg = new DownloadProgressUpdate();

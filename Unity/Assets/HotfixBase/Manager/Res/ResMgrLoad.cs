@@ -38,6 +38,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return default(TObject);
             var handle = package.Package.LoadAssetSync(assetInfo);
             return _LoadAsset<TObject>(assetInfo.Address, handle);
         }
@@ -57,6 +58,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return default(TObject);
             var handle = package.Package.LoadAssetSync<TObject>(location);
             return _LoadAsset<TObject>(location, handle);
         }
@@ -114,6 +116,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return default(TObject);
             var handle = package.Package.LoadAssetAsync(assetInfo);
             return await _LoadAssetAsync<TObject>(assetInfo.Address, handle);
         }
@@ -133,6 +136,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return default(TObject);
             var handle = package.Package.LoadAssetAsync<TObject>(location);
             return await _LoadAssetAsync<TObject>(location, handle);
         }

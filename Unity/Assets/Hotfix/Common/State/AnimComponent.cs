@@ -24,8 +24,8 @@ namespace Ux
         }
         public void OnUpdate()
         {
-            var deltaTime = Time.deltaTime;
-            _graph.Evaluate(deltaTime);
+            Log.Debug("AnimUpdate");
+            _graph.Evaluate(Time.deltaTime);
         }
 
         public void OnApplicationQuit()
@@ -35,6 +35,7 @@ namespace Ux
 
         protected override void OnDestroy()
         {
+            Log.Debug("AnimDestroy");
             _graph.Destroy();
             Animator = null;
         }

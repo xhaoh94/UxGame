@@ -10,22 +10,14 @@ namespace Ux
         {
             UpdateManifest().Forget();
         }
-        protected override void OnUpdate()
-        {
-        }
-        protected override void OnExit()
-        {
-        }
-
-        bool IsSucceed;
+        
         private async UniTaskVoid UpdateManifest()
-        {
-            IsSucceed = true;
+        {            
             // 强制卸载所有资源
             YooMgr.Ins.ForceUnloadAllAssets();
             // 更新补丁清单
-            await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);
-            if (IsSucceed)
+            var succeed = await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);
+            if (succeed)
             {
                 PatchMgr.Enter<PatchCreateDownloader>();
             }
@@ -44,15 +36,16 @@ namespace Ux
             PatchMgr.View.ShowMessageBox($"获取补丁清单失败，请检测网络状态。", "确定", callback);
         }
 
-        async UniTask UpdateManifestAsync(YooPackage package)
+        async UniTask<bool> UpdateManifestAsync(YooPackage package)
         {
             var operation = package.Package.UpdatePackageManifestAsync(package.Version);
             await operation;
             if (operation.Status != EOperationStatus.Succeed)
             {
                 Log.Error(operation.Error);
-                if (IsSucceed) IsSucceed = false;
+                return false;
             }
+            return true;
         }
     }
 }

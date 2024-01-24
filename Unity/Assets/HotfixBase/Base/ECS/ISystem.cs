@@ -332,7 +332,6 @@ namespace Ux
         {
             if (this is IUpdateSystem updateSystem)
             {
-
                 GameMain.Ins.RemoveUpdate(updateSystem.OnUpdate);
             }
 

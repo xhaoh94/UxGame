@@ -26,11 +26,11 @@ MonoBehaviour:
     FileName: 3d892cda32a18db79a6a095d262e5ee6.rawfile
     FileCRC32: 64e410c8
   - PackageName: CodePackage
-    FileName: 5ac2fabbc965111c24e342afa49923c9.rawfile
-    FileCRC32: b186655f
+    FileName: 6bb97e0dfb9315f354956e8df425cd0e.rawfile
+    FileCRC32: 0460b0cc
   - PackageName: CodePackage
-    FileName: a005d6213318c45b61cf23b4c018eb29.rawfile
-    FileCRC32: 6bf13338
+    FileName: 81afc8cf78d1bc7fdc636081fb209539.rawfile
+    FileCRC32: bf8157ed
   - PackageName: CodePackage
     FileName: ad55c572cedfabc970704ebfa9676ee7.rawfile
     FileCRC32: 7f258343
@@ -41,28 +41,25 @@ MonoBehaviour:
     FileName: dbc857f83ccd2a069f30728c849b6756.rawfile
     FileCRC32: 6088ce42
   - PackageName: CodePackage
-    FileName: ea5f59ed943d95146e13bc806f762a3a.rawfile
-    FileCRC32: 77af52e6
-  - PackageName: CodePackage
     FileName: f47a1dd0ee1de9c2e4b5b833be15e5e9.rawfile
     FileCRC32: 6f8c5ef3
+  - PackageName: CodePackage
+    FileName: fca2d5143fee7f6de0ae978bec0dda1f.rawfile
+    FileCRC32: 97a924aa
   - PackageName: ConfigPackage
     FileName: 87425efdd0624bcd68b07d7bf074029f.bundle
     FileCRC32: 57ac8e6b
   - PackageName: MainPackage
-    FileName: mainpackage_assets_data_res_prefab_fogofwar_cea0255b7a9301844a670e0c943d35aa.bundle
-    FileCRC32: c08298b8
-  - PackageName: MainPackage
-    FileName: mainpackage_assets_data_res_prefab_patch_e74303844d70635f56a67e214b4523bd.bundle
-    FileCRC32: 6e45c10c
-  - PackageName: MainPackage
-    FileName: mainpackage_assets_data_res_texture_2cf9fc74b55dc7bb66083907f4d89f43.bundle
-    FileCRC32: ec14c69a
-  - PackageName: MainPackage
-    FileName: mainpackage_assets_scenes_hotfix_0e6559b28b05fdaf159735fc0480a166.bundle
+    FileName: 0e6559b28b05fdaf159735fc0480a166.bundle
     FileCRC32: c8acc4f3
   - PackageName: MainPackage
-    FileName: mainpackage_unityshaders_d0a136a50f7b3227a13b5c729bdc07b4.bundle
+    FileName: 2cf9fc74b55dc7bb66083907f4d89f43.bundle
+    FileCRC32: ec14c69a
+  - PackageName: MainPackage
+    FileName: cea0255b7a9301844a670e0c943d35aa.bundle
+    FileCRC32: c08298b8
+  - PackageName: MainPackage
+    FileName: d0a136a50f7b3227a13b5c729bdc07b4.bundle
     FileCRC32: ec401b0f
   - PackageName: RawFilePackage
     FileName: 43041a569ea761c3660f02bb98d40278.bundle

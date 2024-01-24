@@ -16,8 +16,8 @@ namespace Pb
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        [global::ProtoBuf.ProtoMember(1, Name = @"role")]
-        public Entity Role { get; set; }
+        [global::ProtoBuf.ProtoMember(1, Name = @"roles")]
+        public global::System.Collections.Generic.List<Entity> Roles { get; } = new global::System.Collections.Generic.List<Entity>();
 
     }
 
@@ -28,8 +28,8 @@ namespace Pb
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        [global::ProtoBuf.ProtoMember(1)]
-        public uint roleId { get; set; }
+        [global::ProtoBuf.ProtoMember(1, Name = @"roles", IsPacked = true)]
+        public uint[] Roles { get; set; }
 
     }
 

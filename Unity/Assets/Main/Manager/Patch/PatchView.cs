@@ -77,7 +77,7 @@ namespace Ux
             }
         }
 
-        public void ShowMessageBox(string content, string btnTitle, Action callback, Action closeCb = null)
+        public void ShowMessageBox(string content, string btnTitle, Action callback)
         {
             txtBtnHotfix.text = btnTitle;
             txtHotfix.text = content;
@@ -90,9 +90,9 @@ namespace Ux
             });
             btnClose.onClick.RemoveAllListeners();
             btnClose.onClick.AddListener(() =>
-            {
-                closeCb?.Invoke();
+            {                
                 messageBox.Visable(false);
+                Application.Quit();
             });
         }
 

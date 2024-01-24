@@ -6,11 +6,11 @@ import "common/common.proto";
 
 //bcst=999900001
 message Bcst_UnitIntoView{
-    Entity role=1;
+    repeated Entity roles=1;
 }
 //bcst=999900002
 message Bcst_UnitOutofView{
-    uint32 roleId=1;
+    repeated uint32 roles=1;
 }
 //bcst=999900003
 message Bcst_UnitMove{

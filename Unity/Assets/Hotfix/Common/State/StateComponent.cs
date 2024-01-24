@@ -9,7 +9,7 @@ namespace Ux
         public StateMachine Machine { get; private set; }
         public void OnAwake()
         {
-            Machine = StateMachine.CreateByPool(Parent);
+            Machine = StateMachine.CreateByPool(false, Parent);
             Machine.AddNode<StateIdle>();
             Machine.AddNode<StateRun>();
             Machine.Enter<StateIdle>();

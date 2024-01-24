@@ -18,16 +18,39 @@ namespace Ux
         };
 
         readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();
-
         public async UniTask Initialize(EPlayMode playMode)
         {
+            if (YooAssets.Initialized)
+            {
+                Log.Error($"{nameof(YooAssets)} is initialized !");
+                return;
+            }
             // 初始化资源系统
             YooAssets.Initialize();
-            // 创建资源包            
-            ForEachPackage(x => x.CreatePackage());
             // 初始化资源包
-            await ForEachPackage(x => x.Initialize(playMode));
+            var succeed = await InitializePackage(playMode);
+
+            if (succeed || playMode == EPlayMode.EditorSimulateMode)
+            {
+                return;
+            }
+            // 如果初始化失败弹出提示界面            
+            Action callback = () =>
+            {
+                PatchMgr.Ins.Enter<PatchInit>(playMode);
+            };
+            PatchMgr.Ins.View.ShowMessageBox("初始化失败", "确定", callback);
         }
+        async UniTask<bool> InitializePackage(EPlayMode playMode)
+        {
+            foreach (var _value in _Packages.Values)
+            {
+                var b = await (_value as IYooPackage).Initialize(playMode);
+                if (!b) return false;
+            }
+            return true;
+        }
+
         public void ForEachPackage(Action<YooPackage> fn)
         {
             _Packages.ForEachValue(fn);
@@ -36,14 +59,17 @@ namespace Ux
         {
             _Packages.ForEachValue(fn);
         }
-        public IEnumerator ForEachPackage(Func<YooPackage, IEnumerator> fn)
+        public async UniTask<bool> ForEachPackage(Func<YooPackage, UniTask<bool>> fn)
         {
-            yield return _Packages.ForEachValue(fn);
+            foreach (var _value in _Packages.Values)
+            {
+                var b = await fn.Invoke(_value);
+                if (!b) return false;
+            }
+            return true;
         }
-        public async UniTask ForEachPackage(Func<YooPackage, UniTask> fn)
-        {
-            await _Packages.ForEachValue(fn);
-        }
+
+
         public YooPackage GetPackage(YooType resType)
         {
             if (_Packages.TryGetValue(resType, out var result))
@@ -65,14 +91,13 @@ namespace Ux
                     return true;
                 });
             }
-            try
+            if (_locationToPackage.TryGetValue(location, out var result))
             {
-                return _locationToPackage[location];
+                return result;
             }
-            catch
-            {
-                throw (new Exception($"资源找不到Package:{location}"));
-            }
+
+            Log.Error($"资源找不到Package:{location}");
+            return null;
         }
 
         #region 资源卸载

@@ -10,19 +10,11 @@ namespace Ux
         {
             GetStaticVersion().Forget();
         }
-        protected override void OnUpdate()
-        {
-        }
-        protected override void OnExit()
-        {
-        }
-        bool IsSucceed;
         async UniTaskVoid GetStaticVersion()
         {
-            IsSucceed = true;
             // 更新资源版本号
-            await YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
-            if (IsSucceed)
+            var succeed = await YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
+            if (succeed)
             {
                 PatchMgr.Enter<PatchUpdateManifest>();
             }
@@ -41,7 +33,7 @@ namespace Ux
             PatchMgr.View.ShowMessageBox($"获取资源版本失败，请检测网络状态。", "确定", callback);
         }
 
-        async UniTask UpdateStaticVersionAsync(YooPackage package)
+        async UniTask<bool> UpdateStaticVersionAsync(YooPackage package)
         {
             var operation = package.Package.UpdatePackageVersionAsync();
             await operation;
@@ -53,8 +45,9 @@ namespace Ux
             else
             {
                 Log.Warning(operation.Error);
-                if (IsSucceed) IsSucceed = false;
+                return false;
             }
+            return true;
         }
     }
 }

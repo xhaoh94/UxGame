@@ -15,12 +15,5 @@ namespace Ux
                 Log.Error(e);
             }
         }
-
-        protected override void OnUpdate()
-        {
-        }
-        protected override void OnExit()
-        {            
-        }
     }
 }

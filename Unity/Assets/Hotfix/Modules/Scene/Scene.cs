@@ -49,17 +49,26 @@ namespace Ux
         [Evt(EventType.UNIT_INTO_VIEW)]
         void _OnUnitIntoView(Pb.BcstUnitIntoView param)
         {
-            var data = new PlayerData();
-            data.data = param.Role;
-            data.self = false;
-            data.name = "name_" + data.data.roleId;
-            data.res = "Hero_CK";
-            AddPlayer(data);
+            foreach (var role in param.Roles)
+            {
+                var player = GetChild<Player>(role.roleId);
+                if (player != null) continue;
+                var data = new PlayerData();
+                data.data = role;
+                data.self = false;
+                data.name = "name_" + role.roleId;
+                data.res = "Hero_CK";
+                AddPlayer(data);
+            }
         }
         [Evt(EventType.UNIT_OUTOF_VIEW)]
         void _OnUnitOutofView(Pb.BcstUnitOutofView param)
         {
-            RemoveChild(param.roleId);
+            foreach (var role in param.Roles)
+            {
+                RemoveChild(role);
+                players.Remove(role);
+            }
         }
 
         protected override void OnDestroy()

@@ -9,6 +9,7 @@ namespace Ux
         private IStateNode _curNode;
         private IStateNode _preNode;
         bool _isFromPool;
+        bool _isUpdate;
         /// <summary>
         /// 状态机持有者
         /// </summary>
@@ -26,27 +27,31 @@ namespace Ux
         /// </summary>
         public IStateNode PreviousNode => _preNode;
 
-        public static StateMachine Create(object owner = null)
+        public static StateMachine Create(bool isUpdate = false, object owner = null)
         {
             var stateMachine = new StateMachine();
-            stateMachine.Init(false, owner);
+            stateMachine.Init(false, isUpdate, owner);
             return stateMachine;
         }
-        public static StateMachine CreateByPool(object owner = null)
+        public static StateMachine CreateByPool(bool isUpdate = false, object owner = null)
         {
             var stateMachine = Pool.Get<StateMachine>();
-            stateMachine.Init(true, owner);
+            stateMachine.Init(true, isUpdate, owner);
             return stateMachine;
         }
 
-        void Init(bool isFromPool, object owner = null)
+        void Init(bool isFromPool, bool isUpdate, object owner = null)
         {
             _isFromPool = isFromPool;
+            _isUpdate = isUpdate;
             Owner = owner;
         }
         public void Release()
         {
-            GameMain.Ins.RemoveUpdate(Update);
+            if (_isUpdate)
+            {
+                GameMain.Ins.RemoveUpdate(Update);
+            }
             Owner = null;
             _curNode?.Exit();
             _curNode = null;
@@ -56,6 +61,9 @@ namespace Ux
 
             if (_isFromPool)
                 Pool.Push(this);
+
+            _isFromPool = false;
+            _isUpdate = false;
         }
 
         /// <summary>
@@ -106,7 +114,10 @@ namespace Ux
             }
             else
             {
-                GameMain.Ins.AddUpdate(Update);
+                if (_isUpdate)
+                {
+                    GameMain.Ins.AddUpdate(Update);
+                }
                 Log.Debug($"{OwnerName} 进入节点：{node.Name}");
                 _preNode = _curNode;
             }

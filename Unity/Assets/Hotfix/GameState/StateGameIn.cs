@@ -23,10 +23,5 @@
             UIMgr.Ins.Hide<UI.MainView>();
             SceneModule.Ins.LeaveScene();
         }
-
-        protected override void OnUpdate()
-        {
-
-        }
     }
 }

@@ -15,6 +15,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileData();
@@ -29,6 +30,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFileText();
@@ -43,6 +45,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileSync(location))
             {
                 return handle.GetRawFilePath();
@@ -57,6 +60,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFileData();
@@ -71,6 +75,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFileText();
@@ -85,6 +90,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileSync(assetInfo))
             {
                 return handle.GetRawFilePath();
@@ -103,6 +109,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -118,6 +125,7 @@ namespace Ux
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
                 : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -133,6 +141,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(location)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileAsync(location))
             {
                 await handle.ToUniTask();
@@ -148,6 +157,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();
@@ -163,6 +173,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();
@@ -178,6 +189,7 @@ namespace Ux
             var package = resType == YooType.None
                ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
             using (var handle = package.Package.LoadRawFileAsync(assetInfo))
             {
                 await handle.ToUniTask();

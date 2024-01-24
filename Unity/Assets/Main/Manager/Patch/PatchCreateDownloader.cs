@@ -8,13 +8,6 @@ namespace Ux
         {
             CreateDownloader();
         }
-        protected override void OnUpdate()
-        {
-        }
-        protected override void OnExit()
-        {
-        }
-
         void CreateDownloader()
         {
             Log.Debug("创建补丁下载器.");

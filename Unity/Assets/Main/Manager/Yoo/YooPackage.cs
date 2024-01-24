@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 using YooAsset;
 
 namespace Ux
@@ -14,7 +16,7 @@ namespace Ux
         Config,//配置
         RawFile,//原生文件
     }
-    public abstract class YooPackage
+    public abstract class YooPackage : IYooPackage
     {
         public abstract YooType YooType { get; }
         public abstract string Name { get; }
@@ -22,7 +24,7 @@ namespace Ux
         public abstract EDefaultBuildPipeline EDefaultBuildPipeline { get; }
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
-        public void CreatePackage()
+        void _CreatePackage()
         {
             Package = YooAssets.TryGetPackage(Name);
             if (Package == null)
@@ -33,8 +35,11 @@ namespace Ux
                 YooAssets.SetDefaultPackage(Package);
             }
         }
-        public async UniTask Initialize(EPlayMode playMode)
+        async UniTask<bool> IYooPackage.Initialize(EPlayMode playMode)
         {
+            // 创建资源包            
+            _CreatePackage();
+
             InitializeParameters initializeParameters = null;
             IDecryptionServices decryptionServices = null;
             if (DecryptionType != null)
@@ -88,12 +93,12 @@ namespace Ux
             initializeParameters.DecryptionServices = decryptionServices;
             var initializationOperation = Package.InitializeAsync(initializeParameters);
             await initializationOperation;
-
-            // 如果初始化失败弹出提示界面
             if (initializationOperation.Status != EOperationStatus.Succeed)
             {
                 Log.Warning($"{initializationOperation.Error}");
+                return false;
             }
+            return true;
         }
 
         #region 远端地址
@@ -123,6 +128,10 @@ namespace Ux
 
     }
 
+    public interface IYooPackage
+    {
+        UniTask<bool> Initialize(EPlayMode playMode);
+    }
     public class YooMainPackage : YooPackage
     {
         public override YooType YooType => YooType.Main;
