@@ -2,25 +2,19 @@
 
 namespace Ux
 {
-    public interface IUnitVisionEntity
-    {
-        Vector3 Position { get; }
-        int Layer { set; }
-        int Mask { get; }
-    }
     /// <summary>
     /// 单位视野
     /// 通常每个单位有一个对应的单位视野
     /// 部分复杂单位，如建筑，会有多个单位视野
     /// </summary>
-    public class UnitVisionComponent : Entity, IAwakeSystem<IUnitVisionEntity, PlayerData>, IEventSystem, IUnitVision
+    public class UnitVisionComponent : Entity, IAwakeSystem, IEventSystem, IFogOfWarUnit
     {
-        public int Layer { set { _entity.Layer = value; } }
+        public BoolValue Visable => _unit.Visable;
         /// <summary>
         /// 表示玩家分组的位掩码
         /// 如玩家0是0001，玩家1是0010，则这两个玩家共同的视野是0011
         /// </summary>
-        public int Mask => _entity.Mask;
+        public int Mask => _unit.Mask;
 
         /// <summary>
         /// 视野范围
@@ -39,19 +33,16 @@ namespace Ux
         /// <summary>
         /// 格子坐标
         /// </summary>
-        public Vector2Int TilePos => FogOfWarMgr.Ins.WorldPosToTilePos(_entity.Position);
+        public Vector2Int TilePos => FogOfWarMgr.Ins.WorldPosToTilePos(_unit.Position);
 
-        IUnitVisionEntity _entity;
+        Unit _unit => ParentAs<Unit>();
 
-
-        void IAwakeSystem<IUnitVisionEntity, PlayerData>.OnAwake(IUnitVisionEntity a, PlayerData b)
-        {
-            _entity = a;
+        void IAwakeSystem.OnAwake()
+        {            
             FogOfWarMgr.Ins.AddUnit(this);
-
-            if (b.self)
+            if (_unit.IsSelf)
             {
-                FogOfWarMgr.Ins.SetVisionMask(_entity.Mask);
+                FogOfWarMgr.Ins.SetVisionMask(_unit.Mask);
             }
         }
         protected override void OnDestroy()
@@ -60,8 +51,7 @@ namespace Ux
             FogOfWarMgr.Ins.RemoveUnit(this);
             Radius = 3;
             Altitude = 0;
-            GrassId = 0;
-            _entity = null;
+            GrassId = 0;            
         }
 
         [MainEvt(MainEventType.FOG_OF_WAR_INIT)]

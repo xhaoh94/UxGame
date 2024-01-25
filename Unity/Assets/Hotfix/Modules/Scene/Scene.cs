@@ -11,7 +11,7 @@ namespace Ux
         public AStarComponent AStar { get; private set; }
         public GameObject Go { get; private set; }
         [EEViewer("玩家")]
-        Dictionary<uint, Player> players = new Dictionary<uint, Player>();
+        Dictionary<uint, Unit> players = new Dictionary<uint, Unit>();
         public void OnAwake(GameObject a)
         {
             Go = a;
@@ -23,23 +23,25 @@ namespace Ux
 
         public void AddPlayer(PlayerData playerData)
         {
-            var player = AddChild<Player, PlayerData>(playerData.id, playerData);
+            Log.Debug("创建Unit" + playerData.id);
+            var player = AddChild<Unit, PlayerData>(playerData.id, playerData);
             players.Add(playerData.id, player);
         }
 
         [Evt(EventType.UNIT_MOVE)]
         void _OnUnitMove(Pb.BcstUnitMove param)
         {
-            var player = GetChild<Player>(param.roleId);
+            Log.Debug("移动Unit" + param.roleId);
+            var player = GetChild<Unit>(param.roleId);
             if (player != null)
             {
-                player.Seeker.SetPoints(param.Points, param.pointIndex);
+                player.Path.SetPoints(param.Points, param.pointIndex);
             }
         }
         [Evt(EventType.UNIT_UPDATE_POSITION)]
         void _OnUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
         {
-            var player = GetChild<Player>(param.roleId);
+            var player = GetChild<Unit>(param.roleId);
             if (player != null)
             {
                 player.Position = new Vector3(param.Point.X, param.Point.Y, param.Point.Z);
@@ -51,8 +53,8 @@ namespace Ux
         {
             foreach (var role in param.Roles)
             {
-                var player = GetChild<Player>(role.roleId);
-                if (player != null) continue;
+                var player = GetChild<Unit>(role.roleId);
+                if (player != null) continue;                
                 var data = new PlayerData();
                 data.data = role;
                 data.self = false;

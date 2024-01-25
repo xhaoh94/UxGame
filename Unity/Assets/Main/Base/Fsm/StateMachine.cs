@@ -108,7 +108,7 @@ namespace Ux
 
             if (_curNode != null)
             {
-                Log.Debug($"{OwnerName} 更改节点：{_curNode.Name} --> {node.Name}");
+                //Log.Debug($"{OwnerName} 更改节点：{_curNode.Name} --> {node.Name}");
                 _preNode = _curNode;
                 _curNode.Exit();
             }
@@ -118,7 +118,7 @@ namespace Ux
                 {
                     GameMain.Ins.AddUpdate(Update);
                 }
-                Log.Debug($"{OwnerName} 进入节点：{node.Name}");
+                //Log.Debug($"{OwnerName} 进入节点：{node.Name}");
                 _preNode = _curNode;
             }
             _curNode = node;

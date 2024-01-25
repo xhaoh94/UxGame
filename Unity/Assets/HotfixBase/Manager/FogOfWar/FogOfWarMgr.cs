@@ -9,10 +9,8 @@ namespace Ux
 {
     public partial class FogOfWarMgr : Singleton<FogOfWarMgr>
     {
-        const string LayerDefault = "Default";
-        const string LayerHidden = "Hidden";
-        const string LayerFogOfWar = "FogOfWar";
-        const string Prefab = "FogOfWar";
+        const string _location = "FogOfWar";
+        const string _visable = "FogOfWar";
 
         bool _init;
         public bool IsInit => _init;
@@ -87,7 +85,7 @@ namespace Ux
         readonly List<Vector2Int> _circleByBoundingCircle = new List<Vector2Int>();
         readonly List<Vector2Int> _lineByBresenhams = new List<Vector2Int>();
 
-        readonly HashSet<IUnitVision> _units = new HashSet<IUnitVision>();
+        readonly HashSet<IFogOfWarUnit> _units = new HashSet<IFogOfWarUnit>();
 
         public float TileSize { get; private set; } = 1f;
         public int Width { get; private set; } = 200;
@@ -137,7 +135,7 @@ namespace Ux
                 return;
             }
             _init = true;
-            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>(Prefab);
+            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>(_location);
 
             Width = width;
             Height = height;
@@ -163,16 +161,16 @@ namespace Ux
             _mainCamera = null;
             if (_FogOfWar != null)
             {
-                UnityPool.Push(Prefab, _FogOfWar);
+                UnityPool.Push(_location, _FogOfWar);
                 _FogOfWar = null;
             }
         }
 
-        public void AddUnit(IUnitVision unitVision)
+        public void AddUnit(IFogOfWarUnit unitVision)
         {
             _units.Add(unitVision);
         }
-        public void RemoveUnit(IUnitVision unitVision)
+        public void RemoveUnit(IFogOfWarUnit unitVision)
         {
             _units.Remove(unitVision);
         }
@@ -236,7 +234,7 @@ namespace Ux
             var cameraData = cam.GetUniversalAdditionalCameraData();
             cameraData.renderType = CameraRenderType.Overlay;
 
-            cam.cullingMask = LayerMask.GetMask(LayerFogOfWar);
+            cam.cullingMask = LayerMask.GetMask(Layers.FogOfWar);
             //cam.clearFlags = CameraClearFlags.Depth;
             if (_mainCamera != null)
             {
@@ -399,8 +397,7 @@ namespace Ux
         {
             foreach (var unit in _units)
             {
-                string layerName = IsVisible(unit) ? LayerDefault : LayerHidden;
-                unit.Layer = LayerMask.NameToLayer(layerName);
+                unit.Visable.Set(_visable, IsVisible(unit));                
             }
         }
 
@@ -429,7 +426,7 @@ namespace Ux
         /// <summary>
         /// 两点间的视野是否因为地形被阻挡了
         /// </summary>
-        bool IsBlocked(Vector2Int startTile, Vector2Int targetTile, IUnitVision unit)
+        bool IsBlocked(Vector2Int startTile, Vector2Int targetTile, IFogOfWarUnit unit)
         {
             _LineByBresenhams(startTile, targetTile);
             for (int i = 0; i < _lineByBresenhams.Count; i++)

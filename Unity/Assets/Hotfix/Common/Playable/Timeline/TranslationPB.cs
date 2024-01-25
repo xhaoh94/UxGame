@@ -31,7 +31,7 @@ namespace Ux
             if (go == null) return;
             var mono = go.GetComponent<EntityMono>();
             if (mono == null) return;
-            var player = mono.GetEntity<Player>();
+            var player = mono.GetEntity<Unit>();
             if (player == null) return;
             var forward = go.transform.forward.normalized;
             if (time == 0)
@@ -56,7 +56,7 @@ namespace Ux
                 if (go == null) return;
                 var mono = go.GetComponent<EntityMono>();
                 if (mono == null) return;
-                var player = mono.GetEntity<Player>();
+                var player = mono.GetEntity<Unit>();
                 if (player == null) return;
                 var dir = target - player.Position;
                 player.Position += dir.normalized * (Time.fixedDeltaTime * time);

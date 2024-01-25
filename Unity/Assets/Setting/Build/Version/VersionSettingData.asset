@@ -22,7 +22,7 @@ MonoBehaviour:
     CopyPath: ./CDN
     IsClearSandBox: 1
     IsExportExecutable: 1
-    ResVersion: 24012538096x1
+    ResVersion: 24012552298x1
     PackageBuilds:
     - New: 0
       IsCollectShaderVariant: 0

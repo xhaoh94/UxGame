@@ -12,7 +12,7 @@ namespace Ux
 {
     public class OperateComponent : Entity, IAwakeSystem, IUpdateSystem, InputActions.IPlayerActions
     {
-        Player Player => Parent as Player;
+        Unit Unit => Parent as Unit;
         private InputActions _input;
 
         public void OnAwake()
@@ -49,7 +49,7 @@ namespace Ux
             if (context.performed)
             {
                 var pos = Mouse.current.position.ReadValue();
-                var mapCamera = Player.Map.Camera.MapCamera;
+                var mapCamera = Unit.Map.Camera.MapCamera;
                 var ray = mapCamera.ScreenPointToRay(pos);
                 if (Physics.Raycast(ray, out var hitInfo))
                 {
@@ -57,7 +57,7 @@ namespace Ux
                         hitInfo.transform.gameObject.CompareTag("FogOfWar"))
                     {
                         Log.Debug("点击地板");
-                        Player.Seeker.StartPath(hitInfo.point);
+                        Unit.Seeker.StartPath(hitInfo.point);
                     }
                 }
             }
@@ -70,14 +70,14 @@ namespace Ux
                 if (context.control == Keyboard.current.qKey)
                 {
                     var asset = await SkillMgr.Ins.GetSkillAssetAsync("Skill01");
-                    Player.Director.SetPlayableAsset(asset);
-                    Player.Director.Play();
+                    Unit.Director.SetPlayableAsset(asset);
+                    Unit.Director.Play();
                 }
                 else if (context.control == Keyboard.current.eKey)
                 {
                     var asset = await SkillMgr.Ins.GetSkillAssetAsync("Skill02");
-                    Player.Director.SetPlayableAsset(asset);
-                    Player.Director.Play();
+                    Unit.Director.SetPlayableAsset(asset);
+                    Unit.Director.Play();
                 }
             }
         }

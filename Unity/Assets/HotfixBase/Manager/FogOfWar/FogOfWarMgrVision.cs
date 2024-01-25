@@ -8,7 +8,7 @@ namespace Ux
 {
     partial class FogOfWarMgr
     {
-        public bool IsVisible(IUnitVision unit)
+        public bool IsVisible(IFogOfWarUnit unit)
         {
             if ((_visionMask & unit.Mask) > 0)
                 return true;
