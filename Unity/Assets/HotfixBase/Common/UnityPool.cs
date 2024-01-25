@@ -9,15 +9,22 @@ using Ux;
 public static class UnityPool
 {
     private static readonly Dictionary<string, Queue<UnityEngine.Object>> _unity = new Dictionary<string, Queue<UnityEngine.Object>>();
+#if UNITY_EDITOR
     static Transform _pool_content;
+    static Dictionary<string, Transform> _pool_location_content = new Dictionary<string, Transform>();
+#endif
     public static void Init()
     {
         GameMain.Ins.AddLowMemory(Clear);
     }
-    public static UnityEngine.Object Get(string location)
+    public static T Get<T>(string location, Func<T> create = null) where T : UnityEngine.Object
     {
         if (!_unity.TryGetValue(location, out var queue) || queue.Count == 0)
         {
+            if (create != null)
+            {
+                return create.Invoke();
+            }
             return null;
         }
         else
@@ -27,14 +34,9 @@ public static class UnityPool
             {
                 go.Visable(true);
             }
-            return obj;
+            return obj as T;
         }
     }
-    public static T Get<T>(string location) where T : UnityEngine.Object
-    {
-        return (T)Get(location);
-    }
-
 
     public static void Push(UnityEngine.GameObject obj)
     {
@@ -72,12 +74,19 @@ public static class UnityPool
                 UnityEngine.Object.Destroy(entityMono);
             }
 #if UNITY_EDITOR
-            if (_pool_content == null)
+            if (!_pool_location_content.TryGetValue(location, out var locationContent))
             {
-                _pool_content = new GameObject("[UnityPool]").transform;
-                UnityEngine.Object.DontDestroyOnLoad(_pool_content);
+                if (_pool_content == null)
+                {
+                    _pool_content = new GameObject("[UnityPool]").transform;
+                    UnityEngine.Object.DontDestroyOnLoad(_pool_content);
+                }
+
+                locationContent = new GameObject($"[{location}]").transform;
+                locationContent.SetParent(_pool_content);
+                _pool_location_content.Add(location, locationContent);
             }
-            go.transform.parent = _pool_content;
+            go.transform.parent = locationContent;
 #else
             go.transform.parent = null;
 #endif

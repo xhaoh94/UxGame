@@ -548,8 +548,10 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.ObjectEqualityComparer<long>
 	// System.Collections.Generic.ObjectEqualityComparer<object>
 	// System.Collections.Generic.ObjectEqualityComparer<uint>
+	// System.Collections.Generic.Queue.Enumerator<Ux.Entity.DelayFn>
 	// System.Collections.Generic.Queue.Enumerator<int>
 	// System.Collections.Generic.Queue.Enumerator<object>
+	// System.Collections.Generic.Queue<Ux.Entity.DelayFn>
 	// System.Collections.Generic.Queue<int>
 	// System.Collections.Generic.Queue<object>
 	// System.Collections.Generic.Stack.Enumerator<Ux.UIMgr.UIStack>
@@ -680,7 +682,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray.Enumerator<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.Playables.ScriptPlayable<object>
-	// Ux.StateMachine.<>c__DisplayClass26_0<object>
+	// Ux.StateMachine.<>c__DisplayClass27_0<object>
 	// }}
 
 	public void RefMethods()

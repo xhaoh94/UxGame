@@ -6,7 +6,7 @@ namespace Ux
     public interface IEntityMono
     {
 #if UNITY_EDITOR
-        void SetEntity(Entity entity, GameObject go);
+        void SetEntity(Entity entity, EntityViewer go);
 #else
         void SetEntity(Entity entity);
 #endif
@@ -22,11 +22,11 @@ namespace Ux
         }
 
 #if UNITY_EDITOR
-        [SerializeField] GameObject GoViewer;
-        public void SetEntity(Entity entity, GameObject goViewer)
+        [SerializeField] EntityViewer Viewer;
+        public void SetEntity(Entity entity, EntityViewer viewer)
         {
             Entity = entity;
-            GoViewer = goViewer;
+            Viewer = viewer;
         }
 #else
         public void SetEntity(Entity entity)

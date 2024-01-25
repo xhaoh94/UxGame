@@ -30,10 +30,10 @@ namespace Ux
         /// <param name="assetInfo">资源信息</param>
         public TObject LoadAsset<TObject>(AssetInfo assetInfo, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
-            var obj = UnityPool.Get(assetInfo.Address);
+            var obj = UnityPool.Get<TObject>(assetInfo.Address);
             if (obj != null)
             {
-                return obj as TObject;
+                return obj;
             }
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
@@ -50,10 +50,10 @@ namespace Ux
         /// <param name="location">资源的定位地址</param>
         public TObject LoadAsset<TObject>(string location, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
-            var obj = UnityPool.Get(location);
+            var obj = UnityPool.Get<TObject>(location);
             if (obj != null)
             {
-                return obj as TObject;
+                return obj;
             }
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)
@@ -108,10 +108,10 @@ namespace Ux
         /// <param name="assetInfo">资源信息</param>
         public async UniTask<TObject> LoadAssetAsync<TObject>(AssetInfo assetInfo, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
-            var obj = UnityPool.Get(assetInfo.Address);
+            var obj = UnityPool.Get<TObject>(assetInfo.Address);
             if (obj != null)
             {
-                return obj as TObject;
+                return obj;
             }
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(assetInfo.Address)
@@ -128,10 +128,10 @@ namespace Ux
 		/// <param name="location">资源的定位地址</param>
 		public async UniTask<TObject> LoadAssetAsync<TObject>(string location, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
-            var obj = UnityPool.Get(location);
+            var obj = UnityPool.Get<TObject>(location);
             if (obj != null)
             {
-                return obj as TObject;
+                return obj;
             }
             var package = resType == YooType.None
                 ? YooMgr.Ins.GetPackageByLocation(location)

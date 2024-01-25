@@ -38,13 +38,26 @@ namespace Ux
 
 
 
-#if UNITY_EDITOR
-        const string _PoolTag = "ECS_EMPTY_GO_VIEWER";
-        public GameObject GoViewer { get; private set; }
+#if UNITY_EDITOR        
+        public EntityViewer Viewer { get; private set; }
 #endif
         public EntityMono EntityMono { get; private set; }
 
         public long ID { get; private set; }
+        string _name;
+        public string Name
+        {
+            get => _name; set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+#if UNITY_EDITOR
+                    Viewer.name = value;
+#endif
+                }
+            }
+        }
         /// <summary>
         /// 是否从对象池获取
         /// </summary>
@@ -110,56 +123,32 @@ namespace Ux
         {
             var entity = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (entity == null) return null;
+#if UNITY_EDITOR
+            entity.Viewer = EntityViewer.Create(entity);
+#endif
             entity._isDestroyed = false;
             entity._isDestroying = false;
             entity.IsFromPool = isFromPool;
             entity.ID = id;
-#if UNITY_EDITOR            
-            entity.GoViewer = UnityPool.Get<GameObject>(_PoolTag);
-            if (entity.GoViewer == null)
-            {
-                entity.GoViewer = new GameObject();
-            }
-            entity.GoViewer.name = $"{type.Name}_{id}";
-            var eg = entity.GoViewer.AddComponent<EntityViewer>();
-            eg.SetEntity(entity);
-#endif
+            entity.Name = $"{type.Name}_{id}";
             return entity;
         }
-#if UNITY_EDITOR
-        protected void SetViewerName(string name)
-        {
-            if (GoViewer != null)
-            {
-                GoViewer.name = name;
-            }
-        }
-#endif
 
         public void SetMono(GameObject gameObject, bool isSetParent = true)
         {
             EntityMono = gameObject.GetOrAddComponent<EntityMono>();
 #if UNITY_EDITOR
-            EntityMono.SetEntity(this, GoViewer);
+            EntityMono.SetEntity(this, Viewer);
             if (isSetParent)
             {
-                Transform assetContent = null;
                 if (IsComponent)
                 {
-                    assetContent = Parent.GoViewer.transform.Find("Asset");
+                    gameObject.SetParent(Parent.Viewer.AssetContent);
                 }
                 else
                 {
-                    assetContent = GoViewer.transform.Find("Asset");
+                    gameObject.SetParent(Viewer.AssetContent);
                 }
-
-                if (assetContent == null)
-                {
-                    assetContent = new GameObject("Asset").transform;
-                    assetContent.SetParent(GoViewer.transform);
-                    assetContent.SetAsFirstSibling();
-                }
-                gameObject.SetParent(assetContent);
             }
 #else
             EntityMono.SetEntity(this);
@@ -237,15 +226,8 @@ namespace Ux
             }
             listData.Add(entity);
 
-#if UNITY_EDITOR
-            var entityContent = GoViewer.transform.Find("Entitys");
-            if (entityContent == null)
-            {
-                entityContent = new GameObject("Entitys").transform;
-                entityContent.SetParent(GoViewer.transform);
-                entityContent.SetAsLastSibling();
-            }
-            entity.GoViewer.transform.SetParent(entityContent);
+#if UNITY_EDITOR            
+            entity.Viewer.SetParent(Viewer.EntityContent);
 #endif
             return true;
         }
@@ -672,7 +654,7 @@ namespace Ux
         {
             if (IsDestroy)
             {
-                Log.Error(GetType().FullName + "已销毁");
+                Log.Error(Name + "已销毁");
                 return true;
             }
             if (IsComponent)
@@ -680,7 +662,7 @@ namespace Ux
                 var temParent = Parent;
                 if (temParent != null && temParent.IsDestroy)
                 {
-                    Log.Error(temParent.GetType().FullName + "已销毁");
+                    Log.Error(temParent.Name + "已销毁");
                     return true;
                 }
             }
@@ -702,9 +684,6 @@ namespace Ux
 
         void _Destroy(bool isDestroy)
         {
-#if UNITY_EDITOR
-            GoViewer.transform.SetParent(null);
-#endif
             _RemoveSystem();
             if (!isDestroy)
             {
@@ -754,13 +733,14 @@ namespace Ux
             _entitys.Clear();
             _typeToentitys.Clear();
             _components.Clear();
+            _name = null;
             ID = 0;
             _is_init = false;
 #if UNITY_EDITOR
-            if (GoViewer != null)
+            if (Viewer != null)
             {
-                UnityPool.Push(_PoolTag, GoViewer);
-                GoViewer = null;
+                Viewer.Release();
+                Viewer = null;
             }
 #endif
             if (IsFromPool)

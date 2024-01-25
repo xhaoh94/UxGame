@@ -9,8 +9,7 @@ namespace Ux
         /// <summary>
         /// 动画层级
         /// </summary>
-        public int Layer { get; private set; } = 0;
-        public string Name { get; private set; }
+        public int Layer { get; private set; } = 0;        
         public AnimationClip Clip { get; private set; }
 
         private AnimationClipPlayable _clipPlayable;
@@ -68,8 +67,7 @@ namespace Ux
         }
 
         public void OnAwake(PlayableGraph graph, string a, AnimationClip b, int c)
-        {
-
+        {            
             Name = a;
             Clip = b;
             Layer = c;
@@ -83,17 +81,12 @@ namespace Ux
             {
                 _clipPlayable.SetDuration(b.length);
             }
-
-#if UNITY_EDITOR
-            SetViewerName($"{GetType().Name}_{Name}");
-#endif
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            Layer = 0;
-            Name = null;
+            Layer = 0;            
             Clip = null;
         }
     }

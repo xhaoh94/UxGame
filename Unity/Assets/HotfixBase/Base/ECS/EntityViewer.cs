@@ -133,7 +133,7 @@ namespace Ux
             }
             else if (v is Entity entity)
             {
-                return EditorGUILayout.ObjectField(tag, entity.GoViewer, typeof(GameObject), true);
+                return EditorGUILayout.ObjectField(tag, entity.Viewer, typeof(GameObject), true);
             }
             else if (typeof(IList).IsAssignableFrom(vType))
             {
@@ -359,15 +359,94 @@ namespace Ux
     }
     public class EntityViewer : MonoBehaviour
     {
+        const string _location = "$ECS_EMPTY_VIEWER$";
         EEInfos infos;
-        public void SetEntity(Entity entity)
-        {
-            infos = new EEInfos(entity, true);
-        }
 
+        public void SetParent(Transform _parent)
+        {
+            transform.SetParent(_parent);
+        }
         public void Layout()
         {
             infos?.Layout();
+        }
+
+        public static EntityViewer Create(Entity entity = null)
+        {
+            var viewer = UnityPool.Get<GameObject>(_location, () => new GameObject())
+                .GetOrAddComponent<EntityViewer>();
+            if (entity != null)
+            {
+                viewer.infos = new EEInfos(entity, true);
+            }
+            return viewer;
+        }
+
+        Transform _entityContent;
+        public Transform EntityContent
+        {
+            get
+            {
+                if (_entityContent == null)
+                {
+                    _entityContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
+                    _entityContent.name = "Entitys";
+                    _entityContent.SetParent(transform);
+                }
+                return _entityContent;
+            }
+        }
+
+        Transform _componentContent;
+        public Transform ComponentContent
+        {
+            get
+            {
+                if (_componentContent == null)
+                {
+                    _componentContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
+                    _componentContent.name = "Components";
+                    _componentContent.SetParent(transform);
+                }
+                return _componentContent;
+            }
+        }
+
+        Transform _assetContent;
+        public Transform AssetContent
+        {
+            get
+            {
+                if (_assetContent == null)
+                {
+                    _assetContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
+                    _assetContent.name = "Assets";
+                    _assetContent.SetParent(transform);
+                    _assetContent.SetAsFirstSibling();
+                }
+                return _assetContent;
+            }
+        }
+
+        public void Release()
+        {
+            if (_entityContent != null)
+            {
+                UnityPool.Push(_location, _entityContent.gameObject);
+                _entityContent = null;
+            }
+            if (_componentContent != null)
+            {
+                UnityPool.Push(_location, _componentContent.gameObject);
+                _componentContent = null;
+            }
+            if (_assetContent != null)
+            {
+                UnityPool.Push(_location, _assetContent.gameObject);
+                _assetContent = null;
+            }
+            UnityEngine.Object.Destroy(this);
+            UnityPool.Push(_location, gameObject);
         }
     }
 }

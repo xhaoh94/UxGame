@@ -37,7 +37,7 @@ namespace Ux
                 var dir = target - Player.Position;
                 var rotation = Quaternion.LookRotation(dir);
                 Player.Rotation = Quaternion.Slerp(Player.Rotation, rotation, Time.fixedDeltaTime * 10f);
-                Player.Position += dir.normalized * (Time.fixedDeltaTime * 5);
+                Player.Position += dir.normalized * (Time.fixedDeltaTime * 5);                
                 if (Vector3.SqrMagnitude(dir) <= 0.1f)
                 {
                     _pathIndex++;

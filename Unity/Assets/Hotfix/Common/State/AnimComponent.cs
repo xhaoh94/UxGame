@@ -23,8 +23,7 @@ namespace Ux
             _output.SetSourcePlayable(_mixerRoot);
         }
         public void OnUpdate()
-        {
-            Log.Debug("AnimUpdate");
+        {            
             _graph.Evaluate(Time.deltaTime);
         }
 
@@ -34,8 +33,7 @@ namespace Ux
         }
 
         protected override void OnDestroy()
-        {
-            Log.Debug("AnimDestroy");
+        {            
             _graph.Destroy();
             Animator = null;
         }
