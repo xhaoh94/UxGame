@@ -1,29 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="500,400">
-  <controller name="dialogState" pages="0,btn1,1,btn2" selected="0">
-    <remark page="0" value="单按钮"/>
-    <remark page="1" value="双按钮"/>
-  </controller>
+<component size="1280,720">
   <displayList>
-    <graph id="n4_muls" name="n4" xy="0,0" size="500,400" type="rect" fillColor="#ffffcc33">
-      <relation target="" sidePair="width-width,height-height"/>
+    <graph id="n4_muls" name="n4" xy="390,188" size="500,334" type="rect" fillColor="#ffffcc33">
+      <relation target="" sidePair="center-center,middle-middle"/>
+      <relation target="n5_muls" sidePair="width-width,height-height"/>
     </graph>
-    <text id="n0_oylh" name="txtTitle" xy="142,50" size="215,53" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="标题"/>
-    <text id="n1_oylh" name="txtContent" xy="70,111" size="360,155" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="文本"/>
-    <component id="n2_oylh" name="btn1" src="oylhc" fileName="Component/Btn1.xml" xy="192,298" size="100,48" group="n5_muls">
-      <gearXY controller="dialogState" pages="0" values="192,298" default="61,298"/>
+    <text id="n0_oylh" name="txtTitle" xy="525,203" size="215,53" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" text="标题">
+      <relation target="" sidePair="center-center"/>
+    </text>
+    <text id="n1_oylh" name="txtContent" xy="415,266" size="450,150" group="n5_muls" fontSize="20" align="center" vAlign="middle" autoSize="none" autoClearText="true" text="是否确定？">
+      <relation target="" sidePair="center-center"/>
+    </text>
+    <component id="n7_i4ve" name="checkbox" src="i4ved" fileName="Component/CheckBox.xml" xy="574,426" size="132,24" group="n5_muls">
+      <relation target="" sidePair="center-center"/>
+      <Button title="本次登录不提示"/>
+    </component>
+    <component id="n2_oylh" name="btn1" src="oylhc" fileName="Component/Btn1.xml" xy="480,460" size="100,48" group="n8_g7ls">
       <Button title="确定"/>
     </component>
-    <component id="n3_oylh" name="btn2" src="oylhc" fileName="Component/Btn1.xml" xy="314,302" size="100,48" group="n5_muls">
-      <gearDisplay controller="dialogState" pages="1"/>
+    <component id="n3_oylh" name="btn2" src="oylhc" fileName="Component/Btn1.xml" xy="700,460" size="100,48" group="n8_g7ls">
       <Button title="取消"/>
     </component>
-    <group id="n5_muls" name="n5" xy="70,50" size="360,300"/>
-    <component id="n6_dvaq" name="btnClose" src="o2441" fileName="Component/BtnClose.xml" xy="426,22">
-      <relation target="" sidePair="right-right"/>
-    </component>
-    <component id="n7_i4ve" name="checkbox" src="i4ved" fileName="Component/CheckBox.xml" xy="136,266" size="228,20">
-      <Button title="本次登录不提示"/>
+    <group id="n8_g7ls" name="n8" xy="480,460" size="320,48" group="n5_muls" advanced="true" layout="hz" colGap="120" excludeInvisibles="true" autoSizeDisabled="true">
+      <relation target="" sidePair="center-center"/>
+    </group>
+    <group id="n5_muls" name="n5" xy="415,203" size="450,305" advanced="true" layout="vt" lineGap="10" colGap="40" excludeInvisibles="true">
+      <relation target="n4_muls" sidePair="center-center,middle-middle"/>
+    </group>
+    <component id="n6_dvaq" name="btnClose" src="o2441" fileName="Component/BtnClose.xml" xy="822,205">
+      <relation target="n4_muls" sidePair="right-right,top-top"/>
     </component>
   </displayList>
 </component>
