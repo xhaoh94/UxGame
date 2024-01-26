@@ -17,12 +17,7 @@ namespace Ux
             ChcekBox,
             Custom,
         }
-        public enum DialogType
-        {
-            SingleBtn,
-            DoubleBtn,
-            Custom
-        }
+
         public struct DialogCheckBox
         {
             public string Tag { get; }
@@ -35,16 +30,14 @@ namespace Ux
         }
         public struct DialogData
         {
-            public DialogData(Action<UIDialog> _closeFn, Action<string> _pushTag, DialogType _boxType)
+            public DialogData(Action<UIDialog> _closeFn, Action<string> _pushTag)
             {
                 HideCallBack = _closeFn;
                 PushTagCallBack = _pushTag;
-                DType = _boxType;
                 Param = new Dictionary<ParamType, object>();
             }
             public Action<UIDialog> HideCallBack { get; }
             public Action<string> PushTagCallBack { get; }
-            public DialogType DType { get; }
             public Dictionary<ParamType, object> Param { get; }
         }
         public readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
@@ -147,16 +140,16 @@ namespace Ux
             }
             return false;
         }
-        public void SingleBtnCheckBox(string title, string content, string btn1Title, Action btn1Fn, string tag, string desc)
+        public void SingleBtnCheckBox(string tag, string checkboxContent, string title, string content, string btn1Title, Action btn1Fn)
         {
             if (_CheckBox(tag))
             {
                 btn1Fn?.Invoke();
                 return;
             }
-            _SingleBtnCheckBox(_GetDefalutID(), title, content, btn1Title, btn1Fn, tag, desc);
+            _SingleBtnCheckBox(_GetDefalutID(), title, content, btn1Title, btn1Fn, tag, checkboxContent);
         }
-        public void SingleBtnCheckBox<T>(string title, string content, string btn1Title, Action btn1Fn, string tag, string desc) where T : UIDialog
+        public void SingleBtnCheckBox<T>(string tag, string checkboxContent, string title, string content, string btn1Title, Action btn1Fn) where T : UIDialog
         {
             if (_CheckBox(tag))
             {
@@ -164,7 +157,7 @@ namespace Ux
                 return;
             }
             var id = _GetTypeUIID(typeof(T));
-            _SingleBtnCheckBox(id, title, content, btn1Title, btn1Fn, tag, desc);
+            _SingleBtnCheckBox(id, title, content, btn1Title, btn1Fn, tag, checkboxContent);
         }
         void _SingleBtnCheckBox(int id, string title, string content, string btn1Title, Action btn1Fn, string tag, string desc)
         {
@@ -192,16 +185,16 @@ namespace Ux
             mbData.Param.Add(ParamType.Btn2Fn, btn2Fn);
             UIMgr.Ins.Show(id, mbData);
         }
-        public void DoubleBtnCheckBox(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn, string tag, string desc)
+        public void DoubleBtnCheckBox(string tag, string checkboxContent,string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
         {
             if (_CheckBox(tag))
             {
                 btn1Fn?.Invoke();
                 return;
             }
-            _DoubleBtnCheckBox(_GetDefalutID(), title, content, btn1Title, btn1Fn, btn2Title, btn2Fn, tag, desc);
+            _DoubleBtnCheckBox(_GetDefalutID(), title, content, btn1Title, btn1Fn, btn2Title, btn2Fn, tag, checkboxContent);
         }
-        public void DoubleBtnCheckBox<T>(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn, string tag, string desc) where T : UIDialog
+        public void DoubleBtnCheckBox<T>(string tag, string checkboxContent,string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn) where T : UIDialog
         {
             if (_CheckBox(tag))
             {
@@ -209,7 +202,7 @@ namespace Ux
                 return;
             }
             var id = _GetTypeUIID(typeof(T));
-            _DoubleBtnCheckBox(id, title, content, btn1Title, btn1Fn, btn2Title, btn2Fn, tag, desc);
+            _DoubleBtnCheckBox(id, title, content, btn1Title, btn1Fn, btn2Title, btn2Fn, tag, checkboxContent);
         }
         void _DoubleBtnCheckBox(int id, string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn, string tag, string desc)
         {
@@ -223,7 +216,7 @@ namespace Ux
         }
         public DialogData CreateDialogData(string title, string content)
         {
-            var mbData = new DialogData(_Hide, _PushTag, DialogType.DoubleBtn);
+            var mbData = new DialogData(_Hide, _PushTag);
             mbData.Param.Add(ParamType.Title, title);
             mbData.Param.Add(ParamType.Content, content);
             return mbData;

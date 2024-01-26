@@ -21,7 +21,7 @@
     <component id="n3_oylh" name="btn2" src="oylhc" fileName="Component/Btn1.xml" xy="700,460" size="100,48" group="n8_g7ls">
       <Button title="取消"/>
     </component>
-    <group id="n8_g7ls" name="n8" xy="480,460" size="320,48" group="n5_muls" advanced="true" layout="hz" colGap="120" excludeInvisibles="true" autoSizeDisabled="true">
+    <group id="n8_g7ls" name="n8" xy="480,460" size="320,48" group="n5_muls" advanced="true" layout="hz" colGap="120" excludeInvisibles="true">
       <relation target="" sidePair="center-center"/>
     </group>
     <group id="n5_muls" name="n5" xy="415,203" size="450,305" advanced="true" layout="vt" lineGap="10" colGap="40" excludeInvisibles="true">

@@ -164,7 +164,7 @@ MonoBehaviour:
         Name: checkbox
       - Key: __controller
         Type: Controller
-        Name: dialogState
+        Name: 
       members:
       - index: 0
         name: n4
@@ -196,7 +196,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
-      - index: 3
+      - index: 4
         name: btn1
         defaultType: GButton
         customType: Btn1
@@ -206,7 +206,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-      - index: 4
+      - index: 5
         name: btn2
         defaultType: GButton
         customType: Btn1
@@ -216,7 +216,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-      - index: 5
+      - index: 8
         name: btnClose
         defaultType: GButton
         customType: BtnClose
@@ -226,7 +226,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-      - index: 6
+      - index: 3
         name: checkbox
         defaultType: GButton
         customType: CheckBox
@@ -236,10 +236,20 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-      - index: 0
-        name: dialogState
-        defaultType: Controller
-        customType: Controller
+      - index: 6
+        name: n8
+        defaultType: GGroup
+        customType: GGroup
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 7
+        name: n5
+        defaultType: GGroup
+        customType: GGroup
         pkg: 
         res: 
         isCreateVar: 1

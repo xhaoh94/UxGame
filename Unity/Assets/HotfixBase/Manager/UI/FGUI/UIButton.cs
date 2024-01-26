@@ -21,6 +21,13 @@ namespace Ux
         public GButton Button => ObjAs<GButton>();
 
         #region FairyGUI 属性-方法
+        public bool visible
+        {
+            get => GObject.visible;
+            set => GObject.visible = value;
+        }
+
+
         /// <summary>
         /// Play sound when button is clicked.
         /// </summary>
