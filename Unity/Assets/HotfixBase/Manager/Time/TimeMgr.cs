@@ -35,6 +35,11 @@ namespace Ux
 
         void _FixedUpdate()
         {
+            _frame?.Run();
+        }
+
+        void _Update()
+        {
             if (TotalTime >= _nextUpdateTime)
             {
                 _nextUpdateTime = TotalTime + _updateDuration;
@@ -42,11 +47,6 @@ namespace Ux
                 _timeStamp?.Run();
                 _cron?.Run();
             }
-        }
-
-        void _Update()
-        {
-            _frame?.Run();
         }
 
 

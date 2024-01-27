@@ -115,7 +115,7 @@ namespace UI.Editor
                        new CustomData("__btn1","UIButton",string.Empty),
                        new CustomData("__btn2","UIButton",string.Empty),
                        new CustomData("__checkbox","UIButton",string.Empty),
-                       new CustomData("__controller","Controller",string.Empty),
+                       //new CustomData("__controller","Controller",string.Empty),
                     };
                 }
                 return _dialogData;
