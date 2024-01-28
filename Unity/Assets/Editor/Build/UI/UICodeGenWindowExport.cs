@@ -198,7 +198,7 @@ namespace UI.Editor
                 case UIExtendPanel.View:
                 case UIExtendPanel.Window:
                 case UIExtendPanel.TabView:
-                case UIExtendPanel.Dialog:
+                case UIExtendPanel.MessageBox:
                     var pkgs = UIEditorTools.GetDependenciesPkg(com);
                     if (pkgs != null && pkgs.Count > 0)
                     {
@@ -231,9 +231,9 @@ namespace UI.Editor
                     clsFn();
                     write.Writeln($"protected override string PkgName => \"{com.packageItem.owner.name}\";");
                     write.Writeln($"protected override string ResName => \"{com.packageItem.name}\";");
-                    if (ext is UIExtendPanel.Dialog)
+                    if (ext is UIExtendPanel.MessageBox)
                     {
-                        Func(comData.DialogData);
+                        Func(comData.MessageBoxData);
                     }
                     write.Writeln();
                     memberVarFn();
@@ -278,7 +278,7 @@ namespace UI.Editor
             {
                 write.Writeln("try");
                 write.StartBlock();
-                if (ext is UIExtendPanel.Window || ext is UIExtendPanel.Dialog)
+                if (ext is UIExtendPanel.Window || ext is UIExtendPanel.MessageBox)
                 {
                     write.Writeln("var gCom = ObjAs<Window>().contentPane;");
                 }

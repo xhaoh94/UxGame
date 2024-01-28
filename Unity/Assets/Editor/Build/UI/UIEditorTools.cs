@@ -184,7 +184,7 @@ namespace UI.Editor
 
             strMatch = @"(?<v>[\S]+)(?=Dialog)";
             match = Regex.IsMatch(str, strMatch);
-            if (match) return $"{UIExtends.Panel}/{UIExtendPanel.Dialog}";
+            if (match) return $"{UIExtends.Panel}/{UIExtendPanel.MessageBox}";
 
             strMatch = @"(?<v>[\S]+)(?=TabFrame)";
             match = Regex.IsMatch(str, strMatch);

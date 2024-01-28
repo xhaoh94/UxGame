@@ -9,6 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Hero_CK_B
   m_Shader: {fileID: 4800000, guid: 8f5cdd7bb4699f843b0dfb820608ce66, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -17,6 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -53,6 +56,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FaceShadowMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlashMaskTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FlashShapeTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -94,12 +105,16 @@ Material:
     - _EnableSelectOutline: 0
     - _FaceShadowOffset: 0
     - _FaceUOffset: 0
+    - _Flash: 0
+    - _FlashWidth: 1
     - _GlobalAlpha: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _Metallic: 0
     - _Mode: 0
+    - _ModelCut: 0
+    - _ModelCutHeight: 0
     - _OLWVWD: 0
     - _OcclusionStrength: 1
     - _OutlineWidth: 0.3
@@ -115,12 +130,15 @@ Material:
     - _SrcBlend: 1
     - _StencilID: 2
     - _UVSec: 0
+    - _UseEmissionMask: 0
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0.0028479954, g: 0, b: 0.1509434, a: 1}
+    - _FlashColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FlashMoveSpeed: {r: 1, g: 0, b: 0, a: 0}
     - _MainColor: {r: 1, g: 1, b: 1, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 0.753}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _Plane: {r: 0, g: 1, b: 0, a: 0.2}
     - _RimColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _ShadowColor: {r: 0, g: 0, b: 0, a: 1}

@@ -159,7 +159,7 @@ namespace Ux
 
             public void Dispose()
             {
-                Dialog._waitDels.Remove(ui.ID);
+                MessageBox._waitDels.Remove(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Ins.Dispose(ui);
                 Release();
@@ -168,7 +168,7 @@ namespace Ux
             public void GetUI(out IUI outUI)
             {
                 outUI = ui;
-                Dialog._waitDels.Remove(ui.ID);
+                MessageBox._waitDels.Remove(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Release();
             }

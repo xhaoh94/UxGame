@@ -18,7 +18,7 @@ namespace Ux
                             GameMain.Machine.Enter<StateLogin>();
                         }
                     };
-                    UIMgr.Dialog.SingleBtn("提示", $"链接超时", "确定", callback);
+                    UIMgr.MessageBox.SingleBtn("提示", $"链接超时", "确定", callback);
                     break;
                 case SocketCode.Error:
                     Action fn1 = () =>
@@ -29,7 +29,7 @@ namespace Ux
                     {
                         GameMain.Machine.Enter<StateLogin>();
                     };
-                    UIMgr.Dialog.DoubleBtn("提示", "网络断开连接", "重新连接", fn1, "返回登录", fn2);
+                    UIMgr.MessageBox.DoubleBtn("提示", "网络断开连接", "重新连接", fn1, "返回登录", fn2);
                     break;
             }
         }

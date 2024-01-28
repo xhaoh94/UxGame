@@ -26,6 +26,7 @@ namespace Ux
                 return null;
             }
             view = Instantiate(Resources.Load<GameObject>("Patch/PatchView"));
+            DontDestroyOnLoad(view);
             if (EventSystem.current == null)
             {
                 var es = new GameObject("EventSystem");

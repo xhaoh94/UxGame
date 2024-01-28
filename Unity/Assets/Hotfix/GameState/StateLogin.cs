@@ -6,14 +6,15 @@
         {
 
         }
-        protected override void OnEnter(object args)
+        protected override async void OnEnter(object args)
         {
             NetMgr.Ins.Release();
             TagMgr.Ins.Release();
             UIMgr.Ins.Release();
             ModuleMgr.Ins.Release();
             ModuleMgr.Ins.Create();
-            UIMgr.Ins.Show<UI.LoginView>();
+            await UIMgr.Ins.Show<UI.LoginView>().Task();
+            PatchMgr.Ins.Done();
         }
     }
 }

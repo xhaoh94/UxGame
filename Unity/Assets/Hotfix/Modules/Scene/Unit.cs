@@ -25,7 +25,7 @@ namespace Ux
         public GameObject Model { get; private set; }
         public AnimComponent Anim { get; private set; }
         public PathComponent Path { get; private set; }
-        public StateComponent State { get; private set; }
+        public StateComponent State { get; private set; }        
         public SeekerComponent Seeker { get; private set; }
         public PlayableDirectorComponent Director { get; private set; }
 
@@ -113,7 +113,7 @@ namespace Ux
                 Map.Camera.SetFollow(Model.transform);
                 Map.Camera.SetLookAt(Model.transform);
             }
-
+            
             Anim = AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
             Seeker = AddComponent<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
             Director = AddComponent<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());

@@ -69,9 +69,7 @@ namespace Ux
             {
                 if (context.control == Keyboard.current.qKey)
                 {
-                    var asset = await SkillMgr.Ins.GetSkillAssetAsync("Skill01");
-                    Unit.Director.SetPlayableAsset(asset);
-                    Unit.Director.Play();
+                    Unit.State.Machine.Enter<StateAttack>();
                 }
                 else if (context.control == Keyboard.current.eKey)
                 {

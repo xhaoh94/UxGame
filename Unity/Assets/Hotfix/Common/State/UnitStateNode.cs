@@ -11,12 +11,6 @@ namespace Ux
         public virtual string AnimName { get; } = null;        
         public AnimComponent Anim { get; private set; }
 
-
-        public override void Create(StateMachine machine, object args = null, bool isFromPool = true)
-        {            
-            base.Create(machine, args, isFromPool);
-        }
-
         public override void Enter(object args = null)
         {
             base.Enter(args);

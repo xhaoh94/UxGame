@@ -15,7 +15,7 @@ namespace Ux
         //待销毁时间
         const float _waitDelTime = 10f;
         //对话弹窗
-        public static readonly UIDialogFactory Dialog = new UIDialogFactory();
+        public static readonly UIMessageBoxFactory MessageBox = new UIMessageBoxFactory();
 
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeId = new Dictionary<Type, int>();
@@ -84,9 +84,9 @@ namespace Ux
         }
 
         //内存不足时，清理缓存
-        public void OnLowMemory()
+        void OnRelease()
         {
-            Dialog?.Clear();
+            MessageBox?.Clear();
             if (_cacel.Count > 0)
             {
                 var ids = _cacel.Keys.ToList();
@@ -133,7 +133,7 @@ namespace Ux
 
         public void Release()
         {
-            OnLowMemory();
+            OnRelease();
             //清理掉动态创建的UI数据
             if (_dymUIData.Count > 0)
             {
@@ -622,7 +622,7 @@ namespace Ux
             if (data == null) return;
             if (data.Pkgs == null || data.Pkgs.Length == 0) return;
             RemoveUIPackage(data.Pkgs);
-            if (ui is UIDialog)
+            if (ui is UIMessageBox)
             {
                 RemoveUIData(id);
             }
@@ -697,7 +697,7 @@ namespace Ux
             download = ResMgr.Lazyload.GetDownloaderByTags(tags);
             if (download == null) return false;
             Log.Debug($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
-            Dialog.DoubleBtn(
+            MessageBox.DoubleBtn(
                 "下载",
                 $"一共发现了{download.TotalDownloadCount}个资源需要更新下载。",
                 "下载",

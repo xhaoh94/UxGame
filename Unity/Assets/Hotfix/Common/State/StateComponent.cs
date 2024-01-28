@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Ux;
 using UnityEngine;
+using Unity.VisualScripting;
 
 namespace Ux
 {
@@ -12,6 +13,7 @@ namespace Ux
             Machine = StateMachine.CreateByPool(false, Parent);
             Machine.AddNode<StateIdle>();
             Machine.AddNode<StateRun>();
+            Machine.AddNode<StateAttack>();
             Machine.Enter<StateIdle>();
         }
 
@@ -27,5 +29,5 @@ namespace Ux
             if (anim == null) return;
             Machine.ForEach<UnitStateNode>(_node => _node.AddAnimation(anim).Forget());
         }
-    }
+    }  
 }

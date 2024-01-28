@@ -134,9 +134,9 @@ public class UICodeMemberItem : TemplateContainer
             }
         }
 
-        if (comData.IsDialog)
+        if (comData.IsMessageBox)
         {
-            foreach (var temData in comData.DialogData)
+            foreach (var temData in comData.MessageBoxData)
             {
                 if (temData.Name == data.name) return;
             }

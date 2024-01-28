@@ -28,19 +28,19 @@ namespace Ux
             data.data = resp.Self;
             data.self = true;
             data.name = "name_" + data.data.roleId;
-            data.res = "Hero_CK";
+            data.res = "Hero_ZS";
             map.AddPlayer(data);
 
-            foreach (var other in resp.Others)
-            {
-                if (other == null) continue;
-                var data2 = new PlayerData();
-                data2.self = false;
-                data2.data = other;
-                data2.name = "name_" + other.roleId;
-                data2.res = "Hero_CK";
-                map.AddPlayer(data2);
-            }
+            //foreach (var other in resp.Others)
+            //{
+            //    if (other == null) continue;
+            //    var data2 = new PlayerData();
+            //    data2.self = false;
+            //    data2.data = other;
+            //    data2.name = "name_" + other.roleId;
+            //    data2.res = "Hero_CK";
+            //    map.AddPlayer(data2);
+            //}
         }
 
         public void LeaveScene()
@@ -52,11 +52,14 @@ namespace Ux
         public void SendMove(List<Vector3> points)
         {
             var req = new Pb.C2SMove();
+            var resp = new Pb.BcstUnitMove() { roleId = 1, pointIndex = 0 };
             foreach (var point in points)
             {
                 req.Points.Add(new Pb.Vector3() { X = point.x, Y = point.y, Z = point.z });
+                resp.Points.Add(new Pb.Vector3() { X = point.x, Y = point.y, Z = point.z });
             }
-            NetMgr.Ins.Send(Pb.CS.C2S_Move, req);
+            //NetMgr.Ins.Send(Pb.CS.C2S_Move, req);
+            _BcstUnitMove(resp);
         }
         #endregion
 

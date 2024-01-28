@@ -19,11 +19,20 @@ namespace Ux
         public void Connect(Action OnConnect)
         {
             //   TCP KCP
-            NetMgr.Ins.Connect(NetType.TCP, "127.0.0.1:10002", OnConnect);
+            //NetMgr.Ins.Connect(NetType.TCP, "127.0.0.1:10002", OnConnect);
             //WebSocket
             //NetMgr.Ins.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
 
-            //GameMain.Machine.Enter<StateGameIn>();
+            var resp = new Pb.S2CEnterScene()
+            {
+                Self = new Pb.Entity()
+                {
+                    Position = new Pb.Vector3(),
+                    roleId = 1,
+                    roleMask = 1,
+                }
+            };
+            GameMain.Machine.Enter<StateGameIn>(resp);
         }
         struct LoginReslut
         {

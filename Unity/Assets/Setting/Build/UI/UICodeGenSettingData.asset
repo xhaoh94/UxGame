@@ -38,7 +38,7 @@ MonoBehaviour:
       - Key: __btnClose
         Type: UIButton
         Name: btnClose
-      _dialogData: []
+      _messageBoxData: []
       members:
       - index: 0
         name: n0
@@ -110,7 +110,7 @@ MonoBehaviour:
       - Key: __btnClose
         Type: UIButton
         Name: btnClose
-      _dialogData: []
+      _messageBoxData: []
       members:
       - index: 0
         name: n0
@@ -140,10 +140,10 @@ MonoBehaviour:
       resName: CommonDialog
       ns: Ux.UI
       cls: CommonDialog
-      ext: Panel/Dialog
+      ext: Panel/MessageBox
       isExport: 1
       _tabViewData: []
-      _dialogData:
+      _messageBoxData:
       - Key: __txtTitle
         Type: GTextField
         Name: txtTitle
@@ -162,9 +162,6 @@ MonoBehaviour:
       - Key: __checkbox
         Type: UIButton
         Name: checkbox
-      - Key: __controller
-        Type: Controller
-        Name: 
       members:
       - index: 0
         name: n4
@@ -269,7 +266,7 @@ MonoBehaviour:
       ext: Panel/View
       isExport: 1
       _tabViewData: []
-      _dialogData: []
+      _messageBoxData: []
       members:
       - index: 0
         name: mCommonBg
@@ -312,7 +309,7 @@ MonoBehaviour:
       ext: Panel/TabView
       isExport: 1
       _tabViewData: []
-      _dialogData: []
+      _messageBoxData: []
       members:
       - index: 0
         name: n4
@@ -387,7 +384,7 @@ MonoBehaviour:
       ext: Panel/View
       isExport: 1
       _tabViewData: []
-      _dialogData: []
+      _messageBoxData: []
       members:
       - index: 0
         name: n0
@@ -502,7 +499,7 @@ MonoBehaviour:
       ext: Panel/View
       isExport: 1
       _tabViewData: []
-      _dialogData: []
+      _messageBoxData: []
       members:
       - index: 0
         name: n0

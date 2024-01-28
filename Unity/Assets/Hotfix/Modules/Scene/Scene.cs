@@ -59,7 +59,7 @@ namespace Ux
                 data.data = role;
                 data.self = false;
                 data.name = "name_" + role.roleId;
-                data.res = "Hero_CK";
+                data.res = "Hero_ZS";
                 AddPlayer(data);
             }
         }

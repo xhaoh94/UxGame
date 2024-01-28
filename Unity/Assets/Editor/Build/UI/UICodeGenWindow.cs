@@ -20,7 +20,7 @@ namespace UI.Editor
         View,
         Window,
         TabView,
-        Dialog,
+        MessageBox,
     }
     public enum UIExtendComponent
     {
@@ -86,7 +86,7 @@ namespace UI.Editor
         //TextField inputViewStack;
         //TextField inputBtnClose;
 
-        VisualElement dialogElement;
+        VisualElement messageBoxElement;
         //TextField inputDialogTitle;
         //TextField inputDialogContent;
         //TextField inputDialogBtnClose;
@@ -220,7 +220,7 @@ namespace UI.Editor
                 //inputViewStack.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
                 //inputBtnClose = root.Q<TextField>("inputBtnClose");
                 //inputBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                dialogElement = root.Q<VisualElement>("dialogElement");
+                messageBoxElement = root.Q<VisualElement>("messageBoxElement");
                 //inputDialogTitle = root.Q<TextField>("inputDialogTitle");
                 //inputDialogTitle.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
                 //inputDialogContent = root.Q<TextField>("inputDialogContent");
@@ -340,13 +340,13 @@ namespace UI.Editor
             {
                 tabViewElement.style.display = DisplayStyle.None;
             }
-            if (data.IsDialog)
+            if (data.IsMessageBox)
             {
-                CreateText(data.DialogData, dialogElement);
+                CreateText(data.MessageBoxData, messageBoxElement);
             }
             else
             {
-                dialogElement.style.display = DisplayStyle.None;
+                messageBoxElement.style.display = DisplayStyle.None;
             }
         }
         void CreateText(List<CustomData> listData, VisualElement parent)
@@ -395,9 +395,9 @@ namespace UI.Editor
                 FreshDict(tabViewElement, data.TabViewData);
             }
 
-            if (data.IsDialog)
+            if (data.IsMessageBox)
             {
-                FreshDict(dialogElement, data.DialogData);
+                FreshDict(messageBoxElement, data.MessageBoxData);
             }
 
             UICodeGenSettingData.SetComponentData(data);

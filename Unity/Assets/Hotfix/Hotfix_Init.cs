@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using Ux.UI;
@@ -6,7 +7,7 @@ using Ux.UI;
 namespace Ux
 {
     public class Hotfix_Init : MonoBehaviour
-    {
+    {        
 #if UNITY_EDITOR
         bool __CHANGED_BOOT;
 #endif
@@ -21,31 +22,23 @@ namespace Ux
                 return;
             }
 #endif            
-            Log.Info("启动热更层");
-
-            PatchMgr.Ins.Done();
-
-            YooMgr.Ins.UnloadUnusedAssets();
-            
-            EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();
+            Log.Info("启动热更层");            
             HotFixMgr.Ins.Assemblys.ForEach(assembly =>
             {
                 assembly.Initialize();
             });
+            EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();            
+            UnityPool.Init();            
+            ConfigMgr.Ins.Init();            
+            UIMgr.MessageBox.SetDefalutType<CommonDialog>();
 
-            UnityPool.Init();
             
-            ConfigMgr.Ins.Init();
-            UIMgr.Ins.OnLowMemory();
-            UIMgr.Dialog.SetDefalutType<CommonDialog>();
-
             GameMain.Machine.AddNode<StateLogin>();
             GameMain.Machine.AddNode<StateGameIn>();
             GameMain.Machine.Enter<StateLogin>();
-
             Destroy(gameObject);
-        }
 
+        }
 #if UNITY_EDITOR
         private async void OnApplicationQuit()
         {

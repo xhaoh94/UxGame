@@ -86,7 +86,7 @@ namespace UI.Editor
         {
             get
             {
-                if (_tabViewData == null)
+                if (_tabViewData == null || _tabViewData.Count == 0)
                 {
                     _tabViewData = new List<CustomData>()
                     {
@@ -100,14 +100,14 @@ namespace UI.Editor
         }
 
         [SerializeField]
-        List<CustomData> _dialogData;
-        public List<CustomData> DialogData
+        List<CustomData> _messageBoxData;
+        public List<CustomData> MessageBoxData
         {
             get
             {
-                if (_dialogData == null)
+                if (_messageBoxData == null || _messageBoxData.Count == 0)
                 {
-                    _dialogData = new List<CustomData>()
+                    _messageBoxData = new List<CustomData>()
                     {
                        new CustomData("__txtTitle","GTextField",string.Empty),
                        new CustomData("__txtContent","GTextField",string.Empty),
@@ -118,7 +118,7 @@ namespace UI.Editor
                        //new CustomData("__controller","Controller",string.Empty),
                     };
                 }
-                return _dialogData;
+                return _messageBoxData;
             }
         }
 
@@ -151,11 +151,11 @@ namespace UI.Editor
                 return ext == $"{UIExtends.Component}/{UIExtendComponent.TabFrame}";
             }
         }
-        public bool IsDialog
+        public bool IsMessageBox
         {
             get
             {
-                return ext == $"{UIExtends.Panel}/{UIExtendPanel.Dialog}";
+                return ext == $"{UIExtends.Panel}/{UIExtendPanel.MessageBox}";
             }
         }
         public object Extend

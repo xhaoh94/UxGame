@@ -1,0 +1,27 @@
+Hero_WSJ_W01_L挂载在P_Hand_L
+Hero_WSJ_W01_R挂载在P_Hand_R
+
+Hero_WSJ@Attack01为特殊普攻，请根据需求配置
+
+
+@Idle01                                   普通待机
+@Idle02                                    随机待机
+@Bq01                                     情景表情01
+@Walk                                     走
+@Run                                       跑
+@ShangZhen                           上阵
+@Stand                                    战斗待机
+@Hit                                        受击
+@Die                                        死亡
+@Die01                                    海滩昏倒动作(弓箭手特定动作)
+@Win                                       胜利
+@Attack                                   普通攻击
+@Skill01                                   技能01
+@Skill02                                   技能02
+@Skill03                                   技能03
+@Skill04                                   技能04
+@Skill05                                   技能05
+@Skill06                                   技能06
+@Skill07                                   技能07
+@Skill08                                   技能08
+@Skill09                                   技能09

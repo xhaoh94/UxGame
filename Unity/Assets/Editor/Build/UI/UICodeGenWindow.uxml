@@ -45,7 +45,7 @@
                         <ui:TextField picking-mode="Ignore" label="类名" name="inputClsName" />
                         <ui:DropdownField label="继承类型" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="ddExt" />
                         <ui:VisualElement name="tabViewElement" />
-                        <ui:VisualElement name="dialogElement" />
+                        <ui:VisualElement name="messageBoxElement" />
                         <ui:Button text="导出选中组件" display-tooltip-when-elided="true" name="btnGenSelectItem" />
                     </ui:VisualElement>
                 </ui:IMGUIContainer>

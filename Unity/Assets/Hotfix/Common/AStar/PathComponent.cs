@@ -38,7 +38,7 @@ namespace Ux
 
                 if (!IsRun)
                 {
-                    IsRun = true;
+                    IsRun = true;                    
                     Unit.State.Machine.Enter<StateRun>();
                 }
             }
@@ -46,7 +46,7 @@ namespace Ux
             {
                 if (IsRun)
                 {
-                    IsRun = false;
+                    IsRun = false;                    
                     Unit.State.Machine.Enter<StateIdle>();
                     _points.Clear();
                     _pathIndex = 0;

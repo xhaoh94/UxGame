@@ -27,7 +27,7 @@ namespace Ux.UI
         }
         partial void OnBtnTestClick(EventContext e)
         {
-            UIMgr.Dialog.SingleBtnCheckBox("_test", "本次登录不显示咯", "提示2", $"测试弹窗2", "确定", () =>
+            UIMgr.MessageBox.SingleBtnCheckBox("_test", "本次登录不显示咯", "提示2", $"测试弹窗2", "确定", () =>
             {
                 Log.Debug("CheckBox");
             });
