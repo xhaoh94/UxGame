@@ -7,9 +7,9 @@ namespace Ux
 {
     internal class PatchInit : PatchStateNode
     {
-        public override void Enter(object args = null)
+        protected override void OnEnter(object args = null)
         {
-            base.Enter(args);
+            base.OnEnter(args);
             if (args is EPlayMode playMode)
             {
                 Initialize(playMode).Forget();

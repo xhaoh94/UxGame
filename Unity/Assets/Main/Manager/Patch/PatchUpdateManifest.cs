@@ -8,6 +8,7 @@ namespace Ux
     {
         protected override void OnEnter(object args)
         {
+            base.OnEnter(args);
             UpdateManifest().Forget();
         }
         

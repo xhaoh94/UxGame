@@ -77,33 +77,36 @@ namespace Ux
         /// <summary>
         /// 启动状态机
         /// </summary>
-        public void Enter<TNode>(object args = null) where TNode : IStateNode
+        public bool Enter<TNode>(object args = null) where TNode : IStateNode
         {
-            Enter(typeof(TNode), args);
+            return Enter(typeof(TNode), args);
         }
-        public void Enter(Type entryNode, object args = null)
+        public bool Enter(Type entryNode, object args = null)
         {
-            Enter(entryNode.FullName, args);
+            return Enter(entryNode.Name, args);
         }
-        void Enter(string entryNode, object args = null)
+        public bool Enter(string entryNode, object args = null)
         {
             if (string.IsNullOrEmpty(entryNode))
             {
                 Log.Error("节点名字为空");
-                return;
+                return false;
             }
 
             IStateNode node = GetNode(entryNode);
             if (node == null)
             {
                 Log.Error($"找不到节点 : {entryNode}");
-                return;
+                return false;
+            }
+            if (!node.CheckValid(args))
+            {
+                return false;
             }
             if (_curNode != null && _curNode == node)
             {
-                Log.Warning($"{OwnerName} 重复进入节点：{node.Name}");
                 _curNode.Enter(args);
-                return;
+                return true;
             }
 
             if (_curNode != null)
@@ -123,6 +126,7 @@ namespace Ux
             }
             _curNode = node;
             _curNode.Enter(args);
+            return true;
         }
 
         /// <summary>

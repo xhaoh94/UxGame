@@ -7,14 +7,22 @@ using UnityEngine.Timeline;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using FairyGUI;
+using System.Collections.Generic;
+using System;
 
 namespace Ux
 {
+    [Serializable]
+    public struct TriggerData
+    {
+        public Key Key;
+        public string State;
+    }
     public class OperateComponent : Entity, IAwakeSystem, IUpdateSystem, InputActions.IPlayerActions
     {
         Unit Unit => Parent as Unit;
         private InputActions _input;
-
+        TriggerData? triggerData;
         public void OnAwake()
         {
             _input = new InputActions();
@@ -31,7 +39,14 @@ namespace Ux
             _input?.Disable();
             _input?.Dispose();
         }
-
+        public void AddTrigger(TriggerData triggerData)
+        {
+            this.triggerData = triggerData;
+        }
+        public void RemoveTrigger()
+        {
+            this.triggerData = null;
+        }
         public void OnMove(InputAction.CallbackContext context)
         {
             if (context.performed)
@@ -67,6 +82,16 @@ namespace Ux
         {
             if (context.performed)
             {
+                if (this.triggerData != null)
+                {
+                    if (context.control == Keyboard.current[triggerData.Value.Key])
+                    {
+                        Unit.State.Machine.Enter(triggerData.Value.State);
+                        this.triggerData = null;
+                        return;
+                    }
+                }
+
                 if (context.control == Keyboard.current.qKey)
                 {
                     Unit.State.Machine.Enter<StateAttack>();

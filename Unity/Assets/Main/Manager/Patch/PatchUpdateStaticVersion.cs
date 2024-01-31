@@ -8,6 +8,7 @@ namespace Ux
     {
         protected override void OnEnter(object args = null)
         {
+            base.OnEnter(args);
             GetStaticVersion().Forget();
         }
         async UniTaskVoid GetStaticVersion()

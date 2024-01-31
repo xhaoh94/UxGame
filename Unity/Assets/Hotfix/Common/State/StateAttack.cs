@@ -4,23 +4,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine.Playables;
 
 namespace Ux
 {
-    internal class StateAttack : UnitStateNode
+    internal class StateAttack : UnitTimeLineNode
     {
-        protected override void OnEnter(object args = null)
+        public override string ResName => "ZS_Attack";
+        protected override bool OnCheckValid(object args = null)
         {
-            base.OnEnter(args);
-
+            Log.Debug(Machine.CurrentNode.Name);
+            if (Machine.CurrentNode == this)
+            {
+                return false;
+            }
+            if (Machine.CurrentNode.Name == nameof(StateSkilll08))
+            {
+                return false;
+            }
+            return base.OnCheckValid(args);
         }
-
-        async UniTaskVoid OnGetSkillAsync()
+        protected override void OnPlayEnd(PlayableDirector playableDirector)
         {
-            var asset = await SkillMgr.Ins.GetSkillAssetAsync("ZS_Attack");
-            var Unit = (Machine.Owner as Unit);
-            Unit.Director.SetPlayableAsset(asset);
-            Unit.Director.Play();
+            base.OnPlayEnd(playableDirector);
+
+            Machine.Enter<StateIdle>();
+        }
+    }
+    internal class StateSkilll08 : UnitTimeLineNode
+    {
+        public override string ResName => "ZS_Skill08";
+        protected override void OnPlayEnd(PlayableDirector playableDirector)
+        {
+            base.OnPlayEnd(playableDirector);
+
+            Machine.Enter<StateIdle>();
         }
     }
 }

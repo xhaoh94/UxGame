@@ -50,12 +50,6 @@ namespace Ux
 
         public void RemoveUIPackage(string[] pkgs)
         {
-            //热更没完成前，加载资源的语柄都是直接Release，
-            //不会计算引用计数，所以不需要走此逻辑
-            if (!PatchMgr.Ins.IsDone)
-            {
-                return;
-            }
 
             if (pkgs.Length == 0) return;
             foreach (var pkg in pkgs)
@@ -96,17 +90,6 @@ namespace Ux
 
         public async UniTask<bool> LoaUIdPackage(string[] pkgs)
         {
-            //热更没完成前，直接加载资源，不需要引用计数判断
-            if (!PatchMgr.Ins.IsDone)
-            {
-                foreach (var pkg in pkgs)
-                {
-                    if (!await _ToLoadUIPackage(pkg)) return false;
-                }
-
-                return true;
-            }
-
             if (pkgs.Length == 0) return false;
             List<string> tem = null;
             foreach (var pkg in pkgs)
@@ -191,13 +174,6 @@ namespace Ux
                 suc = false;
             }
 
-            //热更没完成前，加载资源的语柄，都直接Release掉
-            if (!PatchMgr.Ins.IsDone)
-            {
-                handle.Release();
-                return suc;
-            }
-
             if (!_pkgToHandles.TryGetValue(pkg, out var handles))
             {
                 handles = new List<AssetHandle>();
@@ -244,13 +220,6 @@ namespace Ux
 
             Texture texture = handle.AssetObject as Texture;
             item.owner.SetItemAsset(item, texture, DestroyMethod.None);
-
-            //热更没完成前，加载资源的语柄，都直接Release掉
-            if (!PatchMgr.Ins.IsDone)
-            {
-                handle.Release();
-                return;
-            }
 
             if (!_pkgToHandles.TryGetValue(item.owner.name, out var handles))
             {

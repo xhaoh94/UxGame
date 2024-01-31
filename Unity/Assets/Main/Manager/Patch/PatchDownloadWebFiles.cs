@@ -6,6 +6,7 @@ namespace Ux
     {
         protected override void OnEnter(object args)
         {
+            base.OnEnter(args);
             BeginDownload((Downloader)args);
         }
         void OnDownloadProgressCallback(int totalDownloadCount, int currentDownloadCount, long totalDownloadSizeBytes, long currentDownloadSizeBytes)

@@ -23,11 +23,10 @@ namespace Ux
     public class Unit : Entity, IAwakeSystem<PlayerData>
     {
         public GameObject Model { get; private set; }
-        public AnimComponent Anim { get; private set; }
-        public PathComponent Path { get; private set; }
-        public StateComponent State { get; private set; }        
-        public SeekerComponent Seeker { get; private set; }
-        public PlayableDirectorComponent Director { get; private set; }
+        public AnimComponent Anim => GetComponent<AnimComponent>();        
+        public StateComponent State=> GetComponent<StateComponent>();
+        public SeekerComponent Seeker => GetComponent<SeekerComponent>();
+        public PlayableDirectorComponent Director => GetComponent<PlayableDirectorComponent>();
 
         #region Get-Set
         private Vector3 _postion;
@@ -86,9 +85,8 @@ namespace Ux
         PlayerData _playerData;
         public void OnAwake(PlayerData playerData)
         {
-            _playerData = playerData;
-            Path = AddComponent<PathComponent>();
-            State = AddComponent<StateComponent>();
+            _playerData = playerData;            
+            AddComponent<StateComponent>();
             if (playerData.self)
             {
                 AddComponent<OperateComponent>();
@@ -114,9 +112,9 @@ namespace Ux
                 Map.Camera.SetLookAt(Model.transform);
             }
             
-            Anim = AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
-            Seeker = AddComponent<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
-            Director = AddComponent<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
+            AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
+            AddComponent<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
+            AddComponent<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
             Director.SetBinding("Animation Track", Anim.Animator);
         }
 
@@ -124,10 +122,6 @@ namespace Ux
         {
             UnityPool.Push(Model);
             Visable.Release();
-            Anim = null;
-            State = null;
-            Seeker = null;
-            Director = null;
         }
 
 

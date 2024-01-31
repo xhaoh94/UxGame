@@ -10,11 +10,11 @@ namespace Ux
         public StateMachine Machine { get; private set; }
         public void OnAwake()
         {
-            Machine = StateMachine.CreateByPool(false, Parent);
+            Machine = StateMachine.CreateByPool(true, this);
             Machine.AddNode<StateIdle>();
             Machine.AddNode<StateRun>();
             Machine.AddNode<StateAttack>();
-            Machine.Enter<StateIdle>();
+            Machine.AddNode<StateSkilll08>();            
         }
 
         protected override void OnDestroy()
@@ -23,11 +23,15 @@ namespace Ux
             Machine = null;
         }
 
-        [ListenAddEntity(typeof(AnimComponent))]
-        void OnAddAnimComponent(AnimComponent anim)
+        //[ListenAddEntity(typeof(AnimComponent))]
+        //void OnAddAnimComponent(AnimComponent anim)
+        //{
+        //    Machine.Enter<StateIdle>();            
+        //}
+        [ListenAddEntity(typeof(PlayableDirectorComponent))]
+        void OnAddAnimComponent(PlayableDirectorComponent anim)
         {
-            if (anim == null) return;
-            Machine.ForEach<UnitStateNode>(_node => _node.AddAnimation(anim).Forget());
+            Machine.Enter<StateIdle>();
         }
     }  
 }

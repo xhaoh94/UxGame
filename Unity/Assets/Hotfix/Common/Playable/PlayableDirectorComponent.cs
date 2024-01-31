@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,18 +11,40 @@ namespace Ux
     {
         PlayableDirector _director;
         SkillAsset _asset;
-        Dictionary<string, Object> _bingObjs;
+        Dictionary<string, UnityEngine.Object> _bingObjs;
         public void OnAwake(PlayableDirector a)
-        {
+        {            
             _director = a;
-            _director.playOnAwake = false;            
+            _director.playOnAwake = false;
+            _director.played += OnPlayStart;
+            _director.stopped += OnPlayEnd;
+            _director.paused += OnPlayPause;
         }
 
         protected override void OnDestroy()
         {
+            _director.played -= OnPlayStart;
+            _director.stopped -= OnPlayEnd;
+            _director.paused -= OnPlayPause;
             _director = null;
             _asset = null;
             _bingObjs?.Clear();
+        }
+        public Action<PlayableDirector> OnPlayStartEvent;
+        public Action<PlayableDirector> OnPlayPauseEvent;
+        public Action<PlayableDirector> OnPlayEndEvent;
+        void OnPlayStart(PlayableDirector playableDirector)
+        {
+            Log.Debug("OnPlayStart");
+            OnPlayStartEvent?.Invoke(playableDirector);
+        }
+        void OnPlayPause(PlayableDirector playableDirector)
+        {
+            OnPlayPauseEvent?.Invoke(playableDirector);
+        }
+        void OnPlayEnd(PlayableDirector playableDirector)
+        {
+            OnPlayEndEvent?.Invoke(playableDirector);
         }
 
         public void SetPlayableAsset(SkillAsset asset)
@@ -30,21 +53,22 @@ namespace Ux
             this._asset = asset;
 
             if (_bingObjs != null)
-            {
+            {                
                 foreach (var kv in _bingObjs)
-                {
+                {                    
                     var track = GetTrack<TrackAsset>(kv.Key);
                     if (track == null) continue;
+                    
                     _director.SetGenericBinding(track, kv.Value);
                 }
             }
         }
 
-        public void SetBinding(string trackName, Object o)
-        {
+        public void SetBinding(string trackName, UnityEngine.Object o)
+        {            
             if (_bingObjs == null)
             {
-                _bingObjs = new Dictionary<string, Object>();
+                _bingObjs = new Dictionary<string, UnityEngine.Object>();
             }
             _bingObjs[trackName] = o;
 

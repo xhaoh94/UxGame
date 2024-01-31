@@ -35,7 +35,8 @@ namespace Ux
             var player = GetChild<Unit>(param.roleId);
             if (player != null)
             {
-                player.Path.SetPoints(param.Points, param.pointIndex);
+                player.State.Machine.Enter<StateRun>(param);
+                //player.Path.SetPoints(param.Points, param.pointIndex);
             }
         }
         [Evt(EventType.UNIT_UPDATE_POSITION)]
