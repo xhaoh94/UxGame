@@ -13,35 +13,69 @@ MonoBehaviour:
   m_Name: StateSettingData
   m_EditorClassIdentifier: 
   StateSettings:
-  - StateName: Idle
-    Desc: "\u7AD9\u7ACB\u72B6\u6001"
+  - StateName: idle
+    Desc: "\u7AD9\u7ACB"
     ViewType: 1
-    AnimName: Assets/Data/Res/Prefab/Hero/Hero_ZS/Hero_ZS@Run.FBX
+    AnimName: 
     TimeLineName: 
     Conditions:
     - Type: 0
-      ItemData:
-        key: 
-        value: 0
-        validType: 0
-        states:
-        - 
-        - 
-        keyType: 0
-        inputType: 0
+      key: 
+      value: 0
+      validType: 0
+      states: []
+      triggerType: 0
+      keyType: 0
+      inputType: 0
   - StateName: run
-    Desc: "\u5954\u8DD1\u72B6\u6001"
-    ViewType: 1
-    AnimName: Assets/Data/Res/Prefab/Hero/Hero_ZS/Hero_ZS@Run.FBX
+    Desc: "\u884C\u8D70"
+    ViewType: 0
+    AnimName: 
     TimeLineName: 
     Conditions:
+    - Type: 0
+      key: temmove
+      value: 1
+      validType: 1
+      states:
+      - idle
+      - run
+      triggerType: 0
+      keyType: 0
+      inputType: 0
     - Type: 1
-      ItemData:
-        key: 
-        value: 0
-        validType: 0
-        states:
-        - Idle
-        - run
-        keyType: 0
-        inputType: 0
+      key: temmove
+      value: 1
+      validType: 0
+      states:
+      - idle
+      - run
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+  - StateName: attack
+    Desc: "\u666E\u653B"
+    ViewType: 0
+    AnimName: 
+    TimeLineName: 
+    Conditions:
+    - Type: 4
+      key: 
+      value: 0
+      validType: 0
+      states:
+      - idle
+      - run
+      triggerType: 2
+      keyType: 0
+      inputType: 0
+    - Type: 0
+      key: 
+      value: 0
+      validType: 1
+      states:
+      - idle
+      - run
+      triggerType: 2
+      keyType: 0
+      inputType: 0

@@ -1,6 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <ui:VisualElement>
+    <ui:VisualElement style="border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-top-left-radius: 1px; border-bottom-left-radius: 1px; border-top-right-radius: 1px; border-bottom-right-radius: 1px; background-color: rgba(0, 0, 0, 0);">
+        <ui:Label text="条件" display-tooltip-when-elided="true" style="background-color: rgb(89, 89, 89); -unity-text-align: upper-center; -unity-font-style: bold; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; font-size: 12px;" />
         <ui:EnumField label="类型" type="Ux.StateEnterConditionType, Unity.HotfixBase" include-obsolete-values="false" name="conditionType" />
-        <ui:VisualElement name="content" />
+        <ui:VisualElement name="content" style="flex-grow: 1;" />
     </ui:VisualElement>
 </ui:UXML>

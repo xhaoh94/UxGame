@@ -227,7 +227,7 @@ public class StateWindow : EditorWindow
     void OnBtnAddState()
     {
         var element = MakeConfitionItem();
-        var data = new StateEnterCondition();
+        var data = new StateCondition();
         SelectItem.Conditions.Add(data);
         BindConditionItem(element, _content.childCount, data);
         _content.Add(element);
@@ -248,7 +248,7 @@ public class StateWindow : EditorWindow
         var element = new StateConditionContent();
         return element;
     }
-    private void BindConditionItem(StateConditionContent element, int index, StateEnterCondition condition)
+    private void BindConditionItem(StateConditionContent element, int index, StateCondition condition)
     {
         var btn = element.Q<Button>("Sub");
         btn.clicked += () =>

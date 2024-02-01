@@ -13,7 +13,7 @@ public class StateConditinItem : TemplateContainer
         visualAsset.CloneTree(this);
 
         _conditionType = this.Q<EnumField>("conditionType");
-        _conditionType.Init(StateEnterConditionType.Any);
+        _conditionType.Init(StateEnterConditionType.State);
         _conditionType.RegisterValueChangedCallback(evt =>
         {
             enterCondition.Type = (StateEnterConditionType)evt.newValue;
@@ -23,8 +23,8 @@ public class StateConditinItem : TemplateContainer
 
     }
     System.Action cb;
-    StateEnterCondition enterCondition;
-    public void SetData(StateEnterCondition enterCondition, System.Action cb)
+    StateCondition enterCondition;
+    public void SetData(StateCondition enterCondition, System.Action cb)
     {        
         this.cb = cb;
         this.enterCondition = enterCondition;

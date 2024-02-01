@@ -2,58 +2,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Ux;
-public class StateConditionContent : TemplateContainer
-{
-    StateEnterCondition stateEnter;
-    StateItemBase item;
-    StateConditinItem content;
-    public StateConditionContent()
-    {
-        VisualElement element = new VisualElement();
-        {
-            element.style.alignItems = Align.Center;
-            element.style.flexDirection = FlexDirection.Row;
-            var btn = new Button();
-            btn.name = "Sub";
-            btn.text = "[-]";
-            btn.style.width = 30f;
-            btn.style.height = 20;
-            element.Add(btn);
-            content = new StateConditinItem();
-            {
-                content.name = "Content";
-                content.style.flexGrow = 1f;
-            }
-            element.Add(content);
-        }
-        Add(element);
-    }
-    public void SetData(StateEnterCondition enterCondition)
-    {
-        content.SetData(enterCondition, UpdateView);
-        stateEnter = enterCondition;
-        UpdateView();
-    }
-    public void UpdateView()
-    {
-        if (item != null)
-        {
-            content.Remove(item);
-            item = null;
-        }
-        switch (stateEnter.Type)
-        {
-            case StateEnterConditionType.State:
-                item = new StateItem();                
-                content.Add(item);
-                break;
-        }        
-        item?.SetData(stateEnter.ItemData);
-    }
-}
 public class StateItemBase : TemplateContainer
 {
-    public virtual void SetData(StateItemData data) { }
+    public virtual void SetData(StateCondition data) { }
 }
 public class StateItem : StateItemBase
 {
@@ -66,18 +17,30 @@ public class StateItem : StateItemBase
     }
     VisualElement _content;
     EnumField _validType;
+    Button btnAdd;
     void CreateView()
     {
 
         _validType = this.Q<EnumField>("validType");
+        _validType.Init(StateCondition.ValidType.Any);
+        _validType.RegisterValueChangedCallback(e =>
+        {
+            data.validType = (StateCondition.ValidType)e.newValue;
+            Refresh();
+        });
 
         _content = this.Q<VisualElement>("content");
         _content.style.unityParagraphSpacing = 10;
 
-        var btnAdd = this.Q<Button>("btnAdd");
+        btnAdd = this.Q<Button>("btnAdd");
         btnAdd.clicked += OnBtnAdd;
 
-
+    }
+    void Refresh()
+    {
+        _content.style.display = data.validType == StateCondition.ValidType.Any ?
+            DisplayStyle.None : DisplayStyle.Flex;
+        btnAdd.style.display = _content.style.display;
     }
 
     void OnBtnAdd()
@@ -87,11 +50,14 @@ public class StateItem : StateItemBase
         BindItem(element, _content.childCount, string.Empty);
         _content.Add(element);
     }
-    StateItemData data;
-    public override void SetData(StateItemData data)
+    StateCondition data;
+    public override void SetData(StateCondition data)
     {
         if (data == null) return;
         this.data = data;
+        _validType.SetValueWithoutNotify(data.validType);
+        Refresh();
+
         _content.Clear();
         for (int i = 0; i < this.data.states.Count; i++)
         {
@@ -139,7 +105,7 @@ public class StateItem : StateItemBase
         };
         var textField = element.Q<TextField>("Label1");
         textField.RegisterValueChangedCallback(evt =>
-        {            
+        {
             data.states[index] = evt.newValue;
         });
         if (!string.IsNullOrEmpty(state))
