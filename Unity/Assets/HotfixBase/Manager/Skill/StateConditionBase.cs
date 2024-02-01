@@ -37,5 +37,12 @@ namespace Ux
             Up,
             Click
         }
+
+        public StateMachine Machine { get; }
+        public StateConditionBase(StateMachine machine)
+        {
+            Machine = machine;
+        }
+        public virtual bool IsValid => false;
     }
 }
