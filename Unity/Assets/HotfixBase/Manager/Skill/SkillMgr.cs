@@ -9,7 +9,7 @@ using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
 namespace Ux
-{    
+{
     public class SkillMgr : Singleton<SkillMgr>
     {
         Dictionary<string, SkillAsset> resToData = new Dictionary<string, SkillAsset>();
@@ -26,6 +26,16 @@ namespace Ux
             return data;
         }
 
+
+        public void Update()
+        {
+
+        }
+
+        public void AddState()
+        {
+
+        }
 
     }
 }
