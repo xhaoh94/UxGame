@@ -6,9 +6,9 @@ namespace Ux
 {
     internal class PatchUpdateManifest : PatchStateNode
     {
-        protected override void OnEnter(object args)
+        protected override void OnEnter()
         {
-            base.OnEnter(args);
+            base.OnEnter();
             UpdateManifest().Forget();
         }
         

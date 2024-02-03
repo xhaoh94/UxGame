@@ -16,6 +16,7 @@ namespace Ux
     [Module]
     public class LoginModule : ModuleBase<LoginModule>
     {
+        public Pb.S2CEnterScene resp;
         public void Connect(Action OnConnect)
         {
             //   TCP KCP
@@ -23,7 +24,7 @@ namespace Ux
             //WebSocket
             //NetMgr.Ins.Connect(NetType.WebSocket,"ws://127.0.0.1:10002/");
 
-            var resp = new Pb.S2CEnterScene()
+            resp = new Pb.S2CEnterScene()
             {
                 Self = new Pb.Entity()
                 {
@@ -32,7 +33,7 @@ namespace Ux
                     roleMask = 1,
                 }
             };
-            GameMain.Machine.Enter<StateGameIn>(resp);
+            GameMain.Machine.Enter<StateGameIn>();
         }
         struct LoginReslut
         {
@@ -80,13 +81,13 @@ namespace Ux
             data.roleMask = login.mask;
             data.Sceneid = 1;
             data.Token = login.token;
-            var resp = await NetMgr.Ins.Call<Pb.S2CEnterScene>(CS.C2S_EnterScene, data);
+            resp = await NetMgr.Ins.Call<Pb.S2CEnterScene>(CS.C2S_EnterScene, data);
             if (resp.Error == Pb.ErrCode.UnKnown)
             {
                 Log.Error("请求进入场景失败");
                 return;
             }
-            GameMain.Machine.Enter<StateGameIn>(resp);
+            GameMain.Machine.Enter<StateGameIn>();
         }
     }
 }

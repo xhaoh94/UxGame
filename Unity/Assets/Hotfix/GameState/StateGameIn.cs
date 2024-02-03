@@ -6,14 +6,11 @@
         {
 
         }
-        protected override async void OnEnter(object args = null)
+        protected override async void OnEnter()
         {
-            if (args is Pb.S2CEnterScene resp)
-            {
-                await SceneModule.Ins.EnterScene("Map001", resp);
-                await UIMgr.Ins.Show<UI.MainView>().Task();
-                UIMgr.Ins.Hide<UI.LoginView>();
-            }
+            await SceneModule.Ins.EnterScene("Map001");
+            await UIMgr.Ins.Show<UI.MainView>().Task();
+            UIMgr.Ins.Hide<UI.LoginView>();
 
             //var item = ConfigMgr.Ins.Tables.TbItem.Get(10000);
         }

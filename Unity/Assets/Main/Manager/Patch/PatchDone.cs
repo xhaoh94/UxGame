@@ -4,9 +4,9 @@ namespace Ux
 {
     internal class PatchDone : PatchStateNode
     {
-        protected override void OnEnter(object args)
+        protected override void OnEnter()
         {
-            base.OnEnter(args);
+            base.OnEnter();
             try
             {                
                 HotFixMgr.Ins.Init();

@@ -27,20 +27,28 @@ namespace Ux
         /// </summary>
         public IStateNode PreviousNode => _preNode;
 
+        public static T Create<T>(bool isUpdate = false, object owner = null) where T : StateMachine, new()
+        {
+            var stateMachine = new T();
+            stateMachine.Init(false, isUpdate, owner);
+            return stateMachine;
+        }
         public static StateMachine Create(bool isUpdate = false, object owner = null)
         {
-            var stateMachine = new StateMachine();
-            stateMachine.Init(false, isUpdate, owner);
+            return Create<StateMachine>(isUpdate, owner);
+        }
+        public static T CreateByPool<T>(bool isUpdate = false, object owner = null) where T : StateMachine, new()
+        {
+            var stateMachine = Pool.Get<T>();
+            stateMachine.Init(true, isUpdate, owner);
             return stateMachine;
         }
         public static StateMachine CreateByPool(bool isUpdate = false, object owner = null)
         {
-            var stateMachine = Pool.Get<StateMachine>();
-            stateMachine.Init(true, isUpdate, owner);
-            return stateMachine;
+            return CreateByPool<StateMachine>(isUpdate, owner);
         }
 
-        void Init(bool isFromPool, bool isUpdate, object owner = null)
+        protected void Init(bool isFromPool, bool isUpdate, object owner = null)
         {
             _isFromPool = isFromPool;
             _isUpdate = isUpdate;
@@ -77,15 +85,15 @@ namespace Ux
         /// <summary>
         /// 启动状态机
         /// </summary>
-        public bool Enter<TNode>(object args = null) where TNode : IStateNode
+        public bool Enter<TNode>() where TNode : IStateNode
         {
-            return Enter(typeof(TNode), args);
+            return Enter(typeof(TNode));
         }
-        public bool Enter(Type entryNode, object args = null)
+        public bool Enter(Type entryNode)
         {
-            return Enter(entryNode.Name, args);
+            return Enter(entryNode.Name);
         }
-        public bool Enter(string entryNode, object args = null)
+        public virtual bool Enter(string entryNode)
         {
             if (string.IsNullOrEmpty(entryNode))
             {
@@ -99,13 +107,13 @@ namespace Ux
                 Log.Error($"找不到节点 : {entryNode}");
                 return false;
             }
-            if (!node.CheckValid(args))
+            if (!node.CheckValid())
             {
                 return false;
             }
             if (_curNode != null && _curNode == node)
             {
-                _curNode.Enter(args);
+                _curNode.Enter();
                 return true;
             }
 
@@ -125,7 +133,7 @@ namespace Ux
                 _preNode = _curNode;
             }
             _curNode = node;
-            _curNode.Enter(args);
+            _curNode.Enter();
             return true;
         }
 

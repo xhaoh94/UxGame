@@ -6,7 +6,7 @@
         {
 
         }
-        protected override async void OnEnter(object args)
+        protected override async void OnEnter()
         {
             NetMgr.Ins.Release();
             TagMgr.Ins.Release();

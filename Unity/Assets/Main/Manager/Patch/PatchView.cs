@@ -19,9 +19,9 @@ namespace Ux
         [SerializeField] Text txtHotfix;
 
         static GameObject view;
-        public static PatchView Show(EPlayMode playMode)
-        {
-            if (playMode == EPlayMode.EditorSimulateMode)
+        public static PatchView Show()
+        {            
+            if (GameMain.Ins.PlayMode == EPlayMode.EditorSimulateMode)
             {
                 return null;
             }

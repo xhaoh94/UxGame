@@ -1,14 +1,8 @@
-﻿using Ux;
-using System.Collections;
-using Pathfinding;
+﻿using Cysharp.Threading.Tasks;
+using FairyGUI;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Timeline;
-using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
-using FairyGUI;
-using System.Collections.Generic;
-using System;
 
 namespace Ux
 {
@@ -78,31 +72,31 @@ namespace Ux
             }
         }
 
-        public async void OnKey(InputAction.CallbackContext context)
+        public void OnKey(InputAction.CallbackContext context)
         {
-            if (context.performed)
-            {
-                if (this.triggerData != null)
-                {
-                    if (context.control == Keyboard.current[triggerData.Value.Key])
-                    {
-                        Unit.State.Machine.Enter(triggerData.Value.State);
-                        this.triggerData = null;
-                        return;
-                    }
-                }
+            //if (context.performed)
+            //{
+            //    if (this.triggerData != null)
+            //    {
+            //        if (context.control == Keyboard.current[triggerData.Value.Key])
+            //        {
+            //            Unit.State.Machine.Enter(triggerData.Value.State);
+            //            this.triggerData = null;
+            //            return;
+            //        }
+            //    }
 
-                if (context.control == Keyboard.current.qKey)
-                {
-                    Unit.State.Machine.Enter<StateAttack>();
-                }
-                else if (context.control == Keyboard.current.eKey)
-                {
-                    var asset = await SkillMgr.Ins.GetSkillAssetAsync("Skill02");
-                    Unit.Director.SetPlayableAsset(asset);
-                    Unit.Director.Play();
-                }
-            }
+            //    if (context.control == Keyboard.current.qKey)
+            //    {
+            //        Unit.State.Machine.Enter<StateAttack>();
+            //    }
+            //    else if (context.control == Keyboard.current.eKey)
+            //    {
+            //        var asset = await StateMgr.Ins.GetSkillAssetAsync("Skill02");
+            //        Unit.Director.SetPlayableAsset(asset);
+            //        Unit.Director.Play();
+            //    }
+            //}
         }
     }
 }

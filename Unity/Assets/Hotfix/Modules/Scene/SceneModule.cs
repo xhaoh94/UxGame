@@ -14,7 +14,7 @@ namespace Ux
             World.Destroy();
             World = null;
         }
-        public async UniTask EnterScene(string mapName, Pb.S2CEnterScene resp)
+        public async UniTask EnterScene(string mapName)
         {
             if (World == null)
             {
@@ -25,7 +25,7 @@ namespace Ux
             World.EnterScene(map);
 
             var data = new PlayerData();
-            data.data = resp.Self;
+            data.data = LoginModule.Ins.resp.Self;
             data.self = true;
             data.name = "name_" + data.data.roleId;
             data.res = "Hero_ZS";

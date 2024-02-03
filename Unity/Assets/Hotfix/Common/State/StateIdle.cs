@@ -3,54 +3,47 @@ using UnityEngine;
 
 namespace Ux
 {
-    public class StateIdle : UnitTimeLineNode
+    public partial class HeroZSIdle
     {
-        //public override string ResName => "Hero_ZS@Stand";        
-        public override string ResName => "ZS_Idle";
-        protected override void OnEnter(object args = null)
+        //const UnitAnimNode AnimNode = new UnitAnimNode(this);
+        public override long OwnerID => Unit.ID;
+        public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
+        public override AnimComponent Anim => Unit.Anim;
+        protected override void OnEnter()
         {
-            base.OnEnter(args);
+            base.OnEnter();
         }
 
     }
-    public class StateRun : UnitAnimNode
+    public partial class HeroZSRun 
     {
-        public override string ResName => "Hero_ZS@Run";
-        private List<Vector3> _points = new List<Vector3>();
-        private int _pathIndex;
-        protected override void OnEnter(object args = null)
+        public override long OwnerID => Unit.ID;
+        public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
+        public override AnimComponent Anim => Unit.Anim;
+       
+        protected override void OnEnter()
         {
-            base.OnEnter(args);
-            if (args is Pb.BcstUnitMove move)
-            {
-                _pathIndex = move.pointIndex;
-                _points.Clear();
-                foreach (var point in move.Points)
-                {
-                    _points.Add(new Vector3(point.X, point.Y, point.Z));
-                }
-            }
+            base.OnEnter();
         }
         protected override void OnUpdate()
         {
-            if (_pathIndex < _points.Count)
-            {
-                var target = _points[_pathIndex];
-                var dir = target - Unit.Position;
-                var rotation = Quaternion.LookRotation(dir);
-                Unit.Rotation = Quaternion.Slerp(Unit.Rotation, rotation, Time.fixedDeltaTime * 10f);
-                Unit.Position += dir.normalized * (Time.fixedDeltaTime * 5);
-                if (Vector3.SqrMagnitude(dir) <= 0.1f)
-                {
-                    _pathIndex++;
-                }
-            }
-            else
-            {
-                Machine.Enter<StateIdle>();
-                _points.Clear();
-                _pathIndex = 0;
-            }
+            //if (Unit.Path.PathIndex < Unit.Path.Points.Count)
+            //{
+            //    var target = Unit.Path.Points[Unit.Path.PathIndex];
+            //    var dir = target - Unit.Position;
+            //    var rotation = Quaternion.LookRotation(dir);
+            //    Unit.Rotation = Quaternion.Slerp(Unit.Rotation, rotation, Time.fixedDeltaTime * 10f);
+            //    Unit.Position += dir.normalized * (Time.fixedDeltaTime * 5);
+            //    if (Vector3.SqrMagnitude(dir) <= 0.1f)
+            //    {
+            //        _pathIndex++;
+            //    }
+            //}
+            //else
+            //{                
+            //    _points.Clear();
+            //    _pathIndex = 0;
+            //}
         }
     }
 }

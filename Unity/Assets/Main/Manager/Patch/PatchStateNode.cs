@@ -4,10 +4,10 @@
     {
         protected PatchMgr PatchMgr => PatchMgr.Ins;
 
-        protected override void OnEnter(object args = null)
+        protected override void OnEnter()
         {
             PatchMgr.View?.OnStatusChanged(GetType().Name);
-            base.OnEnter(args);
+            base.OnEnter();
         }
     }
 }

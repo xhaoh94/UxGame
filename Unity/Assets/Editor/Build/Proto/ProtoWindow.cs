@@ -9,7 +9,7 @@ using Cysharp.Threading.Tasks;
 
 public class ProtoWindow : EditorWindow
 {
-    [MenuItem("UxGame/构建/协议", false, 530)]
+    [MenuItem("UxGame/构建/协议", false, 540)]
     public static void ShowConfigWindon()
     {
         var window = GetWindow<ProtoWindow>("ProtoWindow", true);

@@ -23,9 +23,10 @@ namespace Ux
     public class Unit : Entity, IAwakeSystem<PlayerData>
     {
         public GameObject Model { get; private set; }
-        public AnimComponent Anim => GetComponent<AnimComponent>();        
-        public StateComponent State=> GetComponent<StateComponent>();
+        public AnimComponent Anim => GetComponent<AnimComponent>();
+        public StateComponent State => GetComponent<StateComponent>();
         public SeekerComponent Seeker => GetComponent<SeekerComponent>();
+        public PathComponent Path => GetComponent<PathComponent>();
         public PlayableDirectorComponent Director => GetComponent<PlayableDirectorComponent>();
 
         #region Get-Set
@@ -85,8 +86,9 @@ namespace Ux
         PlayerData _playerData;
         public void OnAwake(PlayerData playerData)
         {
-            _playerData = playerData;            
+            _playerData = playerData;
             AddComponent<StateComponent>();
+            AddComponent<PathComponent>();
             if (playerData.self)
             {
                 AddComponent<OperateComponent>();
@@ -111,11 +113,12 @@ namespace Ux
                 Map.Camera.SetFollow(Model.transform);
                 Map.Camera.SetLookAt(Model.transform);
             }
-            
+
             AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
             AddComponent<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
             AddComponent<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
             Director.SetBinding("Animation Track", Anim.Animator);
+            StateMgr.Ins.Update(ID);
         }
 
         protected override void OnDestroy()

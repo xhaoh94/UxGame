@@ -11,7 +11,7 @@ namespace Ux
         public static StateMachine Machine { get; private set; }
 
         [SerializeField]
-        private EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
+        public EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
 
         [SerializeField]
         bool IngameDebug = true;
@@ -46,7 +46,7 @@ namespace Ux
             Log.Debug($"资源系统运行模式：{PlayMode}");
 
             // 运行补丁流程
-            PatchMgr.Ins.Run(PlayMode);
+            PatchMgr.Ins.Run();
         }
 
         public void AddUpdate(Action action)

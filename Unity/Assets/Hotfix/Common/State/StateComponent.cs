@@ -7,14 +7,14 @@ namespace Ux
 {
     public class StateComponent : Entity, IAwakeSystem, IListenSystem
     {
-        public StateMachine Machine { get; private set; }
+        public UnitStateMachine Machine { get; private set; }
         public void OnAwake()
         {
-            Machine = StateMachine.CreateByPool(true, this);
-            Machine.AddNode<StateIdle>();
-            Machine.AddNode<StateRun>();
-            Machine.AddNode<StateAttack>();
-            Machine.AddNode<StateSkilll08>();            
+            Machine = StateMachine.CreateByPool<UnitStateMachine>(true, this);
+            Machine.AddNode<HeroZSRun>();
+            Machine.AddNode<HeroZSIdle>();
+            //Machine.AddNode<StateAttack>();
+            //Machine.AddNode<StateSkilll08>();            
         }
 
         protected override void OnDestroy()
@@ -31,7 +31,7 @@ namespace Ux
         [ListenAddEntity(typeof(PlayableDirectorComponent))]
         void OnAddAnimComponent(PlayableDirectorComponent anim)
         {
-            Machine.Enter<StateIdle>();
+            //Machine.Enter<StateIdle>();            
         }
     }  
 }

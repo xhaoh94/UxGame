@@ -9,6 +9,7 @@ namespace Ux
         private bool _isRun = false;
         public bool IsDone { get; private set; }
         public PatchView View { get; private set; }
+        public Downloader Downloader { get;  set; }
         /// <summary>
         /// 状态机
         /// </summary>
@@ -16,14 +17,13 @@ namespace Ux
         /// <summary>
         /// 开启初始化流程
         /// </summary>
-        public void Run(EPlayMode playMode)
+        public void Run()
         {
             if (_isRun == false)
             {
                 IsDone = false;
                 _isRun = true;
-                View = PatchView.Show(playMode);
-
+                View = PatchView.Show();                
                 machine = StateMachine.CreateByPool();
                 machine.AddNode(new PatchInit());
                 machine.AddNode(new PatchUpdateStaticVersion());
@@ -31,7 +31,7 @@ namespace Ux
                 machine.AddNode(new PatchCreateDownloader());
                 machine.AddNode(new PatchDownloadWebFiles());
                 machine.AddNode(new PatchDone());
-                Enter<PatchInit>(playMode);
+                Enter<PatchInit>();
             }
             else
             {
@@ -48,9 +48,9 @@ namespace Ux
             IsDone = true;
         }
 
-        public void Enter<TNode>(object args = null) where TNode : PatchStateNode
+        public void Enter<TNode>() where TNode : PatchStateNode
         {
-            machine.Enter<TNode>(args);
+            machine.Enter<TNode>();
         }
     }
 }

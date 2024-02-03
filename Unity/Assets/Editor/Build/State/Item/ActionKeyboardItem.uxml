@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1;">
+        <ui:EnumField label="按键" type="UnityEngine.InputSystem.Key, Unity.InputSystem" name="enumKey" />
+        <ui:EnumField label="触发时间" type="Ux.StateConditionBase+Trigger, Unity.HotfixBase" name="enumType" />
+    </ui:VisualElement>
+</ui:UXML>

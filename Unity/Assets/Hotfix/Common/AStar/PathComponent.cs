@@ -38,18 +38,20 @@ namespace Ux
 
                 if (!IsRun)
                 {
-                    IsRun = true;                    
-                    Unit.State.Machine.Enter<StateRun>();
+                    IsRun = true;
+                    StateMgr.Ins.AddMove(Unit.ID);
+                    StateMgr.Ins.Update(Unit.ID);
                 }
             }
             else
             {
                 if (IsRun)
                 {
-                    IsRun = false;                    
-                    Unit.State.Machine.Enter<StateIdle>();
+                    IsRun = false;                                        
                     _points.Clear();
                     _pathIndex = 0;
+                    StateMgr.Ins.RevemoMove(Unit.ID);
+                    StateMgr.Ins.Update(Unit.ID);
                 }
             }
         }

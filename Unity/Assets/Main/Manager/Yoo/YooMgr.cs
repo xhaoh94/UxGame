@@ -37,7 +37,7 @@ namespace Ux
             // 如果初始化失败弹出提示界面            
             Action callback = () =>
             {
-                PatchMgr.Ins.Enter<PatchInit>(playMode);
+                PatchMgr.Ins.Enter<PatchInit>();
             };
             PatchMgr.Ins.View.ShowMessageBox("初始化失败", "确定", callback);
         }

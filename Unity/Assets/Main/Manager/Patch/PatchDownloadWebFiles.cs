@@ -4,10 +4,10 @@ namespace Ux
 {
     public class PatchDownloadWebFiles : PatchStateNode
     {
-        protected override void OnEnter(object args)
+        protected override void OnEnter()
         {
-            base.OnEnter(args);
-            BeginDownload((Downloader)args);
+            base.OnEnter();
+            BeginDownload();
         }
         void OnDownloadProgressCallback(int totalDownloadCount, int currentDownloadCount, long totalDownloadSizeBytes, long currentDownloadSizeBytes)
         {
@@ -28,12 +28,12 @@ namespace Ux
             PatchMgr.View.ShowMessageBox($"更新失败,可能磁盘空间不足！", "确定", callback);
         }
 
-        private void BeginDownload(Downloader downloader)
+        private void BeginDownload()
         {
             // 注册下载回调
-            downloader.OnDownloadErrorCallback = OnDownloadErrorCallback;
-            downloader.OnDownloadProgressCallback = OnDownloadProgressCallback;
-            downloader.BeginDownload(DownloadComplete);
+            PatchMgr.Downloader.OnDownloadErrorCallback = OnDownloadErrorCallback;
+            PatchMgr.Downloader.OnDownloadProgressCallback = OnDownloadProgressCallback;
+            PatchMgr.Downloader.BeginDownload(DownloadComplete);
         }
         private void DownloadComplete(bool succeed)
         {

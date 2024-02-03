@@ -6,9 +6,9 @@ namespace Ux
 {
     internal class PatchUpdateStaticVersion : PatchStateNode
     {
-        protected override void OnEnter(object args = null)
+        protected override void OnEnter()
         {
-            base.OnEnter(args);
+            base.OnEnter();
             GetStaticVersion().Forget();
         }
         async UniTaskVoid GetStaticVersion()

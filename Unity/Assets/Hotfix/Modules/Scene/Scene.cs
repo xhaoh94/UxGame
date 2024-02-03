@@ -34,9 +34,8 @@ namespace Ux
             Log.Debug("移动Unit" + param.roleId);
             var player = GetChild<Unit>(param.roleId);
             if (player != null)
-            {
-                player.State.Machine.Enter<StateRun>(param);
-                //player.Path.SetPoints(param.Points, param.pointIndex);
+            {                
+                player.Path.SetPoints(param.Points, param.pointIndex);
             }
         }
         [Evt(EventType.UNIT_UPDATE_POSITION)]
