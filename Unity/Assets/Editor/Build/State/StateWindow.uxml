@@ -18,6 +18,8 @@
             </ui:Foldout>
             <ui:VisualElement name="infoView" style="flex-grow: 1; flex-direction: row; word-spacing: 0;">
                 <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0);">
+                    <ui:Toggle label="是否禁用" value="false" name="tgMute" />
+                    <ui:IntegerField label="优先级" value="0" name="txtPri" />
                     <ui:TextField picking-mode="Ignore" label="生成类名" name="txtClass" />
                     <ui:TextField picking-mode="Ignore" label="状态" name="txtName" />
                     <ui:TextField picking-mode="Ignore" label="描述" name="txtDesc" />

@@ -21,6 +21,8 @@ namespace Ux
         [Serializable]
         public class StateData
         {
+            public int Pri = 0;
+            public bool IsMute;
             public string ClsName;
             public string StateName = "Empty";
             public string Desc = "未设置";

@@ -81,9 +81,10 @@ namespace Ux
                 return;
             }
             foreach (var state in stateList)
-            {
+            {                
+                if (state.IsMute) continue;
                 if (state.IsValid)
-                {
+                {                    
                     state.Machine.Enter(state.Name);
                     break;
                 }
@@ -104,6 +105,14 @@ namespace Ux
                 UnitStates.Add(id, unitStates);
             }
             unitStates.Add(unitState);
+            unitStates.Sort((a, b) =>
+            {
+                if (b.Priority == a.Priority)
+                {
+                    return unitStates.IndexOf(a) - unitStates.IndexOf(b);
+                }
+                return b.Priority - a.Priority;
+            });
 
             foreach (var conditin in unitState.Conditions)
             {

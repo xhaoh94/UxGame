@@ -4,16 +4,20 @@ namespace Ux
 {
 	public partial class HeroZSRun : UnitStateAnim
 	{
-		public override string Name => "run";
+		public override int Priority => 10;
+		public override string Name => "Run";
 		public override string ResName => "Hero_ZS@Run";
-		public override List<StateConditionBase> Conditions { get; } = new List<StateConditionBase>()
+		protected override void InitConditions()
 		{
-			new StateCondition(StateConditionBase.State.Include, new HashSet<string>
+			Conditions = new List<StateConditionBase>()
 			{
-                "Idle",
-				"run",
-			}),
-			new ActionMoveCondition(),
-		};
+				CreateCondition(nameof(StateCondition),StateConditionBase.State.Include, new HashSet<string>
+				{
+					"Idle",
+					"Run",
+				}),
+				CreateCondition(nameof(ActionMoveCondition)),
+			};
+		}
 	}
 }

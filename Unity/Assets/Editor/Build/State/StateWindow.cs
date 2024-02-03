@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using UI.Editor;
 using UnityEditor;
@@ -31,6 +32,9 @@ public class StateWindow : EditorWindow
     TextField _txtPath;
     TextField _txtNs;
 
+
+    IntegerField _txtPri;
+    Toggle _tgMute;
     TextField _txtClass;
     TextField _txtName;
     TextField _txtDesc;
@@ -67,6 +71,19 @@ public class StateWindow : EditorWindow
             _btnRemove.clicked += OnBtnRemoveClick;
 
             _infoView = root.Q<VisualElement>("infoView");
+
+
+            _txtPri = root.Q<IntegerField>("txtPri");
+            _txtPri.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.Pri = evt.newValue;
+            });
+
+            _tgMute = root.Q<Toggle>("tgMute");
+            _tgMute.RegisterValueChangedCallback(evt =>
+            {
+                SelectItem.IsMute = evt.newValue;
+            });
 
             _txtClass = root.Q<TextField>("txtClass");
             _txtClass.RegisterValueChangedCallback(evt =>
@@ -206,6 +223,8 @@ public class StateWindow : EditorWindow
             return;
         }
         _infoView.style.display = DisplayStyle.Flex;
+        _txtPri.SetValueWithoutNotify(SelectItem.Pri);
+        _tgMute.SetValueWithoutNotify(SelectItem.IsMute);
         _txtClass.SetValueWithoutNotify(SelectItem.ClsName);
         _viewType.SetValueWithoutNotify(SelectItem.ViewType);
         _txtName.SetValueWithoutNotify(SelectItem.StateName);
@@ -299,14 +318,23 @@ public class StateWindow : EditorWindow
                 break;
         }
         write.StartBlock();
+        if (data.Pri != 0)
+        {
+            write.Writeln($"public override int Priority => {data.Pri};");
+        }
+        if (data.IsMute)
+        {
+            write.Writeln($"public override bool IsMute => true;");
+        }
         write.Writeln($"public override string Name => \"{data.StateName}\";");
         if (!string.IsNullOrEmpty(resName))
         {
             write.Writeln($"public override string ResName => \"{resName}\";");
         }
-        write.Writeln("public override List<StateConditionBase> Conditions { get; } = new List<StateConditionBase>()");
+        write.Writeln("protected override void InitConditions()");
         write.StartBlock();
-
+        write.Writeln("Conditions = new List<StateConditionBase>()");
+        write.StartBlock();
         foreach (var condition in data.Conditions)
         {
             switch (condition.Type)
@@ -314,11 +342,11 @@ public class StateWindow : EditorWindow
                 case StateConditionBase.Type.State:
                     if (condition.stateType == StateConditionBase.State.Any)
                     {
-                        write.Writeln($"new {nameof(StateCondition)}(StateConditionBase.State.Any, null),");
+                        write.Writeln($"CreateCondition(nameof({nameof(StateCondition)}),StateConditionBase.State.Any, null),");
                     }
                     else
                     {
-                        write.Writeln($"new {nameof(StateCondition)}(StateConditionBase.State.{condition.stateType}, new HashSet<string>");
+                        write.Writeln($"CreateCondition(nameof({nameof(StateCondition)}),StateConditionBase.State.{condition.stateType}, new HashSet<string>");
                         write.StartBlock();
                         foreach (var state in condition.states)
                         {
@@ -329,22 +357,24 @@ public class StateWindow : EditorWindow
                     }
                     break;
                 case StateConditionBase.Type.TempBoolVar:
-                    write.Writeln($"new {nameof(TemBoolVarCondition)}({condition.key}, {condition.value}),");
+                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),{condition.key}, {condition.value}),");                    
                     break;
                 case StateConditionBase.Type.Action_Move:
-                    write.Writeln($"new {nameof(ActionMoveCondition)}(),");
+                    write.Writeln($"CreateCondition(nameof({nameof(ActionMoveCondition)})),");                    
                     break;
                 case StateConditionBase.Type.Action_Keyboard:
-                    write.Writeln($"new {nameof(ActionKeyboardCondition)}(UnityEngine.InputSystem.Key.{condition.keyType},StateConditionBase.Trigger.{condition.triggerType}),");
+                    write.Writeln($"CreateCondition(nameof({nameof(ActionKeyboardCondition)}),UnityEngine.InputSystem.Key.{condition.keyType}, StateConditionBase.Trigger.{condition.triggerType}),");                    
                     break;
                 case StateConditionBase.Type.Action_Input:
-                    write.Writeln($"new {nameof(ActionInputCondition)}(StateConditionBase.Input.{condition.inputType},StateConditionBase.Trigger.{condition.triggerType}),");
+                    write.Writeln($"CreateCondition(nameof({nameof(ActionInputCondition)}),StateConditionBase.Input.{condition.inputType}, StateConditionBase.Trigger.{condition.triggerType}),");                    
                     break;
             }
 
         }
+
         write.EndBlock(false);
         write.Writeln(";", false);
+        write.EndBlock();
         write.EndBlock();
         write.EndBlock();
         write.Export($"{Setting.path}/", data.ClsName);

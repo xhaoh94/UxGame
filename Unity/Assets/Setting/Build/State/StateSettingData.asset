@@ -15,7 +15,9 @@ MonoBehaviour:
   path: Assets/Hotfix/CodeGen/State
   ns: Ux
   StateSettings:
-  - ClsName: HeroZSIdle
+  - Pri: 0
+    IsMute: 0
+    ClsName: HeroZSIdle
     StateName: Idle
     Desc: "\u7AD9\u7ACB"
     ViewType: 1
@@ -30,8 +32,10 @@ MonoBehaviour:
       triggerType: 0
       keyType: 0
       inputType: 0
-  - ClsName: HeroZSRun
-    StateName: run
+  - Pri: 10
+    IsMute: 0
+    ClsName: HeroZSRun
+    StateName: Run
     Desc: "\u5954\u8DD1"
     ViewType: 1
     AnimName: Assets/Data/Res/Prefab/Hero/Hero_ZS/Hero_ZS@Run.FBX
@@ -42,8 +46,8 @@ MonoBehaviour:
       value: 0
       stateType: 1
       states:
-      - idle
-      - run
+      - Idle
+      - Run
       triggerType: 0
       keyType: 0
       inputType: 0

@@ -15,12 +15,12 @@ namespace Ux
         }
 
     }
-    public partial class HeroZSRun 
+    public partial class HeroZSRun
     {
         public override long OwnerID => Unit.ID;
         public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
         public override AnimComponent Anim => Unit.Anim;
-       
+
         protected override void OnEnter()
         {
             base.OnEnter();
@@ -44,6 +44,27 @@ namespace Ux
             //    _points.Clear();
             //    _pathIndex = 0;
             //}
+        }
+        protected override StateConditionBase CreateCondition(string condition, params object[] args)
+        {
+            switch (condition)
+            {
+                case nameof(ActionMoveCondition):
+                    return new HeroMoveCondition();
+            }
+            return base.CreateCondition(condition, args);
+        }
+    }
+
+    public class HeroMoveCondition : ActionMoveCondition
+    {
+        public override bool IsValid
+        {
+            get
+            {
+                var unit = (UnitState.Machine.Owner as StateComponent).ParentAs<Unit>();
+                return unit.Path.IsRun;
+            }
         }
     }
 }

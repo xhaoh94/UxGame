@@ -11,8 +11,8 @@ namespace Ux
         public void OnAwake()
         {
             Machine = StateMachine.CreateByPool<UnitStateMachine>(true, this);
-            Machine.AddNode<HeroZSRun>();
             Machine.AddNode<HeroZSIdle>();
+            Machine.AddNode<HeroZSRun>();
             //Machine.AddNode<StateAttack>();
             //Machine.AddNode<StateSkilll08>();            
         }

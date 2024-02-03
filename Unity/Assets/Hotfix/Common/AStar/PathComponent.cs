@@ -39,7 +39,7 @@ namespace Ux
                 if (!IsRun)
                 {
                     IsRun = true;
-                    StateMgr.Ins.AddMove(Unit.ID);
+                    //StateMgr.Ins.AddMove(Unit.ID);
                     StateMgr.Ins.Update(Unit.ID);
                 }
             }
@@ -50,7 +50,7 @@ namespace Ux
                     IsRun = false;                                        
                     _points.Clear();
                     _pathIndex = 0;
-                    StateMgr.Ins.RevemoMove(Unit.ID);
+                    //StateMgr.Ins.RevemoMove(Unit.ID);
                     StateMgr.Ins.Update(Unit.ID);
                 }
             }

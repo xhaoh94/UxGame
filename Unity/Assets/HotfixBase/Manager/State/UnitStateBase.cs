@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,9 +9,11 @@ namespace Ux
 {
     public abstract class UnitStateBase : StateNode
     {
+        public virtual bool IsMute { get; }
+        public virtual int Priority { get; }
         public virtual long OwnerID { get; }
         public virtual string ResName { get; } = null;
-        public virtual List<StateConditionBase> Conditions { get; } = null;
+        public List<StateConditionBase> Conditions { get; protected set; }
         public virtual bool IsValid
         {
             get
@@ -27,7 +30,37 @@ namespace Ux
         protected override void OnCreate(object args = null)
         {
             base.OnCreate(args);
+            InitConditions();
             StateMgr.Ins.AddState(this);
+        }
+
+        protected virtual void InitConditions()
+        {
+
+        }
+
+        protected virtual StateConditionBase CreateCondition(string condition, params object[] args)
+        {
+            Type type = null;
+            switch (condition)
+            {
+                case nameof(StateCondition):
+                    type = typeof(StateCondition);
+                    break;
+                case nameof(TemBoolVarCondition):
+                    type = typeof(TemBoolVarCondition);
+                    break;
+                case nameof(ActionMoveCondition):
+                    type = typeof(ActionMoveCondition);
+                    break;
+                case nameof(ActionKeyboardCondition):
+                    type = typeof(ActionKeyboardCondition);
+                    break;
+                case nameof(ActionInputCondition):
+                    type = typeof(ActionInputCondition);
+                    break;
+            }
+            return (StateConditionBase)Activator.CreateInstance(type, args);
         }
 
     }
