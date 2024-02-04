@@ -43,7 +43,7 @@ namespace Ux.UI
 			AddClick(btnSingle,_OnBtnSingleClick);
 			AddClick(btnTest,_OnBtnTestClick);
 			AddClick(btnBack,_OnBtnBackClick);
-			AddMultipleClick(btnDouble,_OnBtnDoubleMultipleClick, 2, 0.2f);
+			AddMultipleClick(btnDouble,_OnBtnDoubleMultipleClick, 3, 0.2f);
 			AddLongPress(btnLongClick,-1f, _OnBtnLongClickLongPress, 0.2f, 0, 50);
 		}
 		void _OnBtnMultipleClick(EventContext e)

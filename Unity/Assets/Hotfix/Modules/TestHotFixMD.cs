@@ -29,7 +29,7 @@ namespace Ux
 
     }
 
-    [Package("Common", "Login")]
+    [Package("Common", "Login")]    
     public class LoginTestUI : UIView
     {
         public string aaa;

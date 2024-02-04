@@ -173,11 +173,7 @@ namespace Ux
                     _Show(id, param, isStack);
                     return;
                 case UIState.HideAnim:
-                    if (_hideToken != null)
-                    {
-                        _hideToken.Cancel();
-                        _hideToken = null;
-                    }
+                    _ReleaseHideToken();
                     break;
                 case UIState.Hide:
                     AddToStage();
@@ -204,11 +200,7 @@ namespace Ux
                 case UIState.HideAnim:
                     return;
                 case UIState.ShowAnim:
-                    if (_showToken != null)
-                    {
-                        _showToken.Cancel();
-                        _showToken = null;
-                    }
+                    _ReleaseShowToken();
                     break;
             }
             if (_cbData != null)
@@ -244,7 +236,7 @@ namespace Ux
         {
             if (_showToken != null)
             {
-                _showToken.Dispose();
+                _showToken.Cancel();
                 _showToken = null;
             }
         }
@@ -252,7 +244,7 @@ namespace Ux
         {
             if (_hideToken != null)
             {
-                _hideToken.Dispose();
+                _hideToken.Cancel();
                 _hideToken = null;
             }
         }

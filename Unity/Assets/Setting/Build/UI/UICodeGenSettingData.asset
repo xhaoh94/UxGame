@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -455,7 +455,7 @@ MonoBehaviour:
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u591A\u51FB"
-        evtParam: '{"dCnt":2,"dGapTime":0.2}'
+        evtParam: '{"dCnt":3,"dGapTime":0.2}'
       - index: 7
         name: btnLongClick
         defaultType: GButton

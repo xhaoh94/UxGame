@@ -15,7 +15,7 @@ namespace Ux.UI
         public override UIBlur Blur => UIBlur.Blur;
         partial void OnBtnMultipleClick(EventContext e)
         {
-            UIMgr.Ins.Show<MultipleView>();
+            UIMgr.Ins.Show<Multiple2TabView>();
         }
         partial void OnBtnNoneViewClick(EventContext e)
         {
