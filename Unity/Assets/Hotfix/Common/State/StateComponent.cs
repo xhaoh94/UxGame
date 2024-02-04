@@ -11,7 +11,7 @@ namespace Ux
         public void OnAwake()
         {
             Machine = StateMachine.CreateByPool<UnitStateMachine>(true, this);
-            Machine.InitGroup("HeroZs");
+            Machine.InitGroup("HeroZs", Parent.ID);
         }
 
         protected override void OnDestroy()
@@ -20,15 +20,27 @@ namespace Ux
             Machine = null;
         }
 
-        //[ListenAddEntity(typeof(AnimComponent))]
-        //void OnAddAnimComponent(AnimComponent anim)
-        //{
-        //    Machine.Enter<StateIdle>();            
-        //}
-        [ListenAddEntity(typeof(PlayableDirectorComponent))]
-        void OnAddAnimComponent(PlayableDirectorComponent anim)
+        [ListenAddEntity(typeof(AnimComponent))]
+        void OnAddAnimComponent(AnimComponent anim)
         {
-            //Machine.Enter<StateIdle>();            
+            Machine.ForEach<IUnitState>((unit) =>
+            {
+                if (unit is IUnitAnimState animState)
+                {
+                    animState.Set(anim);
+                }
+            });
+        }
+        [ListenAddEntity(typeof(PlayableDirectorComponent))]
+        void OnAddAnimComponent(PlayableDirectorComponent director)
+        {
+            Machine.ForEach<IUnitState>((unit) =>
+            {
+                if (unit is IUnitTimelineState timeLineState)
+                {
+                    timeLineState.Set(director);
+                }
+            });
         }
     }
 }

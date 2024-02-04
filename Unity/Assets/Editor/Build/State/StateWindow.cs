@@ -157,10 +157,21 @@ public partial class StateWindow : EditorWindow
         write.StartBlock();
         write.Writeln("readonly static Dictionary<string, HashSet<Type>> _stateGroup = new Dictionary<string, HashSet<Type>>()");
         write.StartBlock();
+        var temData = new List<StateSettingData.StateData>();
         foreach (var group in Setting.groups)
         {
             write.Write($"{{ \"{group}\",new HashSet<Type>() {{");
-            foreach (var item in Setting.StateSettings)
+            temData.Clear();
+            temData.AddRange(Setting.StateSettings);
+            temData.Sort((a, b) =>
+            {
+                if (a.Pri == b.Pri)
+                {
+                    return temData.IndexOf(a) - temData.IndexOf(b);
+                }
+                return b.Pri - a.Pri;
+            });
+            foreach (var item in temData)
             {
                 if (item.Group.Contains(group))
                 {
@@ -171,7 +182,7 @@ public partial class StateWindow : EditorWindow
         }
         write.EndBlock(false);
         write.Writeln(";", false);
-        write.Writeln("public static void InitGroup(this UnitStateMachine machine, string group)");
+        write.Writeln("public static void InitGroup(this UnitStateMachine machine, string group, long OwnerID)");
         write.StartBlock();
         write.Writeln("if (string.IsNullOrEmpty(group)) return;");
         write.Writeln("if (_stateGroup.TryGetValue(group, out var states))");
@@ -179,7 +190,8 @@ public partial class StateWindow : EditorWindow
         write.Writeln("int index = 0;");
         write.Writeln("foreach (var state in states)");
         write.StartBlock();
-        write.Writeln("var item = Activator.CreateInstance(state) as UnitStateBase;");
+        write.Writeln("var item = Activator.CreateInstance(state) as IUnitState;");
+        write.Writeln("item.Set(OwnerID);");       
         write.Writeln("machine.AddNode(item);");
         write.Writeln("StateMgr.Ins.AddState(item, index == states.Count - 1);");
         write.Writeln("index++;");

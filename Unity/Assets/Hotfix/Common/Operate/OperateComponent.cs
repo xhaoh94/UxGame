@@ -74,6 +74,7 @@ namespace Ux
 
         public void OnKey(InputAction.CallbackContext context)
         {
+            StateMgr.Ins.Update(Unit.ID);
             //if (context.performed)
             //{
             //    if (this.triggerData != null)

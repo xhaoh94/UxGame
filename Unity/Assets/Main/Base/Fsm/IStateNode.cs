@@ -3,6 +3,7 @@ namespace Ux
     public interface IStateNode
     {
         string Name { get; }
+        StateMachine Machine { get; }
         void Create(StateMachine machine, object args = null, bool isFromPool = true);
         bool CheckValid();
         void Enter();

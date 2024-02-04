@@ -5,10 +5,7 @@ namespace Ux
 {
     public partial class HeroZSIdle
     {
-        //const UnitAnimNode AnimNode = new UnitAnimNode(this);
-        public override long OwnerID => Unit.ID;
         public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
-        public override AnimComponent Anim => Unit.Anim;
         protected override void OnEnter()
         {
             base.OnEnter();
@@ -17,9 +14,8 @@ namespace Ux
     }
     public partial class HeroZSRun
     {
-        public override long OwnerID => Unit.ID;
         public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
-        public override AnimComponent Anim => Unit.Anim;
+
 
         protected override void OnEnter()
         {
@@ -65,6 +61,6 @@ namespace Ux
                 var unit = (UnitState.Machine.Owner as StateComponent).ParentAs<Unit>();
                 return unit.Path.IsRun;
             }
-        }        
+        }
     }
 }

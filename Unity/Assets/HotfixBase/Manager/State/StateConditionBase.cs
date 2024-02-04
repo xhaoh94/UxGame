@@ -39,8 +39,8 @@ namespace Ux
         }
         public abstract bool IsValid { get; }
         public abstract Type ConditionType { get; }
-        public UnitStateBase UnitState { get; private set; }
-        public void Init(UnitStateBase state)
+        public IUnitState UnitState { get; private set; }
+        public void Init(IUnitState state)
         {
             UnitState = state;
         }

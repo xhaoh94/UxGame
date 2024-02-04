@@ -26,7 +26,7 @@ namespace Ux
             return data;
         }
 
-        Dictionary<long, List<UnitStateBase>> UnitStates = new Dictionary<long, List<UnitStateBase>>();
+        Dictionary<long, List<IUnitState>> UnitStates = new Dictionary<long, List<IUnitState>>();
         Dictionary<long, Dictionary<string, bool>> TempBoolVar = new Dictionary<long, Dictionary<string, bool>>();
         HashSet<long> Move = new HashSet<long>();
 
@@ -71,23 +71,31 @@ namespace Ux
                 if (state.IsMute) continue;
                 if (state.IsValid)
                 {
-                    state.Machine.Enter(state.Name);
+                    if (state.Machine.CurrentNode != state)
+                    {
+                        state.Machine.Enter(state.Name);
+                    }
                     break;
                 }
             }
         }
 
 
-        public void AddState(UnitStateBase unitState, bool Sort)
+        public void AddState(IUnitState unitState, bool Sort)
         {
             if (unitState == null)
             {
                 return;
             }
             var id = unitState.OwnerID;
+            if (id == 0)
+            {
+                Log.Error($"需要实现状态机[{unitState.Name}]所属拥有者ID");
+                return;
+            }
             if (!UnitStates.TryGetValue(id, out var unitStates))
             {
-                unitStates = new List<UnitStateBase>();
+                unitStates = new List<IUnitState>();
                 UnitStates.Add(id, unitStates);
             }
             unitStates.Add(unitState);

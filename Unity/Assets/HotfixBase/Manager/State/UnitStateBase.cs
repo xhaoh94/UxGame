@@ -7,11 +7,27 @@ using UnityEngine.Playables;
 
 namespace Ux
 {
-    public abstract class UnitStateBase : StateNode
+    public interface IUnitState : IStateNode
+    {
+        void Set(long id);
+        bool IsMute { get; }
+        int Priority { get; }
+        bool IsValid { get; }
+        long OwnerID { get; }
+        List<StateConditionBase> Conditions { get; }
+    }
+    public interface IUnitAnimState : IUnitState
+    {
+        void Set(AnimComponent anim);
+    }
+    public interface IUnitTimelineState : IUnitState
+    {
+        void Set(PlayableDirectorComponent director);
+    }
+    public abstract class UnitStateBase : StateNode, IUnitState
     {
         public virtual bool IsMute { get; }
         public virtual int Priority { get; }
-        public virtual long OwnerID { get; }
         public virtual string ResName { get; } = null;
         public List<StateConditionBase> Conditions { get; protected set; }
         public virtual bool IsValid
@@ -27,12 +43,12 @@ namespace Ux
             }
         }
 
-        protected override void OnCreate(object args = null)
+        public long OwnerID { get; private set; }
+        void IUnitState.Set(long id)
         {
-            base.OnCreate(args);
-            InitConditions();           
+            OwnerID = id;
+            InitConditions();
         }
-
         protected virtual void InitConditions()
         {
 
@@ -64,11 +80,22 @@ namespace Ux
             return (StateConditionBase)Activator.CreateInstance(type, args);
         }
 
+
+        protected override void OnRelease()
+        {
+            base.OnRelease();
+            OwnerID = 0;
+            Conditions = null;
+        }
     }
 
-    public abstract class UnitStateAnim : UnitStateBase
+    public abstract class UnitStateAnim : UnitStateBase, IUnitAnimState
     {
-        public virtual AnimComponent Anim { get; }
+        void IUnitAnimState.Set(Ux.AnimComponent anim)
+        {
+            Anim = anim;
+        }
+        public AnimComponent Anim { get; private set; }
         protected override bool OnCheckValid()
         {
             if (Anim == null) return false;
@@ -85,10 +112,12 @@ namespace Ux
         }
         protected override void OnRelease()
         {
+            base.OnRelease();
             if (!string.IsNullOrEmpty(ResName))
             {
                 Anim?.RemoveAnimation(ResName);
             }
+            Anim = null;
         }
 
         protected async UniTaskVoid LoadAsset()
@@ -113,13 +142,22 @@ namespace Ux
             Anim.Play(ResName, 0.3f);
         }
     }
-    public abstract class UnitStateTimeLine : UnitStateBase
+    public abstract class UnitStateTimeLine : UnitStateBase, IUnitTimelineState
     {
-        public virtual PlayableDirectorComponent PlayableDirector { get; }
+        void IUnitTimelineState.Set(Ux.PlayableDirectorComponent director)
+        {
+            PlayableDirector = director;
+        }
+        public PlayableDirectorComponent PlayableDirector { get; private set; }
         protected override bool OnCheckValid()
         {
             if (PlayableDirector == null) return false;
             return base.OnCheckValid();
+        }
+        protected override void OnRelease()
+        {
+            base.OnRelease();
+            PlayableDirector = null;
         }
         protected override void OnEnter()
         {
@@ -159,6 +197,7 @@ namespace Ux
         }
         protected virtual void OnPlayEnd(PlayableDirector playableDirector)
         {
+            StateMgr.Ins.Update(OwnerID);
         }
     }
 }

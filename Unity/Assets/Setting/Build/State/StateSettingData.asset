@@ -69,3 +69,35 @@ MonoBehaviour:
       inputType: 0
       customName: HeroMoveCondition
       customValue: 
+  - Group: HeroZs
+    Pri: 20
+    IsMute: 0
+    ClsName: HeroZSAttack
+    StateName: Attack
+    Desc: "\u666E\u653B"
+    ViewType: 2
+    AnimName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Attack.playable
+    Conditions:
+    - Type: 0
+      key: 
+      value: 0
+      stateType: 1
+      states:
+      - Idle
+      - Run
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 2
+      key: 
+      value: 0
+      stateType: 0
+      states: []
+      triggerType: 1
+      keyType: 31
+      inputType: 0
+      customName: 
+      customValue: 
