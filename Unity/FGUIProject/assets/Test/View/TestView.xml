@@ -4,7 +4,7 @@
     <graph id="n0_q30y" name="n0" xy="0,0" size="1280,720" type="rect" fillColor="#ff999999">
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
-    <text id="n1_q30y" name="n1" xy="618,336" size="79,51" fontSize="38" text="测试">
+    <text id="n1_q30y" name="n1" xy="618,336" size="80,52" fontSize="38" text="测试">
       <relation target="" sidePair="center-center,middle-middle"/>
     </text>
     <component id="n2_q30y" name="btnMultiple" src="oylhc" fileName="Component/Btn1.xml" pkg="ex3p2il3" xy="107,139" size="100,40">

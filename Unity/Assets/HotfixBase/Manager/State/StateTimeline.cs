@@ -6,13 +6,13 @@ using UnityEngine.Timeline;
 
 namespace Ux
 {
-    public class SkillAsset
+    public class StateTimeline
     {
-        public TimelineAsset Asset { get; }
+        public UnityEngine.Timeline.TimelineAsset Asset { get; }
         Dictionary<string, PlayableBinding> bindings;
         Dictionary<string, Dictionary<string, PlayableAsset>> clips;
 
-        public SkillAsset(TimelineAsset asset)
+        public StateTimeline(UnityEngine.Timeline.TimelineAsset asset)
         {
             Asset = asset;
 

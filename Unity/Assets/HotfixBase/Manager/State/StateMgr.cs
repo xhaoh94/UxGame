@@ -12,8 +12,8 @@ namespace Ux
 {
     public class StateMgr : Singleton<StateMgr>
     {
-        Dictionary<string, SkillAsset> resToData = new Dictionary<string, SkillAsset>();
-        public async UniTask<SkillAsset> GetSkillAssetAsync(string res)
+        Dictionary<string, StateTimeline> resToData = new Dictionary<string, StateTimeline>();
+        public async UniTask<StateTimeline> GetTimeLineAssetAsync(string res)
         {
             if (resToData.TryGetValue(res, out var data))
             {
@@ -21,27 +21,34 @@ namespace Ux
             }
             var asset = await ResMgr.Ins.LoadAssetAsync<TimelineAsset>(res);
 
-            data = new SkillAsset(asset);
+            data = new StateTimeline(asset);
             resToData[res] = data;
             return data;
         }
 
-        Dictionary<long, List<IUnitState>> UnitStates = new Dictionary<long, List<IUnitState>>();
-        Dictionary<long, Dictionary<string, bool>> TempBoolVar = new Dictionary<long, Dictionary<string, bool>>();
-        HashSet<long> Move = new HashSet<long>();
+        Dictionary<long, List<IUnitState>> _unitStates =
+            new Dictionary<long, List<IUnitState>>();
+        Dictionary<long, Dictionary<StateConditionBase.Type, HashSet<IUnitState>>> _typeStates =
+            new Dictionary<long, Dictionary<StateConditionBase.Type, HashSet<IUnitState>>>();
+        Dictionary<long, Dictionary<string, bool>> _tempBoolVar =
+            new Dictionary<long, Dictionary<string, bool>>();
 
+        protected override void OnCreated()
+        {
+            base.OnCreated();            
+        }
         public void AddTempBoolVar(long id, string key, bool value)
         {
-            if (!TempBoolVar.TryGetValue(id, out var dict))
+            if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
                 dict = new Dictionary<string, bool>();
-                TempBoolVar.Add(id, dict);
+                _tempBoolVar.Add(id, dict);
             }
             dict[key] = value;
         }
         public void RevemoTempBoolVar(long id, string key)
         {
-            if (!TempBoolVar.TryGetValue(id, out var dict))
+            if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
                 return;
             }
@@ -49,7 +56,7 @@ namespace Ux
         }
         public bool CheckTempBoolVar(long id, string key, bool value)
         {
-            if (!TempBoolVar.TryGetValue(id, out var dict))
+            if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
                 return false;
             }
@@ -60,9 +67,33 @@ namespace Ux
             return temV == value;
         }
 
+        public void Update(long id, StateConditionBase.Type type)
+        {
+            if (!_typeStates.TryGetValue(id, out var temDict))
+            {
+                return;
+            }
+            if (!temDict.TryGetValue(type, out var stateList))
+            {
+                return;
+            }
+            
+            foreach (var state in stateList)
+            {
+                if (state.IsMute) continue;
+                if (state.IsValid)
+                {
+                    if (state.Machine.CurrentNode != state)
+                    {                        
+                        state.Machine.Enter(state.Name);
+                    }
+                    break;
+                }
+            }
+        }
         public void Update(long id)
         {
-            if (!UnitStates.TryGetValue(id, out var stateList))
+            if (!_unitStates.TryGetValue(id, out var stateList))
             {
                 return;
             }
@@ -72,7 +103,7 @@ namespace Ux
                 if (state.IsValid)
                 {
                     if (state.Machine.CurrentNode != state)
-                    {
+                    {                        
                         state.Machine.Enter(state.Name);
                     }
                     break;
@@ -80,6 +111,12 @@ namespace Ux
             }
         }
 
+        public void Remove(long id)
+        {
+            _unitStates.Remove(id);
+            _tempBoolVar.Remove(id);
+            _typeStates.Remove(id);
+        }
 
         public void AddState(IUnitState unitState, bool Sort)
         {
@@ -93,10 +130,10 @@ namespace Ux
                 Log.Error($"需要实现状态机[{unitState.Name}]所属拥有者ID");
                 return;
             }
-            if (!UnitStates.TryGetValue(id, out var unitStates))
+            if (!_unitStates.TryGetValue(id, out var unitStates))
             {
                 unitStates = new List<IUnitState>();
-                UnitStates.Add(id, unitStates);
+                _unitStates.Add(id, unitStates);
             }
             unitStates.Add(unitState);
             if (Sort)
@@ -111,12 +148,21 @@ namespace Ux
                 });
             }
 
+            if (!_typeStates.TryGetValue(id, out var temDict))
+            {
+                temDict = new Dictionary<StateConditionBase.Type, HashSet<IUnitState>>();
+                _typeStates.Add(id, temDict);
+            }
             foreach (var conditin in unitState.Conditions)
             {
                 conditin.Init(unitState);
+                if (!temDict.TryGetValue(conditin.ConditionType, out var units))
+                {
+                    units = new HashSet<IUnitState>();
+                    temDict.Add(conditin.ConditionType, units);
+                }
+                units.Add(unitState);
             }
-
-
         }
     }
 }

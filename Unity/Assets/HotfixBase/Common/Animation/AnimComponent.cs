@@ -16,14 +16,14 @@ namespace Ux
             Animator = animator;
             string name = animator.gameObject.name;
             _graph = PlayableGraph.Create(name);
-            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 
             _mixerRoot = AnimationLayerMixerPlayable.Create(_graph);
             var _output = AnimationPlayableOutput.Create(_graph, name, animator);
             _output.SetSourcePlayable(_mixerRoot);
         }
         public void OnUpdate()
-        {            
+        {
             _graph.Evaluate(Time.deltaTime);
         }
 
@@ -33,7 +33,7 @@ namespace Ux
         }
 
         protected override void OnDestroy()
-        {            
+        {
             _graph.Destroy();
             Animator = null;
         }
@@ -134,6 +134,18 @@ namespace Ux
                 throw new System.Exception("没获取到动画混合器");
 
             animMixer.Stop(animClip.Name);
+        }
+        public void Stop()
+        {
+            if (IsDestroy) return;
+            var animMixers = GetChilds<AnimMixer>();
+            if (animMixers != null)
+            {
+                foreach (var animMixer in animMixers)
+                {
+                    animMixer.Stop();
+                }
+            }
         }
         /// <summary>
         /// 添加一个动画片段

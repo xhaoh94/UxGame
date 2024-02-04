@@ -119,7 +119,21 @@ namespace Ux
                 }
             }
         }
+        public void Stop()
+        {
+            for (int i = 0; i < _animClips.Count; i++)
+            {
+                var animClip = _animClips[i];
+                if (animClip == null)
+                    continue;
 
+                if (animClip.IsPlaying)
+                {
+                    animClip.PauseNode();
+                    animClip.ResetNode();
+                }
+            }
+        }
         /// <summary>
         /// 停止指定动画，恢复为初始状态
         /// </summary>

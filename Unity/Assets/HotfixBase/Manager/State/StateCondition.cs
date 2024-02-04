@@ -29,7 +29,7 @@ namespace Ux
                         {
                             var cur = UnitState.Machine.CurrentNode;
                             if (cur != null)
-                            {                                
+                            {
                                 return States.Contains(cur.Name);
                             }
                             break;

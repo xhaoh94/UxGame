@@ -144,6 +144,7 @@ namespace Ux
     }
     public abstract class UnitStateTimeLine : UnitStateBase, IUnitTimelineState
     {
+        public virtual DirectorWrapMode WarpMode { get; } = DirectorWrapMode.None;
         void IUnitTimelineState.Set(Ux.PlayableDirectorComponent director)
         {
             PlayableDirector = director;
@@ -187,13 +188,12 @@ namespace Ux
             {
                 return;
             }
-            var asset = await StateMgr.Ins.GetSkillAssetAsync(ResName);
+            var asset = await StateMgr.Ins.GetTimeLineAssetAsync(ResName);
             if (Machine.CurrentNode != this)
             {
                 return;
             }
-            PlayableDirector.SetPlayableAsset(asset);
-            PlayableDirector.Play();
+            PlayableDirector.Play(asset, WarpMode);
         }
         protected virtual void OnPlayEnd(PlayableDirector playableDirector)
         {

@@ -16,6 +16,7 @@ namespace Ux
 
         protected override void OnDestroy()
         {
+            StateMgr.Ins.Remove(Parent.ID);
             Machine.Release();
             Machine = null;
         }

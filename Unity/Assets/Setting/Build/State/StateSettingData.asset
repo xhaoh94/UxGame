@@ -25,7 +25,7 @@ MonoBehaviour:
     Desc: "\u7AD9\u7ACB"
     ViewType: 1
     AnimName: Assets/Data/Res/Prefab/Hero/Hero_ZS/Hero_ZS@Stand.FBX
-    TimeLineName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Idle.playable
     Conditions:
     - Type: 0
       key: 
@@ -45,7 +45,7 @@ MonoBehaviour:
     Desc: "\u5954\u8DD1"
     ViewType: 1
     AnimName: Assets/Data/Res/Prefab/Hero/Hero_ZS/Hero_ZS@Run.FBX
-    TimeLineName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Run.playable
     Conditions:
     - Type: 0
       key: 
