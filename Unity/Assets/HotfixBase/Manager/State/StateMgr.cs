@@ -60,20 +60,6 @@ namespace Ux
             return temV == value;
         }
 
-        public void AddMove(long id)
-        {
-            Move.Add(id);
-        }
-        public void RevemoMove(long id)
-        {
-            Move.Remove(id);
-        }
-        public bool CheckMove(long id)
-        {
-            return Move.Contains(id);
-        }
-
-
         public void Update(long id)
         {
             if (!UnitStates.TryGetValue(id, out var stateList))
@@ -81,10 +67,10 @@ namespace Ux
                 return;
             }
             foreach (var state in stateList)
-            {                
+            {
                 if (state.IsMute) continue;
                 if (state.IsValid)
-                {                    
+                {
                     state.Machine.Enter(state.Name);
                     break;
                 }
@@ -92,7 +78,7 @@ namespace Ux
         }
 
 
-        public void AddState(UnitStateBase unitState)
+        public void AddState(UnitStateBase unitState, bool Sort)
         {
             if (unitState == null)
             {
@@ -105,19 +91,24 @@ namespace Ux
                 UnitStates.Add(id, unitStates);
             }
             unitStates.Add(unitState);
-            unitStates.Sort((a, b) =>
+            if (Sort)
             {
-                if (b.Priority == a.Priority)
+                unitStates.Sort((a, b) =>
                 {
-                    return unitStates.IndexOf(a) - unitStates.IndexOf(b);
-                }
-                return b.Priority - a.Priority;
-            });
+                    if (b.Priority == a.Priority)
+                    {
+                        return unitStates.IndexOf(a) - unitStates.IndexOf(b);
+                    }
+                    return b.Priority - a.Priority;
+                });
+            }
 
             foreach (var conditin in unitState.Conditions)
             {
                 conditin.Init(unitState);
             }
+
+
         }
     }
 }

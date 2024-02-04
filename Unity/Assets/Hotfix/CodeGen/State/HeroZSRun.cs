@@ -16,7 +16,7 @@ namespace Ux
 					"Idle",
 					"Run",
 				}),
-				CreateCondition(nameof(ActionMoveCondition)),
+				CreateCondition("HeroMoveCondition"),
 			};
 		}
 	}

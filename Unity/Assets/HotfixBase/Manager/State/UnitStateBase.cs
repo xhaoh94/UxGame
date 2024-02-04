@@ -30,8 +30,7 @@ namespace Ux
         protected override void OnCreate(object args = null)
         {
             base.OnCreate(args);
-            InitConditions();
-            StateMgr.Ins.AddState(this);
+            InitConditions();           
         }
 
         protected virtual void InitConditions()
@@ -50,15 +49,17 @@ namespace Ux
                 case nameof(TemBoolVarCondition):
                     type = typeof(TemBoolVarCondition);
                     break;
-                case nameof(ActionMoveCondition):
-                    type = typeof(ActionMoveCondition);
-                    break;
                 case nameof(ActionKeyboardCondition):
                     type = typeof(ActionKeyboardCondition);
                     break;
                 case nameof(ActionInputCondition):
                     type = typeof(ActionInputCondition);
                     break;
+            }
+            if (type == null)
+            {
+                Log.Error($"没有找到名字为{condition}的条件");
+                return null;
             }
             return (StateConditionBase)Activator.CreateInstance(type, args);
         }

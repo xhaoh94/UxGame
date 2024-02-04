@@ -11,10 +11,10 @@ namespace Ux
         public enum Type
         {
             State,
-            TempBoolVar,
-            Action_Move,
+            TempBoolVar,            
             Action_Keyboard,
             Action_Input,
+            Custom,
         }
         public enum State
         {

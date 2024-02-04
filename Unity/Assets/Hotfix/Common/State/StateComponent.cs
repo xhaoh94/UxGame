@@ -11,10 +11,7 @@ namespace Ux
         public void OnAwake()
         {
             Machine = StateMachine.CreateByPool<UnitStateMachine>(true, this);
-            Machine.AddNode<HeroZSIdle>();
-            Machine.AddNode<HeroZSRun>();
-            //Machine.AddNode<StateAttack>();
-            //Machine.AddNode<StateSkilll08>();            
+            Machine.InitGroup("HeroZs");
         }
 
         protected override void OnDestroy()
@@ -33,5 +30,5 @@ namespace Ux
         {
             //Machine.Enter<StateIdle>();            
         }
-    }  
+    }
 }

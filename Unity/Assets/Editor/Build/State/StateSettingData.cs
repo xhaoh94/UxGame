@@ -21,6 +21,7 @@ namespace Ux
         [Serializable]
         public class StateData
         {
+            public string Group;
             public int Pri = 0;
             public bool IsMute;
             public string ClsName;
@@ -45,11 +46,14 @@ namespace Ux
             public StateConditionBase.Trigger triggerType;
             public Key keyType;
             public StateConditionBase.Input inputType;
+
+            public string customName;
+            public string customValue;
         }
 
         public string path = "Assets/Hotfix/CodeGen/State";
         public string ns = "Ux";
-
+        public List<string> groups = new List<string>();
         public List<StateData> StateSettings = new List<StateData>();
 
         /// <summary>

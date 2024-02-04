@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   path: Assets/Hotfix/CodeGen/State
   ns: Ux
+  groups:
+  - HeroZs
   StateSettings:
-  - Pri: 0
+  - Group: HeroZs
+    Pri: 0
     IsMute: 0
     ClsName: HeroZSIdle
     StateName: Idle
@@ -32,7 +35,10 @@ MonoBehaviour:
       triggerType: 0
       keyType: 0
       inputType: 0
-  - Pri: 10
+      customName: 
+      customValue: 
+  - Group: HeroZs
+    Pri: 10
     IsMute: 0
     ClsName: HeroZSRun
     StateName: Run
@@ -51,7 +57,9 @@ MonoBehaviour:
       triggerType: 0
       keyType: 0
       inputType: 0
-    - Type: 2
+      customName: 
+      customValue: 
+    - Type: 4
       key: 
       value: 0
       stateType: 0
@@ -59,3 +67,5 @@ MonoBehaviour:
       triggerType: 0
       keyType: 0
       inputType: 0
+      customName: HeroMoveCondition
+      customValue: 

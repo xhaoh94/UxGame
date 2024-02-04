@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Ux;
 
-public class StateWindow : EditorWindow
+public partial class StateWindow : EditorWindow
 {
     [SerializeField]
     private VisualTreeAsset m_VisualTreeAsset = default;
@@ -22,30 +22,9 @@ public class StateWindow : EditorWindow
     }
 
     private StateSettingData Setting;
-    private int _lastModifyExportIndex = 0;
-    ListView _listView;
-    Button _btnAdd;
-    Button _btnRemove;
 
-    VisualElement _infoView;
+    Button _btnExport;
 
-    TextField _txtPath;
-    TextField _txtNs;
-
-
-    IntegerField _txtPri;
-    Toggle _tgMute;
-    TextField _txtClass;
-    TextField _txtName;
-    TextField _txtDesc;
-    EnumField _viewType;
-    ObjectField _viewAnim;
-    ObjectField _viewTimeline;
-    VisualElement _content;
-
-    Button _btnCreate;
-
-    Button _btnAddCondition;
 
 
     public void CreateGUI()
@@ -56,98 +35,15 @@ public class StateWindow : EditorWindow
             VisualElement root = rootVisualElement;
             m_VisualTreeAsset.CloneTree(root);
 
-            _listView = root.Q<ListView>("listView");
-            _listView.makeItem = MakeListViewItem;
-            _listView.bindItem = BindListViewItem;
-#if UNITY_2022_1_OR_NEWER
-            _listView.selectionChanged += OnListViewSelectionChange;
-#else
-            _listView.onSelectionChange += OnListViewSelectionChange;
-#endif
+            OnCreateGroup();
+            OnCreateListView();
+            OnCreateView();
+            OnCreateCondition();
 
-            _btnAdd = root.Q<Button>("btnAdd");
-            _btnAdd.clicked += OnBtnAddClick;
-            _btnRemove = root.Q<Button>("btnRemove");
-            _btnRemove.clicked += OnBtnRemoveClick;
-
-            _infoView = root.Q<VisualElement>("infoView");
+            _btnExport = root.Q<Button>("btnExport");
+            _btnExport.clicked += OnBtnCreate;
 
 
-            _txtPri = root.Q<IntegerField>("txtPri");
-            _txtPri.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.Pri = evt.newValue;
-            });
-
-            _tgMute = root.Q<Toggle>("tgMute");
-            _tgMute.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.IsMute = evt.newValue;
-            });
-
-            _txtClass = root.Q<TextField>("txtClass");
-            _txtClass.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.ClsName = evt.newValue;
-            });
-
-
-            _txtPath = root.Q<TextField>("txtPath");
-            _txtPath.RegisterValueChangedCallback(evt =>
-            {
-                Setting.path = evt.newValue;
-            });
-            var btnCodePath = root.Q<Button>("btnCodePath");
-            btnCodePath.clicked += OnBtnCodeGenPathClick;
-
-            _txtNs = root.Q<TextField>("txtNs");
-            _txtNs.RegisterValueChangedCallback(evt =>
-            {
-                Setting.ns = evt.newValue;
-            });
-
-            _txtName = root.Q<TextField>("txtName");
-            _txtName.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.StateName = evt.newValue;
-                OnUpdateListView();
-            });
-            _txtDesc = root.Q<TextField>("txtDesc");
-            _txtDesc.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.Desc = evt.newValue;
-                OnUpdateListView();
-            });
-            _viewType = root.Q<EnumField>("viewType");
-            _viewType.Init(StateViewType.None);
-            _viewType.RegisterValueChangedCallback(evt =>
-            {
-                SelectItem.ViewType = (StateViewType)evt.newValue;
-                RefreshElement();
-            });
-            _viewAnim = root.Q<ObjectField>("viewAnim");
-            _viewAnim.RegisterValueChangedCallback(evt =>
-            {
-                var path = AssetDatabase.GetAssetPath(evt.newValue);
-                SelectItem.AnimName = path;
-            });
-            _viewTimeline = root.Q<ObjectField>("viewTimeline");
-            _viewTimeline.RegisterValueChangedCallback(evt =>
-            {
-                var path = AssetDatabase.GetAssetPath(evt.newValue);
-                SelectItem.TimeLineName = path;
-            });
-
-
-            _btnCreate = root.Q<Button>("btnCreate");
-            _btnCreate.clicked += OnBtnCreate;
-
-            _btnAddCondition = root.Q<Button>("btnAddCondition");
-            _btnAddCondition.clicked += OnBtnAddState;
-
-            _content = root.Q<VisualElement>("content");
-
-            _lastModifyExportIndex = 0;
             OnUpdateListView();
         }
         catch (Exception ex)
@@ -155,146 +51,9 @@ public class StateWindow : EditorWindow
             Log.Error(ex);
         }
     }
-    void OnBtnCodeGenPathClick()
-    {
-        var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", Setting.path, "");
-        if (temPath.Length == 0)
-        {
-            return;
-        }
 
-        if (!Directory.Exists(temPath))
-        {
-            EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-            return;
-        }
-        Setting.path = temPath;
-        _txtPath.SetValueWithoutNotify(temPath);
-    }
-    private VisualElement MakeListViewItem()
+    void ExportItem(StateSettingData.StateData data)
     {
-        VisualElement element = new VisualElement();
-        {
-            var label = new Label();
-            label.name = "Label1";
-            label.style.unityTextAlign = TextAnchor.MiddleLeft;
-            label.style.flexGrow = 1f;
-            label.style.height = 20f;
-            element.Add(label);
-        }
-
-        return element;
-    }
-    private void BindListViewItem(VisualElement element, int index)
-    {
-        var setting = Setting.StateSettings[index];
-
-        var textField1 = element.Q<Label>("Label1");
-        textField1.text = setting.StateName;
-        if (!string.IsNullOrEmpty(setting.Desc))
-        {
-            if (string.IsNullOrEmpty(setting.StateName))
-            {
-                textField1.text = setting.Desc;
-            }
-            else
-            {
-                textField1.text += "@" + setting.Desc;
-            }
-        }
-    }
-
-    private void OnListViewSelectionChange(IEnumerable<object> objs)
-    {
-        if (_listView.selectedIndex < 0)
-        {
-            return;
-        }
-        _lastModifyExportIndex = _listView.selectedIndex;
-        RefreshView();
-    }
-    void RefreshView()
-    {
-        _txtPath.SetValueWithoutNotify(Setting.path);
-        _txtNs.SetValueWithoutNotify(Setting.ns);
-        if (SelectItem == null)
-        {
-            _infoView.style.display = DisplayStyle.None;
-            return;
-        }
-        _infoView.style.display = DisplayStyle.Flex;
-        _txtPri.SetValueWithoutNotify(SelectItem.Pri);
-        _tgMute.SetValueWithoutNotify(SelectItem.IsMute);
-        _txtClass.SetValueWithoutNotify(SelectItem.ClsName);
-        _viewType.SetValueWithoutNotify(SelectItem.ViewType);
-        _txtName.SetValueWithoutNotify(SelectItem.StateName);
-        _txtDesc.SetValueWithoutNotify(SelectItem.Desc);
-        _viewAnim.SetValueWithoutNotify(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(SelectItem.AnimName));
-        _viewTimeline.SetValueWithoutNotify(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(SelectItem.TimeLineName));
-        RefreshElement();
-        RefreshCondition();
-    }
-    void RefreshElement()
-    {
-        switch (SelectItem.ViewType)
-        {
-            case StateViewType.None:
-                _viewAnim.style.display = DisplayStyle.None;
-                _viewTimeline.style.display = DisplayStyle.None;
-                break;
-            case StateViewType.Anim:
-                _viewAnim.style.display = DisplayStyle.Flex;
-                _viewTimeline.style.display = DisplayStyle.None;
-                break;
-            case StateViewType.Timeline:
-                _viewAnim.style.display = DisplayStyle.None;
-                _viewTimeline.style.display = DisplayStyle.Flex;
-                break;
-        }
-    }
-
-    private void OnUpdateListView()
-    {
-        _listView.Clear();
-        _listView.ClearSelection();
-        _listView.itemsSource = Setting.StateSettings;
-        _listView.Rebuild();
-        if (Setting.StateSettings.Count > 0)
-        {
-            if (_lastModifyExportIndex >= 0)
-            {
-                if (_lastModifyExportIndex >= _listView.itemsSource.Count)
-                {
-                    _lastModifyExportIndex = 0;
-                }
-                _listView.selectedIndex = _lastModifyExportIndex;
-            }
-        }
-        else
-        {
-            RefreshView();
-        }
-    }
-
-    void OnBtnAddClick()
-    {
-        var item = new StateSettingData.StateData();
-        Setting.StateSettings.Add(item);
-        OnUpdateListView();
-    }
-    void OnBtnRemoveClick()
-    {
-        if (SelectItem == null)
-        {
-            return;
-        }
-        Setting.StateSettings.Remove(SelectItem);
-        OnUpdateListView();
-    }
-
-    void OnBtnCreate()
-    {
-        var data = SelectItem;
         if (data == null) return;
         if (string.IsNullOrEmpty(data.ClsName)) return;
         var write = new WriteData();
@@ -357,16 +116,23 @@ public class StateWindow : EditorWindow
                     }
                     break;
                 case StateConditionBase.Type.TempBoolVar:
-                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),{condition.key}, {condition.value}),");                    
-                    break;
-                case StateConditionBase.Type.Action_Move:
-                    write.Writeln($"CreateCondition(nameof({nameof(ActionMoveCondition)})),");                    
+                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),{condition.key}, {condition.value}),");
                     break;
                 case StateConditionBase.Type.Action_Keyboard:
-                    write.Writeln($"CreateCondition(nameof({nameof(ActionKeyboardCondition)}),UnityEngine.InputSystem.Key.{condition.keyType}, StateConditionBase.Trigger.{condition.triggerType}),");                    
+                    write.Writeln($"CreateCondition(nameof({nameof(ActionKeyboardCondition)}),UnityEngine.InputSystem.Key.{condition.keyType}, StateConditionBase.Trigger.{condition.triggerType}),");
                     break;
                 case StateConditionBase.Type.Action_Input:
-                    write.Writeln($"CreateCondition(nameof({nameof(ActionInputCondition)}),StateConditionBase.Input.{condition.inputType}, StateConditionBase.Trigger.{condition.triggerType}),");                    
+                    write.Writeln($"CreateCondition(nameof({nameof(ActionInputCondition)}),StateConditionBase.Input.{condition.inputType}, StateConditionBase.Trigger.{condition.triggerType}),");
+                    break;
+                case StateConditionBase.Type.Custom:
+                    if (string.IsNullOrEmpty(condition.customValue))
+                    {
+                        write.Writeln($"CreateCondition(\"{condition.customName}\"),");
+                    }
+                    else
+                    {
+                        write.Writeln($"CreateCondition(\"{condition.customName}\",\"{condition.customValue}\"),");
+                    }
                     break;
             }
 
@@ -379,40 +145,60 @@ public class StateWindow : EditorWindow
         write.EndBlock();
         write.Export($"{Setting.path}/", data.ClsName);
     }
-    void OnBtnAddState()
+    void OnBtnCreate()
     {
-        var element = MakeConfitionItem();
-        var data = new StateSettingData.StateCondition();
-        SelectItem.Conditions.Add(data);
-        BindConditionItem(element, _content.childCount, data);
-        _content.Add(element);
-    }
-    void RefreshCondition()
-    {
-        _content.Clear();
-        for (int i = 0; i < SelectItem.Conditions.Count; i++)
+        var write = new WriteData();
+        write.Writeln(@"//自动生成的代码，请勿修改!!!");
+        write.Writeln("using System;");
+        write.Writeln("using System.Collections.Generic;");
+        write.Writeln($"namespace {Setting.ns}");
+        write.StartBlock();
+        write.Writeln("public static partial class StateMgrEx");
+        write.StartBlock();
+        write.Writeln("readonly static Dictionary<string, HashSet<Type>> _stateGroup = new Dictionary<string, HashSet<Type>>()");
+        write.StartBlock();
+        foreach (var group in Setting.groups)
         {
-            var element = MakeConfitionItem();
-            BindConditionItem(element, i, SelectItem.Conditions[i]);
-            _content.Add(element);
+            write.Write($"{{ \"{group}\",new HashSet<Type>() {{");
+            foreach (var item in Setting.StateSettings)
+            {
+                if (item.Group.Contains(group))
+                {
+                    write.Write($" typeof({item.ClsName}),", false);
+                }
+            }
+            write.Writeln($"}}}},", false);
         }
+        write.EndBlock(false);
+        write.Writeln(";", false);
+        write.Writeln("public static void InitGroup(this UnitStateMachine machine, string group)");
+        write.StartBlock();
+        write.Writeln("if (string.IsNullOrEmpty(group)) return;");
+        write.Writeln("if (_stateGroup.TryGetValue(group, out var states))");
+        write.StartBlock();
+        write.Writeln("int index = 0;");
+        write.Writeln("foreach (var state in states)");
+        write.StartBlock();
+        write.Writeln("var item = Activator.CreateInstance(state) as UnitStateBase;");
+        write.Writeln("machine.AddNode(item);");
+        write.Writeln("StateMgr.Ins.AddState(item, index == states.Count - 1);");
+        write.Writeln("index++;");
+        write.EndBlock();
+        write.EndBlock();
+        write.EndBlock();
+        write.EndBlock();
+        write.EndBlock();
+        write.Export($"{Setting.path}/", "StateMgrEx");
+
+        foreach (var item in Setting.StateSettings)
+        {
+            ExportItem(item);
+        }
+
+        EditorUtility.DisplayDialog("提示", "导出成功", "确定");
     }
 
-    private StateConditionContent MakeConfitionItem()
-    {
-        var element = new StateConditionContent();
-        return element;
-    }
-    private void BindConditionItem(StateConditionContent element, int index, StateSettingData.StateCondition condition)
-    {
-        var btn = element.Q<Button>("Sub");
-        btn.clicked += () =>
-        {
-            _content.RemoveAt(index);
-            SelectItem.Conditions.RemoveAt(index);
-        };
-        element.SetData(condition);
-    }
+
 
     StateSettingData.StateData SelectItem
     {

@@ -49,14 +49,14 @@ namespace Ux
         {
             switch (condition)
             {
-                case nameof(ActionMoveCondition):
+                case nameof(HeroMoveCondition):
                     return new HeroMoveCondition();
             }
             return base.CreateCondition(condition, args);
         }
     }
 
-    public class HeroMoveCondition : ActionMoveCondition
+    public class HeroMoveCondition : CustomCondition
     {
         public override bool IsValid
         {
@@ -65,6 +65,6 @@ namespace Ux
                 var unit = (UnitState.Machine.Owner as StateComponent).ParentAs<Unit>();
                 return unit.Path.IsRun;
             }
-        }
+        }        
     }
 }

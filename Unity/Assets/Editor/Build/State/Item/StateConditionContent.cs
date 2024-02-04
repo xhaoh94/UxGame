@@ -62,6 +62,9 @@ public class StateConditionContent : TemplateContainer
             case StateConditionBase.Type.Action_Input:
                 item = new ActionInputItem();
                 break;
+            case StateConditionBase.Type.Custom:
+                item = new CustomItem();
+                break;
         }
         if (item != null)
         {
