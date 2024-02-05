@@ -40,7 +40,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311992, g: 0.38074034, b: 0.35872713, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311918, g: 0.3807398, b: 0.35872716, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -652,15 +652,17 @@ PlayableDirector:
   m_GameObject: {fileID: 1655780031}
   m_Enabled: 1
   serializedVersion: 3
-  m_PlayableAsset: {fileID: 11400000, guid: c900ca8f2c081d84faf0bfa80e0715d4, type: 2}
-  m_InitialState: 0
-  m_WrapMode: 2
+  m_PlayableAsset: {fileID: 11400000, guid: d0317cdc230f633458c73d9d69af7081, type: 2}
+  m_InitialState: 1
+  m_WrapMode: 1
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
   m_SceneBindings:
   - key: {fileID: -459823142539254494, guid: 5806d0f94bf4e4347b0c8ec01342c24d, type: 2}
     value: {fileID: 1655780033}
   - key: {fileID: -459823142539254494, guid: c900ca8f2c081d84faf0bfa80e0715d4, type: 2}
+    value: {fileID: 1655780033}
+  - key: {fileID: -2794529655256408095, guid: d0317cdc230f633458c73d9d69af7081, type: 2}
     value: {fileID: 1655780033}
   m_ExposedReferences:
     m_References:

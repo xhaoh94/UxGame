@@ -32,7 +32,7 @@ namespace Ux
         public Action<PlayableDirector> OnPlayPauseEvent;
         public Action<PlayableDirector> OnPlayEndEvent;
         void OnPlayStart(PlayableDirector playableDirector)
-        {            
+        {
             OnPlayStartEvent?.Invoke(playableDirector);
         }
         void OnPlayPause(PlayableDirector playableDirector)
@@ -54,24 +54,6 @@ namespace Ux
             _bingObjs[trackName] = o;
         }
 
-        public T GetTrack<T>(StateTimeline asset, string trackName) where T : TrackAsset
-        {
-            if (asset == null)
-            {
-                return null;
-            }
-            return asset.GetTrack<T>(trackName);
-        }
-
-        public T GetClip<T>(StateTimeline asset, string trackName, string clipName) where T : PlayableAsset
-        {
-            if (asset == null)
-            {
-                return null;
-            }
-            return asset.GetClip<T>(trackName, clipName);
-        }
-
         public void Play(StateTimeline asset, DirectorWrapMode mode)
         {
             if (asset == null)
@@ -83,7 +65,7 @@ namespace Ux
             {
                 foreach (var kv in _bingObjs)
                 {
-                    var track = GetTrack<TrackAsset>(asset, kv.Key);
+                    var track = asset.GetTrack<TrackAsset>(kv.Key);
                     if (track == null) continue;
 
                     _director.SetGenericBinding(track, kv.Value);

@@ -7,7 +7,7 @@ using UnityEngine.Timeline;
 namespace Ux
 {
     public class StateTimeline
-    {
+    {        
         public UnityEngine.Timeline.TimelineAsset Asset { get; }
         Dictionary<string, PlayableBinding> bindings;
         Dictionary<string, Dictionary<string, PlayableAsset>> clips;

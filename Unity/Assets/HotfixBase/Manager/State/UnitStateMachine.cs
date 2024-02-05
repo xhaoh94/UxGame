@@ -16,9 +16,9 @@ namespace Ux
             var b = base.Enter(entryNode);
             if (b && changed)
             {
-                //StateMgr.Ins.Update(ID);
+                StateMgr.Ins.Update(ID, StateConditionBase.Type.State);
             }
             return b;
-        }        
+        }
     }
 }

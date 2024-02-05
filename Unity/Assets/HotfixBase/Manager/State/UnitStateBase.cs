@@ -56,6 +56,11 @@ namespace Ux
 
         protected virtual StateConditionBase CreateCondition(string condition, params object[] args)
         {
+            if (string.IsNullOrEmpty(condition))
+            {
+                Log.Error($"状态[{Name}]CreateCondition条件为空");
+                return null;
+            }
             Type type = null;
             switch (condition)
             {
@@ -141,6 +146,14 @@ namespace Ux
             }
             Anim.Play(ResName, 0.3f);
         }
+
+        public void Stop()
+        {
+            if (!string.IsNullOrEmpty(ResName))
+            {
+                Anim?.Stop(ResName);
+            }
+        }
     }
     public abstract class UnitStateTimeLine : UnitStateBase, IUnitTimelineState
     {
@@ -168,6 +181,10 @@ namespace Ux
                 PlayableDirector.OnPlayEndEvent += OnPlayEnd;
             }
             LoadAsset().Forget();
+            if (Machine.PreviousNode is UnitStateAnim AnimNode)
+            {
+                AnimNode.Stop();
+            }
         }
         protected override void OnExit()
         {

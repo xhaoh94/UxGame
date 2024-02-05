@@ -27,7 +27,7 @@ namespace Ux
         protected override void OnExit()
         {
             base.OnExit();            
-            Unit.Path.Stop(false);            
+            Unit.Path.Stop(false);                 
         }
         protected override void OnUpdate()
         {

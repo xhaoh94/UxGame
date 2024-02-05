@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Animations;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
@@ -11,7 +12,7 @@ namespace Ux
 {
     [System.Serializable]
     public class TriggerPA : PlayableAsset
-    {        
+    {
         public TriggerData triggerData;
         public override Playable CreatePlayable(PlayableGraph graph, GameObject go)
         {
@@ -64,5 +65,6 @@ namespace Ux
         {
 
         }
-    }
+    }    
+
 }

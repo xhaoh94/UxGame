@@ -16,7 +16,7 @@ namespace Ux
             Animator = animator;
             string name = animator.gameObject.name;
             _graph = PlayableGraph.Create(name);
-            _graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
 
             _mixerRoot = AnimationLayerMixerPlayable.Create(_graph);
             var _output = AnimationPlayableOutput.Create(_graph, name, animator);

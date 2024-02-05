@@ -10,7 +10,11 @@ namespace Ux
 {
     partial class HeroZSAttack
     {        
-        public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();        
+        public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
+        protected override void OnEnter()
+        {
+            base.OnEnter();
+        }
         protected override void OnPlayEnd(PlayableDirector playableDirector)
         {
             base.OnPlayEnd(playableDirector);
