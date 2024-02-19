@@ -20,8 +20,8 @@ namespace Ux
 
         public const string HotfixScene = "Hotfix";
 
-        private const string AotPrefix = "AOT_{0}";
-        private const string HotPrefix = "HOT_{0}";
+        private const string AotPrefix = "Code/{0}";
+        private const string HotPrefix = "Code_{0}";
 
         private List<Type> _hotfixTypes;
 
@@ -83,11 +83,8 @@ namespace Ux
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = string.Format(AotPrefix, aotDllName);
-                byte[] assBytes = null;
-                using (var handle = YooMgr.Ins.GetPackage(YooType.Code).Package.LoadRawFileSync(dllName))
-                {
-                    assBytes = handle.GetRawFileData();
-                }
+                var ta = Resources.Load<TextAsset>(dllName);                
+                byte[] assBytes = ta.bytes;
                 if (assBytes == null)
                 {
                     Log.Error($"LoadMetadataForAOTAssembly 加载失败:{dllName}");

@@ -13,8 +13,8 @@ namespace HybridCLR.Commands
 {
     public class HybridCLRCommand
     {
-        private const string HotDir = "Assets/Data/Res/Code/HOT";
-        private const string AotDir = "Assets/Data/Res/Code/AOT";
+        private const string HotDir = "Assets/Data/Res/Code";
+        private const string AotDir = "Assets/Resources/Code";
         private const string ComplileAOTTempPath = "./Release_Temp";
 
         [UnityEditor.Callbacks.DidReloadScripts]

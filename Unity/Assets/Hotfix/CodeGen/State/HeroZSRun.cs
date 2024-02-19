@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 namespace Ux
 {
-	public partial class HeroZSRun : UnitStateAnim
+	public partial class HeroZSRun : UnitStateTimeLine
 	{
 		public override int Priority => 10;
 		public override string Name => "Run";
-		public override string ResName => "Hero_ZS@Run";
+		public override string ResName => "ZS_Run";
 		protected override void InitConditions()
 		{
 			Conditions = new List<StateConditionBase>()
