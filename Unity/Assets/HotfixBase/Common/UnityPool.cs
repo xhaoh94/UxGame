@@ -11,6 +11,18 @@ public static class UnityPool
     private static readonly Dictionary<string, Queue<UnityEngine.Object>> _unity = new Dictionary<string, Queue<UnityEngine.Object>>();
 #if UNITY_EDITOR
     static Transform _pool_content;
+    public static Transform PoolContent
+    {
+        get
+        {
+            if (_pool_content == null)
+            {
+                _pool_content = new GameObject("[UnityPool]").transform;
+                UnityEngine.Object.DontDestroyOnLoad(PoolContent);
+            }
+            return _pool_content;
+        }
+    }
     static Dictionary<string, Transform> _pool_location_content = new Dictionary<string, Transform>();
 #endif
     public static void Init()
@@ -76,14 +88,8 @@ public static class UnityPool
 #if UNITY_EDITOR
             if (!_pool_location_content.TryGetValue(location, out var locationContent))
             {
-                if (_pool_content == null)
-                {
-                    _pool_content = new GameObject("[UnityPool]").transform;
-                    UnityEngine.Object.DontDestroyOnLoad(_pool_content);
-                }
-
                 locationContent = new GameObject($"[{location}]").transform;
-                locationContent.SetParent(_pool_content);
+                locationContent.SetParent(PoolContent);
                 _pool_location_content.Add(location, locationContent);
             }
             go.transform.parent = locationContent;

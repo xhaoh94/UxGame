@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
 using System.Threading;
+using UnityEngine;
 using static Ux.UIMgr;
 
 namespace Ux
@@ -66,6 +67,10 @@ namespace Ux
     }
     public abstract class UIBase : UIObject, IUI
     {
+#if UNITY_EDITOR
+        static Transform __ui_cache_content;
+#endif
+
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         public virtual bool IsDestroy => true;
@@ -95,8 +100,16 @@ namespace Ux
             {
                 Log.Fatal("没有指定pkgName或是resName");
             }
-
-            return UIPackage.CreateObject(pkg, res);
+            var gobj = UIPackage.CreateObject(pkg, res);
+#if UNITY_EDITOR
+            if (__ui_cache_content == null)
+            {
+                __ui_cache_content = new GameObject($"[UI]").transform;
+                __ui_cache_content.SetParent(UnityPool.PoolContent);
+            }
+            gobj.displayObject.home = __ui_cache_content;
+#endif
+            return gobj;
         }
         public IFilter Filter
         {
@@ -161,7 +174,7 @@ namespace Ux
         {
         }
         void IUI.DoShow(bool isAnim, int id, object param, bool isStack)
-        {            
+        {
             switch (State)
             {
                 case UIState.Show:
@@ -193,7 +206,7 @@ namespace Ux
         }
 
         void IUI.DoHide(bool isAnim, bool isStack)
-        {            
+        {
             switch (State)
             {
                 case UIState.Hide:
