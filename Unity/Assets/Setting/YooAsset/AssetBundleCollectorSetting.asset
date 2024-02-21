@@ -113,8 +113,8 @@ MonoBehaviour:
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Code/HOT
-        CollectorGUID: 95b205c0d1216a345a2e5f51c520b77a
+      - CollectPath: Assets/Data/Res/Code
+        CollectorGUID: 5136dcfd732443e4fbcedd13488bb8d5
         CollectorType: 0
         AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackRawFile

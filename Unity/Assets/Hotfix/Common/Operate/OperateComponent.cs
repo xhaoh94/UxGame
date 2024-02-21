@@ -65,7 +65,7 @@ namespace Ux
                     if (hitInfo.transform.gameObject.CompareTag("Ground") ||
                         hitInfo.transform.gameObject.CompareTag("FogOfWar"))
                     {
-                        Log.Debug("点击地板");
+                        //Log.Debug("点击地板");
                         Unit.Seeker.StartPath(hitInfo.point);
                     }
                 }
@@ -73,7 +73,7 @@ namespace Ux
         }
 
         public void OnKey(InputAction.CallbackContext context)
-        {
+        {            
             StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Action_Keyboard);
             //if (context.performed)
             //{

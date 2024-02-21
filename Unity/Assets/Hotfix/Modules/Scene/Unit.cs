@@ -117,7 +117,7 @@ namespace Ux
             AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
             AddComponent<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
             AddComponent<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
-            Director.SetBinding("Animation Track", Anim.Animator);
+            Director.SetBinding("Anim Track", Model.GetComponentInChildren<Animator>());
             StateMgr.Ins.Update(ID);
         }
 

@@ -6,7 +6,7 @@ namespace Ux
 {
     public partial class HeroZSIdle
     {
-        public override DirectorWrapMode WarpMode => DirectorWrapMode.Loop;
+        //public override DirectorWrapMode WarpMode => DirectorWrapMode.Loop;
         public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
         protected override void OnEnter()
         {
@@ -16,7 +16,7 @@ namespace Ux
     }
     public partial class HeroZSRun
     {
-        public override DirectorWrapMode WarpMode => DirectorWrapMode.Loop;
+        //public override DirectorWrapMode WarpMode => DirectorWrapMode.Loop;
         public Unit Unit => (Machine.Owner as StateComponent).ParentAs<Unit>();
 
 

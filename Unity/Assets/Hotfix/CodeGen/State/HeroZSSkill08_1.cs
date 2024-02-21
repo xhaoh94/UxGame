@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 namespace Ux
 {
-	public partial class HeroZSRun : UnitStateAnim
+	public partial class HeroZSSkill08_1 : UnitStateTimeLine
 	{
-		public override int Priority => 10;
-		public override string Name => "Run";
-		public override string ResName => "Hero_ZS@Run";
+		public override int Priority => 21;
+		public override string Name => "Skill08_1";
+		public override string ResName => "ZS_Skill08_1";
 		protected override void InitConditions()
 		{
 			Conditions = new List<StateConditionBase>()
@@ -16,7 +16,7 @@ namespace Ux
 					"Idle",
 					"Run",
 				}),
-				CreateCondition("HeroMoveCondition"),
+				CreateCondition(nameof(ActionKeyboardCondition),UnityEngine.InputSystem.Key.R, StateConditionBase.Trigger.Down),
 			};
 		}
 	}

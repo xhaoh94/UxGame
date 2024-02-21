@@ -27,9 +27,9 @@ namespace Ux
                 {
                     switch (Tri)
                     {
-                        case Trigger.Down:
+                        case Trigger.Down:                            
                             return btn.wasPressedThisFrame;
-                        case Trigger.Up:
+                        case Trigger.Up:                            
                             return btn.wasReleasedThisFrame;
                         case Trigger.Pressed:
                             return btn.isPressed;

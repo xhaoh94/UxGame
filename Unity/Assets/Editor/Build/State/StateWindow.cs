@@ -116,7 +116,7 @@ public partial class StateWindow : EditorWindow
                     }
                     break;
                 case StateConditionBase.Type.TempBoolVar:
-                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),{condition.key}, {condition.value}),");
+                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),\"{condition.key}\", {condition.value.ToString().ToLower()}),");
                     break;
                 case StateConditionBase.Type.Action_Keyboard:
                     write.Writeln($"CreateCondition(nameof({nameof(ActionKeyboardCondition)}),UnityEngine.InputSystem.Key.{condition.keyType}, StateConditionBase.Trigger.{condition.triggerType}),");
@@ -191,7 +191,7 @@ public partial class StateWindow : EditorWindow
         write.Writeln("foreach (var state in states)");
         write.StartBlock();
         write.Writeln("var item = Activator.CreateInstance(state) as IUnitState;");
-        write.Writeln("item.Set(OwnerID);");       
+        write.Writeln("item.Set(OwnerID);");
         write.Writeln("machine.AddNode(item);");
         write.Writeln("StateMgr.Ins.AddState(item, index == states.Count - 1);");
         write.Writeln("index++;");

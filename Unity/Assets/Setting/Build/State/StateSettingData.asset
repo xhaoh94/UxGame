@@ -101,3 +101,158 @@ MonoBehaviour:
       inputType: 0
       customName: 
       customValue: 
+  - Group: HeroZs
+    Pri: 21
+    IsMute: 0
+    ClsName: HeroZSSkill08_1
+    StateName: Skill08_1
+    Desc: "\u6280\u80FD8@1"
+    ViewType: 2
+    AnimName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Skill08_1.playable
+    Conditions:
+    - Type: 0
+      key: 
+      value: 0
+      stateType: 1
+      states:
+      - Idle
+      - Run
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 2
+      key: 
+      value: 0
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 32
+      inputType: 0
+      customName: 
+      customValue: 
+  - Group: HeroZs
+    Pri: 22
+    IsMute: 0
+    ClsName: HeroZSSkill08_2
+    StateName: Skill08_2
+    Desc: "\u6280\u80FD8@2"
+    ViewType: 2
+    AnimName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Skill08_2.playable
+    Conditions:
+    - Type: 0
+      key: 
+      value: 0
+      stateType: 1
+      states:
+      - Skill08_1
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 1
+      key: Skill08_1
+      value: 1
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 2
+      key: 
+      value: 0
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 32
+      inputType: 0
+      customName: 
+      customValue: 
+  - Group: HeroZs
+    Pri: 23
+    IsMute: 0
+    ClsName: HeroZSSkill08_3
+    StateName: Skill08_3
+    Desc: "\u6280\u80FD8"
+    ViewType: 2
+    AnimName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Skill08_3.playable
+    Conditions:
+    - Type: 0
+      key: 
+      value: 0
+      stateType: 1
+      states:
+      - Skill08_2
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 1
+      key: Skill08_2
+      value: 1
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 2
+      key: 
+      value: 0
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 32
+      inputType: 0
+      customName: 
+      customValue: 
+  - Group: HeroZs
+    Pri: 24
+    IsMute: 0
+    ClsName: HeroZSSkill08_4
+    StateName: Skill08_4
+    Desc: "\u6280\u80FD8"
+    ViewType: 2
+    AnimName: 
+    TimeLineName: Assets/Data/Res/Timeline/Hero/Hero_ZS/ZS_Skill08_4.playable
+    Conditions:
+    - Type: 0
+      key: 
+      value: 0
+      stateType: 1
+      states:
+      - Skill08_3
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 1
+      key: Skill08_3
+      value: 1
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 0
+      inputType: 0
+      customName: 
+      customValue: 
+    - Type: 2
+      key: 
+      value: 0
+      stateType: 0
+      states: []
+      triggerType: 0
+      keyType: 32
+      inputType: 0
+      customName: 
+      customValue: 

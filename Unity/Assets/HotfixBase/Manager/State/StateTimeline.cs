@@ -21,9 +21,10 @@ namespace Ux
 
             foreach (var o in asset.outputs)
             {
+                var track = o.sourceObject as TrackAsset;
+                if (track == null) continue;
                 var trackName = o.streamName;
                 bindings.Add(trackName, o);
-                var track = o.sourceObject as TrackAsset;
                 var clipList = track.GetClips();
                 foreach (var c in clipList)
                 {

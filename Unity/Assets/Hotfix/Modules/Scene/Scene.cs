@@ -23,7 +23,7 @@ namespace Ux
 
         public void AddPlayer(PlayerData playerData)
         {
-            Log.Debug("创建Unit" + playerData.id);
+            //Log.Debug("创建Unit" + playerData.id);
             var player = AddChild<Unit, PlayerData>(playerData.id, playerData);
             players.Add(playerData.id, player);
         }
@@ -31,7 +31,7 @@ namespace Ux
         [Evt(EventType.UNIT_MOVE)]
         void _OnUnitMove(Pb.BcstUnitMove param)
         {
-            Log.Debug("移动Unit" + param.roleId);
+            //Log.Debug("移动Unit" + param.roleId);
             var player = GetChild<Unit>(param.roleId);
             if (player != null)
             {                
