@@ -15,7 +15,7 @@ namespace Ux
 				{
 					"Skill08_2",
 				}),
-				CreateCondition(nameof(TemBoolVarCondition),"Skill08_2", true),
+				CreateCondition(nameof(TemBoolVarCondition),"Skill08_2"),
 				CreateCondition(nameof(ActionKeyboardCondition),UnityEngine.InputSystem.Key.R, StateConditionBase.Trigger.Down),
 			};
 		}

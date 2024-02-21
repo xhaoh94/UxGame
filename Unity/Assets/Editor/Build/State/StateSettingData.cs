@@ -37,8 +37,7 @@ namespace Ux
         {
             public StateConditionBase.Type Type;
 
-            public string key;
-            public bool value;
+            public string key;            
 
             public StateConditionBase.State stateType;
             public List<string> states = new List<string>();

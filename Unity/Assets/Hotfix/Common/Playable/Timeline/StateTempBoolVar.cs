@@ -38,7 +38,7 @@ namespace Ux
             if (mono == null) return;
             var player = mono.GetEntity<Unit>();
             if (player == null) return;
-            StateMgr.Ins.AddTempBoolVar(player.ID, Key, true);
+            StateMgr.Ins.AddTempBoolVar(player.ID, Key);
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)

@@ -116,7 +116,7 @@ public partial class StateWindow : EditorWindow
                     }
                     break;
                 case StateConditionBase.Type.TempBoolVar:
-                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),\"{condition.key}\", {condition.value.ToString().ToLower()}),");
+                    write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),\"{condition.key}\"),");
                     break;
                 case StateConditionBase.Type.Action_Keyboard:
                     write.Writeln($"CreateCondition(nameof({nameof(ActionKeyboardCondition)}),UnityEngine.InputSystem.Key.{condition.keyType}, StateConditionBase.Trigger.{condition.triggerType}),");

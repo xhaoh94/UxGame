@@ -29,7 +29,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 0
@@ -49,7 +48,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 1
       states:
       - Idle
@@ -61,7 +59,6 @@ MonoBehaviour:
       customValue: 
     - Type: 4
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 0
@@ -81,7 +78,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 1
       states:
       - Idle
@@ -93,7 +89,6 @@ MonoBehaviour:
       customValue: 
     - Type: 2
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 1
@@ -113,7 +108,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 1
       states:
       - Idle
@@ -125,7 +119,6 @@ MonoBehaviour:
       customValue: 
     - Type: 2
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 0
@@ -145,7 +138,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 1
       states:
       - Skill08_1
@@ -156,7 +148,6 @@ MonoBehaviour:
       customValue: 
     - Type: 1
       key: Skill08_1
-      value: 1
       stateType: 0
       states: []
       triggerType: 0
@@ -166,7 +157,6 @@ MonoBehaviour:
       customValue: 
     - Type: 2
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 0
@@ -186,7 +176,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 1
       states:
       - Skill08_2
@@ -197,7 +186,6 @@ MonoBehaviour:
       customValue: 
     - Type: 1
       key: Skill08_2
-      value: 1
       stateType: 0
       states: []
       triggerType: 0
@@ -207,7 +195,6 @@ MonoBehaviour:
       customValue: 
     - Type: 2
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 0
@@ -227,7 +214,6 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      value: 0
       stateType: 1
       states:
       - Skill08_3
@@ -238,7 +224,6 @@ MonoBehaviour:
       customValue: 
     - Type: 1
       key: Skill08_3
-      value: 1
       stateType: 0
       states: []
       triggerType: 0
@@ -248,7 +233,6 @@ MonoBehaviour:
       customValue: 
     - Type: 2
       key: 
-      value: 0
       stateType: 0
       states: []
       triggerType: 0

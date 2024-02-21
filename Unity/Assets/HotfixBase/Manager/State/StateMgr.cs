@@ -30,21 +30,20 @@ namespace Ux
             new Dictionary<long, List<IUnitState>>();
         Dictionary<long, Dictionary<StateConditionBase.Type, HashSet<IUnitState>>> _typeStates =
             new Dictionary<long, Dictionary<StateConditionBase.Type, HashSet<IUnitState>>>();
-        Dictionary<long, Dictionary<string, bool>> _tempBoolVar =
-            new Dictionary<long, Dictionary<string, bool>>();
-
+        Dictionary<long, HashSet<string>> _tempBoolVar =
+            new Dictionary<long, HashSet<string>>();
         protected override void OnCreated()
         {
-            base.OnCreated();            
+            base.OnCreated();
         }
-        public void AddTempBoolVar(long id, string key, bool value)
+        public void AddTempBoolVar(long id, string key)
         {
             if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
-                dict = new Dictionary<string, bool>();
+                dict = new HashSet<string>();
                 _tempBoolVar.Add(id, dict);
             }
-            dict[key] = value;
+            dict.Add(key);
         }
         public void RevemoTempBoolVar(long id, string key)
         {
@@ -54,17 +53,13 @@ namespace Ux
             }
             dict.Remove(key);
         }
-        public bool CheckTempBoolVar(long id, string key, bool value)
+        public bool CheckTempBoolVar(long id, string key)
         {
             if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
                 return false;
             }
-            if (!dict.TryGetValue(key, out var temV))
-            {
-                return false;
-            }
-            return temV == value;
+            return dict.Contains(key);            
         }
 
         public void Update(long id, StateConditionBase.Type type)
@@ -77,14 +72,14 @@ namespace Ux
             {
                 return;
             }
-            
+
             foreach (var state in stateList)
             {
                 if (state.IsMute) continue;
                 if (state.IsValid)
                 {
                     if (state.Machine.CurrentNode != state)
-                    {                        
+                    {
                         state.Machine.Enter(state.Name);
                     }
                     break;
@@ -103,7 +98,7 @@ namespace Ux
                 if (state.IsValid)
                 {
                     if (state.Machine.CurrentNode != state)
-                    {                        
+                    {
                         state.Machine.Enter(state.Name);
                     }
                     break;

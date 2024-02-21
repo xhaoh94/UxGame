@@ -11,19 +11,13 @@ public class TempBoolVarItem : StateItemBase
         style.flexGrow = 1f;
         CreateView();
     }
-    TextField _txtVar;
-    Toggle _tgVar;
+    TextField _txtVar;    
     void CreateView()
     {
         _txtVar = this.Q<TextField>("txtVar");
         _txtVar.RegisterValueChangedCallback(e =>
         {
             data.key = e.newValue;
-        });
-        _tgVar = this.Q<Toggle>("tgVar");
-        _tgVar.RegisterValueChangedCallback(e =>
-        {
-            data.value = e.newValue;
         });
     }
 
@@ -32,8 +26,7 @@ public class TempBoolVarItem : StateItemBase
     {
         if (data == null) return;
         this.data = data;
-        _txtVar.SetValueWithoutNotify(data.key);
-        _tgVar.SetValueWithoutNotify(data.value);
+        _txtVar.SetValueWithoutNotify(data.key);        
     }
 
 
