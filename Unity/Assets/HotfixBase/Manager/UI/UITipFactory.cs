@@ -124,7 +124,7 @@ namespace Ux
                 var ui = UIMgr.Ins.GetUI<UITip>(id);
                 if (ui == null) continue;
                 var gobj = ui.GObject;
-                gobj.SetPosition(gobj.x, gobj.y - 20, 0);
+                gobj.SetPosition(gobj.x, gobj.y - 30, 0);
             }
         }
     }

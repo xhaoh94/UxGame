@@ -10,6 +10,8 @@ namespace Ux
         protected override string PkgName => null;
 
         protected override string ResName => null;
+
+        public override bool IsDestroy => false;
         public override UIType Type => UIType.Fixed;
         public override UIBlur Blur => UIBlur.None | UIBlur.Blur | UIBlur.Fixed;
         protected UIMessageBoxFactory.MessageBoxData dialogData;
