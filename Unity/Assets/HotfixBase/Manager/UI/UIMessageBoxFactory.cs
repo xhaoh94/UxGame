@@ -30,19 +30,21 @@ namespace Ux
         }
         public struct MessageBoxData
         {
-            public MessageBoxData(Action<UIMessageBox> _closeFn, Action<string> _pushTag)
+            public MessageBoxData(Action<UIMessageBox> _showFn, Action<UIMessageBox> _hideFn, Action<string> _pushTag)
             {
-                HideCallBack = _closeFn;
+                ShowCallBack = _showFn;
+                HideCallBack = _hideFn;
                 PushTagCallBack = _pushTag;
                 Param = new Dictionary<ParamType, object>();
             }
+            public Action<UIMessageBox> ShowCallBack { get; }
             public Action<UIMessageBox> HideCallBack { get; }
             public Action<string> PushTagCallBack { get; }
             public Dictionary<ParamType, object> Param { get; }
         }
         public readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
         readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
-
+        readonly HashSet<int> _showed = new HashSet<int>();
         HashSet<string> _tags = new HashSet<string>();
         void _PushTag(string tag)
         {
@@ -52,8 +54,13 @@ namespace Ux
             }
             _tags.Add(tag);
         }
+        void _Show(UIMessageBox box)
+        {
+            _showed.Add(box.ID);
+        }
         void _Hide(UIMessageBox box)
         {
+            _showed.Remove(box.ID);
             if (box.IsDestroy)
             {
                 _waitDels.Add(box.ID, box);
@@ -112,7 +119,7 @@ namespace Ux
             return id;
         }
         bool _CheckDefalut(int id)
-        {            
+        {
             if (id == 0)
             {
                 Log.Error("没有指定Dialog面板,请检查是否已初始化SetDefalutType");
@@ -139,7 +146,7 @@ namespace Ux
             var mbData = CreateData(title, content);
             mbData.Param.Add(ParamType.Btn1Title, btn1Title);
             mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
-            UIMgr.Ins.Show(id, mbData);
+            _Show(id, mbData);
         }
         bool _CheckBox(string tag)
         {
@@ -184,7 +191,7 @@ namespace Ux
             mbData.Param.Add(ParamType.Btn1Title, btn1Title);
             mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
             mbData.Param.Add(ParamType.ChcekBox, new MessageBoxCheckBox(tag, desc));
-            UIMgr.Ins.Show(id, mbData);
+            _Show(id, mbData);
         }
         public void DoubleBtn(string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
         {
@@ -207,9 +214,9 @@ namespace Ux
             mbData.Param.Add(ParamType.Btn1Fn, btn1Fn);
             mbData.Param.Add(ParamType.Btn2Title, btn2Title);
             mbData.Param.Add(ParamType.Btn2Fn, btn2Fn);
-            UIMgr.Ins.Show(id, mbData);
+            _Show(id, mbData);
         }
-        public void DoubleBtnCheckBox(string tag, string checkboxContent,string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
+        public void DoubleBtnCheckBox(string tag, string checkboxContent, string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn)
         {
             if (_CheckBox(tag))
             {
@@ -218,7 +225,7 @@ namespace Ux
             }
             _DoubleBtnCheckBox(_GetDefalutID(), title, content, btn1Title, btn1Fn, btn2Title, btn2Fn, tag, checkboxContent);
         }
-        public void DoubleBtnCheckBox<T>(string tag, string checkboxContent,string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn) where T : UIMessageBox
+        public void DoubleBtnCheckBox<T>(string tag, string checkboxContent, string title, string content, string btn1Title, Action btn1Fn, string btn2Title, Action btn2Fn) where T : UIMessageBox
         {
             if (_CheckBox(tag))
             {
@@ -236,11 +243,15 @@ namespace Ux
             mbData.Param.Add(ParamType.Btn2Title, btn2Title);
             mbData.Param.Add(ParamType.Btn2Fn, btn2Fn);
             mbData.Param.Add(ParamType.ChcekBox, new MessageBoxCheckBox(tag, desc));
+            _Show(id, mbData);
+        }
+        void _Show(int id, MessageBoxData mbData)
+        {
             UIMgr.Ins.Show(id, mbData);
         }
         public MessageBoxData CreateData(string title, string content)
         {
-            var mbData = new MessageBoxData(_Hide, _PushTag);
+            var mbData = new MessageBoxData(_Show, _Hide, _PushTag);
             mbData.Param.Add(ParamType.Title, title);
             mbData.Param.Add(ParamType.Content, content);
             return mbData;

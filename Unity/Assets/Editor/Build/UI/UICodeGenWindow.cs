@@ -21,6 +21,7 @@ namespace UI.Editor
         Window,
         TabView,
         MessageBox,
+        Tip,
     }
     public enum UIExtendComponent
     {
@@ -80,20 +81,12 @@ namespace UI.Editor
         TextField inputClsName;
         DropdownField ddExt;
 
-        VisualElement tabViewElement;
         Dictionary<string, TextField> nameTextField = new Dictionary<string, TextField>();
-        //TextField inputGList;
-        //TextField inputViewStack;
-        //TextField inputBtnClose;
 
+
+        VisualElement tabViewElement;
         VisualElement messageBoxElement;
-        //TextField inputDialogTitle;
-        //TextField inputDialogContent;
-        //TextField inputDialogBtnClose;
-        //TextField inputDialogBtn1;
-        //TextField inputDialogBtn2;
-        //TextField inputDialogController;
-        //TextField inputDialogCheckBox;
+        VisualElement tipElement;
 
 
         public void CreateGUI()
@@ -199,14 +192,7 @@ namespace UI.Editor
                 inputNS_select.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
                 inputClsName = root.Q<TextField>("inputClsName");
                 inputClsName.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //popExt = root.Q<EnumField>("popExt");
-                //popExt.Init(UIExtends.UIObject);
-                //popExt.RegisterValueChangedCallback(e =>
-                //{
-                //    var pop = (UIExtends)popExt.value;
-                //    SaveSelectItemData();
-                //    FreshComContaine();
-                //});
+
                 ddExt = root.Q<DropdownField>("ddExt");
                 var keys = UIEditorTools.CheckExt();
                 ddExt.choices = keys;
@@ -214,27 +200,8 @@ namespace UI.Editor
                 ddExt.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
 
                 tabViewElement = root.Q<VisualElement>("tabViewElement");
-                //inputGList = root.Q<TextField>("inputGList");
-                //inputGList.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputViewStack = root.Q<TextField>("inputViewStack");
-                //inputViewStack.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputBtnClose = root.Q<TextField>("inputBtnClose");
-                //inputBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
                 messageBoxElement = root.Q<VisualElement>("messageBoxElement");
-                //inputDialogTitle = root.Q<TextField>("inputDialogTitle");
-                //inputDialogTitle.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputDialogContent = root.Q<TextField>("inputDialogContent");
-                //inputDialogContent.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputDialogBtnClose = root.Q<TextField>("inputDialogBtnClose");
-                //inputDialogBtnClose.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputDialogBtn1 = root.Q<TextField>("inputDialogBtn1");
-                //inputDialogBtn1.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputDialogBtn2 = root.Q<TextField>("inputDialogBtn2");
-                //inputDialogBtn2.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputDialogController = root.Q<TextField>("inputDialogController");
-                //inputDialogController.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                //inputDialogCheckBox = root.Q<TextField>("inputDialogCheckBox");
-                //inputDialogCheckBox.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
+                tipElement = root.Q<VisualElement>("tipElement");
 
                 var btnGenSelectItem = root.Q<Button>("btnGenSelectItem");
                 btnGenSelectItem.clicked += OnBtnGenClick;
@@ -348,6 +315,15 @@ namespace UI.Editor
             {
                 messageBoxElement.style.display = DisplayStyle.None;
             }
+
+            if (data.IsTip)
+            {
+                CreateText(data.TipData, tipElement);
+            }
+            else
+            {
+                tipElement.style.display = DisplayStyle.None;
+            }
         }
         void CreateText(List<CustomData> listData, VisualElement parent)
         {
@@ -400,6 +376,10 @@ namespace UI.Editor
                 FreshDict(messageBoxElement, data.MessageBoxData);
             }
 
+            if (data.IsTip)
+            {
+                FreshDict(tipElement, data.TipData);
+            }
             UICodeGenSettingData.SetComponentData(data);
             FreshComponentData();
         }

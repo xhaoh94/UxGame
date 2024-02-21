@@ -199,6 +199,7 @@ namespace UI.Editor
                 case UIExtendPanel.Window:
                 case UIExtendPanel.TabView:
                 case UIExtendPanel.MessageBox:
+                case UIExtendPanel.Tip:
                     var pkgs = UIEditorTools.GetDependenciesPkg(com);
                     if (pkgs != null && pkgs.Count > 0)
                     {
@@ -234,6 +235,10 @@ namespace UI.Editor
                     if (ext is UIExtendPanel.MessageBox)
                     {
                         Func(comData.MessageBoxData);
+                    }
+                    else if (ext is UIExtendPanel.Tip)
+                    {
+                        Func(comData.TipData);
                     }
                     write.Writeln();
                     memberVarFn();

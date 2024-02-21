@@ -32,6 +32,7 @@ namespace Ux
         protected override void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
         {
             dialogData = (UIMessageBoxFactory.MessageBoxData)param;
+            dialogData.ShowCallBack?.Invoke(this);
             InitParam();
             base.ToShow(isAnim, id, param, isStack, token);
         }
@@ -53,7 +54,7 @@ namespace Ux
         protected virtual void InitParam()
         {
             ResetBtns();
-            AddClick(__btnClose, Hide);
+            AddClick(__btnClose, HideSelf);
             foreach (var (paramType, value) in dialogData.Param)
             {
                 switch (paramType)
@@ -111,7 +112,7 @@ namespace Ux
             {
                 (obj as Action)?.Invoke();
             }
-            Hide();
+            HideSelf();
         }
         void OnBtn2Click()
         {
@@ -119,7 +120,7 @@ namespace Ux
             {
                 (obj as Action)?.Invoke();
             }
-            Hide();
+            HideSelf();
         }
         protected override void OnLayout()
         {

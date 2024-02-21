@@ -39,6 +39,7 @@ MonoBehaviour:
         Type: UIButton
         Name: btnClose
       _messageBoxData: []
+      _tipData: []
       members:
       - index: 0
         name: n0
@@ -111,6 +112,7 @@ MonoBehaviour:
         Type: UIButton
         Name: btnClose
       _messageBoxData: []
+      _tipData: []
       members:
       - index: 0
         name: n0
@@ -162,6 +164,7 @@ MonoBehaviour:
       - Key: __checkbox
         Type: UIButton
         Name: checkbox
+      _tipData: []
       members:
       - index: 0
         name: n4
@@ -253,6 +256,188 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
+    - ID: Common@CommonMessageBox
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonMessageBox
+      ns: Ux.UI
+      cls: CommonMessageBox
+      ext: Panel/MessageBox
+      isExport: 1
+      _tabViewData: []
+      _messageBoxData:
+      - Key: __txtTitle
+        Type: GTextField
+        Name: txtTitle
+      - Key: __txtContent
+        Type: GTextField
+        Name: txtContent
+      - Key: __btnClose
+        Type: UIButton
+        Name: btnClose
+      - Key: __btn1
+        Type: UIButton
+        Name: btn1
+      - Key: __btn2
+        Type: UIButton
+        Name: btn2
+      - Key: __checkbox
+        Type: UIButton
+        Name: checkbox
+      _tipData: []
+      members:
+      - index: 0
+        name: n4
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: txtTitle
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: txtContent
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: checkbox
+        defaultType: GButton
+        customType: CheckBox
+        pkg: Common
+        res: CheckBox
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 4
+        name: btn1
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 5
+        name: btn2
+        defaultType: GButton
+        customType: Btn1
+        pkg: Common
+        res: Btn1
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 6
+        name: n8
+        defaultType: GGroup
+        customType: GGroup
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 7
+        name: n5
+        defaultType: GGroup
+        customType: GGroup
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 8
+        name: btnClose
+        defaultType: GButton
+        customType: BtnClose
+        pkg: Common
+        res: BtnClose
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5355\u51FB"
+        evtParam: 
+    - ID: Common@CommonTip
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonTip
+      ns: Ux.UI
+      cls: CommonTip
+      ext: Panel/Tip
+      isExport: 1
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData:
+      - Key: __txtContent
+        Type: GTextField
+        Name: txtContent
+      - Key: __transition
+        Type: Transition
+        Name: show
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: txtContent
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: n3
+        defaultType: GGroup
+        customType: GGroup
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 0
+        name: show
+        defaultType: Transition
+        customType: Transition
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
   - name: Multiple
     components:
     - ID: Multiple@MultipleView
@@ -267,6 +452,7 @@ MonoBehaviour:
       isExport: 1
       _tabViewData: []
       _messageBoxData: []
+      _tipData: []
       members:
       - index: 0
         name: mCommonBg
@@ -310,6 +496,7 @@ MonoBehaviour:
       isExport: 1
       _tabViewData: []
       _messageBoxData: []
+      _tipData: []
       members:
       - index: 0
         name: n4
@@ -385,6 +572,7 @@ MonoBehaviour:
       isExport: 1
       _tabViewData: []
       _messageBoxData: []
+      _tipData: []
       members:
       - index: 0
         name: n0
@@ -455,7 +643,7 @@ MonoBehaviour:
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u591A\u51FB"
-        evtParam: '{"dCnt":3,"dGapTime":0.2}'
+        evtParam: '{"dCnt":2,"dGapTime":0.2}'
       - index: 7
         name: btnLongClick
         defaultType: GButton
@@ -500,6 +688,7 @@ MonoBehaviour:
       isExport: 1
       _tabViewData: []
       _messageBoxData: []
+      _tipData: []
       members:
       - index: 0
         name: n0
@@ -531,7 +720,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u5355\u51FB"
         evtParam: 
-      - index: 3
+      - index: 4
         name: inputAcc
         defaultType: GTextInput
         customType: GTextInput
@@ -541,7 +730,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
-      - index: 4
+      - index: 5
         name: n4
         defaultType: GTextField
         customType: GTextField
@@ -551,7 +740,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
-      - index: 5
+      - index: 6
         name: camp1
         defaultType: GButton
         customType: SingleBtn
@@ -561,7 +750,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
-      - index: 6
+      - index: 7
         name: camp2
         defaultType: GButton
         customType: SingleBtn
@@ -571,7 +760,7 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
-      - index: 7
+      - index: 8
         name: camp3
         defaultType: GButton
         customType: SingleBtn
@@ -585,6 +774,16 @@ MonoBehaviour:
         name: camp
         defaultType: Controller
         customType: Controller
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: n10
+        defaultType: GGraph
+        customType: GGraph
         pkg: 
         res: 
         isCreateVar: 1

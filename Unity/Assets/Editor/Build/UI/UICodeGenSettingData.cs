@@ -122,6 +122,23 @@ namespace UI.Editor
             }
         }
 
+        [SerializeField]
+        List<CustomData> _tipData;
+        public List<CustomData> TipData
+        {
+            get
+            {
+                if (_tipData == null || _tipData.Count == 0)
+                {
+                    _tipData = new List<CustomData>()
+                    {                       
+                       new CustomData("__txtContent","GTextField",string.Empty),
+                       new CustomData("__transition","Transition",string.Empty),                       
+                    };
+                }
+                return _tipData;
+            }
+        }
 
         [HideInInspector]
         public List<UIMemberData> members = new List<UIMemberData>();
@@ -156,6 +173,13 @@ namespace UI.Editor
             get
             {
                 return ext == $"{UIExtends.Panel}/{UIExtendPanel.MessageBox}";
+            }
+        }
+        public bool IsTip
+        {
+            get
+            {
+                return ext == $"{UIExtends.Panel}/{UIExtendPanel.Tip}";
             }
         }
         public object Extend

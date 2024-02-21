@@ -43,12 +43,12 @@ namespace Ux
         /// <summary>
         /// 显示动效
         /// </summary>
-        protected virtual IUIAnim ShowAnim { get; } = null;
+        protected virtual IUIAnim ShowAnim { get; set; } = null;
 
         /// <summary>
         /// 关闭动效
         /// </summary>
-        protected virtual IUIAnim HideAnim { get; } = null;
+        protected virtual IUIAnim HideAnim { get; set; } = null;
 
         protected Action<int, object, bool> OnShowCallBack;
         protected Action OnHideCallBack;

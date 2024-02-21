@@ -30,9 +30,10 @@ namespace Ux
             EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();            
             UnityPool.Init();            
             ConfigMgr.Ins.Init();            
-            UIMgr.MessageBox.SetDefalutType<CommonDialog>();
+            UIMgr.MessageBox.SetDefalutType<CommonMessageBox>();
+            UIMgr.Tip.SetDefalutType<CommonTip>();
 
-            
+
             GameMain.Machine.AddNode<StateLogin>();
             GameMain.Machine.AddNode<StateGameIn>();
             GameMain.Machine.Enter<StateLogin>();

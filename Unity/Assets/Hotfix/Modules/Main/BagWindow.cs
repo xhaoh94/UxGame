@@ -11,7 +11,7 @@ namespace Ux.UI
     [UI]
     partial class BagWindow
     {
-        public override UIType Type => UIType.None;
+        public override UIType Type => UIType.Normal;
         public override UIBlur Blur => UIBlur.Blur;
         protected override void OnShow(object param)
         {

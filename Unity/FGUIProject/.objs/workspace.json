@@ -9,6 +9,7 @@
     "ui://ex3p2il3ftpt7",
     "ui://ex3p2il3q30y3",
     "ui://ex3p2il3oylhb",
+    "ui://ex3p2il3uc7cg",
     "ui://wyq0c9jxskmp0",
     "ui://ex3p2il38apjf",
     "ui://ex3p2il3i4ved",
@@ -24,7 +25,7 @@
   "auxline1": true,
   "canvasColor": 10066329,
   "auxline2": true,
-  "doc.activeDoc": "ui://7vg0rkntq30y5",
+  "doc.activeDoc": "ui://ex3p2il3uc7cg",
   "libview.twoColumn": false,
   "libview.expandedNodes": [
     "ds45f2uo",
@@ -40,9 +41,7 @@
     "ddmliri8",
     "/View/",
     "7vg0rknt",
-    "/",
-    "7vg0rknt",
-    "/View/"
+    "/"
   ],
   "snapToGrid": true,
   "backgroundColor": 6710886,

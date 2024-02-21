@@ -29,7 +29,7 @@ namespace Ux
         /// <summary>
         /// 不会关闭任何界面，但会被Stack界面关闭（Stack界面关闭的时候，会自动重新打开）
         /// </summary>
-        None,
+        Normal,
         /// <summary>
         /// 会关闭除Fixed之外的界面，也会被其他Stack界面关闭（Stack界面关闭的时候，会自动重新打开） 
         /// </summary>
@@ -69,7 +69,7 @@ namespace Ux
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         public virtual bool IsDestroy => true;
-        public virtual UIType Type => UIType.None;
+        public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
 
         CancellationTokenSource _showToken;
@@ -130,7 +130,7 @@ namespace Ux
         public string Name => Data.Name;
         public IUIData Data { get; private set; }
 
-        protected void Hide()
+        protected void HideSelf()
         {
             Hide(true);
         }

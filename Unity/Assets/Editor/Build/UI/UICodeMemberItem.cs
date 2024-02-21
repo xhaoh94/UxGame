@@ -142,6 +142,13 @@ public class UICodeMemberItem : TemplateContainer
             }
         }
 
+        if (comData.IsTabFrame)
+        {
+            foreach (var temData in comData.TipData)
+            {
+                if (temData.Name == data.name) return;
+            }
+        }
         _tgExport.style.display = DisplayStyle.Flex;
         _tgCreate.style.display = DisplayStyle.Flex;
         _tgExport.SetValueWithoutNotify(data.isCreateVar);

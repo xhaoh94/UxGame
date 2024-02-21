@@ -20,7 +20,7 @@ namespace UI.Editor
             ExtTypeObject.Clear();
             ExtTypeObject.Add($"{UIExtends.None}", string.Empty);
             int i1 = 0;
-            while (typeof(UIExtends).IsEnumDefined(i1))
+            while (typeof(UIExtendPanel).IsEnumDefined(i1))
             {
                 var panelEx = (UIExtendPanel)i1;
                 string key = $"{UIExtends.Panel}/{panelEx}";
@@ -182,9 +182,13 @@ namespace UI.Editor
             match = Regex.IsMatch(str, strMatch);
             if (match) return $"{UIExtends.Panel}/{UIExtendPanel.Window}";
 
-            strMatch = @"(?<v>[\S]+)(?=Dialog)";
+            strMatch = @"(?<v>[\S]+)(?=MessageBox)";
             match = Regex.IsMatch(str, strMatch);
             if (match) return $"{UIExtends.Panel}/{UIExtendPanel.MessageBox}";
+
+            strMatch = @"(?<v>[\S]+)(?=Tip)";
+            match = Regex.IsMatch(str, strMatch);
+            if (match) return $"{UIExtends.Panel}/{UIExtendPanel.Tip}";
 
             strMatch = @"(?<v>[\S]+)(?=TabFrame)";
             match = Regex.IsMatch(str, strMatch);

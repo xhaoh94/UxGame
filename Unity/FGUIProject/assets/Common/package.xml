@@ -14,6 +14,7 @@
     <component id="oylhc" name="Btn1.xml" path="/Component/" exported="true"/>
     <component id="i4ved" name="CheckBox.xml" path="/Component/" exported="true"/>
     <component id="8apjf" name="SingleBtn.xml" path="/Component/" exported="true"/>
+    <component id="uc7cg" name="CommonTip.xml" path="/View/" exported="true"/>
   </resources>
   <publish name="Common" genCode="true"/>
 </packageDescription>

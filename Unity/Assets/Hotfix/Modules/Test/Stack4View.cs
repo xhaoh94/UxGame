@@ -26,7 +26,7 @@ namespace Ux.UI
         }
         partial void OnBtnBackClick(EventContext e)
         {
-            Hide();
+            HideSelf();
         }
     }
 }

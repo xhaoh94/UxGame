@@ -6,7 +6,7 @@ namespace Ux.UI
     partial class Stack3View
     {
         protected override UILayer Layer => UILayer.View;
-        public override UIType Type => UIType.None;
+        public override UIType Type => UIType.Normal;
 
         protected override void OnShow(object param)
         {
@@ -26,7 +26,7 @@ namespace Ux.UI
         }
         partial void OnBtnBackClick(EventContext e)
         {
-            Hide();            
+            HideSelf();            
         }
     }
 }

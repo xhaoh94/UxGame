@@ -16,6 +16,8 @@ namespace Ux
         const float _waitDelTime = 10f;
         //对话弹窗
         public static readonly UIMessageBoxFactory MessageBox = new UIMessageBoxFactory();
+        //提示
+        public static readonly UITipFactory Tip = new UITipFactory();
 
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeId = new Dictionary<Type, int>();
@@ -73,8 +75,8 @@ namespace Ux
         }
 
         public UIMgr()
-        {            
-            GRoot.inst.SetContentScaleFactor(1280, 720, UIContentScaler.ScreenMatchMode.MatchWidthOrHeight);            
+        {
+            GRoot.inst.SetContentScaleFactor(1280, 720, UIContentScaler.ScreenMatchMode.MatchWidthOrHeight);
             //StageCamera.main.clearFlags = CameraClearFlags.Nothing;
             if (PatchMgr.Ins.IsDone)
             {
@@ -87,6 +89,7 @@ namespace Ux
         void OnRelease()
         {
             MessageBox?.Clear();
+            Tip?.Clear();
             if (_cacel.Count > 0)
             {
                 var ids = _cacel.Keys.ToList();

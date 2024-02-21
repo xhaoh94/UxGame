@@ -37,18 +37,21 @@ namespace Ux.UI
         partial void OnBtnSingleClick(EventContext e)
         {
             Log.Debug("单击");
+            UIMgr.Tip.Show("单击");
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {
             Log.Debug("双击");
+            UIMgr.Tip.Show("双击");
         }
         partial void OnBtnLongClickLongPress(ref bool isBreak)
         {
             Log.Debug("长按");
+            UIMgr.Tip.Show("长按");
         }
         partial void OnBtnBackClick(EventContext e)
         {
-            Hide();
+            HideSelf();
         }
     }
 }
