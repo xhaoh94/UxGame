@@ -59,7 +59,7 @@ namespace Ux
         }
 
 
-        void _CheckStack(IUI ui, bool isStack = false)
+        bool _CheckStack(IUI ui, bool isStack = false)
         {
             if (_stack.Count > 0)
             {
@@ -73,6 +73,7 @@ namespace Ux
 #endif
                 }
             }
+            bool isBreak = false;
             if (isStack && ui.Type == UIType.Stack)
             {
                 _backs.Clear();
@@ -81,7 +82,14 @@ namespace Ux
                     var preStack = _stack[i];
                     if (preStack.Type == UIType.Stack)
                     {
-                        _ShowByStack(preStack.ID, preStack.Param);
+                        if (ui.ID == preStack.ID)
+                        {
+                            isBreak = true;                            
+                        }
+                        else
+                        {
+                            _ShowByStack(preStack.ID, preStack.Param);
+                        }
                         break;
                     }
                     else
@@ -95,6 +103,7 @@ namespace Ux
                     _ShowByStack(preStack.ID, preStack.Param);
                 }
             }
+            return isBreak;
         }
 
         void _HideByStack(int id, bool isAnim)

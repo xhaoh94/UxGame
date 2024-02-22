@@ -207,6 +207,14 @@ namespace Ux
 
         void IUI.DoHide(bool isAnim, bool isStack)
         {
+            if (_cbData != null)
+            {
+                if (_cbData.Value.stackCb.Invoke(this, isStack))
+                {
+                    return;
+                }
+            }
+
             switch (State)
             {
                 case UIState.Hide:
@@ -216,10 +224,7 @@ namespace Ux
                     _ReleaseShowToken();
                     break;
             }
-            if (_cbData != null)
-            {
-                _cbData.Value.stackCb?.Invoke(this, isStack);
-            }
+
             _ReleaseHideToken();
             _hideToken = new CancellationTokenSource();
             ToHide(isAnim, isStack, _hideToken);

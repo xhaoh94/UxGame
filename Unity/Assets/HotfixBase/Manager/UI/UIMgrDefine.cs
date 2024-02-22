@@ -8,17 +8,17 @@ namespace Ux
     {
         public readonly struct CallBackData
         {
-            public CallBackData(Action<IUI, object, bool> _showCb, Action<IUI> _hideCb, Action<IUI, bool> _stackCb, Action<int, bool> _backCb)
+            public CallBackData(Action<IUI, object, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb, Action<int, bool> _backCb)
             {
                 showCb = _showCb;
                 hideCb = _hideCb;
                 stackCb = _stackCb;
                 backCb = _backCb;
             }
-            public readonly Action<IUI> hideCb;
-            public readonly Action<IUI, bool> stackCb;
-            public readonly Action<int, bool> backCb;
             public readonly Action<IUI, object, bool> showCb;
+            public readonly Action<IUI> hideCb;
+            public readonly Func<IUI, bool, bool> stackCb;
+            public readonly Action<int, bool> backCb;
         }
         public struct BlurStack
         {
