@@ -7,20 +7,19 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Test";
 		protected override string ResName => "Stack3View";
-
-		protected Btn1 btnBack;
-		protected Btn1 btn1;
-		protected Btn1 btn2;
-		protected Btn1 btn4;
+		protected UIButton btnBack;
+		protected UIButton btn1;
+		protected UIButton btn2;
+		protected UIButton btn4;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btnBack = new Btn1(gCom.GetChildAt(2), this);
-				btn1 = new Btn1(gCom.GetChildAt(3), this);
-				btn2 = new Btn1(gCom.GetChildAt(4), this);
-				btn4 = new Btn1(gCom.GetChildAt(5), this);
+				btnBack = new UIButton(gCom.GetChildAt(2), this);
+				btn1 = new UIButton(gCom.GetChildAt(3), this);
+				btn2 = new UIButton(gCom.GetChildAt(4), this);
+				btn4 = new UIButton(gCom.GetChildAt(5), this);
 			}
 			catch (System.Exception e)
 			{

@@ -45,7 +45,7 @@ namespace Ux
             }
             dict.Add(key);
         }
-        public void RevemoTempBoolVar(long id, string key)
+        public void RemoveTempBoolVar(long id, string key)
         {
             if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
@@ -58,8 +58,8 @@ namespace Ux
             if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
                 return false;
-            }
-            return dict.Contains(key);            
+            }            
+            return dict.Contains(key);
         }
 
         public void Update(long id, StateConditionBase.Type type)
@@ -98,7 +98,7 @@ namespace Ux
                 if (state.IsValid)
                 {
                     if (state.Machine.CurrentNode != state)
-                    {
+                    {                        
                         state.Machine.Enter(state.Name);
                     }
                     break;

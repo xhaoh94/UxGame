@@ -12,7 +12,7 @@ namespace Ux
         public Key Key;
         public string State;
     }
-    public class OperateComponent : Entity, IAwakeSystem, IUpdateSystem, InputActions.IPlayerActions
+    public class OperateComponent : Entity, IAwakeSystem, InputActions.IPlayerActions
     {
         Unit Unit => Parent as Unit;
         private InputActions _input;
@@ -22,11 +22,7 @@ namespace Ux
             _input = new InputActions();
             _input.Player.SetCallbacks(this);
             _input.Enable();
-        }
-
-        public void OnUpdate()
-        {
-        }
+        }       
 
         protected override void OnDestroy()
         {
@@ -40,40 +36,45 @@ namespace Ux
         public void RemoveTrigger()
         {
             this.triggerData = null;
-        }
+        }      
         public void OnMove(InputAction.CallbackContext context)
         {
             if (context.performed)
             {
-                Vector2 move = context.ReadValue<Vector2>();
+                var moveVector2 = context.ReadValue<Vector2>();
+                SceneModule.Ins.SendMove(moveVector2);
             }
-        }
+            else
+            {
+                SceneModule.Ins.SendMove(Vector2.zero);
+            }
+        }       
 
         public void OnFire(InputAction.CallbackContext context)
         {
-            if (Stage.isTouchOnUI)
-            {
-                return;
-            }
-            if (context.performed)
-            {
-                var pos = Mouse.current.position.ReadValue();
-                var mapCamera = Unit.Map.Camera.MapCamera;
-                var ray = mapCamera.ScreenPointToRay(pos);
-                if (Physics.Raycast(ray, out var hitInfo))
-                {
-                    if (hitInfo.transform.gameObject.CompareTag("Ground") ||
-                        hitInfo.transform.gameObject.CompareTag("FogOfWar"))
-                    {
-                        //Log.Debug("点击地板");
-                        Unit.Seeker.StartPath(hitInfo.point);
-                    }
-                }
-            }
+            //if (Stage.isTouchOnUI)
+            //{
+            //    return;
+            //}
+            //if (context.performed)
+            //{
+            //    var pos = Mouse.current.position.ReadValue();
+            //    var mapCamera = Unit.Map.Camera.MapCamera;
+            //    var ray = mapCamera.ScreenPointToRay(pos);
+            //    if (Physics.Raycast(ray, out var hitInfo))
+            //    {
+            //        if (hitInfo.transform.gameObject.CompareTag("Ground") ||
+            //            hitInfo.transform.gameObject.CompareTag("FogOfWar"))
+            //        {
+            //            //Log.Debug("点击地板");
+            //            //Unit.Seeker.StartPath(hitInfo.point);
+            //        }
+            //    }
+            //}
         }
 
         public void OnKey(InputAction.CallbackContext context)
-        {            
+        {
             StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Action_Keyboard);
             //if (context.performed)
             //{

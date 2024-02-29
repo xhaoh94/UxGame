@@ -192,10 +192,10 @@ namespace Ux
                 _SetInfo(info, trans);
             }
         }
-
         protected virtual void CreateChildren()
         {
             var component = GObject is Window ? ObjAs<Window>().contentPane : ObjAs<GComponent>();
+            if (component == null) return;
             var selfType = GetType();
             try
             {

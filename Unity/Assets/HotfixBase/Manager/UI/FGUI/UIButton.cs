@@ -5,11 +5,7 @@ using UnityEngine;
 namespace Ux
 {
     public class UIButton : UIObject
-    {
-        public UIButton()
-        {
-
-        }
+    {        
         public UIButton(GObject gObject, UIObject parent)
         {
             Init(gObject, parent);

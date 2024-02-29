@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:yousandi.cn,2023:
+%TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40,6 +40,7 @@ MonoBehaviour:
         Name: btnClose
       _messageBoxData: []
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n0
@@ -84,7 +85,7 @@ MonoBehaviour:
       - index: 4
         name: btnClose
         defaultType: GButton
-        customType: BtnClose
+        customType: UIButton
         pkg: Common
         res: BtnClose
         isCreateVar: 1
@@ -113,6 +114,7 @@ MonoBehaviour:
         Name: btnClose
       _messageBoxData: []
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n0
@@ -127,7 +129,7 @@ MonoBehaviour:
       - index: 1
         name: btnClose
         defaultType: GButton
-        customType: BtnClose
+        customType: UIButton
         pkg: Common
         res: BtnClose
         isCreateVar: 1
@@ -165,6 +167,7 @@ MonoBehaviour:
         Type: UIButton
         Name: checkbox
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n4
@@ -287,6 +290,7 @@ MonoBehaviour:
         Type: UIButton
         Name: checkbox
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n4
@@ -321,7 +325,7 @@ MonoBehaviour:
       - index: 3
         name: checkbox
         defaultType: GButton
-        customType: CheckBox
+        customType: UIButton
         pkg: Common
         res: CheckBox
         isCreateVar: 1
@@ -331,7 +335,7 @@ MonoBehaviour:
       - index: 4
         name: btn1
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -341,7 +345,7 @@ MonoBehaviour:
       - index: 5
         name: btn2
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -371,7 +375,7 @@ MonoBehaviour:
       - index: 8
         name: btnClose
         defaultType: GButton
-        customType: BtnClose
+        customType: UIButton
         pkg: Common
         res: BtnClose
         isCreateVar: 1
@@ -397,6 +401,7 @@ MonoBehaviour:
       - Key: __transition
         Type: Transition
         Name: show
+      _modelData: []
       members:
       - index: 0
         name: n0
@@ -438,6 +443,259 @@ MonoBehaviour:
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
+    - ID: Common@Btn1
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: Btn1
+      ns: Ux.UI
+      cls: Btn1
+      ext: FGUI/Button
+      isExport: 0
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData: []
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: n2
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: Common@BtnClose
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: BtnClose
+      ns: Ux.UI
+      cls: BtnClose
+      ext: FGUI/Button
+      isExport: 0
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData: []
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: n2
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: n3
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: Common@CheckBox
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CheckBox
+      ns: Ux.UI
+      cls: CheckBox
+      ext: FGUI/Button
+      isExport: 0
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData: []
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n4
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: Common@SingleBtn
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: SingleBtn
+      ns: Ux.UI
+      cls: SingleBtn
+      ext: FGUI/Button
+      isExport: 0
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData: []
+      members:
+      - index: 0
+        name: n0
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n4
+        defaultType: GTextField
+        customType: GTextField
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: Common@CommonTabBtn
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonTabBtn
+      ns: Ux.UI
+      cls: CommonTabBtn
+      ext: Component/TabBtn
+      isExport: 1
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData: []
+      members:
+      - index: 0
+        name: n0
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: n1
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 3
+        name: redPoint
+        defaultType: GImage
+        customType: GImage
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: Common@CommonUIModel
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonUIModel
+      ns: Ux.UI
+      cls: CommonUIModel
+      ext: Component/Model
+      isExport: 1
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData:
+      - Key: __container
+        Type: GGraph
+        Name: container
+      members:
+      - index: 0
+        name: n12
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: container
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
   - name: Multiple
     components:
     - ID: Multiple@MultipleView
@@ -453,6 +711,7 @@ MonoBehaviour:
       _tabViewData: []
       _messageBoxData: []
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: mCommonBg
@@ -497,6 +756,7 @@ MonoBehaviour:
       _tabViewData: []
       _messageBoxData: []
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n4
@@ -521,7 +781,7 @@ MonoBehaviour:
       - index: 2
         name: btn1
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -573,6 +833,7 @@ MonoBehaviour:
       _tabViewData: []
       _messageBoxData: []
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n0
@@ -597,7 +858,7 @@ MonoBehaviour:
       - index: 2
         name: btnMultiple
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -607,7 +868,7 @@ MonoBehaviour:
       - index: 3
         name: btnNoneWindow
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -617,7 +878,7 @@ MonoBehaviour:
       - index: 4
         name: btnNoneView
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -627,7 +888,7 @@ MonoBehaviour:
       - index: 5
         name: btnSingle
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -637,7 +898,7 @@ MonoBehaviour:
       - index: 6
         name: btnDouble
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -647,7 +908,7 @@ MonoBehaviour:
       - index: 7
         name: btnLongClick
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -657,7 +918,7 @@ MonoBehaviour:
       - index: 8
         name: btnTest
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -667,12 +928,32 @@ MonoBehaviour:
       - index: 9
         name: btnBack
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u5355\u51FB"
+        evtParam: 
+      - index: 10
+        name: n12
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 11
+        name: model
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
         evtParam: 
   - name: Login
     components:
@@ -689,6 +970,7 @@ MonoBehaviour:
       _tabViewData: []
       _messageBoxData: []
       _tipData: []
+      _modelData: []
       members:
       - index: 0
         name: n0
@@ -713,7 +995,7 @@ MonoBehaviour:
       - index: 2
         name: btnLogin
         defaultType: GButton
-        customType: Btn1
+        customType: UIButton
         pkg: Common
         res: Btn1
         isCreateVar: 1
@@ -743,7 +1025,7 @@ MonoBehaviour:
       - index: 6
         name: camp1
         defaultType: GButton
-        customType: SingleBtn
+        customType: UIButton
         pkg: Common
         res: SingleBtn
         isCreateVar: 1
@@ -753,7 +1035,7 @@ MonoBehaviour:
       - index: 7
         name: camp2
         defaultType: GButton
-        customType: SingleBtn
+        customType: UIButton
         pkg: Common
         res: SingleBtn
         isCreateVar: 1
@@ -763,7 +1045,7 @@ MonoBehaviour:
       - index: 8
         name: camp3
         defaultType: GButton
-        customType: SingleBtn
+        customType: UIButton
         pkg: Common
         res: SingleBtn
         isCreateVar: 1

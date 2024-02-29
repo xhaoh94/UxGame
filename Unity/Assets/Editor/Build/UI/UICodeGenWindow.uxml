@@ -17,12 +17,12 @@
         </ui:IMGUIContainer>
         <ui:IMGUIContainer name="mid" usage-hints="None" style="flex-direction: row; padding-bottom: 0; flex-grow: 1; justify-content: flex-start; align-items: stretch; margin-left: 0; left: auto; right: auto; position: relative; bottom: auto; flex-basis: auto; flex-wrap: nowrap;">
             <ui:IMGUIContainer name="left" style="flex-direction: row; height: auto; width: 550px; flex-grow: 0; max-width: none; flex-wrap: nowrap;">
-                <ui:IMGUIContainer style="flex-direction: column; width: auto;">
+                <ui:IMGUIContainer style="flex-direction: column; width: auto; flex-grow: 1;">
                     <ui:IMGUIContainer style="flex-direction: row-reverse;">
                         <ui:Button text="收缩" display-tooltip-when-elided="true" name="btnHide" style="width: 30px;" />
                         <ui:Button text="展开" display-tooltip-when-elided="true" name="btnShow" style="width: 30px;" />
                     </ui:IMGUIContainer>
-                    <ui:ScrollView name="svPkg" style="width: 150px; height: auto; flex-grow: 0;" />
+                    <ui:ScrollView name="svPkg" style="width: auto; height: auto; flex-grow: 1;" />
                 </ui:IMGUIContainer>
                 <ui:IMGUIContainer style="background-color: rgb(56, 56, 56); flex-grow: 1; flex-basis: auto; margin-left: 0; padding-left: 0; flex-shrink: 1; -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0; flex-wrap: nowrap;">
                     <ui:Label text="成员变量" display-tooltip-when-elided="true" style="border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-color: rgb(144, 144, 144); border-right-color: rgb(144, 144, 144); border-top-color: rgb(144, 144, 144); border-bottom-color: rgb(144, 144, 144); padding-left: 0; padding-right: 0;" />
@@ -31,6 +31,7 @@
             </ui:IMGUIContainer>
             <ui:IMGUIContainer name="right" style="background-color: rgba(0, 0, 0, 0.18); border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); width: auto; margin-right: 0; margin-left: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; left: 0; top: auto; right: 0; position: relative; flex-grow: 1;">
                 <ui:IMGUIContainer name="comContaine" style="display: flex; opacity: 1; visibility: visible;">
+                    <ui:DropdownField label="继承类型" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="ddExt" />
                     <ui:Toggle label="是否导出" name="tgExport" value="true" style="flex-grow: 0; justify-content: flex-start; align-items: stretch; margin-top: 1px; margin-bottom: 1px;" />
                     <ui:VisualElement name="elementExport">
                         <ui:Toggle label="使用全局设置" name="tgUseGlobal" value="true" style="flex-grow: 0; justify-content: flex-start; align-items: stretch; margin-top: 1px; margin-bottom: 1px;" />
@@ -43,10 +44,7 @@
                             </ui:IMGUIContainer>
                         </ui:IMGUIContainer>
                         <ui:TextField picking-mode="Ignore" label="类名" name="inputClsName" />
-                        <ui:DropdownField label="继承类型" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="ddExt" />
-                        <ui:VisualElement name="tabViewElement" />
-                        <ui:VisualElement name="messageBoxElement" />
-                        <ui:VisualElement name="tipElement" />
+                        <ui:VisualElement name="elementContent" />
                         <ui:Button text="导出选中组件" display-tooltip-when-elided="true" name="btnGenSelectItem" />
                     </ui:VisualElement>
                 </ui:IMGUIContainer>

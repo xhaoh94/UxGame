@@ -9,7 +9,6 @@ namespace Ux.UI
 		protected override string ResName => "CommonTip";
 		protected override GTextField __txtContent => txtContent;
 		protected override Transition __transition => show;
-
 		protected GTextField txtContent;
 		protected Transition show;
 		protected override void CreateChildren()

@@ -7,23 +7,22 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Login";
 		protected override string ResName => "LoginView";
-
-		protected Btn1 btnLogin;
+		protected UIButton btnLogin;
 		protected GTextInput inputAcc;
-		protected SingleBtn camp1;
-		protected SingleBtn camp2;
-		protected SingleBtn camp3;
+		protected UIButton camp1;
+		protected UIButton camp2;
+		protected UIButton camp3;
 		protected Controller camp;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btnLogin = new Btn1(gCom.GetChildAt(2), this);
+				btnLogin = new UIButton(gCom.GetChildAt(2), this);
 				inputAcc = (GTextInput)gCom.GetChildAt(4);
-				camp1 = new SingleBtn(gCom.GetChildAt(6), this);
-				camp2 = new SingleBtn(gCom.GetChildAt(7), this);
-				camp3 = new SingleBtn(gCom.GetChildAt(8), this);
+				camp1 = new UIButton(gCom.GetChildAt(6), this);
+				camp2 = new UIButton(gCom.GetChildAt(7), this);
+				camp3 = new UIButton(gCom.GetChildAt(8), this);
 				camp = gCom.GetControllerAt(0);
 			}
 			catch (System.Exception e)

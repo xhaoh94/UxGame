@@ -5,6 +5,11 @@ namespace Ux
 {
     public class UIProgressBar : UIObject
     {
+        public UIProgressBar(GObject gObject, UIObject parent)
+        {
+            Init(gObject, parent);
+            parent?.Components?.Add(this);
+        }
         public GProgressBar ProgressBar => ObjAs<GProgressBar>();
         #region FairyGUI 属性-方法
         public ProgressTitleType titleType

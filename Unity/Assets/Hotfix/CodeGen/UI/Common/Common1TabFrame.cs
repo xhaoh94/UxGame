@@ -7,15 +7,10 @@ namespace Ux.UI
 		protected override GComponent __tabContent => tabContent;
 		protected override GList __listTab => listTab;
 		protected override UIButton __btnClose => btnClose;
-
 		protected GComponent tabContent;
 		protected GList listTab;
-		protected BtnClose btnClose;
-		public Common1TabFrame(GObject gObject,UIObject parent)
-		{
-			Init(gObject,parent);
-			parent?.Components?.Add(this);
-		}
+		protected UIButton btnClose;
+		public Common1TabFrame(GObject gObject,UIObject parent): base(gObject, parent) { }
 		protected override void CreateChildren()
 		{
 			try
@@ -23,7 +18,7 @@ namespace Ux.UI
 				var gCom = ObjAs<GComponent>();
 				tabContent = (GComponent)gCom.GetChildAt(2);
 				listTab = (GList)gCom.GetChildAt(3);
-				btnClose = new BtnClose(gCom.GetChildAt(4), this);
+				btnClose = new UIButton(gCom.GetChildAt(4), this);
 			}
 			catch (System.Exception e)
 			{

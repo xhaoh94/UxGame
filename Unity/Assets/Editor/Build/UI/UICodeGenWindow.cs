@@ -28,6 +28,7 @@ namespace UI.Editor
         Object,
         TabFrame,
         TabBtn,
+        Model,
     }
     public enum UIExttendFGUI
     {
@@ -83,10 +84,11 @@ namespace UI.Editor
 
         Dictionary<string, TextField> nameTextField = new Dictionary<string, TextField>();
 
-
+        VisualElement elementContent;
         VisualElement tabViewElement;
         VisualElement messageBoxElement;
         VisualElement tipElement;
+        VisualElement modelElement;
 
 
         public void CreateGUI()
@@ -199,9 +201,20 @@ namespace UI.Editor
                 ddExt.index = 0;
                 ddExt.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
 
-                tabViewElement = root.Q<VisualElement>("tabViewElement");
-                messageBoxElement = root.Q<VisualElement>("messageBoxElement");
-                tipElement = root.Q<VisualElement>("tipElement");
+                elementContent = root.Q<VisualElement>("elementContent");
+
+                tabViewElement = new VisualElement();
+                elementContent.Add(tabViewElement);
+
+                messageBoxElement = new VisualElement();
+                elementContent.Add(messageBoxElement);
+
+                tipElement = new VisualElement();
+                elementContent.Add(tipElement);
+
+                modelElement = new VisualElement();
+                elementContent.Add(modelElement);
+
 
                 var btnGenSelectItem = root.Q<Button>("btnGenSelectItem");
                 btnGenSelectItem.clicked += OnBtnGenClick;
@@ -324,6 +337,15 @@ namespace UI.Editor
             {
                 tipElement.style.display = DisplayStyle.None;
             }
+
+            if (data.IsModel)
+            {
+                CreateText(data.ModelData, modelElement);
+            }
+            else
+            {
+                modelElement.style.display = DisplayStyle.None;
+            }
         }
         void CreateText(List<CustomData> listData, VisualElement parent)
         {
@@ -379,6 +401,11 @@ namespace UI.Editor
             if (data.IsTip)
             {
                 FreshDict(tipElement, data.TipData);
+            }
+
+            if (data.IsModel)
+            {
+                FreshDict(modelElement, data.ModelData);
             }
             UICodeGenSettingData.SetComponentData(data);
             FreshComponentData();

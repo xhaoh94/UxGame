@@ -8,7 +8,6 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Multiple";
 		protected override string ResName => "MultipleView";
-
 		protected Common1TabFrame mCommonBg;
 		protected Transition t0;
 		protected Transition t1;

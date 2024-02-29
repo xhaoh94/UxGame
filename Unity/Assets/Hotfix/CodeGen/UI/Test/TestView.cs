@@ -7,28 +7,31 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Test";
 		protected override string ResName => "TestView";
-
-		protected Btn1 btnMultiple;
-		protected Btn1 btnNoneWindow;
-		protected Btn1 btnNoneView;
-		protected Btn1 btnSingle;
-		protected Btn1 btnDouble;
-		protected Btn1 btnLongClick;
-		protected Btn1 btnTest;
-		protected Btn1 btnBack;
+		protected UIButton btnMultiple;
+		protected UIButton btnNoneWindow;
+		protected UIButton btnNoneView;
+		protected UIButton btnSingle;
+		protected UIButton btnDouble;
+		protected UIButton btnLongClick;
+		protected UIButton btnTest;
+		protected UIButton btnBack;
+		protected CommonUIModel model;
+		protected GGraph rtmodel;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btnMultiple = new Btn1(gCom.GetChildAt(2), this);
-				btnNoneWindow = new Btn1(gCom.GetChildAt(3), this);
-				btnNoneView = new Btn1(gCom.GetChildAt(4), this);
-				btnSingle = new Btn1(gCom.GetChildAt(5), this);
-				btnDouble = new Btn1(gCom.GetChildAt(6), this);
-				btnLongClick = new Btn1(gCom.GetChildAt(7), this);
-				btnTest = new Btn1(gCom.GetChildAt(8), this);
-				btnBack = new Btn1(gCom.GetChildAt(9), this);
+				btnMultiple = new UIButton(gCom.GetChildAt(2), this);
+				btnNoneWindow = new UIButton(gCom.GetChildAt(3), this);
+				btnNoneView = new UIButton(gCom.GetChildAt(4), this);
+				btnSingle = new UIButton(gCom.GetChildAt(5), this);
+				btnDouble = new UIButton(gCom.GetChildAt(6), this);
+				btnLongClick = new UIButton(gCom.GetChildAt(7), this);
+				btnTest = new UIButton(gCom.GetChildAt(8), this);
+				btnBack = new UIButton(gCom.GetChildAt(9), this);
+				model = new CommonUIModel(gCom.GetChildAt(10), this);
+				rtmodel = (GGraph)gCom.GetChildAt(11);
 			}
 			catch (System.Exception e)
 			{

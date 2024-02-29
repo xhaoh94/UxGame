@@ -11,12 +11,8 @@ namespace Ux
 		{
 			Conditions = new List<StateConditionBase>()
 			{
-				CreateCondition(nameof(StateCondition),StateConditionBase.State.Include, new HashSet<string>
-				{
-					"Idle",
-					"Run",
-				}),
-				CreateCondition("HeroMoveCondition"),
+				CreateCondition(nameof(StateCondition),StateConditionBase.State.Any, null),
+				CreateCondition(nameof(TemBoolVarCondition),"_move"),
 			};
 		}
 	}

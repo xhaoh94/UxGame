@@ -1,7 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement style="flex-grow: 1; background-color: rgb(56, 56, 56); -unity-background-image-tint-color: rgb(47, 47, 47); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(255, 255, 255); border-right-color: rgb(255, 255, 255); border-top-color: rgb(255, 255, 255); border-bottom-color: rgb(255, 255, 255);">
         <ui:TextField picking-mode="Ignore" label="名字" name="txtName" readonly="true" style="flex-direction: row; flex-wrap: nowrap; flex-basis: auto; align-items: stretch; width: auto; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0; letter-spacing: 0; word-spacing: 0; -unity-paragraph-spacing: 0; min-width: auto; flex-shrink: 0; position: relative; left: auto;" />
-        <ui:TextField picking-mode="Ignore" label="类型" name="txtType" readonly="true" style="height: auto;" />
+        <ui:TextField picking-mode="Ignore" label="原类型" name="txtType" readonly="true" style="height: auto;" />
+        <ui:TextField picking-mode="Ignore" label="生成类型" name="txtCustomType" readonly="true" style="height: auto;" />
         <ui:TextField picking-mode="Ignore" label="资源" name="txtRes" readonly="true" />
         <ui:VisualElement name="VisualElement" style="flex-grow: 0; flex-direction: column;">
             <ui:Toggle label="是否创建变量" name="tgExport" style="flex-grow: 0; flex-direction: row;" />

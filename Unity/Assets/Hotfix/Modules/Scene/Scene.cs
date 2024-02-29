@@ -18,7 +18,7 @@ namespace Ux
             SetMono(Go);
             Camera = AddComponent<CameraComponent>();
             AStar = AddComponent<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
-            AddComponent<FogOfWarComponent>();
+            //AddComponent<FogOfWarComponent>();
         }
 
         public void AddPlayer(PlayerData playerData)

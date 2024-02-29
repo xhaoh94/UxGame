@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Ux;
 
 public static class UnityPool
@@ -45,6 +46,8 @@ public static class UnityPool
             if (obj is GameObject go)
             {
                 go.Visable(true);
+                go.transform.SetParent(null);
+                SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
             }
             return obj as T;
         }
@@ -52,6 +55,11 @@ public static class UnityPool
 
     public static void Push(UnityEngine.GameObject obj)
     {
+        if (obj == null)
+        {
+            Log.Error("将Null的UnityEngine.GameObject 放入了对象池!");
+            return;
+        }
         var mono = obj.GetComponent<ResHandleMono>();
         if (mono == null)
         {
@@ -67,6 +75,12 @@ public static class UnityPool
 
     public static void Push(string location, UnityEngine.Object obj)
     {
+        if (obj == null)
+        {
+            Log.Error("将Null的UnityEngine.Object 放入了对象池!");
+            return;
+        }
+
         if (!_unity.TryGetValue(location, out var queue))
         {
             queue = new Queue<UnityEngine.Object>();

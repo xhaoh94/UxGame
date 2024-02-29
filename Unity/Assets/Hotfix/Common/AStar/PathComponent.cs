@@ -9,6 +9,8 @@ namespace Ux
         public List<Vector3> Points { get; set; }
         public int PathIndex { get; set; }
         public bool IsRun { get; private set; }
+
+        public Vector2 MoveVector2 { get; private set; }
         Unit Unit => Parent as Unit;
 
         void IAwakeSystem.OnAwake()
@@ -24,14 +26,34 @@ namespace Ux
         }
         public void SetPoints(List<Pb.Vector3> points, int moveIndex)
         {
-            PathIndex = moveIndex;
-            Points.Clear();
-            foreach (var point in points)
+            //PathIndex = moveIndex;
+            //Points.Clear();
+            //foreach (var point in points)
+            //{
+            //    Points.Add(new Vector3(point.X, point.Y, point.Z));
+            //}
+            //IsRun = true;
+            //StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Custom);
+
+            MoveVector2 = new Vector2(points[0].X, points[0].Y);
+            if (MoveVector2 == Vector2.zero)
             {
-                Points.Add(new Vector3(point.X, point.Y, point.Z));
+                if (IsRun)
+                {
+                    IsRun = false;
+                    StateMgr.Ins.RemoveTempBoolVar(Unit.ID, "_move");
+                    StateMgr.Ins.Update(Unit.ID);                    
+                }
             }
-            IsRun = true;
-            StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Custom);
+            else
+            {
+                if (!IsRun)
+                {
+                    IsRun = true;
+                    StateMgr.Ins.AddTempBoolVar(Unit.ID, "_move");
+                    StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.TempBoolVar);
+                }
+            }
         }
         public void Stop(bool isUpdate)
         {

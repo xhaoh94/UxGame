@@ -7,24 +7,23 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Main";
 		protected override string ResName => "MainView";
-
-		protected Btn1 btnMainView;
-		protected Btn1 btnBack;
-		protected Btn1 btnStack1;
-		protected Btn1 btnStack2;
-		protected Btn1 btnStack3;
-		protected Btn1 btnStack4;
+		protected UIButton btnMainView;
+		protected UIButton btnBack;
+		protected UIButton btnStack1;
+		protected UIButton btnStack2;
+		protected UIButton btnStack3;
+		protected UIButton btnStack4;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btnMainView = new Btn1(gCom.GetChildAt(0), this);
-				btnBack = new Btn1(gCom.GetChildAt(1), this);
-				btnStack1 = new Btn1(gCom.GetChildAt(2), this);
-				btnStack2 = new Btn1(gCom.GetChildAt(3), this);
-				btnStack3 = new Btn1(gCom.GetChildAt(4), this);
-				btnStack4 = new Btn1(gCom.GetChildAt(5), this);
+				btnMainView = new UIButton(gCom.GetChildAt(0), this);
+				btnBack = new UIButton(gCom.GetChildAt(1), this);
+				btnStack1 = new UIButton(gCom.GetChildAt(2), this);
+				btnStack2 = new UIButton(gCom.GetChildAt(3), this);
+				btnStack3 = new UIButton(gCom.GetChildAt(4), this);
+				btnStack4 = new UIButton(gCom.GetChildAt(5), this);
 			}
 			catch (System.Exception e)
 			{

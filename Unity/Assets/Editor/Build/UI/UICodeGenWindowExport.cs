@@ -192,7 +192,7 @@ namespace UI.Editor
                 }
                 return b;
             }
-
+            //特性
             switch (ext)
             {
                 case UIExtendPanel.View:
@@ -229,48 +229,58 @@ namespace UI.Editor
                         }
                         write.Writeln($"[Lazyload({lazyloadStr})]");
                     }
-                    clsFn();
-                    write.Writeln($"protected override string PkgName => \"{com.packageItem.owner.name}\";");
-                    write.Writeln($"protected override string ResName => \"{com.packageItem.name}\";");
-                    if (ext is UIExtendPanel.MessageBox)
-                    {
-                        Func(comData.MessageBoxData);
-                    }
-                    else if (ext is UIExtendPanel.Tip)
-                    {
-                        Func(comData.TipData);
-                    }
-                    write.Writeln();
-                    memberVarFn();
-                    break;
-                case UIExtendComponent.TabFrame:
-                    clsFn();
-                    if (Func(comData.TabViewData))
-                    {
-                        write.Writeln();
-                    }
-                    memberVarFn();
-                    write.Writeln($"public {clsName}(GObject gObject,UIObject parent)");
-                    write.StartBlock();
-                    write.Writeln($"Init(gObject,parent);");
-                    write.Writeln($"parent?.Components?.Add(this);");
-                    write.EndBlock();
-                    break;
-                case UIExtendComponent.TabBtn:
-                    clsFn();
-                    memberVarFn();
-                    break;
-                default:
-                    clsFn();
-                    memberVarFn();
-                    write.Writeln($"public {clsName}(GObject gObject,UIObject parent)");
-                    write.StartBlock();
-                    write.Writeln($"Init(gObject,parent);");
-                    write.Writeln($"parent?.Components?.Add(this);");
-                    write.EndBlock();
                     break;
             }
-
+            //类
+            clsFn();
+            //资源包
+            switch (ext)
+            {
+                case UIExtendPanel.View:
+                case UIExtendPanel.Window:
+                case UIExtendPanel.TabView:
+                case UIExtendPanel.MessageBox:
+                case UIExtendPanel.Tip:
+                    write.Writeln($"protected override string PkgName => \"{com.packageItem.owner.name}\";");
+                    write.Writeln($"protected override string ResName => \"{com.packageItem.name}\";");
+                    break;
+            }
+            //重写字段
+            switch (ext)
+            {
+                case UIExtendPanel.MessageBox:
+                    Func(comData.MessageBoxData);
+                    break;
+                case UIExtendPanel.Tip:
+                    Func(comData.TipData);
+                    break;
+                case UIExtendComponent.TabFrame:
+                    Func(comData.TabViewData);
+                    break;
+                case UIExtendComponent.Model:
+                    Func(comData.ModelData);
+                    break;
+            }
+            //变量字段
+            memberVarFn();
+            //组件构造方法
+            switch (ext)
+            {
+                case UIExtendPanel.View:
+                case UIExtendPanel.Window:
+                case UIExtendPanel.TabView:
+                case UIExtendPanel.MessageBox:
+                case UIExtendPanel.Tip:
+                case UIExtendComponent.TabBtn:
+                    break;
+                default:
+                    write.Writeln($"public {clsName}(GObject gObject,UIObject parent): base(gObject, parent) {{ }}");
+                    //write.StartBlock();
+                    //write.Writeln($"Init(gObject,parent);");
+                    //write.Writeln($"parent?.Components?.Add(this);");
+                    //write.EndBlock();
+                    break;
+            }
 
             UIMemberData frame = null;
             List<UIMemberData> btns = new List<UIMemberData>();

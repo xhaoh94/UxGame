@@ -1,16 +1,18 @@
 ﻿using FairyGUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Ux;
 
 namespace UI.Editor
 {
     public class UIEditorTools
     {
-        public static List<ObjectType> CustomTypeList = new List<ObjectType>() {
-            ObjectType.Button,
-            ObjectType.ProgressBar,
+        public static Dictionary<ObjectType, string> CustomTypeList = new Dictionary<ObjectType, string>() {
+            { ObjectType.Button ,nameof(UIButton)},
+            { ObjectType.ProgressBar,nameof(UIProgressBar)},
         };
         private static Dictionary<string, object> ExtTypeObject = new Dictionary<string, object>();
         private static Dictionary<string, FairyGUI.GComponent> key2com = new Dictionary<string, FairyGUI.GComponent>();
@@ -58,7 +60,9 @@ namespace UI.Editor
         }
         static FairyGUI.GComponent CreateObject(string pkg, string res)
         {
-            var com = (FairyGUI.GComponent)FairyGUI.UIPackage.CreateObject(pkg, res);
+            var gobj = FairyGUI.UIPackage.CreateObject(pkg, res);
+            if (gobj == null) return null;
+            var com = (FairyGUI.GComponent)gobj;
             com.displayObject.gameObject.hideFlags = HideFlags.HideAndDontSave;
             return com;
         }
@@ -78,6 +82,7 @@ namespace UI.Editor
             if (!key2com.TryGetValue(key, out var com))
             {
                 com = CreateObject(pkg, res);
+                if (com == null) return null;
                 key2com.Add(key, com);
             }
             return com;
@@ -122,7 +127,7 @@ namespace UI.Editor
                     {
                         itemDatas.Add(item);
                     }
-                    else if (CustomTypeList.Contains(item.objectType))
+                    else if (CustomTypeList.ContainsKey(item.objectType))
                     {
                         itemDatas.Add(item);
                     }
@@ -197,6 +202,10 @@ namespace UI.Editor
             strMatch = @"(?<v>[\S]+)(?=TabBtn)";
             match = Regex.IsMatch(str, strMatch);
             if (match) return $"{UIExtends.Component}/{UIExtendComponent.TabBtn}";
+
+            strMatch = @"(?<v>[\S]+)(?=UIModel)";
+            match = Regex.IsMatch(str, strMatch);
+            if (match) return $"{UIExtends.Component}/{UIExtendComponent.Model}";
 
             if (com is GButton)
             {

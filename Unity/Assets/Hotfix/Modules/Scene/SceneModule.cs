@@ -61,6 +61,13 @@ namespace Ux
             //NetMgr.Ins.Send(Pb.CS.C2S_Move, req);
             _BcstUnitMove(resp);
         }
+
+        public void SendMove(Vector2 vector2)
+        {
+            var resp = new Pb.BcstUnitMove() { roleId = 1, pointIndex = 0 };
+            resp.Points.Add(new Pb.Vector3() { X = vector2.x, Y = vector2.y });
+            EventMgr.Ins.Send(EventType.UNIT_MOVE, resp);
+        }
         #endregion
 
         #region ÍøÂç¹ã²¥

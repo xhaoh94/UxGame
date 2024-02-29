@@ -111,7 +111,7 @@ namespace Ux
             if (_playerData.self)
             {
                 Map.Camera.SetFollow(Model.transform);
-                Map.Camera.SetLookAt(Model.transform);
+                //Map.Camera.SetLookAt(Model.transform);
             }
 
             AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());

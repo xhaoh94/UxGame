@@ -15,6 +15,12 @@ namespace Ux
 
         readonly List<UITabBtn> _frameTabs = new List<UITabBtn>();
 
+        public UITabFrame(GObject container, UIObject parent)
+        {
+            Init(container, parent);
+            parent?.Components?.Add(this);
+        }
+
         #region 组件
 
         protected virtual GList __listTab { get; } = null;

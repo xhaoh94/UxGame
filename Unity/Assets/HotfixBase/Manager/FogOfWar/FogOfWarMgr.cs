@@ -161,7 +161,7 @@ namespace Ux
             _mainCamera = null;
             if (_FogOfWar != null)
             {
-                UnityPool.Push(_location, _FogOfWar);
+                UnityPool.Push(_FogOfWar);
                 _FogOfWar = null;
             }
         }

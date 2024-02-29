@@ -48,7 +48,7 @@ MonoBehaviour:
     Conditions:
     - Type: 0
       key: 
-      stateType: 1
+      stateType: 0
       states:
       - Idle
       - Run
@@ -57,8 +57,8 @@ MonoBehaviour:
       inputType: 0
       customName: 
       customValue: 
-    - Type: 4
-      key: 
+    - Type: 1
+      key: _move
       stateType: 0
       states: []
       triggerType: 0

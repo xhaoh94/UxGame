@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:yousandi.cn,2023:
+%TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53,6 +53,14 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+      - CollectPath: Assets/Data/Res/Prefab/Common
+        CollectorGUID: 9dfef7769977a774bb51fbe27ef660e3
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
     - GroupName: Preload
       GroupDesc: "\u9884\u52A0\u8F7D"
       AssetTags: preload
@@ -76,6 +84,14 @@ MonoBehaviour:
         UserData: 
       - CollectPath: Assets/Data/Res/Timeline
         CollectorGUID: de523ac24d0eef34d83b36ad0bf292a6
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Data/Res/Atlas
+        CollectorGUID: bbf62020395cb4c489585f2ffd312862
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackSeparately

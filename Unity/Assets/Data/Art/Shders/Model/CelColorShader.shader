@@ -8,9 +8,24 @@
         _OutlineWidth("OutlineWidth", Range(0, 10)) = 0.4
         _OutlineColor("Outline Color", Color) = (0, 0, 0, 1)
         [Toggle]_OLWVWD("OutlineWidth Varies With Distance?", float) = 0
+
+        _StencilComp ("Stencil Comparison", Float) = 8
+        _Stencil ("Stencil ID", Float) = 0
+        _StencilOp ("Stencil Operation", Float) = 0
+        _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        _StencilReadMask ("Stencil Read Mask", Float) = 255
     }
     SubShader
     {
+            Stencil
+            {
+                Ref [_Stencil]
+                Comp [_StencilComp]
+                Pass [_StencilOp] 
+                ReadMask [_StencilReadMask]
+                WriteMask [_StencilWriteMask]
+            }
+
         HLSLINCLUDE
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"         
@@ -36,6 +51,7 @@
         Pass 
         {
             Tags{"LightMode" = "UniversalForward"} 
+
             Cull off
             HLSLPROGRAM
 	    #pragma target 3.0
@@ -59,6 +75,9 @@
             }
             ENDHLSL
         }
+
+
+
         Pass {
             Name "OutLine"
             Tags{ "LightMode" = "SRPDefaultUnlit" }

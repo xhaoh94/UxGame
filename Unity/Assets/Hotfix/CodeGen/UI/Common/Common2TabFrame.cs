@@ -5,19 +5,14 @@ namespace Ux.UI
 	public partial class Common2TabFrame : UITabFrame
 	{
 		protected override UIButton __btnClose => btnClose;
-
-		protected BtnClose btnClose;
-		public Common2TabFrame(GObject gObject,UIObject parent)
-		{
-			Init(gObject,parent);
-			parent?.Components?.Add(this);
-		}
+		protected UIButton btnClose;
+		public Common2TabFrame(GObject gObject,UIObject parent): base(gObject, parent) { }
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btnClose = new BtnClose(gCom.GetChildAt(1), this);
+				btnClose = new UIButton(gCom.GetChildAt(1), this);
 			}
 			catch (System.Exception e)
 			{

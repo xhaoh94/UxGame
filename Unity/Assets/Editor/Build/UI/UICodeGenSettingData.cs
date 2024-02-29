@@ -131,12 +131,29 @@ namespace UI.Editor
                 if (_tipData == null || _tipData.Count == 0)
                 {
                     _tipData = new List<CustomData>()
-                    {                       
+                    {
                        new CustomData("__txtContent","GTextField",string.Empty),
-                       new CustomData("__transition","Transition",string.Empty),                       
+                       new CustomData("__transition","Transition",string.Empty),
                     };
                 }
                 return _tipData;
+            }
+        }
+
+        [SerializeField]
+        List<CustomData> _modelData;
+        public List<CustomData> ModelData
+        {
+            get
+            {
+                if (_modelData == null || _modelData.Count == 0)
+                {
+                    _modelData = new List<CustomData>()
+                    {
+                       new CustomData("__container","GGraph",string.Empty),                       
+                    };
+                }
+                return _modelData;
             }
         }
 
@@ -161,6 +178,13 @@ namespace UI.Editor
                 return ext == $"{UIExtends.None}";
             }
         }
+        public bool IsExFGUI
+        {
+            get
+            {
+                return ext.Contains($"{UIExtends.FGUI}");
+            }
+        }
         public bool IsTabFrame
         {
             get
@@ -180,6 +204,13 @@ namespace UI.Editor
             get
             {
                 return ext == $"{UIExtends.Panel}/{UIExtendPanel.Tip}";
+            }
+        }
+        public bool IsModel
+        {
+            get
+            {
+                return ext == $"{UIExtends.Component}/{UIExtendComponent.Model}";
             }
         }
         public object Extend
@@ -246,21 +277,30 @@ namespace UI.Editor
                 member.name = child.name;
                 member.index = i;
                 member.defaultType = child.GetType().Name;
-
-                if (child.packageItem != null && child is GComponent)
+                if (child.packageItem != null)
                 {
-                    if (child.packageItem.exported ||
-                        UIEditorTools.CustomTypeList.Contains(child.packageItem.objectType))
+                    var b = UIEditorTools.CustomTypeList.TryGetValue(child.packageItem.objectType, out var temName);
+                    if (b || child.packageItem.exported)
                     {
                         var set = UICodeGenSettingData.GetComponentData(child.asCom);
+
                         if (set == null || !set.IsExNone)
                         {
-                            member.customType = set != null ? set.cls : child.packageItem.name;
                             member.pkg = child.packageItem.owner.name;
                             member.res = child.packageItem.name;
-                            continue;
+                            if (set == null)
+                            {
+                                member.customType = string.IsNullOrEmpty(temName) ? child.packageItem.name : temName;
+                                continue;
+                            }
+
+                            if (!set.IsExNone)
+                            {
+                                member.customType = set.isExport || string.IsNullOrEmpty(temName) ? set.cls : temName;
+                                continue;
+                            }
                         }
-                    }
+                    }                    
                 }
                 member.customType = child.GetType().Name;
             }
@@ -554,6 +594,13 @@ namespace UI.Editor
             data.cls = com.packageItem.name;
             data.ext = UIEditorTools.CheckExt(com);
             data.isExport = true;
+            if (UIEditorTools.CustomTypeList.ContainsKey(com.packageItem.objectType))
+            {
+                if (com.packageItem.exported && data.IsExFGUI)
+                {
+                    data.isExport = false;
+                }
+            }
             return data;
         }
 

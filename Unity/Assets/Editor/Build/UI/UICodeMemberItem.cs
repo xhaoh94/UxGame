@@ -25,6 +25,7 @@ public class UICodeMemberItem : TemplateContainer
 
     TextField _txtName;
     TextField _txtType;
+    TextField _txtCustomType;
     TextField _txtRes;
     Toggle _tgExport;
     Toggle _tgCreate;
@@ -61,6 +62,8 @@ public class UICodeMemberItem : TemplateContainer
     {
         _txtName = this.Q<TextField>("txtName");
         _txtType = this.Q<TextField>("txtType");
+        _txtCustomType = this.Q<TextField>("txtCustomType");
+
         _txtRes = this.Q<TextField>("txtRes");
         _tgExport = this.Q<Toggle>("tgExport");
         _tgExport.RegisterValueChangedCallback(evt =>
@@ -108,6 +111,7 @@ public class UICodeMemberItem : TemplateContainer
         this.data = data;
         _txtName.SetValueWithoutNotify(data.name);
         _txtType.SetValueWithoutNotify(data.defaultType);
+        _txtCustomType.SetValueWithoutNotify(data.customType);
         if (!string.IsNullOrEmpty(data.pkg) && !string.IsNullOrEmpty(data.res))
         {
             _txtRes.SetValueWithoutNotify($"{data.res}@{data.pkg}");

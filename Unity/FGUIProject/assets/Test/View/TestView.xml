@@ -39,5 +39,7 @@
       <relation target="" sidePair="left-left"/>
       <Button title="返回"/>
     </component>
+    <component id="n14_hp0v" name="model" src="hp0v6" fileName="Component/CommonUIModel.xml" pkg="ex3p2il3" xy="949,24"/>
+    <graph id="n15_iyb6" name="rtmodel" xy="197,370" size="300,300" type="rect"/>
   </displayList>
 </component>

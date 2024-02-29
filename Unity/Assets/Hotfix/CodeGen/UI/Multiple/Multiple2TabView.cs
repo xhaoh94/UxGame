@@ -8,8 +8,7 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Multiple";
 		protected override string ResName => "Multiple2TabView";
-
-		protected Btn1 btn1;
+		protected UIButton btn1;
 		protected Transition t0;
 		protected Transition t1;
 		protected override void CreateChildren()
@@ -17,7 +16,7 @@ namespace Ux.UI
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btn1 = new Btn1(gCom.GetChildAt(2), this);
+				btn1 = new UIButton(gCom.GetChildAt(2), this);
 				t0 = gCom.GetTransitionAt(0);
 				t1 = gCom.GetTransitionAt(1);
 			}

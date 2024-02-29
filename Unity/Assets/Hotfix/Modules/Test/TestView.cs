@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Ux.UI
 {
@@ -13,6 +14,25 @@ namespace Ux.UI
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Stack;
         public override UIBlur Blur => UIBlur.Blur;
+
+        protected override void OnInit()
+        {
+            base.OnInit();
+        }
+        protected override void OnShow(object param)
+        {
+            base.OnShow(param);
+            var loader = new UxLoader();
+            loader.autoSize = true;
+            loader.url = "130G_TieKuang";
+            GObject.asCom.AddChild(loader);
+
+            model.CloneMaterial = true;
+            model.Load("Hero_ZS").Play("Hero_ZS@Stand");
+
+            var rt = new RTModel(rtmodel);
+            rt.LoadModel("Hero_ZS");
+        }
         partial void OnBtnMultipleClick(EventContext e)
         {
             UIMgr.Ins.Show<Multiple2TabView>();

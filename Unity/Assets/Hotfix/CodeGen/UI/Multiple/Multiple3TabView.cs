@@ -8,14 +8,13 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Multiple";
 		protected override string ResName => "Multiple3TabView";
-
-		protected Btn1 btn1;
+		protected UIButton btn1;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				btn1 = new Btn1(gCom.GetChildAt(2), this);
+				btn1 = new UIButton(gCom.GetChildAt(2), this);
 			}
 			catch (System.Exception e)
 			{

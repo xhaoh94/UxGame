@@ -8,7 +8,6 @@ namespace Ux.UI
 	{
 		protected override string PkgName => "Bag";
 		protected override string ResName => "BagWindow";
-
 		protected Common2TabFrame mCommonBg;
 		protected override void CreateChildren()
 		{

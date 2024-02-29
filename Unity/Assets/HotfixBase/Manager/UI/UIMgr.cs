@@ -77,6 +77,7 @@ namespace Ux
         public UIMgr()
         {
             GRoot.inst.SetContentScaleFactor(1280, 720, UIContentScaler.ScreenMatchMode.MatchWidthOrHeight);
+            UIObjectFactory.SetLoaderExtension(typeof(UxLoader));
             //StageCamera.main.clearFlags = CameraClearFlags.Nothing;
             if (PatchMgr.Ins.IsDone)
             {
