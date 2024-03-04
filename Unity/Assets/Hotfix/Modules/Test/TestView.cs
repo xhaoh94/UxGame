@@ -15,9 +15,11 @@ namespace Ux.UI
         public override UIType Type => UIType.Stack;
         public override UIBlur Blur => UIBlur.Blur;
 
+        RTModel rt;
         protected override void OnInit()
         {
             base.OnInit();
+            rt = new RTModel(rtmodel, this);
         }
         protected override void OnShow(object param)
         {
@@ -30,8 +32,7 @@ namespace Ux.UI
             model.CloneMaterial = true;
             model.Load("Hero_ZS").Play("Hero_ZS@Stand");
 
-            var rt = new RTModel(rtmodel);
-            rt.LoadModel("Hero_ZS");
+            rt.Load("Hero_ZS").Play("Hero_ZS@Stand");
         }
         partial void OnBtnMultipleClick(EventContext e)
         {

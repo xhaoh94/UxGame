@@ -6,7 +6,7 @@ namespace Ux
 {
     public class UIModel : UIObject
     {
-        class ModelEntity : Entity
+        public class ModelEntity : Entity
         {
             public AnimComponent Anim { get; private set; }
 

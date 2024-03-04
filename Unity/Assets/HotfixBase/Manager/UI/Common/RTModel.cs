@@ -1,95 +1,96 @@
 ﻿using FairyGUI;
 using FairyGUI.Utils;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using static Ux.UIModel;
+using NativeBlendMode = UnityEngine.Rendering.BlendMode;
+
 namespace Ux
 {
-    public class RTModel
+    public class RTModel : UIObject
     {
-        public Transform modelRoot { get; private set; }
+        public GameObject Model { get; private set; }
+        public Camera Camera { get; private set; }
 
-        Camera _camera;
         Image _image;
         Transform _root;
+        Transform _modelRoot;
         Transform _background;
-        Transform _model;
         RenderTexture _renderTexture;
         int _width;
         int _height;
-        bool _cacheTexture;
-        float _rotating;
+        int _layer;
 
-        const int RENDER_LAYER = 0;
-        const int HIDDEN_LAYER = 10;
+        bool _isInLoad;
+        ModelEntity _entity;
 
-        public RTModel(GGraph holder)
+        const int S_LAYER = 10;
+        const int E_LAYER = 29;
+        static Queue<int> _queue;
+        static int GetLyaer()
         {
-            _width = (int)holder.width;
-            _height = (int)holder.height;
-            _cacheTexture = true;
+            if (_queue == null)
+            {
+                _queue = new Queue<int>();
+                for (int i = S_LAYER; i <= E_LAYER; i++)
+                {
+                    _queue.Enqueue(i);
+                }
+            }
+            if (_queue.Count == 0)
+            {
+                Log.Warning("Layer超出预存范围！");
+                return 0;
+            }
+            return _queue.Dequeue();
+        }
+
+        #region 组件
+
+        protected virtual GGraph __container => GObject.asGraph;
+
+        #endregion 
+        public RTModel(GObject container, UIObject parent)
+        {
+            Init(container, parent);
+            parent?.Components?.Add(this);
+
+            _width = (int)container.width;
+            _height = (int)container.height;
 
             this._image = new Image();
-            holder.SetNativeObject(this._image);
-
-            var go = ResMgr.Ins.LoadAsset<GameObject>("RTModelCamera");
-            _camera = go.GetComponent<Camera>();
-            _camera.transform.position = new Vector3(0, 1000, 0);
-            //_camera.cullingMask = 1 << RENDER_LAYER;
-            _camera.enabled = false;
-            Object.DontDestroyOnLoad(_camera.gameObject);
-
-            this._root = new GameObject("RTModel").transform;
-            this._root.SetParent(_camera.transform, false);
-            SetLayer(this._root.gameObject, HIDDEN_LAYER);
-
-            this.modelRoot = new GameObject("model_root").transform;
-            this.modelRoot.SetParent(this._root, false);
-
-            this._background = new GameObject("background").transform;
-            this._background.SetParent(this._root, false);
-
-            this._image.onAddedToStage.Add(OnAddedToStage);
-            this._image.onRemovedFromStage.Add(OnRemoveFromStage);
-
-            if (this._image.stage != null)
-                OnAddedToStage();
-            else
-                _camera.gameObject.SetActive(false);
+            __container.SetNativeObject(this._image);
         }
 
-        public void Dispose()
+        protected override void OnHide()
         {
-            Object.Destroy(_camera.gameObject);
-            DestroyTexture();
-
-            this._image.Dispose();
-            this._image = null;
+            base.OnHide();
+            _Release();
         }
 
-        /// <summary>
-        /// The rendertexture is not transparent. So if you want to the UI elements can be seen in the back of the models/particles in rendertexture,
-        /// you can set a maximunm two images for background.
-        /// Be careful if your image is 9 grid scaling, you must make sure the place holder is inside the middle box(dont cover from border to middle).
-        /// </summary>
-        /// <param name="image"></param>
+        protected override void OnDispose()
+        {
+            base.OnDispose();
+            if (this._image != null)
+            {
+                this._image.Dispose();
+                this._image = null;
+            }
+        }
+
         public void SetBackground(GObject image)
         {
             SetBackground(image, null);
         }
 
-        /// <summary>
-        /// The rendertexture is not transparent. So if you want to the UI elements can be seen in the back of the models/particles in rendertexture,
-        /// you can set a maximunm two images for background.
-        /// </summary>
-        /// <param name="image1"></param>
-        /// <param name="image2"></param>
         public void SetBackground(GObject image1, GObject image2)
         {
             Image source1 = (Image)image1.displayObject;
             Image source2 = image2 != null ? (Image)image2.displayObject : null;
 
             Vector3 pos = _background.position;
-            pos.z = _camera.farClipPlane;
+            pos.z = Camera.farClipPlane;
             _background.position = pos;
 
             Vector2[] uv = new Vector2[4];
@@ -184,115 +185,160 @@ namespace Ux
             return uvRect;
         }
 
-        public void LoadModel(string location)
+        public RTModel Load(string location, float angle = 180, float scale = 1)
         {
-            this.UnloadModel();
-
             var model = ResMgr.Ins.LoadAsset<GameObject>(location);
-            model.SetLayer(LayerMask.NameToLayer("Test"));
-            model.transform.localPosition = new Vector3(0, 0, 10);
-            model.transform.localScale = new Vector3(1, 1, 1);
-            model.transform.localEulerAngles = new Vector3(0, 180, 0);
-            _model = model.transform;
-            _model.SetParent(this.modelRoot, false);
+            return _Set(model, true, angle, scale);
         }
-
-        public void UnloadModel()
+        public RTModel Set(GameObject model, float angle=180, float scale=1)
         {
-            if (_model != null)
+            return _Set(model, false, angle, scale);
+        }
+        public RTModel _Set(GameObject model, bool isLoad, float angle, float scale)
+        {
+            _CreateCamera();
+            _CreateTexture();
+
+            if (Model != null && _isInLoad)
             {
-                Object.Destroy(_model.gameObject);
-                _model = null;
+                UnityPool.Push(Model);
             }
-            _rotating = 0;
-        }
 
-        public void StartRotate(float delta)
+            _isInLoad = isLoad;
+            this.Model = model;
+
+            model.transform.localPosition = new Vector3(0, -0.5f, 5);
+            model.transform.localScale = new Vector3(scale, scale, scale);
+            model.transform.localEulerAngles = new Vector3(0, angle, 0);
+            model.SetParent(this._modelRoot, false);
+
+            _root.gameObject.SetLayer(_layer);
+
+
+            if (_entity == null)
+            {
+                _entity = Entity.Create<ModelEntity>(true);
+            }
+            _entity.Name = $"RTModel@{model.name}";
+            _entity.Set(model);
+
+            return this;
+        }
+        void _CreateCamera()
         {
-            _rotating = delta;
-        }
+            if (Camera != null) return;
 
-        public void StopRotate()
-        {
-            _rotating = 0;
-        }
+            _layer = GetLyaer();
 
-        void CreateTexture()
+            var go = ResMgr.Ins.LoadAsset<GameObject>("RTModelCamera");
+            Camera = go.GetComponent<Camera>();
+            Camera.transform.position = new Vector3(0, 1000, 0);
+            Camera.cullingMask = 1 << _layer;
+            Camera.enabled = false;
+
+            Object.DontDestroyOnLoad(Camera.gameObject);
+
+            _root = go.transform.Find("RTModel");
+            if (_root == null)
+            {
+                _root = new GameObject("RTModel").transform;
+                _root.SetParent(go.transform, false);
+            }
+            _modelRoot = _root.Find("modelRoot");
+            if (_modelRoot == null)
+            {
+                _modelRoot = new GameObject("modelRoot").transform;
+                _modelRoot.SetParent(_root, false);
+            }
+
+            _background = _root.Find("background");
+            if (_background == null)
+            {
+                _background = new GameObject("background").transform;
+                _background.SetParent(_root, false);
+
+            }
+        }
+        void _CreateTexture()
         {
             if (_renderTexture != null)
                 return;
 
-            _renderTexture= RenderTexture.GetTemporary(_width, _height, 24);
-            //_renderTexture = new RenderTexture(_width, _height, 24, RenderTextureFormat.ARGB32)
-            //{
-            //    antiAliasing = 1,
-            //    filterMode = FilterMode.Bilinear,
-            //    anisoLevel = 0,
-            //    useMipMap = false
-            //};
+            _renderTexture = RenderTexture.GetTemporary(_width, _height, 24, RenderTextureFormat.ARGB32);
+            _renderTexture.antiAliasing = 1;
+            _renderTexture.filterMode= FilterMode.Bilinear;
+            _renderTexture.anisoLevel = 0;
+            _renderTexture.useMipMap = false;
+
             this._image.texture = new NTexture(_renderTexture);
             this._image.blendMode = BlendMode.Off;
-        }
+            //BlendModeUtils.Override(BlendMode.Custom1, NativeBlendMode.One, NativeBlendMode.OneMinusSrcAlpha);
+            //this._image.blendMode = BlendMode.Custom1;
 
-        void DestroyTexture()
+            Timers.inst.AddUpdate(this.Render);
+            Render();
+
+        }
+        void _Release()
         {
+            Timers.inst.Remove(this.Render);
+
+            _entity?.Destroy();
+            _entity = null;
+
+            if (Camera != null)
+            {
+                UnityPool.Push(Camera.gameObject);
+                Camera = null;
+            }
+
+            var temGo = Model;
+            if (_isInLoad)
+            {
+                UnityPool.Push(Model);
+                _isInLoad = false;
+            }
+            Model = null;
+
+            if (_layer != -1)
+            {
+                _queue.Enqueue(_layer);
+                _layer = -1;
+            }
+
             if (_renderTexture != null)
             {
                 RenderTexture.ReleaseTemporary(_renderTexture);
-                //Object.Destroy(_renderTexture);
                 _renderTexture = null;
+            }
+
+            if (this._image != null)
+            {
                 this._image.texture = null;
             }
+            
         }
 
-        void OnAddedToStage()
+        public void Play(string Anim)
         {
-            if (_renderTexture == null)
-                CreateTexture();
+            if (_entity == null) return;
 
-            Timers.inst.AddUpdate(this.Render);
-            _camera.gameObject.SetActive(true);
-
-            Render();
+            var clip = ResMgr.Ins.LoadAsset<AnimationClip>(Anim);
+            _entity.Anim.AddAnimation(Anim, clip);
+            _entity.Anim.Play(Anim, 0.3f);
         }
 
-        void OnRemoveFromStage()
-        {
-            if (!_cacheTexture)
-                DestroyTexture();
-
-            Timers.inst.Remove(this.Render);
-            _camera.gameObject.SetActive(false);
-        }
 
         void Render(object param = null)
-        {
-            if (_rotating != 0 && this.modelRoot != null)
-            {
-                Vector3 localRotation = this.modelRoot.localRotation.eulerAngles;
-                localRotation.y += _rotating;
-                this.modelRoot.localRotation = Quaternion.Euler(localRotation);
-            }
-
-            SetLayer(this._root.gameObject, RENDER_LAYER);
-
-            _camera.targetTexture = this._renderTexture;
+        {            
+            Camera.targetTexture = this._renderTexture;
             RenderTexture old = RenderTexture.active;
             RenderTexture.active = this._renderTexture;
             GL.Clear(true, true, Color.clear);
-            _camera.Render();
+            Camera.Render();
             RenderTexture.active = old;
-
-            SetLayer(this._root.gameObject, HIDDEN_LAYER);
         }
 
-        void SetLayer(GameObject go, int layer)
-        {
-            Transform[] transforms = go.GetComponentsInChildren<Transform>(true);
-            foreach (Transform t in transforms)
-            {
-                t.gameObject.layer = layer;
-            }
-        }
+
     }
 }

@@ -24,8 +24,7 @@
                 Pass [_StencilOp] 
                 ReadMask [_StencilReadMask]
                 WriteMask [_StencilWriteMask]
-            }
-
+            }            
         HLSLINCLUDE
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"         
