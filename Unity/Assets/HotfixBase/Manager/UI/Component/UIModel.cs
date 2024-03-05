@@ -54,6 +54,13 @@ namespace Ux
         public UIModel Load(string location, float angle = 180, float scale = 180)
         {
             var model = ResMgr.Ins.LoadAsset<GameObject>(location);
+            switch (State)
+            {
+                case UIState.Hide:
+                case UIState.HideAnim:
+                    UnityPool.Push(model);
+                    return this;
+            }
             _Set(model, true, angle, scale);
             return this;
         }

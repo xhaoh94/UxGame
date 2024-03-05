@@ -100,6 +100,13 @@ namespace Ux
         public RTModel Load(string location, float angle = 180, float scale = 1)
         {
             var model = ResMgr.Ins.LoadAsset<GameObject>(location);
+            switch (State)
+            {
+                case UIState.Hide:
+                case UIState.HideAnim:
+                    UnityPool.Push(model);
+                    return this;
+            }
             return _Set(model, true, angle, scale);
         }
         public RTModel Set(GameObject model, float angle = 180, float scale = 1)
