@@ -271,9 +271,9 @@ namespace Ux
             _renderTexture.useMipMap = false;
 
             this._image.texture = new NTexture(_renderTexture);
-            this._image.blendMode = BlendMode.Off;
+            //this._image.blendMode = BlendMode.Off;
             //BlendModeUtils.Override(BlendMode.Custom1, NativeBlendMode.One, NativeBlendMode.OneMinusSrcAlpha);
-            //this._image.blendMode = BlendMode.Custom1;
+            this._image.blendMode = BlendMode.One_OneMinusSrcAlpha;
 
             Timers.inst.AddUpdate(this.Render);
             Render();
