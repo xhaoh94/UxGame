@@ -210,9 +210,11 @@ namespace Ux
 
         protected virtual void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
         {
-            if (_state == UIState.Show || _state == UIState.ShowAnim)
+            switch (_state)
             {
-                return;
+                case UIState.Show:
+                case UIState.ShowAnim:
+                    return;
             }
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
@@ -228,11 +230,11 @@ namespace Ux
             _RemoveTag();
             EventMgr.Ins.___RegisterFastMethod(this);
             OnAddEvent();
-            OnShow(param);
             foreach (var component in Components)
             {
                 component.ToShow(isAnim, id, param, isStack, token);
             }
+            OnShow(param);
             _CheckShow(id, param, isStack, token).Forget();
         }
 

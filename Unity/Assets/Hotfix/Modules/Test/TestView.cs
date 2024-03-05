@@ -57,6 +57,7 @@ namespace Ux.UI
         {
             Log.Debug("单击");
             UIMgr.Tip.Show("单击");
+            testRtModel.Load("Hero_CK").Play("Hero_CK@Stand"); ;
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {

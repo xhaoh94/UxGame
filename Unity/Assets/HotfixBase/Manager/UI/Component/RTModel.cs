@@ -18,9 +18,10 @@ namespace Ux
         RenderTexture _renderTexture;
         int _width;
         int _height;
-        int _posz;
+        int _posz = -1;
         bool _isInLoad;
         int _srcLayer;
+        string _curAnim;
         ModelEntity _entity;
 
         const int GAP = 30;
@@ -111,6 +112,12 @@ namespace Ux
         }
         public RTModel Set(GameObject model, float angle = 180, float scale = 1)
         {
+            switch (State)
+            {
+                case UIState.Hide:
+                case UIState.HideAnim:
+                    return this;
+            }
             return _Set(model, false, angle, scale);
         }
         public RTModel _Set(GameObject model, bool isLoad, float angle, float scale)
@@ -135,11 +142,15 @@ namespace Ux
 
             if (_entity == null)
             {
-                _entity = Entity.Create<ModelEntity>(true);
+                _entity = Entity.Create<ModelEntity>();
             }
             _entity.Name = $"RTModel@{model.name}";
             _entity.Set(model);
 
+            //if (!string.IsNullOrEmpty(_curAnim))
+            //{
+            //    Play(_curAnim);
+            //}
             return this;
         }
         void _CreateCamera()
@@ -193,7 +204,7 @@ namespace Ux
 
             if (_posz >= -1)
             {
-                _queue.Push(_posz);
+                _queue?.Push(_posz);
                 _posz = -1;
             }
 
@@ -208,15 +219,23 @@ namespace Ux
                 this._image.texture = null;
             }
 
+            _curAnim = null;
         }
 
-        public void Play(string Anim)
+        public void Play(string anim)
         {
             if (_entity == null) return;
+            if (string.IsNullOrEmpty(anim)) return;
 
-            var clip = ResMgr.Ins.LoadAsset<AnimationClip>(Anim);
-            _entity.Anim.AddAnimation(Anim, clip);
-            _entity.Anim.Play(Anim, 0.3f);
+            if (!_entity.Anim.Has(anim))
+            {
+                var clip = ResMgr.Ins.LoadAsset<AnimationClip>(anim);
+                _entity.Anim.AddAnimation(anim, clip);
+            }
+            else if (_curAnim == anim) return;
+
+            _curAnim = anim;
+            _entity.Anim.Play(anim, 0.3f);
         }
 
 

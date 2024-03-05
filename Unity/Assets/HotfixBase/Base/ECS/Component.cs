@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Ux
@@ -16,7 +17,7 @@ namespace Ux
             var component = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (component == null) return null;
 #if UNITY_EDITOR
-            component.Viewer = EntityViewer.Create();            
+            component.Viewer = EntityViewer.Create();
 #endif
             component.IsFromPool = isFromPool;
             component._isDestroyed = false;
@@ -211,11 +212,6 @@ namespace Ux
 
         bool RemoveComponent(Type type, bool isDestroy)
         {
-            if (CheckDestroy())
-            {
-                return false;
-            }
-
             if (_components.TryGetValue(type, out var component))
             {
                 component._Destroy(isDestroy);
@@ -224,6 +220,14 @@ namespace Ux
             }
 
             return false;
+        }
+
+        void RemoveComponents()
+        {
+            while (_components.Count > 0)
+            {
+                RemoveComponent(_components.ElementAt(0).Value);
+            }
         }
 
         public T GetOrAddComponent<T>(bool isFromPool = true) where T : Entity

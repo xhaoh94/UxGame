@@ -66,6 +66,13 @@ namespace Ux
         }
         public UIModel Set(GameObject model, float angle = 180, float scale = 180)
         {
+            switch (State)
+            {
+                case UIState.Hide:
+                case UIState.HideAnim:
+                    return this;
+            }
+
             _Set(model, false, angle, scale);
             return this;
         }
@@ -103,7 +110,7 @@ namespace Ux
 
             if (_entity == null)
             {
-                _entity = Entity.Create<ModelEntity>(true);
+                _entity = Entity.Create<ModelEntity>();
             }
             _entity.Name = $"UIModel@{model.name}";
             _entity.Set(model);

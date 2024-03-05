@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -164,16 +165,6 @@ namespace Ux
         }
         bool _AddChild(Entity entity)
         {
-            if (IsComponent)
-            {
-                var temParent = Parent;
-                if (temParent == null)
-                {
-                    Log.Error("父实体为空，无法添加子实体");
-                    return false;
-                }
-                return temParent._AddChild(entity);
-            }
             if (CheckDestroy())
             {
                 return false;
@@ -202,21 +193,39 @@ namespace Ux
                 Log.Error("不可添加自己");
                 return false;
             }
+
+
             if (_entitys.ContainsKey(entity.ID))
             {
                 Log.Error($"重复添加实体,ID:{entity.ID}");
                 return false;
             }
+            var entityID = entity.ID;
 
-
-            if (entity._parent == this)
+            if (IsComponent)
             {
-                return true;
+                var temParent = Parent;
+                if (temParent == null)
+                {
+                    Log.Error("父实体为空，无法添加子实体");
+                    return false;
+                }
+                temParent._AddChild(entity);
+            }
+            else
+            {
+                if (entity._parent == this)
+                {
+                    return true;
+                }
+                entity._parent?.RemoveChild(entity, false);
+                entity._parent = this;
+
+#if UNITY_EDITOR
+                entity.Viewer.SetParent(Viewer.EntityContent);
+#endif
             }
 
-            entity._parent?.RemoveChild(entity, false);
-            entity._parent = this;
-            var entityID = entity.ID;
             _entitys.Add(entityID, entity);
             var type = entity.GetType();
             if (!_typeToentitys.TryGetValue(type, out var listData))
@@ -225,10 +234,6 @@ namespace Ux
                 _typeToentitys.Add(type, listData);
             }
             listData.Add(entity);
-
-#if UNITY_EDITOR            
-            entity.Viewer.SetParent(Viewer.EntityContent);
-#endif
             return true;
         }
 
@@ -520,11 +525,6 @@ namespace Ux
         }
         bool RemoveChild(Entity entity, bool isDestroy)
         {
-            if (CheckDestroy())
-            {
-                return false;
-            }
-
             if (entity == null)
             {
                 Log.Error("Entity为空");
@@ -541,12 +541,22 @@ namespace Ux
                         _typeToentitys.Remove(type);
                     }
                 }
-
+                if (IsComponent)
+                {
+                    return Parent.RemoveChild(entity, isDestroy);
+                }
                 entity._Destroy(isDestroy);
                 return true;
             }
-
             return false;
+        }
+
+        void RemoveChilds()
+        {
+            while (_entitys.Count > 0)
+            {
+                RemoveChild(_entitys.ElementAt(0).Value, true);
+            }
         }
         public T GetChild<T>(long id) where T : Entity
         {
@@ -554,10 +564,6 @@ namespace Ux
         }
         public Entity GetChild(long id)
         {
-            if (IsComponent)
-            {
-                return Parent?.GetChild(id);
-            }
             if (_entitys.TryGetValue(id, out var entity))
             {
                 return entity;
@@ -566,10 +572,6 @@ namespace Ux
         }
         public List<Entity> GetChilds(bool isIncludeNested = false)
         {
-            if (IsComponent)
-            {
-                return Parent?.GetChilds(isIncludeNested);
-            }
             if (CheckDestroy())
             {
                 return null;
@@ -580,10 +582,6 @@ namespace Ux
         }
         public List<Entity> GetChilds(Type type, bool isIncludeNested = false)
         {
-            if (IsComponent)
-            {
-                return Parent?.GetChilds(type, isIncludeNested);
-            }
             if (CheckDestroy())
             {
                 return null;
@@ -594,10 +592,6 @@ namespace Ux
         }
         public List<T> GetChilds<T>(bool isIncludeNested = false) where T : Entity
         {
-            if (IsComponent)
-            {
-                return Parent?.GetChilds<T>(isIncludeNested);
-            }
             if (CheckDestroy())
             {
                 return null;
@@ -684,13 +678,14 @@ namespace Ux
 
         void _Destroy(bool isDestroy)
         {
-            _RemoveSystem();
             if (!isDestroy)
             {
+                _RemoveSystem();
                 _parent = null;
                 return;
             }
             if (IsDestroy) return;
+            _RemoveSystem();
             _isDestroying = true;
             TimeMgr.Ins.RemoveTag(this);
             EventMgr.Ins.OffTag(this);
@@ -703,15 +698,9 @@ namespace Ux
 #endif
                 EntityMono = null;
             }
-            foreach (var entity in _entitys)
-            {
-                entity.Value._Destroy(true);
-            }
 
-            foreach (var component in _components)
-            {
-                component.Value._Destroy(true);
-            }
+            RemoveChilds();
+            RemoveComponents();
 
             if (_event != null)
             {
@@ -729,6 +718,7 @@ namespace Ux
             _isDestroyed = true;
             _isDestroying = false;
             OnDestroy();
+
             _parent = null;
             _entitys.Clear();
             _typeToentitys.Clear();
