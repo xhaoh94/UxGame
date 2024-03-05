@@ -33,11 +33,24 @@
         [Header(Hair Setting)]
         _HairHighLightTex ("高光贴图", 2D) = "black" { }
         _HighLightColor ("高光颜色", Color) = (1, 1, 1, 1)
+
+        _StencilComp ("Stencil Comparison", Float) = 8
+        _Stencil ("Stencil ID", Float) = 0
+        _StencilOp ("Stencil Operation", Float) = 0
+        _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        _StencilReadMask ("Stencil Read Mask", Float) = 255
     }
     //【模型的处理】
     SubShader
     {
-
+        Stencil
+        {
+            Ref [_Stencil]
+            Comp [_StencilComp]
+            Pass [_StencilOp] 
+            ReadMask [_StencilReadMask]
+            WriteMask [_StencilWriteMask]
+        }  
         pass
         {
             //定义一个使用的语言类型

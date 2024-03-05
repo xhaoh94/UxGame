@@ -165,7 +165,16 @@ namespace UI.Editor
 
             Action clsFn = () =>
             {
-                write.Writeln($"public partial class {clsName} : UI{ext}");
+                switch (ext)
+                {
+                    case UIExtendComponent.UIModel:
+                    case UIExtendComponent.RTModel:
+                        write.Writeln($"public partial class {clsName} : {ext}");
+                        break;
+                    default:
+                        write.Writeln($"public partial class {clsName} : UI{ext}");
+                        break;
+                }                
                 write.StartBlock();
             };
 
@@ -257,7 +266,8 @@ namespace UI.Editor
                 case UIExtendComponent.TabFrame:
                     Func(comData.TabViewData);
                     break;
-                case UIExtendComponent.Model:
+                case UIExtendComponent.UIModel:
+                case UIExtendComponent.RTModel:
                     Func(comData.ModelData);
                     break;
             }

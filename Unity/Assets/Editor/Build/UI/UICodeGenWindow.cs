@@ -28,7 +28,8 @@ namespace UI.Editor
         Object,
         TabFrame,
         TabBtn,
-        Model,
+        UIModel,
+        RTModel,
     }
     public enum UIExttendFGUI
     {

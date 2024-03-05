@@ -150,7 +150,7 @@ namespace UI.Editor
                 {
                     _modelData = new List<CustomData>()
                     {
-                       new CustomData("__container","GGraph",string.Empty),                       
+                       new CustomData("__container","GGraph",string.Empty),
                     };
                 }
                 return _modelData;
@@ -210,7 +210,8 @@ namespace UI.Editor
         {
             get
             {
-                return ext == $"{UIExtends.Component}/{UIExtendComponent.Model}";
+                return ext == $"{UIExtends.Component}/{UIExtendComponent.UIModel}" ||
+                    ext == $"{UIExtends.Component}/{UIExtendComponent.RTModel}";
             }
         }
         public object Extend
@@ -300,7 +301,7 @@ namespace UI.Editor
                                 continue;
                             }
                         }
-                    }                    
+                    }
                 }
                 member.customType = child.GetType().Name;
             }

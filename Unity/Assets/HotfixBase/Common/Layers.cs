@@ -29,5 +29,9 @@ namespace Ux
         /// 战争迷雾
         /// </summary>
         public const string FogOfWar = "FogOfWar";
+        /// <summary>
+        /// UI模型
+        /// </summary>
+        public const string RTModel = "RTModel";
     }
 }

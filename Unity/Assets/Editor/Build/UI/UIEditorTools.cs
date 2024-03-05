@@ -205,7 +205,11 @@ namespace UI.Editor
 
             strMatch = @"(?<v>[\S]+)(?=UIModel)";
             match = Regex.IsMatch(str, strMatch);
-            if (match) return $"{UIExtends.Component}/{UIExtendComponent.Model}";
+            if (match) return $"{UIExtends.Component}/{UIExtendComponent.UIModel}";
+
+            strMatch = @"(?<v>[\S]+)(?=RTModel)";
+            match = Regex.IsMatch(str, strMatch);
+            if (match) return $"{UIExtends.Component}/{UIExtendComponent.RTModel}";
 
             if (com is GButton)
             {

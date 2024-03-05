@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="300,300" mask="n13_nmbh">
+<component size="300,300">
   <displayList>
     <graph id="n12_hp0v" name="n12" xy="0,0" size="300,300" visible="false" type="rect">
       <relation target="" sidePair="width-width,height-height"/>
@@ -7,6 +7,5 @@
     <graph id="n10_hp0v" name="container" xy="0,0" size="300,300">
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
-    <graph id="n13_nmbh" name="n13" xy="0,0" size="300,300" type="rect"/>
   </displayList>
 </component>

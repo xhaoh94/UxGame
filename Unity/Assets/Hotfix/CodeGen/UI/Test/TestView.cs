@@ -15,8 +15,8 @@ namespace Ux.UI
 		protected UIButton btnLongClick;
 		protected UIButton btnTest;
 		protected UIButton btnBack;
-		protected CommonUIModel model;
-		protected GGraph rtmodel;
+		protected CommonUIModel testUIModel;
+		protected CommonRTModel testRtModel;
 		protected override void CreateChildren()
 		{
 			try
@@ -30,8 +30,8 @@ namespace Ux.UI
 				btnLongClick = new UIButton(gCom.GetChildAt(7), this);
 				btnTest = new UIButton(gCom.GetChildAt(8), this);
 				btnBack = new UIButton(gCom.GetChildAt(9), this);
-				model = new CommonUIModel(gCom.GetChildAt(10), this);
-				rtmodel = (GGraph)gCom.GetChildAt(11);
+				testUIModel = new CommonUIModel(gCom.GetChildAt(10), this);
+				testRtModel = new CommonRTModel(gCom.GetChildAt(11), this);
 			}
 			catch (System.Exception e)
 			{

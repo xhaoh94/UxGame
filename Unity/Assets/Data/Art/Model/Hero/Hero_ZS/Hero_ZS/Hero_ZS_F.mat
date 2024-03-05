@@ -151,8 +151,8 @@ Material:
     - _Roughness: 0.01
     - _ShadowChange: 0
     - _ShadowOn: 1
-    - _ShadowRange: 0.5
-    - _ShadowSmooth: 0.2
+    - _ShadowRange: 0
+    - _ShadowSmooth: 0
     - _ShadowStrength: 0
     - _Shadow_Feather: 0
     - _Shadow_Step: 0

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6420327719798424993}
   - component: {fileID: 4622021188142310739}
   - component: {fileID: 5897717656531891747}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: RTModelCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65,14 +65,14 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.1
-  far clip plane: 50
-  field of view: 28
+  far clip plane: 20
+  field of view: 30
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 536870912
+    m_Bits: 536871936
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0

@@ -14,12 +14,10 @@ namespace Ux.UI
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Stack;
         public override UIBlur Blur => UIBlur.Blur;
-
-        RTModel rt;
+        
         protected override void OnInit()
         {
-            base.OnInit();
-            rt = new RTModel(rtmodel, this);
+            base.OnInit();            
         }
         protected override void OnShow(object param)
         {
@@ -29,10 +27,10 @@ namespace Ux.UI
             loader.url = "130G_TieKuang";
             GObject.asCom.AddChild(loader);
 
-            model.CloneMaterial = true;
-            model.Load("Hero_ZS").Play("Hero_ZS@Stand");
+            testUIModel.CloneMaterial = true;
+            testUIModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
 
-            rt.Load("Hero_ZS").Play("Hero_ZS@Stand");
+            testRtModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
         }
         partial void OnBtnMultipleClick(EventContext e)
         {

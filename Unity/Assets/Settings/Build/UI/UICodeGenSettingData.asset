@@ -666,7 +666,55 @@ MonoBehaviour:
       resName: CommonUIModel
       ns: Ux.UI
       cls: CommonUIModel
-      ext: Component/Model
+      ext: Component/UIModel
+      isExport: 1
+      _tabViewData: []
+      _messageBoxData: []
+      _tipData: []
+      _modelData:
+      - Key: __container
+        Type: GGraph
+        Name: container
+      members:
+      - index: 0
+        name: n12
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 1
+        name: container
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+      - index: 2
+        name: n13
+        defaultType: GGraph
+        customType: GGraph
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u65E0"
+        evtParam: 
+    - ID: Common@CommonRTModel
+      useGlobal: 1
+      path: Assets/Hotfix/CodeGen/UI
+      ingoreDefault: 1
+      pkgName: Common
+      resName: CommonRTModel
+      ns: Ux.UI
+      cls: CommonRTModel
+      ext: Component/RTModel
       isExport: 1
       _tabViewData: []
       _messageBoxData: []
@@ -936,21 +984,21 @@ MonoBehaviour:
         evtType: "\u5355\u51FB"
         evtParam: 
       - index: 10
-        name: n12
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
+        name: testUIModel
+        defaultType: GComponent
+        customType: CommonUIModel
+        pkg: Common
+        res: CommonUIModel
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u65E0"
         evtParam: 
       - index: 11
-        name: model
-        defaultType: GGraph
-        customType: GGraph
-        pkg: 
-        res: 
+        name: testRtModel
+        defaultType: GComponent
+        customType: CommonRTModel
+        pkg: Common
+        res: CommonRTModel
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u65E0"
