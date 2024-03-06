@@ -47,7 +47,7 @@ namespace Ux
             public object Param;
             public readonly UIType Type;
 #if UNITY_EDITOR
-            public readonly string IDStr;
+            public string IDStr;
             public UIStack(int parentID, string idStr, int id, object param, UIType type)
             {
                 ParentID = parentID;

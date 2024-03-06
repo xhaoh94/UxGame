@@ -23,16 +23,74 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// {{ AOT generic types
 	// Cysharp.Threading.Tasks.AutoResetUniTaskCompletionSource.<>c<object>
 	// Cysharp.Threading.Tasks.AutoResetUniTaskCompletionSource<object>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<object,byte>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<object,object>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<object>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<object,byte>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<object,object>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ByteArray.<PopToWebSocketAsync>d__42>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ByteArray.<PushByWebSocketAsync>d__25,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.NetMgr.<Call>d__10<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<GetRawFileDataAsync>d__17,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<GetRawFileDataAsync>d__20,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<GetRawFilePathAsync>d__19,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<GetRawFilePathAsync>d__22,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<GetRawFileTextAsync>d__18,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<GetRawFileTextAsync>d__21,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<LoadAssetAsync>d__6,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<LoadAssetAsync>d__7,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<LoadAssetAsync>d__8<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<LoadAssetAsync>d__9<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<_LoadAssetAsync>d__10<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.SceneModule.<EnterScene>d__5>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.StateMgr.<GetTimeLineAssetAsync>d__1,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<CreateUI>d__41,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<LoaUIdPackage>d__72,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<ShowAsync>d__39<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<ShowAsync>d__40,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<_ToLoadUIPackage>d__73,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.WSocket.<ConnectAsync>d__9>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ByteArray.<PopToWebSocketAsync>d__42>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ByteArray.<PushByWebSocketAsync>d__25,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.NetMgr.<Call>d__10<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<GetRawFileDataAsync>d__17,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<GetRawFileDataAsync>d__20,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<GetRawFilePathAsync>d__19,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<GetRawFilePathAsync>d__22,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<GetRawFileTextAsync>d__18,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<GetRawFileTextAsync>d__21,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<LoadAssetAsync>d__6,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<LoadAssetAsync>d__7,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<LoadAssetAsync>d__8<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<LoadAssetAsync>d__9<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<_LoadAssetAsync>d__10<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.SceneModule.<EnterScene>d__5>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.StateMgr.<GetTimeLineAssetAsync>d__1,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<CreateUI>d__41,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<LoaUIdPackage>d__72,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<ShowAsync>d__39<object>,object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<ShowAsync>d__40,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<_ToLoadUIPackage>d__73,byte>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.WSocket.<ConnectAsync>d__9>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<object>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<object>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.AStarComponent.<_Load>d__12>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.FogOfWarComponent.<_UpdateMapDataAsync>d__5>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.LoginModule.<LoginAccount>d__3>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.LoginModule.<_EnterMap>d__4>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.UIObject.<_CheckHide>d__40>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.UIObject.<_CheckShow>d__35>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.Unit.<LoadPlayer>d__35>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.UnitStateAnim.<LoadAsset>d__9>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.UnitStateTimeLine.<LoadAsset>d__12>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.WSocket.<StartRecv>d__12>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid.<>c<Ux.WSocket.<_SendSync>d__11>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.AStarComponent.<_Load>d__12>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.FogOfWarComponent.<_UpdateMapDataAsync>d__5>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.LoginModule.<LoginAccount>d__3>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.LoginModule.<_EnterMap>d__4>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.UIObject.<_CheckHide>d__40>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.UIObject.<_CheckShow>d__35>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.Unit.<LoadPlayer>d__35>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.UnitStateAnim.<LoadAsset>d__9>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.UnitStateTimeLine.<LoadAsset>d__12>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.WSocket.<StartRecv>d__12>
+	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoid<Ux.WSocket.<_SendSync>d__11>
 	// Cysharp.Threading.Tasks.CompilerServices.IStateMachineRunnerPromise<byte>
 	// Cysharp.Threading.Tasks.CompilerServices.IStateMachineRunnerPromise<object>
 	// Cysharp.Threading.Tasks.ITaskPoolNode<object>
@@ -56,7 +114,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.IUniTaskSource<System.ValueTuple<byte,object>>
 	// Cysharp.Threading.Tasks.IUniTaskSource<byte>
 	// Cysharp.Threading.Tasks.IUniTaskSource<object>
-	// Cysharp.Threading.Tasks.TaskPool<object>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,object>>>>>>>>>>
 	// Cysharp.Threading.Tasks.UniTask.Awaiter<System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,System.ValueTuple<byte,byte>>>>>>>>>
@@ -142,7 +199,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<Cysharp.Threading.Tasks.AsyncUnit>
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<byte>
 	// Cysharp.Threading.Tasks.UniTaskCompletionSourceCore<object>
-	// Singleton<object>
 	// System.Action<Cysharp.Threading.Tasks.UniTask>
 	// System.Action<System.DateTime>
 	// System.Action<UnityEngine.InputSystem.InputAction.CallbackContext>
@@ -155,12 +211,12 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Action<Ux.UIMgr.UIParse>
 	// System.Action<Ux.UIMgr.UIStack>
 	// System.Action<byte,object>
+	// System.Action<byte>
 	// System.Action<int,byte>
 	// System.Action<int,int>
 	// System.Action<int,object,byte>
 	// System.Action<int>
 	// System.Action<long>
-	// System.Action<object,byte>
 	// System.Action<object,int>
 	// System.Action<object,object,byte>
 	// System.Action<object,object,object>
@@ -438,6 +494,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.IEqualityComparer<object>
 	// System.Collections.Generic.IEqualityComparer<uint>
 	// System.Collections.Generic.IList<Cysharp.Threading.Tasks.UniTask>
+	// System.Collections.Generic.IList<System.Collections.Generic.KeyValuePair<long,object>>
+	// System.Collections.Generic.IList<System.Collections.Generic.KeyValuePair<object,object>>
 	// System.Collections.Generic.IList<System.DateTime>
 	// System.Collections.Generic.IList<UnityEngine.Vector2Int>
 	// System.Collections.Generic.IList<UnityEngine.Vector3>
@@ -555,7 +613,9 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.Queue<int>
 	// System.Collections.Generic.Queue<object>
 	// System.Collections.Generic.Stack.Enumerator<Ux.UIMgr.UIStack>
+	// System.Collections.Generic.Stack.Enumerator<int>
 	// System.Collections.Generic.Stack<Ux.UIMgr.UIStack>
+	// System.Collections.Generic.Stack<int>
 	// System.Collections.ObjectModel.ReadOnlyCollection<Cysharp.Threading.Tasks.UniTask>
 	// System.Collections.ObjectModel.ReadOnlyCollection<System.DateTime>
 	// System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Vector2Int>
@@ -594,6 +654,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Func<double>
 	// System.Func<int,byte>
 	// System.Func<int>
+	// System.Func<object,byte,byte>
 	// System.Func<object,byte>
 	// System.Func<object,double>
 	// System.Func<object,int>
@@ -619,6 +680,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Linq.Enumerable.WhereSelectListIterator<object,byte>
 	// System.Linq.Enumerable.WhereSelectListIterator<object,int>
 	// System.Linq.Expressions.Expression<object>
+	// System.Nullable<Ux.TriggerData>
 	// System.Nullable<Ux.UIMgr.BlurStack>
 	// System.Nullable<Ux.UIMgr.CallBackData>
 	// System.Nullable<long>
@@ -639,9 +701,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Predicate<uint>
 	// System.ReadOnlySpan.Enumerator<byte>
 	// System.ReadOnlySpan<byte>
-	// System.Runtime.CompilerServices.ConditionalWeakTable.CreateValueCallback<object,object>
-	// System.Runtime.CompilerServices.ConditionalWeakTable.Enumerator<object,object>
-	// System.Runtime.CompilerServices.ConditionalWeakTable<object,object>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable.ConfiguredTaskAwaiter<object>
 	// System.Runtime.CompilerServices.ConfiguredTaskAwaitable<object>
 	// System.Runtime.CompilerServices.ReadOnlyCollectionBuilder.Enumerator<object>
@@ -681,33 +740,84 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// UnityEngine.InputSystem.Utilities.InlinedArray<object>
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray.Enumerator<UnityEngine.InputSystem.InputControlScheme>
 	// UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.InputControlScheme>
-	// UnityEngine.Playables.ScriptPlayable<object>
-	// Ux.StateMachine.<>c__DisplayClass27_0<object>
+	// Ux.StateMachine.<>c__DisplayClass29_0<object>
 	// }}
 
 	public void RefMethods()
 	{
 		// string Bright.Common.StringUtil.CollectionToString<object>(System.Collections.Generic.IEnumerable<object>)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,object>(System.Runtime.CompilerServices.TaskAwaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,object>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,object>(System.Runtime.CompilerServices.TaskAwaiter<object>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<object>(object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<object>(object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<object>(object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,object>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,object>(System.Runtime.CompilerServices.TaskAwaiter&,object&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<object>(object&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ByteArray.<PopToWebSocketAsync>d__42>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ByteArray.<PopToWebSocketAsync>d__42&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.SceneModule.<EnterScene>d__5>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.SceneModule.<EnterScene>d__5&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Ux.WSocket.<ConnectAsync>d__9>(System.Runtime.CompilerServices.TaskAwaiter&,Ux.WSocket.<ConnectAsync>d__9&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.UIMgr.<_ToLoadUIPackage>d__73>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.UIMgr.<_ToLoadUIPackage>d__73&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Ux.UIMgr.<LoaUIdPackage>d__72>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Ux.UIMgr.<LoaUIdPackage>d__72&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Ux.UIMgr.<ShowAsync>d__40>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Ux.UIMgr.<ShowAsync>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.UIMgr.<ShowAsync>d__40>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.UIMgr.<ShowAsync>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,Ux.UIMgr.<LoaUIdPackage>d__72>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,Ux.UIMgr.<LoaUIdPackage>d__72&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,Ux.UIMgr.<ShowAsync>d__40>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,Ux.UIMgr.<ShowAsync>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<GetRawFileDataAsync>d__17>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<GetRawFileDataAsync>d__17&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<GetRawFileDataAsync>d__20>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<GetRawFileDataAsync>d__20&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<GetRawFilePathAsync>d__19>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<GetRawFilePathAsync>d__19&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<GetRawFilePathAsync>d__22>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<GetRawFilePathAsync>d__22&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<GetRawFileTextAsync>d__18>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<GetRawFileTextAsync>d__18&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<GetRawFileTextAsync>d__21>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<GetRawFileTextAsync>d__21&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.ResMgr.<_LoadAssetAsync>d__10<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.ResMgr.<_LoadAssetAsync>d__10<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Ux.UIMgr.<CreateUI>d__41>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Ux.UIMgr.<CreateUI>d__41&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Ux.UIMgr.<ShowAsync>d__39<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Ux.UIMgr.<ShowAsync>d__39<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.NetMgr.<Call>d__10<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.NetMgr.<Call>d__10<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__6>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__6&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__7>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__7&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__8<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__8<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__9<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__9<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.StateMgr.<GetTimeLineAssetAsync>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.StateMgr.<GetTimeLineAssetAsync>d__1&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Ux.ByteArray.<PushByWebSocketAsync>d__25>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Ux.ByteArray.<PushByWebSocketAsync>d__25&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<Ux.ByteArray.<PopToWebSocketAsync>d__42>(Ux.ByteArray.<PopToWebSocketAsync>d__42&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<Ux.SceneModule.<EnterScene>d__5>(Ux.SceneModule.<EnterScene>d__5&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<Ux.WSocket.<ConnectAsync>d__9>(Ux.WSocket.<ConnectAsync>d__9&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<Ux.UIMgr.<LoaUIdPackage>d__72>(Ux.UIMgr.<LoaUIdPackage>d__72&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<Ux.UIMgr.<ShowAsync>d__40>(Ux.UIMgr.<ShowAsync>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<byte>.Start<Ux.UIMgr.<_ToLoadUIPackage>d__73>(Ux.UIMgr.<_ToLoadUIPackage>d__73&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ByteArray.<PushByWebSocketAsync>d__25>(Ux.ByteArray.<PushByWebSocketAsync>d__25&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.NetMgr.<Call>d__10<object>>(Ux.NetMgr.<Call>d__10<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<GetRawFileDataAsync>d__17>(Ux.ResMgr.<GetRawFileDataAsync>d__17&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<GetRawFileDataAsync>d__20>(Ux.ResMgr.<GetRawFileDataAsync>d__20&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<GetRawFilePathAsync>d__19>(Ux.ResMgr.<GetRawFilePathAsync>d__19&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<GetRawFilePathAsync>d__22>(Ux.ResMgr.<GetRawFilePathAsync>d__22&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<GetRawFileTextAsync>d__18>(Ux.ResMgr.<GetRawFileTextAsync>d__18&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<GetRawFileTextAsync>d__21>(Ux.ResMgr.<GetRawFileTextAsync>d__21&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__6>(Ux.ResMgr.<LoadAssetAsync>d__6&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__7>(Ux.ResMgr.<LoadAssetAsync>d__7&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__8<object>>(Ux.ResMgr.<LoadAssetAsync>d__8<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__9<object>>(Ux.ResMgr.<LoadAssetAsync>d__9<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<_LoadAssetAsync>d__10<object>>(Ux.ResMgr.<_LoadAssetAsync>d__10<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.StateMgr.<GetTimeLineAssetAsync>d__1>(Ux.StateMgr.<GetTimeLineAssetAsync>d__1&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.UIMgr.<CreateUI>d__41>(Ux.UIMgr.<CreateUI>d__41&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.UIMgr.<ShowAsync>d__39<object>>(Ux.UIMgr.<ShowAsync>d__39<object>&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.WSocket.<_SendSync>d__11>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.WSocket.<_SendSync>d__11&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Ux.UIObject.<_CheckHide>d__40>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Ux.UIObject.<_CheckHide>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<byte>,Ux.UIObject.<_CheckShow>d__35>(Cysharp.Threading.Tasks.UniTask.Awaiter<byte>&,Ux.UIObject.<_CheckShow>d__35&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.AStarComponent.<_Load>d__12>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.AStarComponent.<_Load>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.LoginModule.<LoginAccount>d__3>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.LoginModule.<LoginAccount>d__3&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.LoginModule.<_EnterMap>d__4>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.LoginModule.<_EnterMap>d__4&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.Unit.<LoadPlayer>d__35>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.Unit.<LoadPlayer>d__35&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.UnitStateAnim.<LoadAsset>d__9>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.UnitStateAnim.<LoadAsset>d__9&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.UnitStateTimeLine.<LoadAsset>d__12>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.UnitStateTimeLine.<LoadAsset>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.WSocket.<StartRecv>d__12>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.WSocket.<StartRecv>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,Ux.FogOfWarComponent.<_UpdateMapDataAsync>d__5>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,Ux.FogOfWarComponent.<_UpdateMapDataAsync>d__5&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,Ux.UIObject.<_CheckHide>d__40>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,Ux.UIObject.<_CheckHide>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.YieldAwaitable.Awaiter,Ux.UIObject.<_CheckShow>d__35>(Cysharp.Threading.Tasks.YieldAwaitable.Awaiter&,Ux.UIObject.<_CheckShow>d__35&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,Ux.WSocket.<StartRecv>d__12>(System.Runtime.CompilerServices.TaskAwaiter&,Ux.WSocket.<StartRecv>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.AStarComponent.<_Load>d__12>(Ux.AStarComponent.<_Load>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.FogOfWarComponent.<_UpdateMapDataAsync>d__5>(Ux.FogOfWarComponent.<_UpdateMapDataAsync>d__5&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.LoginModule.<LoginAccount>d__3>(Ux.LoginModule.<LoginAccount>d__3&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.LoginModule.<_EnterMap>d__4>(Ux.LoginModule.<_EnterMap>d__4&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.UIObject.<_CheckHide>d__40>(Ux.UIObject.<_CheckHide>d__40&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.UIObject.<_CheckShow>d__35>(Ux.UIObject.<_CheckShow>d__35&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.Unit.<LoadPlayer>d__35>(Ux.Unit.<LoadPlayer>d__35&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.UnitStateAnim.<LoadAsset>d__9>(Ux.UnitStateAnim.<LoadAsset>d__9&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.UnitStateTimeLine.<LoadAsset>d__12>(Ux.UnitStateTimeLine.<LoadAsset>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.WSocket.<StartRecv>d__12>(Ux.WSocket.<StartRecv>d__12&)
+		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.Start<Ux.WSocket.<_SendSync>d__11>(Ux.WSocket.<_SendSync>d__11&)
 		// object Pool.Get<object>()
 		// object Pool.Get<object>(System.Type)
 		// System.Void ProtoBuf.Serializer.Serialize<object>(System.IO.Stream,object)
@@ -716,6 +826,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Collections.ObjectModel.ReadOnlyCollection<object> System.Dynamic.Utils.CollectionExtensions.ToReadOnly<object>(System.Collections.Generic.IEnumerable<object>)
 		// bool System.Linq.Enumerable.Any<byte>(System.Collections.Generic.IEnumerable<byte>,System.Func<byte,bool>)
 		// bool System.Linq.Enumerable.Any<object>(System.Collections.Generic.IEnumerable<object>)
+		// System.Collections.Generic.KeyValuePair<long,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<long,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<long,object>>,int)
+		// System.Collections.Generic.KeyValuePair<object,object> System.Linq.Enumerable.ElementAt<System.Collections.Generic.KeyValuePair<object,object>>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<object,object>>,int)
 		// object System.Linq.Enumerable.ElementAt<object>(System.Collections.Generic.IEnumerable<object>,int)
 		// System.Collections.Generic.IEnumerable<byte> System.Linq.Enumerable.Select<object,byte>(System.Collections.Generic.IEnumerable<object>,System.Func<object,byte>)
 		// System.Collections.Generic.IEnumerable<int> System.Linq.Enumerable.Select<object,int>(System.Collections.Generic.IEnumerable<object>,System.Func<object,int>)
@@ -730,9 +842,13 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Linq.Expressions.Expression<object> System.Linq.Expressions.Expression.Lambda<object>(System.Linq.Expressions.Expression,string,bool,System.Collections.Generic.IEnumerable<System.Linq.Expressions.ParameterExpression>)
 		// System.Span<byte> System.MemoryExtensions.AsSpan<byte>(byte[],int,int)
 		// object System.Reflection.CustomAttributeExtensions.GetCustomAttribute<object>(System.Reflection.MemberInfo)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,object>(Cysharp.Threading.Tasks.UniTask.Awaiter&,object&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,object>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,object&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<object>(object&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.StateGameIn.<OnEnter>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.StateGameIn.<OnEnter>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.UIMgr.<_LoadTextureFn>d__74>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.UIMgr.<_LoadTextureFn>d__74&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.StateGameIn.<OnEnter>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.StateGameIn.<OnEnter>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.StateLogin.<OnEnter>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.StateLogin.<OnEnter>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.StateGameIn.<OnEnter>d__1>(Ux.StateGameIn.<OnEnter>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.StateLogin.<OnEnter>d__1>(Ux.StateLogin.<OnEnter>d__1&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<Ux.UIMgr.<_LoadTextureFn>d__74>(Ux.UIMgr.<_LoadTextureFn>d__74&)
 		// System.Void* Unity.Collections.LowLevel.Unsafe.UnsafeUtility.AddressOf<UnityEngine.Vector2>(UnityEngine.Vector2&)
 		// int Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SizeOf<UnityEngine.Vector2>()
 		// object UnityEngine.Component.GetComponent<object>()
@@ -743,24 +859,36 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// UnityEngine.Vector2 UnityEngine.InputSystem.InputAction.CallbackContext.ReadValue<UnityEngine.Vector2>()
 		// UnityEngine.Vector2 UnityEngine.InputSystem.InputActionState.ApplyProcessors<UnityEngine.Vector2>(int,UnityEngine.Vector2,UnityEngine.InputSystem.InputControl<UnityEngine.Vector2>)
 		// UnityEngine.Vector2 UnityEngine.InputSystem.InputActionState.ReadValue<UnityEngine.Vector2>(int,int,bool)
+		// System.Void UnityEngine.Playables.PlayableExtensions.ConnectInput<UnityEngine.Animations.AnimationMixerPlayable,UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationMixerPlayable,int,UnityEngine.Animations.AnimationClipPlayable,int)
+		// System.Void UnityEngine.Playables.PlayableExtensions.ConnectInput<UnityEngine.Animations.AnimationMixerPlayable,UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationMixerPlayable,int,UnityEngine.Animations.AnimationClipPlayable,int,float)
+		// System.Void UnityEngine.Playables.PlayableExtensions.ConnectInput<UnityEngine.Playables.Playable,UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Playables.Playable,int,UnityEngine.Animations.AnimationMixerPlayable,int)
+		// System.Void UnityEngine.Playables.PlayableExtensions.ConnectInput<UnityEngine.Playables.Playable,UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Playables.Playable,int,UnityEngine.Animations.AnimationMixerPlayable,int,float)
+		// UnityEngine.Playables.PlayableGraph UnityEngine.Playables.PlayableExtensions.GetGraph<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable)
 		// UnityEngine.Playables.PlayableGraph UnityEngine.Playables.PlayableExtensions.GetGraph<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// int UnityEngine.Playables.PlayableExtensions.GetInputCount<UnityEngine.Animations.AnimationLayerMixerPlayable>(UnityEngine.Animations.AnimationLayerMixerPlayable)
 		// int UnityEngine.Playables.PlayableExtensions.GetInputCount<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable)
+		// float UnityEngine.Playables.PlayableExtensions.GetInputWeight<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable,int)
 		// float UnityEngine.Playables.PlayableExtensions.GetInputWeight<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int)
 		// UnityEngine.Playables.PlayState UnityEngine.Playables.PlayableExtensions.GetPlayState<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// double UnityEngine.Playables.PlayableExtensions.GetSpeed<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// double UnityEngine.Playables.PlayableExtensions.GetTime<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// bool UnityEngine.Playables.PlayableExtensions.IsDone<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// bool UnityEngine.Playables.PlayableExtensions.IsValid<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// System.Void UnityEngine.Playables.PlayableExtensions.Pause<UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationClipPlayable)
 		// System.Void UnityEngine.Playables.PlayableExtensions.Pause<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// System.Void UnityEngine.Playables.PlayableExtensions.Play<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetDone<UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationClipPlayable,bool)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetDone<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,bool)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetDuration<UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationClipPlayable,double)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputCount<UnityEngine.Animations.AnimationLayerMixerPlayable>(UnityEngine.Animations.AnimationLayerMixerPlayable,int)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputCount<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable,int)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputWeight<UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationMixerPlayable,int,float)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetInputWeight<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int,float)
+		// System.Void UnityEngine.Playables.PlayableExtensions.SetSpeed<UnityEngine.Animations.AnimationClipPlayable>(UnityEngine.Animations.AnimationClipPlayable,double)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetSpeed<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,double)
 		// System.Void UnityEngine.Playables.PlayableExtensions.SetTime<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,double)
+		// bool UnityEngine.Playables.PlayableGraph.Connect<UnityEngine.Animations.AnimationClipPlayable,UnityEngine.Animations.AnimationMixerPlayable>(UnityEngine.Animations.AnimationClipPlayable,int,UnityEngine.Animations.AnimationMixerPlayable,int)
+		// bool UnityEngine.Playables.PlayableGraph.Connect<UnityEngine.Animations.AnimationMixerPlayable,UnityEngine.Playables.Playable>(UnityEngine.Animations.AnimationMixerPlayable,int,UnityEngine.Playables.Playable,int)
 		// bool UnityEngine.Playables.PlayableGraph.Connect<UnityEngine.Playables.Playable,UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int,UnityEngine.Playables.Playable,int)
 		// System.Void UnityEngine.Playables.PlayableGraph.DestroySubgraph<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable)
 		// System.Void UnityEngine.Playables.PlayableGraph.Disconnect<UnityEngine.Playables.Playable>(UnityEngine.Playables.Playable,int)
@@ -769,7 +897,8 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void Ux.DictionaryEx.ForEachValue<object,object>(System.Collections.Generic.Dictionary<object,object>,System.Action<object>)
 		// object Ux.GameObjectEx.GetOrAddComponent<object>(UnityEngine.GameObject)
 		// System.Void Ux.StateMachine.AddNode<object>(object,bool)
-		// System.Void Ux.StateMachine.Enter<object>(object)
+		// object Ux.StateMachine.CreateByPool<object>(bool,object)
+		// bool Ux.StateMachine.Enter<object>()
 		// System.Void Ux.StateMachine.ForEach<object>(System.Action<object>)
 		// object YooAsset.AssetHandle.GetAssetObject<object>()
 		// YooAsset.AssetHandle YooAsset.ResourcePackage.LoadAssetAsync<object>(string,uint)

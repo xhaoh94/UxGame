@@ -94,7 +94,7 @@ namespace Ux
         }
 
         protected override void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
-        {
+        {            
             SelectItem?.HideByParent(isAnim, isStack, token);
             base.ToHide(isAnim, isStack, token);
         }

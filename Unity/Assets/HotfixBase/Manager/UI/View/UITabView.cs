@@ -14,7 +14,7 @@ namespace Ux
         /// <param name="isAnim"></param>
         /// <param name="isStack"></param>
         /// <param name="token"></param>
-        void HideByParent(bool isAnim, bool isStack, CancellationTokenSource token);
+        void HideByParent(bool isAnim, bool isStack, CancellationTokenSource token);        
     }
     public abstract class UITabView : UIBase, ITabView
     {

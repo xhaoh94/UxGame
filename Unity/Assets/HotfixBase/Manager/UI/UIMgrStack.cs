@@ -29,7 +29,14 @@ namespace Ux
                 {
                     lastStack.ID = ui.ID;
                     lastStack.Param = param;
+#if UNITY_EDITOR
+                    lastStack.IDStr = ui.Name;
+#endif
                     _stack[_stack.Count - 1] = lastStack;
+
+#if UNITY_EDITOR
+                    __Debugger_Stack_Event();
+#endif
                     return;
                 }
             }
@@ -65,7 +72,7 @@ namespace Ux
             {
                 var lastIndex = _stack.Count - 1;
                 var last = _stack[lastIndex];
-                if (last.ID == ui.ID)
+                if (last.ID == ui.ID || last.ParentID == ui.ID)
                 {
                     _stack.RemoveAt(lastIndex);
 #if UNITY_EDITOR
@@ -84,7 +91,7 @@ namespace Ux
                     {
                         if (ui.ID == preStack.ID)
                         {
-                            isBreak = true;                            
+                            isBreak = true;
                         }
                         else
                         {

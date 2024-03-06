@@ -12,6 +12,7 @@ namespace Ux
             if (UnityEditor.EditorApplication.isPlaying)
             {
                 __Debugger_UI_Event();
+                __Debugger_Stack_Event();
                 __Debugger_Showed_Event();
                 __Debugger_Showing_Event();
                 __Debugger_Cacel_Event();

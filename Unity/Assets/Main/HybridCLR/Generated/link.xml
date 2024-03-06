@@ -18,6 +18,7 @@
     <type fullname="FairyGUI.ButtonMode" preserve="all" />
     <type fullname="FairyGUI.Controller" preserve="all" />
     <type fullname="FairyGUI.DestroyMethod" preserve="all" />
+    <type fullname="FairyGUI.DisplayObject" preserve="all" />
     <type fullname="FairyGUI.EventCallback0" preserve="all" />
     <type fullname="FairyGUI.EventCallback1" preserve="all" />
     <type fullname="FairyGUI.EventContext" preserve="all" />
@@ -25,27 +26,35 @@
     <type fullname="FairyGUI.EventListener" preserve="all" />
     <type fullname="FairyGUI.GButton" preserve="all" />
     <type fullname="FairyGUI.GComponent" preserve="all" />
+    <type fullname="FairyGUI.GGraph" preserve="all" />
     <type fullname="FairyGUI.GImage" preserve="all" />
     <type fullname="FairyGUI.GList" preserve="all" />
+    <type fullname="FairyGUI.GLoader" preserve="all" />
     <type fullname="FairyGUI.GObject" preserve="all" />
     <type fullname="FairyGUI.GProgressBar" preserve="all" />
     <type fullname="FairyGUI.GRoot" preserve="all" />
     <type fullname="FairyGUI.GTextField" preserve="all" />
     <type fullname="FairyGUI.GTextInput" preserve="all" />
     <type fullname="FairyGUI.GTweener" preserve="all" />
+    <type fullname="FairyGUI.GoWrapper" preserve="all" />
     <type fullname="FairyGUI.IFilter" preserve="all" />
+    <type fullname="FairyGUI.Image" preserve="all" />
     <type fullname="FairyGUI.InputEvent" preserve="all" />
     <type fullname="FairyGUI.ListItemRenderer" preserve="all" />
     <type fullname="FairyGUI.NAudioClip" preserve="all" />
+    <type fullname="FairyGUI.NTexture" preserve="all" />
     <type fullname="FairyGUI.PackageItem" preserve="all" />
     <type fullname="FairyGUI.PlayCompleteCallback" preserve="all" />
     <type fullname="FairyGUI.ProgressTitleType" preserve="all" />
     <type fullname="FairyGUI.RelationType" preserve="all" />
     <type fullname="FairyGUI.Stage" preserve="all" />
     <type fullname="FairyGUI.StageCamera" preserve="all" />
+    <type fullname="FairyGUI.TimerCallback" preserve="all" />
+    <type fullname="FairyGUI.Timers" preserve="all" />
     <type fullname="FairyGUI.Transition" preserve="all" />
     <type fullname="FairyGUI.UIContentScaler" preserve="all" />
     <type fullname="FairyGUI.UIContentScaler/ScreenMatchMode" preserve="all" />
+    <type fullname="FairyGUI.UIObjectFactory" preserve="all" />
     <type fullname="FairyGUI.UIPackage" preserve="all" />
     <type fullname="FairyGUI.UIPackage/LoadResourceAsync" preserve="all" />
     <type fullname="FairyGUI.Utils.ByteBuffer" preserve="all" />
@@ -135,8 +144,8 @@
     <type fullname="Cysharp.Threading.Tasks.YieldAwaitable/Awaiter" preserve="all" />
   </assembly>
   <assembly fullname="Unity.InputSystem">
+    <type fullname="UnityEngine.InputSystem.Controls.ButtonControl" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Controls.KeyControl" preserve="all" />
-    <type fullname="UnityEngine.InputSystem.Controls.Vector2Control" preserve="all" />
     <type fullname="UnityEngine.InputSystem.IInputActionCollection" preserve="all" />
     <type fullname="UnityEngine.InputSystem.IInputActionCollection2" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputAction" preserve="all" />
@@ -144,13 +153,10 @@
     <type fullname="UnityEngine.InputSystem.InputActionAsset" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputActionMap" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputBinding" preserve="all" />
-    <type fullname="UnityEngine.InputSystem.InputControl" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputControlScheme" preserve="all" />
-    <type fullname="UnityEngine.InputSystem.InputControl`1" preserve="all" />
     <type fullname="UnityEngine.InputSystem.InputDevice" preserve="all" />
+    <type fullname="UnityEngine.InputSystem.Key" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Keyboard" preserve="all" />
-    <type fullname="UnityEngine.InputSystem.Mouse" preserve="all" />
-    <type fullname="UnityEngine.InputSystem.Pointer" preserve="all" />
     <type fullname="UnityEngine.InputSystem.Utilities.ReadOnlyArray`1" preserve="all" />
   </assembly>
   <assembly fullname="Unity.Main">
@@ -178,9 +184,13 @@
     <type fullname="UnityEngine.Rendering.Universal.UniversalAdditionalCameraData" preserve="all" />
   </assembly>
   <assembly fullname="Unity.Timeline">
+    <type fullname="UnityEngine.Timeline.AnimationPlayableAsset" preserve="all" />
+    <type fullname="UnityEngine.Timeline.AnimationTrack" preserve="all" />
     <type fullname="UnityEngine.Timeline.TimelineAsset" preserve="all" />
     <type fullname="UnityEngine.Timeline.TimelineClip" preserve="all" />
     <type fullname="UnityEngine.Timeline.TrackAsset" preserve="all" />
+    <type fullname="UnityEngine.Timeline.TrackBindingTypeAttribute" preserve="all" />
+    <type fullname="UnityEngine.Timeline.TrackClipTypeAttribute" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.AnimationModule">
     <type fullname="UnityEngine.AnimationClip" preserve="all" />
@@ -191,10 +201,13 @@
     <type fullname="UnityEngine.Animator" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.CoreModule">
+    <type fullname="UnityEngine.Behaviour" preserve="all" />
     <type fullname="UnityEngine.Camera" preserve="all" />
     <type fullname="UnityEngine.Color" preserve="all" />
     <type fullname="UnityEngine.Component" preserve="all" />
+    <type fullname="UnityEngine.ExcludeFromPresetAttribute" preserve="all" />
     <type fullname="UnityEngine.FilterMode" preserve="all" />
+    <type fullname="UnityEngine.GL" preserve="all" />
     <type fullname="UnityEngine.GameObject" preserve="all" />
     <type fullname="UnityEngine.LayerMask" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
@@ -204,6 +217,7 @@
     <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
     <type fullname="UnityEngine.Playables.DirectorUpdateMode" preserve="all" />
+    <type fullname="UnityEngine.Playables.DirectorWrapMode" preserve="all" />
     <type fullname="UnityEngine.Playables.FrameData" preserve="all" />
     <type fullname="UnityEngine.Playables.PlayState" preserve="all" />
     <type fullname="UnityEngine.Playables.Playable" preserve="all" />
@@ -215,12 +229,15 @@
     <type fullname="UnityEngine.Playables.PlayableOutputExtensions" preserve="all" />
     <type fullname="UnityEngine.Playables.ScriptPlayable`1" preserve="all" />
     <type fullname="UnityEngine.Quaternion" preserve="all" />
-    <type fullname="UnityEngine.Ray" preserve="all" />
     <type fullname="UnityEngine.Rect" preserve="all" />
     <type fullname="UnityEngine.RenderTexture" preserve="all" />
     <type fullname="UnityEngine.RenderTextureFormat" preserve="all" />
     <type fullname="UnityEngine.Renderer" preserve="all" />
+    <type fullname="UnityEngine.Rendering.BlendMode" preserve="all" />
     <type fullname="UnityEngine.SceneManagement.LoadSceneMode" preserve="all" />
+    <type fullname="UnityEngine.SceneManagement.Scene" preserve="all" />
+    <type fullname="UnityEngine.SceneManagement.SceneManager" preserve="all" />
+    <type fullname="UnityEngine.Sprite" preserve="all" />
     <type fullname="UnityEngine.SystemInfo" preserve="all" />
     <type fullname="UnityEngine.TextAsset" preserve="all" />
     <type fullname="UnityEngine.Texture" preserve="all" />
@@ -229,6 +246,7 @@
     <type fullname="UnityEngine.TextureWrapMode" preserve="all" />
     <type fullname="UnityEngine.Time" preserve="all" />
     <type fullname="UnityEngine.Transform" preserve="all" />
+    <type fullname="UnityEngine.U2D.SpriteAtlas" preserve="all" />
     <type fullname="UnityEngine.Vector2" preserve="all" />
     <type fullname="UnityEngine.Vector2Int" preserve="all" />
     <type fullname="UnityEngine.Vector3" preserve="all" />
@@ -237,10 +255,6 @@
   </assembly>
   <assembly fullname="UnityEngine.DirectorModule">
     <type fullname="UnityEngine.Playables.PlayableDirector" preserve="all" />
-  </assembly>
-  <assembly fullname="UnityEngine.PhysicsModule">
-    <type fullname="UnityEngine.Physics" preserve="all" />
-    <type fullname="UnityEngine.RaycastHit" preserve="all" />
   </assembly>
   <assembly fullname="YooAsset">
     <type fullname="YooAsset.AssetHandle" preserve="all" />
@@ -295,10 +309,7 @@
     <type fullname="System.Delegate" preserve="all" />
     <type fullname="System.Diagnostics.DebuggableAttribute" preserve="all" />
     <type fullname="System.Diagnostics.DebuggableAttribute/DebuggingModes" preserve="all" />
-    <type fullname="System.Diagnostics.DebuggerBrowsableAttribute" preserve="all" />
-    <type fullname="System.Diagnostics.DebuggerBrowsableState" preserve="all" />
     <type fullname="System.Diagnostics.DebuggerHiddenAttribute" preserve="all" />
-    <type fullname="System.Diagnostics.DebuggerStepThroughAttribute" preserve="all" />
     <type fullname="System.Double" preserve="all" />
     <type fullname="System.Enum" preserve="all" />
     <type fullname="System.EventHandler`1" preserve="all" />
