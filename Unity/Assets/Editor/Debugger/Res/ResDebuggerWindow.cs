@@ -13,6 +13,8 @@ public class ResDebuggerWindow : EditorWindow
         var window = GetWindow<ResDebuggerWindow>("资源调试工具", true, EditorDefine.DebuggerWindowTypes);
         window.minSize = new Vector2(800, 500);
     }
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
 
     DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef> _listPackageRef;
 
@@ -25,9 +27,7 @@ public class ResDebuggerWindow : EditorWindow
     {
         UIMgr.__Debugger_Pkg_CallBack = OnUpdateData;
         VisualElement root = rootVisualElement;
-        var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Res/ResDebuggerWindow.uxml");
-        if (visualAsset == null) return;
-        visualAsset.CloneTree(root);
+        m_VisualTreeAsset.CloneTree(root);
 
         _listPackageRef = new DebuggerObjectSearchListView<ResDebuggerItem,UIPkgRef>(root.Q<VisualElement>("veList"));
         UIMgr.__Debugger_Pkg_Event();

@@ -57,7 +57,8 @@ public partial class VersionWindow : EditorWindow
     }
 
 
-
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
 
     private List<string> _buildPackageNames;
     private VersionSettingData Setting;
@@ -109,10 +110,8 @@ public partial class VersionWindow : EditorWindow
         try
         {
             LoadConfig();
-            VisualElement root = rootVisualElement;
-
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Version/VersionWindow.uxml");
-            visualAsset.CloneTree(root);
+            VisualElement root = rootVisualElement;            
+            m_VisualTreeAsset.CloneTree(root);
 
 
             // 检测构建包裹

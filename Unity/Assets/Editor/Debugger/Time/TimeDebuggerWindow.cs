@@ -14,6 +14,10 @@ public class TimeDebuggerWindow : EditorWindow
         var window = GetWindow<TimeDebuggerWindow>("定时器调试工具", true, EditorDefine.DebuggerWindowTypes);
         window.minSize = new Vector2(800, 500);
     }
+
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
+
     ToolbarButton _tbBtnTime;
     ToolbarButton _tbBtnFrame;
     ToolbarButton _tbBtnTimeStamp;
@@ -37,9 +41,7 @@ public class TimeDebuggerWindow : EditorWindow
         __Debugger_TimeStamp_CallBack = OnUpdateTimeStamp;
         __Debugger_Cron_CallBack = OnUpdateCron;
         VisualElement root = rootVisualElement;
-        var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Time/TimeDebuggerWindow.uxml");
-        if (visualAsset == null) return;
-        visualAsset.CloneTree(root);
+        m_VisualTreeAsset.CloneTree(root);
         _tbBtnTime = root.Q<ToolbarButton>("tbBtnTime");
         _tbBtnTime.clicked += () => { OnChangeType(TimeType.Time); };
         _tbBtnFrame = root.Q<ToolbarButton>("tbBtnFrame");

@@ -16,6 +16,9 @@ public class ProtoWindow : EditorWindow
         window.minSize = new Vector2(800, 500);
     }
 
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
+
     private List<string> GenTypes = new List<string>() { "csharp_pbnet", "csharp" };    
 
 
@@ -42,9 +45,7 @@ public class ProtoWindow : EditorWindow
         {
             var Setting = ProtoSettingData.LoadConfig();
             VisualElement root = rootVisualElement;
-
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Proto/ProtoWindow.uxml");
-            visualAsset.CloneTree(root);
+            m_VisualTreeAsset.CloneTree(root);
 
             _txtPbTool = root.Q<TextField>("txtPbTool");
             _txtPbTool.SetValueWithoutNotify(Setting.PbTool);

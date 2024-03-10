@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1; flex-direction: column;">
+        <ui:VisualElement style="flex-grow: 0; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0);">
+            <uie:ObjectField label="GameObject" />
+            <uie:Toolbar>
+                <uie:ObjectField label="TimeLine" />
+                <ui:Button text="播放" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                <ui:Button text="暂停" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            </uie:Toolbar>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+            <Ux.Editor.SplitView>
+                <ui:VisualElement style="flex-grow: 1;">
+                    <uie:Toolbar style="-unity-slice-right: 0; border-right-width: 1px;">
+                        <ui:Button text="+" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    </uie:Toolbar>
+                    <ui:VisualElement style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <TimelineClipView focusable="false" />
+            </Ux.Editor.SplitView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

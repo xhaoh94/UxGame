@@ -12,6 +12,9 @@ public class UIDebuggerWindow : EditorWindow
         var window = GetWindow<UIDebuggerWindow>("UI调试工具", true, EditorDefine.DebuggerWindowTypes);
         window.minSize = new Vector2(800, 500);
     }
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
+
     private DebuggerObjectSearchListView<UIDebuggerItem, IUIData> _listUI;
     private DebuggerStringListView _listShowed;
     private DebuggerObjectListView<UIDebuggerStackItem, Ux.UIMgr.UIStack> _listStack;
@@ -31,9 +34,7 @@ public class UIDebuggerWindow : EditorWindow
         UIMgr.__Debugger_WaitDel_CallBack = OnUpdateWaitDel;
 
         VisualElement root = rootVisualElement;
-        var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/UI/UIDebuggerWindow.uxml");
-        if (visualAsset == null) return;
-        visualAsset.CloneTree(root);
+        m_VisualTreeAsset.CloneTree(root);
 
         _listUI = new DebuggerObjectSearchListView<UIDebuggerItem, IUIData>(root.Q<VisualElement>("veList"), 5);
         _listShowed = new DebuggerStringListView(root.Q<ListView>("listShowed"), OnBtnClick);

@@ -59,6 +59,9 @@ namespace UI.Editor
             window.minSize = new Vector2(800, 600);
         }
 
+        [SerializeField]
+        private VisualTreeAsset m_VisualTreeAsset = default;
+
         private string lastPkg;
         private string lastRes;
         private UICodeButton selectItem;
@@ -95,9 +98,8 @@ namespace UI.Editor
         public void CreateGUI()
         {
             UICodeGenSettingData.Load();
-            VisualElement root = rootVisualElement;
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/UI/UICodeGenWindow.uxml");
-            visualAsset.CloneTree(root);
+            VisualElement root = rootVisualElement;            
+            m_VisualTreeAsset.CloneTree(root);
             try
             {
                 inputCodePath = root.Q<TextField>("inputCodePath");

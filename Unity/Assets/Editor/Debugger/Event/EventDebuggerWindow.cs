@@ -12,6 +12,8 @@ public class EventDebuggerWindow : EditorWindow
         var window = GetWindow<EventDebuggerWindow>("事件调试工具", true, EditorDefine.DebuggerWindowTypes);
         window.minSize = new Vector2(800, 500);
     }
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
 
     private DebuggerObjectSearchListView<EventDebuggerItem, EventList> _list;
 
@@ -19,9 +21,7 @@ public class EventDebuggerWindow : EditorWindow
     {
         EventMgr.__Debugger_CallBack = OnUpdateData;
         VisualElement root = rootVisualElement;
-        var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Event/EventDebuggerWindow.uxml");
-        if (visualAsset == null) return;
-        visualAsset.CloneTree(root);
+        m_VisualTreeAsset.CloneTree(root);
         _list = new DebuggerObjectSearchListView<EventDebuggerItem, EventList>(root.Q<VisualElement>("veList"), 10);
         EventMgr.__Debugger_Event();
     }

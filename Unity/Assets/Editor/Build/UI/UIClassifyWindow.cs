@@ -117,14 +117,16 @@ namespace UI.Editor
             }
         }
 
+        [SerializeField]
+        private VisualTreeAsset m_VisualTreeAsset = default;
+
         VisualElement builtin;
         VisualElement lazyload;
         public void CreateGUI()
         {
             _ResClassifySettings = null;
             VisualElement root = rootVisualElement;
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/UI/UIClassifyWindow.uxml");
-            visualAsset.CloneTree(root);
+            m_VisualTreeAsset.CloneTree(root);
             try
             {
                 var pathField = root.Q<ObjectField>("pathField");

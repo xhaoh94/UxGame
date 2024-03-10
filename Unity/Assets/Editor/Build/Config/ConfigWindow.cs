@@ -26,6 +26,9 @@ public class ConfigWindow : EditorWindow
         window.minSize = new Vector2(800, 500);
     }
 
+    [SerializeField]
+    private VisualTreeAsset m_VisualTreeAsset = default;
+
     private List<string> GenTypes = new List<string>() { "code_cs_unity_bin,data_bin", "code_cs_unity_json,data_json" };
     private List<string> ServiceTypes = new List<string>() { "client", "server" };
 
@@ -56,9 +59,8 @@ public class ConfigWindow : EditorWindow
         {
             var Setting = ConfigSettingData.LoadConfig();
             VisualElement root = rootVisualElement;
-
-            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Config/ConfigWindow.uxml");
-            visualAsset.CloneTree(root);
+            
+            m_VisualTreeAsset.CloneTree(root);
 
             _txtDllFile = root.Q<TextField>("txtDllFile");
             _txtDllFile.SetValueWithoutNotify(Setting.DllFile);
