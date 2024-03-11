@@ -9,14 +9,14 @@
             </uie:Toolbar>
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
-            <Ux.Editor.SplitView>
-                <ui:VisualElement style="flex-grow: 1;">
+            <Ux.Editor.SplitView fixed-pane-initial-dimension="300">
+                <ui:VisualElement style="flex-grow: 0; width: 300px;">
                     <uie:Toolbar style="-unity-slice-right: 0; border-right-width: 1px;">
                         <ui:Button text="+" parse-escape-sequences="true" display-tooltip-when-elided="true" />
                     </uie:Toolbar>
                     <ui:VisualElement style="flex-grow: 1;" />
                 </ui:VisualElement>
-                <TimelineClipView focusable="false" />
+                <Ux.Editor.TimelineClipView />
             </Ux.Editor.SplitView>
         </ui:VisualElement>
     </ui:VisualElement>
