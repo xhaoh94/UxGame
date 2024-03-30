@@ -10,15 +10,13 @@ namespace Ux
 {
     public class HotFixMgr : Singleton<HotFixMgr>
     {
-        //public const string HotfixBaseAssemblyName = "Unity.HotfixBase";
-        //public const string HotfixAssemblyName = "Assembly-CSharp";
         //热更DLL，注意顺序
         public readonly string[] HotfixAssembly = new string[2] {
             "Unity.HotfixBase",
             "Assembly-CSharp"
         };
 
-        public const string HotfixScene = "Hotfix";
+        public const string HotfixScene = "Code_Hotfix";
 
         private const string AotPrefix = "Code/{0}";
         private const string HotPrefix = "Code_{0}";
@@ -47,9 +45,9 @@ namespace Ux
             foreach (var hotfixName in HotfixAssembly)
             {
                 byte[] assBytes = null;
-                using (var handle = YooMgr.Ins.GetPackage(YooType.Code).Package.LoadRawFileSync(string.Format(HotPrefix, $"{hotfixName}.dll")))
+                using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(string.Format(HotPrefix, $"{hotfixName}.dll")))
                 {
-                    assBytes = handle.GetRawFileData();
+                    assBytes = handle.GetAssetObject<TextAsset>().bytes;
                     if (assBytes == null)
                     {
                         Log.Error($"HotFixMgr.Load 加载失败:{hotfixName}");
@@ -83,7 +81,7 @@ namespace Ux
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = string.Format(AotPrefix, aotDllName);
-                var ta = Resources.Load<TextAsset>(dllName);                
+                var ta = Resources.Load<TextAsset>(dllName);
                 byte[] assBytes = ta.bytes;
                 if (assBytes == null)
                 {

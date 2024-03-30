@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -10,20 +11,21 @@ namespace UI.Editor
     {
         [Serializable]
         public class ResClassify
-        {            
-            public string key;         
+        {
+            public string key;
             public string value;
-        }        
+        }
         public string path = "Assets/Data/Res/UI";
 
-        [Header("不在内置资源或懒加载资源的，都是预加载资源")]                
-        public string[] builtins;        
+        [Header("不在预加载资源或懒加载资源的，都是内置资源，出包的时候会打进包体里的")]
+        public string[] proloads;
         public ResClassify[] lazyloads;
 
-        public static List<string> GetLazyloadsByKeys(UIClassifySettingData rc, List<string> pkgs)
+        public static List<string> GetLazyloadsByKeys(List<string> pkgs)
         {
             if (pkgs == null || pkgs.Count == 0) return null;
-            var r = new List<string>();            
+            var rc = UIClassifyWindow.ResClassifySettings;
+            var r = new List<string>();
             var temLazyloads = rc.lazyloads.ToList();
             foreach (var key in pkgs)
             {
@@ -39,6 +41,42 @@ namespace UI.Editor
                 }
             }
             return r;
+        }
+
+        public static bool IsProload(string path)
+        {
+            var rc = UIClassifyWindow.ResClassifySettings;
+            var dirName = Path.GetDirectoryName(path);
+            dirName = dirName.Replace('\\', '/');
+            var buildins = rc.proloads;
+            var uiPath = rc.path;
+            foreach (var buildin in buildins)
+            {
+                var dir = $"{uiPath}/{buildin}";
+                if (dirName == dir)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static bool IsLazyload(string path)
+        {
+            var rc = UIClassifyWindow.ResClassifySettings;
+            var dirName = Path.GetDirectoryName(path);
+            dirName = dirName.Replace('\\', '/');
+
+            var lazyloads = rc.lazyloads;
+            var uiPath = rc.path;
+            foreach (var lazyload in lazyloads)
+            {
+                var dir = $"{uiPath}/{lazyload.key}";
+                if (dirName == dir)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

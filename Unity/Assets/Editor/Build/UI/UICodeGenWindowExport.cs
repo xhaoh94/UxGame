@@ -224,7 +224,7 @@ namespace UI.Editor
                         write.Writeln($"[Package({pkgStr})]");
                     }
 
-                    var lazyloads = UIClassifySettingData.GetLazyloadsByKeys(UIClassifyWindow.ResClassifySettings, pkgs);
+                    var lazyloads = UIClassifySettingData.GetLazyloadsByKeys(pkgs);
                     if (lazyloads != null && lazyloads.Count > 0)
                     {
                         string lazyloadStr = string.Empty;

@@ -10,11 +10,10 @@ namespace Ux
     public enum YooType
     {
         None,
-        Main,//主包
-        Code,//代码
-        UI,//UI包
-        Config,//配置
-        RawFile,//原生文件
+        //主包
+        Main,
+        //原生文件,由于微信小游戏不支持多Pacage,所以暂时不用原生文件。如果要读取原生文件，放到Main里面，用TextAsset方式读取
+        RawFile,
     }
     public abstract class YooPackage : IYooPackage
     {
@@ -139,28 +138,7 @@ namespace Ux
         public override Type DecryptionType => null;
 
         public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
-    }
-    public class YooCodePackage : YooPackage
-    {
-        public override YooType YooType => YooType.Code;
-        public override string Name => "CodePackage";
-        public override Type DecryptionType => null;
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
-    }
-    public class YooUIPackage : YooPackage
-    {
-        public override YooType YooType => YooType.UI;
-        public override string Name => "UIPackage";
-        public override Type DecryptionType => typeof(FileStreamDecryption);
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
-    }
-    public class YooConfigPackage : YooPackage
-    {
-        public override YooType YooType => YooType.Config;
-        public override string Name => "ConfigPackage";
-        public override Type DecryptionType => null;
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
-    }
+    }  
     public class YooRawFilePackage : YooPackage
     {
         public override YooType YooType => YooType.RawFile;

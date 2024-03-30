@@ -21,52 +21,46 @@ namespace UI.Editor
         {
             Log.Debug("------------------------------------>生成YooAsset UI收集器配置<------------------------------");
             var packages = AssetBundleCollectorSettingData.Setting.Packages;
-            var package = packages.Find(x => x.PackageName == "UIPackage");
+            var package = packages.Find(x => x.PackageName == "MainPackage");
             if (package == null)
             {
                 package = new AssetBundleCollectorPackage();
-                package.PackageDesc = "UI资源包";
-                package.PackageName = "UIPackage";
+                package.PackageDesc = "主包";
+                package.PackageName = "MainPackage";
                 packages.Add(package);
             }
-            #region Builtin
-            var buildinGp = package.Groups.Find(x => x.GroupName == "Builtin");
-            if (buildinGp == null)
+            var group= package.Groups.Find(x => x.GroupName == "UI");
+            if (group == null)
             {
-                buildinGp = new AssetBundleCollectorGroup();
-                buildinGp.AssetTags = "builtin";
-                buildinGp.GroupDesc = "内置资源";
-                buildinGp.GroupName = "Builtin";
-                package.Groups.Add(buildinGp);
+                group = new AssetBundleCollectorGroup();
+                group.AssetTags = string.Empty;
+                group.GroupDesc = "UI界面";
+                group.GroupName = "UI";
+                package.Groups.Add(group);
             }
-            buildinGp.Collectors.Clear();
+            group.Collectors.Clear();
+                     
+            #region Builtin                       
+            var collectorBuiltin = new AssetBundleCollector();
+            collectorBuiltin.AssetTags = "builtin";
+            collectorBuiltin.CollectPath = ResClassifySettings.path;
+            collectorBuiltin.PackRuleName = typeof(PackTopDirectory).Name;
+            collectorBuiltin.FilterRuleName = typeof(CollectBuiltinUI).Name;
+            collectorBuiltin.AddressRuleName = nameof(AddressByFolderAndFileName);
+            group.Collectors.Add(collectorBuiltin);
+            #endregion
 
-            HashSet<string> excludes = new HashSet<string>();
-            var buildins = ResClassifySettings.builtins;
-            foreach (var buildin in buildins)
-            {
-                var dir = $"{ResClassifySettings.path}/{buildin}";
-                if (!Directory.Exists(dir)) continue;
-                var collector = new AssetBundleCollector();
-                collector.CollectPath = dir;
-                collector.AddressRuleName = nameof(AddressByFolderAndFileName);
-                buildinGp.Collectors.Add(collector);
-                excludes.Add(buildin);
-            }
+            #region Preload
+            var collectorPreload = new AssetBundleCollector();
+            collectorPreload.AssetTags = "preload";
+            collectorPreload.CollectPath = ResClassifySettings.path;
+            collectorPreload.PackRuleName = typeof(PackTopDirectory).Name;
+            collectorPreload.FilterRuleName = typeof(CollectPreloadUI).Name;
+            collectorPreload.AddressRuleName = nameof(AddressByFolderAndFileName);
+            group.Collectors.Add(collectorPreload);
             #endregion
 
             #region Lazyload
-            var lazyloadGp = package.Groups.Find(x => x.GroupName == "Lazyload");
-            if (lazyloadGp == null)
-            {
-                lazyloadGp = new AssetBundleCollectorGroup();
-                lazyloadGp.AssetTags = "lazyload";
-                lazyloadGp.GroupDesc = "懒加载资源";
-                lazyloadGp.GroupName = "Lazyload";
-                package.Groups.Add(lazyloadGp);
-            }
-            lazyloadGp.Collectors.Clear();
-
             var lazyloads = ResClassifySettings.lazyloads;
             foreach (var lazyload in lazyloads)
             {
@@ -76,29 +70,8 @@ namespace UI.Editor
                 collector.CollectPath = dir;
                 collector.AssetTags = lazyload.value;
                 collector.AddressRuleName = nameof(AddressByFolderAndFileName);
-                lazyloadGp.Collectors.Add(collector);
-                excludes.Add(lazyload.key);
+                group.Collectors.Add(collector);
             }
-            #endregion
-
-            #region Preload
-            var preloadGp = package.Groups.Find(x => x.GroupName == "Preload");
-            if (preloadGp == null)
-            {
-                preloadGp = new AssetBundleCollectorGroup();
-                preloadGp.AssetTags = "preload";
-                preloadGp.GroupDesc = "预加载资源";
-                preloadGp.GroupName = "Preload";
-                package.Groups.Add(preloadGp);
-            }
-            preloadGp.Collectors.Clear();
-
-            var collectorPreload = new AssetBundleCollector();
-            collectorPreload.CollectPath = ResClassifySettings.path;
-            collectorPreload.PackRuleName = typeof(PackTopDirectory).Name;
-            collectorPreload.FilterRuleName = typeof(CollectPreloadUI).Name;
-            collectorPreload.AddressRuleName = nameof(AddressByFolderAndFileName);
-            preloadGp.Collectors.Add(collectorPreload);
             #endregion
 
             EditorUtility.SetDirty(ResClassifySettings);
@@ -140,8 +113,8 @@ namespace UI.Editor
                     pathField.value.name = ResClassifySettings.path;
                 });
 
-                var helpBox = new HelpBox("除去内置和懒加载，其他的资源都为预加载", HelpBoxMessageType.Info);
-                helpBox.style.fontSize = 26;
+                var helpBox = new HelpBox("不在预加载资源或懒加载资源的，都是内置资源，出包的时候会打进包体里的", HelpBoxMessageType.Info);
+                helpBox.style.fontSize = 30;
 
                 root.Insert(0, helpBox);
                 builtin = root.Q<VisualElement>("buildin");
@@ -199,7 +172,7 @@ namespace UI.Editor
                 if (string.IsNullOrEmpty(tf2.value)) continue;
                 lazyloads.Add(new ResClassify() { key = tf1.value, value = tf2.value });
             }
-            ResClassifySettings.builtins = builtins.ToArray();
+            ResClassifySettings.proloads = builtins.ToArray();
             ResClassifySettings.lazyloads = lazyloads.ToArray();
             CreateYooAssetUIGroup();
             if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("提示", "创建成功!", "ok"))
@@ -216,10 +189,10 @@ namespace UI.Editor
         private void UpdateBuildIn()
         {
             builtin.Clear();
-            for (int i = 0; i < ResClassifySettings.builtins.Length; i++)
+            for (int i = 0; i < ResClassifySettings.proloads.Length; i++)
             {
                 var element = MakeBuildinItem();
-                BindBuildinItem(element, i, ResClassifySettings.builtins[i]);
+                BindBuildinItem(element, i, ResClassifySettings.proloads[i]);
                 builtin.Add(element);
             }
         }

@@ -3,7 +3,7 @@
         <uie:ObjectField label="资源目录" name="pathField" allow-scene-objects="true" type="UnityEngine.Object, UnityEngine.CoreModule" style="flex-grow: 1;" />
         <ui:Button text="重载配置" display-tooltip-when-elided="true" name="btnLoad" />
         <ui:VisualElement>
-            <ui:Foldout text="内置资源" value="false" style="align-items: stretch; min-width: auto; min-height: auto;">
+            <ui:Foldout text="预加载资源" value="false" style="align-items: stretch; min-width: auto; min-height: auto;">
                 <ui:VisualElement style="flex-grow: 1; flex-direction: row; align-items: stretch;">
                     <ui:Button text="[+]" display-tooltip-when-elided="true" enable-rich-text="true" name="btnBuildinAdd" style="width: 30px; height: 30px;" />
                 </ui:VisualElement>

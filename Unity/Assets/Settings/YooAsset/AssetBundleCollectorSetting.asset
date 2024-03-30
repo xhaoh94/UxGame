@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 185f6993d5150494d98da50e26cb1c25, type: 3}
   m_Name: AssetBundleCollectorSetting
   m_EditorClassIdentifier: 
-  ShowPackageView: 1
+  ShowPackageView: 0
   ShowEditorAlias: 0
   UniqueBundleName: 1
   Packages:
@@ -22,21 +22,13 @@ MonoBehaviour:
     LocationToLower: 0
     IncludeAssetGUID: 0
     IgnoreDefaultType: 1
-    AutoCollectShaders: 0
+    AutoCollectShaders: 1
     Groups:
     - GroupName: Builtin
       GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Scenes/Hotfix.unity
-        CollectorGUID: 8637324786e1dda489f776e4e1cf2fed
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackSeparately
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
       - CollectPath: Assets/Data/Res/Prefab/FogOfWar
         CollectorGUID: 03ba04db73f99bd42b2378dbe96da11b
         CollectorType: 0
@@ -98,77 +90,43 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-    - GroupName: Lazyload
-      GroupDesc: "\u61D2\u52A0\u8F7D"
-      AssetTags: lazyload
-      ActiveRuleName: EnableGroup
-      Collectors: []
-    - GroupName: ShaderVariant
-      GroupDesc: "\u7740\u8272\u5668"
+    - GroupName: Code
+      GroupDesc: "\u4EE3\u7801"
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Art/ShaderVariants/MainPackage
-        CollectorGUID: 
+      - CollectPath: Assets/Scenes/Hotfix.unity
+        CollectorGUID: 8637324786e1dda489f776e4e1cf2fed
         CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackShaderVariants
-        FilterRuleName: CollectShaderVariants
+        AddressRuleName: AddressByGroupAndFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-  - PackageName: CodePackage
-    PackageDesc: "\u4EE3\u7801"
-    EnableAddressable: 1
-    LocationToLower: 0
-    IncludeAssetGUID: 0
-    IgnoreDefaultType: 1
-    AutoCollectShaders: 1
-    Groups:
-    - GroupName: Builtin
-      GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
-      AssetTags: builtin
-      ActiveRuleName: EnableGroup
-      Collectors:
       - CollectPath: Assets/Data/Res/Code
         CollectorGUID: 5136dcfd732443e4fbcedd13488bb8d5
         CollectorType: 0
         AddressRuleName: AddressByFolderAndFileName
-        PackRuleName: PackRawFile
+        PackRuleName: PackSeparately
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-  - PackageName: UIPackage
-    PackageDesc: "UI\u5305"
-    EnableAddressable: 1
-    LocationToLower: 0
-    IncludeAssetGUID: 0
-    IgnoreDefaultType: 1
-    AutoCollectShaders: 1
-    Groups:
-    - GroupName: Builtin
-      GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
+    - GroupName: Config
+      GroupDesc: "\u914D\u7F6E\u8868"
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/UI/Common
-        CollectorGUID: 
+      - CollectPath: Assets/Data/Res/Config
+        CollectorGUID: 8f52838e936dc4e42976f151a4bf6d17
         CollectorType: 0
         AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/UI/Main
-        CollectorGUID: 
-        CollectorType: 0
-        AddressRuleName: AddressByFolderAndFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-    - GroupName: Preload
-      GroupDesc: "\u9884\u52A0\u8F7D"
-      AssetTags: preload
+    - GroupName: UI
+      GroupDesc: "UI\u754C\u9762"
+      AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
       - CollectPath: Assets/Data/Res/UI
@@ -176,14 +134,17 @@ MonoBehaviour:
         CollectorType: 0
         AddressRuleName: AddressByFolderAndFileName
         PackRuleName: PackTopDirectory
-        FilterRuleName: CollectPreloadUI
-        AssetTags: 
+        FilterRuleName: CollectBuiltinUI
+        AssetTags: builtin
         UserData: 
-    - GroupName: Lazyload
-      GroupDesc: "\u61D2\u52A0\u8F7D"
-      AssetTags: lazyload
-      ActiveRuleName: EnableGroup
-      Collectors:
+      - CollectPath: Assets/Data/Res/UI
+        CollectorGUID: 
+        CollectorType: 0
+        AddressRuleName: AddressByFolderAndFileName
+        PackRuleName: PackTopDirectory
+        FilterRuleName: CollectPreloadUI
+        AssetTags: preload
+        UserData: 
       - CollectPath: Assets/Data/Res/UI/Bag
         CollectorGUID: 
         CollectorType: 0
@@ -200,78 +161,3 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: lazyload_multiple
         UserData: 
-    - GroupName: ShaderVariant
-      GroupDesc: "\u7740\u8272\u5668"
-      AssetTags: builtin
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/Data/Art/ShaderVariants/UIPackage
-        CollectorGUID: 
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackShaderVariants
-        FilterRuleName: CollectShaderVariants
-        AssetTags: 
-        UserData: 
-  - PackageName: RawFilePackage
-    PackageDesc: "\u539F\u751F\u6587\u4EF6"
-    EnableAddressable: 1
-    LocationToLower: 0
-    IncludeAssetGUID: 0
-    IgnoreDefaultType: 1
-    AutoCollectShaders: 1
-    Groups:
-    - GroupName: Builtin
-      GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
-      AssetTags: builtin
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/Data/Res/Music
-        CollectorGUID: f62955498e8973147a35e0fe2a8f6726
-        CollectorType: 0
-        AddressRuleName: AddressByFolderAndFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-    - GroupName: Preload
-      GroupDesc: "\u9884\u52A0\u8F7D"
-      AssetTags: preload
-      ActiveRuleName: EnableGroup
-      Collectors: []
-    - GroupName: Lazyload
-      GroupDesc: "\u61D2\u52A0\u8F7D"
-      AssetTags: lazyload
-      ActiveRuleName: EnableGroup
-      Collectors: []
-  - PackageName: ConfigPackage
-    PackageDesc: "\u914D\u7F6E"
-    EnableAddressable: 1
-    LocationToLower: 0
-    IncludeAssetGUID: 0
-    IgnoreDefaultType: 1
-    AutoCollectShaders: 1
-    Groups:
-    - GroupName: Builtin
-      GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
-      AssetTags: builtin
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/Data/Res/Config
-        CollectorGUID: 8f52838e936dc4e42976f151a4bf6d17
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-    - GroupName: Preload
-      GroupDesc: "\u9884\u52A0\u8F7D"
-      AssetTags: preload
-      ActiveRuleName: EnableGroup
-      Collectors: []
-    - GroupName: Lazyload
-      GroupDesc: "\u61D2\u52A0\u8F7D"
-      AssetTags: lazyload
-      ActiveRuleName: EnableGroup
-      Collectors: []

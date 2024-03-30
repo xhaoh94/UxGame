@@ -40,7 +40,7 @@ namespace Ux
 
     public partial class UIMgr
     {
-
+        private readonly YooPackage _yoo = YooMgr.Ins.GetPackage(YooType.Main);
         private readonly Dictionary<string, UIPkgRef> _pkgToRef = new Dictionary<string, UIPkgRef>();
 
         private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles =
@@ -157,7 +157,7 @@ namespace Ux
             sw.Start();
 #endif
 
-            var handle = YooMgr.Ins.GetPackage(YooType.UI).Package.LoadAssetAsync<TextAsset>(resName);
+            var handle = _yoo.Package.LoadAssetAsync<TextAsset>(resName);
             await handle.ToUniTask();
 #if UNITY_EDITOR
             sw.Stop();
@@ -204,7 +204,7 @@ namespace Ux
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 #endif
-            var handle = YooMgr.Ins.GetPackage(YooType.UI).Package.LoadAssetAsync<Texture>(resName);
+            var handle = _yoo.Package.LoadAssetAsync<Texture>(resName);
             await handle.ToUniTask();
 #if UNITY_EDITOR
             sw.Stop();

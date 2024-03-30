@@ -11,10 +11,6 @@ namespace Ux
         static readonly Dictionary<YooType, YooPackage> _Packages = new Dictionary<YooType, YooPackage>()
         {
             { YooType.Main,new YooMainPackage() },
-            { YooType.Code,new YooCodePackage() },
-            { YooType.UI,new YooUIPackage() },
-            { YooType.Config,new YooConfigPackage() },
-            { YooType.RawFile,new YooRawFilePackage() },
         };
 
         readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();

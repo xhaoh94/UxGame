@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13,10 +13,8 @@ MonoBehaviour:
   m_Name: UIResClassifySettingData
   m_EditorClassIdentifier: 
   path: Assets/Data/Res/UI
-  builtins:
-  - Common
-  - Patch
-  - Main
+  proloads:
+  - Test
   lazyloads:
   - key: Bag
     value: lazyload_bag
