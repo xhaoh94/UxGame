@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using TreeEditor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.WSA;
 namespace Ux.Editor
 {
     public class TimelineClipView : VisualElement
@@ -37,10 +39,15 @@ namespace Ux.Editor
         float FrameScale = 1;
         float FrameWidth => 10 * FrameScale;
         float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
-        float ScrClipViewWidth => scrClipView.worldBound.width;
+        //需要减10 是因为容器里面设置了边缘Border left = 10 
+        float ScrClipViewWidth => scrClipView.worldBound.width - 10;
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
 
+        int CurFrame = 0;
+        float CurPosx = 0;
+
         public ScrollView scrClipView { get; private set; }
+        public VisualElement ScrContent { get; private set; }
         public VisualElement veLineContent { get; private set; }
         public VisualElement veMarkerContent { get; private set; }
         public VisualElement veMarkerIcon { get; private set; }
@@ -52,48 +59,31 @@ namespace Ux.Editor
         {
             var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipView.uxml");
             visualTree.CloneTree(this);
-
+            RegisterCallback<WheelEvent>(OnWheel);
+            RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
             scrClipView = this.Q<ScrollView>("scr_clip");
-            new VeDrag(scrClipView, null, (e) =>
-            {
-                var pos = scrClipView.scrollOffset;
-                pos.x -= e.x;
-                scrClipView.scrollOffset = pos;
-            }, null, 2);
-            //ScrClipView.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            scrClipView.horizontalScroller.valueChanged += (e) =>
-            {
-                //if (VeContent.worldBound.width < ScrollViewContentWidth + ScrollViewContentOffset)
-                //    VeContent.style.width = ScrollViewContentWidth + ScrollViewContentOffset;
-                //DrawTimeField();
-            };
+
+            ElementDrag.Add(scrClipView, this, OnScrDrag, 2);
 
             veLineContent = this.Q<VisualElement>("ve_line_content");
             veLineContent.generateVisualContent += OnDrawLine;
 
             veMarkerContent = this.Q<VisualElement>("ve_marker_content");
             veMarkerContent.generateVisualContent += OnDrawMarker;
+            ElementDrag.Add(veMarkerContent, this, OnMarkerStar, OnMarkerDrag);
 
-
-            veMarkerIcon = this.Q<VisualElement>("ve_marker_icon");            
-            new VeDrag(veMarkerContent,
-                (e) =>
-                {
-                    var pos = veMarkerIcon.transform.position;
-                    pos.x = e.x;
-                    veMarkerIcon.transform.position = pos;
-                },
-                (e) =>
-                {
-                    var pos = veMarkerIcon.transform.position;
-                    pos.x += e.x;
-                    veMarkerIcon.transform.position = pos;
-                }, null);
-           
+            veMarkerIcon = this.Q<VisualElement>("ve_marker_icon");
+            veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
             lbMarker = this.Q<Label>("lb_marker");
 
-            RegisterCallback<WheelEvent>(OnWheel);
 
+        }
+
+        void OnGeometryChanged(GeometryChangedEvent changedEvent)
+        {
+            veLineContent.MarkDirtyRepaint();
+            veMarkerContent.MarkDirtyRepaint();
+            veMarkerIcon.MarkDirtyRepaint();
         }
         void OnWheel(WheelEvent wheelEvent)
         {
@@ -110,30 +100,73 @@ namespace Ux.Editor
             float targetWidth = Mathf.Max(ScrClipViewWidth * FrameScale, ScrClipViewWidth);
             if (ScrClipViewContentWidth == targetWidth)
             {
-                Resize();
+                veLineContent.MarkDirtyRepaint();
                 veMarkerContent.MarkDirtyRepaint();
-                veMarkerContent.MarkDirtyRepaint();
+                veMarkerIcon.MarkDirtyRepaint();
             }
             else
             {
                 scrClipView.contentContainer.style.width = targetWidth;
-                Resize();
-                ForceScrollViewUpdate(scrClipView);
+                scrClipView.schedule.Execute(() =>
+                {
+                    var fakeOldRect = Rect.zero;
+                    var fakeNewRect = scrClipView.layout;
+
+                    using var evt = GeometryChangedEvent.GetPooled(fakeOldRect, fakeNewRect);
+                    evt.target = scrClipView.contentContainer;
+                    scrClipView.contentContainer.SendEvent(evt);
+                });
+            }
+            UpdateMarkerPos();
+        }
+
+
+        void OnScrDrag(Vector2 e)
+        {
+            var pos = scrClipView.scrollOffset;
+            pos.x -= e.x;
+            scrClipView.scrollOffset = pos;
+        }
+        void OnMarkerStar()
+        {
+            OnMarkerDrag(Vector2.zero);
+        }
+        void OnMarkerDrag(Vector2 e)
+        {
+            var pos = veMarkerContent.WorldToLocal(Event.current.mousePosition);
+            CurPosx = pos.x;
+            var offset = veMarkerIcon.worldBound.width / 2;
+            if (CurPosx < 0)
+            {
+                CurPosx = 0;
+            }
+            if (CurPosx > ScrClipViewWidth - offset)
+            {
+                CurPosx = ScrClipViewWidth - offset;
+            }
+            var frame = Mathf.RoundToInt((ScrClipViewOffsetX + CurPosx) / FrameWidth);
+            if (frame != CurFrame)
+            {
+                CurFrame = frame;
+                lbMarker.text = CurFrame.ToString();
+                UpdateMarkerPos();
             }
         }
-        public void ForceScrollViewUpdate(ScrollView view)
-        {
-            view.schedule.Execute(() =>
-            {
-                var fakeOldRect = Rect.zero;
-                var fakeNewRect = view.layout;
 
-                using var evt = GeometryChangedEvent.GetPooled(fakeOldRect, fakeNewRect);
-                evt.target = view.contentContainer;
-                view.contentContainer.SendEvent(evt);
-            });
+        void UpdateMarkerPos()
+        {
+            try
+            {
+                CurPosx = (CurFrame * FrameWidth - ScrClipViewOffsetX);
+                var pos = veMarkerIcon.transform.position;
+                pos.x = CurPosx - (veMarkerIcon.worldBound.width / 2);
+                veMarkerIcon.transform.position = pos;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+            }
         }
-        float m_WheelLerpSpeed = 0.2f;
         void OnDrawLine(MeshGenerationContext mgc)
         {
             var paint2D = mgc.painter2D;
@@ -150,7 +183,7 @@ namespace Ux.Editor
             {
                 if (i % interval == 0)
                 {
-                    var x = i * FrameWidth;
+                    var x = i * frameWidth;
                     paint2D.MoveTo(new Vector2(x, 24));
                     paint2D.LineTo(new Vector2(x, scrClipView.worldBound.height));
                 }
@@ -177,7 +210,9 @@ namespace Ux.Editor
                 {
                     paint2D.MoveTo(new Vector2(x, 14));
                     paint2D.LineTo(new Vector2(x, 24));
-                    mgc.DrawText(i.ToString(), new Vector2(x + 3, 5), 10, Color.white);
+                    var len = i.ToString().Length;
+                    x -= (len * 3);
+                    mgc.DrawText(i.ToString(), new Vector2(x, 2), 10, Color.white);
                 }
                 else if (i % (interval / 5) == 0)
                 {
@@ -185,17 +220,23 @@ namespace Ux.Editor
                     paint2D.LineTo(new Vector2(x, 24));
                     if (frameWidth >= 30)
                     {
-                        mgc.DrawText(i.ToString(), new Vector2(x + 3, 5), 10, Color.white);
+                        var len = i.ToString().Length;
+                        x -= (len * 3);
+                        mgc.DrawText(i.ToString(), new Vector2(x, 5), 10, Color.white);
                     }
                 }
             }
             paint2D.Stroke();
         }
-
-
-        void Resize()
+        void OnDrawMarkerLine(MeshGenerationContext mgc)
         {
-
+            var paint2D = mgc.painter2D;
+            paint2D.strokeColor = new Color(.2f, .7f, .2f, 1f);
+            paint2D.BeginPath();
+            var x = (veMarkerIcon.worldBound.width / 2);
+            paint2D.MoveTo(new Vector2(x, 24));
+            paint2D.LineTo(new Vector2(x, scrClipView.worldBound.height));
+            paint2D.Stroke();
         }
     }
 
