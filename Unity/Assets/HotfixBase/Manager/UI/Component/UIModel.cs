@@ -39,16 +39,11 @@ namespace Ux
         {
             Init(container, parent);
             parent?.Components?.Add(this);
+            OnHideCallBack += _Release;
         }
         protected override void CreateChildren()
         {
 
-        }
-
-        protected override void OnHide()
-        {
-            base.OnHide();
-            _Release();
         }
 
         public UIModel Load(string location, float angle = 180, float scale = 180)

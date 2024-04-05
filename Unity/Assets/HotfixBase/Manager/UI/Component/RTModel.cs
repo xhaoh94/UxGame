@@ -80,12 +80,8 @@ namespace Ux
 
             this._image = new Image();
             __container.SetNativeObject(this._image);
-        }
 
-        protected override void OnHide()
-        {
-            base.OnHide();
-            _Release();
+            OnHideCallBack += _Release;
         }
 
         protected override void OnDispose()

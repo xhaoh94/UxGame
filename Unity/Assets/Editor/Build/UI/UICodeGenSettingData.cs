@@ -91,7 +91,7 @@ namespace UI.Editor
                     _tabViewData = new List<CustomData>()
                     {
                         new CustomData("__tabContent","GComponent",string.Empty),
-                        new CustomData("__listTab","GList",string.Empty),
+                        new CustomData("__listTab","UIList",string.Empty),
                         new CustomData("__btnClose","UIButton",string.Empty)
                     };
                 }
@@ -278,13 +278,14 @@ namespace UI.Editor
                 member.name = child.name;
                 member.index = i;
                 member.defaultType = child.GetType().Name;
-                if (child.packageItem != null)
+
+                var b = UIEditorTools.GTypes.TryGetValue(child.GetType(), out var temName);
+                if (!b) b = child.packageItem != null && child.packageItem.exported;
+                if (b)
                 {
-                    var b = UIEditorTools.CustomTypeList.TryGetValue(child.packageItem.objectType, out var temName);
-                    if (b || child.packageItem.exported)
+                    if (child.packageItem != null)
                     {
                         var set = UICodeGenSettingData.GetComponentData(child.asCom);
-
                         if (set == null || !set.IsExNone)
                         {
                             member.pkg = child.packageItem.owner.name;
@@ -302,7 +303,16 @@ namespace UI.Editor
                             }
                         }
                     }
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(temName))
+                        {
+                            member.customType = temName;
+                            continue;
+                        }
+                    }
                 }
+
                 member.customType = child.GetType().Name;
             }
 
@@ -410,6 +420,7 @@ namespace UI.Editor
         {
             var com = UIEditorTools.GetOrAddGComBy(pkg, res);
             var data = UICodeGenSettingData.GetOrAddComponentData(com);
+            if (data == null) return false;
             var ext = data.Extend;
             if (ext is UIExtendComponent.TabFrame)
             {
@@ -595,7 +606,7 @@ namespace UI.Editor
             data.cls = com.packageItem.name;
             data.ext = UIEditorTools.CheckExt(com);
             data.isExport = true;
-            if (UIEditorTools.CustomTypeList.ContainsKey(com.packageItem.objectType))
+            if (UIEditorTools.OTypes.Contains(com.packageItem.objectType))
             {
                 if (com.packageItem.exported && data.IsExFGUI)
                 {

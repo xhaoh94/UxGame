@@ -2,15 +2,16 @@
 using FairyGUI;
 namespace Ux.UI
 {
-	public partial class CommonTabBtn : UITabBtn
+	[ItemUrl("ui://7vg0rkntrxzz7")]
+	public partial class Test22Item : ItemRenderer
 	{
-		protected GImage redPoint;
+		protected GTextField txtNum;
 		protected override void CreateChildren()
 		{
 			try
 			{
 				var gCom = ObjAs<GComponent>();
-				redPoint = (GImage)gCom.GetChildAt(3);
+				txtNum = (GTextField)gCom.GetChildAt(1);
 			}
 			catch (System.Exception e)
 			{

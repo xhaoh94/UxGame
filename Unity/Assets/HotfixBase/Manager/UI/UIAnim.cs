@@ -7,40 +7,44 @@ namespace Ux
 {
     public interface IUIAnim
     {
-        void Play(Action end);
+        void Play(Action end = null);
         void Stop();
-
-        void SetStart();
-        void SetEnd();
+        /// <summary>
+        /// 设置到开始状态
+        /// </summary>
+        void SetToStart();
+        /// <summary>
+        /// 设置到结束状态
+        /// </summary>
+        void SetToEnd();
     }
 
-    public class UITransition : IUIAnim
+    public class UIAnimTransition : IUIAnim
     {
-        Transition transition;
-        public UITransition(Transition transition)
+        Transition _transition;
+        public UIAnimTransition(Transition transition)
         {
-            this.transition = transition;
+            _transition = transition;
         }
         public void Play(Action end)
         {
-            transition?.Play(() => end?.Invoke());
+            _transition?.Play(() => end?.Invoke());
         }
 
         public void Stop()
         {
-            //transition.Play(1, 0, transition.totalDuration, transition.totalDuration, null);            
-            transition?.Stop();
+            _transition?.Stop();
         }
 
-        public void SetEnd()
+        public void SetToEnd()
         {
-            transition.Play(1, 0, transition.totalDuration, transition.totalDuration, null);            
+            _transition.Play(1, 0, _transition.totalDuration, _transition.totalDuration, null);
         }
 
-        public void SetStart()
+        public void SetToStart()
         {
-            transition?.Play();
-            transition?.Stop(false, false);
+            _transition?.Play();
+            _transition?.Stop(false, false);
         }
     }
 }

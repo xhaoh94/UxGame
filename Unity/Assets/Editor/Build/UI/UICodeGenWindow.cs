@@ -26,8 +26,8 @@ namespace UI.Editor
     public enum UIExtendComponent
     {
         Object,
-        TabFrame,
-        TabBtn,
+        TabFrame,        
+        ItemRenderer,
         UIModel,
         RTModel,
     }
@@ -35,6 +35,7 @@ namespace UI.Editor
     {
         Button,
         ProgressBar,
+        List
     }
     public class UICodeFoldout : Foldout
     {

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="186,65" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <displayList>
+    <image id="n0_ftpt" name="n0" src="ftpt6" fileName="Asset/ui_tyzy_button_01.png" xy="0,0" group="n4_f8a8">
+      <gearDisplay controller="button" pages="0,2"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <image id="n1_ftpt" name="n1" src="ftpt5" fileName="Asset/ui_tyzy_button_02.png" xy="0,0" group="n4_f8a8">
+      <gearDisplay controller="button" pages="1,3"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </image>
+    <text id="n2_ftpt" name="txtTitle" xy="0,0" size="186,65" group="n4_f8a8" fontSize="30" align="center" vAlign="middle" autoSize="none" singleLine="true" text="测试">
+      <relation target="" sidePair="width-width,height-height"/>
+    </text>
+    <image id="n3_rxsl" name="redPoint" src="rxsl8" fileName="Asset/ui_tyzy_tshd.png" xy="162,0" group="n4_f8a8" visible="false">
+      <relation target="" sidePair="right-right,top-top"/>
+    </image>
+    <group id="n4_f8a8" name="n4" xy="0,0" size="186,65" advanced="true"/>
+  </displayList>
+  <Button mode="Radio"/>
+  <transition name="showanim">
+    <item time="0" type="XY" target="n4_f8a8" tween="true" startValue="-238,0" endValue="0,0" duration="24"/>
+  </transition>
+</component>

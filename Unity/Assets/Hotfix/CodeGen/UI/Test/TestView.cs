@@ -17,6 +17,7 @@ namespace Ux.UI
 		protected UIButton btnBack;
 		protected CommonUIModel testUIModel;
 		protected CommonRTModel testRtModel;
+		protected UIList testList;
 		protected override void CreateChildren()
 		{
 			try
@@ -32,6 +33,7 @@ namespace Ux.UI
 				btnBack = new UIButton(gCom.GetChildAt(9), this);
 				testUIModel = new CommonUIModel(gCom.GetChildAt(10), this);
 				testRtModel = new CommonRTModel(gCom.GetChildAt(11), this);
+				testList = new UIList(gCom.GetChildAt(12), this);
 			}
 			catch (System.Exception e)
 			{
@@ -48,6 +50,7 @@ namespace Ux.UI
 			AddClick(btnBack,_OnBtnBackClick);
 			AddMultipleClick(btnDouble,_OnBtnDoubleMultipleClick, 2, 0.2f);
 			AddLongPress(btnLongClick,-1f, _OnBtnLongClickLongPress, 0.2f, 0, 50);
+			AddItemClick(testList,_OnTestListItemClick);
 		}
 		void _OnBtnMultipleClick(EventContext e)
 		{
@@ -91,5 +94,10 @@ namespace Ux.UI
 			return b;
 		}
 		partial void OnBtnLongClickLongPress(ref bool isBreak);
+		void _OnTestListItemClick(EventContext e)
+		{
+			OnTestListItemClick(e);
+		}
+		partial void OnTestListItemClick(EventContext e);
 	}
 }

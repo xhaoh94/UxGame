@@ -169,7 +169,10 @@ namespace Ux
             GObject?.RemoveFromParent();
         }
         protected virtual void OnLayout() { }
-
+        /// <summary>
+        /// 界面数据重置
+        /// </summary>
+        /// <param name="param"></param>
         protected virtual void OnOverwrite(object param)
         {
         }
@@ -181,7 +184,7 @@ namespace Ux
                 case UIState.ShowAnim:
                     if (id == ID && param != null)
                     {
-                        OnOverwrite(param);
+                        ToOverwrite(param);
                     }
                     _Show(id, param, isStack);
                     return;
@@ -194,11 +197,18 @@ namespace Ux
                     break;
             }
             _ReleaseShowToken();
-            _showToken = new CancellationTokenSource();
+            if (isAnim && ShowAnim != null)
+            {
+                _showToken = new CancellationTokenSource();
+            }
             ToShow(isAnim, id, param, isStack, _showToken);
         }
         private void _Show(int id, object param, bool isStack)
         {
+            if (_showToken != null)
+            {
+                _showToken = null;
+            }
             if (id == ID && _cbData != null)
             {
                 _cbData.Value.showCb?.Invoke(this, param, isStack);
@@ -226,12 +236,19 @@ namespace Ux
             }
 
             _ReleaseHideToken();
-            _hideToken = new CancellationTokenSource();
+            if (isAnim && HideAnim != null)
+            {
+                _hideToken = new CancellationTokenSource();
+            }
             ToHide(isAnim, isStack, _hideToken);
         }
 
         private void _Hide()
         {
+            if (_hideToken != null)
+            {
+                _hideToken = null;
+            }
             RemoveToStage();
             Filter = null;
             if (_cbData != null)

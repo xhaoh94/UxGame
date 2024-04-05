@@ -19,6 +19,7 @@ namespace Ux
         //提示
         public static readonly UITipFactory Tip = new UITipFactory();
 
+        private readonly Dictionary<Type, string> _itemUrls = new Dictionary<Type, string>();
         //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeId = new Dictionary<Type, int>();
 #if UNITY_EDITOR
@@ -162,10 +163,11 @@ namespace Ux
             }
         }
 
-        public void Add(List<UIParse> uis)
+        public void Add(List<UIParse> uis, List<ItemUrlParse> itemUrls)
         {
             uis.ForEach(ui => { ui.Add(_idUIData); });
             uis.ForEach(ui => { ui.Parse(_idUIData); });
+            itemUrls.ForEach(item => { item.Add(_itemUrls); });
 #if UNITY_EDITOR
             __Debugger_UI_Event();
 #endif
@@ -176,7 +178,11 @@ namespace Ux
             if (_layerCom.TryGetValue(layer, out var com)) return com;
             return GRoot.inst;
         }
-
+        public string GetItemUrl(Type type)
+        {            
+            if (type != null && _itemUrls.TryGetValue(type, out var url)) return url;
+            return null;
+        }
         public T GetUI<T>() where T : IUI
         {
             return GetUI<T>(ConverterID(typeof(T)));

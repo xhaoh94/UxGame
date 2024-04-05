@@ -13,9 +13,9 @@ namespace Ux.UI
     {
         public override UIType Type => UIType.Normal;
         public override UIBlur Blur => UIBlur.Blur;
-        protected override void OnShow(object param)
+        protected override void OnShow()
         {
-            base.OnShow(param);
+            base.OnShow();
             //TimeMgr.Ins.DoOnce(2, () =>
             //{
             //    UIMgr.Ins.Show<MultipleView>();

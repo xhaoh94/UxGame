@@ -10,9 +10,14 @@ namespace UI.Editor
 {
     public class UIEditorTools
     {
-        public static Dictionary<ObjectType, string> CustomTypeList = new Dictionary<ObjectType, string>() {
-            { ObjectType.Button ,nameof(UIButton)},
-            { ObjectType.ProgressBar,nameof(UIProgressBar)},
+        public static HashSet<ObjectType> OTypes = new HashSet<ObjectType>() {
+            ObjectType.Button ,
+            ObjectType.ProgressBar,
+        };
+        public static Dictionary<Type, string> GTypes = new Dictionary<Type, string>() {
+            { typeof(GButton) ,nameof(UIButton)},
+            { typeof(GProgressBar),nameof(UIProgressBar)},
+            { typeof(GList),nameof(UIList)},
         };
         private static Dictionary<string, object> ExtTypeObject = new Dictionary<string, object>();
         private static Dictionary<string, FairyGUI.GComponent> key2com = new Dictionary<string, FairyGUI.GComponent>();
@@ -127,7 +132,7 @@ namespace UI.Editor
                     {
                         itemDatas.Add(item);
                     }
-                    else if (CustomTypeList.ContainsKey(item.objectType))
+                    else if (OTypes.Contains(item.objectType))
                     {
                         itemDatas.Add(item);
                     }
@@ -199,9 +204,9 @@ namespace UI.Editor
             match = Regex.IsMatch(str, strMatch);
             if (match) return $"{UIExtends.Component}/{UIExtendComponent.TabFrame}";
 
-            strMatch = @"(?<v>[\S]+)(?=TabBtn)";
+            strMatch = @"(?<v>[\S]+)(?=Item)";
             match = Regex.IsMatch(str, strMatch);
-            if (match) return $"{UIExtends.Component}/{UIExtendComponent.TabBtn}";
+            if (match) return $"{UIExtends.Component}/{UIExtendComponent.ItemRenderer}";
 
             strMatch = @"(?<v>[\S]+)(?=UIModel)";
             match = Regex.IsMatch(str, strMatch);
@@ -218,6 +223,10 @@ namespace UI.Editor
             else if (com is GProgressBar)
             {
                 return $"{UIExtends.FGUI}/{UIExttendFGUI.ProgressBar}";
+            }
+            else if (com is GList)
+            {
+                return $"{UIExtends.FGUI}/{UIExttendFGUI.List}";
             }
             else if (com is GComponent)
             {

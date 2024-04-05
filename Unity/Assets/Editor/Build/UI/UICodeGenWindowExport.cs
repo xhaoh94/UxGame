@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using Ux;
 using static UI.Editor.ComponentData;
 using static UI.Editor.UIMemberData;
 
@@ -169,12 +170,13 @@ namespace UI.Editor
                 {
                     case UIExtendComponent.UIModel:
                     case UIExtendComponent.RTModel:
+                    case UIExtendComponent.ItemRenderer:
                         write.Writeln($"public partial class {clsName} : {ext}");
                         break;
                     default:
                         write.Writeln($"public partial class {clsName} : UI{ext}");
                         break;
-                }                
+                }
                 write.StartBlock();
             };
 
@@ -239,6 +241,9 @@ namespace UI.Editor
                         write.Writeln($"[Lazyload({lazyloadStr})]");
                     }
                     break;
+                case UIExtendComponent.ItemRenderer:
+                    write.Writeln($"[ItemUrl(\"{com.resourceURL}\")]");
+                    break;
             }
             //类
             clsFn();
@@ -280,8 +285,8 @@ namespace UI.Editor
                 case UIExtendPanel.Window:
                 case UIExtendPanel.TabView:
                 case UIExtendPanel.MessageBox:
-                case UIExtendPanel.Tip:
-                case UIExtendComponent.TabBtn:
+                case UIExtendPanel.Tip:                
+                case UIExtendComponent.ItemRenderer:
                     break;
                 default:
                     write.Writeln($"public {clsName}(GObject gObject,UIObject parent): base(gObject, parent) {{ }}");
@@ -417,7 +422,6 @@ namespace UI.Editor
                 {
                     var fnName = $"_On{char.ToUpper(list.name[0])}{list.name.Substring(1)}Item";
                     write.Writeln($"AddItemClick({list.name},{fnName}Click);");
-                    write.Writeln($"{list.name}.itemRenderer = {fnName}Renderer;");
                 }
                 write.EndBlock();
 
@@ -458,12 +462,6 @@ namespace UI.Editor
                     write.Writeln($"{fnName}Click(e);");
                     write.EndBlock();
                     write.Writeln($"partial void {fnName}Click(EventContext e);");
-
-                    write.Writeln($"void _{fnName}Renderer(int index, GObject item)");
-                    write.StartBlock();
-                    write.Writeln($"{fnName}Renderer(index, item);");
-                    write.EndBlock();
-                    write.Writeln($"partial void {fnName}Renderer(int index, GObject item);");
                 }
             }
 
@@ -481,9 +479,13 @@ namespace UI.Editor
                 write.StartBlock();
                 write.Writeln($"return {frame.name}?.SelectItem;");
                 write.EndBlock();
-                write.Writeln($"protected void SetTabRenderer<T>() where T : UITabBtn");
+                write.Writeln($"public void SetItemRenderer<T>() where T : ItemRenderer");
                 write.StartBlock();
-                write.Writeln($"{frame.name}?.SetTabRenderer<T>();");
+                write.Writeln($"{frame.name}?.SetItemRenderer<T>();");
+                write.EndBlock();
+                write.Writeln($"public void SetItemProvider(System.Func<int, System.Type> itemTypeFunc)");
+                write.StartBlock();
+                write.Writeln($"{frame.name}?.SetItemProvider(itemTypeFunc);");
                 write.EndBlock();
             }
 

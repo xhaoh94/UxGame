@@ -6,6 +6,8 @@
     <component id="omlm1" name="Stack2View.xml" path="/View/" exported="true"/>
     <component id="omlm2" name="Stack3View.xml" path="/View/" exported="true"/>
     <component id="omlm3" name="Stack4View.xml" path="/View/" exported="true"/>
+    <component id="rxzz6" name="TestItem.xml" path="/Component/" exported="true"/>
+    <component id="rxzz7" name="Test22Item.xml" path="/Component/" exported="true"/>
   </resources>
   <publish name=""/>
 </packageDescription>

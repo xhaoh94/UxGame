@@ -109,6 +109,27 @@ namespace Ux
             }
         }
 
+        public readonly struct ItemUrlParse
+        {
+            public ItemUrlParse(Type type, string url)
+            {
+                Type = type;
+                Url = url;
+            }
+            Type Type { get; }
+            string Url { get; }
+
+            public void Add(Dictionary<Type, string> _urls)
+            {
+                if (_urls.ContainsKey(Type))
+                {
+                    Log.Error("ItemRenderer 注册URL 重复了。Type[{0}]", Type.FullName);
+                    return;
+                }
+                _urls.Add(Type, Url);
+            }
+        }
+
         public readonly struct UITask<T> where T : IUI
         {
             readonly UniTask<T> task;

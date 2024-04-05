@@ -40,9 +40,9 @@ namespace Ux
 
         protected override string ResName => "LoginUI";
 
-        protected override void OnShow(object param)
+        protected override void OnShow()
         {
-            base.OnShow(param);
+            base.OnShow();
         }
     }
 

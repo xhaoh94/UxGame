@@ -37,9 +37,13 @@ namespace Ux.UI
 		{
 			return mCommonBg?.SelectItem;
 		}
-		protected void SetTabRenderer<T>() where T : UITabBtn
+		public void SetItemRenderer<T>() where T : ItemRenderer
 		{
-			mCommonBg?.SetTabRenderer<T>();
+			mCommonBg?.SetItemRenderer<T>();
+		}
+		public void SetItemProvider(System.Func<int, System.Type> itemTypeFunc)
+		{
+			mCommonBg?.SetItemProvider(itemTypeFunc);
 		}
 	}
 }

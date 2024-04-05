@@ -8,9 +8,9 @@ namespace Ux.UI
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Normal;
 
-        protected override void OnShow(object param)
+        protected override void OnShow()
         {
-            base.OnShow(param);            
+            base.OnShow();            
         }
         partial void OnBtn1Click(EventContext e)
         {

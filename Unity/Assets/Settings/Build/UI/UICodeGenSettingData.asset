@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33,7 +33,7 @@ MonoBehaviour:
         Type: GComponent
         Name: tabContent
       - Key: __listTab
-        Type: GList
+        Type: UIList
         Name: listTab
       - Key: __btnClose
         Type: UIButton
@@ -75,7 +75,7 @@ MonoBehaviour:
       - index: 3
         name: listTab
         defaultType: GList
-        customType: GList
+        customType: UIList
         pkg: 
         res: 
         isCreateVar: 1
@@ -107,7 +107,7 @@ MonoBehaviour:
         Type: GComponent
         Name: 
       - Key: __listTab
-        Type: GList
+        Type: UIList
         Name: 
       - Key: __btnClose
         Type: UIButton
@@ -878,10 +878,46 @@ MonoBehaviour:
       cls: TestView
       ext: Panel/View
       isExport: 1
-      _tabViewData: []
-      _messageBoxData: []
-      _tipData: []
-      _modelData: []
+      _tabViewData:
+      - Key: __tabContent
+        Type: GComponent
+        Name: 
+      - Key: __listTab
+        Type: GList
+        Name: 
+      - Key: __btnClose
+        Type: UIButton
+        Name: 
+      _messageBoxData:
+      - Key: __txtTitle
+        Type: GTextField
+        Name: 
+      - Key: __txtContent
+        Type: GTextField
+        Name: 
+      - Key: __btnClose
+        Type: UIButton
+        Name: 
+      - Key: __btn1
+        Type: UIButton
+        Name: 
+      - Key: __btn2
+        Type: UIButton
+        Name: 
+      - Key: __checkbox
+        Type: UIButton
+        Name: 
+      _tipData:
+      - Key: __txtContent
+        Type: GTextField
+        Name: 
+      - Key: __transition
+        Type: Transition
+        Name: 
+      _modelData:
+      - Key: __container
+        Type: GGraph
+        Name: 
       members:
       - index: 0
         name: n0
@@ -1002,6 +1038,16 @@ MonoBehaviour:
         isCreateVar: 1
         isCreateIns: 1
         evtType: "\u65E0"
+        evtParam: 
+      - index: 12
+        name: testList
+        defaultType: GList
+        customType: UIList
+        pkg: 
+        res: 
+        isCreateVar: 1
+        isCreateIns: 1
+        evtType: "\u5217\u8868\u70B9\u51FB"
         evtParam: 
   - name: Login
     components:

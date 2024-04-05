@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="400,150">
+  <displayList>
+    <graph id="n0_rxzz" name="n0" xy="0,0" size="400,150" type="rect" fillColor="#ff009933">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="n1_rxzz" name="txtNum" xy="53,54" size="293,41" fontSize="30" text="xxxxxxxxxxxxxxxxxxx">
+      <relation target="" sidePair="center-center,middle-middle"/>
+    </text>
+  </displayList>
+</component>

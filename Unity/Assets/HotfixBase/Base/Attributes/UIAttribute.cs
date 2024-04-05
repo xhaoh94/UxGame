@@ -87,4 +87,15 @@ namespace Ux
         }
         public object Title { get; }
     }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class ItemUrlAttribute : Attribute
+    {
+        public ItemUrlAttribute(string url)
+        {
+            Url = url;
+        }
+
+        public string Url { get; }
+    }
 }

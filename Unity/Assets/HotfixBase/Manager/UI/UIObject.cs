@@ -23,7 +23,6 @@ namespace Ux
         private List<UIObject> _components;
         public List<UIObject> Components => _components ??= new List<UIObject>();
         private UIState _state = UIState.Hide;
-
         public virtual UIState State
         {
             get
@@ -39,7 +38,12 @@ namespace Ux
 
         public virtual UIObject Parent { get; private set; }
         public GObject GObject { get; private set; }
+        protected object ShowParame { get; private set; }
 
+        /// <summary>
+        /// 是否可以使用特性快速注册事件函数        
+        /// </summary>
+        protected virtual bool IsRegisterFastMethod => false;
         /// <summary>
         /// 显示动效
         /// </summary>
@@ -61,16 +65,6 @@ namespace Ux
         protected T ObjAs<T>() where T : GObject
         {
             return GObject as T;
-        }
-
-        protected T ParamAs<T>(object param)
-        {
-            if (param is T cParam)
-            {
-                return cParam;
-            }
-
-            return default(T);
         }
 
         protected void Init(GObject gObj, UIObject parent = null)
@@ -151,7 +145,7 @@ namespace Ux
             }
         }
 
-        private void ToCreateChildren(Type selfType, GComponent component)
+        void _ToCreateChildren(Type selfType, GComponent component)
         {
             for (int i = 0; i < component.numChildren; i++)
             {
@@ -199,7 +193,7 @@ namespace Ux
             var selfType = GetType();
             try
             {
-                ToCreateChildren(selfType, component);
+                _ToCreateChildren(selfType, component);
             }
             catch
             {
@@ -210,31 +204,30 @@ namespace Ux
 
         protected virtual void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
         {
-            switch (_state)
-            {
-                case UIState.Show:
-                case UIState.ShowAnim:
-                    return;
-            }
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
             {
                 _state = UIState.ShowAnim;
+                ShowAnim?.SetToStart();
                 ShowAnim?.Play(() => { _state = UIState.Show; });
             }
             else
             {
                 _state = UIState.Show;
-                ShowAnim?.SetEnd();
+                ShowAnim?.SetToEnd();
             }
-            _RemoveTag();
-            EventMgr.Ins.___RegisterFastMethod(this);
+            RemoveTag();
+            if (IsRegisterFastMethod)
+            {
+                EventMgr.Ins.___RegisterFastMethod(this);
+            }
             OnAddEvent();
             foreach (var component in Components)
             {
                 component.ToShow(isAnim, id, param, isStack, token);
             }
-            OnShow(param);
+            ShowParame = param;
+            OnShow();
             _CheckShow(id, param, isStack, token).Forget();
         }
 
@@ -247,7 +240,7 @@ namespace Ux
                     var isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
                     if (isCanceled)
                     {
-                        Log.Debug(GetType().Name + "显示动画取消");
+                        Log.Debug(GetType().Name + "取消显示动画");
                         return;
                     }
                 }
@@ -260,7 +253,19 @@ namespace Ux
             OnShowCallBack?.Invoke(id, param, isStack);
         }
 
-        protected virtual void OnShow(object param)
+        protected virtual void ToOverwrite(object param)
+        {
+            ShowParame = param;
+            foreach (var component in Components)
+            {
+                component.ToOverwrite(ShowParame);
+            }
+            OnOverwrite();
+        }
+        protected virtual void OnOverwrite()
+        {
+        }
+        protected virtual void OnShow()
         {
         }
 
@@ -275,27 +280,27 @@ namespace Ux
 
         protected virtual void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
         {
-            if (_state == UIState.Hide || _state == UIState.HideAnim)
-            {
-                return;
-            }
+            ShowParame = null;
             ShowAnim?.Stop();
             if (isAnim && HideAnim != null)
             {
                 _state = UIState.HideAnim;
+                HideAnim?.SetToStart();
                 HideAnim?.Play(() => { _state = UIState.Hide; });
             }
             else
             {
                 _state = UIState.Hide;
+                HideAnim?.SetToEnd();
             }
 
             foreach (var component in Components)
             {
                 component.ToHide(isAnim, isStack, token);
             }
+
             OnHide();
-            _RemoveTag();
+            RemoveTag();
             _CheckHide(token).Forget();
         }
 
@@ -308,7 +313,7 @@ namespace Ux
                     var isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
                     if (isCanceled)
                     {
-                        Log.Debug(GetType().Name + "关闭动画取消");
+                        Log.Debug(GetType().Name + "取消关闭动画");
                         return;
                     }
                 }
@@ -322,13 +327,18 @@ namespace Ux
         }
 
         /// <summary>
-        /// 不要在OnHide ,注册定时器或是监听事件。
-        /// 请在模块监听 MainEventType.UI_HIDE
+        /// 注意！！！
+        /// 不要在这里注册定时器或是监听事件。
+        /// 在这里注册的定时器或是事件，都会流程给清空的
         /// </summary>
         protected virtual void OnHide()
         {
         }
-
+        /// <summary>
+        /// 注意！！！
+        /// 不要在这里注册定时器或是监听事件。
+        /// 在这里注册的定时器或是事件，都会流程给清空的
+        /// </summary>
         protected virtual void OnHideAnimComplete()
         {
         }
@@ -482,21 +492,32 @@ namespace Ux
             AddEvent(gObj.onClick, fn);
         }
 
-        protected void AddItemClick(GList gList, EventCallback1 fn)
+        protected void AddItemClick(UIList list, EventCallback1 fn)
         {
-            if (gList == null) return;
-            AddEvent(gList.onClickItem, fn);
+            if (list == null) return;
+            AddItemClick(list.List, fn);
         }
 
-        protected void AddItemClick(GList gList, EventCallback0 fn)
+        protected void AddItemClick(UIList list, EventCallback0 fn)
         {
-            if (gList == null) return;
-            AddEvent(gList.onClickItem, fn);
+            if (list == null) return;
+            AddItemClick(list.List, fn);
+        }
+        protected void AddItemClick(GList list, EventCallback1 fn)
+        {
+            if (list == null) return;
+            AddEvent(list.onClickItem, fn);
+        }
+
+        protected void AddItemClick(GList list, EventCallback0 fn)
+        {
+            if (list == null) return;
+            AddEvent(list.onClickItem, fn);
         }
 
         #endregion
 
-        private void _RemoveTag()
+        protected void RemoveTag()
         {
             _event?.RemoveEvents();
             EventMgr.Ins.OffTag(this);

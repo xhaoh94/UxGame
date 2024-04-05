@@ -14,14 +14,24 @@ namespace Ux.UI
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Stack;
         public override UIBlur Blur => UIBlur.Blur;
-        
+
         protected override void OnInit()
         {
-            base.OnInit();            
+            base.OnInit();
+            testList.SetItemRenderer<TestItem>();
+            //testList.SetItemProvider((int index) =>
+            //{
+            //    object data = testList.GetDatas()[index];
+            //    if (data is int id)
+            //    {
+            //        if (id % 2 == 0) return typeof(Test22Item);
+            //    }
+            //    return typeof(TestItem);
+            //});
         }
-        protected override void OnShow(object param)
+        protected override void OnShow()
         {
-            base.OnShow(param);
+            base.OnShow();
             var loader = new UxLoader();
             loader.autoSize = true;
             loader.url = "130G_TieKuang";
@@ -31,6 +41,15 @@ namespace Ux.UI
             testUIModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
 
             testRtModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
+
+            testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
+            this.DoTimer(5, 1, () =>
+            {
+                testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
+                //testList.List.ScrollToView(7);
+                EventMgr.Ins.Run(11111111);
+            });
+            EventMgr.Ins.Run(11111111);
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
