@@ -94,10 +94,10 @@ namespace Ux.UI
 			return b;
 		}
 		partial void OnBtnLongClickLongPress(ref bool isBreak);
-		void _OnTestListItemClick(EventContext e)
+		void _OnTestListItemClick(IItemRenderer item)
 		{
-			OnTestListItemClick(e);
+			OnTestListItemClick(item);
 		}
-		partial void OnTestListItemClick(EventContext e);
+		partial void OnTestListItemClick(IItemRenderer item);
 	}
 }

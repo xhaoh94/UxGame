@@ -19,15 +19,12 @@ namespace Ux.UI
         {
             base.OnInit();
             testList.SetItemRenderer<TestItem>();
-            //testList.SetItemProvider((int index) =>
-            //{
-            //    object data = testList.GetDatas()[index];
-            //    if (data is int id)
-            //    {
-            //        if (id % 2 == 0) return typeof(Test22Item);
-            //    }
-            //    return typeof(TestItem);
-            //});
+            testList.SetItemProvider((int index) =>
+            {
+                var id = testList.GetData<int>(index);
+                if (id % 2 == 0) return typeof(Test22Item);
+                return typeof(TestItem);
+            });
         }
         protected override void OnShow()
         {
@@ -43,13 +40,13 @@ namespace Ux.UI
             testRtModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
 
             testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
-            this.DoTimer(5, 1, () =>
-            {
-                testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
-                //testList.List.ScrollToView(7);
-                EventMgr.Ins.Run(11111111);
-            });
-            EventMgr.Ins.Run(11111111);
+            //this.DoTimer(5, 1, () =>
+            //{
+            //    testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
+            //    //testList.List.ScrollToView(7);
+            //    EventMgr.Ins.Run(11111111);
+            //});
+            //EventMgr.Ins.Run(11111111);
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
@@ -92,6 +89,10 @@ namespace Ux.UI
         partial void OnBtnBackClick(EventContext e)
         {
             HideSelf();
+        }
+        partial void OnTestListItemClick(IItemRenderer e)
+        {            
+            Log.Debug(e.Index);
         }
     }
 }

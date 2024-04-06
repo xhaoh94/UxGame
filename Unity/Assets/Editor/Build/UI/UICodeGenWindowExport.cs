@@ -457,11 +457,11 @@ namespace UI.Editor
                 foreach (var list in lists)
                 {
                     var fnName = $"On{char.ToUpper(list.name[0])}{list.name.Substring(1)}Item";
-                    write.Writeln($"void _{fnName}Click(EventContext e)");
+                    write.Writeln($"void _{fnName}Click(IItemRenderer item)");
                     write.StartBlock();
-                    write.Writeln($"{fnName}Click(e);");
+                    write.Writeln($"{fnName}Click(item);");
                     write.EndBlock();
-                    write.Writeln($"partial void {fnName}Click(EventContext e);");
+                    write.Writeln($"partial void {fnName}Click(IItemRenderer item);");
                 }
             }
 

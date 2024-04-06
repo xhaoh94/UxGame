@@ -28,7 +28,7 @@ namespace Ux
         Func<int, Type> _itemTypeFunc;
         Dictionary<GObject, IItemRenderer> _renderers = new Dictionary<GObject, IItemRenderer>();
         List<object> _datas = new List<object>();
-
+        Action<IItemRenderer> _itemClickEvt;
         protected override void OnInit()
         {
             List.itemRenderer = _OnItemRenderer;
@@ -46,11 +46,10 @@ namespace Ux
             base.OnHide();
             _ClearRenderers();
             _datas.Clear();
+            _itemClickEvt = null;
         }
         protected override void OnDispose()
         {
-            _ClearRenderers();
-            _datas.Clear();
             _itemType = null;
             _itemTypeFunc = null;
         }
@@ -63,10 +62,6 @@ namespace Ux
         public void SetItemRenderer<T>() where T : ItemRenderer
         {
             var newType = typeof(T);
-            if (_itemType != null && _itemType != newType)
-            {
-                _ClearRenderers();
-            }
             _itemType = newType;
         }
         /// <summary>
@@ -76,14 +71,23 @@ namespace Ux
         /// <param name="itemTypeFunc"></param>
         public void SetItemProvider(Func<int, Type> itemTypeFunc)
         {
-            if (_itemTypeFunc != null && _itemTypeFunc != itemTypeFunc)
-            {
-                _ClearRenderers();
-            }
             _itemTypeFunc = itemTypeFunc;
             List.itemProvider = _itemTypeFunc != null ? _OnItemProvider : null;
         }
 
+        public void AddItemClick(Action<IItemRenderer> itemClickEvt)
+        {
+            _itemClickEvt = itemClickEvt;
+            AddItemClick(List, _OnItemClickEvt);
+        }
+        void _OnItemClickEvt(EventContext e)
+        {
+            var gObj = (GObject)e.data;
+            if (_renderers.TryGetValue(gObj, out var renderer))
+            {
+                _itemClickEvt?.Invoke(renderer);
+            }
+        }
         public int FindIndex(object data)
         {
             for (int i = 0; i < _datas.Count; i++)
@@ -100,10 +104,7 @@ namespace Ux
             }
             return default(T);
         }
-        public List<object> GetDatas()
-        {
-            return _datas;
-        }
+        public List<object> GetDatas() => _datas;
         public IEnumerable<T> GetDatas<T>()
         {
             return _datas.Cast<T>();
@@ -119,6 +120,11 @@ namespace Ux
             if (_itemType == null && _itemTypeFunc == null)
             {
                 Log.Error("需要设置ItemRenderer 或 ItemProvider");
+                return;
+            }
+            if (datas == null)
+            {
+                List.numItems = 0;
                 return;
             }
             _datas.Clear();
@@ -154,7 +160,7 @@ namespace Ux
                     return url;
                 }
             }
-            return List.defaultItem;
+            return null;
         }
         void _OnItemRenderer(int index, GObject item)
         {
@@ -169,7 +175,7 @@ namespace Ux
             }
 
             IItemRenderer renderer;
-            if (_renderers.TryGetValue(item, out renderer) && (renderer.Index != index || renderer.GetType() != temType))
+            if (_renderers.TryGetValue(item, out renderer) && renderer.GetType() != temType)
             {
                 renderer.Release();
                 renderer = null;
@@ -178,11 +184,11 @@ namespace Ux
             if (renderer == null)
             {
                 renderer = Pool.Get(temType) as IItemRenderer;
-                renderer.Init(index, this);
+                renderer.Init(item, this);
                 _renderers[item] = renderer;
             }
 
-            renderer.Set(item, _datas[index], _fristShow);
+            renderer.Set(index, _datas[index], _fristShow);
 
         }
         void _ClearRenderers()

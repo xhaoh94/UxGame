@@ -43,7 +43,7 @@ namespace Ux
         /// <summary>
         /// 是否可以使用特性快速注册事件函数        
         /// </summary>
-        protected virtual bool IsRegisterFastMethod => false;
+        protected virtual bool IsRegisterFastMethod => true;
         /// <summary>
         /// 显示动效
         /// </summary>
@@ -492,17 +492,12 @@ namespace Ux
             AddEvent(gObj.onClick, fn);
         }
 
-        protected void AddItemClick(UIList list, EventCallback1 fn)
+        protected void AddItemClick(UIList list, Action<IItemRenderer> fn)
         {
             if (list == null) return;
-            AddItemClick(list.List, fn);
+            list.AddItemClick(fn);            
         }
 
-        protected void AddItemClick(UIList list, EventCallback0 fn)
-        {
-            if (list == null) return;
-            AddItemClick(list.List, fn);
-        }
         protected void AddItemClick(GList list, EventCallback1 fn)
         {
             if (list == null) return;

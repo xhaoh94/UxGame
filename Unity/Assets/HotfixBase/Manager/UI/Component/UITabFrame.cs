@@ -130,10 +130,10 @@ namespace Ux
             ParentAs<UIBase>().Hide();
         }
 
-        private void OnTabClick(EventContext e)
+        private void OnTabClick(IItemRenderer item)
         {
             if (__listTab == null) return;
-            int index = __listTab.List.GetChildIndex((GObject)e.data);
+            int index = item.Index;
             if (index == -1) return;
             if (__listTab.List.numItems < index) return;
             OnTabClick(index);
