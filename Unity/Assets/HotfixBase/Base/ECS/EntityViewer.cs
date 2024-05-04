@@ -430,6 +430,14 @@ namespace Ux
 
         public void Release()
         {
+#if UNITY_EDITOR
+            if (!UnityEngine.Application.isPlaying)
+            {
+                UnityEngine.Object.DestroyImmediate(gameObject);
+                return;
+            }
+#endif
+
             if (_entityContent != null)
             {
                 UnityPool.Push(_location, _entityContent.gameObject);

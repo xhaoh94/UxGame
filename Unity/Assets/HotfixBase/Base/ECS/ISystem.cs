@@ -285,20 +285,40 @@ namespace Ux
             {
                 addConponentSystem.OnAddComponent();
             }
-
-            if (this is IUpdateSystem updateSystem)
+#if UNITY_EDITOR
+            if (!UnityEngine.Application.isPlaying)
             {
-                GameMain.Ins.AddUpdate(updateSystem.OnUpdate);
+                if (this is IUpdateSystem updateSystem)
+                {
+                    UnityEditor.EditorApplication.update += updateSystem.OnUpdate;
+                }
+                if (this is ILateUpdateSystem lateUpdateSystem)
+                {
+                    UnityEditor.EditorApplication.update += lateUpdateSystem.OnLateUpdate;
+                }
+                if (this is IFixedUpdateSystem fixedUpdateSystem)
+                {
+                    UnityEditor.EditorApplication.update += fixedUpdateSystem.OnFixedUpdate;
+                }
+                return;
             }
-
-            if (this is ILateUpdateSystem lateUpdateSystem)
+#endif
             {
-                GameMain.Ins.AddLateUpdate(lateUpdateSystem.OnLateUpdate);
-            }
+                if (this is IUpdateSystem updateSystem)
+                {
+                    GameMain.Ins.AddUpdate(updateSystem.OnUpdate);
 
-            if (this is IFixedUpdateSystem fixedUpdateSystem)
-            {
-                GameMain.Ins.AddFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                }
+
+                if (this is ILateUpdateSystem lateUpdateSystem)
+                {
+                    GameMain.Ins.AddLateUpdate(lateUpdateSystem.OnLateUpdate);
+                }
+
+                if (this is IFixedUpdateSystem fixedUpdateSystem)
+                {
+                    GameMain.Ins.AddFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                }
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
@@ -330,19 +350,44 @@ namespace Ux
 
         void _RemoveSystem()
         {
-            if (this is IUpdateSystem updateSystem)
+            if (this is IRemoveComponentSystem removeComponentSystem)
             {
-                GameMain.Ins.RemoveUpdate(updateSystem.OnUpdate);
+                removeComponentSystem.OnRemoveComponent();
             }
 
-            if (this is ILateUpdateSystem lateUpdateSystem)
+#if UNITY_EDITOR
+            if (!UnityEngine.Application.isPlaying)
             {
-                GameMain.Ins.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
+                if (this is IUpdateSystem updateSystem)
+                {
+                    UnityEditor.EditorApplication.update -= updateSystem.OnUpdate;
+                }
+                if (this is ILateUpdateSystem lateUpdateSystem)
+                {
+                    UnityEditor.EditorApplication.update -= lateUpdateSystem.OnLateUpdate;
+                }
+                if (this is IFixedUpdateSystem fixedUpdateSystem)
+                {
+                    UnityEditor.EditorApplication.update -= fixedUpdateSystem.OnFixedUpdate;
+                }
+                return;
             }
-
-            if (this is IFixedUpdateSystem fixedUpdateSystem)
+#endif
             {
-                GameMain.Ins.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                if (this is IUpdateSystem updateSystem)
+                {
+                    GameMain.Ins.RemoveUpdate(updateSystem.OnUpdate);
+                }
+
+                if (this is ILateUpdateSystem lateUpdateSystem)
+                {
+                    GameMain.Ins.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
+                }
+
+                if (this is IFixedUpdateSystem fixedUpdateSystem)
+                {
+                    GameMain.Ins.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                }
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
@@ -350,10 +395,6 @@ namespace Ux
                 GameMain.Ins.RemoveQuit(applicationQuit.OnApplicationQuit);
             }
 
-            if (this is IRemoveComponentSystem removeComponentSystem)
-            {
-                removeComponentSystem.OnRemoveComponent();
-            }
 
             var temPar = Parent;
 

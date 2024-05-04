@@ -72,7 +72,7 @@ namespace Ux
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
         Entity _parent;
-
+        Entity _parentByComponent;
 
         /// <summary>
         /// 获取父类实体，如果父类是组件的时候，会循环往上获取，直到获取到为实体为止
@@ -82,9 +82,9 @@ namespace Ux
             get
             {
                 var temPar = _parent;
-                while (temPar is { IsComponent: true })
                 {
-                    temPar = temPar._parent;
+                    while (temPar is { IsComponent: true })
+                        temPar = temPar._parent;
                 }
 
                 return temPar;
@@ -210,6 +210,7 @@ namespace Ux
                     Log.Error("父实体为空，无法添加子实体");
                     return false;
                 }
+                entity._parentByComponent = this;
                 temParent._AddChild(entity);
             }
             else
@@ -530,7 +531,20 @@ namespace Ux
                 Log.Error("Entity为空");
                 return false;
             }
-
+            if (IsComponent)
+            {
+                return Parent.RemoveChild(entity, isDestroy);
+            }
+            else
+            {
+                entity._parentByComponent?._RemoveChild(entity);
+                var b= _RemoveChild(entity);
+                entity._Destroy(isDestroy);
+                return b;
+            }
+        }
+        bool _RemoveChild(Entity entity)
+        {
             if (_entitys.Remove(entity.ID))
             {
                 var type = entity.GetType();
@@ -541,11 +555,6 @@ namespace Ux
                         _typeToentitys.Remove(type);
                     }
                 }
-                if (IsComponent)
-                {
-                    return Parent.RemoveChild(entity, isDestroy);
-                }
-                entity._Destroy(isDestroy);
                 return true;
             }
             return false;
@@ -553,9 +562,15 @@ namespace Ux
 
         void RemoveChilds()
         {
-            while (_entitys.Count > 0)
-            {
+            var cnt = _entitys.Count;
+            while (cnt > 0)
+            {                
                 RemoveChild(_entitys.ElementAt(0).Value, true);
+                cnt--;
+            }
+            if (_entitys.Count > 0)
+            {
+                Log.Error("RemoveChilds 存在无法删除的Child！检查是否存在已被Destroy却没有从父类清除的Child");
             }
         }
         public T GetChild<T>(long id) where T : Entity
@@ -682,13 +697,23 @@ namespace Ux
             {
                 _RemoveSystem();
                 _parent = null;
+                _parentByComponent= null;
                 return;
             }
             if (IsDestroy) return;
             _RemoveSystem();
             _isDestroying = true;
+#if UNITY_EDITOR
+            if (UnityEngine.Application.isPlaying)
+            {
+                TimeMgr.Ins.RemoveTag(this);
+                EventMgr.Ins.OffTag(this);
+            }
+#else
             TimeMgr.Ins.RemoveTag(this);
             EventMgr.Ins.OffTag(this);
+#endif
+
             if (EntityMono != null)
             {
 #if UNITY_EDITOR
@@ -709,8 +734,19 @@ namespace Ux
                 _event = null;
             }
 
-
+#if UNITY_EDITOR
+            if (UnityEngine.Application.isPlaying)
+            {
+                EnqueueDelay(_DelayDestroy);
+            }
+            else
+            {
+                _DelayDestroy();
+            }
+#else
             EnqueueDelay(_DelayDestroy);
+#endif
+
         }
 
         void _DelayDestroy()
@@ -719,6 +755,7 @@ namespace Ux
             _isDestroying = false;
             OnDestroy();
 
+            _parentByComponent = null;
             _parent = null;
             _entitys.Clear();
             _typeToentitys.Clear();
@@ -732,11 +769,18 @@ namespace Ux
                 Viewer.Release();
                 Viewer = null;
             }
-#endif
+
+            if (IsFromPool && UnityEngine.Application.isPlaying)
+            {
+                Pool.Push(this);
+            }
+#else
             if (IsFromPool)
             {
                 Pool.Push(this);
             }
+#endif
+
         }
 
         protected virtual void OnDestroy()

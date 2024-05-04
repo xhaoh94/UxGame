@@ -223,10 +223,17 @@ namespace Ux
         }
 
         void RemoveComponents()
-        {
-            while (_components.Count > 0)
+        {            
+            var cnt = _components.Count;
+            while (cnt > 0)
+            {                
+                RemoveComponent(_components.ElementAt(0).Key);
+                cnt--; 
+            }
+
+            if (_components.Count>0)
             {
-                RemoveComponent(_components.ElementAt(0).Value);
+                Log.Error("RemoveComponents 存在无法删除的Component,请检查是否存在已被Destory却没从父类删除的组件");
             }
         }
 
