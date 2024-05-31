@@ -27,7 +27,7 @@ namespace Ux
         Type _itemType;
         Func<int, Type> _itemTypeFunc;
         Dictionary<GObject, IItemRenderer> _renderers = new Dictionary<GObject, IItemRenderer>();
-        List<object> _datas = new List<object>();
+        List<IUIParam> _datas = new List<IUIParam>();
         Action<IItemRenderer> _itemClickEvt;
         protected override void OnInit()
         {
@@ -45,7 +45,7 @@ namespace Ux
         {
             base.OnHide();
             _ClearRenderers();
-            _datas.Clear();
+            _ClearDatas();
             _itemClickEvt = null;
         }
         protected override void OnDispose()
@@ -88,27 +88,41 @@ namespace Ux
                 _itemClickEvt?.Invoke(renderer);
             }
         }
-        public int FindIndex(object data)
+        public int IndexOf(IUIParam data)
         {
-            for (int i = 0; i < _datas.Count; i++)
+            return _datas.IndexOf(data);
+        }
+        public int IndexOf<T>(T data, UIParamType type = UIParamType.A)
+        {
+            for (var i = 0; i < _datas.Count; i++)
             {
-                if (data.Equals(_datas[i])) return i;
+                if (_datas[i].TryGet(out T v, type) && data.Equals(v))
+                {
+                    return i;
+                }
             }
             return -1;
         }
-        public T GetData<T>(int index)
+        public T GetData<T>(int index, UIParamType type= UIParamType.A)
         {
             if (index < _datas.Count)
             {
-                return (T)_datas[index];
+                if (_datas[index].TryGet(out T v, type))
+                {
+                    return v;
+                }                
             }
-            return default(T);
+            return default;
         }
-        public List<object> GetDatas() => _datas;
-        public IEnumerable<T> GetDatas<T>()
+        public IUIParam GetData(int index)
         {
-            return _datas.Cast<T>();
+            if (index < _datas.Count)
+            {
+                return _datas[index];
+            }
+            return null;
         }
+        public List<IUIParam> GetDatas() => _datas;
         /// <summary>
         /// 设置数据源
         /// </summary>
@@ -127,8 +141,38 @@ namespace Ux
                 List.numItems = 0;
                 return;
             }
-            _datas.Clear();
-            _datas.AddRange(datas.Cast<object>());
+            _ClearDatas();
+            foreach (var _data in datas)
+            {
+                _datas.Add(IUIParam.Create(_data));
+            }
+            List.numItems = _datas.Count;
+            _fristShow = false;
+            if (scrollToIndex != -1)
+            {
+                List.ScrollToView(scrollToIndex);
+            }
+        }
+        /// <summary>
+        /// 设置数据源
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="datas">数据</param>
+        /// <param name="scrollToIndex">滚动位置</param>
+        public void SetDatas(IEnumerable<IUIParam> datas, int scrollToIndex = -1)
+        {
+            if (_itemType == null && _itemTypeFunc == null)
+            {
+                Log.Error("需要设置ItemRenderer 或 ItemProvider");
+                return;
+            }
+            if (datas == null)
+            {
+                List.numItems = 0;
+                return;
+            }
+            _ClearDatas();
+            _datas.AddRange(datas);            
             List.numItems = _datas.Count;
             _fristShow = false;
             if (scrollToIndex != -1)
@@ -202,7 +246,14 @@ namespace Ux
                 _renderers.Clear();
             }
         }
-
+        void _ClearDatas()
+        {
+            for (var i = 0; i < _datas.Count; i++)
+            {
+                _datas[i].Release();
+            }
+            _datas.Clear();
+        }
 
     }
 }

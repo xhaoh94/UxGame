@@ -38,7 +38,31 @@ namespace Ux
 
         public virtual UIObject Parent { get; private set; }
         public GObject GObject { get; private set; }
-        protected object ShowParame { get; private set; }
+
+        IUIParam _paramVo;
+        IUIParam ParamVo
+        {
+            get => _paramVo;
+            set
+            {
+                //只有UIBase的界面，才回收
+                if (this is UIBase)
+                {
+                    _paramVo?.Release();
+                }
+                _paramVo = value;
+            }
+        }
+        protected bool TryGetParam<V>(out V value,UIParamType type = UIParamType.A)
+        {
+            if (_paramVo == null)
+            {
+                value = default;
+                return false;
+            }
+            return ParamVo.TryGet(out value, type);
+        }
+
 
         /// <summary>
         /// 是否可以使用特性快速注册事件函数        
@@ -54,7 +78,7 @@ namespace Ux
         /// </summary>
         protected virtual IUIAnim HideAnim { get; set; } = null;
 
-        protected Action<int, object, bool> OnShowCallBack;
+        protected Action<int, IUIParam, bool> OnShowCallBack;
         protected Action OnHideCallBack;
 
         protected T ParentAs<T>() where T : UIObject
@@ -202,7 +226,7 @@ namespace Ux
         }
 
 
-        protected virtual void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
+        protected virtual void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
         {
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
@@ -226,12 +250,12 @@ namespace Ux
             {
                 component.ToShow(isAnim, id, param, isStack, token);
             }
-            ShowParame = param;
+            ParamVo = param;
             OnShow();
             _CheckShow(id, param, isStack, token).Forget();
         }
 
-        async UniTaskVoid _CheckShow(int id, object param, bool isStack, CancellationTokenSource token)
+        async UniTaskVoid _CheckShow(int id, IUIParam param, bool isStack, CancellationTokenSource token)
         {
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
             {
@@ -253,12 +277,12 @@ namespace Ux
             OnShowCallBack?.Invoke(id, param, isStack);
         }
 
-        protected virtual void ToOverwrite(object param)
+        protected virtual void ToOverwrite(IUIParam param)
         {
-            ShowParame = param;
+            ParamVo = param;
             foreach (var component in Components)
             {
-                component.ToOverwrite(ShowParame);
+                component.ToOverwrite(ParamVo);
             }
             OnOverwrite();
         }
@@ -280,7 +304,7 @@ namespace Ux
 
         protected virtual void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
         {
-            ShowParame = null;
+            ParamVo = null;
             ShowAnim?.Stop();
             if (isAnim && HideAnim != null)
             {
@@ -495,7 +519,7 @@ namespace Ux
         protected void AddItemClick(UIList list, Action<IItemRenderer> fn)
         {
             if (list == null) return;
-            list.AddItemClick(fn);            
+            list.AddItemClick(fn);
         }
 
         protected void AddItemClick(GList list, EventCallback1 fn)

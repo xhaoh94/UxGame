@@ -247,7 +247,7 @@ namespace Ux
         }
         void _Show(int id, MessageBoxData mbData)
         {
-            UIMgr.Ins.Show(id, mbData);
+            UIMgr.Ins.Show(id,IUIParam.Create(mbData));
         }
         public MessageBoxData CreateData(string title, string content)
         {

@@ -8,6 +8,7 @@ namespace Ux
     public abstract class UITabFrame : UIObject
     {
         public int SelectIndex => GetIndex(SelectItem != null ? SelectItem.ID : 0);
+        List<int> _children;
         public ITabView SelectItem { get; private set; }
 
         public UITabFrame(GObject container, UIObject parent)
@@ -36,18 +37,12 @@ namespace Ux
 
         public void SetItemRenderer<T>() where T : ItemRenderer, IItemRenderer
         {
-            if (__listTab != null)
-            {
-                __listTab.SetItemRenderer<T>();
-            }
+            __listTab?.SetItemRenderer<T>();
         }
 
         public void SetItemProvider(Func<int, Type> itemTypeFunc)
         {
-            if (__listTab != null)
-            {
-                __listTab.SetItemProvider(itemTypeFunc);
-            }
+            __listTab?.SetItemProvider(itemTypeFunc);
         }
 
         protected override void OnInit()
@@ -64,7 +59,7 @@ namespace Ux
         {
             if (__listTab == null) return;
             var parent = ParentAs<UIBase>();
-            var _children = parent.Data.Children;
+            _children = parent.Data.Children;
             __listTab.SetDatas(_children);
             if (selectIndex < 0) return;
             __listTab.List.selectedIndex = selectIndex;
@@ -72,19 +67,11 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        protected override void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
         {
             base.ToShow(isAnim, id, param, isStack, token);
-            if (__listTab != null)
-            {
-                AddItemClick(__listTab, OnTabClick);
-            }
-
-            if (__btnClose != null)
-            {
-                AddClick(__btnClose, OnBtnCloseClick);
-            }
-
+            AddItemClick(__listTab, OnTabClick);
+            AddClick(__btnClose, OnBtnCloseClick);
             Refresh(-1);
         }
 
@@ -97,6 +84,7 @@ namespace Ux
         void _Hide()
         {
             SelectItem = null;
+            _children = null;
         }
 
 
@@ -121,8 +109,8 @@ namespace Ux
         private int GetIndex(int id)
         {
             if (id == 0) return -1;
-            if (__listTab == null) return -1;
-            return __listTab.FindIndex(id);
+            if (_children == null|| _children.Count == 0) return -1;
+            return _children.IndexOf(id);
         }
 
         private void OnBtnCloseClick()

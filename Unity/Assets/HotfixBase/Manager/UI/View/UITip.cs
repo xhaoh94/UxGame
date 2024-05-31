@@ -29,10 +29,18 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        protected override void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
         {
-            tipData = (UITipFactory.TipData)param;
-            tipData.ShowCallBack?.Invoke(this);
+            if (TryGetParam(out UITipFactory.TipData _tipData))
+            {
+                tipData = _tipData;
+                tipData.ShowCallBack?.Invoke(this);
+            }
+            else
+            {
+                Log.Error("Tip 参数类型错误");
+                return;
+            }            
             InitParam();
             base.ToShow(isAnim, id, param, isStack, token);
         }

@@ -9,7 +9,7 @@ namespace Ux
         int Index { get; }
         void Init(GObject gObject, UIList list);
         void Release();
-        void Set(int index, object data, bool isAnim);
+        void Set(int index, IUIParam data, bool isAnim);
     }
     public abstract class ItemRenderer : UIObject, IItemRenderer
     {
@@ -34,7 +34,7 @@ namespace Ux
             Pool.Push(this);
         }
 
-        void IItemRenderer.Set(int index, object data, bool isAnim)
+        void IItemRenderer.Set(int index, IUIParam data, bool isAnim)
         {
             Index = index;
             ToShow(false, 0, data, false, null);

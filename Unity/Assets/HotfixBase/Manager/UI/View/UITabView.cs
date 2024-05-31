@@ -51,11 +51,11 @@ namespace Ux
         }
 
         void ITabView.HideByTab()
-        {
+        {            
             ToHide(false, false, null);
         }
         void ITabView.HideByParent(bool isAnim, bool isStack, CancellationTokenSource token)
-        {
+        {            
             ToHide(isAnim, isStack, token);
         }
     }

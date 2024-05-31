@@ -84,7 +84,7 @@ namespace Ux
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
-            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _CheckStack, _HideByStack);
+            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBefore_Stack, _Hide_Stack);
         }
 
         //内存不足时，清理缓存
@@ -179,7 +179,7 @@ namespace Ux
             return GRoot.inst;
         }
         public string GetItemUrl(Type type)
-        {            
+        {
             if (type != null && _itemUrls.TryGetValue(type, out var url)) return url;
             return null;
         }
@@ -223,35 +223,36 @@ namespace Ux
 #endif
             return id;
         }
-        public UITask<T> Show<T>(object param = null, bool isAnim = true) where T : IUI
+
+        public UITask<T> Show<T>(IUIParam param = null, bool isAnim = true) where T : IUI
         {
             return Show<T>(ConverterID(typeof(T)), param, isAnim);
         }
 
-        public UITask<T> Show<T>(int id, object param = null, bool isAnim = true) where T : IUI
+        public UITask<T> Show<T>(int id, IUIParam param = null, bool isAnim = true) where T : IUI
         {
             var task = ShowAsync<T>(true, id, param, isAnim);
             return new UITask<T>(task);
         }
 
-        public UITask<IUI> Show(int id, object param = null, bool isAnim = true)
+        public UITask<IUI> Show(int id, IUIParam param = null, bool isAnim = true)
         {
             var task = ShowAsync<IUI>(true, id, param, isAnim);
             return new UITask<IUI>(task);
         }
 
-        UITask<IUI> _ShowByStack(int id, object param = null)
+        UITask<IUI> _ShowByStack(int id, IUIParam param = null)
         {
             var task = ShowAsync<IUI>(false, id, param, false);
             return new UITask<IUI>(task);
         }
-        void _ShowCallBack(IUI ui, object param, bool isStack)
+        void _ShowCallBack(IUI ui, IUIParam param, bool isStack)
         {
             _ShowCallBack_Stack(ui, param, isStack);
             _ShowCallBack_Blur(ui);
         }
 
-        private async UniTask<T> ShowAsync<T>(bool isStack, int id, object param = null, bool isAnim = true) where T : IUI
+        private async UniTask<T> ShowAsync<T>(bool isStack, int id, IUIParam param = null, bool isAnim = true) where T : IUI
         {
             var data = GetUIData(id);
             if (data == null)
@@ -529,6 +530,11 @@ namespace Ux
             var parentID = ui.Data.GetParentID();
             if (parentID != 0 && _showed.TryGetValue(parentID, out ui))
             {
+                //如果界面是栈类型，但关闭时，不触发栈，则代表栈已被打乱，此时可清除栈了
+                if (!isStack && _stack.Count > 0 && ui.Type == UIType.Stack)
+                {
+                    _stack.Clear();
+                }
                 ui.DoHide(isAnim, isStack);
             }
         }
@@ -688,7 +694,7 @@ namespace Ux
             return lazyloads;
         }
 
-        bool _CheckDownload(int id, object param, bool isAnim)
+        bool _CheckDownload(int id, IUIParam param, bool isAnim)
         {
             if (_idDownloader.TryGetValue(id, out var download))
             {

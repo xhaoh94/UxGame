@@ -9,15 +9,19 @@ namespace Ux
     partial class UIMgr
     {
         /// <summary>
-        /// 界面顺序
+        /// 界面栈
         /// </summary>
         List<UIStack> _stack = new List<UIStack>();
         Stack<UIStack> _backs = new Stack<UIStack>();
-        void _ShowCallBack_Stack(IUI ui, object param, bool isStack)
+
+        //显示完成后，把ui放进栈
+        void _ShowCallBack_Stack(IUI ui, IUIParam param, bool isStack)
         {
             var uiType = ui.Type;
             if (!isStack || uiType == UIType.Fixed)
             {
+                //非isStack 或 固定面板不需要放入栈中
+                //非isStack （存在于关闭界面触发栈后，重新显示的界面，此时不需要再把界面放进栈中）
                 return;
             }
 
@@ -54,7 +58,11 @@ namespace Ux
                     var preStack = _stack[i];
                     if (preStack.ID != ui.ID)
                     {
+                        //Hide之后，参数会被回收。所以提前拷贝参数对象
+                        var copyParam = preStack.Param?.Copy();
                         Hide(preStack.ParentID);
+                        //重新赋值参数
+                        preStack.Param = copyParam;
                     }
                     if (preStack.Type == UIType.Stack)
                     {
@@ -65,8 +73,8 @@ namespace Ux
 
         }
 
-
-        bool _CheckStack(IUI ui, bool isStack = false)
+        //关闭界面前，检测栈中界面，是否重新打开
+        bool _HideBefore_Stack(IUI ui, bool isStack = false)
         {
             if (_stack.Count > 0)
             {
@@ -113,7 +121,8 @@ namespace Ux
             return isBreak;
         }
 
-        void _HideByStack(int id, bool isAnim)
+        //关闭界面且触发检测栈
+        void _Hide_Stack(int id, bool isAnim)
         {
             _Hide(true, id, isAnim);
         }

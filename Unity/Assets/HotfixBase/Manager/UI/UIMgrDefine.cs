@@ -1,21 +1,80 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using FairyGUI;
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using static Ux.UIMgr;
 
 namespace Ux
 {
+    public interface IUI
+    {
+        UIState State { get; }
+        UIType Type { get; }
+        UIBlur Blur { get; }
+        string Name { get; }
+        int ID { get; }
+        IUIData Data { get; }
+        bool IsDestroy { get; }
+        bool Visable { get; set; }
+        IFilter Filter { get; set; }
+        void InitData(IUIData data, CallBackData initData);
+        void Dispose();
+        void DoShow(bool isAnim, int id, IUIParam param, bool isStack);
+        void DoHide(bool isAnim, bool isStack);
+    }
+    
+    public enum UIType
+    {
+        /// <summary>
+        /// 不会关闭任何界面，但会被Stack界面关闭（Stack界面关闭的时候，会自动重新打开）
+        /// </summary>
+        Normal,
+        /// <summary>
+        /// 会关闭除Fixed之外的界面，也会被其他Stack界面关闭（Stack界面关闭的时候，会自动重新打开） 
+        /// </summary>
+        Stack,
+        /// <summary>
+        /// 固定界面,不会关闭其他界面，也不会被其他界面关闭
+        /// </summary>
+        Fixed,
+    }
+
+    //必须是2的n次方,可组合使用 (PS:Blur|Fixed)
+    public enum UIBlur
+    {
+        /// <summary>
+        /// 不会模糊其他界面也不会被其他界面模糊
+        /// </summary>
+        None = 0x1,
+        /// <summary>
+        /// 不会模糊其他界面但会被其他界面模糊
+        /// </summary>
+        Normal = 0x2,
+        /// <summary>
+        /// 模糊非固定界面
+        /// </summary>
+        Blur = 0x4,
+        /// <summary>
+        /// 模糊固定界面
+        /// </summary>
+        Fixed = 0x8,
+        /// <summary>
+        /// 模糊场景
+        /// </summary>
+        Scene = 0x16,
+    }
     public partial class UIMgr
     {
         public readonly struct CallBackData
         {
-            public CallBackData(Action<IUI, object, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb, Action<int, bool> _backCb)
+            public CallBackData(Action<IUI, IUIParam, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb, Action<int, bool> _backCb)
             {
                 showCb = _showCb;
                 hideCb = _hideCb;
                 stackCb = _stackCb;
                 backCb = _backCb;
             }
-            public readonly Action<IUI, object, bool> showCb;
+            public readonly Action<IUI, IUIParam, bool> showCb;
             public readonly Action<IUI> hideCb;
             public readonly Func<IUI, bool, bool> stackCb;
             public readonly Action<int, bool> backCb;
@@ -44,11 +103,11 @@ namespace Ux
         {
             public readonly int ParentID;
             public int ID;
-            public object Param;
+            public IUIParam Param;
             public readonly UIType Type;
 #if UNITY_EDITOR
             public string IDStr;
-            public UIStack(int parentID, string idStr, int id, object param, UIType type)
+            public UIStack(int parentID, string idStr, int id, IUIParam param, UIType type)
             {
                 ParentID = parentID;
                 IDStr = idStr;
@@ -57,7 +116,7 @@ namespace Ux
                 Type = type;
             }
 #else
-          public UIStack(int parentID, int id, object param, UIType type)
+          public UIStack(int parentID, int id, IUIParam param, UIType type)
             {
                 ParentID = parentID;
                 ID = id;
@@ -132,29 +191,29 @@ namespace Ux
 
         public readonly struct UITask<T> where T : IUI
         {
-            readonly UniTask<T> task;
+            readonly UniTask<T> _task;
 
-            public UITask(UniTask<T> _task)
+            public UITask(UniTask<T> task)
             {
-                task = _task;
+                _task = task;
             }
 
             public UniTask<T> Task()
             {
-                return task;
+                return _task;
             }
         }
 
         public readonly struct DownloadData
         {
-            public DownloadData(int uiid, object param, bool isAnim)
+            public DownloadData(int uiid, IUIParam param, bool isAnim)
             {
                 this.UIID = uiid;
                 this.Param = param;
                 this.IsAnim = isAnim;
             }
             public int UIID { get; }
-            public object Param { get; }
+            public IUIParam Param { get; }
             public bool IsAnim { get; }
         }
         private class WaitDel

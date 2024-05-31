@@ -11,7 +11,7 @@ namespace Ux.UI
 
         protected override void OnShow()
         {
-            if (ShowParame is int index)
+            if (TryGetParam(out int index))
             {
                 txtNum.text = index.ToString();
             }
@@ -33,7 +33,7 @@ namespace Ux.UI
 
         protected override void OnShow()
         {
-            if (ShowParame is int index)
+            if (TryGetParam(out int index))
             {
                 txtNum.text = index.ToString();
             }

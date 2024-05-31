@@ -14,7 +14,7 @@ namespace Ux
         public override bool IsDestroy => false;
         public override UIType Type => UIType.Fixed;
         public override UIBlur Blur => UIBlur.None | UIBlur.Blur | UIBlur.Fixed;
-        protected UIMessageBoxFactory.MessageBoxData dialogData;
+        protected UIMessageBoxFactory.MessageBoxData messageBoxData;
 
         #region 组件
         protected virtual GTextField __txtTitle { get; private set; } = null;
@@ -31,10 +31,19 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        protected override void ToShow(bool isAnim, int id, object param, bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
         {
-            dialogData = (UIMessageBoxFactory.MessageBoxData)param;
-            dialogData.ShowCallBack?.Invoke(this);
+            if(TryGetParam(out UIMessageBoxFactory.MessageBoxData _messageBoxData))
+            {
+                messageBoxData = _messageBoxData;
+                messageBoxData.ShowCallBack?.Invoke(this);
+            }
+            else
+            {
+                Log.Error("MessageBox 参数类型错误");
+                return;
+            }
+            
             InitParam();
             base.ToShow(isAnim, id, param, isStack, token);
         }
@@ -57,7 +66,7 @@ namespace Ux
         {
             ResetBtns();
             AddClick(__btnClose, HideSelf);
-            foreach (var (paramType, value) in dialogData.Param)
+            foreach (var (paramType, value) in messageBoxData.Param)
             {
                 switch (paramType)
                 {
@@ -110,7 +119,7 @@ namespace Ux
         }
         void OnBtn1Click()
         {
-            if (dialogData.Param.TryGetValue(UIMessageBoxFactory.ParamType.Btn1Fn, out var obj))
+            if (messageBoxData.Param.TryGetValue(UIMessageBoxFactory.ParamType.Btn1Fn, out var obj))
             {
                 (obj as Action)?.Invoke();
             }
@@ -118,7 +127,7 @@ namespace Ux
         }
         void OnBtn2Click()
         {
-            if (dialogData.Param.TryGetValue(UIMessageBoxFactory.ParamType.Btn2Fn, out var obj))
+            if (messageBoxData.Param.TryGetValue(UIMessageBoxFactory.ParamType.Btn2Fn, out var obj))
             {
                 (obj as Action)?.Invoke();
             }
@@ -132,12 +141,12 @@ namespace Ux
         {
             if (__checkbox != null
                 && __checkbox.selected
-                && dialogData.Param.TryGetValue(UIMessageBoxFactory.ParamType.ChcekBox, out var obj)
+                && messageBoxData.Param.TryGetValue(UIMessageBoxFactory.ParamType.ChcekBox, out var obj)
                 && obj is UIMessageBoxFactory.MessageBoxCheckBox checkBox)
             {
-                dialogData.PushTagCallBack?.Invoke(checkBox.Tag);
+                messageBoxData.PushTagCallBack?.Invoke(checkBox.Tag);
             }
-            dialogData.HideCallBack?.Invoke(this);
+            messageBoxData.HideCallBack?.Invoke(this);
         }
     }
 }

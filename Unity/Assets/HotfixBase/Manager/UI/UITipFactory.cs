@@ -113,8 +113,8 @@ namespace Ux
                 Log.Error("没有指定Dialog面板,请检查是否已初始化SetDefalutType");
                 return;
             }
-            _CheckPos();
-            UIMgr.Ins.Show(id, new TipData(_Show, _Hide, content));
+            _CheckPos();            
+            UIMgr.Ins.Show(id, IUIParam.Create(new TipData(_Show, _Hide, content)));
         }
 
         void _CheckPos()

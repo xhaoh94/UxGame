@@ -7,7 +7,7 @@ namespace Ux.UI
     {
         protected override void OnShow()
         {
-            if (ShowParame is int id)
+            if (TryGetParam(out int id))            
             {
                 var data = UIMgr.Ins.GetUIData(id);
                 if (data.TabData.Title is string title)

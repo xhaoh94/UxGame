@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
 using System.Threading;
@@ -7,64 +6,6 @@ using static Ux.UIMgr;
 
 namespace Ux
 {
-    public interface IUI
-    {
-        UIState State { get; }
-        UIType Type { get; }
-        UIBlur Blur { get; }
-        string Name { get; }
-        int ID { get; }
-        IUIData Data { get; }
-        bool IsDestroy { get; }
-        bool Visable { get; set; }
-        IFilter Filter { get; set; }
-        void InitData(IUIData data, CallBackData initData);
-        void Dispose();
-        void DoShow(bool isAnim, int id, object param, bool isStack);
-        void DoHide(bool isAnim, bool isStack);
-
-    }
-
-    public enum UIType
-    {
-        /// <summary>
-        /// 不会关闭任何界面，但会被Stack界面关闭（Stack界面关闭的时候，会自动重新打开）
-        /// </summary>
-        Normal,
-        /// <summary>
-        /// 会关闭除Fixed之外的界面，也会被其他Stack界面关闭（Stack界面关闭的时候，会自动重新打开） 
-        /// </summary>
-        Stack,
-        /// <summary>
-        /// 固定界面,不会关闭其他界面，也不会被其他界面关闭
-        /// </summary>
-        Fixed,
-    }
-
-    //必须是2的n次方,可组合使用 (PS:Blur|Fixed)
-    public enum UIBlur
-    {
-        /// <summary>
-        /// 不会模糊其他界面也不会被其他界面模糊
-        /// </summary>
-        None = 0x1,
-        /// <summary>
-        /// 不会模糊其他界面但会被其他界面模糊
-        /// </summary>
-        Normal = 0x2,
-        /// <summary>
-        /// 模糊非固定界面
-        /// </summary>
-        Blur = 0x4,
-        /// <summary>
-        /// 模糊固定界面
-        /// </summary>
-        Fixed = 0x8,
-        /// <summary>
-        /// 模糊场景
-        /// </summary>
-        Scene = 0x16,
-    }
     public abstract class UIBase : UIObject, IUI
     {
 #if UNITY_EDITOR
@@ -169,14 +110,8 @@ namespace Ux
             GObject?.RemoveFromParent();
         }
         protected virtual void OnLayout() { }
-        /// <summary>
-        /// 界面数据重置
-        /// </summary>
-        /// <param name="param"></param>
-        protected virtual void OnOverwrite(object param)
-        {
-        }
-        void IUI.DoShow(bool isAnim, int id, object param, bool isStack)
+
+        void IUI.DoShow(bool isAnim, int id, IUIParam param, bool isStack)
         {
             switch (State)
             {
@@ -203,7 +138,7 @@ namespace Ux
             }
             ToShow(isAnim, id, param, isStack, _showToken);
         }
-        private void _Show(int id, object param, bool isStack)
+        private void _Show(int id, IUIParam param, bool isStack)
         {
             if (_showToken != null)
             {
@@ -216,7 +151,7 @@ namespace Ux
         }
 
         void IUI.DoHide(bool isAnim, bool isStack)
-        {
+        {            
             if (_cbData != null)
             {
                 if (_cbData.Value.stackCb.Invoke(this, isStack))
@@ -239,7 +174,7 @@ namespace Ux
             if (isAnim && HideAnim != null)
             {
                 _hideToken = new CancellationTokenSource();
-            }
+            }            
             ToHide(isAnim, isStack, _hideToken);
         }
 
@@ -251,10 +186,7 @@ namespace Ux
             }
             RemoveToStage();
             Filter = null;
-            if (_cbData != null)
-            {
-                _cbData.Value.hideCb?.Invoke(this);
-            }
+            _cbData?.hideCb?.Invoke(this);
         }
         void IUI.Dispose()
         {
