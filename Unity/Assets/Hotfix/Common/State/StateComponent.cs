@@ -1,9 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using Ux;
-using UnityEngine;
-using Unity.VisualScripting;
-
-namespace Ux
+﻿namespace Ux
 {
     public class StateComponent : Entity, IAwakeSystem, IListenSystem
     {
