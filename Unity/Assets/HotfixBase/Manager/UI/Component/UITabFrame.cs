@@ -9,7 +9,7 @@ namespace Ux
     {
         public int SelectIndex => GetIndex(SelectItem != null ? SelectItem.ID : 0);
         List<int> _children;
-        public ITabView SelectItem { get; private set; }
+        public IUI SelectItem { get; private set; }
 
         public UITabFrame(GObject container, UIObject parent)
         {
@@ -67,18 +67,18 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        protected override void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id, IUIParam param, bool checkStack, CancellationTokenSource token)
         {
-            base.ToShow(isAnim, id, param, isStack, token);
+            base.ToShow(isAnim, id, param, checkStack, token);
             AddItemClick(__listTab, OnTabClick);
             AddClick(__btnClose, OnBtnCloseClick);
             Refresh(-1);
         }
 
-        protected override void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
+        protected override void ToHide(bool isAnim, bool checkStack, CancellationTokenSource token)
         {
-            SelectItem?.HideByParent(isAnim, isStack, token);
-            base.ToHide(isAnim, isStack, token);
+            SelectItem?.DoHide(isAnim, checkStack);            
+            base.ToHide(isAnim, checkStack, token);
         }
 
         void _Hide()
@@ -101,7 +101,7 @@ namespace Ux
                 return;
             }
             __tabContent.AddChild(tab.GObject);
-            SelectItem?.HideByTab();
+            SelectItem?.DoHide(false,false);
             if (index != __listTab.List.selectedIndex) __listTab.List.selectedIndex = index;
             SelectItem = tab;
         }

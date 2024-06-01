@@ -1,23 +1,36 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <ui:VisualElement style="flex-grow: 1; flex-direction: column;">
-        <ui:VisualElement style="flex-grow: 0; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0);">
-            <uie:ObjectField label="GameObject" />
-            <uie:Toolbar>
-                <uie:ObjectField label="TimeLine" />
-                <ui:Button text="播放" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-                <ui:Button text="暂停" parse-escape-sequences="true" display-tooltip-when-elided="true" />
-            </uie:Toolbar>
-        </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 1; flex-direction: column-reverse;">
         <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
             <Ux.Editor.SplitView fixed-pane-initial-dimension="300">
                 <ui:VisualElement style="flex-grow: 0; width: 300px;">
                     <uie:Toolbar style="-unity-slice-right: 0; border-right-width: 1px;">
-                        <ui:Button text="+" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                        <uie:ToolbarMenu tabindex="-1" display-tooltip-when-elided="true" text="+" name="btnAddTrack" />
                     </uie:Toolbar>
-                    <ui:VisualElement style="flex-grow: 1;" />
+                    <ui:VisualElement name="trackContent" style="flex-grow: 1; background-color: rgb(32, 32, 32); margin-top: 0;" />
                 </ui:VisualElement>
-                <Ux.Editor.TimelineClipView />
+                <Ux.Editor.TimelineClipView name="clipView" style="background-color: rgb(32, 32, 32);" />
             </Ux.Editor.SplitView>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 0; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0);">
+            <uie:ObjectField label="演示对象" name="ofEntity" />
+            <uie:Toolbar style="flex-grow: 1; flex-shrink: 1; flex-direction: column; height: auto;">
+                <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+                    <uie:ObjectField label="TimeLine" name="ofTimeline" style="flex-shrink: 1; flex-grow: 1;" />
+                    <ui:Button text="新建" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnCreate" />
+                    <ui:VisualElement picking-mode="Ignore" name="createView" style="flex-grow: 1; background-color: rgb(87, 86, 86); width: 300px; height: 150px; position: absolute; left: auto; top: 21px; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; right: 0;">
+                        <ui:VisualElement style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); flex-direction: row; flex-shrink: 1;">
+                            <ui:TextField picking-mode="Ignore" label="Path" name="inputPath" style="flex-grow: 1; color: rgb(48, 48, 48); -unity-background-image-tint-color: rgb(58, 58, 58);" />
+                            <ui:Button text="选择" display-tooltip-when-elided="true" name="btnPath" style="flex-grow: 0;" />
+                        </ui:VisualElement>
+                        <ui:TextField picking-mode="Ignore" label="名字" name="inputName" style="color: rgb(63, 63, 63); -unity-background-image-tint-color: rgb(255, 255, 255);" />
+                        <ui:Button text="确定" display-tooltip-when-elided="true" name="btnOk" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+                    <ui:Button text="播放" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnPlay" />
+                    <ui:Button text="暂停" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnPause" />
+                </ui:VisualElement>
+            </uie:Toolbar>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

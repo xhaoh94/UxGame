@@ -41,9 +41,20 @@ namespace Ux.UI
             });
         }
 
+        int cnt = 0;
         protected override void OnHide()
         {
             base.OnHide();
+            if (cnt++ < 3)
+            {
+                TimeMgr.Ins.DoTimer(.4f, 1, "ccc", () =>
+                {
+                    UIMgr.Ins.Show<Multiple2TabView>();
+                    //UIMgr.Ins.Hide<Multiple2TabView>();
+                    UIMgr.Ins.Show<Multiple3TabView>();
+                });
+            }
+
         }
 
     }

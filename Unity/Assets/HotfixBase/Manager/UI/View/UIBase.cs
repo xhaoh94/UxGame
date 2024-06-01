@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
 using System.Threading;
@@ -6,7 +7,7 @@ using static Ux.UIMgr;
 
 namespace Ux
 {
-    public abstract class UIBase : UIObject, IUI
+    public abstract class UIBase : UIObject, IUI, IUIAsync
     {
 #if UNITY_EDITOR
         static Transform __ui_cache_content;
@@ -90,14 +91,7 @@ namespace Ux
         }
         public virtual void Hide(bool isAnim = true)
         {
-            if (_cbData != null)
-            {
-                _cbData.Value.backCb?.Invoke(ID, isAnim);
-            }
-            else
-            {
-                UIMgr.Ins.Hide(ID, isAnim);
-            }
+            UIMgr.Ins.Hide(ID, isAnim);
         }
 
         protected void MakeFullScreen()
@@ -111,8 +105,22 @@ namespace Ux
         }
         protected virtual void OnLayout() { }
 
-        void IUI.DoShow(bool isAnim, int id, IUIParam param, bool isStack)
+        bool _async;
+        Action _asyncComplete;
+        void IUIAsync.Change(bool b)
         {
+            _async = b;
+            if (!b)
+            {
+                var temFn = _asyncComplete;
+                _asyncComplete = null;
+                temFn?.Invoke();
+            }
+        }
+
+        UniTask IUI.DoShow(bool isAnim, int id, IUIParam param, bool checkStack)
+        {                     
+            var task = AutoResetUniTaskCompletionSource.Create();
             switch (State)
             {
                 case UIState.Show:
@@ -121,24 +129,37 @@ namespace Ux
                     {
                         ToOverwrite(param);
                     }
-                    _Show(id, param, isStack);
-                    return;
-                case UIState.HideAnim:
-                    _ReleaseHideToken();
-                    break;
+                    _Show(id, param, checkStack);
+                    task.TrySetResult();
+                    return task.Task;                    
                 case UIState.Hide:
                     AddToStage();
                     OnLayout();
                     break;
             }
-            _ReleaseShowToken();
-            if (isAnim && ShowAnim != null)
+
+            if (_async)
             {
-                _showToken = new CancellationTokenSource();
+                _asyncComplete = _DoShow;
             }
-            ToShow(isAnim, id, param, isStack, _showToken);
+            else
+            {
+                _DoShow();
+            }
+            _ReleaseHideToken();
+
+            void _DoShow()
+            {
+                if (isAnim && ShowAnim != null)
+                {
+                    _showToken = new CancellationTokenSource();
+                }                
+                ToShow(isAnim, id, param, checkStack, _showToken);
+                task.TrySetResult();
+            }
+            return task.Task;
         }
-        private void _Show(int id, IUIParam param, bool isStack)
+        private void _Show(int id, IUIParam param, bool checkStack)
         {
             if (_showToken != null)
             {
@@ -146,15 +167,16 @@ namespace Ux
             }
             if (id == ID && _cbData != null)
             {
-                _cbData.Value.showCb?.Invoke(this, param, isStack);
+                _cbData.Value.showCb?.Invoke(this, param, checkStack);
             }
         }
 
-        void IUI.DoHide(bool isAnim, bool isStack)
+        void IUI.DoHide(bool isAnim, bool checkStack)
         {            
-            if (_cbData != null)
+            //子界面不需要检测栈，由最顶层父界面控制
+            if (_cbData != null && !(this is UITabView))
             {
-                if (_cbData.Value.stackCb.Invoke(this, isStack))
+                if (_cbData.Value.stackCb.Invoke(this, checkStack))
                 {
                     return;
                 }
@@ -165,17 +187,25 @@ namespace Ux
                 case UIState.Hide:
                 case UIState.HideAnim:
                     return;
-                case UIState.ShowAnim:
-                    _ReleaseShowToken();
-                    break;
             }
 
-            _ReleaseHideToken();
-            if (isAnim && HideAnim != null)
+            if (_async)
             {
-                _hideToken = new CancellationTokenSource();
-            }            
-            ToHide(isAnim, isStack, _hideToken);
+                _asyncComplete = _DoHide;                
+            }
+            else
+            {
+                _DoHide();
+            }
+            _ReleaseShowToken();
+            void _DoHide()
+            {
+                if (isAnim && HideAnim != null)
+                {
+                    _hideToken = new CancellationTokenSource();
+                }                
+                ToHide(isAnim, checkStack, _hideToken);
+            }
         }
 
         private void _Hide()
@@ -202,7 +232,7 @@ namespace Ux
         void _ReleaseShowToken()
         {
             if (_showToken != null)
-            {
+            {                
                 _showToken.Cancel();
                 _showToken = null;
             }
@@ -210,7 +240,7 @@ namespace Ux
         void _ReleaseHideToken()
         {
             if (_hideToken != null)
-            {
+            {                
                 _hideToken.Cancel();
                 _hideToken = null;
             }
@@ -323,6 +353,5 @@ namespace Ux
             GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
             GObject.RemoveRelation(parent, relation);
         }
-
     }
 }

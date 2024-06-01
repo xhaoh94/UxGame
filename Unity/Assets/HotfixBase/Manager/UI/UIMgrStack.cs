@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,14 +15,27 @@ namespace Ux
         List<UIStack> _stack = new List<UIStack>();
         Stack<UIStack> _backs = new Stack<UIStack>();
 
+        void _ClearStack()
+        {
+            foreach (var stack in _stack)
+            {
+                if (stack.ParamIsNew)
+                {
+                    stack.Param?.Release();
+                }
+            }
+            _stack.Clear();
+        }
+
+
         //显示完成后，把ui放进栈
-        void _ShowCallBack_Stack(IUI ui, IUIParam param, bool isStack)
+        void _ShowCallBack_Stack(IUI ui, IUIParam param, bool checkStack)
         {
             var uiType = ui.Type;
-            if (!isStack || uiType == UIType.Fixed)
+            if (!checkStack || uiType == UIType.Fixed)
             {
-                //非isStack 或 固定面板不需要放入栈中
-                //非isStack （存在于关闭界面触发栈后，重新显示的界面，此时不需要再把界面放进栈中）
+                //非checkStack 或 固定面板不需要放入栈中
+                //非checkStack （存在于关闭界面触发栈后，重新显示的界面，此时不需要再把界面放进栈中）
                 return;
             }
 
@@ -56,13 +70,10 @@ namespace Ux
                 for (var i = _stack.Count - 2; i >= 0; i--)
                 {
                     var preStack = _stack[i];
-                    if (preStack.ID != ui.ID)
+                    var id = preStack.ParentID;
+                    if (id != ui.ID)
                     {
-                        //Hide之后，参数会被回收。所以提前拷贝参数对象
-                        var copyParam = preStack.Param?.Copy();
-                        Hide(preStack.ParentID);
-                        //重新赋值参数
-                        preStack.Param = copyParam;
+                        _HideByStack(preStack, i);
                     }
                     if (preStack.Type == UIType.Stack)
                     {
@@ -70,11 +81,40 @@ namespace Ux
                     }
                 }
             }
+        }
 
+        void _HideByStack(UIStack stack, int index)
+        {
+            bool needCopyParam = true;
+            IUI ui = null;
+            var id = stack.ParentID;
+            if (_showing.Contains(id))
+            {
+                if (!_createdDels.Contains(id)) _createdDels.Add(id);                
+            }
+            else if (_showed.TryGetValue(id, out ui) && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
+            {
+                ui = null;
+                needCopyParam = false;
+            }
+
+            if (needCopyParam)
+            {
+                //Hide之后，参数会被回收。所以提前拷贝参数对象
+                var copyParam = stack.Param?.Copy();
+                //重新赋值参数
+                if (copyParam != null)
+                {
+                    stack.Param = copyParam;
+                    stack.ParamIsNew = true;
+                    _stack[index] = stack;
+                }
+            }
+            ui?.DoHide(false, false);
         }
 
         //关闭界面前，检测栈中界面，是否重新打开
-        bool _HideBefore_Stack(IUI ui, bool isStack = false)
+        bool _HideBefore_Stack(IUI ui, bool checkStack = false)
         {
             if (_stack.Count > 0)
             {
@@ -89,12 +129,17 @@ namespace Ux
                 }
             }
             bool isBreak = false;
-            if (isStack && ui.Type == UIType.Stack)
+            if (checkStack && ui.Type == UIType.Stack)
             {
                 _backs.Clear();
                 for (int i = _stack.Count - 1; i >= 0; i--)
                 {
                     var preStack = _stack[i];
+                    if (preStack.ParamIsNew)
+                    {
+                        preStack.ParamIsNew = false;
+                        _stack[i] = preStack;
+                    }
                     if (preStack.Type == UIType.Stack)
                     {
                         if (ui.ID == preStack.ID)
@@ -103,7 +148,7 @@ namespace Ux
                         }
                         else
                         {
-                            _ShowByStack(preStack.ID, preStack.Param);
+                            _backs.Push(preStack);
                         }
                         break;
                     }
@@ -115,16 +160,14 @@ namespace Ux
                 while (_backs.Count > 0)
                 {
                     var preStack = _backs.Pop();
-                    _ShowByStack(preStack.ID, preStack.Param);
+                    _ShowByStack(preStack);
                 }
             }
             return isBreak;
         }
-
-        //关闭界面且触发检测栈
-        void _Hide_Stack(int id, bool isAnim)
+        public void _ShowByStack(UIStack stack)
         {
-            _Hide(true, id, isAnim);
+            _ShowAsync<IUI>(stack.ID, stack.Param, false, false).Forget();
         }
 
     }

@@ -14,8 +14,7 @@ namespace Ux
         None,
         Anim,
         Timeline
-    }
-    [CreateAssetMenu(fileName = "StateSettingData")]
+    }   
     public class StateSettingData : ScriptableObject
     {
         [Serializable]

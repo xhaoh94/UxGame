@@ -16,7 +16,10 @@ namespace Ux
         Hide,
         HideAnim
     }
-
+    public interface IUIAsync
+    {
+        void Change(bool b);
+    }
     public class UIObject
     {
         private UIEvent _event;
@@ -27,6 +30,14 @@ namespace Ux
         {
             get
             {
+                //foreach (var component in Components)
+                //{
+                //    var state = component.State;
+                //    if (state is UIState.ShowAnim or UIState.HideAnim)
+                //    {
+                //        return state;
+                //    }
+                //}
                 foreach (var state in Components.Select(t => t.State)
                              .Where(state => state is UIState.ShowAnim or UIState.HideAnim))
                 {
@@ -53,7 +64,7 @@ namespace Ux
                 _paramVo = value;
             }
         }
-        protected bool TryGetParam<V>(out V value,UIParamType type = UIParamType.A)
+        protected bool TryGetParam<V>(out V value, UIParamType type = UIParamType.A)
         {
             if (_paramVo == null)
             {
@@ -225,8 +236,7 @@ namespace Ux
             }
         }
 
-
-        protected virtual void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
+        protected virtual void ToShow(bool isAnim, int id, IUIParam param, bool checkStack, CancellationTokenSource token)
         {
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
@@ -248,24 +258,32 @@ namespace Ux
             OnAddEvent();
             foreach (var component in Components)
             {
-                component.ToShow(isAnim, id, param, isStack, token);
+                component.ToShow(isAnim, id, param, checkStack, token);
             }
             ParamVo = param;
             OnShow();
-            _CheckShow(id, param, isStack, token).Forget();
+            _CheckShow(id, param, checkStack, token).Forget();
         }
-
-        async UniTaskVoid _CheckShow(int id, IUIParam param, bool isStack, CancellationTokenSource token)
+        void ChangeAsync(bool b)
         {
+            if (this is IUIAsync async)
+            {
+                async.Change(b);
+            }
+        }
+        async UniTaskVoid _CheckShow(int id, IUIParam param, bool checkStack, CancellationTokenSource token)
+        {
+            ChangeAsync(true);
+            bool isCanceled = false;
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
             {
-                if (token != null)
+                if (token != null && !isCanceled)
                 {
-                    var isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
+                    isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
                     if (isCanceled)
                     {
-                        Log.Debug(GetType().Name + "取消显示动画");
-                        return;
+                        ShowAnim?.SetToEnd();
+                        _state = UIState.Show;                           
                     }
                 }
                 else
@@ -273,8 +291,13 @@ namespace Ux
                     await UniTask.Yield();
                 }
             }
+            ChangeAsync(false);
+            if (isCanceled)
+            {
+                return;
+            }
             OnShowAnimComplete();
-            OnShowCallBack?.Invoke(id, param, isStack);
+            OnShowCallBack?.Invoke(id, param, checkStack);
         }
 
         protected virtual void ToOverwrite(IUIParam param)
@@ -302,7 +325,7 @@ namespace Ux
 
         }
 
-        protected virtual void ToHide(bool isAnim, bool isStack, CancellationTokenSource token)
+        protected virtual void ToHide(bool isAnim, bool checkStack, CancellationTokenSource token)
         {
             ParamVo = null;
             ShowAnim?.Stop();
@@ -320,7 +343,7 @@ namespace Ux
 
             foreach (var component in Components)
             {
-                component.ToHide(isAnim, isStack, token);
+                component.ToHide(isAnim, checkStack, token);
             }
 
             OnHide();
@@ -330,21 +353,28 @@ namespace Ux
 
         async UniTaskVoid _CheckHide(CancellationTokenSource token)
         {
+            ChangeAsync(true);
+            bool isCanceled = false;
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
             {
-                if (token != null)
+                if (token != null && !isCanceled)
                 {
-                    var isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
+                    isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
                     if (isCanceled)
                     {
-                        Log.Debug(GetType().Name + "取消关闭动画");
-                        return;
+                        HideAnim?.SetToEnd();
+                        _state = UIState.Hide;                        
                     }
                 }
                 else
                 {
                     await UniTask.Yield();
                 }
+            }
+            ChangeAsync(false);
+            if (isCanceled)
+            {
+                return;
             }
             OnHideAnimComplete();
             OnHideCallBack?.Invoke();

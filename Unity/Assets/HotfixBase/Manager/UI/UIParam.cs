@@ -40,6 +40,7 @@ namespace Ux
         protected void Init(bool fromPool)
         {
             _fromPool = fromPool;
+            IsRelease = false;
         }
         public void Release()
         {

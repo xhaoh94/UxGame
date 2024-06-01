@@ -16,23 +16,23 @@ namespace Ux.UI
 
         partial void OnBtnMainViewClick(EventContext e)
         {
-            UIMgr.Ins.Show<UI.TestView>();
+            UIMgr.Ins.Show<UI.TestView>(IUIParam.Create("1234"));
         }
         partial void OnBtnStack1Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack1View>();
+            UIMgr.Ins.Show<UI.Stack1View>(IUIParam.Create("123"));
         }
         partial void OnBtnStack2Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack2View>();
+            UIMgr.Ins.Show<UI.Stack2View>(IUIParam.Create(123));
         }
         partial void OnBtnStack3Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack3View>();
+            UIMgr.Ins.Show<UI.Stack3View>(IUIParam.Create(13));
         }
         partial void OnBtnStack4Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack4View>();
+            UIMgr.Ins.Show<UI.Stack4View>(IUIParam.Create(12443));
         }
     }
 }

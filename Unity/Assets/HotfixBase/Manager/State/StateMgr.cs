@@ -19,7 +19,7 @@ namespace Ux
             {
                 return data;
             }
-            var asset = await ResMgr.Ins.LoadAssetAsync<TimelineAsset>(res);
+            var asset = await ResMgr.Ins.LoadAssetAsync<UnityEngine.Timeline.TimelineAsset>(res);
 
             data = new StateTimeline(asset);
             resToData[res] = data;

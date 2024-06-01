@@ -37,6 +37,9 @@ namespace Ux
         //正在显示中的ui列表
         private readonly List<int> _showing = new List<int>();
 
+        //异步中
+        private readonly HashSet<int> _asyncs= new HashSet<int>();
+
         //已经显示的ui列表
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
 
@@ -45,9 +48,6 @@ namespace Ux
 
         //创建完需要关闭的界面（用于打开界面后正在加载的时候，在其他地方又马上关闭了界面）
         private readonly List<int> _createdDels = new List<int>();
-
-        //等待关闭动画结束后重新打开的列表
-        //private readonly List<int> _waitHideAnimCompleteReShow = new List<int>();
 
         //界面对应的懒加载标签
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
@@ -84,7 +84,7 @@ namespace Ux
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
-            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBefore_Stack, _Hide_Stack);
+            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBefore_Stack);
         }
 
         //内存不足时，清理缓存
@@ -231,28 +231,23 @@ namespace Ux
 
         public UITask<T> Show<T>(int id, IUIParam param = null, bool isAnim = true) where T : IUI
         {
-            var task = ShowAsync<T>(true, id, param, isAnim);
+            var task = _ShowAsync<T>(id, param, isAnim, true);
             return new UITask<T>(task);
         }
 
         public UITask<IUI> Show(int id, IUIParam param = null, bool isAnim = true)
         {
-            var task = ShowAsync<IUI>(true, id, param, isAnim);
+            var task = _ShowAsync<IUI>(id, param, isAnim, true);
             return new UITask<IUI>(task);
         }
 
-        UITask<IUI> _ShowByStack(int id, IUIParam param = null)
-        {
-            var task = ShowAsync<IUI>(false, id, param, false);
-            return new UITask<IUI>(task);
-        }
         void _ShowCallBack(IUI ui, IUIParam param, bool isStack)
         {
             _ShowCallBack_Stack(ui, param, isStack);
             _ShowCallBack_Blur(ui);
         }
 
-        private async UniTask<T> ShowAsync<T>(bool isStack, int id, IUIParam param = null, bool isAnim = true) where T : IUI
+        private async UniTask<T> _ShowAsync<T>(int id, IUIParam param, bool isAnim, bool checkStack) where T : IUI
         {
             var data = GetUIData(id);
             if (data == null)
@@ -272,7 +267,7 @@ namespace Ux
             }
 
             var uis = Pool.Get<List<IUI>>();
-            var succ = await ShowAsync(childID, uis);
+            var succ = await _ShowAsync(childID, uis);
             if (succ)
             {
                 foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _createdDels.Contains(uiid)))
@@ -291,8 +286,10 @@ namespace Ux
                     _showing.Remove(uiid);
                     continue;
                 }
+                _asyncs.Add(uiid);
+                await ui.DoShow(isAnim, id, uiid == id ? param : null, checkStack);
+                _asyncs.Remove(uiid);
 
-                ui.DoShow(isAnim, id, uiid == id ? param : null, isStack);
                 if (_showed.ContainsKey(uiid))
                 {
                     continue;
@@ -313,7 +310,7 @@ namespace Ux
             return succ ? (T)_showed[id] : default;
         }
 
-        private async UniTask<bool> ShowAsync(int id, ICollection<IUI> uis)
+        private async UniTask<bool> _ShowAsync(int id, ICollection<IUI> uis)
         {
             var data = GetUIData(id);
             if (data == null)
@@ -323,7 +320,7 @@ namespace Ux
 
             if (data.TabData != null && data.TabData.PID != 0)
             {
-                if (!await ShowAsync(data.TabData.PID, uis))
+                if (!await _ShowAsync(data.TabData.PID, uis))
                 {
                     _showing.Remove(id);
 #if UNITY_EDITOR
@@ -335,27 +332,19 @@ namespace Ux
 
             if (_showed.TryGetValue(id, out var ui))
             {
-                //switch (ui.State)
-                //{
-                //    //如果在关闭中，等待关闭后再重新打开
-                //    case UIState.HideAnim:
-                //    case UIState.Hide:
-                //        _waitHideAnimCompleteReShow.Add(id);
-                //        while (true)
-                //        {
-                //            await UniTask.Yield();
-                //            if (!_waitHideAnimCompleteReShow.Contains(id)) return false;
-                //            if (!_showed.ContainsKey(id))
-                //            {
-                //                _waitHideAnimCompleteReShow.Remove(id);
-                //                break;
-                //            }
-                //        }
-                //        break;
-                //    default:
+                if (_asyncs.Contains(id))
+                {
+                    float time = Time.unscaledTime;
+                    while (true)
+                    {
+                        await UniTask.Yield();                        
+                        if (!_asyncs.Contains(id)) break;                        
+                        if (Time.unscaledTime - time > _showTimeout) break; //超时                    
+                    }
+                }
+
                 uis.Add(ui);
                 return true;
-                //}
             }
 
             if (_showing.Contains(id))
@@ -367,7 +356,7 @@ namespace Ux
                     if (_showed.TryGetValue(id, out ui)) break;
                     if (!_showing.Contains(id)) break;
                     if (_createdDels.Contains(id)) break;
-                    if (Time.unscaledTime - time > _showTimeout) break; //超时
+                    if (Time.unscaledTime - time > _showTimeout) break; //超时                    
                 }
 
                 if (ui == null) return false;
@@ -472,7 +461,7 @@ namespace Ux
         }
         void _HideAll(Func<int, bool> func)
         {
-            _stack.Clear();
+            _ClearStack();
             foreach (var id in _showing.Where(id => !func(id)))
             {
                 Hide(id, false);
@@ -485,15 +474,41 @@ namespace Ux
             }
         }
 
+        /// <summary>
+        ///关闭界面,会检查栈
+        /// </summary>
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
             Hide(ConverterID(typeof(T)), isAnim);
         }
+        /// <summary>
+        ///关闭界面,会检查栈
+        /// </summary>
         public void Hide(int id, bool isAnim = true)
         {
-            _Hide(false, id, isAnim);
+            _Hide(id, isAnim, true);
         }
-        void _Hide(bool isStack, int id, bool isAnim = true)
+
+        /// <summary>
+        /// 关闭界面，不会检查栈
+        /// </summary>
+        public void HideNotStack<T>(bool isAnim = true) where T : UIBase
+        {
+            HideNotStack(ConverterID(typeof(T)), isAnim);
+        }
+        /// <summary>
+        /// 关闭界面，不会检查栈
+        /// </summary>
+        public void HideNotStack(int id, bool isAnim = true)
+        {
+            _Hide(id, isAnim, false);
+        }
+
+        /// <summary>
+        ///  关闭界面
+        /// </summary>        
+        /// <param name="checkStack">关闭后是否要检查栈</param>
+        void _Hide(int id, bool isAnim, bool checkStack)
         {
             if (_showing.Contains(id))
             {
@@ -508,36 +523,24 @@ namespace Ux
 
             if (ui.State == UIState.HideAnim || ui.State == UIState.Hide)
             {
-                //if (_waitHideAnimCompleteReShow.Contains(id))
-                //{
-                //    _waitHideAnimCompleteReShow.Remove(id);
-                //}
-
-                //var ids = ui.Data.GetParentIDs();
-                //if (ids != null)
-                //{
-                //    foreach (var tid in ids)
-                //    {
-                //        if (_waitHideAnimCompleteReShow.Contains(tid))
-                //        {
-                //            _waitHideAnimCompleteReShow.Remove(tid);
-                //        }
-                //    }
-                //}
                 return;
             }
 
             var parentID = ui.Data.GetParentID();
-            if (parentID != 0 && _showed.TryGetValue(parentID, out ui))
+            if (parentID != id)
             {
-                //如果界面是栈类型，但关闭时，不触发栈，则代表栈已被打乱，此时可清除栈了
-                if (!isStack && _stack.Count > 0 && ui.Type == UIType.Stack)
-                {
-                    _stack.Clear();
-                }
-                ui.DoHide(isAnim, isStack);
+                _Hide(parentID, isAnim, checkStack);
+                return;
             }
+
+            //如果界面是栈类型，但关闭时，不触发栈，则代表栈已被打乱，此时可清除栈了
+            if (!checkStack && _stack.Count > 0 && ui.Type == UIType.Stack)
+            {
+                _ClearStack();
+            }
+            ui.DoHide(isAnim, checkStack);
         }
+
         private void _HideCallBack(IUI ui)
         {
             var id = ui.ID;

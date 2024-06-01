@@ -37,8 +37,8 @@ namespace Ux.Editor
 
 
         float FrameScale = 1;
-        float FrameWidth => 10 * FrameScale;
-        float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
+        public float FrameWidth => 10 * FrameScale;
+        public float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
         //需要减10 是因为容器里面设置了边缘Border left = 10 
         float ScrClipViewWidth => scrClipView.worldBound.width - 10;
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
@@ -51,6 +51,7 @@ namespace Ux.Editor
         public VisualElement veLineContent { get; private set; }
         public VisualElement veMarkerContent { get; private set; }
         public VisualElement veMarkerIcon { get; private set; }
+        public VisualElement veClipContent { get;private set; }
         public Label lbMarker { get; private set; }
 
         public ScrollView ScrInspectorView { get; private set; }
@@ -76,7 +77,7 @@ namespace Ux.Editor
             veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
             lbMarker = this.Q<Label>("lb_marker");
 
-
+            veClipContent = this.Q<VisualElement>("ve_clip_content");
         }
 
         void OnGeometryChanged(GeometryChangedEvent changedEvent)
@@ -96,15 +97,9 @@ namespace Ux.Editor
             else if (FrameScale < .1f)
             {
                 FrameScale = .1f;
-            }
+            }            
             float targetWidth = Mathf.Max(ScrClipViewWidth * FrameScale, ScrClipViewWidth);
-            if (ScrClipViewContentWidth == targetWidth)
-            {
-                veLineContent.MarkDirtyRepaint();
-                veMarkerContent.MarkDirtyRepaint();
-                veMarkerIcon.MarkDirtyRepaint();
-            }
-            else
+            if (ScrClipViewContentWidth != targetWidth)
             {
                 scrClipView.contentContainer.style.width = targetWidth;
                 scrClipView.schedule.Execute(() =>
@@ -117,6 +112,10 @@ namespace Ux.Editor
                     scrClipView.contentContainer.SendEvent(evt);
                 });
             }
+
+            veLineContent.MarkDirtyRepaint();
+            veMarkerContent.MarkDirtyRepaint();
+            veMarkerIcon.MarkDirtyRepaint();
             UpdateMarkerPos();
         }
 
@@ -177,7 +176,7 @@ namespace Ux.Editor
             int startFrame = StartFrame;
             int endFrame = EndFrame;
             int interval = Mathf.FloorToInt(1 + (10 - frameWidth)) * 10;
-            if (interval < 5) interval = 5;
+            if (interval < 5) interval = 5;            
 
             for (int i = startFrame; i <= endFrame; i++)
             {

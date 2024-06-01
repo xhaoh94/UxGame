@@ -51,6 +51,8 @@ namespace Ux.UI
         partial void OnBtnMultipleClick(EventContext e)
         {
             UIMgr.Ins.Show<Multiple2TabView>();
+            //UIMgr.Ins.Hide<Multiple2TabView>();
+            UIMgr.Ins.Show<Multiple3TabView>();
         }
         partial void OnBtnNoneViewClick(EventContext e)
         {

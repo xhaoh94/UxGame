@@ -65,7 +65,7 @@ namespace Ux
             {
                 foreach (var kv in _bingObjs)
                 {
-                    var track = asset.GetTrack<TrackAsset>(kv.Key);
+                    var track = asset.GetTrack<UnityEngine.Timeline.TrackAsset>(kv.Key);
                     if (track == null) continue;
 
                     _director.SetGenericBinding(track, kv.Value);

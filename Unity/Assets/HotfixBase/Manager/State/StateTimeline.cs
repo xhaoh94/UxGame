@@ -21,7 +21,7 @@ namespace Ux
 
             foreach (var o in asset.outputs)
             {
-                var track = o.sourceObject as TrackAsset;
+                var track = o.sourceObject as UnityEngine.Timeline.TrackAsset;
                 if (track == null) continue;
                 var trackName = o.streamName;
                 bindings.Add(trackName, o);
@@ -40,7 +40,7 @@ namespace Ux
                 }
             }
         }
-        public T GetTrack<T>(string trackName) where T : TrackAsset
+        public T GetTrack<T>(string trackName) where T : UnityEngine.Timeline.TrackAsset
         {
             if (Asset == null)
             {

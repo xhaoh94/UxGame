@@ -19,8 +19,8 @@ namespace Ux
         IFilter Filter { get; set; }
         void InitData(IUIData data, CallBackData initData);
         void Dispose();
-        void DoShow(bool isAnim, int id, IUIParam param, bool isStack);
-        void DoHide(bool isAnim, bool isStack);
+        UniTask DoShow(bool isAnim, int id, IUIParam param, bool isStack);
+        void DoHide(bool isAnim, bool checkStack);
     }
     
     public enum UIType
@@ -67,17 +67,15 @@ namespace Ux
     {
         public readonly struct CallBackData
         {
-            public CallBackData(Action<IUI, IUIParam, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb, Action<int, bool> _backCb)
+            public CallBackData(Action<IUI, IUIParam, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb)
             {
                 showCb = _showCb;
                 hideCb = _hideCb;
-                stackCb = _stackCb;
-                backCb = _backCb;
+                stackCb = _stackCb;                
             }
             public readonly Action<IUI, IUIParam, bool> showCb;
             public readonly Action<IUI> hideCb;
-            public readonly Func<IUI, bool, bool> stackCb;
-            public readonly Action<int, bool> backCb;
+            public readonly Func<IUI, bool, bool> stackCb;            
         }
         public struct BlurStack
         {
@@ -104,6 +102,7 @@ namespace Ux
             public readonly int ParentID;
             public int ID;
             public IUIParam Param;
+            public bool ParamIsNew;
             public readonly UIType Type;
 #if UNITY_EDITOR
             public string IDStr;
@@ -113,6 +112,7 @@ namespace Ux
                 IDStr = idStr;
                 ID = id;
                 Param = param;
+                ParamIsNew = false;
                 Type = type;
             }
 #else
@@ -121,6 +121,7 @@ namespace Ux
                 ParentID = parentID;
                 ID = id;
                 Param = param;
+                ParamIsNew = false;
                 Type = type;
             }
 #endif
