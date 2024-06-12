@@ -125,23 +125,21 @@ namespace HybridCLR.Commands
             var gs = SettingsUtil.HybridCLRSettings;
             var hotUpdateDllNames = SettingsUtil.HotUpdateAssemblyNamesExcludePreserved;
             List<string> codes = new List<string>();
-            using (AssemblyReferenceDeepCollector collector = new AssemblyReferenceDeepCollector(MetaUtil.CreateHotUpdateAndAOTAssemblyResolver(target, hotUpdateDllNames), hotUpdateDllNames))
+            AssemblyReferenceDeepCollector collector = new AssemblyReferenceDeepCollector(MetaUtil.CreateHotUpdateAndAOTAssemblyResolver(target, hotUpdateDllNames), hotUpdateDllNames);
+            var analyzer = new Analyzer(new Analyzer.Options
             {
-                var analyzer = new Analyzer(new Analyzer.Options
-                {
-                    MaxIterationCount = Math.Min(20, gs.maxGenericReferenceIteration),
-                    Collector = collector,
-                });
+                MaxIterationCount = Math.Min(20, gs.maxGenericReferenceIteration),
+                Collector = collector,
+            });
 
-                analyzer.Run();
-                var types = analyzer.AotGenericTypes.ToList();
-                var methods = analyzer.AotGenericMethods.ToList();
-                var modules = new HashSet<dnlib.DotNet.ModuleDef>(
-                    types.Select(t => t.Type.Module).Concat(methods.Select(m => m.Method.Module))).ToList();
-                foreach (var module in modules)
-                {
-                    codes.Add(module.Name);
-                }
+            analyzer.Run();
+            var types = analyzer.AotGenericTypes.ToList();
+            var methods = analyzer.AotGenericMethods.ToList();
+            var modules = new HashSet<dnlib.DotNet.ModuleDef>(
+                types.Select(t => t.Type.Module).Concat(methods.Select(m => m.Method.Module))).ToList();
+            foreach (var module in modules)
+            {
+                codes.Add(module.Name);
             }
 
             foreach (var dll in codes)

@@ -19,38 +19,6 @@ public class EditorDefine
 }
 public class SettingTools
 {
-    [MenuItem("Assets/Cov/MyItem", false)]
-    public static void Test()
-    {
-        if (Selection.gameObjects.Length > 0)
-        {
-            Debug.Log(Selection.activeGameObject.name);
-            var go = UnityEngine.GameObject.Instantiate(Selection.activeGameObject);
-            var tr = go.transform.GetChild(0);
-            tr = tr.GetChild(0);
-            _Tset(tr);
-            var p = AssetDatabase.GetAssetPath(Selection.activeGameObject);
-            PrefabUtility.SaveAsPrefabAsset(go, p);
-            UnityEngine.Object.DestroyImmediate(go);
-        }
-        else
-        {
-            Debug.Log("请选择至少一个游戏物体");
-        }
-    }
-    static void _Tset(Transform transform)
-    {
-        transform.name = transform.name.Replace("_", " ");
-        if (transform.childCount > 0)
-        {
-            for (int i = 0; i < transform.childCount; i++)
-            {
-                var child = transform.GetChild(i);
-                _Tset(child);
-            }
-        }
-    }
-
     public static T GetSingletonAssets<T>(string path = "Assets", bool isCreate = true) where T : ScriptableObject, new()
     {
         string assetType = typeof(T).Name;

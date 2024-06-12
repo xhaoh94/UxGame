@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.code-philosophy.hybridclr": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
-    "com.greenbamboogames.playablegraphmonitor": "2.5.4",
+    "com.greenbamboogames.playablegraphmonitor": "2.5.9",
     "com.tuyoogame.yooasset": "2.1.1",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.navigation": "1.1.4",
@@ -10,9 +10,7 @@
     "com.unity.cinemachine": "2.9.7",
     "com.unity.collab-proxy": "2.0.7",
     "com.unity.device-simulator.devices": "1.0.0",
-    "com.unity.ide.rider": "3.0.27",
     "com.unity.ide.visualstudio": "2.0.22",
-    "com.unity.ide.vscode": "1.2.5",
     "com.unity.inputsystem": "1.7.0",
     "com.unity.mathematics": "1.2.6",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
@@ -56,20 +54,11 @@
   },
   "scopedRegistries": [
     {
-      "name": "package.openupm.cn",
-      "url": "https://package.openupm.cn",
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
       "scopes": [
         "com.tuyoogame.yooasset",
-        "com.greenbamboogames.playablegraphmonitor",
-        "com.cysharp.unitask",
-        "com.focus-creative-games.hybridclr_unity"
-      ]
-    },
-    {
-      "name": "JetBrains",
-      "url": "https://npm.pkg.jetbrains.space/public/p/jetbrains-gamedev/jetbrains-gamedev",
-      "scopes": [
-        "com.jetbrains"
+        "com.greenbamboogames.playablegraphmonitor"
       ]
     }
   ]

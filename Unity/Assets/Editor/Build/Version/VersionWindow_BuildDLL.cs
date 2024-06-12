@@ -4,6 +4,7 @@ using HybridCLR.Editor.Commands;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 
 public partial class VersionWindow
@@ -25,6 +26,14 @@ public partial class VersionWindow
                     Log.Debug("---------------------------------------->切换编译平台失败<---------------------------------------");
                     return false;
                 }
+
+                var installer = new HybridCLR.Editor.Installer.InstallerController();
+                if (!installer.HasInstalledHybridCLR())
+                {
+                    Log.Debug("---------------------------------------->请先安装HybridCLR<---------------------------------------");
+                    return false;
+                }
+
                 HybridCLRCommand.ClearAOTDll();
                 Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
                 CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
@@ -37,8 +46,7 @@ public partial class VersionWindow
                 StripAOTDllCommand.GenerateStripedAOTDlls(target);
 
                 // 桥接函数生成依赖于AOT dll，必须保证已经build过，生成AOT dll
-                MethodBridgeGeneratorCommand.GenerateMethodBridge(target);
-                ReversePInvokeWrapperGeneratorCommand.GenerateReversePInvokeWrapper(target);
+                MethodBridgeGeneratorCommand.GenerateMethodBridgeAndReversePInvokeWrapper(target);
                 AOTReferenceGeneratorCommand.GenerateAOTGenericReference(target);
                 //PrebuildCommand.GenerateAll();
 

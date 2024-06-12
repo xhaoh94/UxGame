@@ -5,14 +5,14 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "67c487f521087a3887e6c8817dff3cd264aa4f20"
+      "hash": "e5a69527776ca01cf95372c809f522a33d0f9022"
     },
     "com.greenbamboogames.playablegraphmonitor": {
-      "version": "2.5.4",
+      "version": "2.5.9",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
-      "url": "https://package.openupm.cn"
+      "url": "https://package.openupm.com"
     },
     "com.tuyoogame.yooasset": {
       "version": "2.1.1",
@@ -24,7 +24,7 @@
         "com.unity.modules.unitywebrequest": "1.0.0",
         "com.unity.modules.unitywebrequestassetbundle": "1.0.0"
       },
-      "url": "https://package.openupm.cn"
+      "url": "https://package.openupm.com"
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
@@ -91,15 +91,6 @@
       "dependencies": {},
       "url": "https://packages.tuanjie.cn"
     },
-    "com.unity.ide.rider": {
-      "version": "3.0.27",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.ext.nunit": "1.0.6"
-      },
-      "url": "https://packages.tuanjie.cn"
-    },
     "com.unity.ide.visualstudio": {
       "version": "2.0.22",
       "depth": 0,
@@ -107,13 +98,6 @@
       "dependencies": {
         "com.unity.test-framework": "1.1.9"
       },
-      "url": "https://packages.tuanjie.cn"
-    },
-    "com.unity.ide.vscode": {
-      "version": "1.2.5",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {},
       "url": "https://packages.tuanjie.cn"
     },
     "com.unity.inputsystem": {
