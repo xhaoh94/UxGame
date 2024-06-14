@@ -1,5 +1,4 @@
-﻿using System.IO;
-using UI.Editor;
+﻿using Ux.Editor.Build.UI;
 using YooAsset.Editor;
 public class CollectPreloadUI : IFilterRule
 {

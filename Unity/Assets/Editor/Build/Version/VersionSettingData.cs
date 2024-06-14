@@ -2,78 +2,80 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using YooAsset;
 using YooAsset.Editor;
-
-[CreateAssetMenu(fileName = "VersionSettingData", menuName = "Ux/Build/Create VersionSetting")]
-public class VersionSettingData : ScriptableObject
+namespace Ux.Editor.Build.Version
 {
-    public List<BuildExportSetting> ExportSettings = new List<BuildExportSetting>();
-
-    /// <summary>
-    /// 存储配置文件
-    /// </summary>
-    public void SaveFile()
+    [CreateAssetMenu(fileName = "VersionSettingData", menuName = "Ux/Build/Create VersionSetting")]
+    public class VersionSettingData : ScriptableObject
     {
-        foreach (var setting in ExportSettings)
+        public List<BuildExportSetting> ExportSettings = new List<BuildExportSetting>();
+
+        /// <summary>
+        /// 存储配置文件
+        /// </summary>
+        public void SaveFile()
         {
-            foreach (var pb in setting.PackageBuilds)
+            foreach (var setting in ExportSettings)
             {
-                pb.New = false;
+                foreach (var pb in setting.PackageBuilds)
+                {
+                    pb.New = false;
+                }
             }
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"{nameof(VersionSettingData)}.asset is saved!");
         }
-        EditorUtility.SetDirty(this);
-        AssetDatabase.SaveAssets();
-        Debug.Log($"{nameof(VersionSettingData)}.asset is saved!");
     }
-}
 
-[Serializable]
-public class BuildExportSetting
-{
-    public string Name;
-    public CompileType CompileType = CompileType.Development;
-    public PlatformType PlatformType = PlatformType.Win64;
-    public bool IsCopyTo = false;
-    public string BundlePath = "./Bundles";
-    public string ExePath = "./bin";
-    public string CopyPath = "./CDN";
-    public bool IsClearSandBox = true;
-    public bool IsExportExecutable = true;
-    public string ResVersion = string.Empty;
-    public List<BuildPackageSetting> PackageBuilds = new List<BuildPackageSetting>();
-
-    public BuildPackageSetting GetPackageSetting(string pkgName)
+    [Serializable]
+    public class BuildExportSetting
     {
-        var setting = PackageBuilds.Find(x => x.PackageName == pkgName);
-        if (setting == null)
+        public string Name;
+        public CompileType CompileType = CompileType.Development;
+        public PlatformType PlatformType = PlatformType.Win64;
+        public bool IsCopyTo = false;
+        public string BundlePath = "./Bundles";
+        public string ExePath = "./bin";
+        public string CopyPath = "./CDN";
+        public bool IsClearSandBox = true;
+        public bool IsExportExecutable = true;
+        public string ResVersion = string.Empty;
+        public List<BuildPackageSetting> PackageBuilds = new List<BuildPackageSetting>();
+
+        public BuildPackageSetting GetPackageSetting(string pkgName)
         {
-            setting = new BuildPackageSetting();
-            setting.PackageName = pkgName;
-            setting.PiplineOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageBuildPipeline(pkgName);
-            setting.CompressOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageCompressOption(pkgName, setting.PiplineOption);
-            setting.NameStyleOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageFileNameStyle(pkgName, setting.PiplineOption);
-            setting.EncyptionClassName = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageEncyptionClassName(pkgName, setting.PiplineOption);
-            PackageBuilds.Add(setting);
+            var setting = PackageBuilds.Find(x => x.PackageName == pkgName);
+            if (setting == null)
+            {
+                setting = new BuildPackageSetting();
+                setting.PackageName = pkgName;
+                setting.PiplineOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageBuildPipeline(pkgName);
+                setting.CompressOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageCompressOption(pkgName, setting.PiplineOption);
+                setting.NameStyleOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageFileNameStyle(pkgName, setting.PiplineOption);
+                setting.EncyptionClassName = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageEncyptionClassName(pkgName, setting.PiplineOption);
+                PackageBuilds.Add(setting);
+            }
+            return setting;
         }
-        return setting;
-    }
 
-    public void Clear()
+        public void Clear()
+        {
+            PackageBuilds.Clear();
+        }
+    }
+    [Serializable]
+    public class BuildPackageSetting
     {
-        PackageBuilds.Clear();
+        public bool New = true;
+        public bool IsCollectShaderVariant = false;
+        public string PackageName = string.Empty;
+        public string EncyptionClassName = string.Empty;
+        public ECompressOption CompressOption = ECompressOption.LZ4;
+        public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
+        public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;
+        public string BuildTags = "builtin";
+
     }
 }
-[Serializable]
-public class BuildPackageSetting
-{
-    public bool New = true;
-    public bool IsCollectShaderVariant = false;
-    public string PackageName = string.Empty;
-    public string EncyptionClassName = string.Empty;
-    public ECompressOption CompressOption = ECompressOption.LZ4;
-    public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
-    public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;
-    public string BuildTags = "builtin";
 
-}

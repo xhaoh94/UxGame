@@ -3,11 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using Ux;
-using static UI.Editor.ComponentData;
-using static UI.Editor.UIMemberData;
+using static Ux.Editor.Build.UI.ComponentData;
+using static Ux.Editor.Build.UI.UIMemberData;
 
-namespace UI.Editor
+namespace Ux.Editor.Build.UI
 {
     public class WriteData
     {

@@ -1,45 +1,45 @@
 ﻿using System;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
-
-public class UIDebuggerStackItem : TemplateContainer, IDebuggerListItem<Ux.UIMgr.UIStack>
+namespace Ux.Editor.Debugger.UI
 {
-    Action<UIMgr.UIStack> _clickEvt;
-    UIMgr.UIStack data;
-    public UIDebuggerStackItem()
+    public class UIDebuggerStackItem : TemplateContainer, IDebuggerListItem<Ux.UIMgr.UIStack>
     {
-        var element = new VisualElement();
-        element.style.flexDirection = FlexDirection.Row;
+        Action<UIMgr.UIStack> _clickEvt;
+        UIMgr.UIStack data;
+        public UIDebuggerStackItem()
         {
-            var btn = new Button();
-            btn.clicked += () =>
+            var element = new VisualElement();
+            element.style.flexDirection = FlexDirection.Row;
             {
+                var btn = new Button();
+                btn.clicked += () =>
+                {
 
-                _clickEvt?.Invoke(data);
-            };
-            var label = new Label();
-            label.name = "Label0";
-            label.style.unityTextAlign = TextAnchor.MiddleLeft;
-            label.style.flexGrow = 1f;
+                    _clickEvt?.Invoke(data);
+                };
+                var label = new Label();
+                label.name = "Label0";
+                label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                label.style.flexGrow = 1f;
 
-            //label.style.width = 200;
-            btn.Add(label);
-            element.Add(btn);
+                //label.style.width = 200;
+                btn.Add(label);
+                element.Add(btn);
+            }
+            Add(element);
         }
-        Add(element);
-    }
 
-    public void SetClickEvt(Action<UIMgr.UIStack> action)
-    {
-        _clickEvt = action;
-    }
+        public void SetClickEvt(Action<UIMgr.UIStack> action)
+        {
+            _clickEvt = action;
+        }
 
-    public void SetData(UIMgr.UIStack data)
-    {
-        this.data = data;
-        var lb0 = this.Q<Label>("Label0");
-        lb0.text = data.IDStr;
+        public void SetData(UIMgr.UIStack data)
+        {
+            this.data = data;
+            var lb0 = this.Q<Label>("Label0");
+            lb0.text = data.IDStr;
+        }
     }
 }

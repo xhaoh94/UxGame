@@ -5,9 +5,9 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using YooAsset.Editor;
-using static UI.Editor.UIClassifySettingData;
+using static Ux.Editor.Build.UI.UIClassifySettingData;
 
-namespace UI.Editor
+namespace Ux.Editor.Build.UI
 {
     public class UIClassifyWindow : EditorWindow
     {

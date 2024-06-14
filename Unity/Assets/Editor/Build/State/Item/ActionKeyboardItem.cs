@@ -1,43 +1,45 @@
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using Ux;
-public class ActionKeyboardItem : StateItemBase
+namespace Ux.Editor.Build.State
 {
-    public ActionKeyboardItem()
+    public class ActionKeyboardItem : StateItemBase
     {
-        var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/State/Item/ActionKeyboardItem.uxml");
-        visualAsset.CloneTree(this);
-        style.flexGrow = 1f;
-        CreateView();
-    }
-    EnumField _enumKey;
-    EnumField _enumType;
-    void CreateView()
-    {
-        _enumKey = this.Q<EnumField>("enumKey");
-        _enumKey.Init(Key.Enter);
-        _enumKey.RegisterValueChangedCallback(e =>
+        public ActionKeyboardItem()
         {
-            data.keyType = (Key)e.newValue;
-        });
-        _enumType = this.Q<EnumField>("enumType");
-        _enumType.Init(StateConditionBase.Trigger.Down);
-        _enumType.RegisterValueChangedCallback(e =>
+            var visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/State/Item/ActionKeyboardItem.uxml");
+            visualAsset.CloneTree(this);
+            style.flexGrow = 1f;
+            CreateView();
+        }
+        EnumField _enumKey;
+        EnumField _enumType;
+        void CreateView()
         {
-            data.triggerType = (StateConditionBase.Trigger)e.newValue;
-        });
-    }
+            _enumKey = this.Q<EnumField>("enumKey");
+            _enumKey.Init(Key.Enter);
+            _enumKey.RegisterValueChangedCallback(e =>
+            {
+                data.keyType = (Key)e.newValue;
+            });
+            _enumType = this.Q<EnumField>("enumType");
+            _enumType.Init(StateConditionBase.Trigger.Down);
+            _enumType.RegisterValueChangedCallback(e =>
+            {
+                data.triggerType = (StateConditionBase.Trigger)e.newValue;
+            });
+        }
 
-    StateSettingData.StateCondition data;
-    public override void SetData(StateSettingData.StateCondition data)
-    {
-        if (data == null) return;
-        this.data = data;
-        _enumKey.SetValueWithoutNotify(data.keyType);
-        _enumType.SetValueWithoutNotify(data.triggerType);
-    }
+        StateSettingData.StateCondition data;
+        public override void SetData(StateSettingData.StateCondition data)
+        {
+            if (data == null) return;
+            this.data = data;
+            _enumKey.SetValueWithoutNotify(data.keyType);
+            _enumType.SetValueWithoutNotify(data.triggerType);
+        }
 
+
+    }
 
 }

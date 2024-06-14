@@ -1,44 +1,46 @@
 using System;
 using UnityEditor;
 using UnityEngine.UIElements;
-
-public class EventDebuggerItem : TemplateContainer, IDebuggerListItem<EventList>
+namespace Ux.Editor.Debugger.Event
 {
-    private VisualTreeAsset _visualAsset;
-
-    Label _txtID;
-    DebuggerStringListView _list;
-    public EventDebuggerItem()
+    public class EventDebuggerItem : TemplateContainer, IDebuggerListItem<EventList>
     {
-        // 加载布局文件		
-        _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Event/EventDebuggerItem.uxml");
-        if (_visualAsset == null)
-            return;
+        private VisualTreeAsset _visualAsset;
 
-        var _root = _visualAsset.CloneTree();
-        _root.style.flexGrow = 1f;
-        style.flexGrow = 1f;
-        Add(_root);
-        CreateView();
-    }
+        Label _txtID;
+        DebuggerStringListView _list;
+        public EventDebuggerItem()
+        {
+            // 加载布局文件		
+            _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Event/EventDebuggerItem.uxml");
+            if (_visualAsset == null)
+                return;
 
-    /// <summary>
-    /// 初始化页面
-    /// </summary>
-    void CreateView()
-    {
-        _txtID = this.Q<Label>("txtID");
-        _list = new DebuggerStringListView(this.Q<ListView>("listEvt"));
-    }
+            var _root = _visualAsset.CloneTree();
+            _root.style.flexGrow = 1f;
+            style.flexGrow = 1f;
+            Add(_root);
+            CreateView();
+        }
 
-    public void SetData(EventList data)
-    {
-        _txtID.text = data._eventType;
-        _list.SetData(data.events);
-    }
+        /// <summary>
+        /// 初始化页面
+        /// </summary>
+        void CreateView()
+        {
+            _txtID = this.Q<Label>("txtID");
+            _list = new DebuggerStringListView(this.Q<ListView>("listEvt"));
+        }
 
-    public void SetClickEvt(Action<EventList> action)
-    {
-        
+        public void SetData(EventList data)
+        {
+            _txtID.text = data._eventType;
+            _list.SetData(data.events);
+        }
+
+        public void SetClickEvt(Action<EventList> action)
+        {
+
+        }
     }
 }

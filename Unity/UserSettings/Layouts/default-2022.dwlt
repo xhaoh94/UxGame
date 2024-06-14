@@ -1530,7 +1530,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 97
+  controlID: 116
 --- !u!114 &66
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -1550,8 +1550,8 @@ MonoBehaviour:
     y: 0
     width: 401
     height: 947
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 201, y: 221}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 74}
   m_Panes:
   - {fileID: 74}
@@ -1601,8 +1601,8 @@ MonoBehaviour:
     y: 0
     width: 1009
     height: 496
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 202, y: 221}
+  m_MaxSize: {x: 4002, y: 4021}
   m_ActualView: {fileID: 76}
   m_Panes:
   - {fileID: 75}
@@ -1658,8 +1658,8 @@ MonoBehaviour:
     y: 0
     width: 510
     height: 947
-  m_MinSize: {x: 275, y: 50}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 276, y: 71}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 79}
   m_Panes:
   - {fileID: 79}
@@ -1877,9 +1877,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 8e7c0000
+      m_SelectedIDs: d4b70100
       m_LastClickedID: 0
-      m_ExpandedIDs: 8af9ffff
+      m_ExpandedIDs: f47bfdff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -2515,7 +2515,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/ThirdParty/Runtime/AstarPathfindingProject
+    - Assets/Editor/UIElements
     m_Globs: []
     m_OriginalText: 
     m_ImportLogFlags: 0
@@ -2523,16 +2523,16 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/ThirdParty/Runtime/AstarPathfindingProject
+  - Assets/Editor/UIElements
   m_LastFoldersGridSize: -1
   m_LastProjectPath: F:\Projects\Unity\UxGame\Unity
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 330}
-    m_SelectedIDs: be730000
-    m_LastClickedID: 29630
-    m_ExpandedIDs: 00000000d8710000da710000a8730000b0730000ba730000be730000ca730000cc730000547500007c7500007e750000b0750000067800000a780000ea7900007e7c000000ca9a3bffffff7f
+    scrollPos: {x: 0, y: 0}
+    m_SelectedIDs: c4b70100
+    m_LastClickedID: 112580
+    m_ExpandedIDs: 00000000440600009a060000ae060000ee0600007a07000052080000b20a0000660e000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -2560,7 +2560,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000d8710000da710000
+    m_ExpandedIDs: 
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -2587,22 +2587,22 @@ MonoBehaviour:
   m_ListAreaState:
     m_SelectedInstanceIDs: 
     m_LastClickedInstanceID: 0
-    m_HadKeyboardFocusLastEvent: 0
+    m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: fa6c0000ae87000092740000f2bd0000645b0100244c01003a7e00005e7e0000407e0000467e00004c7e0000527e0000587e0000c28700006c950000108e0000728e0000b4ed00000000000010b30600
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: 
-      m_OriginalName: 
+      m_Name: DymView
+      m_OriginalName: DymView
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 0
+      m_UserData: 112596
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 11
+      m_OriginalEventType: 0
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 69}
     m_CreateAssetUtility:

@@ -3,78 +3,79 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
-
-public class ResDebuggerWindow : EditorWindow
+namespace Ux.Editor.Debugger.Res
 {
-    [MenuItem("UxGame/调试/资源", false, 401)]
-    public static void ShowExample()
+    public class ResDebuggerWindow : EditorWindow
     {
-        var window = GetWindow<ResDebuggerWindow>("资源调试工具", true, EditorDefine.DebuggerWindowTypes);
-        window.minSize = new Vector2(800, 500);
-    }
-    [SerializeField]
-    private VisualTreeAsset m_VisualTreeAsset = default;
-
-    DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef> _listPackageRef;
-
-   
-    private void OnDestroy()
-    {
-        UIMgr.__Debugger_Pkg_CallBack = null;        
-    }
-    public void CreateGUI()
-    {
-        UIMgr.__Debugger_Pkg_CallBack = OnUpdateData;
-        VisualElement root = rootVisualElement;
-        m_VisualTreeAsset.CloneTree(root);
-
-        _listPackageRef = new DebuggerObjectSearchListView<ResDebuggerItem,UIPkgRef>(root.Q<VisualElement>("veList"));
-        UIMgr.__Debugger_Pkg_Event();
-    }
-   
-    private void OnUpdateData(Dictionary<string, UIPkgRef> dict)
-    {
-        _listPackageRef.SetData(dict);
-    }       
-}
-
-public class ResDebuggerItem: TemplateContainer, IDebuggerListItem<UIPkgRef>
-{
-    public ResDebuggerItem()
-    {
-        style.flexDirection = FlexDirection.Row;
+        [MenuItem("UxGame/调试/资源", false, 401)]
+        public static void ShowExample()
         {
-            var label = new Label();
-            label.name = "Label0";
-            label.style.unityTextAlign = TextAnchor.MiddleLeft;
-            label.style.marginLeft = 3f;
-            //label.style.flexGrow = 1f;
-            label.style.width = 250;
-            Add(label);
+            var window = GetWindow<ResDebuggerWindow>("资源调试工具", true, DebuggerEditorDefine.DebuggerWindowTypes);
+            window.minSize = new Vector2(800, 500);
+        }
+        [SerializeField]
+        private VisualTreeAsset m_VisualTreeAsset = default;
+
+        DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef> _listPackageRef;
+
+
+        private void OnDestroy()
+        {
+            UIMgr.__Debugger_Pkg_CallBack = null;
+        }
+        public void CreateGUI()
+        {
+            UIMgr.__Debugger_Pkg_CallBack = OnUpdateData;
+            VisualElement root = rootVisualElement;
+            m_VisualTreeAsset.CloneTree(root);
+
+            _listPackageRef = new DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef>(root.Q<VisualElement>("veList"));
+            UIMgr.__Debugger_Pkg_Event();
         }
 
+        private void OnUpdateData(Dictionary<string, UIPkgRef> dict)
         {
-            var label = new Label();
-            label.name = "Label1";
-            label.style.unityTextAlign = TextAnchor.MiddleLeft;
-            label.style.marginLeft = 3f;
-            label.style.flexGrow = 1f;
-            label.style.width = 150;
-            Add(label);
+            _listPackageRef.SetData(dict);
         }
     }
 
-    public void SetClickEvt(Action<UIPkgRef> action)
+    public class ResDebuggerItem : TemplateContainer, IDebuggerListItem<UIPkgRef>
     {
-        
-    }
+        public ResDebuggerItem()
+        {
+            style.flexDirection = FlexDirection.Row;
+            {
+                var label = new Label();
+                label.name = "Label0";
+                label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                label.style.marginLeft = 3f;
+                //label.style.flexGrow = 1f;
+                label.style.width = 250;
+                Add(label);
+            }
 
-    public void SetData(UIPkgRef data)
-    {
-        var lb0 = this.Q<Label>("Label0");
-        lb0.text = data.PkgName;
-        var lb1 = this.Q<Label>("Label1");
-        lb1.text = data.RefCnt.ToString();
+            {
+                var label = new Label();
+                label.name = "Label1";
+                label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                label.style.marginLeft = 3f;
+                label.style.flexGrow = 1f;
+                label.style.width = 150;
+                Add(label);
+            }
+        }
+
+        public void SetClickEvt(Action<UIPkgRef> action)
+        {
+
+        }
+
+        public void SetData(UIPkgRef data)
+        {
+            var lb0 = this.Q<Label>("Label0");
+            lb0.text = data.PkgName;
+            var lb1 = this.Q<Label>("Label1");
+            lb1.text = data.RefCnt.ToString();
+        }
     }
 }

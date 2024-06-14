@@ -4,9 +4,9 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UI.Editor.ComponentData;
+using static Ux.Editor.Build.UI.ComponentData;
 
-namespace UI.Editor
+namespace Ux.Editor.Build.UI
 {
     public enum UIExtends
     {

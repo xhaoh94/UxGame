@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-namespace UI.Editor
+namespace Ux.Editor.Build.UI
 {
     [CreateAssetMenu(fileName = "UIClassifySettingData", menuName = "Ux/UI/Create ClassifySettings")]
     public class UIClassifySettingData : ScriptableObject

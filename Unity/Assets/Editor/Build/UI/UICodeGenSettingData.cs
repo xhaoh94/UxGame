@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-namespace UI.Editor
+namespace Ux.Editor.Build.UI
 {
     [Serializable]
     public class PkgData

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using YooAsset;
 
-namespace YooAsset.Editor
+namespace Ux.Editor.Build.Version
 {
     public class PackageCompare
     {

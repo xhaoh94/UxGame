@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using Ux;
 
-namespace UI.Editor
+namespace Ux.Editor.Build.UI
 {
     public class UIEditorTools
     {

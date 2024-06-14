@@ -7,9 +7,8 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using Ux;
 
-namespace HybridCLR.Commands
+namespace Ux.Editor.HybridCLR
 {
     public class HybridCLRCommand
     {
@@ -22,10 +21,10 @@ namespace HybridCLR.Commands
         {
             var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
             var v = dfs.Contains("HOTFIX_CODE");
-            if (v != HybridCLR.Editor.SettingsUtil.Enable)
+            if (v != SettingsUtil.Enable)
             {
                 Log.Error("热更设置与热更宏对应不上，已把热更设置强制于热更宏同步");
-                HybridCLR.Editor.SettingsUtil.Enable = v;
+                SettingsUtil.Enable = v;
             }
         }
         [MenuItem("HybridCLR/切换热更模式/开", false, 2000)]
@@ -47,7 +46,7 @@ namespace HybridCLR.Commands
                 EditorUtility.DisplayDialog("提示", $"当前已是热更模式", "确定");
                 return;
             }
-            HybridCLR.Editor.SettingsUtil.Enable = true;
+            SettingsUtil.Enable = true;
             symbols.Add("HOTFIX_CODE");
             PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
         }
@@ -55,7 +54,7 @@ namespace HybridCLR.Commands
         [MenuItem("HybridCLR/切换热更模式/开", true, 2000)]
         public static bool ValidateOpenHotfixCode()
         {
-            return !HybridCLR.Editor.SettingsUtil.Enable;
+            return !SettingsUtil.Enable;
         }
 
         [MenuItem("HybridCLR/切换热更模式/关", false, 2001)]
@@ -78,7 +77,7 @@ namespace HybridCLR.Commands
                 EditorUtility.DisplayDialog("提示", $"当前已是非热更模式", "确定");
                 return;
             }
-            HybridCLR.Editor.SettingsUtil.Enable = false;
+            SettingsUtil.Enable = false;
             symbols.Remove("HOTFIX_CODE");
             PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
             //PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, symbols.ToArray());
@@ -86,7 +85,7 @@ namespace HybridCLR.Commands
         [MenuItem("HybridCLR/切换热更模式/关", true, 2001)]
         public static bool ValidateCloseHotfixCode()
         {
-            return HybridCLR.Editor.SettingsUtil.Enable;
+            return SettingsUtil.Enable;
         }
 
         public static void ClearHOTDll()
