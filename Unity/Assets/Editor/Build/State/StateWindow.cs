@@ -54,7 +54,7 @@ namespace Ux.Editor.Build.State
         {
             if (data == null) return;
             if (string.IsNullOrEmpty(data.ClsName)) return;
-            var write = new WriteData();
+            var write = new CodeGenWrite();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");
             write.Writeln("using System.Collections.Generic;");
             write.Writeln($"namespace {Setting.ns}");
@@ -145,7 +145,7 @@ namespace Ux.Editor.Build.State
         }
         void OnBtnCreate()
         {
-            var write = new WriteData();
+            var write = new CodeGenWrite();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");
             write.Writeln("using System;");
             write.Writeln("using System.Collections.Generic;");

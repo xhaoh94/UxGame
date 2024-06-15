@@ -7,115 +7,75 @@ using YooAsset;
 using YooAsset.Editor;
 namespace Ux.Editor.Build.Version
 {
-    internal class VersionPackageViewer
+    partial class VersionPackageViewer
     {
         private List<Type> _encryptionServicesClassTypes;
-        private List<string> _encryptionServicesClassNames;
-        //private List<Type> _sharedPackRuleClassTypes;
-        //private List<string> _sharedPackRuleClassNames;
-
-        protected TemplateContainer Root;
+        private List<string> _encryptionServicesClassNames;    
         BuildPackageSetting PackageSetting;
-        Toggle _tgCollectSV;
-        EnumField _pipelineType;
-        EnumField _nameStyleType;
-        EnumField _compressionType;
-        TextField _inputBuiltinTags;
 
-        PopupField<string> _encryption;
-        //PopupField<string> _sharedPackRule;
+
+        PopupField<string> encryption;        
         public VersionPackageViewer(VisualElement parent)
         {
-            CreateView(parent);
-        }
-        private void CreateView(VisualElement parent)
-        {
-            // 加载布局文件
-            var visualAsset = UxmlLoader.LoadWindowUXML<VersionPackageViewer>();
-            if (visualAsset == null)
-                return;
-
-            Root = visualAsset.CloneTree();
-            Root.style.flexGrow = 1f;
-            parent.Add(Root);
-
+            CreateChildren();
+            root.style.flexGrow = 1f;
+            parent.Add(root);
             _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
-            //_sharedPackRuleClassTypes = GetSharedPackRuleClassTypes();
-            //_sharedPackRuleClassNames = _sharedPackRuleClassTypes.Select(t => t.FullName).ToList();
-
-            _tgCollectSV = Root.Q<Toggle>("tgCollectSV");
-            _tgCollectSV.RegisterValueChangedCallback(evt =>
-            {
-                PackageSetting.IsCollectShaderVariant = evt.newValue;
-            });
-            // 构建管线
-            _pipelineType = Root.Q<EnumField>("pipelineType");
-            _pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
-            _pipelineType.RegisterValueChangedCallback(evt =>
-            {
-                PackageSetting.PiplineOption = (EBuildPipeline)evt.newValue;
-                RefreshElement();
-            });
-
-            // 资源命名格式
-            _nameStyleType = Root.Q<EnumField>("nameStyleType");
-            _nameStyleType.Init(EFileNameStyle.HashName);
-            _nameStyleType.RegisterValueChangedCallback(evt =>
-            {
-                PackageSetting.NameStyleOption = (EFileNameStyle)evt.newValue;
-            });
-
-            // 压缩方式
-            _compressionType = Root.Q<EnumField>("compressionType");
-            _compressionType.Init(ECompressOption.LZ4);
-            _compressionType.RegisterValueChangedCallback(evt =>
-            {
-                PackageSetting.CompressOption = (ECompressOption)evt.newValue;
-            });
-
-            // 首包资源标签
-            _inputBuiltinTags = Root.Q<TextField>("inputBuiltinTags");
-            _inputBuiltinTags.RegisterValueChangedCallback(evt =>
-            {
-                PackageSetting.BuildTags = evt.newValue;
-            });
-
-
-            // 加密方法
-            var encryptionContainer = Root.Q("encryptionContainer");
             if (_encryptionServicesClassNames.Count > 0)
             {
-                _encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-                _encryption.label = "加密方法";
-                _encryption.RegisterValueChangedCallback(evt =>
+                encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
+                encryption.label = "加密方法";
+                encryption.RegisterValueChangedCallback(evt =>
                 {
                     PackageSetting.EncyptionClassName = evt.newValue;
                 });
-                encryptionContainer.Add(_encryption);
+                encryptionContainer.Add(encryption);
             }
             else
             {
-                _encryption = new PopupField<string>();
-                _encryption.label = "加密方法";
-                encryptionContainer.Add(_encryption);
+                encryption = new PopupField<string>();
+                encryption.label = "加密方法";
+                encryptionContainer.Add(encryption);
             }
         }
+        partial void _OnTgCollectSVChanged(ChangeEvent<bool> e)
+        {
+            PackageSetting.IsCollectShaderVariant = e.newValue;
+        }
+        partial void _OnPipelineTypeChanged(ChangeEvent<Enum> e)
+        {
+            PackageSetting.PiplineOption = (EBuildPipeline)e.newValue;
+            RefreshElement();
+        }
+        partial void _OnCompressionTypeChanged(ChangeEvent<Enum> e)
+        {
+            PackageSetting.CompressOption = (ECompressOption)e.newValue;
+        }       
+        partial void _OnNameStyleTypeChanged(ChangeEvent<Enum> e)
+        {
+            PackageSetting.NameStyleOption = (EFileNameStyle)e.newValue;
+        }
+        partial void _OnInputBuiltinTagsChanged(ChangeEvent<string> e)
+        {
+            PackageSetting.BuildTags = e.newValue;
+        }
+     
         public void RefreshView(BuildPackageSetting packageSetting)
         {
             PackageSetting = packageSetting;
-            _tgCollectSV.SetValueWithoutNotify(packageSetting.IsCollectShaderVariant);
-            _pipelineType.SetValueWithoutNotify(PackageSetting.PiplineOption);
-            _nameStyleType.SetValueWithoutNotify(PackageSetting.NameStyleOption);
-            _compressionType.SetValueWithoutNotify(PackageSetting.CompressOption);
-            _inputBuiltinTags.SetValueWithoutNotify(PackageSetting.BuildTags);
+            tgCollectSV.SetValueWithoutNotify(packageSetting.IsCollectShaderVariant);
+            pipelineType.SetValueWithoutNotify(PackageSetting.PiplineOption);
+            nameStyleType.SetValueWithoutNotify(PackageSetting.NameStyleOption);
+            compressionType.SetValueWithoutNotify(PackageSetting.CompressOption);
+            inputBuiltinTags.SetValueWithoutNotify(PackageSetting.BuildTags);
 
             if (string.IsNullOrEmpty(PackageSetting.EncyptionClassName) &&
                  _encryptionServicesClassNames.Count > 0)
             {
                 PackageSetting.EncyptionClassName = _encryptionServicesClassNames[0];
             }
-            _encryption.SetValueWithoutNotify(PackageSetting.EncyptionClassName);
+            encryption.SetValueWithoutNotify(PackageSetting.EncyptionClassName);
 
 
             //if (string.IsNullOrEmpty(SelectItem.PlatformConfig.SharedPackRule) &&
@@ -129,17 +89,17 @@ namespace Ux.Editor.Build.Version
         public void RefreshElement(bool IsForceRebuild)
         {
             var b = IsForceRebuild || PackageSetting.New;
-            _pipelineType.SetEnabled(b);
-            _nameStyleType.SetEnabled(b);
-            _compressionType.SetEnabled(b);
-            _encryption.SetEnabled(b);
+            pipelineType.SetEnabled(b);
+            nameStyleType.SetEnabled(b);
+            compressionType.SetEnabled(b);
+            encryption.SetEnabled(b);
             //_sharedPackRule.SetEnabled(IsForceRebuild);
-            _inputBuiltinTags.SetEnabled(b);
+            inputBuiltinTags.SetEnabled(b);
             RefreshElement();
         }
         void RefreshElement()
         {
-            _compressionType.style.display =
+            compressionType.style.display =
                 PackageSetting.PiplineOption == EBuildPipeline.RawFileBuildPipeline ? DisplayStyle.None : DisplayStyle.Flex;
         }
         #region 构建包裹相关
@@ -147,9 +107,9 @@ namespace Ux.Editor.Build.Version
 
         private IEncryptionServices CreateEncryptionServicesInstance()
         {
-            if (_encryption.index < 0)
+            if (encryption.index < 0)
                 return null;
-            var classType = _encryptionServicesClassTypes[_encryption.index];
+            var classType = _encryptionServicesClassTypes[encryption.index];
             return (IEncryptionServices)Activator.CreateInstance(classType);
         }
         //private ISharedPackRule CreateSharedPackRuleInstance()

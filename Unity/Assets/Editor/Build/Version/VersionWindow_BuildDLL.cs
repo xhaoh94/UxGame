@@ -9,13 +9,13 @@ namespace Ux.Editor.Build.Version
     {
         private async UniTask<bool> BuildDLL(BuildTarget target)
         {
-            if (_tgCompileDLL.value)
+            if (tgCompileDLL.value)
             {
                 Log.Debug("---------------------------------------->开始编译DLL<---------------------------------------");
                 HybridCLRCommand.ClearHOTDll();
-                await UxEditor.Export(_tgCompileUI.value, _tgCompileConfig.value, _tgCompileProto.value, false);
-                var compileType = (CompileType)_compileType.value;
-                if (IsExportExecutable && _tgCompileAot.value)
+                await UxEditor.Export(tgCompileUI.value, tgCompileConfig.value, tgCompileProto.value, false);
+                var compile = (CompileType)compileType.value;
+                if (IsExportExecutable && tgCompileAot.value)
                 {
                     if (target != EditorUserBuildSettings.activeBuildTarget &&
                         !EditorUserBuildSettings.SwitchActiveBuildTarget(
@@ -34,7 +34,7 @@ namespace Ux.Editor.Build.Version
 
                     HybridCLRCommand.ClearAOTDll();
                     Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
-                    CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
+                    CompileDllCommand.CompileDll(target, compile == CompileType.Development);
                     Il2CppDefGeneratorCommand.GenerateIl2CppDef();
 
                     // 这几个生成依赖HotUpdateDlls
@@ -54,7 +54,7 @@ namespace Ux.Editor.Build.Version
                 else
                 {
                     Log.Debug("---------------------------------------->生成热更DLL<---------------------------------------");
-                    CompileDllCommand.CompileDll(target, compileType == CompileType.Development);
+                    CompileDllCommand.CompileDll(target, compile == CompileType.Development);
                 }
 
                 Log.Debug("---------------------------------------->将热更DLL拷贝到资源打包目录<---------------------------------------");

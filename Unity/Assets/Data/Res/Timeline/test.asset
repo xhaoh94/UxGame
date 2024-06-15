@@ -17,9 +17,18 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: 3272319262192304128
+      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        StartFrame: 0
+        EndFrame: 50
+        InFrame: 0
+        OutFrame: 0
+        clip: {fileID: 0}
     - rid: 7646185338061455360
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         Name: Animation
-        clips: []
+        clips:
+        - rid: 3272319262192304128
         Layer: 0

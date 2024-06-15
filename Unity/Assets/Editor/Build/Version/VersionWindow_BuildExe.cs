@@ -8,10 +8,10 @@ namespace Ux.Editor.Build.Version
         {
             if (IsExportExecutable)
             {
-                var compileType = (CompileType)_compileType.value;
-                BuildOptions options = BuildHelper.GetBuildOptions(buildTarget, compileType == CompileType.Development);
+                var compile = (CompileType)compileType.value;
+                BuildOptions options = BuildHelper.GetBuildOptions(buildTarget, compile == CompileType.Development);
 
-                var path = Path.Combine(SelectItem.ExePath, compileType.ToString(), buildTarget.ToString());
+                var path = Path.Combine(SelectItem.ExePath, compile.ToString(), buildTarget.ToString());
                 BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, options, path, "Game");
                 Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
                 var report = BuildPipeline.BuildPlayer(buildPlayerOptions);

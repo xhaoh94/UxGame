@@ -52,171 +52,44 @@ namespace Ux.Editor.Build.Version
         }
 
 
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
-
         private List<string> _buildPackageNames;
         private VersionSettingData Setting;
         private int _lastModifyExportIndex = 0;
 
-        [BindFieldAttribute("listExport")] ListView _listExport;
-        [BindFieldAttribute("btnAdd")] Button _btnAdd;
-        [BindFieldAttribute("btnRemove")] Button _btnRemove;
-
-        [BindFieldAttribute("exportElement")] VisualElement _exportElement;
-        [BindFieldAttribute("txtName")] TextField _txtName;
-        [BindFieldAttribute("platformType")] EnumField _platformType;
-        [BindFieldAttribute("buildType")] EnumField _buildType;
-        [BindFieldAttribute("tgExe")] Toggle _tgExe;
-
-        #region 可执行文件
-        [BindFieldAttribute("exeElement")] VisualElement _exeElement;
-        [BindFieldAttribute("inputExePath")] TextField _inputExePath;
-        [BindFieldAttribute("btnExePath")] Button _btnExePath;
-        [BindFieldAttribute("compileType")] EnumField _compileType;
-        #endregion
-
-        #region 资源构建    
-        [BindFieldAttribute("Toolbar")] Toolbar _toolbar;
-        [BindFieldAttribute("Container")] VisualElement _container;
-        [BindFieldAttribute("packageMenu")] ToolbarMenu _packageMenu;
-
-        [BindFieldAttribute("inputBundlePath")] TextField _inputBundlePath;
-        [BindFieldAttribute("btnBundlePath")] Button _btnBundlePath;
-        [BindFieldAttribute("tgCopy")] Toggle _tgCopy;
-        [BindFieldAttribute("inputCopyPath")] TextField _inputCopyPath;
-        [BindFieldAttribute("btnCopyPath")] Button _btnCopyPath;
-        [BindFieldAttribute("txtVersion")] TextField _txtVersion;
-        [BindFieldAttribute("tgClearSandBox")] Toggle _tgClearSandBox;
-        [BindFieldAttribute("tgCompileDLL")] Toggle _tgCompileDLL;
-        [BindFieldAttribute("tgCompileAot")] Toggle _tgCompileAot;
-        [BindFieldAttribute("tgCompileUI")] Toggle _tgCompileUI;
-        [BindFieldAttribute("tgCompileConfig")] Toggle _tgCompileConfig;
-        [BindFieldAttribute("tgCompileProto")] Toggle _tgCompileProto;
-
-        #endregion
-
-        [BindFieldAttribute("buildPackage")]
-        MaskField _buildPackage;
-
         VersionPackageViewer _versionPackage;
-
+        ToolbarMenu _packageMenu;
         public void CreateGUI()
         {
             try
             {
                 LoadConfig();
-                VisualElement root = rootVisualElement;
-                m_VisualTreeAsset.CloneTree(root);
-
-                root.DymBind(this);
+                CreateChildren();
+                rootVisualElement.Add(root);
 
                 // 检测构建包裹
                 _buildPackageNames = GetBuildPackageNames();
 
-                _listExport.makeItem = MakeExportListViewItem;
-                _listExport.bindItem = BindExportListViewItem;
-#if UNITY_2022_1_OR_NEWER
-                _listExport.selectionChanged += OnExportListSelectionChange;
-#else
-            _listExport.onSelectionChange += OnExportListSelectionChange;
-#endif
-
-                _btnAdd.clicked += OnBtnAddClick;
-                _btnRemove.clicked += OnBtnRemoveClick;
-
-                _txtName.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.Name = evt.newValue;
-                    OnExportListData();
-                });
-
-                _platformType.Init(PlatformType.Win64);
-                _platformType.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.PlatformType = (PlatformType)_platformType.value;
-                });
+                platformType.Init(PlatformType.Win64);
                 // 构建包裹            
-                _buildPackage.choices = _buildPackageNames;
-                _buildPackage.value = -1;
+                buildPackage.choices = _buildPackageNames;
+                buildPackage.value = -1;
 
                 //构建版本            
-                _txtVersion.isReadOnly = true;
-                _txtVersion.SetEnabled(false);
+                txtVersion.isReadOnly = true;
+                txtVersion.SetEnabled(false);
 
                 //编译类型            
-                _buildType.Init(BuildType.IncrementalBuild);
-                _buildType.RegisterValueChangedCallback(evt =>
-                {
-                    //var resVersion = _txtVersion.value;
-                    RefreshView();
-                    //_txtVersion.SetValueWithoutNotify(resVersion);
-                });
-
-                //资源导出路径            
-                _inputBundlePath.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.BundlePath = evt.newValue;
-                });
-                _btnBundlePath.clicked += OnBtnBundlePathClick;
-
-                //是否拷贝            
-                _tgCopy.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.IsCopyTo = evt.newValue;
-                    RefreshElement();
-                });
-                //拷贝路径
-                _inputCopyPath.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.CopyPath = evt.newValue;
-                });
-                _btnCopyPath.clicked += OnBtnCopyPathClick;
-
-                // 是否清理沙盒缓存            
-                _tgClearSandBox.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.IsClearSandBox = evt.newValue;
-                });
+                buildType.Init(BuildType.IncrementalBuild);
 
                 // 是否编译热更DLL            
-                _tgCompileDLL.SetValueWithoutNotify(true);
-                _tgCompileDLL.RegisterValueChangedCallback(evt =>
-                {
-                    RefreshElement();
-                });
-                _tgCompileAot.SetValueWithoutNotify(true);
-                _tgCompileUI.SetValueWithoutNotify(true);
-                _tgCompileConfig.SetValueWithoutNotify(true);
-                _tgCompileProto.SetValueWithoutNotify(true);
-
-                _tgExe.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.IsExportExecutable = evt.newValue;
-                    RefreshElement();
-                });
-                //导出路径            
-                _inputExePath.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.ExePath = evt.newValue;
-                });
-                _btnExePath.clicked += OnBtnExePathClick;
+                tgCompileDLL.SetValueWithoutNotify(true);                
+                tgCompileAot.SetValueWithoutNotify(true);
+                tgCompileUI.SetValueWithoutNotify(true);
+                tgCompileConfig.SetValueWithoutNotify(true);
+                tgCompileProto.SetValueWithoutNotify(true);
 
                 //编译类型            
-                _compileType.Init(CompileType.Development);
-                _compileType.RegisterValueChangedCallback(evt =>
-                {
-                    SelectItem.CompileType = (CompileType)evt.newValue;
-                });
-
-
-                // 构建选中按钮
-                var btnBuild = _exportElement.Q<Button>("build");
-                btnBuild.clicked += OnBuildSelectClick;
-
-                // 清理按钮
-                var btnClear = _exportElement.Q<Button>("clear");
-                btnClear.clicked += OnClearClick;
+                compileType.Init(CompileType.Development);
 
 
                 if (_buildPackageNames.Count == 0)
@@ -224,7 +97,7 @@ namespace Ux.Editor.Build.Version
                     var label = new Label();
                     label.text = "没有发现可构建的资源包";
                     label.style.width = 100;
-                    _toolbar.Add(label);
+                    Toolbar.Add(label);
                     return;
                 }
 
@@ -234,9 +107,9 @@ namespace Ux.Editor.Build.Version
                 {
                     _packageMenu.menu.AppendAction(packageName, PackageMenuAction, PackageMenuFun, packageName);
                 }
-                _toolbar.Add(_packageMenu);
+                Toolbar.Add(_packageMenu);
 
-                _versionPackage = new VersionPackageViewer(_container);
+                _versionPackage = new VersionPackageViewer(Container);
                 OnExportListData();
             }
             catch (Exception ex)
@@ -245,61 +118,111 @@ namespace Ux.Editor.Build.Version
             }
         }
 
+        partial void _OnTxtNameChanged(ChangeEvent<string> e)
+        {
+            SelectItem.Name = e.newValue;
+            OnExportListData();
+        }
+
+        partial void _OnPlatformTypeChanged(ChangeEvent<Enum> e)
+        {
+            SelectItem.PlatformType = (PlatformType)e.newValue;
+        }
+        partial void _OnBuildTypeChanged(ChangeEvent<Enum> e)
+        {
+            RefreshView();
+        }
+        partial void _OnInputBundlePathChanged(ChangeEvent<string> e)
+        {
+            SelectItem.BundlePath = e.newValue;
+        }
+
+        partial void _OnTgCopyChanged(ChangeEvent<bool> e)
+        {
+            SelectItem.IsCopyTo = e.newValue;
+            RefreshElement();
+        }
+
+        partial void _OnInputCopyPathChanged(ChangeEvent<string> e)
+        {
+            SelectItem.CopyPath = e.newValue;
+        }
+
+        partial void _OnTgClearSandBoxChanged(ChangeEvent<bool> e)
+        {
+            SelectItem.IsClearSandBox = e.newValue;
+        }
+
+        partial void _OnTgCompileDLLChanged(ChangeEvent<bool> e)
+        {
+            RefreshElement();
+        }
+
+        partial void _OnTgExeChanged(ChangeEvent<bool> e)
+        {
+            SelectItem.IsExportExecutable = e.newValue;
+            RefreshElement();
+        }
+
+
+        partial void _OnInputExePathChanged(ChangeEvent<string> e)
+        {
+            SelectItem.ExePath = e.newValue;
+        }
+
+        partial void _OnCompileTypeChanged(ChangeEvent<Enum> e)
+        {
+            SelectItem.CompileType = (CompileType)e.newValue;
+        }
         BuildExportSetting SelectItem
         {
             get
             {
-                var selectItem = _listExport.selectedItem as BuildExportSetting;
+                var selectItem = listExport.selectedItem as BuildExportSetting;
                 return selectItem;
             }
-        }
+        }        
 
-        private VisualElement MakeExportListViewItem()
+        partial void _OnMakeListExportItem(VisualElement e)
         {
-            VisualElement element = new VisualElement();
-
-            {
-                var label = new Label();
-                label.name = "Label1";
-                label.style.unityTextAlign = TextAnchor.MiddleLeft;
-                label.style.flexGrow = 1f;
-                label.style.height = 20f;
-                element.Add(label);
-            }
-
-            return element;
+            var label = new Label();
+            label.name = "Label1";
+            label.style.unityTextAlign = TextAnchor.MiddleLeft;
+            label.style.flexGrow = 1f;
+            label.style.height = 20f;
+            e.Add(label);
         }
-        private void BindExportListViewItem(VisualElement element, int index)
+        partial void _OnBindListExportItem(VisualElement e, int index)
         {
             var setting = Setting.ExportSettings[index];
-
-            var textField1 = element.Q<Label>("Label1");
+            var textField1 = e.Q<Label>("Label1");
             textField1.text = setting.Name;
         }
-        private void OnExportListSelectionChange(IEnumerable<object> objs)
+
+        partial void _OnListExportItemClick(IEnumerable<object> objs)
         {
-            if (_listExport.selectedIndex < 0)
+            if (listExport.selectedIndex < 0)
             {
                 return;
             }
-            _lastModifyExportIndex = _listExport.selectedIndex;
+            _lastModifyExportIndex = listExport.selectedIndex;
             RefreshView();
         }
         private void OnExportListData()
-        {
-            _listExport.Clear();
-            _listExport.ClearSelection();
-            _listExport.itemsSource = Setting.ExportSettings;
-            _listExport.Rebuild();
+        {            
+            listExport.Clear();
+            listExport.ClearSelection();
+            listExport.itemsSource = Setting.ExportSettings;
+            listExport.Rebuild();
             if (Setting.ExportSettings.Count > 0)
             {
                 if (_lastModifyExportIndex >= 0)
                 {
-                    if (_lastModifyExportIndex >= _listExport.itemsSource.Count)
+                    if (_lastModifyExportIndex >= listExport.itemsSource.Count)
                     {
                         _lastModifyExportIndex = 0;
                     }
-                    _listExport.selectedIndex = _lastModifyExportIndex;
+                    listExport.selectedIndex = _lastModifyExportIndex;
                 }
             }
             else
@@ -360,42 +283,42 @@ namespace Ux.Editor.Build.Version
         {
             if (SelectItem == null)
             {
-                _exportElement.style.display = DisplayStyle.None;
+                exportElement.style.display = DisplayStyle.None;
                 return;
             }
-            _exportElement.style.display = DisplayStyle.Flex;
-            _txtName.SetValueWithoutNotify(SelectItem.Name);
-            _platformType.SetValueWithoutNotify(SelectItem.PlatformType);
-            _inputExePath.SetValueWithoutNotify(SelectItem.ExePath);
-            _compileType.SetValueWithoutNotify(SelectItem.CompileType);
-            _inputBundlePath.SetValueWithoutNotify(SelectItem.BundlePath);
-            _tgCopy.SetValueWithoutNotify(SelectItem.IsCopyTo);
-            _inputCopyPath.SetValueWithoutNotify(SelectItem.CopyPath);
-            _tgExe.SetValueWithoutNotify(SelectItem.IsExportExecutable);
-            _txtVersion.SetValueWithoutNotify(AddVersion(SelectItem.ResVersion));
+            exportElement.style.display = DisplayStyle.Flex;
+            txtName.SetValueWithoutNotify(SelectItem.Name);
+            platformType.SetValueWithoutNotify(SelectItem.PlatformType);
+            inputExePath.SetValueWithoutNotify(SelectItem.ExePath);
+            compileType.SetValueWithoutNotify(SelectItem.CompileType);
+            inputBundlePath.SetValueWithoutNotify(SelectItem.BundlePath);
+            tgCopy.SetValueWithoutNotify(SelectItem.IsCopyTo);
+            inputCopyPath.SetValueWithoutNotify(SelectItem.CopyPath);
+            tgExe.SetValueWithoutNotify(SelectItem.IsExportExecutable);
+            txtVersion.SetValueWithoutNotify(AddVersion(SelectItem.ResVersion));
 
-            _tgClearSandBox.SetValueWithoutNotify(SelectItem.IsClearSandBox);
+            tgClearSandBox.SetValueWithoutNotify(SelectItem.IsClearSandBox);
             RefreshPackageView(_buildPackageNames[0]);
             RefreshElement();
         }
 
-        bool IsForceRebuild => (BuildType)_buildType.value == BuildType.ForceRebuild;
-        bool IsExportExecutable => _tgExe.value && IsForceRebuild;
+        bool IsForceRebuild => (BuildType)buildType.value == BuildType.ForceRebuild;
+        bool IsExportExecutable => tgExe.value && IsForceRebuild;
         void RefreshElement()
         {
-            _tgExe.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
-            _exeElement.style.display = IsExportExecutable ? DisplayStyle.Flex : DisplayStyle.None;
-            _buildPackage.style.display = IsExportExecutable ? DisplayStyle.None : DisplayStyle.Flex;
-            _tgClearSandBox.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
+            tgExe.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
+            exeElement.style.display = IsExportExecutable ? DisplayStyle.Flex : DisplayStyle.None;
+            buildPackage.style.display = IsExportExecutable ? DisplayStyle.None : DisplayStyle.Flex;
+            tgClearSandBox.style.display = IsForceRebuild ? DisplayStyle.Flex : DisplayStyle.None;
 
-            _inputCopyPath.parent.style.display = _tgCopy.value ? DisplayStyle.Flex : DisplayStyle.None;
-            _tgCompileAot.style.display = _tgCompileDLL.value && IsExportExecutable ? DisplayStyle.Flex : DisplayStyle.None;
-            _tgCompileUI.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
-            _tgCompileConfig.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
-            _tgCompileProto.style.display = _tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
+            inputCopyPath.parent.style.display = tgCopy.value ? DisplayStyle.Flex : DisplayStyle.None;
+            tgCompileAot.style.display = tgCompileDLL.value && IsExportExecutable ? DisplayStyle.Flex : DisplayStyle.None;
+            tgCompileUI.style.display = tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
+            tgCompileConfig.style.display = tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
+            tgCompileProto.style.display = tgCompileDLL.value ? DisplayStyle.Flex : DisplayStyle.None;
             _versionPackage.RefreshElement(IsForceRebuild);
         }
-        void OnBtnAddClick()
+        partial void _OnBtnAddClick()
         {
             var dt = DateTime.Now;
             int totalSecond = dt.Hour * 3600 + dt.Minute * 60 + dt.Second;
@@ -404,7 +327,7 @@ namespace Ux.Editor.Build.Version
             Setting.ExportSettings.Add(item);
             OnExportListData();
         }
-        void OnBtnRemoveClick()
+        partial void _OnBtnRemoveClick()
         {
             var item = SelectItem;
             if (item == null)
@@ -415,36 +338,36 @@ namespace Ux.Editor.Build.Version
             OnExportListData();
         }
 
-        void OnBtnExePathClick()
+        partial void _OnBtnExePathClick()
         {
-            BuildHelper.OpenFolderPanel(SelectItem.ExePath, "请选择生成路径", _inputExePath);
+            BuildHelper.OpenFolderPanel(SelectItem.ExePath, "请选择生成路径", inputExePath);
         }
-        void OnBtnBundlePathClick()
+        partial void _OnBtnBundlePathClick()
         {
-            BuildHelper.OpenFolderPanel(SelectItem.BundlePath, "请选择生成路径", _inputBundlePath);
+            BuildHelper.OpenFolderPanel(SelectItem.BundlePath, "请选择生成路径", inputBundlePath);
         }
-        void OnBtnCopyPathClick()
+        partial void _OnBtnCopyPathClick()
         {
-            BuildHelper.OpenFolderPanel(SelectItem.CopyPath, "请选择CDN路径", _inputCopyPath);
+            BuildHelper.OpenFolderPanel(SelectItem.CopyPath, "请选择CDN路径", inputCopyPath);
         }
 
-        void OnBuildSelectClick()
+        partial void _OnBuildClick()
         {
-            var buildType = (BuildType)_buildType.value;
-            var resVersion = _txtVersion.value.Trim();
+            var bType = (BuildType)buildType.value;
+            var resVersion = txtVersion.value.Trim();
             var buildResVerion = SelectItem.ResVersion.Trim();
             if (string.Compare(resVersion, buildResVerion, true) <= 0)
             {
                 if (EditorUtility.DisplayDialog("提示", $"资源版本不可小于当前版本", "确定", "取消"))
                 {
-                    _txtVersion.SetValueWithoutNotify(AddVersion(buildResVerion));
+                    txtVersion.SetValueWithoutNotify(AddVersion(buildResVerion));
                 }
                 return;
             }
             void Build()
             {
                 string content = string.Empty;
-                switch (buildType)
+                switch (bType)
                 {
                     case BuildType.ForceRebuild:
                         content = "是否构建【整包】！";
@@ -548,7 +471,7 @@ namespace Ux.Editor.Build.Version
             var item = SelectItem;
             if (item != null)
             {
-                item.ResVersion = _txtVersion.value;
+                item.ResVersion = txtVersion.value;
             }
             Setting?.SaveFile();
             EditorSceneManager.OpenScene(EditorBuildSettings.scenes[0].path, OpenSceneMode.Single);

@@ -131,12 +131,13 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 268892483}
   - component: {fileID: 268892482}
   - component: {fileID: 268892481}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: EventSystem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -199,13 +200,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 469268396}
   - component: {fileID: 469268395}
   - component: {fileID: 469268394}
   - component: {fileID: 469268393}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -307,12 +309,13 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 747557490}
   - component: {fileID: 747557489}
   - component: {fileID: 747557488}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: Directional Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -426,7 +429,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 934189915}
   - component: {fileID: 934189914}
@@ -434,6 +437,7 @@ GameObject:
   - component: {fileID: 934189916}
   - component: {fileID: 934189917}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}

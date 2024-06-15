@@ -7,77 +7,7 @@ using static Ux.Editor.Build.UI.ComponentData;
 using static Ux.Editor.Build.UI.UIMemberData;
 
 namespace Ux.Editor.Build.UI
-{
-    public class WriteData
-    {
-        string content;
-        bool newLine;
-        public WriteData(string _content)
-        {
-            content = _content;
-        }
-        public WriteData()
-        {
-            content = string.Empty;
-        }
-        public void Writeln()
-        {
-            content += "\n";
-            newLine = true;
-        }
-        public void Writeln(string add, bool isBlock = true)
-        {
-            if (isBlock)
-            {
-                foreach (var b in block)
-                {
-                    content += b;
-                }
-            }
-            content += add + "\n";
-            newLine = true;
-        }
-        public void Write(string add, bool isBlock = true)
-        {
-            if (isBlock)
-            {
-                foreach (var b in block)
-                {
-                    content += b;
-                }
-            }
-            content += add;
-        }
-
-        List<string> block = new List<string>();
-        public void StartBlock()
-        {
-            Writeln("{", newLine);
-            block.Add("\t");
-        }
-        public void EndBlock(bool isLn = true)
-        {
-            block.RemoveAt(0);
-            if (isLn)
-                Writeln("}");
-            else
-                Write("}");
-        }
-
-        public void Export(string path, string fileName)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-            path += $"{fileName}.cs";
-            if (!File.Exists(path))
-            {
-                File.CreateText(path).Dispose();
-            }
-            File.WriteAllText(path, content, System.Text.Encoding.UTF8);
-        }
-    }
+{    
     public partial class UICodeGenWindow
     {
         public static bool Export()
@@ -157,7 +87,7 @@ namespace Ux.Editor.Build.UI
                 Log.Error("导出目录不能为空");
                 return false;
             }
-            var write = new WriteData();
+            var write = new CodeGenWrite();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");
             write.Writeln("using FairyGUI;");
             write.Writeln($"namespace {ns}");

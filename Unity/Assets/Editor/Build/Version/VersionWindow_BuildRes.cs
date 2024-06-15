@@ -47,7 +47,7 @@ namespace Ux.Editor.Build.Version
             }
         }
 
-        void OnClearClick()
+        partial void _OnClearClick()
         {
             if (EditorUtility.DisplayDialog("提示", $"是否重置构建！\n重置会删除所有构建相关目录！", "确定", "取消"))
             {
@@ -88,7 +88,7 @@ namespace Ux.Editor.Build.Version
 
         private async UniTask<bool> BuildRes(BuildTarget buildTarget)
         {
-            var packageValue = _buildPackage.value;
+            var packageValue = buildPackage.value;
             if (packageValue == 0)
             {
                 Log.Error("没有选中要构建的资源包");
@@ -99,7 +99,7 @@ namespace Ux.Editor.Build.Version
             {
                 EditorTools.ClearFolder(StreamingAssetsRoot);
 
-                if (_tgClearSandBox.value)
+                if (tgClearSandBox.value)
                 {
                     if (EditorTools.DeleteDirectory(SandboxRoot))
                     {
@@ -116,7 +116,7 @@ namespace Ux.Editor.Build.Version
             }
             else
             {
-                var array = Convert.ToString(_buildPackage.value, 2).ToCharArray().Reverse();
+                var array = Convert.ToString(buildPackage.value, 2).ToCharArray().Reverse();
                 var pCnt = array.Count();
                 for (int i = 0; i < _buildPackageNames.Count; i++)
                 {
@@ -229,7 +229,7 @@ namespace Ux.Editor.Build.Version
             var outputDir = "Output";
             var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
             var temBuildPath = $"{temOutputRoot}/{buildTarget}/{packageName}";
-            var nowVersion = _txtVersion.value;
+            var nowVersion = txtVersion.value;
             var lastVersion = string.Empty;
             var versionFile = $"{buildPath}/{outputDir}/{versionFileName}";
             if (File.Exists(versionFile))
@@ -240,7 +240,7 @@ namespace Ux.Editor.Build.Version
             if (lastVersion == nowVersion)
             {
                 nowVersion = AddVersion(lastVersion);
-                _txtVersion.SetValueWithoutNotify(nowVersion);
+                txtVersion.SetValueWithoutNotify(nowVersion);
                 Log.Warning("版本号无更新，将进行自动更新！");
             }
 
@@ -382,7 +382,7 @@ namespace Ux.Editor.Build.Version
                 Directory.CreateDirectory(tPath);
             }
             desPathList.Add(tPath);
-            if (_tgCopy.value && !string.IsNullOrEmpty(SelectItem.CopyPath))
+            if (tgCopy.value && !string.IsNullOrEmpty(SelectItem.CopyPath))
             {
                 tPath = $"{SelectItem.CopyPath}/{buildTarget}";
                 if (!Directory.Exists(tPath))

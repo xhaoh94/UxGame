@@ -22,6 +22,23 @@ public class TimeLineWindow : EditorWindow
         wnd = GetWindow<TimeLineWindow>();
         wnd.titleContent = new GUIContent("时间轴");
     }
+    //[UnityEditor.Callbacks.DidReloadScripts]
+    //static void OnScriptReloaded()
+    //{
+    //    if (wnd)
+    //    {
+    //        if (lastObject != null)
+    //        {
+    //            wnd.ofEntity.SetValueWithoutNotify(lastObject);
+    //        }
+    //        if (lastTimeline != null)
+    //        {
+    //            wnd.ofTimeline.SetValueWithoutNotify(lastTimeline);
+    //        }
+    //    }
+    //}
+    static UnityEngine.GameObject lastObject;
+    static UnityEngine.Object lastTimeline;
     static string Path = "Assets/Data/Res/Timeline";
     #region 组件
     ObjectField ofEntity;
@@ -118,6 +135,15 @@ public class TimeLineWindow : EditorWindow
         trackContent = root.Q<VisualElement>("trackContent");
 
         clipView = root.Q<TimelineClipView>("clipView");
+
+        if (lastObject != null)
+        {
+            ofEntity.SetValueWithoutNotify(lastObject);
+        }
+        if (lastTimeline != null)
+        {
+            ofTimeline.SetValueWithoutNotify(lastTimeline);
+        }
     }
 
 
@@ -134,6 +160,7 @@ public class TimeLineWindow : EditorWindow
     {
         if (e.newValue is GameObject gameObject)
         {
+            lastObject = gameObject;
             if (entity == null)
             {
                 entity = Entity.Create<TimelineEditor>();
@@ -165,6 +192,7 @@ public class TimeLineWindow : EditorWindow
     {
         if (e.newValue is TimelineAsset asset)
         {
+            lastTimeline = asset;
             if (Component == null)
             {
                 return;
