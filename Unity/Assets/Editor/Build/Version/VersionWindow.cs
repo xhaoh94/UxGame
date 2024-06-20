@@ -58,6 +58,15 @@ namespace Ux.Editor.Build.Version
 
         VersionPackageViewer _versionPackage;
         ToolbarMenu _packageMenu;
+
+        BuildExportSetting SelectItem
+        {
+            get
+            {
+                var selectItem = listExport.selectedItem as BuildExportSetting;
+                return selectItem;
+            }
+        }
         public void CreateGUI()
         {
             try
@@ -174,14 +183,7 @@ namespace Ux.Editor.Build.Version
         {
             SelectItem.CompileType = (CompileType)e.newValue;
         }
-        BuildExportSetting SelectItem
-        {
-            get
-            {
-                var selectItem = listExport.selectedItem as BuildExportSetting;
-                return selectItem;
-            }
-        }        
+    
 
         partial void _OnMakeListExportItem(VisualElement e)
         {

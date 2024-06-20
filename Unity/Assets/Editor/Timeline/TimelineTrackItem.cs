@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Build.Pipeline;
 using UnityEditor.UIElements;
@@ -14,6 +15,7 @@ public class TimelineTrackItem : VisualElement, IToolbarMenuElement
     Label lbType;
     TextField inputName;
     public DropdownMenu menu { get; }
+    Dictionary<TimelineClipAsset, TimelineClipItem> clipItemDic = new Dictionary<TimelineClipAsset, TimelineClipItem>();
     public TimelineTrackItem(TimelineTrackAsset asset,TimeLineWindow window)
     {
         this.asset = asset;
@@ -53,21 +55,36 @@ public class TimelineTrackItem : VisualElement, IToolbarMenuElement
                 clip.StartFrame = 0;
                 clip.EndFrame = 50;
                 //clip.Name = tName;
-                asset.clips.Add(clip);
-                window.Component.SetTimeline(window.Component.CurTimeline.Asset);
-                EditorUtility.SetDirty(window.Component.CurTimeline.Asset);
-                AssetDatabase.SaveAssets();
-
+                AddClipItem(clip);
             }, e => DropdownMenuAction.Status.Normal);
             this.ShowMenu();
         }
     }
     void CreateClip()
     {
-        foreach (var asset in asset.clips)
+        foreach (var clipAsset in asset.clips)
         {
-            window.clipView.veClipContent.Add(new TimelineClipItem(asset, this, window));            
+            var item = new TimelineClipItem();
+            item.Init(clipAsset, this, window);            
+            clipItemDic.Add(clipAsset, item);
+            window.clipView.AddItem(item);
         }
+    }
+
+    void AddClipItem(TimelineClipAsset clipAsset)
+    {
+        if (clipItemDic.ContainsKey(clipAsset))
+        {
+            return;
+        }
+        asset.clips.Add(clipAsset);
+        window.SaveAssets();
+
+        var item = new TimelineClipItem();
+        item.Init(clipAsset, this, window);
+        window.clipView.AddItem(item);
+        clipItemDic.Add(clipAsset, item);
+        window.RefreshEntity();
     }
 
 }

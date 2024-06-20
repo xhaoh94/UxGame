@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Ux
 {
+    public class EntityEmpty : Entity { }
     public partial class Entity
     {
         readonly Dictionary<Type, Entity> _components = new Dictionary<Type, Entity>();

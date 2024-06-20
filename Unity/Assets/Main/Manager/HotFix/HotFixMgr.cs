@@ -77,7 +77,7 @@ namespace Ux
             // 注意，补充元数据是给AOT dll补充元数据，而不是给热更新dll补充元数据。
             // 热更新dll不缺元数据，不需要补充，如果调用LoadMetadataForAOTAssembly会返回错误
 
-            const HomologousImageMode mode = HomologousImageMode.SuperSet;
+            const HomologousImageMode mode = HomologousImageMode.Consistent;
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
                 var dllName = string.Format(AotPrefix, aotDllName);

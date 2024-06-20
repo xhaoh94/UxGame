@@ -20,7 +20,7 @@ MonoBehaviour:
     - rid: 3272319262192304128
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
-        StartFrame: 0
+        StartFrame: 10
         EndFrame: 50
         InFrame: 0
         OutFrame: 0

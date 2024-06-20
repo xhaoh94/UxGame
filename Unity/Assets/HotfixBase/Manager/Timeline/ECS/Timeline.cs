@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine.Animations;
+﻿using System.Collections.Generic;
 
 namespace Ux
 {
@@ -16,14 +11,15 @@ namespace Ux
         void IAwakeSystem<TimelineAsset, TimelineComponent>.OnAwake(TimelineAsset a, TimelineComponent b)
         {
             Asset = a;            
-            Component = b;            
+            Component = b;
 
             foreach (var asset in Asset.tracks)
             {
-                _tacks.Add(AddChild<TimelineTrack, TimelineTrackAsset>(asset));                
-            }       
-            
+                _tacks.Add(AddChild<TimelineTrack, TimelineTrackAsset>(asset));
+            }
+
         }
+
         protected override void OnDestroy()
         {
             _tacks.Clear();

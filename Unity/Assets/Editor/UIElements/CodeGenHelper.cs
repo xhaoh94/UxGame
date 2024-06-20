@@ -1,4 +1,3 @@
-using dnlib.DotNet;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor
 {
-    public static class DymTools
+    public static class CodeGenHelper
     {
         static Dictionary<string, string> _RegisterValueChangedCallback = new Dictionary<string, string>()
         {

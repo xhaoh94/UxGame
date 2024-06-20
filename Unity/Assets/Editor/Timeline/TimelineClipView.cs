@@ -19,28 +19,15 @@ namespace Ux.Editor
             }
         }
 
-        int StartFrame
-        {
-            get
-            {
-                return Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
-            }
-        }
-        int EndFrame
-        {
-            get
-            {
-                var width = ScrClipViewContentWidth + scrClipView.scrollOffset.x;
-                return Mathf.FloorToInt(width / FrameWidth);
-            }
-        }
-
+        List<TimelineClipItem> items = new List<TimelineClipItem>();
+        int StartFrame=> Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
+        int EndFrame=> Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
 
         float FrameScale = 1;
         public float FrameWidth => 10 * FrameScale;
         public float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
         //需要减10 是因为容器里面设置了边缘Border left = 10 
-        float ScrClipViewWidth => scrClipView.worldBound.width - 10;
+        public float ScrClipViewWidth => scrClipView.worldBound.width - 10;
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
 
         int CurFrame = 0;
@@ -80,12 +67,24 @@ namespace Ux.Editor
             veClipContent = this.Q<VisualElement>("ve_clip_content");
         }
 
+        public void AddItem(TimelineClipItem item)
+        {
+            veClipContent.Add(item);
+            items.Add(item);
+        }
+        public void RemoveItem(TimelineClipItem item)
+        {
+            veClipContent.Remove(item);
+            items.Remove(item);
+        }
+
         void OnGeometryChanged(GeometryChangedEvent changedEvent)
         {
             veLineContent.MarkDirtyRepaint();
             veMarkerContent.MarkDirtyRepaint();
             veMarkerIcon.MarkDirtyRepaint();
         }
+
         void OnWheel(WheelEvent wheelEvent)
         {
             //下：正  上：负        
@@ -160,6 +159,10 @@ namespace Ux.Editor
                 var pos = veMarkerIcon.transform.position;
                 pos.x = CurPosx - (veMarkerIcon.worldBound.width / 2);
                 veMarkerIcon.transform.position = pos;
+                foreach (var item in items)
+                {
+                    item.UpdateView();
+                }
             }
             catch (Exception e)
             {

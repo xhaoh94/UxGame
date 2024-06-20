@@ -1,14 +1,10 @@
-using NUnit.Framework.Internal.Filters;
-using System;
 using System.IO;
-using System.Runtime.Remoting.Activation;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Ux;
 using Ux.Editor;
-using YooAsset.Editor;
 
 public class TimeLineWindow : EditorWindow
 {
@@ -22,23 +18,9 @@ public class TimeLineWindow : EditorWindow
         wnd = GetWindow<TimeLineWindow>();
         wnd.titleContent = new GUIContent("时间轴");
     }
-    //[UnityEditor.Callbacks.DidReloadScripts]
-    //static void OnScriptReloaded()
-    //{
-    //    if (wnd)
-    //    {
-    //        if (lastObject != null)
-    //        {
-    //            wnd.ofEntity.SetValueWithoutNotify(lastObject);
-    //        }
-    //        if (lastTimeline != null)
-    //        {
-    //            wnd.ofTimeline.SetValueWithoutNotify(lastTimeline);
-    //        }
-    //    }
-    //}
-    static UnityEngine.GameObject lastObject;
-    static UnityEngine.Object lastTimeline;
+
+    static GameObject lastObject;
+    static TimelineAsset lastTimeline;
     static string Path = "Assets/Data/Res/Timeline";
     #region 组件
     ObjectField ofEntity;
@@ -52,14 +34,24 @@ public class TimeLineWindow : EditorWindow
 
     Button btnPlay;
     Button btnPause;
-    ToolbarMenu btnAddTrack;
-    VisualElement trackContent;
+
 
     public TimelineClipView clipView;
+    public TimelineTrackView trackView;
     #endregion
 
-    TimelineEditor entity;
-    public TimelineComponent Component => entity?.GetComponent<TimelineComponent>();
+
+    EntityEmpty entity;
+    public TimelineAsset asset;
+    public void SaveAssets()
+    {
+        if (asset != null)
+        {
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+        }
+    }
+
     public void CreateGUI()
     {
         VisualElement root = rootVisualElement;
@@ -90,49 +82,6 @@ public class TimeLineWindow : EditorWindow
         btnPlay.clicked += OnBtnPlayClick;
         btnPause = root.Q<Button>("btnPause");
         btnPause.clicked += OnBtnPauseClick;
-        btnAddTrack = root.Q<ToolbarMenu>("btnAddTrack");
-        var trackAssets = EditorTools.GetAssignableTypes(typeof(TimelineTrackAsset));
-        foreach (var ta in trackAssets)
-        {
-            var temName = ta.Name.Substring(0, ta.Name.Length - 5);
-            if (temName.EndsWith("Track"))
-            {
-                temName = temName.Substring(0, temName.Length - 5) + " Track";
-            }
-            else
-            {
-                temName += " Track";
-            }
-            DropdownMenuAction.Status TrackMenuFun(DropdownMenuAction action)
-            {
-                return DropdownMenuAction.Status.Normal;
-            }
-            void TrackMenuAction(DropdownMenuAction action)
-            {
-                if (Component == null)
-                {
-                    return;
-                }
-                var trackType = (System.Type)action.userData;
-                var track = Activator.CreateInstance(trackType) as TimelineTrackAsset;
-
-                var tName = trackType.Name.Substring(0, trackType.Name.Length - 5);
-                if (tName.EndsWith("Track"))
-                {
-                    tName = temName.Substring(0, tName.Length - 5);
-                }    
-                track.Name= tName;
-                Component.CurTimeline.Asset.tracks.Add(track);
-                Component.SetTimeline(Component.CurTimeline.Asset);
-                EditorUtility.SetDirty(Component.CurTimeline.Asset);
-                AssetDatabase.SaveAssets();
-                UpdateView();
-            }
-
-            btnAddTrack.menu.AppendAction(temName, TrackMenuAction, TrackMenuFun, ta);
-        }
-
-        trackContent = root.Q<VisualElement>("trackContent");
 
         clipView = root.Q<TimelineClipView>("clipView");
 
@@ -142,6 +91,7 @@ public class TimeLineWindow : EditorWindow
         }
         if (lastTimeline != null)
         {
+            asset = lastTimeline;
             ofTimeline.SetValueWithoutNotify(lastTimeline);
         }
     }
@@ -163,20 +113,18 @@ public class TimeLineWindow : EditorWindow
             lastObject = gameObject;
             if (entity == null)
             {
-                entity = Entity.Create<TimelineEditor>();
-                entity.AddComponent<TimelineComponent>(gameObject);
+                entity = Entity.Create<EntityEmpty>();
+                entity.AddComponent<TimelineComponent>().Init(gameObject);
             }
-            else if (entity.Go == gameObject)
+            else if (entity.GetComponent<TimelineComponent>().GameObject == gameObject)
             {
                 return;
             }
-            entity.Go = gameObject;
-            Component.Init(gameObject);
-            if (ofTimeline.value is TimelineAsset asset)
+            else
             {
-                Component.SetTimeline(asset);
-                UpdateView();
+                entity.GetComponent<TimelineComponent>().Init(gameObject);
             }
+            RefreshEntity();
         }
         else
         {
@@ -185,7 +133,7 @@ public class TimeLineWindow : EditorWindow
                 entity.Destroy();
                 entity = null;
             }
-            UpdateView();
+            //RefreshView();
         }
     }
     void OnTimelineChanged(ChangeEvent<UnityEngine.Object> e)
@@ -193,32 +141,17 @@ public class TimeLineWindow : EditorWindow
         if (e.newValue is TimelineAsset asset)
         {
             lastTimeline = asset;
-            if (Component == null)
-            {
-                return;
-            }
-            Component.SetTimeline(asset);
-            UpdateView();
+            this.asset= asset;
+            RefreshEntity();
+            //RefreshView();
         }
     }
 
-    void UpdateView()
+    public void RefreshEntity()
     {
-        trackContent.Clear();
-        if (Component == null)
-        {
-            return;
-        }
-        if (Component.CurTimeline == null)
-        {
-            return;
-        }
-        foreach (var track in Component.CurTimeline.Asset.tracks)
-        {
-            var item = new TimelineTrackItem(track, this);
-            trackContent.Add(item);
-        }
+        entity.GetComponent<TimelineComponent>().SetTimeline(asset);        
     }
+
     void OnBtnCreateClick()
     {
         if (createView.style.display == DisplayStyle.None)
