@@ -25,10 +25,10 @@ public class TimelineClipItem : VisualElement
         visualTree.CloneTree(this);
         content = this.Q<VisualElement>("content");
         left = this.Q<VisualElement>("left");
-        ElementDrag.Add(left, this, OnLeftStar, OnLeftDrag);
+        ElementDrag.Add(left, window.clipView.veClipContent, OnLeftStar, OnLeftDrag);
         lbType = this.Q<Label>("lbType");
         right = this.Q<VisualElement>("right");
-        ElementDrag.Add(right, this, OnRightStar, OnRightDrag);
+        ElementDrag.Add(right, window.clipView.veClipContent, OnRightStar, OnRightDrag);
     }
     public void Init(TimelineClipAsset asset, TimelineTrackItem track, TimeLineWindow window)
     {
@@ -59,7 +59,7 @@ public class TimelineClipItem : VisualElement
         UpdateView();
     }
     void OnRightStar()
-    {                
+    {                        
         EditorGUIUtility.AddCursorRect(
        GUILayoutUtility.GetLastRect(), MouseCursor.ResizeHorizontal);
         OnLeftDrag(Vector2.zero);
