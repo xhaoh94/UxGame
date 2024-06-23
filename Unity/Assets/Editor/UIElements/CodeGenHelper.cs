@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor
@@ -13,6 +14,7 @@ namespace Ux.Editor
             { nameof(Toggle),$"ChangeEvent<bool>" },
             { nameof(EnumField),$"ChangeEvent<Enum>" },
             { nameof(TextField),$"ChangeEvent<string>" },
+            { nameof(ObjectField),$"ChangeEvent<UnityEngine.Object>" },             
         };
 
         [MenuItem("Assets/UIElements/CodeGenByUxml", false)]
@@ -57,7 +59,7 @@ namespace Ux.Editor
                 var (name, type) = _Parse(element);
                 if (!string.IsNullOrEmpty(name))
                 {
-                    write.Writeln($"protected {type} {name};");
+                    write.Writeln($"public {type} {name};");
                 }
             }
             write.Writeln($"protected void CreateChildren()");
@@ -65,6 +67,8 @@ namespace Ux.Editor
             write.Writeln($"var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(\"{filePath}\");");
             write.Writeln($"if (_visualAsset == null) return;");
             write.Writeln($"root = _visualAsset.CloneTree();");
+            write.Writeln($"root.style.flexGrow = 1f;");
+          
             foreach (var element in listElement)
             {
                 var (name, type) = _Parse(element);

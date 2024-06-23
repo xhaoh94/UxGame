@@ -1,94 +1,109 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
-using Ux.Editor;
-
-public class TimelineClipItem : VisualElement
+namespace Ux.Editor.Timeline
 {
-    public new class UxmlFactory : UxmlFactory<TimelineClipItem, UxmlTraits> {}
+    public class TimelineClipItem : VisualElement
+    {        
+        public new class UxmlTraits : TextElement.UxmlTraits
+        {
+        }
 
-    public new class UxmlTraits : TextElement.UxmlTraits
-    {
-    }
+        TimelineClipAsset asset;
+        TimelineWindow window;
+        TimelineTrackItem trackItem;
+        VisualElement content;
+        VisualElement left;
+        Label lbType;
+        VisualElement right;
+        public TimelineClipItem()
+        {
+            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipItem.uxml");
+            visualTree.CloneTree(this);
+            content = this.Q<VisualElement>("content");
+            left = this.Q<VisualElement>("left");
+           
+            lbType = this.Q<Label>("lbType");
+            right = this.Q<VisualElement>("right");
+            
+        }
+        public void Init(TimelineClipAsset asset, TimelineTrackItem track, TimelineWindow window)
+        {
+            this.asset = asset;
+            this.trackItem = track;
+            this.window = window;
+            ElementDrag.Add(left, window.clipView, OnLeftStar, OnLeftDrag);
+            ElementDrag.Add(right, window.clipView, OnRightStar, OnRightDrag);
+            UpdateView();
+        }
+        
+        void OnLeftStar()
+        {
+            EditorGUIUtility.AddCursorRect(
+            GUILayoutUtility.GetLastRect(), MouseCursor.ResizeHorizontal);
+            OnLeftDrag(Vector2.zero);             
+        }
+        
+        void OnLeftDrag(Vector2 e)
+        {
+            var pos = window.clipView.veMarkerContent.WorldToLocal(Event.current.mousePosition);
+            var CurPosx = pos.x;
+            var offset = window.clipView.veMarkerIcon.worldBound.width / 2;
+            if (CurPosx < 0)
+            {
+                CurPosx = 0;
+            }
+            if (CurPosx > window.clipView.ScrClipViewWidth - offset)
+            {
+                CurPosx = window.clipView.ScrClipViewWidth - offset;
+            }
+            var frame = Mathf.RoundToInt((window.clipView.ScrClipViewOffsetX + CurPosx) / window.clipView.FrameWidth);
 
-    TimelineClipAsset asset;
-    TimeLineWindow window;
-    TimelineTrackItem trackItem;
-    VisualElement content;
-    VisualElement left;
-    Label lbType;
-    VisualElement right;
-    public TimelineClipItem()
-    {
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipItem.uxml");
-        visualTree.CloneTree(this);
-        content = this.Q<VisualElement>("content");
-        left = this.Q<VisualElement>("left");
-        ElementDrag.Add(left, window.clipView.veClipContent, OnLeftStar, OnLeftDrag);
-        lbType = this.Q<Label>("lbType");
-        right = this.Q<VisualElement>("right");
-        ElementDrag.Add(right, window.clipView.veClipContent, OnRightStar, OnRightDrag);
-    }
-    public void Init(TimelineClipAsset asset, TimelineTrackItem track, TimeLineWindow window)
-    {
-        this.asset = asset;
-        this.trackItem = track;
-        this.window = window;
-        UpdateView();
-    }
-    void OnLeftStar()
-    {
-        OnLeftDrag(Vector2.zero);
-    }
-    void OnLeftDrag(Vector2 e)
-    {
-        var pos = window.clipView.WorldToLocal(Event.current.mousePosition);
-        var CurPosx = pos.x;
-        var offset = window.clipView.veMarkerIcon.worldBound.width / 2;
-        if (CurPosx < 0)
-        {
-            CurPosx = 0;
+            if (frame < 0)
+            {
+                frame = 0;
+            }
+            if(frame >= asset.EndFrame)
+            {
+                frame = asset.EndFrame - 1;
+            }
+            Log.Debug(frame);
+            asset.StartFrame = frame;
+            UpdateView();
         }
-        if (CurPosx > window.clipView.ScrClipViewWidth - offset)
+        void OnRightStar()
         {
-            CurPosx = window.clipView.ScrClipViewWidth - offset;
+            EditorGUIUtility.AddCursorRect(
+           GUILayoutUtility.GetLastRect(), MouseCursor.ResizeHorizontal);
+            OnLeftDrag(Vector2.zero);
         }
-        var frame = Mathf.RoundToInt((window.clipView.ScrClipViewOffsetX + CurPosx) / window.clipView.FrameWidth);
-        asset.StartFrame = frame;
-        UpdateView();
-    }
-    void OnRightStar()
-    {                        
-        EditorGUIUtility.AddCursorRect(
-       GUILayoutUtility.GetLastRect(), MouseCursor.ResizeHorizontal);
-        OnLeftDrag(Vector2.zero);
-    }
-    void OnRightDrag(Vector2 e)
-    {
-        var pos = window.clipView.WorldToLocal(Event.current.mousePosition);
-        var CurPosx = pos.x;
-        var offset = window.clipView.veMarkerIcon.worldBound.width / 2;
-        if (CurPosx < 0)
+        void OnRightDrag(Vector2 e)
         {
-            CurPosx = 0;
+            var pos = window.clipView.WorldToLocal(Event.current.mousePosition);
+            var CurPosx = pos.x;
+            var offset = window.clipView.veMarkerIcon.worldBound.width / 2;
+            if (CurPosx < 0)
+            {
+                CurPosx = 0;
+            }
+            if (CurPosx > window.clipView.ScrClipViewWidth - offset)
+            {
+                CurPosx = window.clipView.ScrClipViewWidth - offset;
+            }
+            var frame = Mathf.RoundToInt((window.clipView.ScrClipViewOffsetX + CurPosx) / window.clipView.FrameWidth);
+            Log.Debug(frame);
+            //asset.EndFrame = frame;
+            //UpdateView();
         }
-        if (CurPosx > window.clipView.ScrClipViewWidth - offset)
+        public void UpdateView()
         {
-            CurPosx = window.clipView.ScrClipViewWidth - offset;
+            var FrameWidth = window.clipView.FrameWidth;
+            var ScrClipViewOffsetX = window.clipView.ScrClipViewOffsetX;
+            var sx = (asset.StartFrame * FrameWidth - ScrClipViewOffsetX);
+            var ex = (asset.EndFrame * FrameWidth - ScrClipViewOffsetX);
+            this.style.position = new StyleEnum<Position>(Position.Absolute);
+            this.style.left = sx;
+            this.style.width = ex - sx;
         }
-        var frame = Mathf.RoundToInt((window.clipView.ScrClipViewOffsetX + CurPosx) / window.clipView.FrameWidth);
-        asset.EndFrame = frame;
-        UpdateView();
-    }
-    public void UpdateView()
-    {
-        var FrameWidth = window.clipView.FrameWidth;
-        var ScrClipViewOffsetX = window.clipView.ScrClipViewOffsetX;
-        var sx = (asset.StartFrame * FrameWidth - ScrClipViewOffsetX);
-        var ex = (asset.EndFrame * FrameWidth - ScrClipViewOffsetX);
-        this.style.position = new StyleEnum<Position>(Position.Absolute);
-        this.style.left = sx;
-        this.style.width = ex - sx;
     }
 }

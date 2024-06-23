@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using TreeEditor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEngine.WSA;
-namespace Ux.Editor
+namespace Ux.Editor.Timeline
 {
     public class TimelineClipView : VisualElement
     {

@@ -6,84 +6,93 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Ux;
 using YooAsset.Editor;
-
-public class TimelineTrackView : VisualElement
+namespace Ux.Editor.Timeline
 {
-    public TimeLineWindow window;
-    ToolbarMenu btnAddTrack;
-    VisualElement trackContent;
-
-    Dictionary<string, TimelineTrackItem> trackItemDic = new Dictionary<string, TimelineTrackItem>();
-    public TimelineTrackView()
+    public partial class TimelineTrackView : VisualElement
     {
-        //btnAddTrack = root.Q<ToolbarMenu>("btnAddTrack");
-
-        var trackAssets = EditorTools.GetAssignableTypes(typeof(TimelineTrackAsset));
-        foreach (var ta in trackAssets)
+        public new class UxmlFactory : UxmlFactory<TimelineTrackView, UxmlTraits> { }
+        public new class UxmlTraits : VisualElement.UxmlTraits
         {
-            var temName = ta.Name.Substring(0, ta.Name.Length - 5);
-            if (temName.EndsWith("Track"))
+            public UxmlTraits()
             {
-                temName = temName.Substring(0, temName.Length - 5) + " Track";
+                base.focusIndex.defaultValue = 0;
+                base.focusable.defaultValue = true;
             }
-            else
-            {
-                temName += " Track";
-            }
-            DropdownMenuAction.Status TrackMenuFun(DropdownMenuAction action)
-            {
-                return DropdownMenuAction.Status.Normal;
-            }
-            void TrackMenuAction(DropdownMenuAction action)
-            {
-                var trackType = (System.Type)action.userData;
-                var track = Activator.CreateInstance(trackType) as TimelineTrackAsset;
+        }
 
-                var tName = trackType.Name.Substring(0, trackType.Name.Length - 5);
-                if (tName.EndsWith("Track"))
+        public TimelineWindow window;
+
+        Dictionary<string, TimelineTrackItem> trackItemDic = new Dictionary<string, TimelineTrackItem>();
+        public TimelineTrackView()
+        {
+            CreateChildren();            
+            Add(root);
+            var trackAssets = EditorTools.GetAssignableTypes(typeof(TimelineTrackAsset));
+            foreach (var ta in trackAssets)
+            {
+                var temName = ta.Name.Substring(0, ta.Name.Length - 5);
+                if (temName.EndsWith("Track"))
                 {
-                    tName = temName.Substring(0, tName.Length - 5);
+                    temName = temName.Substring(0, temName.Length - 5) + " Track";
                 }
-                track.Name = tName;
-                AddTrackItem(track);
+                else
+                {
+                    temName += " Track";
+                }
+                DropdownMenuAction.Status TrackMenuFun(DropdownMenuAction action)
+                {
+                    return DropdownMenuAction.Status.Normal;
+                }
+                void TrackMenuAction(DropdownMenuAction action)
+                {
+                    var trackType = (System.Type)action.userData;
+                    var track = Activator.CreateInstance(trackType) as TimelineTrackAsset;
+
+                    var tName = trackType.Name.Substring(0, trackType.Name.Length - 5);
+                    if (tName.EndsWith("Track"))
+                    {
+                        tName = temName.Substring(0, tName.Length - 5);
+                    }
+                    track.Name = tName;
+                    AddTrackItem(track);
+                }
+
+                btnAddTrack.menu.AppendAction(temName, TrackMenuAction, TrackMenuFun, ta);
             }
-
-            btnAddTrack.menu.AppendAction(temName, TrackMenuAction, TrackMenuFun, ta);
+            
         }
 
-        //trackContent = root.Q<VisualElement>("trackContent");
-    }
-
-    void AddTrackItem(TimelineTrackAsset trackAsset)
-    {
-        if (window.asset == null)
+        void AddTrackItem(TimelineTrackAsset trackAsset)
         {
-            return;
-        }
-        if (trackItemDic.ContainsKey(trackAsset.Name))
-        {
-            //TODO 改名
-            return;
-        }
-        window.asset.tracks.Add(trackAsset);
-        window.SaveAssets();
+            if (window.asset == null)
+            {
+                return;
+            }
+            if (trackItemDic.ContainsKey(trackAsset.Name))
+            {
+                //TODO 改名
+                return;
+            }
+            window.asset.tracks.Add(trackAsset);
+            window.SaveAssets();
 
-        var item = new TimelineTrackItem(trackAsset, window);
-        trackContent.Add(item);
-        trackItemDic.Add(trackAsset.Name, item);
-        window.RefreshEntity();
-    }
-    void RemoveTrackItem(TimelineTrackAsset trackAsset)
-    {
-
-    }
-    void RefreshView()
-    {
-        trackContent.Clear();
-        foreach (var track in window.asset.tracks)
-        {
-            var item = new TimelineTrackItem(track, window);
+            var item = new TimelineTrackItem(trackAsset, window);
             trackContent.Add(item);
+            trackItemDic.Add(trackAsset.Name, item);
+            window.RefreshEntity();
+        }
+        void RemoveTrackItem(TimelineTrackAsset trackAsset)
+        {
+
+        }
+        public void RefreshView()
+        {
+            trackContent.Clear();
+            foreach (var track in window.asset.tracks)
+            {
+                var item = new TimelineTrackItem(track, window);
+                trackContent.Add(item);
+            }
         }
     }
 }

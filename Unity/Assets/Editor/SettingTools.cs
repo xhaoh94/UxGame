@@ -28,5 +28,21 @@ namespace Ux.Editor
             string assPath = AssetDatabase.GUIDToAssetPath(globalAssetPaths[0]);
             return AssetDatabase.LoadAssetAtPath<T>(assPath);
         }
+
+        public static T GetPlayerPrefs<T>(string key) where T : UnityEngine.Object
+        {
+            var id = PlayerPrefs.GetString(key, string.Empty);
+            if (string.IsNullOrEmpty(id))
+            {
+                return null;
+            }
+            string assPath = AssetDatabase.GUIDToAssetPath(id);
+            return AssetDatabase.LoadAssetAtPath<T>(assPath);
+        }
+        public static void SavePlayerPrefs(string key, string id)
+        {
+            PlayerPrefs.SetString(key, id);
+            PlayerPrefs.Save();
+        }
     }
 }

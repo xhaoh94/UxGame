@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement name="content" style="flex-grow: 1; background-color: rgb(67, 67, 67); border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-color: rgb(111, 212, 201); border-right-color: rgb(111, 212, 201); border-top-color: rgb(111, 212, 201); border-bottom-color: rgb(111, 212, 201); border-left-width: 0; height: auto; flex-direction: row; -unity-slice-left: 0; margin-left: 0; margin-top: 5px; margin-bottom: 0; border-bottom-width: 5px;">
-        <ui:VisualElement name="left" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); width: 20px; flex-shrink: 0;" />
+        <ui:VisualElement name="left" style="flex-grow: 0; background-color: rgb(166, 166, 166); width: 20px; flex-shrink: 0;" />
         <ui:Label tabindex="-1" text="动画" display-tooltip-when-elided="true" name="lbType" style="height: auto; -unity-text-align: middle-center; flex-shrink: 1; flex-grow: 1; width: auto; padding-left: 0; padding-right: 0;" />
-        <ui:VisualElement name="right" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); width: 20px; flex-shrink: 0;" />
+        <ui:VisualElement name="right" style="flex-grow: 0; background-color: rgb(132, 132, 132); width: 20px; flex-shrink: 0;" />
     </ui:VisualElement>
 </ui:UXML>

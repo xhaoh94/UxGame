@@ -3,209 +3,180 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
-using Ux.Editor;
-
-public class TimeLineWindow : EditorWindow
+namespace Ux.Editor.Timeline
 {
-    [SerializeField]
-    private VisualTreeAsset m_VisualTreeAsset = default;
-
-    static TimeLineWindow wnd;
-    [MenuItem("UxGame/时间轴")]
-    public static void ShowExample()
+    public partial class TimelineWindow : EditorWindow
     {
-        wnd = GetWindow<TimeLineWindow>();
-        wnd.titleContent = new GUIContent("时间轴");
-    }
-
-    static GameObject lastObject;
-    static TimelineAsset lastTimeline;
-    static string Path = "Assets/Data/Res/Timeline";
-    #region 组件
-    ObjectField ofEntity;
-    ObjectField ofTimeline;
-    Button btnCreate;
-    VisualElement createView;
-    TextField inputPath;
-    Button btnPath;
-    TextField inputName;
-    Button btnOk;
-
-    Button btnPlay;
-    Button btnPause;
-
-
-    public TimelineClipView clipView;
-    public TimelineTrackView trackView;
-    #endregion
-
-
-    EntityEmpty entity;
-    public TimelineAsset asset;
-    public void SaveAssets()
-    {
-        if (asset != null)
+        static TimelineWindow wnd;
+        [MenuItem("UxGame/时间轴")]
+        public static void ShowExample()
         {
-            EditorUtility.SetDirty(asset);
-            AssetDatabase.SaveAssets();
+            wnd = GetWindow<TimelineWindow>();
+            wnd.titleContent = new GUIContent("时间轴");
         }
-    }
 
-    public void CreateGUI()
-    {
-        VisualElement root = rootVisualElement;
-        m_VisualTreeAsset.CloneTree(root);
-        ofEntity = root.Q<ObjectField>("ofEntity");
-        ofEntity.objectType = typeof(GameObject);
-        ofEntity.RegisterValueChangedCallback(OnEntityChanged);
-        ofTimeline = root.Q<ObjectField>("ofTimeline");
-        ofTimeline.objectType = typeof(TimelineAsset);
-        ofTimeline.RegisterValueChangedCallback(OnTimelineChanged);
+        static string Path = "Assets/Data/Res/Timeline";
 
 
-        btnCreate = root.Q<Button>("btnCreate");
-        btnCreate.clicked += OnBtnCreateClick;
-        createView = root.Q<VisualElement>("createView");
-        createView.style.display = DisplayStyle.None;
-
-        inputPath = root.Q<TextField>("inputPath");
-        inputPath.SetValueWithoutNotify(Path);
-        btnPath = root.Q<Button>("btnPath");
-        btnPath.clicked += OnBtnAssetPathClick;
-        inputName = root.Q<TextField>("inputName");
-        btnOk = root.Q<Button>("btnOk");
-        btnOk.clicked += OnCreateClick;
-
-
-        btnPlay = root.Q<Button>("btnPlay");
-        btnPlay.clicked += OnBtnPlayClick;
-        btnPause = root.Q<Button>("btnPause");
-        btnPause.clicked += OnBtnPauseClick;
-
-        clipView = root.Q<TimelineClipView>("clipView");
-
-        if (lastObject != null)
+        EntityEmpty entity;
+        public TimelineAsset asset;
+        GameObject model;
+        public void SaveAssets()
         {
-            ofEntity.SetValueWithoutNotify(lastObject);
-        }
-        if (lastTimeline != null)
-        {
-            asset = lastTimeline;
-            ofTimeline.SetValueWithoutNotify(lastTimeline);
-        }
-    }
-
-
-    private void OnDestroy()
-    {
-        if (entity != null)
-        {
-            entity.Destroy();
-            entity = null;
-        }
-    }
-
-    void OnEntityChanged(ChangeEvent<UnityEngine.Object> e)
-    {
-        if (e.newValue is GameObject gameObject)
-        {
-            lastObject = gameObject;
-            if (entity == null)
+            if (asset != null)
             {
-                entity = Entity.Create<EntityEmpty>();
-                entity.AddComponent<TimelineComponent>().Init(gameObject);
+                EditorUtility.SetDirty(asset);
+                AssetDatabase.SaveAssets();
             }
-            else if (entity.GetComponent<TimelineComponent>().GameObject == gameObject)
-            {
-                return;
-            }
-            else
-            {
-                entity.GetComponent<TimelineComponent>().Init(gameObject);
-            }
-            RefreshEntity();
         }
-        else
+
+        public void CreateGUI()
+        {
+            CreateChildren();
+            root.style.flexGrow = 1f;
+            rootVisualElement.Add(root);      
+
+            trackView.window = this;
+
+            ofEntity.objectType = typeof(GameObject);
+            ofTimeline.objectType = typeof(TimelineAsset);
+
+
+            createView.style.display = DisplayStyle.None;
+
+            inputPath.SetValueWithoutNotify(Path);
+
+            var temPrefab = SettingTools.GetPlayerPrefs<GameObject>("timeline_entity");
+            ofEntity.SetValueWithoutNotify(temPrefab);
+            _SetModel(temPrefab);
+            asset = SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset");
+            ofTimeline.SetValueWithoutNotify(asset);
+            _SetAsset(asset);
+        }
+
+        private void OnDestroy()
         {
             if (entity != null)
             {
                 entity.Destroy();
                 entity = null;
             }
-            //RefreshView();
+
+            if (model != null)
+            {
+                Object.DestroyImmediate(model);
+                model = null;
+            }
         }
-    }
-    void OnTimelineChanged(ChangeEvent<UnityEngine.Object> e)
-    {
-        if (e.newValue is TimelineAsset asset)
+        partial void _OnOfEntityChanged(ChangeEvent<Object> e)
+        {            
+            if (e.newValue is GameObject obj)
+            {
+                _SetModel(obj);
+            }
+            else
+            {
+                if (entity != null)
+                {
+                    entity.Destroy();
+                    entity = null;
+                }
+                trackView.RefreshView();
+            }
+        }
+        void _SetModel(GameObject obj)
         {
-            lastTimeline = asset;
-            this.asset= asset;
+            if (model != null)
+            {
+                Object.DestroyImmediate(model);
+            }
+            model = Instantiate(obj);
+
+            if (entity != null)
+            {
+                entity.Destroy();
+            }
+            entity = Entity.Create<EntityEmpty>();
+            entity.AddComponent<TimelineComponent>().Init(model);
+
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long _))
+            {
+                SettingTools.SavePlayerPrefs("timeline_entity", guid);
+            }
             RefreshEntity();
-            //RefreshView();
         }
-    }
-
-    public void RefreshEntity()
-    {
-        entity.GetComponent<TimelineComponent>().SetTimeline(asset);        
-    }
-
-    void OnBtnCreateClick()
-    {
-        if (createView.style.display == DisplayStyle.None)
+        partial void _OnOfTimelineChanged(ChangeEvent<Object> e)
         {
-            createView.style.display = DisplayStyle.Flex;
+            if (e.newValue is TimelineAsset asset && this.asset !=asset)
+            {
+                _SetAsset(asset);
+            }
         }
-        else
+        void _SetAsset(TimelineAsset asset)
         {
+            this.asset = asset;
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out long _))
+            {
+                SettingTools.SavePlayerPrefs("timeline_asset", guid);
+            }
+            RefreshEntity();
+            trackView.RefreshView();
+        }
+
+        public void RefreshEntity()
+        {
+            if (asset == null) return;
+            entity.GetComponent<TimelineComponent>().SetTimeline(asset);
+        }
+
+        partial void _OnBtnCreateClick()
+        {
+            if (createView.style.display == DisplayStyle.None)
+            {
+                createView.style.display = DisplayStyle.Flex;
+            }
+            else
+            {
+                createView.style.display = DisplayStyle.None;
+            }
+        }
+
+        partial void _OnInputPathChanged(ChangeEvent<string> e)
+        {
+            var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", Path, "");
+            if (temPath.Length == 0)
+            {
+                return;
+            }
+
+            if (!Directory.Exists(temPath))
+            {
+                EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
+                return;
+            }
+            inputPath.SetValueWithoutNotify(temPath);
+        }
+        partial void _OnBtnOkClick()
+        {
+            if (string.IsNullOrEmpty(inputName.text))
+            {
+                Log.Error("名字不能为空");
+                return;
+            }
+            var assetName = $"{inputPath.text}/{inputName.text}.asset";
+            if (File.Exists(assetName))
+            {
+                Log.Error("重复创建相同的TimelineAsset");
+                return;
+            }
+
             createView.style.display = DisplayStyle.None;
-        }
-    }
-    void OnBtnAssetPathClick()
-    {
-        var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", Path, "");
-        if (temPath.Length == 0)
-        {
-            return;
+            var asset = ScriptableObject.CreateInstance<TimelineAsset>();
+            AssetDatabase.CreateAsset(asset, assetName);
+            ofTimeline.SetValueWithoutNotify(asset);
         }
 
-        if (!Directory.Exists(temPath))
-        {
-            EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-            return;
-        }
-        inputPath.SetValueWithoutNotify(temPath);
     }
-    void OnCreateClick()
-    {
-        if (string.IsNullOrEmpty(inputName.text))
-        {
-            Log.Error("名字不能为空");
-            return;
-        }
-        var assetName = $"{inputPath.text}/{inputName.text}.asset";
-        if (File.Exists(assetName))
-        {
-            Log.Error("重复创建相同的TimelineAsset");
-            return;
-        }
-
-        createView.style.display = DisplayStyle.None;
-        var asset = ScriptableObject.CreateInstance<TimelineAsset>();
-        AssetDatabase.CreateAsset(asset, assetName);
-        ofTimeline.SetValueWithoutNotify(asset);
-    }
-    void OnBtnPlayClick()
-    {
-
-    }
-    void OnBtnPauseClick()
-    {
-
-    }
-
 
 }
 
