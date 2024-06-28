@@ -10,12 +10,12 @@ namespace Ux
 {
     public partial class TimelineComponent : Entity, IAwakeSystem, IFixedUpdateSystem
     {
-        public Timeline CurTimeline { get; private set; }
+        public Timeline Current { get; private set; }
 
         bool _isInit;
         public PlayableGraph PlayableGraph { get; private set; }
 
-        float _playSpeed;
+        float _playSpeed = 1;
         public float PlaySpeed
         {
             get => (float)Math.Round(Math.Max(0.001f, _playSpeed), 2);
@@ -50,11 +50,10 @@ namespace Ux
         }
 
         void IFixedUpdateSystem.OnFixedUpdate()
-        {
-            Log.Debug(Time.deltaTime);
+        {            
             if (_isPlaying)
             {
-                Evaluate(Time.deltaTime * (float)PlaySpeed);
+                Evaluate(Time.deltaTime * PlaySpeed);
             }
         }
 
@@ -65,13 +64,10 @@ namespace Ux
             //    entity=AddChild<Timeline, TimelineAsset>(setting);
             //    _entitys.Add(setting, entity);
             //}
-            if (CurTimeline != null)
-            {
-                CurTimeline.Destroy();
-            }
+            Current?.Destroy();
             Remove<TLAnimationRoot>();
             var entity = Add<Timeline, TimelineAsset>(setting);
-            CurTimeline = entity;
+            Current = entity;
         }
 
         void Evaluate(float deltaTime)
@@ -80,7 +76,7 @@ namespace Ux
             if (PlayableGraph.IsValid())
             {
                 PlayableGraph.Evaluate(deltaTime);
-                CurTimeline?.Evaluate(deltaTime);
+                Current?.Evaluate(deltaTime);
             }
         }
 
@@ -88,7 +84,7 @@ namespace Ux
         {
             if (PlayableGraph.IsValid())
             {
-                CurTimeline?.SetTime(time);
+                Current?.SetTime(time);
             }
         }
 

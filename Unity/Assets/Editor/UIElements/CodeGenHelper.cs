@@ -43,6 +43,7 @@ namespace Ux.Editor
 
             var write = new CodeGenWrite();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");
+            write.Writeln(@"//CodeGen By [Assets/UIElements/CodeGenByUxml]");
             write.Writeln("using System;");
             write.Writeln("using System.Collections.Generic;");
             write.Writeln("using UnityEditor;");

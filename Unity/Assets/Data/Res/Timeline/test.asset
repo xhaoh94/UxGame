@@ -20,11 +20,11 @@ MonoBehaviour:
     - rid: 3272319262192304128
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
-        StartFrame: 10
-        EndFrame: 50
+        StartFrame: 0
+        EndFrame: 40
         InFrame: 0
         OutFrame: 0
-        clip: {fileID: 0}
+        clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
     - rid: 7646185338061455360
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:

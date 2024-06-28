@@ -18,15 +18,13 @@ namespace Ux
             _mixer = AnimationMixerPlayable.Create(Component.PlayableGraph);
             SetSourcePlayable(Component.PlayableGraph, _mixer);
             var root = Component.Get<TLAnimationRoot>();
-            if (root == null)
-            {
-                root = Component.Add<TLAnimationRoot, TimelineComponent>(Component);
-            }
+            root ??= Component.Add<TLAnimationRoot, TimelineComponent>(Component);
             root.Play(this);
         }
-        public void Add(int layer)
+        public void Add(TLAnimationTrack track)
         {            
             int inputCount = _mixer.GetInputCount();
+            int layer = track.Asset.Layer;
             if (layer == 0 && inputCount == 0)
             {
                 _mixer.SetInputCount(1);
@@ -39,8 +37,7 @@ namespace Ux
                 }
             }
 
-            if (IsConnect == false)
-                Connect(_mixer, layer);
+            track.Connect(_mixer, layer);
         }       
     }
 }

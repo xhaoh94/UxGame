@@ -55,12 +55,12 @@ namespace Ux
 
                 if (_mixer == mixer)
                 {
-                    _mixer.StartWeightFade(1f, .3f);
+                    _mixer.StartWeightFade(1f, 0.3f);
                     _mixer.PlayNode();
                 }
                 else
                 {
-                    _mixer.StartWeightFade(0f, .3f);
+                    _mixer.StartWeightFade(0f, 0.3f);
                     _mixer.PauseNode();
                 }
             }

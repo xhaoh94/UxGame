@@ -10,8 +10,8 @@ namespace Ux
     }
     public class TimelineClip
     {        
-        public float Time { get; protected set; }        
-        public bool Active { get; protected set; }
+        public float Time { get; private set; }        
+        public bool Active { get; private set; }
 
         public TimelineTrack Track { get; private set; }
         public TimelineClipAsset Asset { get; private set; }
@@ -22,7 +22,7 @@ namespace Ux
         {
             Track=track;
             Asset=asset;
-            _clip = track.Track.Add(asset.ClipType, this) as ITimelineClip;
+            _clip = track.Track.Add(asset.ClipType, this) as ITimelineClip;            
         }
 
         public void Release()
@@ -34,22 +34,8 @@ namespace Ux
         }
 
         public void Evaluate(float deltaTime)
-        {            
-            var _time = Time + deltaTime;
-
-            if (!Active && Asset.StartTime <= _time && _time <= Asset.EndTime)
-            {
-                Active = true;
-                OnEnable();
-            }
-            else if (Active && (_time < Asset.StartTime || Asset.EndTime < _time))
-            {
-                Active = false;
-                OnDisable();
-            }
-
-            Time = _time;
-            SetTime(Time);
+        {                                               
+            SetTime(Time + deltaTime);
         }
         public void OnEnable()
         {
@@ -62,6 +48,17 @@ namespace Ux
 
         public void SetTime(float time)
         {
+            Time = time;
+            if (!Active && Asset.StartTime <= time && time <= Asset.EndTime)
+            {
+                Active = true;
+                OnEnable();
+            }
+            else if (Active && (time < Asset.StartTime || Asset.EndTime < time))
+            {
+                Active = false;
+                OnDisable();
+            }
             _clip?.SetTime(time);
         }
     }

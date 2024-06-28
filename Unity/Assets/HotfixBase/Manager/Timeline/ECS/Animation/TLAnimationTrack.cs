@@ -26,7 +26,7 @@ namespace Ux
             var timeline = ParentAs<Timeline>();
             var layer = timeline.Get<TLAnimationMixer>();
             layer ??= timeline.Add<TLAnimationMixer>();
-            layer.Add(Asset.Layer);
+            layer.Add(this);
         }
 
         public void ConnectClip(TLAnimationClip clip, int index)

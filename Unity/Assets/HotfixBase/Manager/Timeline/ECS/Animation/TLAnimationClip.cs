@@ -23,8 +23,9 @@ namespace Ux
         float _time;
         public void SetTime(float time)
         {
-            Time = time;
-            TimelineMgr.Ins.Lerp(time, time, _Lerp, ref _time);
+            _time = Time = time;
+            _Lerp(0);
+            //TimelineMgr.Ins.Lerp(time, time, _Lerp, ref _time);
         }
         void _Lerp(float deltaTime)
         {
@@ -57,6 +58,7 @@ namespace Ux
 
         void ITimelineClip.OnEnable()
         {
+            Log.Debug("OnEnable");
             var index = Track.Asset.clips.IndexOf(Asset);
             Track.ConnectClip(this, index);
         }
