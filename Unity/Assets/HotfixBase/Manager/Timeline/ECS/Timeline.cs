@@ -1,30 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using SJ;
+using System.Collections.Generic;
+using UnityEditor.VersionControl;
 
 namespace Ux
 {
-    public class Timeline : Entity, IAwakeSystem<TimelineAsset,TimelineComponent>
-    { 
-        public TimelineAsset Asset { get; private set; }
-        public TimelineComponent Component { get; private set; }
+    public class Timeline : Entity, IAwakeSystem<TimelineAsset>
+    {
+        public TimelineComponent Component => ParentAs<TimelineComponent>();
         List<TimelineTrack> _tacks = new List<TimelineTrack>();
 
-        void IAwakeSystem<TimelineAsset, TimelineComponent>.OnAwake(TimelineAsset a, TimelineComponent b)
-        {
-            Asset = a;            
-            Component = b;
-
-            foreach (var asset in Asset.tracks)
+        void IAwakeSystem<TimelineAsset>.OnAwake(TimelineAsset asset)
+        {                                
+            foreach (var trackAsset in asset.tracks)
             {
-                _tacks.Add(AddChild<TimelineTrack, TimelineTrackAsset>(asset));
+                var track = Pool.Get<TimelineTrack>();
+                track.Init(this, trackAsset);
+                _tacks.Add(track);
             }
-
         }
 
         protected override void OnDestroy()
         {
-            _tacks.Clear();
-            Asset = null;
-            Component = null;
+            foreach (var track in _tacks)
+            {
+                track.Release();
+            }
+            _tacks.Clear();                        
         }
 
         public void Bind()
@@ -36,6 +37,13 @@ namespace Ux
 
         }
 
+        public void Evaluate(float time)
+        {
+            foreach (var tack in _tacks)
+            {
+                tack.Evaluate(time);
+            }
+        }
         public void SetTime(float time)
         {
             foreach (var tack in _tacks)

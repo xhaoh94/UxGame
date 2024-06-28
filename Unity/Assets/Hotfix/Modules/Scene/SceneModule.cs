@@ -21,7 +21,7 @@ namespace Ux
                 World = Entity.Create<World>();
             }
             var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
-            var map = World.AddChild<Scene, GameObject>(go);
+            var map = World.Add<Scene, GameObject>(go);
             World.EnterScene(map);
 
             var data = new PlayerData();

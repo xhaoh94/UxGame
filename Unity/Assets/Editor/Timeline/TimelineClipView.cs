@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
@@ -16,30 +17,30 @@ namespace Ux.Editor.Timeline
                 base.focusable.defaultValue = true;
             }
         }
+        public TimelineWindow window;
 
         List<TimelineClipItem> items = new List<TimelineClipItem>();
         int StartFrame=> Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
         int EndFrame=> Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
 
         float FrameScale = 1;
-        public float FrameWidth => 10 * FrameScale;
-        public float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
+        float FrameWidth => 10 * FrameScale;
+        float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
         //需要减10 是因为容器里面设置了边缘Border left = 10 
-        public float ScrClipViewWidth => scrClipView.worldBound.width - 10;
+        float ScrClipViewWidth => scrClipView.worldBound.width - 10;
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
 
-        int CurFrame = 0;
-        float CurPosx = 0;
+        //当前所在帧
+        int nowFrame = 0;       
 
-        public ScrollView scrClipView { get; private set; }
-        public VisualElement ScrContent { get; private set; }
-        public VisualElement veLineContent { get; private set; }
-        public VisualElement veMarkerContent { get; private set; }
-        public VisualElement veMarkerIcon { get; private set; }
-        public VisualElement veClipContent { get;private set; }
-        public Label lbMarker { get; private set; }
-
-        public ScrollView ScrInspectorView { get; private set; }
+        ScrollView scrClipView;
+        VisualElement scrContent;
+        VisualElement veLineContent;
+        VisualElement veMarkerContent;
+        VisualElement veMarkerIcon;
+        VisualElement veClipContent;
+        Label lbMarker;
+        
 
         public TimelineClipView()
         {
@@ -115,6 +116,26 @@ namespace Ux.Editor.Timeline
             veMarkerIcon.MarkDirtyRepaint();
             UpdateMarkerPos();
         }
+        public float GetPositionByFrame(int frame)
+        {            
+            return frame * FrameWidth - ScrClipViewOffsetX;            
+        }
+        public int GetFrameByMousePosition()
+        {
+            var pos = veMarkerContent.WorldToLocal(Event.current.mousePosition);
+            var posx = pos.x;
+            var offset = veMarkerIcon.worldBound.width / 2;
+            if (posx < 0)
+            {
+                posx = 0;
+            }
+            if (posx >ScrClipViewWidth - offset)
+            {
+                posx = ScrClipViewWidth - offset;
+            }
+            var frame = Mathf.RoundToInt((ScrClipViewOffsetX + posx) / FrameWidth);
+            return frame;
+        }
 
 
         void OnScrDrag(Vector2 e)
@@ -129,33 +150,23 @@ namespace Ux.Editor.Timeline
         }
         void OnMarkerDrag(Vector2 e)
         {
-            var pos = veMarkerContent.WorldToLocal(Event.current.mousePosition);
-            CurPosx = pos.x;
-            var offset = veMarkerIcon.worldBound.width / 2;
-            if (CurPosx < 0)
+            var frame = GetFrameByMousePosition();
+            if (frame != nowFrame)
             {
-                CurPosx = 0;
-            }
-            if (CurPosx > ScrClipViewWidth - offset)
-            {
-                CurPosx = ScrClipViewWidth - offset;
-            }
-            var frame = Mathf.RoundToInt((ScrClipViewOffsetX + CurPosx) / FrameWidth);
-            if (frame != CurFrame)
-            {
-                CurFrame = frame;
-                lbMarker.text = CurFrame.ToString();
+                nowFrame = frame;
+                lbMarker.text = nowFrame.ToString();
                 UpdateMarkerPos();
+
+                window.SetFrame(frame);
             }
         }
 
         void UpdateMarkerPos()
         {
             try
-            {
-                CurPosx = (CurFrame * FrameWidth - ScrClipViewOffsetX);
+            {                
                 var pos = veMarkerIcon.transform.position;
-                pos.x = CurPosx - (veMarkerIcon.worldBound.width / 2);
+                pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
                 veMarkerIcon.transform.position = pos;
                 foreach (var item in items)
                 {

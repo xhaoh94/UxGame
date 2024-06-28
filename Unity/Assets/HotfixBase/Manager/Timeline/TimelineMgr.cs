@@ -6,7 +6,7 @@ namespace Ux
 {
     public class TimelineMgr:Singleton<TimelineMgr>
     {
-        public int FrameRate = 60;
+        public float FrameRate = 60f;
         public float DeltaTime
         {
             get
@@ -15,6 +15,12 @@ namespace Ux
                     return UnityEngine.Time.deltaTime;
                 return 1f / FrameRate;
             }
+        }
+
+        //帧转换为时间
+        public float FrameConvertTime(int frame)
+        {
+            return frame / FrameRate;
         }
 
         public void Lerp(float targetTime, float deltaTime, Action<float> evaluateSplitDeltaTime, ref float lastTime)

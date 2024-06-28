@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace Ux
@@ -133,7 +132,7 @@ namespace Ux
             }
             else if (v is Entity entity)
             {
-                return EditorGUILayout.ObjectField(tag, entity.Viewer, typeof(GameObject), true);
+                return EditorGUILayout.ObjectField(tag, entity.Hierarchy, typeof(GameObject), true);
             }
             else if (typeof(IList).IsAssignableFrom(vType))
             {
@@ -357,9 +356,10 @@ namespace Ux
             get { return infos != null && infos.Count > 0; }
         }
     }
-    public class EntityViewer : MonoBehaviour
+    public class EntityHierarchy : MonoBehaviour
     {
         const string _location = "$ECS_EMPTY_VIEWER$";
+        static Transform _ecs;
         EEInfos infos;
 
         public void SetParent(Transform _parent)
@@ -371,89 +371,79 @@ namespace Ux
             infos?.Layout();
         }
 
-        public static EntityViewer Create(Entity entity = null)
+        public static EntityHierarchy Create(Entity entity = null)
         {
             var viewer = UnityPool.Get<GameObject>(_location, () => new GameObject())
-                .GetOrAddComponent<EntityViewer>();
+                .GetOrAddComponent<EntityHierarchy>();
             if (entity != null)
             {
                 viewer.infos = new EEInfos(entity, true);
             }
+            if (Application.isPlaying)
+            {
+                if (_ecs == null)
+                {
+                    _ecs = new GameObject("ECS").transform;
+                    DontDestroyOnLoad(_ecs);
+                }
+                viewer.SetParent(_ecs);
+            }
             return viewer;
         }
 
-        Transform _entityContent;
-        public Transform EntityContent
-        {
-            get
-            {
-                if (_entityContent == null)
-                {
-                    _entityContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
-                    _entityContent.name = "Entitys";
-                    _entityContent.SetParent(transform);
-                }
-                return _entityContent;
-            }
-        }
 
-        Transform _componentContent;
-        public Transform ComponentContent
-        {
-            get
-            {
-                if (_componentContent == null)
-                {
-                    _componentContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
-                    _componentContent.name = "Components";
-                    _componentContent.SetParent(transform);
-                }
-                return _componentContent;
-            }
-        }
 
-        Transform _assetContent;
-        public Transform AssetContent
-        {
-            get
-            {
-                if (_assetContent == null)
-                {
-                    _assetContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
-                    _assetContent.name = "Assets";
-                    _assetContent.SetParent(transform);
-                    _assetContent.SetAsFirstSibling();
-                }
-                return _assetContent;
-            }
-        }
+        //Transform _entityContent;
+        //public Transform EntityContent
+        //{
+        //    get
+        //    {
+        //        if (_entityContent == null)
+        //        {
+        //            _entityContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
+        //            _entityContent.name = "Entitys";
+        //            _entityContent.SetParent(transform);
+        //        }
+        //        return _entityContent;
+        //    }
+        //}
+
+        //Transform _assetContent;
+        //public Transform AssetContent
+        //{
+        //    get
+        //    {
+        //        if (_assetContent == null)
+        //        {
+        //            _assetContent = UnityPool.Get<GameObject>(_location, () => new GameObject()).transform;
+        //            _assetContent.name = "Assets";
+        //            _assetContent.SetParent(transform);
+        //            _assetContent.SetAsFirstSibling();
+        //        }
+        //        return _assetContent;
+        //    }
+        //}
 
         public void Release()
         {
-#if UNITY_EDITOR
-            if (!UnityEngine.Application.isPlaying)
+            if (!Application.isPlaying)
             {
-                UnityEngine.Object.DestroyImmediate(gameObject);
+                DestroyImmediate(gameObject);
                 return;
             }
-#endif
 
-            if (_entityContent != null)
-            {
-                UnityPool.Push(_location, _entityContent.gameObject);
-                _entityContent = null;
-            }
-            if (_componentContent != null)
-            {
-                UnityPool.Push(_location, _componentContent.gameObject);
-                _componentContent = null;
-            }
-            if (_assetContent != null)
-            {
-                UnityPool.Push(_location, _assetContent.gameObject);
-                _assetContent = null;
-            }
-            UnityEngine.Object.Destroy(this);
+            //if (_entityContent != null)
+            //{
+            //    UnityPool.Push(_location, _entityContent.gameObject);
+            //    _entityContent = null;
+            //}
+
+            //if (_assetContent != null)
+            //{
+            //    UnityPool.Push(_location, _assetContent.gameObject);
+            //    _assetContent = null;
+            //}
+            Destroy(this);
             UnityPool.Push(_location, gameObject);
         }
     }

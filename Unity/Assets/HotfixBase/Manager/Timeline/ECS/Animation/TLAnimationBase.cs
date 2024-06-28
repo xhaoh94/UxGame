@@ -140,20 +140,12 @@ namespace Ux
 
         public virtual void PlayNode()
         {
-            // NOTE : When playing, the local time of this Playable will be updated during the evaluation of the PlayableGraph.
             _source.Play();
-
-            // NOTE : Changes a flag indicating that a playable has completed its operation.
-            // Playable that reach the end of their duration are automatically marked as done.
             _source.SetDone(false);
         }
         public virtual void PauseNode()
-        {
-            // NOTE : When paused, the local time of this Playable will not be updated during the evaluation of the PlayableGraph.
-            _source.Pause();
-
-            // NOTE : Changes a flag indicating that a playable has completed its operation.
-            // Playable that reach the end of their duration are automatically marked as done.
+        {            
+            _source.Pause();            
             _source.SetDone(true);
         }
         public virtual void ResetNode()

@@ -15,16 +15,16 @@ namespace Ux
         public void OnAwake(GameObject a)
         {
             Go = a;
-            SetMono(Go);
-            Camera = AddComponent<CameraComponent>();
-            AStar = AddComponent<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
+            LinkModel(Go);
+            Camera = Add<CameraComponent>();
+            AStar = Add<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
             //AddComponent<FogOfWarComponent>();
         }
 
         public void AddPlayer(PlayerData playerData)
         {
             //Log.Debug("创建Unit" + playerData.id);
-            var player = AddChild<Unit, PlayerData>(playerData.id, playerData);
+            var player = Add<Unit, PlayerData>(playerData.id, playerData);
             players.Add(playerData.id, player);
         }
 
@@ -32,7 +32,7 @@ namespace Ux
         void _OnUnitMove(Pb.BcstUnitMove param)
         {
             //Log.Debug("移动Unit" + param.roleId);
-            var player = GetChild<Unit>(param.roleId);
+            var player = Get<Unit>(param.roleId);
             if (player != null)
             {                
                 player.Path.SetPoints(param.Points, param.pointIndex);
@@ -41,7 +41,7 @@ namespace Ux
         [Evt(EventType.UNIT_UPDATE_POSITION)]
         void _OnUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
         {
-            var player = GetChild<Unit>(param.roleId);
+            var player = Get<Unit>(param.roleId);
             if (player != null)
             {
                 player.Position = new Vector3(param.Point.X, param.Point.Y, param.Point.Z);
@@ -53,7 +53,7 @@ namespace Ux
         {
             foreach (var role in param.Roles)
             {
-                var player = GetChild<Unit>(role.roleId);
+                var player = Get<Unit>(role.roleId);
                 if (player != null) continue;                
                 var data = new PlayerData();
                 data.data = role;
@@ -68,7 +68,7 @@ namespace Ux
         {
             foreach (var role in param.Roles)
             {
-                RemoveChild(role);
+                Remove(role);
                 players.Remove(role);
             }
         }

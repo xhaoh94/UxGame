@@ -1,10 +1,17 @@
 using System.IO;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
+    public class TLEntity : Entity
+    {
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Object.DestroyImmediate(Model.gameObject);
+        }
+    }
     public partial class TimelineWindow : EditorWindow
     {
         static TimelineWindow wnd;
@@ -17,26 +24,19 @@ namespace Ux.Editor.Timeline
 
         static string Path = "Assets/Data/Res/Timeline";
 
+        public TimelineAsset asset => ofTimeline.value as TimelineAsset;
+        TLEntity entity;
 
-        EntityEmpty entity;
-        public TimelineAsset asset;
-        GameObject model;
-        public void SaveAssets()
-        {
-            if (asset != null)
-            {
-                EditorUtility.SetDirty(asset);
-                AssetDatabase.SaveAssets();
-            }
-        }
+        bool _isPlaying;
 
         public void CreateGUI()
         {
             CreateChildren();
             root.style.flexGrow = 1f;
-            rootVisualElement.Add(root);      
+            rootVisualElement.Add(root);
 
             trackView.window = this;
+            clipView.window = this;
 
             ofEntity.objectType = typeof(GameObject);
             ofTimeline.objectType = typeof(TimelineAsset);
@@ -46,12 +46,9 @@ namespace Ux.Editor.Timeline
 
             inputPath.SetValueWithoutNotify(Path);
 
-            var temPrefab = SettingTools.GetPlayerPrefs<GameObject>("timeline_entity");
-            ofEntity.SetValueWithoutNotify(temPrefab);
-            _SetModel(temPrefab);
-            asset = SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset");
-            ofTimeline.SetValueWithoutNotify(asset);
-            _SetAsset(asset);
+            _OnOfEntityChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
+            _OnOfTimelineChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
+            
         }
 
         private void OnDestroy()
@@ -61,72 +58,47 @@ namespace Ux.Editor.Timeline
                 entity.Destroy();
                 entity = null;
             }
-
-            if (model != null)
-            {
-                Object.DestroyImmediate(model);
-                model = null;
-            }
         }
+
         partial void _OnOfEntityChanged(ChangeEvent<Object> e)
-        {            
+        {
+            entity?.Destroy();
+            entity = null;
+            ofEntity.SetValueWithoutNotify(e.newValue);
             if (e.newValue is GameObject obj)
             {
-                _SetModel(obj);
-            }
-            else
-            {
-                if (entity != null)
+                if (obj == null)
                 {
-                    entity.Destroy();
-                    entity = null;
+                    return;
                 }
-                trackView.RefreshView();
+                var model = Instantiate(obj);
+
+                entity?.Destroy();
+                entity = Entity.Create<TLEntity>();
+                entity.LinkModel(model);
+                entity.Add<TimelineComponent>();
+
+                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long _))
+                {
+                    SettingTools.SavePlayerPrefs("timeline_entity", guid);
+                }
+                RefreshEntity();
             }
         }
-        void _SetModel(GameObject obj)
-        {
-            if (model != null)
-            {
-                Object.DestroyImmediate(model);
-            }
-            model = Instantiate(obj);
 
-            if (entity != null)
-            {
-                entity.Destroy();
-            }
-            entity = Entity.Create<EntityEmpty>();
-            entity.AddComponent<TimelineComponent>().Init(model);
-
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long _))
-            {
-                SettingTools.SavePlayerPrefs("timeline_entity", guid);
-            }
-            RefreshEntity();
-        }
         partial void _OnOfTimelineChanged(ChangeEvent<Object> e)
         {
-            if (e.newValue is TimelineAsset asset && this.asset !=asset)
+            ofTimeline.SetValueWithoutNotify(e.newValue);
+            if (e.newValue is TimelineAsset asset)
             {
-                _SetAsset(asset);
+                if (asset == null) { return; }
+                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out long _))
+                {
+                    SettingTools.SavePlayerPrefs("timeline_asset", guid);
+                }
+                RefreshEntity();
+                trackView.RefreshView();
             }
-        }
-        void _SetAsset(TimelineAsset asset)
-        {
-            this.asset = asset;
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out long _))
-            {
-                SettingTools.SavePlayerPrefs("timeline_asset", guid);
-            }
-            RefreshEntity();
-            trackView.RefreshView();
-        }
-
-        public void RefreshEntity()
-        {
-            if (asset == null) return;
-            entity.GetComponent<TimelineComponent>().SetTimeline(asset);
         }
 
         partial void _OnBtnCreateClick()
@@ -176,6 +148,24 @@ namespace Ux.Editor.Timeline
             ofTimeline.SetValueWithoutNotify(asset);
         }
 
+        public void SaveAssets()
+        {
+            if (asset != null)
+            {
+                EditorUtility.SetDirty(asset);
+                AssetDatabase.SaveAssets();
+            }
+        }
+        public void RefreshEntity()
+        {
+            if (asset == null) return;
+            entity?.Get<TimelineComponent>()?.SetTimeline(asset);
+        }
+        public void SetFrame(int frame)
+        {
+            var time = TimelineMgr.Ins.FrameConvertTime(frame);
+            entity?.Get<TimelineComponent>()?.SetTime(time);
+        }
     }
 
 }

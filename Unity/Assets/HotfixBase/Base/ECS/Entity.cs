@@ -40,10 +40,9 @@ namespace Ux
 
 
 #if UNITY_EDITOR        
-        public EntityViewer Viewer { get; private set; }
-#endif
-        public EntityMono EntityMono { get; private set; }
-
+        public EntityHierarchy Hierarchy { get; private set; }
+#endif        
+        public EntityModel Model { get; private set; }
         public long ID { get; private set; }
         string _name;
         public string Name
@@ -54,7 +53,7 @@ namespace Ux
                 {
                     _name = value;
 #if UNITY_EDITOR
-                    Viewer.name = value;
+                    Hierarchy.name = value;
 #endif
                 }
             }
@@ -72,7 +71,7 @@ namespace Ux
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
         Entity _parent;
-        Entity _parentByComponent;
+        //Entity _parentByComponent;
 
         /// <summary>
         /// 获取父类实体，如果父类是组件的时候，会循环往上获取，直到获取到为实体为止
@@ -81,13 +80,14 @@ namespace Ux
         {
             get
             {
-                var temPar = _parent;
-                {
-                    while (temPar is { IsComponent: true })
-                        temPar = temPar._parent;
-                }
+                //var temPar = _parent;
+                //{
+                //    while (temPar is { IsComponent: true })
+                //        temPar = temPar._parent;
+                //}
 
-                return temPar;
+                //return temPar;
+                return _parent;
             }
             set
             {
@@ -98,11 +98,11 @@ namespace Ux
 
                 if (value == null)
                 {
-                    _ = IsComponent ? _parent?.RemoveComponent(this) : _parent?.RemoveChild(this);
+                    _ = /*IsComponent ? _parent?.RemoveComponent(this) :*/ _parent?.Remove(this);
                 }
                 else
                 {
-                    _ = IsComponent ? value.AddComponent(this) : value.AddChild(this);
+                    _ = /*IsComponent ? value.AddComponent(this) :*/ value.Add(this);
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace Ux
             var entity = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
             if (entity == null) return null;
 #if UNITY_EDITOR
-            entity.Viewer = EntityViewer.Create(entity);
+            entity.Hierarchy = EntityHierarchy.Create(entity);
 #endif
             entity._isDestroyed = false;
             entity._isDestroying = false;
@@ -134,36 +134,25 @@ namespace Ux
             entity.Name = $"{type.Name}_{id}";
             return entity;
         }
-
-        public void SetMono(GameObject gameObject, bool isSetParent = true)
+        /// <summary>
+        /// 关联显示对象
+        /// </summary>
+        /// <param name="gameObject">显示对象</param>        
+        public void LinkModel(GameObject gameObject)
         {
-            EntityMono = gameObject.GetOrAddComponent<EntityMono>();
+            //if (IsComponent)
+            //{
+            //    Log.Error("组件无法设置显示对象");
+            //    return;
+            //}
+            Model = gameObject.GetOrAddComponent<EntityModel>();
 #if UNITY_EDITOR
-            EntityMono.SetEntity(this, Viewer);
-            if (isSetParent)
-            {
-                if (IsComponent)
-                {
-                    gameObject.SetParent(Parent.Viewer.AssetContent);
-                }
-                else
-                {
-                    gameObject.SetParent(Viewer.AssetContent);
-                }
-            }
+            Model.SetEntity(this, Hierarchy);
 #else
-            EntityMono.SetEntity(this);
-            if (isSetParent)
-            {
-                var temParent = Parent;
-                if (temParent != null && temParent.EntityMono != null)
-                {
-                    gameObject.SetParent(temParent.EntityMono.transform);
-                }
-            }
+            Model.SetEntity(this);
 #endif
         }
-        bool _AddChild(Entity entity)
+        bool _Add(Entity entity)
         {
             if (CheckDestroy())
             {
@@ -182,11 +171,11 @@ namespace Ux
                 return false;
             }
 
-            if (entity.IsComponent)
-            {
-                Log.Error("AddChild不能添加组件类型");
-                return false;
-            }
+            //if (entity.IsComponent)
+            //{
+            //    Log.Error("AddChild不能添加组件类型");
+            //    return false;
+            //}
 
             if (entity == this)
             {
@@ -202,30 +191,30 @@ namespace Ux
             }
             var entityID = entity.ID;
 
-            if (IsComponent)
+            //if (IsComponent)
+            //{
+            //    var temParent = Parent;
+            //    if (temParent == null)
+            //    {
+            //        Log.Error("父实体为空，无法添加子实体");
+            //        return false;
+            //    }
+            //    entity._parentByComponent = this;
+            //    temParent._AddChild(entity);
+            //}
+            //else
+            //{
+            if (entity._parent == this)
             {
-                var temParent = Parent;
-                if (temParent == null)
-                {
-                    Log.Error("父实体为空，无法添加子实体");
-                    return false;
-                }
-                entity._parentByComponent = this;
-                temParent._AddChild(entity);
+                return true;
             }
-            else
-            {
-                if (entity._parent == this)
-                {
-                    return true;
-                }
-                entity._parent?.RemoveChild(entity, false);
-                entity._parent = this;
+            entity._parent?.Remove(entity, false);
+            entity._parent = this;
 
 #if UNITY_EDITOR
-                entity.Viewer.SetParent(Viewer.EntityContent);
+            entity.Hierarchy.SetParent(Hierarchy.transform);
 #endif
-            }
+            //}
 
             _entitys.Add(entityID, entity);
             var type = entity.GetType();
@@ -238,9 +227,9 @@ namespace Ux
             return true;
         }
 
-        Entity AddChild(Entity entity)
+        Entity Add(Entity entity)
         {
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -249,67 +238,67 @@ namespace Ux
             return entity;
         }
 
-        public TEntity AddChild<TEntity>(bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity>(bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(typeof(TEntity), isFromPool);
+            return (TEntity)Add(typeof(TEntity), isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A>(A a, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A>(A a, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(typeof(TEntity), a, isFromPool);
+            return (TEntity)Add(typeof(TEntity), a, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B>(A a, B b, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A, B>(A a, B b, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(typeof(TEntity), a, b, isFromPool);
+            return (TEntity)Add(typeof(TEntity), a, b, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B, C>(A a, B b, C c, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A, B, C>(A a, B b, C c, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(typeof(TEntity), a, b, c, isFromPool);
+            return (TEntity)Add(typeof(TEntity), a, b, c, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B, C, D>(A a, B b, C c, D d, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A, B, C, D>(A a, B b, C c, D d, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(typeof(TEntity), a, b, c, d, isFromPool);
+            return (TEntity)Add(typeof(TEntity), a, b, c, d, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B, C, D, E>(A a, B b, C c, D d, E e, bool isFromPool = true)
+        public TEntity Add<TEntity, A, B, C, D, E>(A a, B b, C c, D d, E e, bool isFromPool = true)
             where TEntity : Entity
         {
-            return (TEntity)AddChild(typeof(TEntity), a, b, c, d, e, isFromPool);
+            return (TEntity)Add(typeof(TEntity), a, b, c, d, e, isFromPool);
         }
-        public TEntity AddChild<TEntity>(long id, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity>(long id, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(id, typeof(TEntity), isFromPool);
+            return (TEntity)Add(id, typeof(TEntity), isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A>(long id, A a, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A>(long id, A a, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(id, typeof(TEntity), a, isFromPool);
+            return (TEntity)Add(id, typeof(TEntity), a, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B>(long id, A a, B b, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A, B>(long id, A a, B b, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(id, typeof(TEntity), a, b, isFromPool);
+            return (TEntity)Add(id, typeof(TEntity), a, b, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B, C>(long id, A a, B b, C c, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A, B, C>(long id, A a, B b, C c, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(id, typeof(TEntity), a, b, c, isFromPool);
+            return (TEntity)Add(id, typeof(TEntity), a, b, c, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B, C, D>(long id, A a, B b, C c, D d, bool isFromPool = true) where TEntity : Entity
+        public TEntity Add<TEntity, A, B, C, D>(long id, A a, B b, C c, D d, bool isFromPool = true) where TEntity : Entity
         {
-            return (TEntity)AddChild(id, typeof(TEntity), a, b, c, d, isFromPool);
+            return (TEntity)Add<A, B, C, D, bool>(id, typeof(TEntity), a, b, c, d, isFromPool);
         }
 
-        public TEntity AddChild<TEntity, A, B, C, D, E>(long id, A a, B b, C c, D d, E e, bool isFromPool = true)
+        public TEntity Add<TEntity, A, B, C, D, E>(long id, A a, B b, C c, D d, E e, bool isFromPool = true)
             where TEntity : Entity
         {
-            return (TEntity)AddChild(id, typeof(TEntity), a, b, c, d, e, isFromPool);
+            return (TEntity)Add(id, typeof(TEntity), a, b, c, d, e, isFromPool);
         }
-        public Entity AddChild(long id, Type type, bool isFromPool = true)
+        public Entity Add(long id, Type type, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -317,7 +306,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(id, type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -326,7 +315,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A>(long id, Type type, A a, bool isFromPool = true)
+        public Entity Add<A>(long id, Type type, A a, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -334,7 +323,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(id, type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -343,7 +332,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B>(long id, Type type, A a, B b, bool isFromPool = true)
+        public Entity Add<A, B>(long id, Type type, A a, B b, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -351,7 +340,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(id, type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -360,7 +349,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B, C>(long id, Type type, A a, B b, C c, bool isFromPool = true)
+        public Entity Add<A, B, C>(long id, Type type, A a, B b, C c, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -368,7 +357,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(id, type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -377,7 +366,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B, C, D>(long id, Type type, A a, B b, C c, D d, bool isFromPool = true)
+        public Entity Add<A, B, C, D>(long id, Type type, A a, B b, C c, D d, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -385,7 +374,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(id, type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -394,7 +383,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B, C, D, E>(long id, Type type, A a, B b, C c, D d, E e, bool isFromPool = true)
+        public Entity Add<A, B, C, D, E>(long id, Type type, A a, B b, C c, D d, E e, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -402,7 +391,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(id, type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -410,7 +399,7 @@ namespace Ux
             entity._InitSystem(a, b, c, d, e);
             return entity;
         }
-        public Entity AddChild(Type type, bool isFromPool = true)
+        public Entity Add(Type type, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -418,7 +407,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -427,7 +416,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A>(Type type, A a, bool isFromPool = true)
+        public Entity Add<A>(Type type, A a, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -435,7 +424,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -444,7 +433,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B>(Type type, A a, B b, bool isFromPool = true)
+        public Entity Add<A, B>(Type type, A a, B b, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -452,7 +441,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -461,7 +450,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B, C>(Type type, A a, B b, C c, bool isFromPool = true)
+        public Entity Add<A, B, C>(Type type, A a, B b, C c, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -469,7 +458,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -478,7 +467,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B, C, D>(Type type, A a, B b, C c, D d, bool isFromPool = true)
+        public Entity Add<A, B, C, D>(Type type, A a, B b, C c, D d, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -486,7 +475,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -495,7 +484,7 @@ namespace Ux
             return entity;
         }
 
-        public Entity AddChild<A, B, C, D, E>(Type type, A a, B b, C c, D d, E e, bool isFromPool = true)
+        public Entity Add<A, B, C, D, E>(Type type, A a, B b, C c, D d, E e, bool isFromPool = true)
         {
             if (CheckDestroy())
             {
@@ -503,7 +492,7 @@ namespace Ux
             }
 
             var entity = Entity.Create(IDGenerater.GenerateId(), type, isFromPool);
-            if (!_AddChild(entity))
+            if (!_Add(entity))
             {
                 return null;
             }
@@ -511,39 +500,48 @@ namespace Ux
             entity._InitSystem(a, b, c, d, e);
             return entity;
         }
-        public bool RemoveChild(long cid)
+        public bool Remove(long cid)
         {
-            var child = GetChild(cid);
+            var child = Get(cid);
             if (child == null)
             {
                 return true;
             }
-            return RemoveChild(child);
+            return Remove(child);
         }
-        public bool RemoveChild(Entity entity)
+        public bool Remove<T>() where T : Entity
         {
-            return RemoveChild(entity, true);
+            var child = Get<T>();
+            if (child == null)
+            {
+                return true;
+            }
+            return Remove(child);
         }
-        bool RemoveChild(Entity entity, bool isDestroy)
+        public bool Remove(Entity entity)
+        {
+            return Remove(entity, true);
+        }
+        bool Remove(Entity entity, bool isDestroy)
         {
             if (entity == null)
             {
                 Log.Error("Entity为空");
                 return false;
             }
-            if (IsComponent)
-            {
-                return Parent.RemoveChild(entity, isDestroy);
-            }
-            else
-            {
-                entity._parentByComponent?._RemoveChild(entity);
-                var b= _RemoveChild(entity);
-                entity._Destroy(isDestroy);
-                return b;
-            }
+            //if (IsComponent)
+            //{
+            //    return Parent.RemoveChild(entity, isDestroy);
+            //}
+            //else
+            //{
+            //entity._parentByComponent?._RemoveChild(entity);
+            var b = _Remove(entity);
+            entity._Destroy(isDestroy);
+            return b;
+            //}
         }
-        bool _RemoveChild(Entity entity)
+        bool _Remove(Entity entity)
         {
             if (_entitys.Remove(entity.ID))
             {
@@ -560,12 +558,12 @@ namespace Ux
             return false;
         }
 
-        void RemoveChilds()
+        void RemoveAll()
         {
             var cnt = _entitys.Count;
             while (cnt > 0)
-            {                
-                RemoveChild(_entitys.ElementAt(0).Value, true);
+            {
+                Remove(_entitys.ElementAt(0).Value, true);
                 cnt--;
             }
             if (_entitys.Count > 0)
@@ -573,11 +571,11 @@ namespace Ux
                 Log.Error("RemoveChilds 存在无法删除的Child！检查是否存在已被Destroy却没有从父类清除的Child");
             }
         }
-        public T GetChild<T>(long id) where T : Entity
+        public T Get<T>(long id) where T : Entity
         {
-            return GetChild(id) as T;
+            return Get(id) as T;
         }
-        public Entity GetChild(long id)
+        public Entity Get(long id)
         {
             if (_entitys.TryGetValue(id, out var entity))
             {
@@ -585,37 +583,55 @@ namespace Ux
             }
             return null;
         }
-        public List<Entity> GetChilds(bool isIncludeNested = false)
+
+        public T Get<T>() where T : Entity
+        {
+            if (_typeToentitys.TryGetValue(typeof(T), out var _temList) && _temList.Count > 0)
+            {
+                return _temList[0] as T;
+            }
+            return null;
+        }
+        public Entity Get(Type type)
+        {
+            if (_typeToentitys.TryGetValue(type, out var _temList) && _temList.Count > 0)
+            {
+                return _temList[0];
+            }
+            return null;
+        }
+
+        public List<Entity> GetAll(bool includeNested = false)
         {
             if (CheckDestroy())
             {
                 return null;
             }
             var listData = new List<Entity>();
-            _GetChilds(listData, isIncludeNested);
+            _Get(listData, includeNested);
             return listData;
         }
-        public List<Entity> GetChilds(Type type, bool isIncludeNested = false)
+        public List<Entity> GetAll(Type type, bool isIncludeNested = false)
         {
             if (CheckDestroy())
             {
                 return null;
             }
             var listData = new List<Entity>();
-            _GetChilds(type, listData, isIncludeNested);
+            _Get(type, listData, isIncludeNested);
             return listData;
         }
-        public List<T> GetChilds<T>(bool isIncludeNested = false) where T : Entity
+        public List<T> GetAll<T>(bool isIncludeNested = false) where T : Entity
         {
             if (CheckDestroy())
             {
                 return null;
             }
             var listData = new List<T>();
-            _GetChilds(listData, isIncludeNested);
+            _Get(listData, isIncludeNested);
             return listData;
         }
-        void _GetChilds<T>(List<T> listData, bool isIncludeNested) where T : Entity
+        void _Get<T>(List<T> listData, bool isIncludeNested) where T : Entity
         {
             if (_typeToentitys.TryGetValue(typeof(T), out var _temList))
             {
@@ -624,12 +640,12 @@ namespace Ux
                     listData.Add(entity as T);
                     if (isIncludeNested)
                     {
-                        entity._GetChilds<T>(listData, isIncludeNested);
+                        entity._Get(listData, isIncludeNested);
                     }
                 }
             }
         }
-        void _GetChilds(Type type, List<Entity> listData, bool isIncludeNested)
+        void _Get(Type type, List<Entity> listData, bool isIncludeNested)
         {
             if (_typeToentitys.TryGetValue(type, out var _temList))
             {
@@ -638,12 +654,12 @@ namespace Ux
                 {
                     foreach (var entity in _temList)
                     {
-                        entity._GetChilds(type, listData, isIncludeNested);
+                        entity._Get(type, listData, isIncludeNested);
                     }
                 }
             }
         }
-        void _GetChilds(List<Entity> listData, bool isIncludeNested)
+        void _Get(List<Entity> listData, bool isIncludeNested)
         {
             foreach (var entityKv in _typeToentitys)
             {
@@ -652,7 +668,7 @@ namespace Ux
                 {
                     foreach (var entity in entityKv.Value)
                     {
-                        entity._GetChilds(listData, isIncludeNested);
+                        entity._Get(listData, isIncludeNested);
                     }
                 }
             }
@@ -666,15 +682,15 @@ namespace Ux
                 Log.Error(Name + "已销毁");
                 return true;
             }
-            if (IsComponent)
-            {
-                var temParent = Parent;
-                if (temParent != null && temParent.IsDestroy)
-                {
-                    Log.Error(temParent.Name + "已销毁");
-                    return true;
-                }
-            }
+            //if (IsComponent)
+            //{
+            //    var temParent = Parent;
+            //    if (temParent != null && temParent.IsDestroy)
+            //    {
+            //        Log.Error(temParent.Name + "已销毁");
+            //        return true;
+            //    }
+            //}
             return false;
         }
 
@@ -697,35 +713,20 @@ namespace Ux
             {
                 _RemoveSystem();
                 _parent = null;
-                _parentByComponent= null;
+                //_parentByComponent = null;
                 return;
             }
             if (IsDestroy) return;
             _RemoveSystem();
             _isDestroying = true;
-#if UNITY_EDITOR
-            if (UnityEngine.Application.isPlaying)
+            if (Application.isPlaying)
             {
                 TimeMgr.Ins.RemoveTag(this);
                 EventMgr.Ins.OffTag(this);
             }
-#else
-            TimeMgr.Ins.RemoveTag(this);
-            EventMgr.Ins.OffTag(this);
-#endif
 
-            if (EntityMono != null)
-            {
-#if UNITY_EDITOR
-                EntityMono.SetEntity(null, null);
-#else
-                EntityMono.SetEntity(null);
-#endif
-                EntityMono = null;
-            }
-
-            RemoveChilds();
-            RemoveComponents();
+            RemoveAll();
+            //RemoveComponents();
 
             if (_event != null)
             {
@@ -734,8 +735,7 @@ namespace Ux
                 _event = null;
             }
 
-#if UNITY_EDITOR
-            if (UnityEngine.Application.isPlaying)
+            if (Application.isPlaying)
             {
                 EnqueueDelay(_DelayDestroy);
             }
@@ -743,10 +743,6 @@ namespace Ux
             {
                 _DelayDestroy();
             }
-#else
-            EnqueueDelay(_DelayDestroy);
-#endif
-
         }
 
         void _DelayDestroy()
@@ -755,19 +751,24 @@ namespace Ux
             _isDestroying = false;
             OnDestroy();
 
-            _parentByComponent = null;
+            //_parentByComponent = null;
             _parent = null;
             _entitys.Clear();
             _typeToentitys.Clear();
-            _components.Clear();
+            //_components.Clear();
             _name = null;
-            ID = 0;
             _is_init = false;
-#if UNITY_EDITOR
-            if (Viewer != null)
+            ID = 0;
+            if (Model != null)
             {
-                Viewer.Release();
-                Viewer = null;
+                Model.Release();
+                Model = null;
+            }
+#if UNITY_EDITOR
+            if (Hierarchy != null)
+            {
+                Hierarchy.Release();
+                Hierarchy = null;
             }
 
             if (IsFromPool && UnityEngine.Application.isPlaying)

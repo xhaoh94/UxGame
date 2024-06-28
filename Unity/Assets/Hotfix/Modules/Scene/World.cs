@@ -14,7 +14,7 @@ namespace Ux
         {
             if (NowScene != null)
             {
-                RemoveChild(NowScene);
+                Remove(NowScene);
             }
             NowScene = newScene;
         }
@@ -22,7 +22,7 @@ namespace Ux
         {
             if (NowScene != null)
             {
-                RemoveChild(NowScene);
+                Remove(NowScene);
             }
         }
 

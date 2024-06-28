@@ -33,7 +33,7 @@ namespace Ux.Editor.Timeline
             content.style.borderTopColor = attr.Color;
             content.style.borderLeftColor = attr.Color;
             content.style.borderBottomColor = attr.Color;
-            CreateClip();
+            RefreshView();
 
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             menu = new DropdownMenu();
@@ -62,7 +62,7 @@ namespace Ux.Editor.Timeline
                 this.ShowMenu();
             }
         }
-        void CreateClip()
+        void RefreshView()
         {
             foreach (var clipAsset in asset.clips)
             {

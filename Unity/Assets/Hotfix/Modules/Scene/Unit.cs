@@ -1,10 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
-using Ux;
-using System.Collections;
 using Pathfinding;
 using UnityEngine;
 using UnityEngine.Playables;
-using UnityEngine.Timeline;
 
 namespace Ux
 {
@@ -22,12 +19,12 @@ namespace Ux
 
     public class Unit : Entity, IAwakeSystem<PlayerData>
     {
-        public GameObject Model { get; private set; }
-        public AnimComponent Anim => GetComponent<AnimComponent>();
-        public StateComponent State => GetComponent<StateComponent>();
-        public SeekerComponent Seeker => GetComponent<SeekerComponent>();
-        public PathComponent Path => GetComponent<PathComponent>();
-        public PlayableDirectorComponent Director => GetComponent<PlayableDirectorComponent>();
+        public GameObject Root { get; private set; }
+        public AnimComponent Anim => Get<AnimComponent>();
+        public StateComponent State => Get<StateComponent>();
+        public SeekerComponent Seeker => Get<SeekerComponent>();
+        public PathComponent Path => Get<PathComponent>();
+        public PlayableDirectorComponent Director => Get<PlayableDirectorComponent>();
 
         #region Get-Set
         private Vector3 _postion;
@@ -77,7 +74,7 @@ namespace Ux
                 if (_layer != value)
                 {
                     _layer = value;
-                    Model?.SetLayer(_layer);
+                    Root?.SetLayer(_layer);
                 }
             }
         }
@@ -87,14 +84,16 @@ namespace Ux
         public void OnAwake(PlayerData playerData)
         {
             _playerData = playerData;
-            AddComponent<StateComponent>();
-            AddComponent<PathComponent>();
+            Add<StateComponent>();
+            Add<PathComponent>();
             if (playerData.self)
             {
-                AddComponent<OperateComponent>();
+                Add<OperateComponent>();
             }
             Visable = new BoolValue(OnVisableChanged);
             Position = _playerData.pos;
+            Root = new GameObject();
+            LinkModel(Root);
             LoadPlayer().Forget();
         }
 
@@ -102,11 +101,11 @@ namespace Ux
 
         async UniTaskVoid LoadPlayer()
         {
-            Model = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
-            SetMono(Model);
-            Model.transform.position = Position;
-            Model.transform.rotation = Rotation;
-            Model.layer = Layer;
+            var model = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
+            model.SetParent(Root.transform);
+            model.transform.position = Position;
+            model.transform.rotation = Rotation;
+            model.layer = Layer;
 
             if (_playerData.self)
             {
@@ -114,16 +113,16 @@ namespace Ux
                 //Map.Camera.SetLookAt(Model.transform);
             }
 
-            AddComponent<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
-            AddComponent<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
-            AddComponent<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
+            Add<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
+            Add<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
+            Add<PlayableDirectorComponent, PlayableDirector>(model.GetOrAddComponent<PlayableDirector>());
             Director.SetBinding("Anim Track", Model.GetComponentInChildren<Animator>());
             StateMgr.Ins.Update(ID);
         }
 
         protected override void OnDestroy()
         {
-            UnityPool.Push(Model);
+            UnityPool.Push(Root);
             Visable.Release();
         }
 
@@ -132,10 +131,10 @@ namespace Ux
         #region fogofwar        
         void _UpdateFogOfWar()
         {
-            var unitVision = GetComponent<UnitVisionComponent>();
+            var unitVision = Get<UnitVisionComponent>();
             if (unitVision == null)
             {
-                unitVision = AddComponent<UnitVisionComponent>();
+                unitVision = Add<UnitVisionComponent>();
             }
             unitVision.UpdateUnit();
         }

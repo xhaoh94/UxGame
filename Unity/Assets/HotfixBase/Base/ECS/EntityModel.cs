@@ -1,3 +1,4 @@
+using FairyGUI;
 using System.ComponentModel;
 using UnityEngine;
 
@@ -6,14 +7,14 @@ namespace Ux
     public interface IEntityMono
     {
 #if UNITY_EDITOR
-        void SetEntity(Entity entity, EntityViewer go);
+        void SetEntity(Entity entity, EntityHierarchy go);
 #else
         void SetEntity(Entity entity);
 #endif
     }
-    public class EntityMono : MonoBehaviour, IEntityMono
+    public class EntityModel : MonoBehaviour, IEntityMono
     {
-        public Entity Entity { get; private set; }
+        public Entity Entity { get; private set; }        
 
         public T GetEntity<T>() where T : Entity
         {
@@ -21,12 +22,20 @@ namespace Ux
             return Entity as T;
         }
 
+
+        public void Release()
+        {
+            Entity = null;
 #if UNITY_EDITOR
-        [SerializeField] EntityViewer Viewer;
-        public void SetEntity(Entity entity, EntityViewer viewer)
+            _hierarchy = null;
+#endif
+        }
+#if UNITY_EDITOR
+        [SerializeField] EntityHierarchy _hierarchy;
+        public void SetEntity(Entity entity, EntityHierarchy hierarchy)
         {
             Entity = entity;
-            Viewer = viewer;
+            _hierarchy = hierarchy;
         }
 #else
         public void SetEntity(Entity entity)

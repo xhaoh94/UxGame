@@ -34,7 +34,7 @@ namespace Ux
         public override void OnBehaviourPlay(Playable playable, FrameData info)
         {
             if (go == null) return;
-            var mono = go.GetComponent<EntityMono>();
+            var mono = go.GetComponent<EntityModel>();
             if (mono == null) return;
             var player = mono.GetEntity<Unit>();
             if (player == null) return;
@@ -44,7 +44,7 @@ namespace Ux
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
             if (go == null) return;
-            var mono = go.GetComponent<EntityMono>();
+            var mono = go.GetComponent<EntityModel>();
             if (mono == null) return;
             var player = mono.GetEntity<Unit>();
             if (player == null) return;

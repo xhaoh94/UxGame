@@ -1,28 +1,28 @@
-﻿using UnityEngine.Animations;
+﻿using UnityEditor.VersionControl;
+using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 namespace Ux
 {
-    public class TLAnimationClip : TLAnimationBase, IAwakeSystem, ITimelineClip
+    public class TLAnimationClip : TLAnimationBase, IAwakeSystem<TimelineClip>, ITimelineClip
     {
-        public TimelineClip Clip => ParentAs<TimelineClip>();
+        public TimelineClip Clip { get; private set; }
         public AnimationClipAsset Asset => Clip.Asset as AnimationClipAsset;
-        public TimelineComponent Component => Clip.Track.Component;
-        public TLAnimationTrack Track => Clip.Track.GetComponent<TLAnimationTrack>();
+        public TLAnimationTrack Track => ParentAs<TLAnimationTrack>();
 
         private AnimationClipPlayable _source;
         private Playable _parent;
 
-        void IAwakeSystem.OnAwake()
+        void IAwakeSystem<TimelineClip>.OnAwake(TimelineClip clip)
         {
-            _source = AnimationClipPlayable.Create(Component.PlayableGraph, Asset.clip);
-            SetSourcePlayable(Component.PlayableGraph, _source);
+            Clip = clip;
+            _source = AnimationClipPlayable.Create(Clip.PlayableGraph, Asset.clip);
+            SetSourcePlayable(Clip.PlayableGraph, _source);
         }
 
         float _time;
         public void SetTime(float time)
         {
-            if (!Clip.Active) return;
             Time = time;
             TimelineMgr.Ins.Lerp(time, time, _Lerp, ref _time);
         }
@@ -57,8 +57,8 @@ namespace Ux
 
         void ITimelineClip.OnEnable()
         {
-            var index = Track.Asset.clips.IndexOf(Clip.Asset);
-            Track.AddClip(this, index);
+            var index = Track.Asset.clips.IndexOf(Asset);
+            Track.ConnectClip(this, index);
         }
 
         void ITimelineClip.OnDisable()

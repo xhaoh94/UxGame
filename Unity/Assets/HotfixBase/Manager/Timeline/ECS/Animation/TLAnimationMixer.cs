@@ -17,10 +17,10 @@ namespace Ux
         {
             _mixer = AnimationMixerPlayable.Create(Component.PlayableGraph);
             SetSourcePlayable(Component.PlayableGraph, _mixer);
-            var root = Component.GetComponent<TLAnimationRoot>();
+            var root = Component.Get<TLAnimationRoot>();
             if (root == null)
             {
-                root = Component.AddComponent<TLAnimationRoot, TimelineComponent>(Component);
+                root = Component.Add<TLAnimationRoot, TimelineComponent>(Component);
             }
             root.Play(this);
         }

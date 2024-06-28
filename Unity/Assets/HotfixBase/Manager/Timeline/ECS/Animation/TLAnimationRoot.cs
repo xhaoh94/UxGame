@@ -17,7 +17,7 @@ namespace Ux
         void IAwakeSystem<TimelineComponent>.OnAwake(TimelineComponent a)
         {
             Component= a;
-            var animator=Component.GameObject.GetComponentInChildren<Animator>();
+            var animator=Component.Parent.Model.GetComponentInChildren<Animator>();
             string name = animator.gameObject.name;
             MixerRoot = AnimationLayerMixerPlayable.Create(Component.PlayableGraph);
             var _output = AnimationPlayableOutput.Create(Component.PlayableGraph, name, animator);

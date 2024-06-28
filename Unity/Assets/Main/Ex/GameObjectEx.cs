@@ -16,6 +16,10 @@ namespace Ux
         {
             go.transform.SetParent(parent, worldPositionStays);
         }
+        public static void SetParent(this GameObject go, GameObject parent, bool worldPositionStays = true)
+        {
+            go.transform.SetParent(parent.transform, worldPositionStays);
+        }
         public static void SetLayer(this GameObject go, int layer, bool includeChild = true)
         {
             go.layer = layer;

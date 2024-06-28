@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
 using YooAsset.Editor;
 namespace Ux.Editor.Timeline
 {
@@ -62,6 +58,7 @@ namespace Ux.Editor.Timeline
             
         }
 
+        
         void AddTrackItem(TimelineTrackAsset trackAsset)
         {
             if (window.asset == null)
@@ -83,16 +80,26 @@ namespace Ux.Editor.Timeline
         }
         void RemoveTrackItem(TimelineTrackAsset trackAsset)
         {
-
+            if(trackItemDic.TryGetValue(trackAsset.Name,out var item))
+            {
+                trackContent.Remove(item);
+                trackItemDic.Remove(trackAsset.Name);
+                window.RefreshEntity();
+            }
         }
         public void RefreshView()
         {
             trackContent.Clear();
-            foreach (var track in window.asset.tracks)
+            trackItemDic.Clear();
+            if (window.asset!=null)
             {
-                var item = new TimelineTrackItem(track, window);
-                trackContent.Add(item);
-            }
+                foreach (var track in window.asset.tracks)
+                {
+                    var item = new TimelineTrackItem(track, window);
+                    trackContent.Add(item);
+                    trackItemDic.Add(track.Name, item);
+                }
+            }            
         }
     }
 }

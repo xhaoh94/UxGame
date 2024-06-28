@@ -45,8 +45,9 @@ namespace Ux.Editor
                     isDrag = true;
                     start?.Invoke();
                     moveDelta = Event.current.mousePosition;
-                    content.RegisterCallback<PointerMoveEvent>(OnMove);
+                    content.RegisterCallback<PointerMoveEvent>(OnMove);                    
                     content.RegisterCallback<PointerUpEvent>(OnUp);
+                    content.RegisterCallback<MouseLeaveEvent>(OnOut);                    
                 }
             });
         }
@@ -73,6 +74,10 @@ namespace Ux.Editor
                 ve.UnregisterCallback<PointerMoveEvent>(OnMove);
                 ve.UnregisterCallback<PointerUpEvent>(OnUp);
             }
+        }
+        void OnOut(MouseLeaveEvent e)
+        {
+            OnUp(null);
         }
     }
 }

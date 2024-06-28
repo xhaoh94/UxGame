@@ -3,31 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEditor.VersionControl;
 using UnityEngine.Animations;
+using UnityEngine.Playables;
+using static PlasticPipe.Server.MonitorStats;
 
 namespace Ux
 {
 
-    public class TLAnimationTrack : TLAnimationBase, IAwakeSystem
+    public class TLAnimationTrack : TLAnimationBase, IAwakeSystem<TimelineTrack>
     {
-        public TimelineTrack Track => ParentAs<TimelineTrack>();
-        public AnimationTrackAsset Asset => Track.Asset as AnimationTrackAsset;
+        public TimelineTrack Track { get; private set; }
+        public AnimationTrackAsset Asset =>Track.Asset as AnimationTrackAsset;        
 
         private AnimationMixerPlayable _mixer;
-        void IAwakeSystem.OnAwake()
+        void IAwakeSystem<TimelineTrack>.OnAwake(TimelineTrack track)
         {
-            _mixer = AnimationMixerPlayable.Create(Track.Component.PlayableGraph, Asset.clips.Count);
-            SetSourcePlayable(Track.Component.PlayableGraph, _mixer);
+            Track = track;
+            _mixer = AnimationMixerPlayable.Create(Track.PlayableGraph, Asset.clips.Count);
+            SetSourcePlayable(Track.PlayableGraph, _mixer);
 
-            var layer = Track.Timeline.GetComponent<TLAnimationMixer>();
-            if (layer == null)
-            {
-                layer = Track.Timeline.AddComponent<TLAnimationMixer>();
-            }
+            var timeline = ParentAs<Timeline>();
+            var layer = timeline.Get<TLAnimationMixer>();
+            layer ??= timeline.Add<TLAnimationMixer>();
             layer.Add(Asset.Layer);
         }
 
-        public void AddClip(TLAnimationClip clip, int index)
+        public void ConnectClip(TLAnimationClip clip, int index)
         {
             clip.Connect(_mixer, index);
         }

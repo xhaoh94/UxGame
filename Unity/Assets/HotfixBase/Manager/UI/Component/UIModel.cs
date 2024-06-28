@@ -14,9 +14,9 @@ namespace Ux
             {
                 if (Anim != null)
                 {
-                    RemoveComponent(Anim);
+                    Remove(Anim);
                 }
-                Anim = AddComponent<AnimComponent, Animator>(model.GetComponentInChildren<Animator>());
+                Anim = Add<AnimComponent, Animator>(model.GetComponentInChildren<Animator>());
             }
 
             protected override void OnDestroy()

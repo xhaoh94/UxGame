@@ -1,4 +1,6 @@
-﻿namespace Ux
+﻿using UnityEngine.Playables;
+
+namespace Ux
 {
     public interface ITimelineClip
     {
@@ -6,26 +8,31 @@
         void OnDisable();
         void SetTime(float time);
     }
-    public class TimelineClip : Entity, IAwakeSystem<TimelineClipAsset>, IFixedUpdateSystem
-    {
-        public TimelineClipAsset Asset { get; private set; }
-        public TimelineTrack Track => ParentAs<TimelineTrack>();
-        public TimelineComponent Component => Track.Component;
-
+    public class TimelineClip
+    {        
         public float Time { get; protected set; }        
         public bool Active { get; protected set; }
 
+        public TimelineTrack Track { get; private set; }
+        public TimelineClipAsset Asset { get; private set; }
+        public PlayableGraph PlayableGraph=> Track.Component.PlayableGraph;
+        float PlaySpeed => Track.Component.PlaySpeed;
         ITimelineClip _clip;
-        void IAwakeSystem<TimelineClipAsset>.OnAwake(TimelineClipAsset a)
+        public void Init(TimelineTrack track, TimelineClipAsset asset)
         {
-            Asset = a;
-            _clip = AddComponent(Asset.ClipType) as ITimelineClip;
+            Track=track;
+            Asset=asset;
+            _clip = track.Track.Add(asset.ClipType, this) as ITimelineClip;
         }
-        void IFixedUpdateSystem.OnFixedUpdate()
+
+        public void Release()
         {
-            Evaluate(UnityEngine.Time.deltaTime * (float)Component.PlaySpeed);
-            _clip?.SetTime(Time);
+            _clip = null;
+            Asset = null;
+            Track = null;
+            Pool.Push(this);
         }
+
         public void Evaluate(float deltaTime)
         {            
             var _time = Time + deltaTime;
@@ -42,6 +49,7 @@
             }
 
             Time = _time;
+            SetTime(Time);
         }
         public void OnEnable()
         {

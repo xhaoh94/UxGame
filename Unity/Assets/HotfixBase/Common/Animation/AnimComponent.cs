@@ -138,7 +138,7 @@ namespace Ux
         public void Stop()
         {
             if (IsDestroy) return;
-            var animMixers = GetChilds<AnimMixer>();
+            var animMixers = GetAll<AnimMixer>();
             if (animMixers != null)
             {
                 foreach (var animMixer in animMixers)
@@ -170,7 +170,7 @@ namespace Ux
                 Log.Warning($"已存在动画片段: {name}");
                 return false;
             }
-            AddChild<AnimClip, PlayableGraph, string, AnimationClip, int>(animClipID, _graph, name, clip, layer);
+            Add<AnimClip, PlayableGraph, string, AnimationClip, int>(animClipID, _graph, name, clip, layer);
             return true;
         }
 
@@ -227,11 +227,11 @@ namespace Ux
         }
         private AnimClip GetAnimClip(int clipId)
         {
-            return GetChild<AnimClip>(clipId);
+            return Get<AnimClip>(clipId);
         }
         private AnimMixer GetAnimMixer(int layer)
         {
-            return GetChild<AnimMixer>(layer);
+            return Get<AnimMixer>(layer);
         }
         private AnimMixer CreateAnimMixer(int layer)
         {
@@ -248,7 +248,7 @@ namespace Ux
                     _mixerRoot.SetInputCount(layer + 1);
                 }
             }
-            var animMixer = AddChild<AnimMixer, PlayableGraph>(layer, _graph);
+            var animMixer = Add<AnimMixer, PlayableGraph>(layer, _graph);
             return animMixer;
         }
     }

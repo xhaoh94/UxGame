@@ -10,18 +10,15 @@ namespace Ux
 {
     public partial class TimelineComponent : Entity, IAwakeSystem, IFixedUpdateSystem
     {
-        public GameObject GameObject { get; private set; }
-        
         public Timeline CurTimeline { get; private set; }
-
 
         bool _isInit;
         public PlayableGraph PlayableGraph { get; private set; }
 
-        double _playSpeed;
-        public double PlaySpeed
+        float _playSpeed;
+        public float PlaySpeed
         {
-            get => Math.Round(Math.Max(0.001f, _playSpeed), 2);
+            get => (float)Math.Round(Math.Max(0.001f, _playSpeed), 2);
             set => _playSpeed = value;
         }
 
@@ -35,15 +32,16 @@ namespace Ux
                     return;
 
                 _isPlaying = value;
-#if UNITY_EDITOR
-                _EditorInit();
-#endif
             }
         }
         void IAwakeSystem.OnAwake()
         {
             PlaySpeed = 1;
             IsPlaying = false;
+
+#if UNITY_EDITOR
+            PlayableGraph = PlayableGraph.Create(Parent.Model.name);
+#endif
         }
         protected override void OnDestroy()
         {
@@ -53,18 +51,11 @@ namespace Ux
 
         void IFixedUpdateSystem.OnFixedUpdate()
         {
-            Evaluate(Time.deltaTime * (float)PlaySpeed);
-        }
-
-        public void Init(GameObject gameObject)
-        {
-            this.GameObject = gameObject;
-            if (PlayableGraph.IsValid())
+            Log.Debug(Time.deltaTime);
+            if (_isPlaying)
             {
-                PlayableGraph.Destroy();
+                Evaluate(Time.deltaTime * (float)PlaySpeed);
             }
-            PlayableGraph = PlayableGraph.Create(gameObject.name);
-            _isInit = true;
         }
 
         public void SetTimeline(TimelineAsset setting)
@@ -78,8 +69,8 @@ namespace Ux
             {
                 CurTimeline.Destroy();
             }
-            RemoveComponent<TLAnimationRoot>();
-            var entity = AddChild<Timeline, TimelineAsset, TimelineComponent>(setting, this);
+            Remove<TLAnimationRoot>();
+            var entity = Add<Timeline, TimelineAsset>(setting);
             CurTimeline = entity;
         }
 
@@ -89,6 +80,7 @@ namespace Ux
             if (PlayableGraph.IsValid())
             {
                 PlayableGraph.Evaluate(deltaTime);
+                CurTimeline?.Evaluate(deltaTime);
             }
         }
 

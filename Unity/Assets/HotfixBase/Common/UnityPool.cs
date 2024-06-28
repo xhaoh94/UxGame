@@ -94,7 +94,7 @@ public static class UnityPool
 #endif
         if (obj is GameObject go)
         {
-            var entityMono = go.GetComponent<EntityMono>();
+            var entityMono = go.GetComponent<EntityModel>();
             if (entityMono != null)
             {
                 UnityEngine.Object.Destroy(entityMono);

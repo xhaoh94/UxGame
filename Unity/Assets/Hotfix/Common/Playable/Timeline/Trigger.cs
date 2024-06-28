@@ -40,11 +40,11 @@ namespace Ux
         public override void OnBehaviourPlay(Playable playable, FrameData info)
         {
             if (go == null) return;
-            var mono = go.GetComponent<EntityMono>();
+            var mono = go.GetComponent<EntityModel>();
             if (mono == null) return;
             var player = mono.GetEntity<Unit>();
             if (player == null) return;
-            var operate = player.GetComponent<OperateComponent>();
+            var operate = player.Get<OperateComponent>();
             if (operate == null) return;
             operate.AddTrigger(triggerData);
         }
@@ -52,11 +52,11 @@ namespace Ux
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
             if (go == null) return;
-            var mono = go.GetComponent<EntityMono>();
+            var mono = go.GetComponent<EntityModel>();
             if (mono == null) return;
             var player = mono.GetEntity<Unit>();
             if (player == null) return;
-            var operate = player.GetComponent<OperateComponent>();
+            var operate = player.Get<OperateComponent>();
             if (operate == null) return;
             operate.RemoveTrigger();
         }
