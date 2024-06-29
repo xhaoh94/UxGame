@@ -67,3 +67,5 @@ crashlytics-build.properties
 
 *.vsconfig
 /Unity/UserSettings/Layouts/*.dwlt
+/Unity/UserSettings/Layouts/default-2021.dwlt
+/Unity/UserSettings/Layouts/default-2022.dwlt
