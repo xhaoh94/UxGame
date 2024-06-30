@@ -9,21 +9,20 @@ using UnityEngine.Playables;
 
 namespace Ux
 {
-    public partial class TLAnimationRoot : Entity,IAwakeSystem<TimelineComponent>
+    public partial class TLAnimationRoot : Entity, IAwakeSystem<TimelineComponent>
     {
         public TimelineComponent Component { get; private set; }
         public AnimationLayerMixerPlayable MixerRoot { get; private set; }
         private readonly List<TLAnimationMixer> _mixers = new List<TLAnimationMixer>(10);
         void IAwakeSystem<TimelineComponent>.OnAwake(TimelineComponent a)
         {
-            Component= a;
-            var animator=Component.Parent.Model.GetComponentInChildren<Animator>();
+            Component = a;
+            var animator = Component.Parent.Model.GetComponentInChildren<Animator>();
             string name = animator.gameObject.name;
             MixerRoot = AnimationLayerMixerPlayable.Create(Component.PlayableGraph);
             var _output = AnimationPlayableOutput.Create(Component.PlayableGraph, name, animator);
             _output.SetSourcePlayable(MixerRoot);
         }
-
         public void Play(TLAnimationMixer mixer)
         {
             if (mixer == null)
@@ -46,23 +45,29 @@ namespace Ux
                     _mixers[index] = mixer;
                 }
             }
-
-            for (int i = 0; i < _mixers.Count; i++)
+            if (Application.isPlaying)
             {
-                var _mixer = _mixers[i];
-                if (_mixer == null)
-                    continue;
+                for (int i = 0; i < _mixers.Count; i++)
+                {
+                    var _mixer = _mixers[i];
+                    if (_mixer == null)
+                        continue;
 
-                if (_mixer == mixer)
-                {
-                    _mixer.StartWeightFade(1f, 0.3f);
-                    _mixer.PlayNode();
+                    if (_mixer == mixer)
+                    {
+                        _mixer.StartWeightFade(1f, 0.3f);
+                        _mixer.PlayNode();
+                    }
+                    else
+                    {
+                        _mixer.StartWeightFade(0f, 0.3f);
+                        _mixer.PauseNode();
+                    }
                 }
-                else
-                {
-                    _mixer.StartWeightFade(0f, 0.3f);
-                    _mixer.PauseNode();
-                }
+            }
+            else
+            {
+                mixer.Weight = 1;
             }
         }
         public bool IsContains(TLAnimationMixer timeline)

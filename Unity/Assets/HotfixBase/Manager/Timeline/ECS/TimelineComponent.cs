@@ -50,7 +50,7 @@ namespace Ux
         }
 
         void IFixedUpdateSystem.OnFixedUpdate()
-        {            
+        {
             if (_isPlaying)
             {
                 Evaluate(Time.deltaTime * PlaySpeed);
@@ -82,9 +82,12 @@ namespace Ux
 
         public void SetTime(float time)
         {
+            if (!_isInit) return;
             if (PlayableGraph.IsValid())
             {
-                Current?.SetTime(time);
+                float deltaTime = time - Current.Asset.MaxTime;
+                PlayableGraph.Evaluate(deltaTime);
+                Current?.Evaluate(deltaTime);
             }
         }
 

@@ -21,6 +21,7 @@ namespace Ux
             root ??= Component.Add<TLAnimationRoot, TimelineComponent>(Component);
             root.Play(this);
         }
+
         public void Add(TLAnimationTrack track)
         {            
             int inputCount = _mixer.GetInputCount();
@@ -31,6 +32,7 @@ namespace Ux
             }
             else
             {
+
                 if (layer > inputCount - 1)
                 {
                     _mixer.SetInputCount(layer + 1);
@@ -38,6 +40,7 @@ namespace Ux
             }
 
             track.Connect(_mixer, layer);
+            track.Weight = 1;
         }       
     }
 }

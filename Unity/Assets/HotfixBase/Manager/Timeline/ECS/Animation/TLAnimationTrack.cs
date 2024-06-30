@@ -28,7 +28,6 @@ namespace Ux
             layer ??= timeline.Add<TLAnimationMixer>();
             layer.Add(this);
         }
-
         public void ConnectClip(TLAnimationClip clip, int index)
         {
             clip.Connect(_mixer, index);

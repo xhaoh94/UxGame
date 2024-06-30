@@ -17,7 +17,7 @@ namespace Ux
         {
             Clip = clip;
             _source = AnimationClipPlayable.Create(Clip.PlayableGraph, Asset.clip);
-            SetSourcePlayable(Clip.PlayableGraph, _source);
+            SetSourcePlayable(Clip.PlayableGraph, _source);            
         }
 
         float _time;
@@ -54,6 +54,8 @@ namespace Ux
             {
                 Weight = 0;
             }
+
+            PlayNode();
         }
 
         void ITimelineClip.OnEnable()

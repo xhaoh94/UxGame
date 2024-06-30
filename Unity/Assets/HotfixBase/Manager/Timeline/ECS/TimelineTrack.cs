@@ -46,7 +46,7 @@ namespace Ux
             }
         }
         public void SetTime(float time)
-        {
+        {            
             foreach (var clip in _clips)
             {
                 clip.SetTime(time);

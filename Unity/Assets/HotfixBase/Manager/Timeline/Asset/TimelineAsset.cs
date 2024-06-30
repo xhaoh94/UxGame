@@ -11,12 +11,21 @@ namespace Ux
     {
         [SerializeReference]
         public List<TimelineTrackAsset> tracks = new List<TimelineTrackAsset>();
-#if UNITY_EDITOR
-        public void Save()
+
+        public float MaxTime
         {
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
+            get
+            {
+                float _maxTime = 0;
+                foreach (var track in tracks)
+                {
+                    if (_maxTime < track.MaxTime)
+                    {
+                        _maxTime = track.MaxTime;
+                    }
+                }
+                return _maxTime;
+            }
         }
-#endif
     }
 }

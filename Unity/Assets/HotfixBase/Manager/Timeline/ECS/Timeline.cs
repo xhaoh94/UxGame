@@ -6,11 +6,13 @@ namespace Ux
 {
     public class Timeline : Entity, IAwakeSystem<TimelineAsset>
     {
+        public TimelineAsset Asset { get; private set; }
         public TimelineComponent Component => ParentAs<TimelineComponent>();
         List<TimelineTrack> _tacks = new List<TimelineTrack>();
 
         void IAwakeSystem<TimelineAsset>.OnAwake(TimelineAsset asset)
-        {                                
+        {                           
+            Asset = asset;
             foreach (var trackAsset in asset.tracks)
             {
                 var track = Pool.Get<TimelineTrack>();

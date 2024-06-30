@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Ux;
 
 public static class Pool
@@ -36,6 +37,12 @@ public static class Pool
 
     public static void Push(object obj)
     {
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+#endif
         Type type = obj.GetType();
         if (!_dict.TryGetValue(type, out var queue))
         {
