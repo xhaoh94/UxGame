@@ -11,8 +11,7 @@ namespace Ux
     public partial class TimelineComponent : Entity, IAwakeSystem, IFixedUpdateSystem
     {
         public Timeline Current { get; private set; }
-
-        bool _isInit;
+        public Timeline Last { get; private set; }
         public PlayableGraph PlayableGraph { get; private set; }
 
         float _playSpeed = 1;
@@ -38,10 +37,7 @@ namespace Ux
         {
             PlaySpeed = 1;
             IsPlaying = false;
-
-#if UNITY_EDITOR
             PlayableGraph = PlayableGraph.Create(Parent.Model.name);
-#endif
         }
         protected override void OnDestroy()
         {
@@ -57,39 +53,43 @@ namespace Ux
             }
         }
 
-        public void SetTimeline(TimelineAsset setting)
+        public void Play(TimelineAsset timeline)
         {
-            //if(!_entitys.TryGetValue(setting,out var entity))
-            //{
-            //    entity=AddChild<Timeline, TimelineAsset>(setting);
-            //    _entitys.Add(setting, entity);
-            //}
-            Current?.Destroy();
-            Remove<TLAnimationRoot>();
-            var entity = Add<Timeline, TimelineAsset>(setting);
-            Current = entity;
+            if (Last != null)
+            {
+                Last.Destroy();
+                Last = null;
+            }
+            if (Current!=null)
+            {
+                if (Application.isPlaying)
+                {
+                    Last = Current;
+                }
+                else
+                {
+                    Remove(Current);
+                }
+            }            
+            Current = Add<Timeline, TimelineAsset>(timeline);
         }
 
-        void Evaluate(float deltaTime)
+        public void Evaluate(float deltaTime)
         {
-            if (!_isInit) return;
             if (PlayableGraph.IsValid())
             {
                 PlayableGraph.Evaluate(deltaTime);
                 Current?.Evaluate(deltaTime);
+                if (Last != null)
+                {
+                    Last.Evaluate(deltaTime);
+                    if (Last.IsDone)
+                    {
+                        Remove(Last);
+                        Last = null;
+                    }
+                }
             }
         }
-
-        public void SetTime(float time)
-        {
-            if (!_isInit) return;
-            if (PlayableGraph.IsValid())
-            {
-                float deltaTime = time - Current.Asset.MaxTime;
-                PlayableGraph.Evaluate(deltaTime);
-                Current?.Evaluate(deltaTime);
-            }
-        }
-
     }
 }

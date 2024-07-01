@@ -8,49 +8,35 @@ namespace Ux
     {
         public TimelineAsset Asset { get; private set; }
         public TimelineComponent Component => ParentAs<TimelineComponent>();
-        List<TimelineTrack> _tacks = new List<TimelineTrack>();
+        List<TimelineTrack> _tacks = new();
+        public bool IsDone { get; private set; }
 
         void IAwakeSystem<TimelineAsset>.OnAwake(TimelineAsset asset)
         {                           
             Asset = asset;
             foreach (var trackAsset in asset.tracks)
             {
-                var track = Pool.Get<TimelineTrack>();
-                track.Init(this, trackAsset);
+                var track = Add(trackAsset.TrackType, trackAsset) as TimelineTrack;
                 _tacks.Add(track);
-            }
+            }            
         }
 
         protected override void OnDestroy()
         {
-            foreach (var track in _tacks)
-            {
-                track.Release();
-            }
-            _tacks.Clear();                        
+            _tacks.Clear();    
+            IsDone = false;
         }
-
-        public void Bind()
+        
+        public void Evaluate(float deltaTime)
         {
-
-        }
-        public void UnBind()
-        {
-
-        }
-
-        public void Evaluate(float time)
-        {
+            IsDone = true;
             foreach (var tack in _tacks)
             {
-                tack.Evaluate(time);
-            }
-        }
-        public void SetTime(float time)
-        {
-            foreach (var tack in _tacks)
-            {
-                tack.SetTime(time);
+                tack.Evaluate(deltaTime);
+                if (IsDone && !tack.IsDone)
+                {
+                    IsDone = false;
+                }
             }
         }
     }

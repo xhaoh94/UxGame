@@ -21,7 +21,7 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         StartFrame: 0
-        EndFrame: 40
+        EndFrame: 70
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 75f41ed80eab9704189a26e21e6c38cf, type: 3}

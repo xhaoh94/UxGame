@@ -20,12 +20,11 @@ namespace Ux
 
         #endregion
 
-        #region Time
-        float _rate => (float)TimelineMgr.Ins.FrameRate;
-        public float StartTime => StartFrame / _rate;
-        public float EndTime => EndFrame / _rate;
-        public float InTime => InFrame / _rate;
-        public float OutTime => OutFrame / _rate;
+        #region Time        
+        public float StartTime => StartFrame / TimelineMgr.Ins.FrameRate;
+        public float EndTime => EndFrame / TimelineMgr.Ins.FrameRate;
+        public float InTime => InFrame / TimelineMgr.Ins.FrameRate;
+        public float OutTime => OutFrame / TimelineMgr.Ins.FrameRate;
 
         #endregion
 

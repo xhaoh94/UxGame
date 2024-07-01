@@ -20,8 +20,8 @@ namespace Ux.Editor.Timeline
         public TimelineWindow window;
 
         List<TimelineClipItem> items = new List<TimelineClipItem>();
-        int StartFrame=> Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
-        int EndFrame=> Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
+        int StartFrame => Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
+        int EndFrame => Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
 
         float FrameScale = 1;
         float FrameWidth => 10 * FrameScale;
@@ -31,7 +31,7 @@ namespace Ux.Editor.Timeline
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
 
         //当前所在帧
-        int nowFrame = 0;       
+        int nowFrame = 0;
 
         ScrollView scrClipView;
         VisualElement scrContent;
@@ -40,7 +40,7 @@ namespace Ux.Editor.Timeline
         VisualElement veMarkerIcon;
         VisualElement veClipContent;
         Label lbMarker;
-        
+
 
         public TimelineClipView()
         {
@@ -95,7 +95,7 @@ namespace Ux.Editor.Timeline
             else if (FrameScale < .1f)
             {
                 FrameScale = .1f;
-            }            
+            }
             float targetWidth = Mathf.Max(ScrClipViewWidth * FrameScale, ScrClipViewWidth);
             if (ScrClipViewContentWidth != targetWidth)
             {
@@ -117,8 +117,8 @@ namespace Ux.Editor.Timeline
             UpdateMarkerPos();
         }
         public float GetPositionByFrame(int frame)
-        {            
-            return frame * FrameWidth - ScrClipViewOffsetX;            
+        {
+            return frame * FrameWidth - ScrClipViewOffsetX;
         }
         public int GetFrameByMousePosition()
         {
@@ -129,7 +129,7 @@ namespace Ux.Editor.Timeline
             {
                 posx = 0;
             }
-            if (posx >ScrClipViewWidth - offset)
+            if (posx > ScrClipViewWidth - offset)
             {
                 posx = ScrClipViewWidth - offset;
             }
@@ -153,18 +153,17 @@ namespace Ux.Editor.Timeline
             var frame = GetFrameByMousePosition();
             if (frame != nowFrame)
             {
-                nowFrame = frame;
                 lbMarker.text = nowFrame.ToString();
                 UpdateMarkerPos();
-
-                window.SetFrame(frame);
+                window.SetFrame(frame - nowFrame);
+                nowFrame = frame;
             }
         }
 
         void UpdateMarkerPos()
         {
             try
-            {                
+            {
                 var pos = veMarkerIcon.transform.position;
                 pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
                 veMarkerIcon.transform.position = pos;
@@ -188,7 +187,7 @@ namespace Ux.Editor.Timeline
             int startFrame = StartFrame;
             int endFrame = EndFrame;
             int interval = Mathf.FloorToInt(1 + (10 - frameWidth)) * 10;
-            if (interval < 5) interval = 5;            
+            if (interval < 5) interval = 5;
 
             for (int i = startFrame; i <= endFrame; i++)
             {

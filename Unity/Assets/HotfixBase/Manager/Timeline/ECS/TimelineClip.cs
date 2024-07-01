@@ -2,64 +2,45 @@
 
 namespace Ux
 {
-    public interface ITimelineClip
+    public abstract class TimelineClip : Entity, IAwakeSystem<TimelineClipAsset>
     {
-        void OnEnable();
-        void OnDisable();
-        void SetTime(float time);
-    }
-    public class TimelineClip
-    {        
-        public float Time { get; private set; }        
+        public float Time { get; private set; }
         public bool Active { get; private set; }
+        public bool IsDone => _asset.EndTime <= Time;
 
-        public TimelineTrack Track { get; private set; }
-        public TimelineClipAsset Asset { get; private set; }
-        public PlayableGraph PlayableGraph=> Track.Component.PlayableGraph;
-        float PlaySpeed => Track.Component.PlaySpeed;
-        ITimelineClip _clip;
-        public void Init(TimelineTrack track, TimelineClipAsset asset)
+        TimelineClipAsset _asset;
+        void IAwakeSystem<TimelineClipAsset>.OnAwake(TimelineClipAsset asset)
+        {            
+            _asset = asset;
+            OnStart(asset);
+        }
+        protected override void OnDestroy()
         {
-            Track=track;
-            Asset=asset;
-            _clip = track.Track.Add(asset.ClipType, this) as ITimelineClip;            
+            _asset = null;
+            Active=false;
+            Time = 0;
         }
 
-        public void Release()
-        {
-            _clip = null;
-            Asset = null;
-            Track = null;
-            Pool.Push(this);
-        }
 
         public void Evaluate(float deltaTime)
-        {                                               
-            SetTime(Time + deltaTime);
-        }
-        public void OnEnable()
-        {
-            _clip?.OnEnable();
-        }
-        public void OnDisable()
-        {
-            _clip?.OnDisable();
-        }
-
-        public void SetTime(float time)
-        {
-            Time = time;
-            if (!Active && Asset.StartTime <= time && time <= Asset.EndTime)
+        {            
+            Time += deltaTime;
+            if (!Active && _asset.StartTime <= Time && Time <= _asset.EndTime)
             {
                 Active = true;
                 OnEnable();
             }
-            else if (Active && (time < Asset.StartTime || Asset.EndTime < time))
+            else if (Active && (Time < _asset.StartTime || _asset.EndTime < Time))
             {
+                
                 Active = false;
                 OnDisable();
-            }
-            _clip?.SetTime(time);
+            }            
+            OnEvaluate(deltaTime);
         }
+        protected abstract void OnStart(TimelineClipAsset asset);
+        protected abstract void OnEnable();
+        protected abstract void OnDisable();
+        protected abstract void OnEvaluate(float deltaTime);
     }
 }

@@ -4,53 +4,43 @@ using UnityEngine.Playables;
 
 namespace Ux
 {
-    public class TimelineTrack
+    public abstract class TimelineTrack : Entity, IAwakeSystem<TimelineTrackAsset>
     {
         public PlayableGraph PlayableGraph => Component.PlayableGraph;
         public TimelineComponent Component => Timeline.Component;
-        public TimelineTrackAsset Asset { get; private set; }
-        public Timeline Timeline { get; private set; }
-        public Entity Track { get; private set; }
+        public Timeline Timeline => ParentAs<Timeline>();
+        public bool IsDone { get; private set; }
 
-        List<TimelineClip> _clips = new List<TimelineClip>();
-
-        public void Init(Timeline timeline, TimelineTrackAsset asset)
-        {
-            Timeline = timeline;
-            Asset = asset;
-            Track = timeline.Add(Asset.TrackType, this);
-            foreach (var clipAsset in Asset.clips)
+        List<TimelineClip> _clips = new();
+        void IAwakeSystem<TimelineTrackAsset>.OnAwake(TimelineTrackAsset asset)
+        {            
+            OnStart(asset);
+            foreach (var clipAsset in asset.clips)
             {
-                var clip = Pool.Get<TimelineClip>();
-                clip.Init(this, clipAsset);
+                var clip = Add(clipAsset.ClipType, clipAsset) as TimelineClip;
                 _clips.Add(clip);
             }
         }
-        public void Release()
+        protected override void OnDestroy()
         {
-            foreach (var clip in _clips)
-            {
-                clip.Release();
-            }
             _clips.Clear();
-            Timeline = null;
-            Asset = null;
-            Track = null;
-            Pool.Push(this);
         }
-        public void Evaluate(float time)
+
+        public void Evaluate(float deltaTime)
         {
+            IsDone = true;
             foreach (var clip in _clips)
             {
-                clip.Evaluate(time);
+                clip.Evaluate(deltaTime);
+                if (!clip.IsDone && IsDone)
+                {
+                    IsDone = false;
+                }
             }
+            OnEvaluate(deltaTime);
         }
-        public void SetTime(float time)
-        {            
-            foreach (var clip in _clips)
-            {
-                clip.SetTime(time);
-            }
-        }
+
+        protected abstract void OnStart(TimelineTrackAsset asset);
+        protected abstract void OnEvaluate(float deltaTime);
     }
 }

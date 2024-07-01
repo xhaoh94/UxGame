@@ -159,12 +159,12 @@ namespace Ux.Editor.Timeline
         public void RefreshEntity()
         {
             if (asset == null) return;
-            entity?.Get<TimelineComponent>()?.SetTimeline(asset);
+            entity?.Get<TimelineComponent>()?.Play(asset);
         }
         public void SetFrame(int frame)
         {
             var time = TimelineMgr.Ins.FrameConvertTime(frame);
-            entity?.Get<TimelineComponent>()?.SetTime(time);
+            entity?.Get<TimelineComponent>()?.Evaluate(time);
         }
     }
 

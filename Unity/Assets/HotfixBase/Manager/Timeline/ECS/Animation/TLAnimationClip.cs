@@ -1,73 +1,77 @@
-﻿using UnityEditor.VersionControl;
-using UnityEngine.Animations;
+﻿using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 namespace Ux
 {
-    public class TLAnimationClip : TLAnimationBase, IAwakeSystem<TimelineClip>, ITimelineClip
-    {
-        public TimelineClip Clip { get; private set; }
-        public AnimationClipAsset Asset => Clip.Asset as AnimationClipAsset;
-        public TLAnimationTrack Track => ParentAs<TLAnimationTrack>();
-
-        private AnimationClipPlayable _source;
-        private Playable _parent;
-
-        void IAwakeSystem<TimelineClip>.OnAwake(TimelineClip clip)
-        {
-            Clip = clip;
-            _source = AnimationClipPlayable.Create(Clip.PlayableGraph, Asset.clip);
-            SetSourcePlayable(Clip.PlayableGraph, _source);            
+    public class TLAnimationClip : TimelineClip
+    {                       
+        private AnimationClipPlayable _source;        
+        private int _inputPort;
+        TLAnimationTrack Track => ParentAs<TLAnimationTrack>();
+        public PlayableGraph PlayableGraph => Track.Component.PlayableGraph;
+        AnimationClipAsset animAsset;
+        protected override void OnStart(TimelineClipAsset asset)
+        {            
+            animAsset = asset as AnimationClipAsset;
+            _source = AnimationClipPlayable.Create(PlayableGraph, animAsset.clip);
+            _inputPort = Track.Asset.clips.IndexOf(animAsset);
         }
-
-        float _time;
-        public void SetTime(float time)
+        protected override void OnDestroy()
         {
-            _time = Time = time;
-            _Lerp(0);
-            //TimelineMgr.Ins.Lerp(time, time, _Lerp, ref _time);
+            base.OnDestroy();
+            animAsset = null;
+            _inputPort = 0;
+            if (_source.IsValid())
+            {
+                PlayableGraph.DestroySubgraph(_source);
+            }
         }
-        void _Lerp(float deltaTime)
+        protected override void OnEnable()
+        {            
+            PlayableGraph.Connect(_source, 0, Track.Mixer, _inputPort);
+        }
+        protected override void OnDisable()
         {
-            if (_time < Asset.StartTime)
+            PlayableGraph.Disconnect(Track.Mixer, _inputPort);
+        }
+        protected override void OnEvaluate(float deltaTime)
+        {
+            if (Time < animAsset.StartTime)
             {
                 Weight = 0;
-                Time = 0;
+                _source.SetTime(0);
             }
-            else if (Asset.StartTime <= _time && _time <= Asset.EndTime)
+            else if (animAsset.StartTime <= Time && Time <= animAsset.EndTime)
             {
-                Time = _time;
-                if (_time > Asset.InTime && _time < Asset.OutTime)
+                _source.SetTime(Time);
+                if (Time > animAsset.InTime && Time < animAsset.OutTime)
                 {
                     Weight = 1;
                 }
-                else if (_time < Asset.InTime)
+                else if (Time < animAsset.InTime)
                 {
-                    Weight = (_time - Asset.StartTime) / (Asset.InTime - Asset.StartTime);
+                    Weight = (Time - animAsset.StartTime) / (animAsset.InTime - animAsset.StartTime);
                 }
-                else if (_time > Asset.OutTime)
+                else if (Time > animAsset.OutTime)
                 {
-                    Weight = 1 - ((_time - Asset.OutTime) / (Asset.EndTime - Asset.OutTime));
+                    Weight = 1 - ((Time - animAsset.OutTime) / (animAsset.EndTime - animAsset.OutTime));
                 }
             }
-            else if (_time > Asset.EndTime)
+            else if (Time > animAsset.EndTime)
             {
                 Weight = 0;
             }
-
-            PlayNode();
         }
 
-        void ITimelineClip.OnEnable()
+        /// <summary>
+        /// 权重值
+        /// </summary>
+        float Weight
         {
-            Log.Debug("OnEnable");
-            var index = Track.Asset.clips.IndexOf(Asset);
-            Track.ConnectClip(this, index);
-        }
-
-        void ITimelineClip.OnDisable()
-        {
-            Disconnect();
+            set
+            {
+                Track.Mixer.SetInputWeight(_inputPort, value);
+            }
         }
     }
 }

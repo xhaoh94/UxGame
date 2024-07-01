@@ -560,11 +560,14 @@ namespace Ux
 
         void RemoveAll()
         {
-            var cnt = _entitys.Count;
-            while (cnt > 0)
-            {
-                Remove(_entitys.ElementAt(0).Value, true);
-                cnt--;
+            var cnt = 0;
+            while (_entitys.Count > 0)
+            {                                
+                Remove(_entitys.ElementAt(0).Value, true);                
+                if(cnt++ >= 1000)
+                {
+                    Log.Error("RemoveAll 删除超出循环，请检测");
+                }
             }
             if (_entitys.Count > 0)
             {

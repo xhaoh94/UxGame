@@ -1,36 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEditor.VersionControl;
-using UnityEngine.Animations;
+﻿using UnityEngine.Animations;
 using UnityEngine.Playables;
-using static PlasticPipe.Server.MonitorStats;
 
 namespace Ux
 {
 
-    public class TLAnimationTrack : TLAnimationBase, IAwakeSystem<TimelineTrack>
+    public class TLAnimationTrack : TimelineTrack
     {
-        public TimelineTrack Track { get; private set; }
-        public AnimationTrackAsset Asset =>Track.Asset as AnimationTrackAsset;        
-
-        private AnimationMixerPlayable _mixer;
-        void IAwakeSystem<TimelineTrack>.OnAwake(TimelineTrack track)
+        public AnimationTrackAsset Asset { get; private set; }
+        
+        public AnimationMixerPlayable Mixer { get; private set; }
+        TLAnimationLayer _layerMixer;
+        protected override void OnStart(TimelineTrackAsset asset)
         {
-            Track = track;
-            _mixer = AnimationMixerPlayable.Create(Track.PlayableGraph, Asset.clips.Count);
-            SetSourcePlayable(Track.PlayableGraph, _mixer);
+            Asset = asset as AnimationTrackAsset;
+            Mixer = AnimationMixerPlayable.Create(PlayableGraph, Asset.clips.Count);
+            _layerMixer = Timeline.Get<TLAnimationLayer>();
+            _layerMixer ??= Timeline.Add<TLAnimationLayer>();
 
-            var timeline = ParentAs<Timeline>();
-            var layer = timeline.Get<TLAnimationMixer>();
-            layer ??= timeline.Add<TLAnimationMixer>();
-            layer.Add(this);
+            int inputCount = _layerMixer.Mixer.GetInputCount();
+            int layer = Asset.Layer;
+            if (layer == 0 && inputCount == 0)
+            {
+                _layerMixer.Mixer.SetInputCount(1);
+            }
+            else
+            {
+                if (layer > inputCount - 1)
+                {
+                    _layerMixer.Mixer.SetInputCount(layer + 1);
+                }
+            }
+
+            PlayableGraph.Connect(Mixer, 0, _layerMixer.Mixer, layer);
+            _layerMixer.Mixer.SetInputWeight(layer, 1);
         }
-        public void ConnectClip(TLAnimationClip clip, int index)
+        protected override void OnEvaluate(float deltaTime)
         {
-            clip.Connect(_mixer, index);
+            _layerMixer?.OnEvaluate(deltaTime);
+        }
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Asset = null;
+            _layerMixer = null;
+            if (Mixer.IsValid())
+            {
+                PlayableGraph.DestroySubgraph(Mixer);
+            }
         }
     }
 }
