@@ -57,8 +57,11 @@ namespace Ux.Editor.Timeline
             }
             
         }
+        public void OnGUI()
+        {
 
-        
+        }
+
         void AddTrackItem(TimelineTrackAsset trackAsset)
         {
             if (window.asset == null)

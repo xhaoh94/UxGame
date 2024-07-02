@@ -51,6 +51,12 @@ namespace Ux.Editor.Timeline
             
         }
 
+        private void OnGUI()
+        {
+            clipView.OnGUI();
+            trackView.OnGUI();
+        }
+
         private void OnDestroy()
         {
             if (entity != null)

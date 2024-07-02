@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ux.UI;
 namespace Ux.Editor.Timeline
 {
     public class TimelineClipView : VisualElement
@@ -64,6 +65,14 @@ namespace Ux.Editor.Timeline
             lbMarker = this.Q<Label>("lb_marker");
 
             veClipContent = this.Q<VisualElement>("ve_clip_content");
+        }
+
+        public void OnGUI()
+        {
+            foreach (var item in items)
+            {
+                item.OnGUI();
+            }
         }
 
         public void AddItem(TimelineClipItem item)
