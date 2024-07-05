@@ -373,7 +373,7 @@ namespace Ux
 
         public static EntityHierarchy Create(Entity entity = null)
         {
-            var viewer = UnityPool.Get<GameObject>(_location, () => new GameObject())
+            var viewer = UnityPool.Get(_location, () => new GameObject())
                 .GetOrAddComponent<EntityHierarchy>();
             if (entity != null)
             {

@@ -13,7 +13,7 @@ namespace Ux
         private readonly List<TLAnimationLayer> _mixers = new(5);
         void IAwakeSystem.OnAwake()
         {            
-            var animator = Component.Parent.Model.GetComponentInChildren<Animator>();
+            var animator = Component.Parent.Viewer.GetComponentInChildren<Animator>();
             string name = animator.gameObject.name;
             MixerRoot = AnimationLayerMixerPlayable.Create(Component.PlayableGraph);
             var _output = AnimationPlayableOutput.Create(Component.PlayableGraph, name, animator);

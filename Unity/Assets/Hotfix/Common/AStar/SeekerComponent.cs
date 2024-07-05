@@ -23,7 +23,7 @@ namespace Ux
        
         public void StartPath(Vector3 target)
         {
-            Seeker.StartPath(Unit.Model.transform.position, target, OnPathComplete);
+            Seeker.StartPath(Unit.Viewer.transform.position, target, OnPathComplete);
             //
             // if (AstarPath.active == null) return;
             // var p = ABPath.Construct(Player.Go.transform.position, target, OnPathComplete);

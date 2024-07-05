@@ -10,7 +10,7 @@ namespace Ux.Editor.Timeline
 {
     public class TimelineTrackItem : VisualElement, IToolbarMenuElement
     {
-        TimelineTrackAsset asset;
+        public TimelineTrackAsset asset;
         TimelineWindow window;
         VisualElement content;
         Label lbType;
@@ -48,16 +48,8 @@ namespace Ux.Editor.Timeline
             else if (e.button == 1)
             {
                 menu.AppendAction("Add Clip", e =>
-                {
-
-                    var attr = asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
-
-                    var clipType = attr.ClipType;
-                    var clip = Activator.CreateInstance(clipType) as TimelineClipAsset;
-                    clip.StartFrame = 0;
-                    clip.EndFrame = 50;
-                    //clip.Name = tName;
-                    AddClipItem(clip);
+                {                    
+                    AddClipItem(CreateClipAsset<TimelineClipAsset>());
                 }, e => DropdownMenuAction.Status.Normal);
                 this.ShowMenu();
             }
@@ -72,8 +64,16 @@ namespace Ux.Editor.Timeline
                 window.clipView.AddItem(item);
             }
         }
-
-        void AddClipItem(TimelineClipAsset clipAsset)
+        public T CreateClipAsset<T>() where T : TimelineClipAsset
+        {
+            var attr = asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
+            var clipType = attr.ClipType;
+            var clip = Activator.CreateInstance(clipType) as TimelineClipAsset;
+            clip.StartFrame = 0;
+            clip.EndFrame = 60;            
+            return clip as T;
+        }
+        public void AddClipItem(TimelineClipAsset clipAsset)
         {
             if (clipItemDic.ContainsKey(clipAsset))
             {

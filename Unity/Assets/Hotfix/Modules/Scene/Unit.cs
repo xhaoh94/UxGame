@@ -2,6 +2,7 @@
 using Pathfinding;
 using UnityEngine;
 using UnityEngine.Playables;
+using static UnityEditor.FilePathAttribute;
 
 namespace Ux
 {
@@ -19,7 +20,8 @@ namespace Ux
 
     public class Unit : Entity, IAwakeSystem<PlayerData>
     {
-        public GameObject Root { get; private set; }
+        const string _ecs_root_pool = "_$ecs_root_pool$_";        
+        public GameObject Model { get; private set; }
         public AnimComponent Anim => Get<AnimComponent>();
         public StateComponent State => Get<StateComponent>();
         public SeekerComponent Seeker => Get<SeekerComponent>();
@@ -35,9 +37,9 @@ namespace Ux
             set
             {
                 _postion = value;
-                if (Model != null)
+                if (Viewer != null)
                 {
-                    Model.transform.position = _postion;
+                    Viewer.transform.position = _postion;
                 }
                 _UpdateFogOfWar();
             }
@@ -51,15 +53,15 @@ namespace Ux
             set
             {
                 _rotation = value;
-                if (Model != null)
+                if (Viewer != null)
                 {
-                    Model.transform.rotation = _rotation;
+                    Viewer.transform.rotation = _rotation;
                 }
             }
         }
 
         [EEViewer("是否可见")]
-        public BoolValue Visable { get; private set; }
+        public BoolValue Visible { get; private set; }
         void OnVisableChanged(bool v)
         {
             Layer = LayerMask.NameToLayer(v ? Layers.Default : Layers.Hidden);
@@ -74,7 +76,7 @@ namespace Ux
                 if (_layer != value)
                 {
                     _layer = value;
-                    Root?.SetLayer(_layer);
+                    Viewer.gameObject.SetLayer(_layer);
                 }
             }
         }
@@ -90,40 +92,43 @@ namespace Ux
             {
                 Add<OperateComponent>();
             }
-            Visable = new BoolValue(OnVisableChanged);
+            Visible = new BoolValue(OnVisableChanged);          
+            
+            var root =UnityPool.Get(_ecs_root_pool, () => new GameObject());
+            root.name = _playerData.name;
+            if (_playerData.self)
+            {
+                Map.Camera.SetFollow(root.transform);
+                //Map.Camera.SetLookAt(root.transform);
+            }
+            Link(root);
+            LoadModel().Forget();
             Position = _playerData.pos;
-            Root = new GameObject();
-            LinkModel(Root);
-            LoadPlayer().Forget();
         }
 
         public Scene Map => ParentAs<Scene>();
 
-        async UniTaskVoid LoadPlayer()
+        async UniTaskVoid LoadModel()
         {
-            var model = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
-            model.SetParent(Root.transform);
-            model.transform.position = Position;
-            model.transform.rotation = Rotation;
-            model.layer = Layer;
-
-            if (_playerData.self)
+            if (Model != null)
             {
-                Map.Camera.SetFollow(Model.transform);
-                //Map.Camera.SetLookAt(Model.transform);
+                UnityPool.Push(Model);
             }
-
+            Model = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
+            Model.SetParent(Viewer.transform);
+            Model.layer = Layer;
+ 
             Add<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
             Add<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
-            Add<PlayableDirectorComponent, PlayableDirector>(model.GetOrAddComponent<PlayableDirector>());
-            Director.SetBinding("Anim Track", Model.GetComponentInChildren<Animator>());
+            Add<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
+            Director.SetBinding("Anim Track", Viewer.GetComponentInChildren<Animator>());
             StateMgr.Ins.Update(ID);
         }
 
         protected override void OnDestroy()
         {
-            UnityPool.Push(Root);
-            Visable.Release();
+            UnityPool.Push(_ecs_root_pool,Viewer.gameObject);
+            Visible.Release();
         }
 
 

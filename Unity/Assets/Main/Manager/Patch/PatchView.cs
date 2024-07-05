@@ -51,8 +51,8 @@ namespace Ux
             txtStatus.text = "游戏初始化";
             barHotfix.maxValue = 1f;
             barHotfix.minValue = 0f;
-            barHotfix.gameObject.Visable(false);
-            messageBox.Visable(false);
+            barHotfix.gameObject.Visible(false);
+            messageBox.Visible(false);
         }
 
 
@@ -82,24 +82,24 @@ namespace Ux
         {
             txtBtnHotfix.text = btnTitle;
             txtHotfix.text = content;
-            messageBox.Visable(true);
+            messageBox.Visible(true);
             btnHotfix.onClick.RemoveAllListeners();
             btnHotfix.onClick.AddListener(() =>
             {
                 callback?.Invoke();
-                messageBox.Visable(false);
+                messageBox.Visible(false);
             });
             btnClose.onClick.RemoveAllListeners();
             btnClose.onClick.AddListener(() =>
             {                
-                messageBox.Visable(false);
+                messageBox.Visible(false);
                 Application.Quit();
             });
         }
 
         public void OnDownloadProgressUpdate(DownloadProgressUpdate message)
         {
-            barHotfix.gameObject.Visable(true);
+            barHotfix.gameObject.Visible(true);
             barHotfix.value = (float)message.CurrentDownloadCount / message.TotalDownloadCount;
             string currentSizeMB = (message.CurrentDownloadSizeBytes / 1048576f).ToString("f1");
             string totalSizeMB = (message.TotalDownloadSizeBytes / 1048576f).ToString("f1");

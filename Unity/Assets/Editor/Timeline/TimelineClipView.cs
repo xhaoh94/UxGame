@@ -67,14 +67,6 @@ namespace Ux.Editor.Timeline
             veClipContent = this.Q<VisualElement>("ve_clip_content");
         }
 
-        public void OnGUI()
-        {
-            foreach (var item in items)
-            {
-                item.OnGUI();
-            }
-        }
-
         public void AddItem(TimelineClipItem item)
         {
             veClipContent.Add(item);

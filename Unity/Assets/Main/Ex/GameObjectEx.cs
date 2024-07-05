@@ -5,7 +5,7 @@ namespace Ux
 {
     public static class GameObjectEx
     {
-        public static void Visable(this GameObject go, bool b)
+        public static void Visible(this GameObject go, bool b)
         {
             if (go != null && go.activeInHierarchy != b)
             {

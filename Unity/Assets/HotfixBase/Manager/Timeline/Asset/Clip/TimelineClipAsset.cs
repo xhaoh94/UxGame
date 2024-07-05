@@ -7,7 +7,8 @@ namespace Ux
 {
     [Serializable]
     public abstract class TimelineClipAsset
-    {        
+    {
+        public string Name;
         #region Frame        
         // ¿ªÊ¼Ö¡        
         public int StartFrame;

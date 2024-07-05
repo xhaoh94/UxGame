@@ -45,7 +45,7 @@ public static class UnityPool
             var obj = queue.Dequeue();
             if (obj is GameObject go)
             {
-                go.Visable(true);
+                go.Visible(true);
                 go.transform.SetParent(null);
                 SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
             }
@@ -94,7 +94,7 @@ public static class UnityPool
 #endif
         if (obj is GameObject go)
         {
-            var entityMono = go.GetComponent<EntityModel>();
+            var entityMono = go.GetComponent<EntityViewer>();
             if (entityMono != null)
             {
                 UnityEngine.Object.Destroy(entityMono);
@@ -110,7 +110,7 @@ public static class UnityPool
 #else
             go.transform.parent = null;
 #endif
-            go.Visable(false);
+            go.Visible(false);
         }
         queue.Enqueue(obj);
     }

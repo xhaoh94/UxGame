@@ -55,9 +55,9 @@ namespace Ux
             if (Unit.Path.MoveVector2 != Vector2.zero && targetDirection.magnitude > 0.1f)
             {
                 Vector3 lookDirection = targetDirection.normalized;
-                var freeRotation = Quaternion.LookRotation(lookDirection, Unit.Model.transform.up);
-                var diferenceRotation = freeRotation.eulerAngles.y - Unit.Model.transform.eulerAngles.y;
-                var eulerY = Unit.Model.transform.eulerAngles.y;
+                var freeRotation = Quaternion.LookRotation(lookDirection, Unit.Viewer.transform.up);
+                var diferenceRotation = freeRotation.eulerAngles.y - Unit.Viewer.transform.eulerAngles.y;
+                var eulerY = Unit.Viewer.transform.eulerAngles.y;
 
                 if (diferenceRotation < 0 || diferenceRotation > 0) eulerY = freeRotation.eulerAngles.y;
                 var euler = new Vector3(0, eulerY, 0);
@@ -85,11 +85,11 @@ namespace Ux
             else
             {
                 turnSpeedMultiplier = 0.2f;
-                var forward = Unit.Model.transform.TransformDirection(Vector3.forward);
+                var forward = Unit.Viewer.transform.TransformDirection(Vector3.forward);
                 forward.y = 0;
 
                 //get the right-facing direction of the referenceTransform
-                var right = Unit.Model.transform.TransformDirection(Vector3.right);
+                var right = Unit.Viewer.transform.TransformDirection(Vector3.right);
                 targetDirection = Unit.Path.MoveVector2.x * right + Mathf.Abs(Unit.Path.MoveVector2.y) * forward;
             }
         }

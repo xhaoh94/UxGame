@@ -37,7 +37,7 @@ namespace Ux
         {
             PlaySpeed = 1;
             IsPlaying = false;
-            PlayableGraph = PlayableGraph.Create(Parent.Model.name);
+            PlayableGraph = PlayableGraph.Create(Parent.Viewer.name);
         }
         protected override void OnDestroy()
         {

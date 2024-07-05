@@ -9,7 +9,7 @@ namespace Ux
     /// </summary>
     public class UnitVisionComponent : Entity, IAwakeSystem, IEventSystem, IFogOfWarUnit
     {
-        public BoolValue Visable => _unit.Visable;
+        public BoolValue Visable => _unit.Visible;
         /// <summary>
         /// 表示玩家分组的位掩码
         /// 如玩家0是0001，玩家1是0010，则这两个玩家共同的视野是0011

@@ -42,7 +42,7 @@ namespace Ux
 #if UNITY_EDITOR        
         public EntityHierarchy Hierarchy { get; private set; }
 #endif        
-        public EntityModel Model { get; private set; }
+        public EntityViewer Viewer { get; private set; }
         public long ID { get; private set; }
         string _name;
         public string Name
@@ -138,18 +138,18 @@ namespace Ux
         /// 关联显示对象
         /// </summary>
         /// <param name="gameObject">显示对象</param>        
-        public void LinkModel(GameObject gameObject)
+        public void Link(GameObject gameObject)
         {
             //if (IsComponent)
             //{
             //    Log.Error("组件无法设置显示对象");
             //    return;
             //}
-            Model = gameObject.GetOrAddComponent<EntityModel>();
+            Viewer = gameObject.GetOrAddComponent<EntityViewer>();
 #if UNITY_EDITOR
-            Model.SetEntity(this, Hierarchy);
+            Viewer.SetEntity(this, Hierarchy);
 #else
-            Model.SetEntity(this);
+            Viwer.SetEntity(this);
 #endif
         }
         bool _Add(Entity entity)
@@ -762,10 +762,10 @@ namespace Ux
             _name = null;
             _is_init = false;
             ID = 0;
-            if (Model != null)
+            if (Viewer != null)
             {
-                Model.Release();
-                Model = null;
+                Viewer.Release();
+                Viewer = null;
             }
 #if UNITY_EDITOR
             if (Hierarchy != null)

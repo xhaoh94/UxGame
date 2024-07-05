@@ -11,6 +11,7 @@ namespace Ux.Editor.Timeline
         TimelineTrackItem trackItem;
         VisualElement content;
         VisualElement left;
+        VisualElement center;
         Label lbType;
         VisualElement right;
         public DropdownMenu menu { get; }
@@ -20,31 +21,38 @@ namespace Ux.Editor.Timeline
             visualTree.CloneTree(this);
             content = this.Q<VisualElement>("content");
             left = this.Q<VisualElement>("left");
-
+            center = this.Q<VisualElement>("center");
             lbType = this.Q<Label>("lbType");
             right = this.Q<VisualElement>("right");
 
-            RegisterCallback<PointerDownEvent>(OnPointerDown);
             menu = new DropdownMenu();
 
+            RegisterCallback<PointerDownEvent>(OnPointerDown);
+            RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
+            RegisterCallback<DragPerformEvent>(_OnDragPerform);
+
         }
-        public void OnGUI()
+        void _OnDragUpd(DragUpdatedEvent e)
         {
-            var pos = this.WorldToLocal(Event.current.mousePosition);
-            if (pos.x > 0 && pos.y > 0 && pos.x < style.width.value.value || pos.y < style.height.value.value)
+            DragAndDrop.visualMode = DragAndDropVisualMode.Move;
+        }
+        void _OnDragPerform(DragPerformEvent e)
+        {
+            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
             {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Move;
-                if ((Event.current.type == UnityEngine.EventType.DragUpdated || Event.current.type == UnityEngine.EventType.DragExited))
+                string retPath = DragAndDrop.paths[0];
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
+                if (clip == null)
                 {
-                    //改变鼠标的外表  
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
-                    if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-                    {
-                        string retPath = DragAndDrop.paths[0];
-                        Log.Debug(retPath);
-                    }
+                    return;
                 }
-            }            
+                var asset = trackItem.CreateClipAsset<AnimationClipAsset>();                
+                asset.StartFrame =Mathf.CeilToInt(trackItem.asset.MaxTime / TimelineMgr.Ins.FrameRate);
+                asset.EndFrame = asset.StartFrame + Mathf.RoundToInt(clip.length * TimelineMgr.Ins.FrameRate);
+                asset.clip = clip;
+                asset.Name = clip.name;
+                trackItem.AddClipItem(asset);
+            }
         }
         void OnPointerDown(PointerDownEvent e)
         {
@@ -72,9 +80,9 @@ namespace Ux.Editor.Timeline
             this.asset = asset;
             this.trackItem = track;
             this.window = window;
-            ElementDrag.Add(left, window.clipView, OnSizeStart, OnLeftDrag, OnSizeEnd);
-            ElementDrag.Add(right, window.clipView, OnSizeStart, OnRightDrag, OnSizeEnd);
-            ElementDrag.Add(content, window.clipView, OnStart, OnDrag, OnEnd);
+            ElementDrag.Add(left, window.clipView, OnLeftDrag);
+            ElementDrag.Add(right, window.clipView, OnRightDrag);
+            ElementDrag.Add(center, window.clipView, OnStart, OnDrag);
             UpdateView();
         }
 
@@ -105,14 +113,7 @@ namespace Ux.Editor.Timeline
             }
             UpdateView();
         }
-        void OnSizeStart()
-        {
-            DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-        }
-        void OnSizeEnd()
-        {
 
-        }
 
         void OnLeftDrag(Vector2 e)
         {
@@ -127,10 +128,6 @@ namespace Ux.Editor.Timeline
         void OnStart()
         {
             startFrame = window.clipView.GetFrameByMousePosition();
-        }
-        void OnEnd()
-        {
-            startFrame = -1;
         }
         void OnDrag(Vector2 e)
         {
@@ -152,6 +149,7 @@ namespace Ux.Editor.Timeline
         {
             var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
             var ex = window.clipView.GetPositionByFrame(asset.EndFrame);
+            this.lbType.text = asset.Name;
             this.style.position = new StyleEnum<Position>(Position.Absolute);
             this.style.left = sx;
             this.style.width = ex - sx;

@@ -15,7 +15,7 @@ namespace Ux
         public void OnAwake(GameObject a)
         {
             Go = a;
-            LinkModel(Go);
+            Link(Go);
             Camera = Add<CameraComponent>();
             AStar = Add<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
             //AddComponent<FogOfWarComponent>();

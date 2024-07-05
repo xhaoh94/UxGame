@@ -9,7 +9,7 @@ namespace Ux.Editor.Timeline
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            Object.DestroyImmediate(Model.gameObject);
+            Object.DestroyImmediate(Viewer.gameObject);
         }
     }
     public partial class TimelineWindow : EditorWindow
@@ -51,11 +51,6 @@ namespace Ux.Editor.Timeline
             
         }
 
-        private void OnGUI()
-        {
-            clipView.OnGUI();
-            trackView.OnGUI();
-        }
 
         private void OnDestroy()
         {
@@ -81,7 +76,7 @@ namespace Ux.Editor.Timeline
 
                 entity?.Destroy();
                 entity = Entity.Create<TLEntity>();
-                entity.LinkModel(model);
+                entity.Link(model);
                 entity.Add<TimelineComponent>();
 
                 if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long _))

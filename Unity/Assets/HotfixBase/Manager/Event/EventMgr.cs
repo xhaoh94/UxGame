@@ -9,23 +9,23 @@ namespace Ux
     {
         //每帧执行上限-超出上限，下一帧处理
         public const int ExeLimit = 200;
-        private readonly Dictionary<long, IEvent> _keyEvent = new Dictionary<long, IEvent>();
+        private readonly Dictionary<long, IEvent> _keyEvent = new();
         /// <summary>
         /// 事件ID对应的所有IEvent
         /// </summary>
-        private readonly Dictionary<int, List<long>> _eTypeKeys = new Dictionary<int, List<long>>();
+        private readonly Dictionary<int, List<long>> _eTypeKeys = new();
         /// <summary>
         /// 标签对应的所有IEvent
         /// </summary>
-        private readonly Dictionary<int, List<long>> _tagKeys = new Dictionary<int, List<long>>();
+        private readonly Dictionary<int, List<long>> _tagKeys = new();
         /// <summary>
         /// 函数对应的所有IEvent
         /// </summary>
-        private readonly Dictionary<int, List<long>> _actionKeys = new Dictionary<int, List<long>>();
+        private readonly Dictionary<int, List<long>> _actionKeys = new();
 
-        private readonly Queue<IEventExe> _waitExes = new Queue<IEventExe>();
-        private readonly List<IEvent> _waitAdds = new List<IEvent>();
-        private readonly List<long> _waitDels = new List<long>();
+        private readonly Queue<IEventExe> _waitExes = new();
+        private readonly List<IEvent> _waitAdds = new();
+        private readonly List<long> _waitDels = new();
 
         protected override void OnCreated()
         {
@@ -81,11 +81,6 @@ namespace Ux
             {
                 return IDGenerater.GenerateId(eType, action.GetHashCode(), tag.GetHashCode());
             }
-        }
-        private long GetKey(int eType, object tag, Delegate action)
-        {
-            if (action == null) return 0;
-            return GetKey(eType, action, tag);
         }
 
         private long GetKey(int eType, FastMethodInfo action)
