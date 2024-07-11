@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -6,6 +7,7 @@ namespace Ux.Editor.Timeline
 {
     public class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
+        Color color;
         TimelineClipAsset asset;
         TimelineWindow window;
         TimelineTrackItem trackItem;
@@ -20,17 +22,18 @@ namespace Ux.Editor.Timeline
             var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipItem.uxml");
             visualTree.CloneTree(this);
             content = this.Q<VisualElement>("content");
+            
             left = this.Q<VisualElement>("left");
             center = this.Q<VisualElement>("center");
             lbType = this.Q<Label>("lbType");
             right = this.Q<VisualElement>("right");
 
             menu = new DropdownMenu();
-
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
-
+            RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
+            generateVisualContent += OnDrawContent;
         }
         void _OnDragUpd(DragUpdatedEvent e)
         {
@@ -80,11 +83,13 @@ namespace Ux.Editor.Timeline
             this.asset = asset;
             this.trackItem = track;
             this.window = window;
-            ElementDrag.Add(left, window.clipView, OnLeftDrag);
-            ElementDrag.Add(right, window.clipView, OnRightDrag);
-            ElementDrag.Add(center, window.clipView, OnStart, OnDrag);
+            color = trackItem.asset.GetType().GetAttribute<TLTrackAttribute>().Color;
+            ElementDrag.Add(left, window.clipView, OnStart, OnLeftDrag, OnEnd);
+            ElementDrag.Add(right, window.clipView, OnStart, OnRightDrag, OnEnd);
+            ElementDrag.Add(center, window.clipView, OnStart, OnDrag, OnEnd);
             UpdateView();
         }
+
 
         void OnDrag(bool left)
         {
@@ -124,16 +129,29 @@ namespace Ux.Editor.Timeline
             OnDrag(false);
         }
 
+        int lastFrame;
         int startFrame;
+        int endFrame;
         void OnStart()
         {
-            startFrame = window.clipView.GetFrameByMousePosition();
+            lastFrame = window.clipView.GetFrameByMousePosition();
+            startFrame = asset.StartFrame;
+            endFrame = asset.EndFrame;
+        }
+        void OnEnd()
+        {
+            if (!trackItem.IsValid())
+            {
+                asset.StartFrame = startFrame;
+                asset.EndFrame = endFrame;
+                UpdateView();
+            }            
         }
         void OnDrag(Vector2 e)
         {
             var dragFrame = window.clipView.GetFrameByMousePosition();
-            var offFrame = dragFrame - startFrame;
-            startFrame = dragFrame;
+            var offFrame = dragFrame - lastFrame;
+            lastFrame = dragFrame;
             if (asset.StartFrame + offFrame < 0)
             {
                 offFrame = 0 - asset.StartFrame;
@@ -144,7 +162,6 @@ namespace Ux.Editor.Timeline
         }
 
 
-
         public void UpdateView()
         {
             var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
@@ -153,6 +170,52 @@ namespace Ux.Editor.Timeline
             this.style.position = new StyleEnum<Position>(Position.Absolute);
             this.style.left = sx;
             this.style.width = ex - sx;
+
+            if (trackItem.IsValid())
+            {
+                content.style.borderLeftWidth = 1;
+                content.style.borderRightWidth = 1;
+                content.style.borderTopWidth = 1;
+                content.style.borderBottomWidth = 3;                
+                
+                content.style.borderLeftColor = color;
+                content.style.borderRightColor = color;
+                content.style.borderTopColor = color;
+                content.style.borderBottomColor = color;
+            }
+            else
+            {
+                content.style.borderLeftWidth = 1;
+                content.style.borderRightWidth = 1;
+                content.style.borderTopWidth = 1;
+                content.style.borderBottomWidth = 3;
+
+                content.style.borderLeftColor = new StyleColor(Color.red);
+                content.style.borderRightColor = new StyleColor(Color.red);
+                content.style.borderTopColor = new StyleColor(Color.red);
+                content.style.borderBottomColor = new StyleColor(Color.red);                
+            }
+            trackItem.UpdateClipData();
+            content.MarkDirtyRepaint();
+        }
+        void OnGeometryChanged(GeometryChangedEvent changedEvent)
+        {            
+            MarkDirtyRepaint();            
+        }
+        void OnDrawContent(MeshGenerationContext mgc)
+        {
+            if (asset.InFrame > 0)
+            {
+                var paint2D = mgc.painter2D;
+                paint2D.strokeColor = color;
+                paint2D.BeginPath();
+                var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
+                var ex = window.clipView.GetPositionByFrame(asset.InFrame);
+                var x = ex - sx;
+                paint2D.MoveTo(new Vector2(x, 0));
+                paint2D.LineTo(new Vector2(x, 100));
+                paint2D.Stroke();
+            }           
         }
     }
 }

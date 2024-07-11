@@ -21,9 +21,8 @@ namespace Ux
             {
                 Log.Error("UITab界面没有指定父类");
                 return;
-            }
-            var parent = UIMgr.Ins.GetUI<UIBase>(Data.TabData.PID);
-            if (parent == null)
+            }            
+            if (!UIMgr.Ins.IsShow(Data.TabData.PID))
             {
                 Log.Error("父类界面未打开就打开了子界面");
                 return;

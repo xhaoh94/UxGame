@@ -20,16 +20,18 @@ MonoBehaviour:
     - rid: 3272319262192304128
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
+        Name: Attack
         StartFrame: 0
-        EndFrame: 69
+        EndFrame: 70
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 75f41ed80eab9704189a26e21e6c38cf, type: 3}
     - rid: 7328207674627850240
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
-        StartFrame: 0
-        EndFrame: 80
+        Name: Stand
+        StartFrame: 50
+        EndFrame: 100
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 833e8c008ced48d48a7abcfabade5ab9, type: 3}

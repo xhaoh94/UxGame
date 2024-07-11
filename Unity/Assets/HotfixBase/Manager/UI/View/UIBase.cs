@@ -228,6 +228,8 @@ namespace Ux
             _ReleaseHideToken();
             Data = null;
             _cbData = null;
+            _async = false;
+            _asyncComplete = null;
         }
         void _ReleaseShowToken()
         {

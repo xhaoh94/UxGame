@@ -105,9 +105,9 @@ namespace Ux
         protected void Init(GObject gObj, UIObject parent = null)
         {
             if (gObj == null || GObject != null) return;
-            _event ??= Pool.Get<UIEvent>();
-            Parent = parent;
+            _event ??= Pool.Get<UIEvent>();           
             GObject = gObj;
+            Parent = parent;
             CreateChildren();
             OnInit();
         }
@@ -180,17 +180,17 @@ namespace Ux
             }
         }
 
-        void _ToCreateChildren(Type selfType, GComponent component)
+        void _ToCreateChildren(Type viewType, GComponent component)
         {
             for (int i = 0; i < component.numChildren; i++)
             {
                 var child = component.GetChildAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
                 MemberInfo info;
-                info = selfType.GetField(child.name, flag);
+                info = viewType.GetField(child.name, flag);
                 if (info == null)
                 {
-                    info = selfType.GetProperty(child.name, flag);
+                    info = viewType.GetProperty(child.name, flag);
                 }
                 _SetInfo(info, child);
             }
@@ -200,10 +200,10 @@ namespace Ux
                 var cont = component.GetControllerAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
                 MemberInfo info;
-                info = selfType.GetField(cont.name, flag);
+                info = viewType.GetField(cont.name, flag);
                 if (info == null)
                 {
-                    info = selfType.GetProperty(cont.name, flag);
+                    info = viewType.GetProperty(cont.name, flag);
                 }
                 _SetInfo(info, cont);
             }
@@ -213,22 +213,24 @@ namespace Ux
                 var trans = component.GetTransitionAt(i);
                 const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
                 MemberInfo info;
-                info = selfType.GetField(trans.name, flag);
+                info = viewType.GetField(trans.name, flag);
                 if (info == null)
                 {
-                    info = selfType.GetProperty(trans.name, flag);
+                    info = viewType.GetProperty(trans.name, flag);
                 }
                 _SetInfo(info, trans);
             }
         }
+        /// <summary>
+        /// 创建子项，默认采用反射，使用代码生成会重写方法，采用API获取
+        /// </summary>
         protected virtual void CreateChildren()
         {
             var component = GObject is Window ? ObjAs<Window>().contentPane : ObjAs<GComponent>();
-            if (component == null) return;
-            var selfType = GetType();
+            if (component == null) return;            
             try
             {
-                _ToCreateChildren(selfType, component);
+                _ToCreateChildren(GetType(), component);
             }
             catch
             {
@@ -264,7 +266,7 @@ namespace Ux
             OnShow();
             _CheckShow(id, param, checkStack, token).Forget();
         }
-        void ChangeAsync(bool b)
+        void _ChangeAsync(bool b)
         {
             if (this is IUIAsync async)
             {
@@ -273,7 +275,7 @@ namespace Ux
         }
         async UniTaskVoid _CheckShow(int id, IUIParam param, bool checkStack, CancellationTokenSource token)
         {
-            ChangeAsync(true);
+            _ChangeAsync(true);
             bool isCanceled = false;
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
             {
@@ -291,7 +293,7 @@ namespace Ux
                     await UniTask.Yield();
                 }
             }
-            ChangeAsync(false);
+            _ChangeAsync(false);
             if (isCanceled)
             {
                 return;
@@ -353,7 +355,7 @@ namespace Ux
 
         async UniTaskVoid _CheckHide(CancellationTokenSource token)
         {
-            ChangeAsync(true);
+            _ChangeAsync(true);
             bool isCanceled = false;
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
             {
@@ -371,7 +373,7 @@ namespace Ux
                     await UniTask.Yield();
                 }
             }
-            ChangeAsync(false);
+            _ChangeAsync(false);
             if (isCanceled)
             {
                 return;
