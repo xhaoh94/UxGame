@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -14,26 +13,28 @@ namespace Ux.Editor.Timeline
         VisualElement content;
         VisualElement left;
         VisualElement center;
-        Label lbType;
         VisualElement right;
+        Label lbType;
+        VisualElement drwa;
         public DropdownMenu menu { get; }
         public TimelineClipItem()
         {
             var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipItem.uxml");
             visualTree.CloneTree(this);
             content = this.Q<VisualElement>("content");
-            
+
             left = this.Q<VisualElement>("left");
             center = this.Q<VisualElement>("center");
             lbType = this.Q<Label>("lbType");
             right = this.Q<VisualElement>("right");
+            drwa = this.Q<VisualElement>("drwa");
 
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
             RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            generateVisualContent += OnDrawContent;
+            drwa.generateVisualContent += OnDrawContent;
         }
         void _OnDragUpd(DragUpdatedEvent e)
         {
@@ -49,8 +50,8 @@ namespace Ux.Editor.Timeline
                 {
                     return;
                 }
-                var asset = trackItem.CreateClipAsset<AnimationClipAsset>();                
-                asset.StartFrame =Mathf.CeilToInt(trackItem.asset.MaxTime / TimelineMgr.Ins.FrameRate);
+                var asset = trackItem.CreateClipAsset<AnimationClipAsset>();
+                asset.StartFrame = Mathf.CeilToInt(trackItem.asset.MaxTime / TimelineMgr.Ins.FrameRate);
                 asset.EndFrame = asset.StartFrame + Mathf.RoundToInt(clip.length * TimelineMgr.Ins.FrameRate);
                 asset.clip = clip;
                 asset.Name = clip.name;
@@ -129,6 +130,7 @@ namespace Ux.Editor.Timeline
             OnDrag(false);
         }
 
+        bool isDrag;
         int lastFrame;
         int startFrame;
         int endFrame;
@@ -137,15 +139,17 @@ namespace Ux.Editor.Timeline
             lastFrame = window.clipView.GetFrameByMousePosition();
             startFrame = asset.StartFrame;
             endFrame = asset.EndFrame;
+            isDrag = true;
         }
         void OnEnd()
         {
+            isDrag = false;
             if (!trackItem.IsValid())
             {
                 asset.StartFrame = startFrame;
                 asset.EndFrame = endFrame;
-                UpdateView();
-            }            
+            }
+            UpdateView();
         }
         void OnDrag(Vector2 e)
         {
@@ -176,12 +180,12 @@ namespace Ux.Editor.Timeline
                 content.style.borderLeftWidth = 1;
                 content.style.borderRightWidth = 1;
                 content.style.borderTopWidth = 1;
-                content.style.borderBottomWidth = 3;                
-                
-                content.style.borderLeftColor = color;
-                content.style.borderRightColor = color;
-                content.style.borderTopColor = color;
-                content.style.borderBottomColor = color;
+                content.style.borderBottomWidth = 3;
+
+                content.style.borderLeftColor = isDrag ? Color.white : color;
+                content.style.borderRightColor = isDrag ? Color.white : color;
+                content.style.borderTopColor = isDrag ? Color.white : color;
+                content.style.borderBottomColor = isDrag ? Color.white : color;
             }
             else
             {
@@ -193,29 +197,43 @@ namespace Ux.Editor.Timeline
                 content.style.borderLeftColor = new StyleColor(Color.red);
                 content.style.borderRightColor = new StyleColor(Color.red);
                 content.style.borderTopColor = new StyleColor(Color.red);
-                content.style.borderBottomColor = new StyleColor(Color.red);                
+                content.style.borderBottomColor = new StyleColor(Color.red);
             }
             trackItem.UpdateClipData();
-            content.MarkDirtyRepaint();
+            drwa.MarkDirtyRepaint();
         }
         void OnGeometryChanged(GeometryChangedEvent changedEvent)
-        {            
-            MarkDirtyRepaint();            
+        {
+            drwa.MarkDirtyRepaint();
         }
         void OnDrawContent(MeshGenerationContext mgc)
         {
+            var paint2D = mgc.painter2D;
+            paint2D.strokeColor = Color.black;
+            paint2D.BeginPath();
+            var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
+            var ex = window.clipView.GetPositionByFrame(asset.EndFrame);
+
             if (asset.InFrame > 0)
             {
-                var paint2D = mgc.painter2D;
-                paint2D.strokeColor = color;
-                paint2D.BeginPath();
-                var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
-                var ex = window.clipView.GetPositionByFrame(asset.InFrame);
-                var x = ex - sx;
-                paint2D.MoveTo(new Vector2(x, 0));
-                paint2D.LineTo(new Vector2(x, 100));
-                paint2D.Stroke();
-            }           
+                var ix = window.clipView.GetPositionByFrame(asset.InFrame);
+                paint2D.MoveTo(new Vector2(0, 0));
+                paint2D.LineTo(new Vector2(ix - sx, 0));
+                paint2D.LineTo(new Vector2(ix - sx, 20));
+                paint2D.LineTo(new Vector2(0, 0));
+            }
+            if (asset.OutFrame > 0)
+            {
+                var ox = window.clipView.GetPositionByFrame(asset.OutFrame);
+
+                //var w = ex - sx;
+                //var xx = asset.OutFrame / (asset.EndFrame - asset.StartFrame) * w;
+                paint2D.MoveTo(new Vector2(ox - sx, 0));
+                paint2D.LineTo(new Vector2(ox - sx, 20));
+                paint2D.LineTo(new Vector2(ex - sx, 20));
+                paint2D.LineTo(new Vector2(ox - sx, 0));
+            }
+            paint2D.Stroke();
         }
     }
 }

@@ -5,5 +5,6 @@
             <ui:Label tabindex="-1" text="动画" display-tooltip-when-elided="true" name="lbType" style="height: auto; -unity-text-align: middle-center; flex-shrink: 1; flex-grow: 1; width: auto; padding-left: 0; padding-right: 0;" />
         </ui:VisualElement>
         <ui:VisualElement name="right" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); width: 20px; flex-shrink: 0;" />
+        <ui:VisualElement name="drwa" focusable="false" picking-mode="Ignore" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
     </ui:VisualElement>
 </ui:UXML>
