@@ -3,8 +3,7 @@ guid: 6e906e299f0bf164c9b7905b91ed2932
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences:
-  - m_VisualTreeAsset: {fileID: 9197481963319205126, guid: 166ea7890a0cd5c49a829a0b8e321d08, type: 3}
+  defaultReferences: []
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

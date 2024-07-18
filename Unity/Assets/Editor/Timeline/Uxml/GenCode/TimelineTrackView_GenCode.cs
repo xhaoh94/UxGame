@@ -1,4 +1,5 @@
 ﻿//自动生成的代码，请勿修改!!!
+//CodeGen By [Assets/UIElements/CodeGenByUxml]
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -9,14 +10,15 @@ namespace Ux.Editor.Timeline
 	public partial class TimelineTrackView
 	{
 		protected VisualElement root;
-		protected ToolbarMenu btnAddTrack;
-		protected VisualElement trackContent;
+		public ToolbarMenu btnAddTrack;
+		public VisualElement trackContent;
 		protected void CreateChildren()
 		{
-			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineTrackView.uxml");
+			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineTrackView.uxml");
 			if (_visualAsset == null) return;
 			root = _visualAsset.CloneTree();
-			btnAddTrack = root.Q<ToolbarMenu>("btnAddTrack");
+			root.style.flexGrow = 1f;
+			btnAddTrack =root.Q<ToolbarMenu>("btnAddTrack");
 			trackContent =root.Q<VisualElement>("trackContent");
 		}
 	}

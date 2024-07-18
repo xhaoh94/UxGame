@@ -8,9 +8,8 @@ TrueTypeFontImporter:
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Noto Sans S Chinese
   fontNames:
-  - Noto Sans S Chinese
+  - Source Han Sans CN
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

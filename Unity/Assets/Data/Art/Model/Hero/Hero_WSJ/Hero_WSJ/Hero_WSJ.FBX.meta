@@ -1,24 +1,9 @@
 fileFormatVersion: 2
 guid: 6c081c6a0b7c68c4c81a33d653db4827
 ModelImporter:
-  serializedVersion: 22201
+  serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Hero_WSJ_B
-    second: {fileID: 2100000, guid: 388f4ccc2a327e6458d7afe569a3e7ac, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Hero_WSJ_F
-    second: {fileID: 2100000, guid: a6a889c8dc55f574da7a198f44544755, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Hero_WSJ_H
-    second: {fileID: 2100000, guid: 60b6ac07533d0b94f9e081612304b72a, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -48,12 +33,6 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations: []
     isReadable: 0
-    virtualGeometry: 0
-    hasBoneWeight: 0
-    generateGeometryBuffer: 0
-    positionPrecision: -2147483648
-    normalPrecision: -1
-    tangentPrecision: -1
   meshes:
     lODScreenPercentages: []
     globalScale: 1
@@ -74,7 +53,7 @@ ModelImporter:
     keepQuads: 0
     weldVertices: 1
     bakeAxisConversion: 0
-    preserveHierarchy: 1
+    preserveHierarchy: 0
     skinWeightsMode: 0
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
@@ -99,7 +78,7 @@ ModelImporter:
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
   referencedClips: []
-  importAnimation: 0
+  importAnimation: 1
   humanDescription:
     serializedVersion: 3
     human: []
@@ -120,7 +99,7 @@ ModelImporter:
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
-  avatarSetup: 1
+  avatarSetup: 0
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0

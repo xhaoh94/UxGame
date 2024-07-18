@@ -1,4 +1,5 @@
 ﻿//自动生成的代码，请勿修改!!!
+//CodeGen By [Assets/UIElements/CodeGenByUxml]
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -24,7 +25,7 @@ namespace Ux.Editor.Timeline
 		public Button btnPause;
 		protected void CreateChildren()
 		{
-			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineWindow.uxml");
+			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineWindow.uxml");
 			if (_visualAsset == null) return;
 			root = _visualAsset.CloneTree();
 			root.style.flexGrow = 1f;

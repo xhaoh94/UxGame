@@ -7,15 +7,13 @@ namespace Ux.Editor.Timeline
     public class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
         Color color;
-        TimelineClipAsset asset;
-        TimelineWindow window;
-        TimelineTrackItem trackItem;
+        public TimelineClipAsset Asset { get; private set; }
+        public TrackClipContent ClipContent { get; private set; }
         VisualElement content;
         VisualElement left;
         VisualElement center;
         VisualElement right;
         Label lbType;
-        VisualElement drwa;
         public DropdownMenu menu { get; }
         public TimelineClipItem()
         {
@@ -27,14 +25,11 @@ namespace Ux.Editor.Timeline
             center = this.Q<VisualElement>("center");
             lbType = this.Q<Label>("lbType");
             right = this.Q<VisualElement>("right");
-            drwa = this.Q<VisualElement>("drwa");
 
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
-            RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            drwa.generateVisualContent += OnDrawContent;
         }
         void _OnDragUpd(DragUpdatedEvent e)
         {
@@ -50,12 +45,9 @@ namespace Ux.Editor.Timeline
                 {
                     return;
                 }
-                var asset = trackItem.CreateClipAsset<AnimationClipAsset>();
-                asset.StartFrame = Mathf.CeilToInt(trackItem.asset.MaxTime / TimelineMgr.Ins.FrameRate);
-                asset.EndFrame = asset.StartFrame + Mathf.RoundToInt(clip.length * TimelineMgr.Ins.FrameRate);
-                asset.clip = clip;
-                asset.Name = clip.name;
-                trackItem.AddClipItem(asset);
+                (Asset as AnimationClipAsset).clip = clip;
+                Timeline.SaveAssets();
+                Timeline.RefreshEntity();
             }
         }
         void OnPointerDown(PointerDownEvent e)
@@ -68,9 +60,9 @@ namespace Ux.Editor.Timeline
             {
                 menu.AppendAction("ÐÞÕý³¤¶È", e =>
                 {
-                    var clip = (asset as AnimationClipAsset).clip;
+                    var clip = (Asset as AnimationClipAsset).clip;
                     var endFrame = clip.length * TimelineMgr.Ins.FrameRate;
-                    asset.EndFrame = asset.StartFrame + Mathf.RoundToInt(endFrame);
+                    Asset.EndFrame = Asset.StartFrame + Mathf.RoundToInt(endFrame);
                     UpdateView();
                 }, e => DropdownMenuAction.Status.Normal);
                 this.ShowMenu();
@@ -79,22 +71,21 @@ namespace Ux.Editor.Timeline
 
 
 
-        public void Init(TimelineClipAsset asset, TimelineTrackItem track, TimelineWindow window)
+        public void Init(TimelineClipAsset asset, TrackClipContent track)
         {
-            this.asset = asset;
-            this.trackItem = track;
-            this.window = window;
-            color = trackItem.asset.GetType().GetAttribute<TLTrackAttribute>().Color;
-            ElementDrag.Add(left, window.clipView, OnStart, OnLeftDrag, OnEnd);
-            ElementDrag.Add(right, window.clipView, OnStart, OnRightDrag, OnEnd);
-            ElementDrag.Add(center, window.clipView, OnStart, OnDrag, OnEnd);
+            Asset = asset;
+            ClipContent = track;
+            color = ClipContent.TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
+            ElementDrag.Add(left, Timeline.ClipContent, OnStart, OnLeftDrag, OnEnd);
+            ElementDrag.Add(right, Timeline.ClipContent, OnStart, OnRightDrag, OnEnd);
+            ElementDrag.Add(center, Timeline.ClipContent, OnStart, OnDrag, OnEnd);
             UpdateView();
         }
 
 
         void OnDrag(bool left)
         {
-            var frame = window.clipView.GetFrameByMousePosition();
+            var frame = Timeline.GetFrameByMousePosition();
 
             if (left)
             {
@@ -102,22 +93,23 @@ namespace Ux.Editor.Timeline
                 {
                     frame = 0;
                 }
-                if (frame >= asset.EndFrame)
+                if (frame >= Asset.EndFrame)
                 {
-                    frame = asset.EndFrame - 1;
+                    frame = Asset.EndFrame - 1;
                 }
-                asset.StartFrame = frame;
+                Asset.StartFrame = frame;
             }
             else
             {
-                if (frame < asset.StartFrame)
+                if (frame < Asset.StartFrame)
                 {
-                    frame = asset.StartFrame;
+                    frame = Asset.StartFrame;
                 }
 
-                asset.EndFrame = frame;
+                Asset.EndFrame = frame;
             }
             UpdateView();
+            ClipContent.ClipMarkDirtyRepaint();
         }
 
 
@@ -136,46 +128,47 @@ namespace Ux.Editor.Timeline
         int endFrame;
         void OnStart()
         {
-            lastFrame = window.clipView.GetFrameByMousePosition();
-            startFrame = asset.StartFrame;
-            endFrame = asset.EndFrame;
+            lastFrame = Timeline.GetFrameByMousePosition();
+            startFrame = Asset.StartFrame;
+            endFrame = Asset.EndFrame;
             isDrag = true;
         }
         void OnEnd()
         {
             isDrag = false;
-            if (!trackItem.IsValid())
+            if (!ClipContent.IsValid())
             {
-                asset.StartFrame = startFrame;
-                asset.EndFrame = endFrame;
+                Asset.StartFrame = startFrame;
+                Asset.EndFrame = endFrame;
             }
             UpdateView();
         }
         void OnDrag(Vector2 e)
         {
-            var dragFrame = window.clipView.GetFrameByMousePosition();
+            var dragFrame = Timeline.GetFrameByMousePosition();
             var offFrame = dragFrame - lastFrame;
             lastFrame = dragFrame;
-            if (asset.StartFrame + offFrame < 0)
+            if (Asset.StartFrame + offFrame < 0)
             {
-                offFrame = 0 - asset.StartFrame;
+                offFrame = 0 - Asset.StartFrame;
             }
-            asset.StartFrame += offFrame;
-            asset.EndFrame += offFrame;
+            Asset.StartFrame += offFrame;
+            Asset.EndFrame += offFrame;
             UpdateView();
+            ClipContent.ClipMarkDirtyRepaint();
         }
 
 
         public void UpdateView()
         {
-            var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
-            var ex = window.clipView.GetPositionByFrame(asset.EndFrame);
-            this.lbType.text = asset.Name;
+            var sx = Timeline.GetPositionByFrame(Asset.StartFrame);
+            var ex = Timeline.GetPositionByFrame(Asset.EndFrame);
+            this.lbType.text = Asset.Name;
             this.style.position = new StyleEnum<Position>(Position.Absolute);
             this.style.left = sx;
             this.style.width = ex - sx;
 
-            if (trackItem.IsValid())
+            if (ClipContent.IsValid())
             {
                 content.style.borderLeftWidth = 1;
                 content.style.borderRightWidth = 1;
@@ -199,41 +192,7 @@ namespace Ux.Editor.Timeline
                 content.style.borderTopColor = new StyleColor(Color.red);
                 content.style.borderBottomColor = new StyleColor(Color.red);
             }
-            trackItem.UpdateClipData();
-            drwa.MarkDirtyRepaint();
-        }
-        void OnGeometryChanged(GeometryChangedEvent changedEvent)
-        {
-            drwa.MarkDirtyRepaint();
-        }
-        void OnDrawContent(MeshGenerationContext mgc)
-        {
-            var paint2D = mgc.painter2D;
-            paint2D.strokeColor = Color.black;
-            paint2D.BeginPath();
-            var sx = window.clipView.GetPositionByFrame(asset.StartFrame);
-            var ex = window.clipView.GetPositionByFrame(asset.EndFrame);
-
-            if (asset.InFrame > 0)
-            {
-                var ix = window.clipView.GetPositionByFrame(asset.InFrame);
-                paint2D.MoveTo(new Vector2(0, 0));
-                paint2D.LineTo(new Vector2(ix - sx, 0));
-                paint2D.LineTo(new Vector2(ix - sx, 20));
-                paint2D.LineTo(new Vector2(0, 0));
-            }
-            if (asset.OutFrame > 0)
-            {
-                var ox = window.clipView.GetPositionByFrame(asset.OutFrame);
-
-                //var w = ex - sx;
-                //var xx = asset.OutFrame / (asset.EndFrame - asset.StartFrame) * w;
-                paint2D.MoveTo(new Vector2(ox - sx, 0));
-                paint2D.LineTo(new Vector2(ox - sx, 20));
-                paint2D.LineTo(new Vector2(ex - sx, 20));
-                paint2D.LineTo(new Vector2(ox - sx, 0));
-            }
-            paint2D.Stroke();
+            ClipContent.UpdateClipData();
         }
     }
 }

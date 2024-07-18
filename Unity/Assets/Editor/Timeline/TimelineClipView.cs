@@ -17,10 +17,8 @@ namespace Ux.Editor.Timeline
                 base.focusIndex.defaultValue = 0;
                 base.focusable.defaultValue = true;
             }
-        }
-        public TimelineWindow window;
-
-        List<TimelineClipItem> items = new List<TimelineClipItem>();
+        }        
+        
         int StartFrame => Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
         int EndFrame => Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
 
@@ -43,9 +41,10 @@ namespace Ux.Editor.Timeline
         Label lbMarker;
 
 
+
         public TimelineClipView()
         {
-            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipView.uxml");
+            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineClipView.uxml");
             visualTree.CloneTree(this);
             RegisterCallback<WheelEvent>(OnWheel);
             RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
@@ -65,18 +64,13 @@ namespace Ux.Editor.Timeline
             lbMarker = this.Q<Label>("lb_marker");
 
             veClipContent = this.Q<VisualElement>("ve_clip_content");
+            Timeline.ClipContent = veClipContent;
+            Timeline.GetPositionByFrame = GetPositionByFrame;
+            Timeline.GetFrameByMousePosition = GetFrameByMousePosition;
+            Timeline.UpdateMarkerPos = UpdateMarkerPos;
         }
+       
 
-        public void AddItem(TimelineClipItem item)
-        {
-            veClipContent.Add(item);
-            items.Add(item);
-        }
-        public void RemoveItem(TimelineClipItem item)
-        {
-            veClipContent.Remove(item);
-            items.Remove(item);
-        }
 
         void OnGeometryChanged(GeometryChangedEvent changedEvent)
         {
@@ -156,7 +150,7 @@ namespace Ux.Editor.Timeline
             {
                 lbMarker.text = nowFrame.ToString();
                 UpdateMarkerPos();
-                window.SetFrame(frame - nowFrame);
+                Timeline.MarkerMove?.Invoke(frame - nowFrame);                
                 nowFrame = frame;
             }
         }
@@ -168,10 +162,7 @@ namespace Ux.Editor.Timeline
                 var pos = veMarkerIcon.transform.position;
                 pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
                 veMarkerIcon.transform.position = pos;
-                foreach (var item in items)
-                {
-                    item.UpdateView();
-                }
+                Timeline.UpdateMarkerPos?.Invoke();                
             }
             catch (Exception e)
             {

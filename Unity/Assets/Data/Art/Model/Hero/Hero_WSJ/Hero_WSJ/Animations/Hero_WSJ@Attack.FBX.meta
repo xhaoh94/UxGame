@@ -1,14 +1,14 @@
 fileFormatVersion: 2
 guid: a848d3fd3a6ac1b45b0aefec1145a80e
 ModelImporter:
-  serializedVersion: 22201
+  serializedVersion: 22200
   internalIDToNameTable: []
   externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
     materialSearch: 1
-    materialLocation: 0
+    materialLocation: 1
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -33,12 +33,6 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations: []
     isReadable: 0
-    virtualGeometry: 0
-    hasBoneWeight: 0
-    generateGeometryBuffer: 0
-    positionPrecision: -2147483648
-    normalPrecision: -1
-    tangentPrecision: -1
   meshes:
     lODScreenPercentages: []
     globalScale: 1
@@ -101,13 +95,13 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 6c081c6a0b7c68c4c81a33d653db4827, type: 3}
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
-  avatarSetup: 2
+  avatarSetup: 0
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
-  importBlendShapeDeformPercent: 0
+  importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
   additionalBone: 0
   userData: 

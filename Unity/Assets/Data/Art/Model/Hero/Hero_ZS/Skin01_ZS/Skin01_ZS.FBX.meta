@@ -1,24 +1,9 @@
 fileFormatVersion: 2
 guid: 922cf84db0065ca4a8440111da433f1e
 ModelImporter:
-  serializedVersion: 22201
+  serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Material #4
-    second: {fileID: 2100000, guid: aa5b3ce28b59e4f43a146b683c0f4dec, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Material #5
-    second: {fileID: 2100000, guid: e1cda66d31be6ca4c9526b64b4f20905, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Material #6
-    second: {fileID: 2100000, guid: beb87fd700c792c44992c94928ae7c9b, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -48,12 +33,6 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations: []
     isReadable: 0
-    virtualGeometry: 0
-    hasBoneWeight: 0
-    generateGeometryBuffer: 0
-    positionPrecision: -2147483648
-    normalPrecision: -1
-    tangentPrecision: -1
   meshes:
     lODScreenPercentages: []
     globalScale: 1

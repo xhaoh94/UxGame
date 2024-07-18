@@ -1,8 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using YooAsset;
 
 namespace Ux
@@ -26,8 +23,7 @@ namespace Ux
         void _CreatePackage()
         {
             Package = YooAssets.TryGetPackage(Name);
-            if (Package == null)
-                Package = YooAssets.CreatePackage(Name);
+            Package ??= YooAssets.CreatePackage(Name);
             if (YooType.Main == YooType)
             {
                 // 设置该资源包为默认的资源包

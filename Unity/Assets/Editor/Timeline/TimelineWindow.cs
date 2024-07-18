@@ -4,6 +4,17 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
+    public static class Timeline
+    {
+        public static VisualElement ClipContent { get; set; }
+        public static System.Action UpdateMarkerPos { get; set; }
+        public static System.Func<int, float> GetPositionByFrame { get; set; }
+        public static System.Func<int> GetFrameByMousePosition {  get; set; }
+        public static System.Action<int> MarkerMove { get; set; }
+        public static TimelineAsset Asset { get; set; }
+        public static System.Action SaveAssets { get; set; }
+        public static System.Action RefreshEntity { get; set; }
+    }
     public class TLEntity : Entity
     {
         protected override void OnDestroy()
@@ -33,10 +44,7 @@ namespace Ux.Editor.Timeline
         {
             CreateChildren();
             root.style.flexGrow = 1f;
-            rootVisualElement.Add(root);
-
-            trackView.window = this;
-            clipView.window = this;
+            rootVisualElement.Add(root);            
 
             ofEntity.objectType = typeof(GameObject);
             ofTimeline.objectType = typeof(TimelineAsset);
@@ -48,7 +56,10 @@ namespace Ux.Editor.Timeline
 
             _OnOfEntityChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
             _OnOfTimelineChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
-            
+
+            Timeline.SaveAssets = SaveAssets;
+            Timeline.RefreshEntity = RefreshEntity;
+            Timeline.MarkerMove = SetFrame;
         }
 
 
@@ -149,7 +160,7 @@ namespace Ux.Editor.Timeline
             ofTimeline.SetValueWithoutNotify(asset);
         }
 
-        public void SaveAssets()
+        void SaveAssets()
         {
             if (asset != null)
             {
@@ -157,7 +168,7 @@ namespace Ux.Editor.Timeline
                 AssetDatabase.SaveAssets();
             }
         }
-        public void RefreshEntity()
+        void RefreshEntity()
         {
             if (asset == null) return;
             entity?.Get<TimelineComponent>()?.Play(asset);

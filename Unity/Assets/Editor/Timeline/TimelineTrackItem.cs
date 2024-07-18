@@ -2,31 +2,154 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Build.Pipeline;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux;
 namespace Ux.Editor.Timeline
 {
-    public class TimelineTrackItem : VisualElement, IToolbarMenuElement
+    public class TrackClipContent : VisualElement
     {
-        public TimelineTrackAsset asset;
-        TimelineWindow window;
-        VisualElement content;
-        Label lbType;
-        TextField inputName;
-        public DropdownMenu menu { get; }
-        Dictionary<TimelineClipAsset, TimelineClipItem> clipItemDic = new Dictionary<TimelineClipAsset, TimelineClipItem>();
-        public TimelineTrackItem(TimelineTrackAsset asset, TimelineWindow window)
+        VisualElement clipParent;
+        VisualElement draw;
+        public TimelineTrackItem TrackItem { get;}
+        public List<TimelineClipItem> Items { get; } = new();
+        public TrackClipContent(TimelineTrackItem trackItem)
         {
-            this.asset = asset;
-            this.window = window;
-            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineTrackItem.uxml");
-            visualTree.CloneTree(this);
-            content = this.Q<VisualElement>("content");
-            lbType = this.Q<Label>("lbType");
-            inputName = this.Q<TextField>("inputName");
+            TrackItem = trackItem;
+            clipParent = new VisualElement();
+            draw = new VisualElement();
+            draw.generateVisualContent += OnDrawContent;
+            style.height = 30;
+
+            Timeline.ClipContent.Add(this);
+            Timeline.UpdateMarkerPos += UpdateMarkerPos;
+        }
+        public void Release()
+        {
+            Timeline.ClipContent.Remove(this);
+            Timeline.UpdateMarkerPos -= UpdateMarkerPos;
+        }
+        void OnDrawContent(MeshGenerationContext mgc)
+        {
+            var paint2D = mgc.painter2D;
+            paint2D.strokeColor = Color.black;
+            paint2D.BeginPath();
+
+            foreach (var item in Items)
+            {
+                var asset = item.Asset;
+                var sx = Timeline.GetPositionByFrame(asset.StartFrame);
+                var ex = Timeline.GetPositionByFrame(asset.EndFrame);
+
+                if (asset.InFrame > 0)
+                {
+                    var ix = Timeline.GetPositionByFrame(asset.InFrame);
+                    paint2D.MoveTo(new Vector2(0, 0));
+                    paint2D.LineTo(new Vector2(ix - sx, 0));
+                    paint2D.LineTo(new Vector2(ix - sx, 20));
+                    paint2D.LineTo(new Vector2(0, 0));
+                }
+                if (asset.OutFrame > 0)
+                {
+                    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
+                    paint2D.MoveTo(new Vector2(ox - sx, 0));
+                    paint2D.LineTo(new Vector2(ox - sx, 20));
+                    paint2D.LineTo(new Vector2(ex - sx, 20));
+                    paint2D.LineTo(new Vector2(ox - sx, 0));
+                }
+            }
+
+            paint2D.Stroke();
+        }
+
+        void UpdateMarkerPos()
+        {
+            ClipMarkDirtyRepaint();
+        }
+        public void ClipMarkDirtyRepaint()
+        {
+            draw.MarkDirtyRepaint();
+        }
+        public void AddItem(TimelineClipAsset asset)
+        {
+            var item = new TimelineClipItem();
+            item.Init(asset, this);
+            Items.Add(item);
+            clipParent.Add(item);
+        }
+
+        public bool IsValid()
+        {
+            Dictionary<TimelineClipAsset, int> kvs = new Dictionary<TimelineClipAsset, int>();
+            foreach (var clip1 in Items)
+            {
+                foreach (var clip2 in Items)
+                {
+                    if (clip1 == clip2) continue;
+                    var t = Intersect(clip1.Asset, clip2.Asset);
+                    if (t == -1000) return false;
+                    if (t != 0)
+                    {
+                        if (kvs.TryGetValue(clip1.Asset, out var temt) && temt == t)
+                        {
+                            return false;
+                        }
+                        kvs.Add(clip1.Asset, t);
+                    }
+                }
+            }
+            return true;
+        }
+        public void UpdateClipData()
+        {
+            foreach (var clip1 in Items)
+            {
+                clip1.Asset.InFrame = 0;
+                clip1.Asset.OutFrame = 0;
+                foreach (var clip2 in Items)
+                {
+                    if (clip1 == clip2) continue;
+                    var t = Intersect(clip1.Asset, clip2.Asset);
+                    switch (t)
+                    {
+                        case 1:
+                            clip1.Asset.OutFrame = clip2.Asset.StartFrame;
+                            break;
+                        case -1:
+                            clip1.Asset.InFrame = clip2.Asset.EndFrame;
+                            break;
+                    }
+                }
+            }
+        }
+        int Intersect(TimelineClipAsset a, TimelineClipAsset b)
+        {
+            if (a.StartFrame < b.StartFrame && a.EndFrame > b.EndFrame) return -1000;
+            if (b.StartFrame < a.StartFrame && b.EndFrame > a.EndFrame) return -1000;
+
+            if (a.EndFrame > b.StartFrame && a.StartFrame < b.EndFrame)
+            {
+                if (a.StartFrame < b.StartTime) return 1;
+                return -1;
+            }
+
+            return 0;
+        }
+    }
+    public partial class TimelineTrackItem : VisualElement, IToolbarMenuElement
+    {
+        public TimelineTrackAsset Asset { get; private set; }
+        TrackClipContent clipContent;
+        public DropdownMenu menu { get; }
+        public TimelineTrackItem(TimelineTrackAsset asset)
+        {
+            CreateChildren();
+            Add(root);
+
+            Asset = asset;
+
+            clipContent = new TrackClipContent(this);
+
             inputName.SetValueWithoutNotify(asset.Name);
 
             var attr = asset.GetType().GetAttribute<TLTrackAttribute>();
@@ -39,6 +162,35 @@ namespace Ux.Editor.Timeline
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             menu = new DropdownMenu();
 
+            clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
+            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
+        }
+        public void Release()
+        {
+            clipContent.Release();
+        }
+
+        void OnDragUpd(DragUpdatedEvent e)
+        {
+            DragAndDrop.visualMode = DragAndDropVisualMode.Move;
+        }
+        void OnDragPerform(DragPerformEvent e)
+        {
+            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
+            {
+                string retPath = DragAndDrop.paths[0];
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
+                if (clip == null)
+                {
+                    return;
+                }
+                var clipAsset = CreateClipAsset<AnimationClipAsset>();
+                clipAsset.StartFrame = Mathf.CeilToInt(Asset.MaxTime / TimelineMgr.Ins.FrameRate);
+                clipAsset.EndFrame = clipAsset.StartFrame + Mathf.RoundToInt(clip.length * TimelineMgr.Ins.FrameRate);
+                clipAsset.clip = clip;
+                clipAsset.Name = clip.name;
+                AddClipItem(clipAsset);
+            }
         }
         void OnPointerDown(PointerDownEvent e)
         {
@@ -57,17 +209,14 @@ namespace Ux.Editor.Timeline
         }
         void RefreshView()
         {
-            foreach (var clipAsset in asset.clips)
+            foreach (var clipAsset in Asset.clips)
             {
-                var item = new TimelineClipItem();
-                item.Init(clipAsset, this, window);
-                clipItemDic.Add(clipAsset, item);
-                window.clipView.AddItem(item);
+                clipContent.AddItem(clipAsset);
             }
         }
         public T CreateClipAsset<T>() where T : TimelineClipAsset
         {
-            var attr = asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
+            var attr = Asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
             var clipType = attr.ClipType;
             var clip = Activator.CreateInstance(clipType) as TimelineClipAsset;
             clip.StartFrame = 0;
@@ -76,77 +225,22 @@ namespace Ux.Editor.Timeline
         }
         public void AddClipItem(TimelineClipAsset clipAsset)
         {
-            if (clipItemDic.ContainsKey(clipAsset))
+            if (Asset.clips.Contains(clipAsset))
             {
                 return;
             }
-            asset.clips.Add(clipAsset);
-            window.SaveAssets();
-
-            var item = new TimelineClipItem();
-            item.Init(clipAsset, this, window);
-            window.clipView.AddItem(item);
-            clipItemDic.Add(clipAsset, item);
-            window.RefreshEntity();
+            Asset.clips.Add(clipAsset);
+            Timeline.SaveAssets();   
+            clipContent.AddItem(clipAsset);
+            Timeline.RefreshEntity();
         }
         public bool IsValid()
         {
-            var clips = clipItemDic.Keys.ToArray();
-            Dictionary<TimelineClipAsset, int> kvs = new Dictionary<TimelineClipAsset, int>();
-            foreach (var clip1 in clips)
-            {
-                foreach (var clip2 in clips)
-                {
-                    if (clip1 == clip2) continue;
-                    var t = Intersect(clip1, clip2);
-                    if (t == -1000) return false;
-                    if (t != 0)
-                    {
-                        if (kvs.TryGetValue(clip1, out var temt) && temt == t)
-                        {
-                            return false;
-                        }
-                        kvs.Add(clip1, t);
-                    }
-                }
-            }
-            return true;
+            return clipContent.IsValid();
         }
         public void UpdateClipData()
         {
-            var clips = clipItemDic.Keys.ToArray();
-            foreach (var clip1 in clips)
-            {
-                clip1.InFrame = 0;
-                clip1.OutFrame = 0;
-                foreach (var clip2 in clips)
-                {
-                    if (clip1 == clip2) continue;
-                    var t = Intersect(clip1, clip2);
-                    switch (t)
-                    {
-                        case 1:
-                            clip1.OutFrame = clip2.StartFrame;
-                            break;
-                        case -1:                            
-                            clip1.InFrame = clip2.EndFrame;
-                            break;
-                    }
-                }
-            }
-        }
-        int Intersect(TimelineClipAsset a, TimelineClipAsset b)
-        {
-            if (a.StartFrame < b.StartFrame && a.EndFrame > b.EndFrame) return -1000;
-            if (b.StartFrame < a.StartFrame && b.EndFrame > a.EndFrame) return -1000;
-
-            if (a.EndFrame > b.StartFrame && a.StartFrame < b.EndFrame)
-            {
-                if (a.StartFrame < b.StartTime) return 1;
-                return -1;
-            }
-
-            return 0;
+            clipContent.UpdateClipData();
         }
     }
 }

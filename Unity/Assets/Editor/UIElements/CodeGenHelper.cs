@@ -14,11 +14,20 @@ namespace Ux.Editor
             { nameof(Toggle),$"ChangeEvent<bool>" },
             { nameof(EnumField),$"ChangeEvent<Enum>" },
             { nameof(TextField),$"ChangeEvent<string>" },
-            { nameof(ObjectField),$"ChangeEvent<UnityEngine.Object>" },             
+            { nameof(ObjectField),$"ChangeEvent<UnityEngine.Object>" },
         };
 
         [MenuItem("Assets/UIElements/CodeGenByUxml", false)]
         public static void GenCode()
+        {
+            VisualTreeAsset[] activeGos = Selection.GetFiltered<VisualTreeAsset>(SelectionMode.Unfiltered);            
+            foreach (Object obj in activeGos)
+            {
+                _GenCode(obj);
+            }
+            AssetDatabase.Refresh();
+        }
+        static void _GenCode(Object activeGo)
         {
             var tree = (Selection.activeObject as VisualTreeAsset);
             if (tree == null)
@@ -39,7 +48,7 @@ namespace Ux.Editor
 
             var clsName = tree.name;
             var dir = filePath.Replace($"/{clsName}.uxml", "");
-            var ns = dir.Replace("Assets", "Ux").Replace("/", ".");
+            var ns = dir.Replace("Assets", "Ux").Replace("/", ".").Replace(".Uxml", "");
 
             var write = new CodeGenWrite();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");
@@ -69,25 +78,24 @@ namespace Ux.Editor
             write.Writeln($"if (_visualAsset == null) return;");
             write.Writeln($"root = _visualAsset.CloneTree();");
             write.Writeln($"root.style.flexGrow = 1f;");
-          
+
             foreach (var element in listElement)
             {
                 var (name, type) = _Parse(element);
                 if (!string.IsNullOrEmpty(name))
-                {
-                    Debug.Log(name + "_" + type);
+                {                    
                     write.Writeln($"{name} =root.Q<{type}>(\"{name}\");");
-                    if(_RegisterValueChangedCallback.ContainsKey(type))
+                    if (_RegisterValueChangedCallback.ContainsKey(type))
                     {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Changed";
                         write.Writeln($"{name}.RegisterValueChangedCallback(e => {fnName}(e));");
                     }
-                    if (type==nameof(Button))
+                    if (type == nameof(Button))
                     {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Click";
                         write.Writeln($"{name}.clicked += () => {fnName}();");
                     }
-                    if(type == nameof(ListView))
+                    if (type == nameof(ListView))
                     {
                         var makeName = $"_OnMake{char.ToUpper(name[0])}{name.Substring(1)}Item";
                         write.Writeln($"{name}.makeItem = ()=> {{ var e = new VisualElement(); {makeName}(e); return e; }};");
@@ -110,9 +118,9 @@ namespace Ux.Editor
                 if (!string.IsNullOrEmpty(name))
                 {
                     if (_RegisterValueChangedCallback.TryGetValue(type, out var evt))
-                    {                        
+                    {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Changed";
-                        write.Writeln($"partial void {fnName}({evt} e);");                                            
+                        write.Writeln($"partial void {fnName}({evt} e);");
                     }
                     if (type == nameof(Button))
                     {
@@ -134,8 +142,7 @@ namespace Ux.Editor
             write.EndBlock();
             write.EndBlock();
 
-            write.Export($"{dir}/", $"{clsName}_GenCode");
-            AssetDatabase.Refresh();
+            write.Export($"{dir}/GenCode/", $"{clsName}_GenCode");
         }
         static (string, string) _Parse(object obj)
         {
@@ -158,7 +165,7 @@ namespace Ux.Editor
             }
             return (null, null);
         }
-        
+
     }
 
 }

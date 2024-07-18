@@ -1,0 +1,1 @@
+del /a /f /s /q F:\Projects\Unity\UxGame\Unity\Assets\*.meta

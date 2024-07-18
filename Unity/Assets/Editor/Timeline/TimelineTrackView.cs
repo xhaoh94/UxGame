@@ -14,9 +14,7 @@ namespace Ux.Editor.Timeline
                 base.focusIndex.defaultValue = 0;
                 base.focusable.defaultValue = true;
             }
-        }
-
-        public TimelineWindow window;
+        }        
 
         Dictionary<string, TimelineTrackItem> trackItemDic = new Dictionary<string, TimelineTrackItem>();
         public TimelineTrackView()
@@ -61,7 +59,7 @@ namespace Ux.Editor.Timeline
 
         void AddTrackItem(TimelineTrackAsset trackAsset)
         {
-            if (window.asset == null)
+            if (Timeline.Asset == null)
             {
                 return;
             }
@@ -70,32 +68,33 @@ namespace Ux.Editor.Timeline
                 //TODO 改名
                 return;
             }
-            window.asset.tracks.Add(trackAsset);
-            window.SaveAssets();
+            Timeline.Asset.tracks.Add(trackAsset);
+            Timeline.SaveAssets();
 
-            var item = new TimelineTrackItem(trackAsset, window);
+            var item = new TimelineTrackItem(trackAsset);
             trackContent.Add(item);
             trackItemDic.Add(trackAsset.Name, item);
-            window.RefreshEntity();
+            Timeline.RefreshEntity();
         }
         void RemoveTrackItem(TimelineTrackAsset trackAsset)
         {
             if(trackItemDic.TryGetValue(trackAsset.Name,out var item))
             {
+                item.Release();
                 trackContent.Remove(item);
                 trackItemDic.Remove(trackAsset.Name);
-                window.RefreshEntity();
+                Timeline.RefreshEntity();
             }
         }
         public void RefreshView()
         {
             trackContent.Clear();
             trackItemDic.Clear();
-            if (window.asset!=null)
+            if (Timeline.Asset!=null)
             {
-                foreach (var track in window.asset.tracks)
+                foreach (var track in Timeline.Asset.tracks)
                 {
-                    var item = new TimelineTrackItem(track, window);
+                    var item = new TimelineTrackItem(track);
                     trackContent.Add(item);
                     trackItemDic.Add(track.Name, item);
                 }
