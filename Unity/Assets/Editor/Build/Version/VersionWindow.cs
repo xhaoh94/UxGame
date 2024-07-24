@@ -30,14 +30,14 @@ namespace Ux.Editor.Build.Version
     }
     public partial class VersionWindow : EditorWindow
     {
-        [MenuItem("UxGame/构建/构建打包", false, 550)]
+        [MenuItem("UxGame/工具/构建打包", false, 550)]
         public static void Build()
         {
             var window = GetWindow<VersionWindow>("VersionWindow", true);
             window.minSize = new Vector2(800, 500);
         }
 
-        [MenuItem("UxGame/构建/本地资源服务器", false, 551)]
+        [MenuItem("UxGame/工具/本地资源服务器", false, 551)]
         public static void OpenFileServer()
         {
             //Command.Run("../HFS/hfs.exe");

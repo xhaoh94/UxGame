@@ -26,7 +26,7 @@ namespace Ux.Editor.Timeline
     public partial class TimelineWindow : EditorWindow
     {
         static TimelineWindow wnd;
-        [MenuItem("UxGame/时间轴")]
+        [MenuItem("UxGame/工具/时间轴", false, 521)]
         public static void ShowExample()
         {
             wnd = GetWindow<TimelineWindow>();
@@ -37,8 +37,6 @@ namespace Ux.Editor.Timeline
 
         public TimelineAsset asset => ofTimeline.value as TimelineAsset;
         TLEntity entity;
-
-        bool _isPlaying;
 
         public void CreateGUI()
         {
@@ -108,8 +106,9 @@ namespace Ux.Editor.Timeline
                 {
                     SettingTools.SavePlayerPrefs("timeline_asset", guid);
                 }
+                Timeline.Asset = asset;
                 RefreshEntity();
-                trackView.RefreshView();
+                trackView.RefreshView();                
             }
         }
 

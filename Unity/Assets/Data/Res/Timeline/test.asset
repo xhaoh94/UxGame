@@ -38,8 +38,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         Name: Stand
-        StartFrame: 1
-        EndFrame: 61
+        StartFrame: 60
+        EndFrame: 90
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}

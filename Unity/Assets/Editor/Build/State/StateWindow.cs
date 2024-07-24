@@ -12,7 +12,7 @@ namespace Ux.Editor.Build.State
         [SerializeField]
         private VisualTreeAsset m_VisualTreeAsset = default;
 
-        [MenuItem("UxGame/构建/状态机", false, 520)]
+        [MenuItem("UxGame/工具/状态机", false, 520)]
         public static void ShowExample()
         {
             StateWindow wnd = GetWindow<StateWindow>();

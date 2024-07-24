@@ -11,7 +11,7 @@ namespace Ux.Editor.Build.UI
 {
     public class UIClassifyWindow : EditorWindow
     {
-        [MenuItem("UxGame/构建/UI/资源分类", false, 511)]
+        [MenuItem("UxGame/工具/UI/资源分类", false, 511)]
         public static void ShowExample()
         {
             var window = GetWindow<UIClassifyWindow>("UIClassifyWindow", true);

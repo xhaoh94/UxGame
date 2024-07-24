@@ -9,7 +9,7 @@ namespace Ux.Editor.Build.Proto
 {
     public class ProtoWindow : EditorWindow
     {
-        [MenuItem("UxGame/构建/协议", false, 540)]
+        [MenuItem("UxGame/工具/协议", false, 540)]
         public static void ShowConfigWindon()
         {
             var window = GetWindow<ProtoWindow>("ProtoWindow", true);

@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <uie:Toolbar style="-unity-slice-right: 0; border-right-width: 1px; flex-grow: 0; flex-shrink: 1;">
+    <uie:Toolbar style="-unity-slice-right: 0; border-right-width: 1px; flex-grow: 0; flex-shrink: 1; height: 25px;">
         <uie:ToolbarMenu tabindex="-1" display-tooltip-when-elided="true" text="+" name="btnAddTrack" />
     </uie:Toolbar>
     <ui:VisualElement name="trackContent" style="flex-grow: 1; background-color: rgb(32, 32, 32); margin-top: 0;" />

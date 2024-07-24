@@ -91,7 +91,7 @@ namespace Ux.Editor.Timeline
             trackContent.Clear();
             trackItemDic.Clear();
             if (Timeline.Asset!=null)
-            {
+            {                
                 foreach (var track in Timeline.Asset.tracks)
                 {
                     var item = new TimelineTrackItem(track);

@@ -19,7 +19,7 @@ namespace Ux.Editor.Build.Config
     }
     public class ConfigWindow : EditorWindow
     {
-        [MenuItem("UxGame/构建/配置", false, 530)]
+        [MenuItem("UxGame/工具/配置", false, 530)]
         public static void ShowConfigWindon()
         {
             var window = GetWindow<ConfigWindow>("ConfigWindow", true);

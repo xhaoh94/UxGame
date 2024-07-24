@@ -17,19 +17,21 @@ namespace Ux.Editor.Timeline
         public DropdownMenu menu { get; }
         public TimelineClipItem()
         {
-            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/TimelineClipItem.uxml");
+            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineClipItem.uxml");
             visualTree.CloneTree(this);
             content = this.Q<VisualElement>("content");
 
             left = this.Q<VisualElement>("left");
             center = this.Q<VisualElement>("center");
-            lbType = this.Q<Label>("lbType");
             right = this.Q<VisualElement>("right");
+            lbType = this.Q<Label>("lbType");
 
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
+            style.position = new StyleEnum<Position>(Position.Absolute);
+            style.height = 30;
         }
         void _OnDragUpd(DragUpdatedEvent e)
         {
@@ -163,16 +165,19 @@ namespace Ux.Editor.Timeline
         {
             var sx = Timeline.GetPositionByFrame(Asset.StartFrame);
             var ex = Timeline.GetPositionByFrame(Asset.EndFrame);
-            this.lbType.text = Asset.Name;
-            this.style.position = new StyleEnum<Position>(Position.Absolute);
-            this.style.left = sx;
-            this.style.width = ex - sx;
+            var tFrame = (float)(Asset.EndFrame - Asset.StartFrame);
+            lbType.text = Asset.Name;
+            var width = ex - sx;
+            lbType.style.left =  width * ((Asset.InFrame - Asset.StartFrame) / tFrame);
+            lbType.style.right = width - (width * ((Asset.OutFrame - Asset.StartFrame) / tFrame));
+            style.left = sx;
+            style.width = width;
 
             if (ClipContent.IsValid())
             {
-                content.style.borderLeftWidth = 1;
-                content.style.borderRightWidth = 1;
-                content.style.borderTopWidth = 1;
+                //content.style.borderLeftWidth = 1;
+                //content.style.borderRightWidth = 1;
+                //content.style.borderTopWidth = 1;
                 content.style.borderBottomWidth = 3;
 
                 content.style.borderLeftColor = isDrag ? Color.white : color;
@@ -182,14 +187,14 @@ namespace Ux.Editor.Timeline
             }
             else
             {
-                content.style.borderLeftWidth = 1;
-                content.style.borderRightWidth = 1;
-                content.style.borderTopWidth = 1;
+                //content.style.borderLeftWidth = 1;
+                //content.style.borderRightWidth = 1;
+                //content.style.borderTopWidth = 1;
                 content.style.borderBottomWidth = 3;
 
-                content.style.borderLeftColor = new StyleColor(Color.red);
-                content.style.borderRightColor = new StyleColor(Color.red);
-                content.style.borderTopColor = new StyleColor(Color.red);
+                //content.style.borderLeftColor = new StyleColor(Color.red);
+                //content.style.borderRightColor = new StyleColor(Color.red);
+                //content.style.borderTopColor = new StyleColor(Color.red);
                 content.style.borderBottomColor = new StyleColor(Color.red);
             }
             ClipContent.UpdateClipData();

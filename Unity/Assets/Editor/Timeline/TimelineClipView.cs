@@ -66,8 +66,7 @@ namespace Ux.Editor.Timeline
             veClipContent = this.Q<VisualElement>("ve_clip_content");
             Timeline.ClipContent = veClipContent;
             Timeline.GetPositionByFrame = GetPositionByFrame;
-            Timeline.GetFrameByMousePosition = GetFrameByMousePosition;
-            Timeline.UpdateMarkerPos = UpdateMarkerPos;
+            Timeline.GetFrameByMousePosition = GetFrameByMousePosition;            
         }
        
 
@@ -111,11 +110,11 @@ namespace Ux.Editor.Timeline
             veMarkerIcon.MarkDirtyRepaint();
             UpdateMarkerPos();
         }
-        public float GetPositionByFrame(int frame)
+        float GetPositionByFrame(int frame)
         {
             return frame * FrameWidth - ScrClipViewOffsetX;
         }
-        public int GetFrameByMousePosition()
+        int GetFrameByMousePosition()
         {
             var pos = veMarkerContent.WorldToLocal(Event.current.mousePosition);
             var posx = pos.x;

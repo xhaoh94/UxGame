@@ -1,3 +1,4 @@
+using Pathfinding.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,26 @@ namespace Ux.Editor.Timeline
         public List<TimelineClipItem> Items { get; } = new();
         public TrackClipContent(TimelineTrackItem trackItem)
         {
-            TrackItem = trackItem;
-            clipParent = new VisualElement();
-            draw = new VisualElement();
-            draw.generateVisualContent += OnDrawContent;
             style.height = 30;
+            style.left = 0;
+            style.right = 0;
+            TrackItem = trackItem;
+            clipParent = new VisualElement();            
+            clipParent.style.position = new StyleEnum<Position>(Position.Absolute);
+            clipParent.style.top = 0;
+            clipParent.style.bottom = 0;
+            clipParent.style.left = 0;
+            clipParent.style.right = 0; 
+            Add(clipParent);
+            draw = new VisualElement();
+            draw.pickingMode = PickingMode.Ignore;
+            draw.style.position = new StyleEnum<Position>(Position.Absolute);
+            draw.style.top = 0;
+            draw.style.bottom = 0;
+            draw.style.left = 0;
+            draw.style.right = 0;
+            Add(draw);
+            draw.generateVisualContent += OnDrawContent;
 
             Timeline.ClipContent.Add(this);
             Timeline.UpdateMarkerPos += UpdateMarkerPos;
@@ -44,19 +60,19 @@ namespace Ux.Editor.Timeline
                 if (asset.InFrame > 0)
                 {
                     var ix = Timeline.GetPositionByFrame(asset.InFrame);
-                    paint2D.MoveTo(new Vector2(0, 0));
-                    paint2D.LineTo(new Vector2(ix - sx, 0));
-                    paint2D.LineTo(new Vector2(ix - sx, 20));
-                    paint2D.LineTo(new Vector2(0, 0));
+                    paint2D.MoveTo(new Vector2(ix, 2));
+                    paint2D.LineTo(new Vector2(sx, 2));
+                    paint2D.LineTo(new Vector2(ix, 28));
+                    paint2D.LineTo(new Vector2(ix, 2));
                 }
-                if (asset.OutFrame > 0)
-                {
-                    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
-                    paint2D.MoveTo(new Vector2(ox - sx, 0));
-                    paint2D.LineTo(new Vector2(ox - sx, 20));
-                    paint2D.LineTo(new Vector2(ex - sx, 20));
-                    paint2D.LineTo(new Vector2(ox - sx, 0));
-                }
+                //if (asset.OutFrame > 0)
+                //{
+                //    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
+                //    paint2D.MoveTo(new Vector2(ox - sx, 5));
+                //    paint2D.LineTo(new Vector2(ox - sx, 20));
+                //    paint2D.LineTo(new Vector2(ex - sx, 20));
+                //    paint2D.LineTo(new Vector2(ox - sx, 5));
+                //}
             }
 
             paint2D.Stroke();
@@ -65,6 +81,10 @@ namespace Ux.Editor.Timeline
         void UpdateMarkerPos()
         {
             ClipMarkDirtyRepaint();
+            foreach (var item in Items)
+            {
+                item.UpdateView();
+            }
         }
         public void ClipMarkDirtyRepaint()
         {
@@ -145,11 +165,10 @@ namespace Ux.Editor.Timeline
         {
             CreateChildren();
             Add(root);
+            style.height = 30;
 
             Asset = asset;
-
             clipContent = new TrackClipContent(this);
-
             inputName.SetValueWithoutNotify(asset.Name);
 
             var attr = asset.GetType().GetAttribute<TLTrackAttribute>();
