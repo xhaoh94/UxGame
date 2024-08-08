@@ -52,7 +52,7 @@ MonoBehaviour:
     m_EaseInDuration: 0
     m_EaseOutDuration: 0
     m_BlendInDuration: -1
-    m_BlendOutDuration: 0.7166666666666666
+    m_BlendOutDuration: 0.5833333333333333
     m_MixInCurve:
       serializedVersion: 2
       m_Curve:
@@ -94,7 +94,7 @@ MonoBehaviour:
     m_PreExtrapolationTime: 0
     m_DisplayName: AnimPA
   - m_Version: 1
-    m_Start: 0.26666666666666666
+    m_Start: 0.4
     m_ClipIn: 0
     m_Asset: {fileID: 1780654354396144109}
     m_Duration: 1
@@ -102,7 +102,7 @@ MonoBehaviour:
     m_ParentTrack: {fileID: 1045402345450608819}
     m_EaseInDuration: 0
     m_EaseOutDuration: 0
-    m_BlendInDuration: 0.7166666666666666
+    m_BlendInDuration: 0.5833333333333333
     m_BlendOutDuration: -1
     m_MixInCurve:
       serializedVersion: 2

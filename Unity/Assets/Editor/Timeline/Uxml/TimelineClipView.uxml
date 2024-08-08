@@ -1,16 +1,16 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <Ux.Editor.SplitView fixed-pane-initial-dimension="200" fixed-pane-index="1" style="flex-direction: column;">
         <ui:ScrollView vertical-scroller-visibility="Hidden" name="scr_clip" mode="Vertical" style="flex-shrink: 0; flex-grow: 1; flex-basis: 0; width: auto;">
-            <ui:VisualElement style="flex-grow: 0; width: 100%; height: 100%; align-self: flex-end; justify-content: space-around; flex-direction: column-reverse; border-left-width: 10px; border-right-width: 0;">
-                <ui:VisualElement name="ve_clip_content" style="flex-grow: 1; margin-top: 0; position: relative;" />
+            <ui:VisualElement style="flex-grow: 0; width: 100%; height: 100%; align-self: flex-end; justify-content: space-around; flex-direction: column; border-left-width: 10px; border-right-width: 0;">
                 <uie:Toolbar name="Toolbar" style="flex-direction: column; height: 25px; flex-grow: 0; background-color: rgba(60, 60, 60, 0); width: 100%;">
                     <ui:VisualElement name="ve_line_content" picking-mode="Ignore" style="flex-grow: 0; height: 25px; position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
-                    <ui:VisualElement name="ve_marker_content" style="flex-grow: 0; height: 25px; position: absolute; left: 0; top: 0; right: 0; width: 100%; bottom: 0;">
-                        <ui:VisualElement name="ve_marker_icon" focusable="true" style="flex-grow: 1; width: auto; height: 24px; background-color: rgb(51, 178, 51); flex-shrink: 0; position: absolute; min-width: 20px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0);">
-                            <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lb_marker" focusable="true" style="font-size: 12px; -unity-text-align: middle-center; white-space: nowrap; text-overflow: clip; -unity-paragraph-spacing: 0; word-spacing: 0; letter-spacing: -10px; height: 24px; flex-grow: 1; flex-shrink: 0; color: rgb(255, 255, 255);" />
-                        </ui:VisualElement>
-                    </ui:VisualElement>
                 </uie:Toolbar>
+                <ui:VisualElement name="ve_clip_content" style="flex-grow: 1; margin-top: 0; position: relative;" />
+                <ui:VisualElement name="ve_marker_content" style="flex-grow: 0; height: 25px; position: absolute; left: 0; top: 0; right: 0; width: 100%; bottom: 0;">
+                    <ui:VisualElement name="ve_marker_icon" focusable="true" style="flex-grow: 1; width: auto; height: 24px; background-color: rgb(51, 178, 51); flex-shrink: 0; position: absolute; min-width: 20px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0);">
+                        <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lb_marker" focusable="true" style="font-size: 12px; -unity-text-align: middle-center; white-space: nowrap; text-overflow: clip; -unity-paragraph-spacing: 0; word-spacing: 0; letter-spacing: -10px; height: 24px; flex-grow: 1; flex-shrink: 0; color: rgb(255, 255, 255);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:ScrollView>
         <ui:ScrollView name="scr_inspector" style="flex-grow: 0; flex-basis: auto; width: 200px;" />

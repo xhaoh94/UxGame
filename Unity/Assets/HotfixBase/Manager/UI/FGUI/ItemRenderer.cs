@@ -13,10 +13,6 @@ namespace Ux
     }
     public abstract class ItemRenderer : UIObject, IItemRenderer
     {
-        /// <summary>
-        /// 由于ItemRenderer在滚动的时候会调用的很频繁，所以取消用特性注册事件
-        /// </summary>
-        //protected override bool IsRegisterFastMethod => false;
         public int Index { get; private set; } = -1;
         public UIList List => ParentAs<UIList>();
 

@@ -1,4 +1,6 @@
+using dnlib.DotNet;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,15 +15,17 @@ namespace Ux
         /// <summary>
         /// 事件ID对应的所有IEvent
         /// </summary>
-        private readonly Dictionary<int, List<long>> _eTypeKeys = new();
+        private readonly Dictionary<int, HashSet<long>> _eTypeKeys = new();
         /// <summary>
         /// 标签对应的所有IEvent
         /// </summary>
-        private readonly Dictionary<int, List<long>> _tagKeys = new();
+        private readonly Dictionary<int, HashSet<long>> _tagKeys = new();
         /// <summary>
         /// 函数对应的所有IEvent
         /// </summary>
-        private readonly Dictionary<int, List<long>> _actionKeys = new();
+        private readonly Dictionary<int, HashSet<long>> _actionKeys = new();
+
+        int _exeCnt = 0;
 
         private readonly Queue<IEventExe> _waitExes = new();
         private readonly List<IEvent> _waitAdds = new();
@@ -91,103 +95,110 @@ namespace Ux
 
         void _Update()
         {
-            while (_waitDels.Count > 0)
+            if (_waitDels.Count > 0)
             {
-                var key = _waitDels[0];
-                _waitDels.RemoveAt(0);
-                if (!_keyEvent.TryGetValue(key, out var evt)) continue;
-                var eType = evt.EType;
-                if (_eTypeKeys.TryGetValue(eType, out var typeKeys))
+                var enumerator = _waitDels.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    typeKeys.Remove(key);
-                    if (typeKeys.Count == 0) _eTypeKeys.Remove(eType);
-                }
-
-                var actionHashCode = evt.Method.GetHashCode();
-                if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
-                {
-                    aKeys.Remove(key);
-                    if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
-                }
-
-                var target = evt.Tag;
-                if (target != null)
-                {
-                    int hashCode = target.GetHashCode();
-                    if (_tagKeys.TryGetValue(hashCode, out var tKeys))
+                    var key = enumerator.Current;
+                    if (!_keyEvent.TryGetValue(key, out var evt)) continue;
+                    var eType = evt.EType;
+                    if (_eTypeKeys.TryGetValue(eType, out var typeKeys))
                     {
-                        tKeys.Remove(key);
-                        if (tKeys.Count == 0) _tagKeys.Remove(hashCode);
+                        typeKeys.Remove(key);
+                        if (typeKeys.Count == 0) _eTypeKeys.Remove(eType);
                     }
-                }
+
+                    var actionHashCode = evt.Method.GetHashCode();
+                    if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                    {
+                        aKeys.Remove(key);
+                        if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
+                    }
+
+                    var target = evt.Tag;
+                    if (target != null)
+                    {
+                        int hashCode = target.GetHashCode();
+                        if (_tagKeys.TryGetValue(hashCode, out var tKeys))
+                        {
+                            tKeys.Remove(key);
+                            if (tKeys.Count == 0) _tagKeys.Remove(hashCode);
+                        }
+                    }
 #if UNITY_EDITOR
-                var eTypeStr = evt.ETypeStr;
-                if (string.IsNullOrEmpty(eTypeStr)) eTypeStr = eType.ToString();
-                if (type2editor.TryGetValue(eTypeStr, out var t2eList))
-                {
-                    if (t2eList.Remove(evt.MethodName))
+                    var eTypeStr = evt.ETypeStr;
+                    if (string.IsNullOrEmpty(eTypeStr)) eTypeStr = eType.ToString();
+                    if (type2editor.TryGetValue(eTypeStr, out var t2eList))
                     {
-                        type2editor.Remove(eTypeStr);
-                        __Debugger_Event();
+                        if (t2eList.Remove(evt.MethodName))
+                        {
+                            type2editor.Remove(eTypeStr);
+                            __Debugger_Event();
+                        }
                     }
-                }
 #endif
 
-                evt.Release();
-                _keyEvent.Remove(key);
+                    evt.Release();
+                    _keyEvent.Remove(key);
+                }
+                _waitDels.Clear();
             }
 
-            while (_waitAdds.Count > 0)
+            if (_waitAdds.Count > 0)
             {
-                var evt = _waitAdds[0];
-                _waitAdds.RemoveAt(0);
-                _keyEvent.Add(evt.Key, evt);
-                var eType = evt.EType;
-                if (!_eTypeKeys.TryGetValue(eType, out var typeKeys))
+                var enumerator = _waitAdds.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    typeKeys = new List<long>();
-                    _eTypeKeys.Add(eType, typeKeys);
-                }
-                var key = evt.Key;
-                if (!typeKeys.Contains(key)) typeKeys.Insert(0, key);
+                    var evt = enumerator.Current;
+                    _keyEvent.Add(evt.Key, evt);
+                    var eType = evt.EType;
+                    if (!_eTypeKeys.TryGetValue(eType, out var typeKeys))
+                    {
+                        typeKeys = new();
+                        _eTypeKeys.Add(eType, typeKeys);
+                    }
+                    var key = evt.Key;
+                    typeKeys.Add(key);
 
 #if UNITY_EDITOR
-                var eTypeStr = evt.ETypeStr;
-                if (string.IsNullOrEmpty(eTypeStr)) eTypeStr = eType.ToString();
-                if (!type2editor.TryGetValue(eTypeStr, out var t2eList))
-                {
-                    t2eList = new EventList(eTypeStr);
-                    type2editor.Add(eTypeStr, t2eList);
-                }
+                    var eTypeStr = evt.ETypeStr;
+                    if (string.IsNullOrEmpty(eTypeStr)) eTypeStr = eType.ToString();
+                    if (!type2editor.TryGetValue(eTypeStr, out var t2eList))
+                    {
+                        t2eList = new EventList(eTypeStr);
+                        type2editor.Add(eTypeStr, t2eList);
+                    }
 
-                t2eList.Add(evt.MethodName);
-                __Debugger_Event();
+                    t2eList.Add(evt.MethodName);
+                    __Debugger_Event();
 #endif
 
 
-                var actionHashCode = evt.Method.GetHashCode();
-                if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
-                {
-                    aKeys = new List<long>();
-                    _actionKeys.Add(actionHashCode, aKeys);
-                }
-
-                if (!aKeys.Contains(key)) aKeys.Insert(0, key);
-
-                var target = evt.Tag;
-                if (target != null)
-                {
-                    int hashCode = target.GetHashCode();
-                    if (!_tagKeys.TryGetValue(hashCode, out var tKeys))
+                    var actionHashCode = evt.Method.GetHashCode();
+                    if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
                     {
-                        tKeys = new List<long>();
-                        _tagKeys.Add(hashCode, tKeys);
+                        aKeys = new();
+                        _actionKeys.Add(actionHashCode, aKeys);
                     }
 
-                    if (!tKeys.Contains(key)) tKeys.Insert(0, key);
-                }
-            }
+                    aKeys.Add(key);
 
+                    var target = evt.Tag;
+                    if (target != null)
+                    {
+                        int hashCode = target.GetHashCode();
+                        if (!_tagKeys.TryGetValue(hashCode, out var tKeys))
+                        {
+                            tKeys = new();
+                            _tagKeys.Add(hashCode, tKeys);
+                        }
+                        tKeys.Add(key);
+                    }
+                }
+                _waitAdds.Clear();
+            }
+            
             _exeCnt = 0;
             while (_waitExes.Count > 0 && _exeCnt < ExeLimit)
             {
@@ -195,24 +206,20 @@ namespace Ux
                 exe.Exe(ref _exeCnt);
             }
         }
-        int _exeCnt = 0;
+        
 
 
 
         private T _Add<T>(long key) where T : IEvent
         {
-            if (key == 0) return default(T);
+            if (key == 0) return default;
             if (_waitDels.Count > 0)
             {
-                var delIndex = _waitDels.IndexOf(key);
-                if (delIndex >= 0)
-                {
-                    _waitDels.RemoveAt(delIndex);
-                }
+                _waitDels.Remove(key);
             }
-
+            
             if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
-            var evtData = _waitAdds.Find(x => x.Key == key);
+            var evtData= _waitAdds.Find(x => x.Key == key);
             if (evtData != null) return (T)evtData;
             evtData = Pool.Get<T>();
             _waitAdds.Add(evtData);
@@ -244,26 +251,25 @@ namespace Ux
             var hashCode = action.GetHashCode();
             if (_waitAdds.Count > 0)
             {
-                for (int i = _waitAdds.Count - 1; i >= 0; i--)
-                {
-                    var wa = _waitAdds[i];
-                    if (wa.Method == action)
-                    {
-                        _waitAdds.RemoveAt(i);
-                    }
-                }
+                _waitAdds.RemoveAll(x => x.Method == action);              
             }
 
             if (!_actionKeys.TryGetValue(hashCode, out var keys)) return;
             RemoveByKey(keys);
         }
 
-        public void RemoveByKey(List<long> keys)
+        public void RemoveByKey(IEnumerable<long> keys)
         {
-            for (int i = keys.Count - 1; i >= 0; i--)
+            using var enumerator = keys.GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                RemoveByKey(keys[i]);
+                RemoveByKey(enumerator.Current);
             }
+
+            //for (int i = keys.Count - 1; i >= 0; i--)
+            //{               
+            //    RemoveByKey(keys[i]);
+            //}
         }
 
         public void RemoveByKey(long key)
@@ -274,15 +280,10 @@ namespace Ux
             {
                 if (_waitAdds.Count > 0)
                 {
-                    var addIndex = _waitAdds.FindIndex(x => x.Key == key);
-                    if (addIndex >= 0)
-                    {
-                        _waitAdds.RemoveAt(addIndex);
-                    }
+                    _waitAdds.RemoveAll(x => x.Key == key);                               
                 }
                 return;
-            }
-            if (_waitDels.Contains(key)) return;
+            }            
             _waitDels.Add(key);
         }
 

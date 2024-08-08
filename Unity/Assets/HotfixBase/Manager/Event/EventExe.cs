@@ -7,7 +7,6 @@ namespace Ux
 {
     public partial class EventMgr
     {
-        #region Exe
 
         interface IEventExe
         {
@@ -26,14 +25,15 @@ namespace Ux
             public void Exe(ref int exeCnt)
             {
                 if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
+                var enumerator = keys.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    var key = keys[i];
-                    if (!Ins._keyEvent.TryGetValue(key, out var evt)) continue;
+                    var key = enumerator.Current;
+                    if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
                     if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
                     {
-                        evt?.Run();
+                        aEvent?.Run();
                         exeCnt++;
                     }
                     catch (Exception e)
@@ -58,9 +58,10 @@ namespace Ux
             public void Exe(ref int exeCnt)
             {
                 if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
+                var enumerator = keys.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    var key = keys[i];
+                    var key = enumerator.Current;
                     if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
                     if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
@@ -92,9 +93,10 @@ namespace Ux
             public void Exe(ref int exeCnt)
             {
                 if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
+                var enumerator = keys.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    var key = keys[i];
+                    var key = enumerator.Current;
                     if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
                     if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
@@ -128,9 +130,10 @@ namespace Ux
             public void Exe(ref int exeCnt)
             {
                 if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                for (var i = keys.Count - 1; i >= 0; i--)
+                var enumerator = keys.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    var key = keys[i];
+                    var key = enumerator.Current;
                     if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
                     if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
                     try
@@ -146,6 +149,5 @@ namespace Ux
             }
         }
 
-        #endregion
     }
 }

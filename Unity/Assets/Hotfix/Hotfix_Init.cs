@@ -17,8 +17,7 @@ namespace Ux
             if (GameMain.Ins == null)
             {
                 __CHANGED_BOOT = true;
-                UnityEditor.EditorApplication.isPlaying = false;
-                //throw new System.Exception("切换Boot场景启动");                
+                UnityEditor.EditorApplication.isPlaying = false;                           
                 return;
             }
 #endif            

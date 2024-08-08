@@ -1,7 +1,5 @@
-using Pathfinding.Util;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -12,7 +10,7 @@ namespace Ux.Editor.Timeline
     {
         VisualElement clipParent;
         VisualElement draw;
-        public TimelineTrackItem TrackItem { get;}
+        public TimelineTrackItem TrackItem { get; }
         public List<TimelineClipItem> Items { get; } = new();
         public TrackClipContent(TimelineTrackItem trackItem)
         {
@@ -20,12 +18,12 @@ namespace Ux.Editor.Timeline
             style.left = 0;
             style.right = 0;
             TrackItem = trackItem;
-            clipParent = new VisualElement();            
+            clipParent = new VisualElement();
             clipParent.style.position = new StyleEnum<Position>(Position.Absolute);
             clipParent.style.top = 0;
             clipParent.style.bottom = 0;
             clipParent.style.left = 0;
-            clipParent.style.right = 0; 
+            clipParent.style.right = 0;
             Add(clipParent);
             draw = new VisualElement();
             draw.pickingMode = PickingMode.Ignore;
@@ -39,6 +37,46 @@ namespace Ux.Editor.Timeline
 
             Timeline.ClipContent.Add(this);
             Timeline.UpdateMarkerPos += UpdateMarkerPos;
+
+            ElementDrag.Add(this, Timeline.ClipContent, OnStart, OnDrag, OnEnd);
+        }
+        int lastFrame;
+        TimelineClipItem selectItem;
+        List<TimelineClipItem> _temItems = new List<TimelineClipItem>();
+        void OnStart()
+        {
+            _temItems.Clear();
+            selectItem = null;
+            if (Items.Count == 0) return;
+            lastFrame = Timeline.GetFrameByMousePosition();
+            foreach (var item in Items)
+            {
+                item.ToDown(lastFrame);
+                if (item.Status != Status.None)
+                {
+                    _temItems.Add(item);
+                }
+            }
+
+            _temItems.Sort((a, b) =>
+            {
+                return a.Status - b.Status;
+            });
+
+            selectItem = _temItems[0];
+        }
+        void OnDrag(Vector2 e)
+        {
+            var now = Timeline.GetFrameByMousePosition();
+            selectItem?.ToDrag(now, lastFrame);
+            lastFrame = now;
+        }
+        void OnEnd()
+        {
+            foreach (var item in Items)
+            {
+                item.ToUp();
+            }
         }
         public void Release()
         {
@@ -50,7 +88,8 @@ namespace Ux.Editor.Timeline
             var paint2D = mgc.painter2D;
             paint2D.strokeColor = Color.black;
             paint2D.BeginPath();
-
+            int minY = 2;
+            int maxY = 28;
             foreach (var item in Items)
             {
                 var asset = item.Asset;
@@ -60,19 +99,19 @@ namespace Ux.Editor.Timeline
                 if (asset.InFrame > 0)
                 {
                     var ix = Timeline.GetPositionByFrame(asset.InFrame);
-                    paint2D.MoveTo(new Vector2(ix, 2));
-                    paint2D.LineTo(new Vector2(sx, 2));
-                    paint2D.LineTo(new Vector2(ix, 28));
-                    paint2D.LineTo(new Vector2(ix, 2));
+                    paint2D.MoveTo(new Vector2(ix, minY));
+                    paint2D.LineTo(new Vector2(sx, minY));
+                    paint2D.LineTo(new Vector2(ix, maxY));
+                    paint2D.LineTo(new Vector2(ix, minY));
                 }
-                //if (asset.OutFrame > 0)
-                //{
-                //    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
-                //    paint2D.MoveTo(new Vector2(ox - sx, 5));
-                //    paint2D.LineTo(new Vector2(ox - sx, 20));
-                //    paint2D.LineTo(new Vector2(ex - sx, 20));
-                //    paint2D.LineTo(new Vector2(ox - sx, 5));
-                //}
+                if (asset.OutFrame > 0)
+                {
+                    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
+                    paint2D.MoveTo(new Vector2(ox, minY));
+                    paint2D.LineTo(new Vector2(ox, maxY));
+                    paint2D.LineTo(new Vector2(ex, maxY));
+                    paint2D.LineTo(new Vector2(ox, minY));
+                }
             }
 
             paint2D.Stroke();
@@ -149,7 +188,10 @@ namespace Ux.Editor.Timeline
 
             if (a.EndFrame > b.StartFrame && a.StartFrame < b.EndFrame)
             {
-                if (a.StartFrame < b.StartTime) return 1;
+                if (a.StartFrame < b.StartFrame)
+                {
+                    return 1;
+                }
                 return -1;
             }
 
@@ -249,7 +291,7 @@ namespace Ux.Editor.Timeline
                 return;
             }
             Asset.clips.Add(clipAsset);
-            Timeline.SaveAssets();   
+            Timeline.SaveAssets();
             clipContent.AddItem(clipAsset);
             Timeline.RefreshEntity();
         }

@@ -1,11 +1,36 @@
+using System;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
+    public enum Status
+    {
+        None,
+        Left,
+        Right,
+        Move,
+    }
+    struct Point
+    {
+        public double X, Y;
+
+        public Point(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        // 计算向量叉积  
+        public static double CrossProduct(Point O, Point A, Point B)
+        {
+            return (A.X - O.X) * (B.Y - O.Y) - (A.Y - O.Y) * (B.X - O.X);
+        }
+    }
     public class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
+        public Status Status { get; private set; }
         Color color;
         public TimelineClipAsset Asset { get; private set; }
         public TrackClipContent ClipContent { get; private set; }
@@ -78,66 +103,133 @@ namespace Ux.Editor.Timeline
             Asset = asset;
             ClipContent = track;
             color = ClipContent.TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
-            ElementDrag.Add(left, Timeline.ClipContent, OnStart, OnLeftDrag, OnEnd);
-            ElementDrag.Add(right, Timeline.ClipContent, OnStart, OnRightDrag, OnEnd);
-            ElementDrag.Add(center, Timeline.ClipContent, OnStart, OnDrag, OnEnd);
+            //ElementDrag.Add(left, Timeline.ClipContent, OnStart, OnLeftDrag, OnEnd);
+            //ElementDrag.Add(right, Timeline.ClipContent, OnStart, OnRightDrag, OnEnd);
+            //ElementDrag.Add(center, Timeline.ClipContent, OnStart, OnDrag, OnEnd);
             UpdateView();
         }
-
-
-        void OnDrag(bool left)
+        bool IsPointInTriangle(Point p, Point a, Point b, Point c)
         {
-            var frame = Timeline.GetFrameByMousePosition();
+            bool b1, b2, b3;
 
-            if (left)
+            b1 = Point.CrossProduct(p, a, b) < 0.0f;
+            b2 = Point.CrossProduct(p, b, c) < 0.0f;
+            b3 = Point.CrossProduct(p, c, a) < 0.0f;
+
+            return ((b1 == b2) && (b2 == b3));
+        }
+        bool isDrag => Status != Status.None;
+        int startFrame;
+        int endFrame;
+        public void ToDown(int frame)
+        {
+            //var frame = Timeline.GetFrameByMousePosition();
+            if (frame >= Asset.StartFrame && frame <= Asset.EndFrame)
             {
-                if (frame < 0)
+                var x = Timeline.GetPositionByFrame(frame);
+                var sx = Timeline.GetPositionByFrame(Asset.StartFrame);
+                var ex = Timeline.GetPositionByFrame(Asset.EndFrame);
+                if (x - sx < 20)
                 {
-                    frame = 0;
+                    Status = Status.Left;
                 }
-                if (frame >= Asset.EndFrame)
+                else if (ex - x < 20)
                 {
-                    frame = Asset.EndFrame - 1;
+                    Status = Status.Right;
                 }
-                Asset.StartFrame = frame;
-            }
-            else
-            {
-                if (frame < Asset.StartFrame)
+                else
                 {
-                    frame = Asset.StartFrame;
+                    if (Asset.InFrame > 0)
+                    {
+                        var pos = this.WorldToLocal(Event.current.mousePosition);
+                        var ix = Timeline.GetPositionByFrame(Asset.InFrame);
+                        var a = new Point(sx, 0);
+                        var b = new Point(sx, 30);
+                        var c = new Point(ix, 30);
+                        var p = new Point(x, pos.y);
+                        bool isInTriangle = IsPointInTriangle(p, a, b, c);
+                        //交叉多边形的下部分
+                        if (isInTriangle)
+                        {
+                            Status = Status.None;
+                            return;
+                        }
+                    }
+                    if (Asset.OutFrame > 0)
+                    {
+                        var pos = this.WorldToLocal(Event.current.mousePosition);
+                        var ox = Timeline.GetPositionByFrame(Asset.OutFrame);
+                        var a = new Point(ox, 0);
+                        var b = new Point(ex, 0);
+                        var c = new Point(ex, 30);
+                        var p = new Point(x, pos.y);
+                        bool isInTriangle = IsPointInTriangle(p, a, b, c);
+                        //交叉多边形的上部分
+                        if (isInTriangle)
+                        {
+                            Status = Status.None;
+                            return;
+                        }
+                    }
+                    Status = Status.Move;
                 }
 
-                Asset.EndFrame = frame;
+                startFrame = Asset.StartFrame;
+                endFrame = Asset.EndFrame;
+                return;
             }
+            Status = Status.None;
+        }
+
+        public void ToDrag(int now, int last)
+        {
+            if (Status == Status.None)
+            {
+                return;
+            }
+            switch (Status)
+            {
+                case Status.Left:
+                    if (now < 0)
+                    {
+                        now = 0;
+                    }
+                    if (now >= Asset.EndFrame)
+                    {
+                        now = Asset.EndFrame - 1;
+                    }
+                    Asset.StartFrame = now;
+                    break;
+                case Status.Right:
+                    if (now < Asset.StartFrame)
+                    {
+                        now = Asset.StartFrame;
+                    }
+                    Asset.EndFrame = now;
+                    break;
+                case Status.Move:
+                    var offFrame = now - last;
+                    if (Asset.StartFrame + offFrame < 0)
+                    {
+                        offFrame = 0 - Asset.StartFrame;
+                    }
+                    Asset.StartFrame += offFrame;
+                    Asset.EndFrame += offFrame;
+                    break;
+            }
+
             UpdateView();
             ClipContent.ClipMarkDirtyRepaint();
         }
 
+        public void ToUp()
+        {
+            if (Status == Status.None)
+            {
+                return;
+            }
+            Status = Status.None;
 
-        void OnLeftDrag(Vector2 e)
-        {
-            OnDrag(true);
-        }
-        void OnRightDrag(Vector2 e)
-        {
-            OnDrag(false);
-        }
-
-        bool isDrag;
-        int lastFrame;
-        int startFrame;
-        int endFrame;
-        void OnStart()
-        {
-            lastFrame = Timeline.GetFrameByMousePosition();
-            startFrame = Asset.StartFrame;
-            endFrame = Asset.EndFrame;
-            isDrag = true;
-        }
-        void OnEnd()
-        {
-            isDrag = false;
             if (!ClipContent.IsValid())
             {
                 Asset.StartFrame = startFrame;
@@ -145,20 +237,71 @@ namespace Ux.Editor.Timeline
             }
             UpdateView();
         }
-        void OnDrag(Vector2 e)
-        {
-            var dragFrame = Timeline.GetFrameByMousePosition();
-            var offFrame = dragFrame - lastFrame;
-            lastFrame = dragFrame;
-            if (Asset.StartFrame + offFrame < 0)
-            {
-                offFrame = 0 - Asset.StartFrame;
-            }
-            Asset.StartFrame += offFrame;
-            Asset.EndFrame += offFrame;
-            UpdateView();
-            ClipContent.ClipMarkDirtyRepaint();
-        }
+
+        //void OnDrag(bool left)
+        //{
+        //    var frame = Timeline.GetFrameByMousePosition();
+
+        //    if (left)
+        //    {
+        //        if (frame < 0)
+        //        {
+        //            frame = 0;
+        //        }
+        //        if (frame >= Asset.EndFrame)
+        //        {
+        //            frame = Asset.EndFrame - 1;
+        //        }
+        //        Asset.StartFrame = frame;
+        //    }
+        //    else
+        //    {
+        //        if (frame < Asset.StartFrame)
+        //        {
+        //            frame = Asset.StartFrame;
+        //        }
+
+        //        Asset.EndFrame = frame;
+        //    }
+        //    UpdateView();
+        //    ClipContent.ClipMarkDirtyRepaint();
+        //}
+
+
+        //void OnLeftDrag(Vector2 e)
+        //{
+        //    OnDrag(true);
+        //}
+        //void OnRightDrag(Vector2 e)
+        //{
+        //    OnDrag(false);
+        //}
+
+
+
+        //void OnEnd()
+        //{            
+        //    if (!ClipContent.IsValid())
+        //    {
+        //        Asset.StartFrame = startFrame;
+        //        Asset.EndFrame = endFrame;
+        //    }
+        //    UpdateView();
+        //}
+        //void OnDrag(Vector2 e)
+        //{
+        //    var dragFrame = Timeline.GetFrameByMousePosition();
+        //    var offFrame = dragFrame - lastFrame;
+        //    lastFrame = dragFrame;
+        //    if (Asset.StartFrame + offFrame < 0)
+        //    {
+        //        offFrame = 0 - Asset.StartFrame;
+        //    }
+        //    Asset.StartFrame += offFrame;
+        //    Asset.EndFrame += offFrame;
+        //    UpdateView();
+        //    ClipContent.ClipMarkDirtyRepaint();
+        //}
 
 
         public void UpdateView()
@@ -168,8 +311,22 @@ namespace Ux.Editor.Timeline
             var tFrame = (float)(Asset.EndFrame - Asset.StartFrame);
             lbType.text = Asset.Name;
             var width = ex - sx;
-            lbType.style.left =  width * ((Asset.InFrame - Asset.StartFrame) / tFrame);
-            lbType.style.right = width - (width * ((Asset.OutFrame - Asset.StartFrame) / tFrame));
+            if (Asset.InFrame > 0)
+            {
+                lbType.style.left = width * ((Asset.InFrame - Asset.StartFrame) / tFrame);
+            }
+            else
+            {
+                lbType.style.left = 0;
+            }
+            if (Asset.OutFrame > 0)
+            {
+                lbType.style.right = width - (width * ((Asset.OutFrame - Asset.StartFrame) / tFrame));
+            }
+            else
+            {
+                lbType.style.right = 0;
+            }
             style.left = sx;
             style.width = width;
 

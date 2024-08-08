@@ -29,8 +29,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         Name: Run
-        StartFrame: 0
-        EndFrame: 60
+        StartFrame: 5
+        EndFrame: 65
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
@@ -38,8 +38,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         Name: Stand
-        StartFrame: 60
-        EndFrame: 90
-        InFrame: 0
+        StartFrame: 61
+        EndFrame: 91
+        InFrame: 65
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}
