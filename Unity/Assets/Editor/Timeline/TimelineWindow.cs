@@ -7,7 +7,7 @@ namespace Ux.Editor.Timeline
     public static class Timeline
     {
         public static VisualElement ClipContent { get; set; }
-        public static System.Action UpdateMarkerPos { get; set; }
+        public static System.Action OnWheelChanged { get; set; }
         public static System.Func<int, float> GetPositionByFrame { get; set; }
         public static System.Func<int> GetFrameByMousePosition {  get; set; }
         public static System.Action<int> MarkerMove { get; set; }

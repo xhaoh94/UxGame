@@ -109,6 +109,7 @@ namespace Ux.Editor.Timeline
             veMarkerContent.MarkDirtyRepaint();
             veMarkerIcon.MarkDirtyRepaint();
             UpdateMarkerPos();
+            Timeline.OnWheelChanged?.Invoke();
         }
         float GetPositionByFrame(int frame)
         {
@@ -160,8 +161,7 @@ namespace Ux.Editor.Timeline
             {
                 var pos = veMarkerIcon.transform.position;
                 pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
-                veMarkerIcon.transform.position = pos;
-                Timeline.UpdateMarkerPos?.Invoke();                
+                veMarkerIcon.transform.position = pos;             
             }
             catch (Exception e)
             {

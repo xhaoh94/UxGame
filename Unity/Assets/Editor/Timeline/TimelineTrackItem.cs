@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
@@ -36,7 +37,7 @@ namespace Ux.Editor.Timeline
             draw.generateVisualContent += OnDrawContent;
 
             Timeline.ClipContent.Add(this);
-            Timeline.UpdateMarkerPos += UpdateMarkerPos;
+            Timeline.OnWheelChanged += OnWheelChanged;
 
             ElementDrag.Add(this, Timeline.ClipContent, OnStart, OnDrag, OnEnd);
         }
@@ -81,7 +82,7 @@ namespace Ux.Editor.Timeline
         public void Release()
         {
             Timeline.ClipContent.Remove(this);
-            Timeline.UpdateMarkerPos -= UpdateMarkerPos;
+            Timeline.OnWheelChanged -= OnWheelChanged;
         }
         void OnDrawContent(MeshGenerationContext mgc)
         {
@@ -117,13 +118,21 @@ namespace Ux.Editor.Timeline
             paint2D.Stroke();
         }
 
-        void UpdateMarkerPos()
+        public void RefreshView()
         {
-            ClipMarkDirtyRepaint();
             foreach (var item in Items)
             {
                 item.UpdateView();
             }
+        }
+
+        void OnWheelChanged()
+        {
+            foreach (var item in Items)
+            {
+                item.RefreshWidth();
+            }
+            ClipMarkDirtyRepaint();
         }
         public void ClipMarkDirtyRepaint()
         {
@@ -159,27 +168,29 @@ namespace Ux.Editor.Timeline
             }
             return true;
         }
-        public void UpdateClipData()
+        public void UpdateItemData()
         {
-            foreach (var clip1 in Items)
+            foreach (var item1 in Items)
             {
-                clip1.Asset.InFrame = 0;
-                clip1.Asset.OutFrame = 0;
-                foreach (var clip2 in Items)
+                item1.Asset.InFrame = 0;
+                item1.Asset.OutFrame = 0;
+                foreach (var item2 in Items)
                 {
-                    if (clip1 == clip2) continue;
-                    var t = Intersect(clip1.Asset, clip2.Asset);
+                    if (item1 == item2) continue;
+                    var t = Intersect(item1.Asset, item2.Asset);
                     switch (t)
                     {
                         case 1:
-                            clip1.Asset.OutFrame = clip2.Asset.StartFrame;
+                            item1.Asset.OutFrame = item2.Asset.StartFrame;
                             break;
                         case -1:
-                            clip1.Asset.InFrame = clip2.Asset.EndFrame;
+                            item1.Asset.InFrame = item2.Asset.EndFrame;
                             break;
                     }
                 }
+                item1.RefreshWidth();
             }
+            ClipMarkDirtyRepaint();
         }
         int Intersect(TimelineClipAsset a, TimelineClipAsset b)
         {
@@ -274,6 +285,7 @@ namespace Ux.Editor.Timeline
             {
                 clipContent.AddItem(clipAsset);
             }
+            clipContent.RefreshView();
         }
         public T CreateClipAsset<T>() where T : TimelineClipAsset
         {
@@ -293,15 +305,8 @@ namespace Ux.Editor.Timeline
             Asset.clips.Add(clipAsset);
             Timeline.SaveAssets();
             clipContent.AddItem(clipAsset);
+            clipContent.RefreshView();
             Timeline.RefreshEntity();
-        }
-        public bool IsValid()
-        {
-            return clipContent.IsValid();
-        }
-        public void UpdateClipData()
-        {
-            clipContent.UpdateClipData();
         }
     }
 }
