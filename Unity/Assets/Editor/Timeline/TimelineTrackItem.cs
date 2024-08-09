@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
@@ -13,6 +12,8 @@ namespace Ux.Editor.Timeline
         VisualElement draw;
         public TimelineTrackItem TrackItem { get; }
         public List<TimelineClipItem> Items { get; } = new();
+        List<VisualElement> mixVe = new List<VisualElement>();
+        Queue<VisualElement> pool = new Queue<VisualElement>();
         public TrackClipContent(TimelineTrackItem trackItem)
         {
             style.height = 30;
@@ -87,7 +88,7 @@ namespace Ux.Editor.Timeline
         void OnDrawContent(MeshGenerationContext mgc)
         {
             var paint2D = mgc.painter2D;
-            paint2D.strokeColor = Color.black;
+            paint2D.strokeColor = Color.white;
             paint2D.BeginPath();
             int minY = 2;
             int maxY = 28;
@@ -137,6 +138,40 @@ namespace Ux.Editor.Timeline
         public void ClipMarkDirtyRepaint()
         {
             draw.MarkDirtyRepaint();
+            foreach (var ve in mixVe)
+            {
+                ve.style.display = DisplayStyle.None;
+                pool.Enqueue(ve);
+            }
+            mixVe.Clear();
+
+            foreach (var item in Items)
+            {
+                var asset = item.Asset;
+                var sx = Timeline.GetPositionByFrame(asset.StartFrame);
+                var ex = Timeline.GetPositionByFrame(asset.EndFrame);
+
+                if (asset.InFrame > 0)
+                {
+                    VisualElement ve;
+                    if (pool.Count > 0)
+                    {
+                        ve = pool.Dequeue();
+                    }
+                    else
+                    {
+                        ve = new VisualElement();
+                        ve.style.backgroundColor = new Color(0.2f, 0.3f, 0.3f, 1f);                        
+                        Add(ve);
+                    }
+                    mixVe.Add(ve);
+                    ve.style.display = DisplayStyle.Flex;
+                    var ix = Timeline.GetPositionByFrame(asset.InFrame);
+                    ve.style.width = ix - sx;
+                    ve.style.height = 30;
+                    ve.style.left = sx;                    
+                }
+            }
         }
         public void AddItem(TimelineClipAsset asset)
         {
