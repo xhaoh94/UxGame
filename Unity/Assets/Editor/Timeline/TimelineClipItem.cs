@@ -246,12 +246,14 @@ namespace Ux.Editor.Timeline
         }
         public void UpdateView()
         {
+            lbType.text = Asset.Name;
+            var lineWidth = 1;
             if (ClipContent.IsValid())
             {
-                //content.style.borderLeftWidth = 1;
-                //content.style.borderRightWidth = 1;
-                //content.style.borderTopWidth = 1;
-                content.style.borderBottomWidth = 3;
+                content.style.borderLeftWidth = lineWidth;
+                content.style.borderRightWidth = lineWidth;
+                content.style.borderTopWidth = lineWidth;
+                content.style.borderBottomWidth = lineWidth;
 
                 content.style.borderLeftColor = isDrag ? Color.white : color;
                 content.style.borderRightColor = isDrag ? Color.white : color;
@@ -260,14 +262,14 @@ namespace Ux.Editor.Timeline
             }
             else
             {
-                //content.style.borderLeftWidth = 1;
-                //content.style.borderRightWidth = 1;
-                //content.style.borderTopWidth = 1;
-                content.style.borderBottomWidth = 3;
+                content.style.borderLeftWidth = lineWidth;
+                content.style.borderRightWidth = lineWidth;
+                content.style.borderTopWidth = lineWidth;
+                content.style.borderBottomWidth = lineWidth;
 
-                //content.style.borderLeftColor = new StyleColor(Color.red);
-                //content.style.borderRightColor = new StyleColor(Color.red);
-                //content.style.borderTopColor = new StyleColor(Color.red);
+                content.style.borderLeftColor = new StyleColor(Color.red);
+                content.style.borderRightColor = new StyleColor(Color.red);
+                content.style.borderTopColor = new StyleColor(Color.red);
                 content.style.borderBottomColor = new StyleColor(Color.red);
             }
             ClipContent.UpdateItemData();

@@ -17,12 +17,12 @@ namespace Ux.Editor.Timeline
                 base.focusIndex.defaultValue = 0;
                 base.focusable.defaultValue = true;
             }
-        }        
-        
+        }
+
         int StartFrame => Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
         int EndFrame => Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
 
-        float FrameScale = 1;
+        float FrameScale = .5f;
         float FrameWidth => 10 * FrameScale;
         float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
         //需要减10 是因为容器里面设置了边缘Border left = 10 
@@ -66,9 +66,9 @@ namespace Ux.Editor.Timeline
             veClipContent = this.Q<VisualElement>("ve_clip_content");
             Timeline.ClipContent = veClipContent;
             Timeline.GetPositionByFrame = GetPositionByFrame;
-            Timeline.GetFrameByMousePosition = GetFrameByMousePosition;            
+            Timeline.GetFrameByMousePosition = GetFrameByMousePosition;
         }
-       
+
 
 
         void OnGeometryChanged(GeometryChangedEvent changedEvent)
@@ -150,7 +150,7 @@ namespace Ux.Editor.Timeline
             {
                 lbMarker.text = nowFrame.ToString();
                 UpdateMarkerPos();
-                Timeline.MarkerMove?.Invoke(frame - nowFrame);                
+                Timeline.MarkerMove?.Invoke(frame - nowFrame);
                 nowFrame = frame;
             }
         }
@@ -161,7 +161,7 @@ namespace Ux.Editor.Timeline
             {
                 var pos = veMarkerIcon.transform.position;
                 pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
-                veMarkerIcon.transform.position = pos;             
+                veMarkerIcon.transform.position = pos;
             }
             catch (Exception e)
             {
@@ -177,14 +177,19 @@ namespace Ux.Editor.Timeline
             float frameWidth = FrameWidth;
             int startFrame = StartFrame;
             int endFrame = EndFrame;
-            int interval = Mathf.FloorToInt(1 + (10 - frameWidth)) * 10;
+            int interval = Mathf.CeilToInt(150 / frameWidth) / 5 * 5;
             if (interval < 5) interval = 5;
 
             for (int i = startFrame; i <= endFrame; i++)
             {
+                var x = i * frameWidth;
                 if (i % interval == 0)
                 {
-                    var x = i * frameWidth;
+                    paint2D.MoveTo(new Vector2(x, 24));
+                    paint2D.LineTo(new Vector2(x, scrClipView.worldBound.height));
+                }
+                else if (i % (interval / 5) == 0)
+                {
                     paint2D.MoveTo(new Vector2(x, 24));
                     paint2D.LineTo(new Vector2(x, scrClipView.worldBound.height));
                 }
@@ -200,10 +205,8 @@ namespace Ux.Editor.Timeline
             int startFrame = StartFrame;
             int endFrame = EndFrame;
             float frameWidth = FrameWidth;
-
-            int interval = Mathf.FloorToInt(1 + (10 - frameWidth)) * 10;
+            int interval = Mathf.CeilToInt(150 / frameWidth) / 5 * 5;
             if (interval < 5) interval = 5;
-
             for (int i = startFrame; i <= endFrame; i++)
             {
                 var x = i * frameWidth;
@@ -219,12 +222,9 @@ namespace Ux.Editor.Timeline
                 {
                     paint2D.MoveTo(new Vector2(x, 20));
                     paint2D.LineTo(new Vector2(x, 24));
-                    if (frameWidth >= 30)
-                    {
-                        var len = i.ToString().Length;
-                        x -= (len * 3);
-                        mgc.DrawText(i.ToString(), new Vector2(x, 5), 10, Color.white);
-                    }
+                    var len = i.ToString().Length;
+                    x -= (len * 3);
+                    mgc.DrawText(i.ToString(), new Vector2(x, 5), 10, Color.white);
                 }
             }
             paint2D.Stroke();

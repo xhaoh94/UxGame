@@ -88,7 +88,8 @@ namespace Ux.Editor.Timeline
         void OnDrawContent(MeshGenerationContext mgc)
         {
             var paint2D = mgc.painter2D;
-            paint2D.strokeColor = Color.white;
+            paint2D.strokeColor = new Color(0,0,0,0.5f);
+            paint2D.lineWidth = 1;
             paint2D.BeginPath();
             int minY = 2;
             int maxY = 28;
@@ -162,7 +163,7 @@ namespace Ux.Editor.Timeline
                     {
                         ve = new VisualElement();
                         ve.style.backgroundColor = new Color(0.2f, 0.3f, 0.3f, 1f);                        
-                        Add(ve);
+                       clipParent.Add(ve);
                     }
                     mixVe.Add(ve);
                     ve.style.display = DisplayStyle.Flex;
