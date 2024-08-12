@@ -28,21 +28,17 @@ namespace Ux.Editor.Timeline
             return (A.X - O.X) * (B.Y - O.Y) - (A.Y - O.Y) * (B.X - O.X);
         }
     }
-    public class TimelineClipItem : VisualElement, IToolbarMenuElement
+    public partial class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
         public Status Status { get; private set; }
         Color color;
         public TimelineClipAsset Asset { get; private set; }
-        public TrackClipContent ClipContent { get; private set; }
-        VisualElement content;
-        Label lbType;
+        public TimelineTrackItem TrackItem { get; private set; }
         public DropdownMenu menu { get; }
         public TimelineClipItem()
         {
-            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineClipItem.uxml");
-            visualTree.CloneTree(this);
-            content = this.Q<VisualElement>("content");
-            lbType = this.Q<Label>("lbType");
+            CreateChildren();
+            Add(root);
 
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
@@ -66,8 +62,8 @@ namespace Ux.Editor.Timeline
                     return;
                 }
                 (Asset as AnimationClipAsset).clip = clip;
-                Timeline.SaveAssets();
-                Timeline.RefreshEntity();
+                TimelineEditor.SaveAssets();
+                TimelineEditor.RefreshEntity();
             }
         }
         void OnPointerDown(PointerDownEvent e)
@@ -84,7 +80,7 @@ namespace Ux.Editor.Timeline
                     var endFrame = clip.length * TimelineMgr.Ins.FrameRate;
                     var oldEndFrame = Asset.EndFrame;
                     Asset.EndFrame = Asset.StartFrame + Mathf.RoundToInt(endFrame);
-                    if (!ClipContent.IsValid())
+                    if (!TrackItem.IsValid())
                     {
                         Asset.EndFrame = oldEndFrame;
                     }
@@ -97,11 +93,11 @@ namespace Ux.Editor.Timeline
             }
         }
 
-        public void Init(TimelineClipAsset asset, TrackClipContent track)
+        public void Init(TimelineClipAsset asset, TimelineTrackItem track)
         {
             Asset = asset;
-            ClipContent = track;
-            color = ClipContent.TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
+            TrackItem = track;
+            color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
         }
         bool IsPointInTriangle(Point p, Point a, Point b, Point c)
         {
@@ -120,9 +116,9 @@ namespace Ux.Editor.Timeline
         {
             if (frame >= Asset.StartFrame && frame <= Asset.EndFrame)
             {
-                var x = Timeline.GetPositionByFrame(frame);
-                var sx = Timeline.GetPositionByFrame(Asset.StartFrame);
-                var ex = Timeline.GetPositionByFrame(Asset.EndFrame);
+                var x = TimelineEditor.GetPositionByFrame(frame);
+                var sx = TimelineEditor.GetPositionByFrame(Asset.StartFrame);
+                var ex = TimelineEditor.GetPositionByFrame(Asset.EndFrame);
                 if (x - sx < 20)
                 {
                     Status = Status.Left;
@@ -136,7 +132,7 @@ namespace Ux.Editor.Timeline
                     if (Asset.InFrame > 0)
                     {
                         var pos = this.WorldToLocal(Event.current.mousePosition);
-                        var ix = Timeline.GetPositionByFrame(Asset.InFrame);
+                        var ix = TimelineEditor.GetPositionByFrame(Asset.InFrame);
                         var a = new Point(sx, 0);
                         var b = new Point(sx, 30);
                         var c = new Point(ix, 30);
@@ -152,7 +148,7 @@ namespace Ux.Editor.Timeline
                     if (Asset.OutFrame > 0)
                     {
                         var pos = this.WorldToLocal(Event.current.mousePosition);
-                        var ox = Timeline.GetPositionByFrame(Asset.OutFrame);
+                        var ox = TimelineEditor.GetPositionByFrame(Asset.OutFrame);
                         var a = new Point(ox, 0);
                         var b = new Point(ex, 0);
                         var c = new Point(ex, 30);
@@ -223,7 +219,7 @@ namespace Ux.Editor.Timeline
             }
             Status = Status.None;
 
-            if (!ClipContent.IsValid())
+            if (!TrackItem.IsValid())
             {
                 Asset.StartFrame = startFrame;
                 Asset.EndFrame = endFrame;
@@ -234,12 +230,12 @@ namespace Ux.Editor.Timeline
         public void RefreshWidth()
         {
             var sx = Asset.InFrame > 0 ?
-               Timeline.GetPositionByFrame(Asset.InFrame) :
-               Timeline.GetPositionByFrame(Asset.StartFrame);
+               TimelineEditor.GetPositionByFrame(Asset.InFrame) :
+               TimelineEditor.GetPositionByFrame(Asset.StartFrame);
 
             var ex = Asset.OutFrame > 0 ?
-                Timeline.GetPositionByFrame(Asset.OutFrame) :
-                Timeline.GetPositionByFrame(Asset.EndFrame);
+                TimelineEditor.GetPositionByFrame(Asset.OutFrame) :
+                TimelineEditor.GetPositionByFrame(Asset.EndFrame);
 
             style.left = sx;
             style.width = ex - sx;
@@ -248,7 +244,7 @@ namespace Ux.Editor.Timeline
         {
             lbType.text = Asset.Name;
             var lineWidth = 1;
-            if (ClipContent.IsValid())
+            if (TrackItem.IsValid())
             {
                 content.style.borderLeftWidth = lineWidth;
                 content.style.borderRightWidth = lineWidth;
@@ -272,7 +268,7 @@ namespace Ux.Editor.Timeline
                 content.style.borderTopColor = new StyleColor(Color.red);
                 content.style.borderBottomColor = new StyleColor(Color.red);
             }
-            ClipContent.UpdateItemData();
+            TrackItem.UpdateItemData();
         }
     }
 }

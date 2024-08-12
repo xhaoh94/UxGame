@@ -6,27 +6,56 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
-    public class TrackClipContent : VisualElement
+    public partial class TimelineTrackItem : VisualElement, IToolbarMenuElement
     {
+        public TimelineTrackAsset Asset { get; private set; }
+        Type ClipType
+        {
+            get
+            {
+                var attr = Asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
+                return attr.ClipType;
+            }
+        }
+
+        VisualElement clipContent;
         VisualElement clipParent;
         VisualElement draw;
-        public TimelineTrackItem TrackItem { get; }
         public List<TimelineClipItem> Items { get; } = new();
         List<VisualElement> mixVe = new List<VisualElement>();
         Queue<VisualElement> pool = new Queue<VisualElement>();
-        public TrackClipContent(TimelineTrackItem trackItem)
+        int lastFrame;
+        TimelineClipItem selectItem;
+
+        public DropdownMenu menu { get; }
+        public TimelineTrackItem(TimelineTrackAsset asset)
         {
+            CreateChildren();
+            Add(root);
             style.height = 30;
-            style.left = 0;
-            style.right = 0;
-            TrackItem = trackItem;
+            Asset = asset;
+            inputName.SetValueWithoutNotify(asset.Name);
+
+            var attr = asset.GetType().GetAttribute<TLTrackAttribute>();
+            lbType.text = attr.Lb;
+            content.style.borderTopColor = attr.Color;
+            content.style.borderLeftColor = attr.Color;
+            content.style.borderBottomColor = attr.Color;
+
+            RegisterCallback<PointerDownEvent>(OnPointerDown);
+            menu = new DropdownMenu();
+
+            clipContent = new VisualElement();
+            clipContent.style.height = 30;
+            clipContent.style.left = 0;
+            clipContent.style.right = 0;
             clipParent = new VisualElement();
             clipParent.style.position = new StyleEnum<Position>(Position.Absolute);
             clipParent.style.top = 0;
             clipParent.style.bottom = 0;
             clipParent.style.left = 0;
             clipParent.style.right = 0;
-            Add(clipParent);
+            clipContent.Add(clipParent);
             draw = new VisualElement();
             draw.pickingMode = PickingMode.Ignore;
             draw.style.position = new StyleEnum<Position>(Position.Absolute);
@@ -34,23 +63,98 @@ namespace Ux.Editor.Timeline
             draw.style.bottom = 0;
             draw.style.left = 0;
             draw.style.right = 0;
-            Add(draw);
             draw.generateVisualContent += OnDrawContent;
+            clipContent.Add(draw);
+            TimelineEditor.ClipContent.Add(clipContent);
+            TimelineEditor.OnWheelChanged += OnWheelChanged;
+            ElementDrag.Add(clipContent, TimelineEditor.ClipContent, OnStart, OnDrag, OnEnd);
+            clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
+            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
 
-            Timeline.ClipContent.Add(this);
-            Timeline.OnWheelChanged += OnWheelChanged;
-
-            ElementDrag.Add(this, Timeline.ClipContent, OnStart, OnDrag, OnEnd);
+            RefreshView();
         }
-        int lastFrame;
-        TimelineClipItem selectItem;
-        List<TimelineClipItem> _temItems = new List<TimelineClipItem>();
+        public void Release()
+        {
+            TimelineEditor.ClipContent.Remove(this);
+            TimelineEditor.OnWheelChanged -= OnWheelChanged;
+        }
+
+        void OnDragUpd(DragUpdatedEvent e)
+        {
+            DragAndDrop.visualMode = DragAndDropVisualMode.Move;
+        }
+        void OnDragPerform(DragPerformEvent e)
+        {
+            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
+            {
+                string retPath = DragAndDrop.paths[0];
+                var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(retPath);
+                if (obj == null)
+                {
+                    return;
+                }
+                var clipAsset = TimelineEditor.CreateClipAsset(ClipType,
+                    Mathf.CeilToInt(Asset.MaxTime / TimelineMgr.Ins.FrameRate), obj);
+                AddClipItem(clipAsset);
+            }
+        }
+        void OnPointerDown(PointerDownEvent e)
+        {
+            if (e.button == 0)
+            {
+
+            }
+            else if (e.button == 1)
+            {
+                menu.AppendAction("Add Clip", e =>
+                {
+                    var clipAsset = TimelineEditor.CreateClipAsset(ClipType,
+                   Mathf.CeilToInt(Asset.MaxTime / TimelineMgr.Ins.FrameRate), null);
+                    AddClipItem(clipAsset);
+                }, e => DropdownMenuAction.Status.Normal);
+                this.ShowMenu();
+            }
+        }
+        void RefreshView()
+        {
+            foreach (var clipAsset in Asset.clips)
+            {
+                var item = new TimelineClipItem();
+                item.Init(clipAsset, this);
+                Items.Add(item);
+                clipParent.Add(item);
+            }
+
+            foreach (var item in Items)
+            {
+                item.UpdateView();
+            }
+        }
+
+        public void AddClipItem(TimelineClipAsset clipAsset)
+        {
+            if (Asset.clips.Contains(clipAsset))
+            {
+                return;
+            }
+            Asset.clips.Add(clipAsset);
+            TimelineEditor.SaveAssets();
+            var item = new TimelineClipItem();
+            item.Init(clipAsset, this);
+            Items.Add(item);
+            clipParent.Add(item);
+            item.UpdateView();
+            TimelineEditor.RefreshEntity();
+        }
+
+
+
         void OnStart()
         {
-            _temItems.Clear();
+            var _temItems = new List<TimelineClipItem>();
             selectItem = null;
             if (Items.Count == 0) return;
-            lastFrame = Timeline.GetFrameByMousePosition();
+            lastFrame = TimelineEditor.GetFrameByMousePosition();
             foreach (var item in Items)
             {
                 item.ToDown(lastFrame);
@@ -69,7 +173,7 @@ namespace Ux.Editor.Timeline
         }
         void OnDrag(Vector2 e)
         {
-            var now = Timeline.GetFrameByMousePosition();
+            var now = TimelineEditor.GetFrameByMousePosition();
             selectItem?.ToDrag(now, lastFrame);
             lastFrame = now;
         }
@@ -80,53 +184,42 @@ namespace Ux.Editor.Timeline
                 item.ToUp();
             }
         }
-        public void Release()
-        {
-            Timeline.ClipContent.Remove(this);
-            Timeline.OnWheelChanged -= OnWheelChanged;
-        }
+
         void OnDrawContent(MeshGenerationContext mgc)
         {
             var paint2D = mgc.painter2D;
-            paint2D.strokeColor = new Color(0,0,0,0.5f);
+            paint2D.strokeColor = new Color(0, 0, 0, 0.5f);
             paint2D.lineWidth = 1;
             paint2D.BeginPath();
-            int minY = 2;
-            int maxY = 28;
+            int minY = 3;
+            int maxY = 27;
             foreach (var item in Items)
             {
                 var asset = item.Asset;
-                var sx = Timeline.GetPositionByFrame(asset.StartFrame);
-                var ex = Timeline.GetPositionByFrame(asset.EndFrame);
+                var sx = TimelineEditor.GetPositionByFrame(asset.StartFrame);
+                var ex = TimelineEditor.GetPositionByFrame(asset.EndFrame);
 
                 if (asset.InFrame > 0)
                 {
-                    var ix = Timeline.GetPositionByFrame(asset.InFrame);
-                    paint2D.MoveTo(new Vector2(ix, minY));
-                    paint2D.LineTo(new Vector2(sx, minY));
+                    var ix = TimelineEditor.GetPositionByFrame(asset.InFrame);
+                    paint2D.MoveTo(new Vector2(sx, minY));
                     paint2D.LineTo(new Vector2(ix, maxY));
-                    paint2D.LineTo(new Vector2(ix, minY));
+                    //paint2D.LineTo(new Vector2(ix, maxY));
+                    //paint2D.LineTo(new Vector2(ix, minY));
                 }
-                if (asset.OutFrame > 0)
-                {
-                    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
-                    paint2D.MoveTo(new Vector2(ox, minY));
-                    paint2D.LineTo(new Vector2(ox, maxY));
-                    paint2D.LineTo(new Vector2(ex, maxY));
-                    paint2D.LineTo(new Vector2(ox, minY));
-                }
+                //if (asset.OutFrame > 0)
+                //{
+                //    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
+                //    paint2D.MoveTo(new Vector2(ox, minY));
+                //    paint2D.LineTo(new Vector2(ox, maxY));
+                //    paint2D.LineTo(new Vector2(ex, maxY));
+                //    paint2D.LineTo(new Vector2(ox, minY));
+                //}
             }
 
             paint2D.Stroke();
         }
 
-        public void RefreshView()
-        {
-            foreach (var item in Items)
-            {
-                item.UpdateView();
-            }
-        }
 
         void OnWheelChanged()
         {
@@ -149,8 +242,8 @@ namespace Ux.Editor.Timeline
             foreach (var item in Items)
             {
                 var asset = item.Asset;
-                var sx = Timeline.GetPositionByFrame(asset.StartFrame);
-                var ex = Timeline.GetPositionByFrame(asset.EndFrame);
+                var sx = TimelineEditor.GetPositionByFrame(asset.StartFrame);
+                var ex = TimelineEditor.GetPositionByFrame(asset.EndFrame);
 
                 if (asset.InFrame > 0)
                 {
@@ -162,24 +255,30 @@ namespace Ux.Editor.Timeline
                     else
                     {
                         ve = new VisualElement();
-                        ve.style.backgroundColor = new Color(0.2f, 0.3f, 0.3f, 1f);                        
-                       clipParent.Add(ve);
+                        ve.style.backgroundColor = new Color(0.2f, 0.3f, 0.3f, 0.8f);
+                        clipParent.Add(ve);
                     }
+                    var lineWidth = 1;
+                    ve.style.borderLeftWidth = lineWidth;
+                    ve.style.borderRightWidth = lineWidth;
+                    ve.style.borderTopWidth = lineWidth;
+                    ve.style.borderBottomWidth = lineWidth;
+
+                    ve.style.borderLeftColor = new Color(0, 0, 0, 0.5f);
+                    ve.style.borderRightColor = new Color(0, 0, 0, 0.5f);
+                    ve.style.borderTopColor = new Color(0, 0, 0, 0.5f);
+                    ve.style.borderBottomColor = new Color(0, 0, 0, 0.5f);
+
                     mixVe.Add(ve);
                     ve.style.display = DisplayStyle.Flex;
-                    var ix = Timeline.GetPositionByFrame(asset.InFrame);
+                    var ix = TimelineEditor.GetPositionByFrame(asset.InFrame);
                     ve.style.width = ix - sx;
                     ve.style.height = 30;
-                    ve.style.left = sx;                    
+                    ve.style.left = sx;
+                    ve.style.marginBottom = 2;
+                    ve.style.marginTop = 2;
                 }
             }
-        }
-        public void AddItem(TimelineClipAsset asset)
-        {
-            var item = new TimelineClipItem();
-            item.Init(asset, this);
-            Items.Add(item);
-            clipParent.Add(item);
         }
 
         public bool IsValid()
@@ -243,106 +342,6 @@ namespace Ux.Editor.Timeline
             }
 
             return 0;
-        }
-    }
-    public partial class TimelineTrackItem : VisualElement, IToolbarMenuElement
-    {
-        public TimelineTrackAsset Asset { get; private set; }
-        TrackClipContent clipContent;
-        public DropdownMenu menu { get; }
-        public TimelineTrackItem(TimelineTrackAsset asset)
-        {
-            CreateChildren();
-            Add(root);
-            style.height = 30;
-
-            Asset = asset;
-            clipContent = new TrackClipContent(this);
-            inputName.SetValueWithoutNotify(asset.Name);
-
-            var attr = asset.GetType().GetAttribute<TLTrackAttribute>();
-            lbType.text = attr.Lb;
-            content.style.borderTopColor = attr.Color;
-            content.style.borderLeftColor = attr.Color;
-            content.style.borderBottomColor = attr.Color;
-            RefreshView();
-
-            RegisterCallback<PointerDownEvent>(OnPointerDown);
-            menu = new DropdownMenu();
-
-            clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
-            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
-        }
-        public void Release()
-        {
-            clipContent.Release();
-        }
-
-        void OnDragUpd(DragUpdatedEvent e)
-        {
-            DragAndDrop.visualMode = DragAndDropVisualMode.Move;
-        }
-        void OnDragPerform(DragPerformEvent e)
-        {
-            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-            {
-                string retPath = DragAndDrop.paths[0];
-                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
-                if (clip == null)
-                {
-                    return;
-                }
-                var clipAsset = CreateClipAsset<AnimationClipAsset>();
-                clipAsset.StartFrame = Mathf.CeilToInt(Asset.MaxTime / TimelineMgr.Ins.FrameRate);
-                clipAsset.EndFrame = clipAsset.StartFrame + Mathf.RoundToInt(clip.length * TimelineMgr.Ins.FrameRate);
-                clipAsset.clip = clip;
-                clipAsset.Name = clip.name;
-                AddClipItem(clipAsset);
-            }
-        }
-        void OnPointerDown(PointerDownEvent e)
-        {
-            if (e.button == 0)
-            {
-
-            }
-            else if (e.button == 1)
-            {
-                menu.AppendAction("Add Clip", e =>
-                {
-                    AddClipItem(CreateClipAsset<TimelineClipAsset>());
-                }, e => DropdownMenuAction.Status.Normal);
-                this.ShowMenu();
-            }
-        }
-        void RefreshView()
-        {
-            foreach (var clipAsset in Asset.clips)
-            {
-                clipContent.AddItem(clipAsset);
-            }
-            clipContent.RefreshView();
-        }
-        public T CreateClipAsset<T>() where T : TimelineClipAsset
-        {
-            var attr = Asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
-            var clipType = attr.ClipType;
-            var clip = Activator.CreateInstance(clipType) as TimelineClipAsset;
-            clip.StartFrame = 0;
-            clip.EndFrame = 60;
-            return clip as T;
-        }
-        public void AddClipItem(TimelineClipAsset clipAsset)
-        {
-            if (Asset.clips.Contains(clipAsset))
-            {
-                return;
-            }
-            Asset.clips.Add(clipAsset);
-            Timeline.SaveAssets();
-            clipContent.AddItem(clipAsset);
-            clipContent.RefreshView();
-            Timeline.RefreshEntity();
         }
     }
 }

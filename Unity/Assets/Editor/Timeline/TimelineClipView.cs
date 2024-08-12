@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux.UI;
 namespace Ux.Editor.Timeline
 {
-    public class TimelineClipView : VisualElement
+    public partial class TimelineClipView : VisualElement
     {
         public new class UxmlFactory : UxmlFactory<TimelineClipView, UxmlTraits> { }
         public new class UxmlTraits : VisualElement.UxmlTraits
@@ -32,41 +29,29 @@ namespace Ux.Editor.Timeline
         //当前所在帧
         int nowFrame = 0;
 
-        ScrollView scrClipView;
-        VisualElement scrContent;
-        VisualElement veLineContent;
-        VisualElement veMarkerContent;
-        VisualElement veMarkerIcon;
-        VisualElement veClipContent;
-        Label lbMarker;
-
-
 
         public TimelineClipView()
         {
-            var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineClipView.uxml");
-            visualTree.CloneTree(this);
+            CreateChildren();
+            Add(root);
+          
             RegisterCallback<WheelEvent>(OnWheel);
             RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-            scrClipView = this.Q<ScrollView>("scr_clip");
+           
 
             ElementDrag.Add(scrClipView, this, OnScrDrag, 2);
 
-            veLineContent = this.Q<VisualElement>("ve_line_content");
+         
             veLineContent.generateVisualContent += OnDrawLine;
 
-            veMarkerContent = this.Q<VisualElement>("ve_marker_content");
             veMarkerContent.generateVisualContent += OnDrawMarker;
             ElementDrag.Add(veMarkerContent, this, OnMarkerStar, OnMarkerDrag);
 
-            veMarkerIcon = this.Q<VisualElement>("ve_marker_icon");
             veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
-            lbMarker = this.Q<Label>("lb_marker");
 
-            veClipContent = this.Q<VisualElement>("ve_clip_content");
-            Timeline.ClipContent = veClipContent;
-            Timeline.GetPositionByFrame = GetPositionByFrame;
-            Timeline.GetFrameByMousePosition = GetFrameByMousePosition;
+            TimelineEditor.ClipContent = veClipContent;
+            TimelineEditor.GetPositionByFrame = GetPositionByFrame;
+            TimelineEditor.GetFrameByMousePosition = GetFrameByMousePosition;
         }
 
 
@@ -109,7 +94,7 @@ namespace Ux.Editor.Timeline
             veMarkerContent.MarkDirtyRepaint();
             veMarkerIcon.MarkDirtyRepaint();
             UpdateMarkerPos();
-            Timeline.OnWheelChanged?.Invoke();
+            TimelineEditor.OnWheelChanged?.Invoke();
         }
         float GetPositionByFrame(int frame)
         {
@@ -150,7 +135,7 @@ namespace Ux.Editor.Timeline
             {
                 lbMarker.text = nowFrame.ToString();
                 UpdateMarkerPos();
-                Timeline.MarkerMove?.Invoke(frame - nowFrame);
+                TimelineEditor.MarkerMove?.Invoke(frame - nowFrame);
                 nowFrame = frame;
             }
         }
