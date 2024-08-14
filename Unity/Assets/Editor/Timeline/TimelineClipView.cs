@@ -1,3 +1,4 @@
+using Assets.Editor.Timeline;
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -49,6 +50,7 @@ namespace Ux.Editor.Timeline
 
             veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
 
+            TimelineEditor.InspectorContent = new TimelineInspectorView(veInspector);
             TimelineEditor.ClipContent = veClipContent;
             TimelineEditor.GetPositionByFrame = GetPositionByFrame;
             TimelineEditor.GetFrameByMousePosition = GetFrameByMousePosition;

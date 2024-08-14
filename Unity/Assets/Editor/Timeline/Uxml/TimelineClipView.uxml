@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Ux.Editor.SplitView fixed-pane-initial-dimension="200" fixed-pane-index="1" style="flex-direction: column;">
+    <Ux.Editor.SplitView fixed-pane-initial-dimension="400" fixed-pane-index="1" style="flex-direction: column;">
         <ui:ScrollView vertical-scroller-visibility="Hidden" name="scrClipView" mode="Vertical" style="flex-shrink: 0; flex-grow: 1; flex-basis: 0; width: auto;">
             <ui:VisualElement style="flex-grow: 0; width: 100%; height: 100%; align-self: flex-end; justify-content: space-around; flex-direction: column; border-left-width: 10px; border-right-width: 0;">
                 <uie:Toolbar name="Toolbar" style="flex-direction: column; height: 25px; flex-grow: 0; background-color: rgba(60, 60, 60, 0); width: 100%;">
@@ -13,6 +13,6 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:ScrollView>
-        <ui:ScrollView name="scrInspector" style="flex-grow: 0; flex-basis: auto; width: 200px;" />
+        <ui:VisualElement name="veInspector" style="flex-grow: 1; width: 400px;" />
     </Ux.Editor.SplitView>
 </ui:UXML>

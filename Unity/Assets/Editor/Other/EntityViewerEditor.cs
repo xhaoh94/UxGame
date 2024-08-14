@@ -1,5 +1,4 @@
 ﻿using UnityEditor;
-using Ux;
 namespace Ux.Editor
 {
     [CustomEditor(typeof(Ux.EntityHierarchy), true)]

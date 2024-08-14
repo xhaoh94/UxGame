@@ -18,13 +18,12 @@ namespace Ux
         void IAwakeSystem.OnAwake()
         {
             Mixer = AnimationMixerPlayable.Create(Component.PlayableGraph);
-            Root = Component.Get<TLAnimationRoot>();
-            Root ??= Component.Add<TLAnimationRoot>();
-            Root.Add(this);
+            Root = Component.GetOrAdd<TLAnimationRoot>();            
+            Root.Connect(this);
         }
         protected override void OnDestroy()
         {
-            Root.Remove(this);
+            Root.Disconnect(this);
             Root = null;
             if (Mixer.IsValid())
             {
@@ -88,8 +87,12 @@ namespace Ux
         /// </summary>
         public void Disconnect()
         {
+            _isFading = false;
+            _fadeSpeed = 0;
+            _fadeWeight = 0;
             // 断开
             Component.PlayableGraph.Disconnect(Root.MixerRoot, InputPort);
+            InputPort = 0;
         }
 
         /// <summary>

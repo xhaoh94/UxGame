@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Scripting;
+using Ux;
 
 [assembly: Preserve]
 enum IntEnum : int
@@ -40,13 +41,14 @@ public class RefTypes : MonoBehaviour
     {
         return new List<Type>
         {
+            typeof(SplashScreenUx)
         };
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log(GetTypes());
+        Debug.Log(GetTypes());        
         GameObject.Instantiate<GameObject>(null);
         Instantiate<GameObject>(null, null);
         Instantiate<GameObject>(null, null, false);

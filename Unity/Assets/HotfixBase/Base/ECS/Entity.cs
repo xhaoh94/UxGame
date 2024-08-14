@@ -574,6 +574,7 @@ namespace Ux
                 Log.Error("RemoveChilds 存在无法删除的Child！检查是否存在已被Destroy却没有从父类清除的Child");
             }
         }
+
         public T Get<T>(long id) where T : Entity
         {
             return Get(id) as T;
@@ -586,7 +587,12 @@ namespace Ux
             }
             return null;
         }
-
+        public T GetOrAdd<T>() where T : Entity
+        {
+            var entity = Get<T>();
+            entity ??= Add<T>();            
+            return entity;
+        }
         public T Get<T>() where T : Entity
         {
             if (_typeToentitys.TryGetValue(typeof(T), out var _temList) && _temList.Count > 0)

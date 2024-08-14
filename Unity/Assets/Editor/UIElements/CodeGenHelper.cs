@@ -14,6 +14,8 @@ namespace Ux.Editor
             { nameof(Toggle),$"ChangeEvent<bool>" },
             { nameof(EnumField),$"ChangeEvent<Enum>" },
             { nameof(TextField),$"ChangeEvent<string>" },
+            { nameof(FloatField),$"ChangeEvent<float>" },
+            { nameof(IntegerField),$"ChangeEvent<int>" },
             { nameof(ObjectField),$"ChangeEvent<UnityEngine.Object>" },
         };
 
@@ -48,7 +50,7 @@ namespace Ux.Editor
 
             var clsName = tree.name;
             var dir = filePath.Replace($"/{clsName}.uxml", "");
-            var ns = dir.Replace("Assets", "Ux").Replace("/", ".").Replace(".Uxml", "");
+            var ns = dir.Replace("Assets", "Ux").Replace("/", ".").Replace("/Uxml", "").Replace(".Uxml", "");
 
             var write = new CodeGenWrite();
             write.Writeln(@"//自动生成的代码，请勿修改!!!");

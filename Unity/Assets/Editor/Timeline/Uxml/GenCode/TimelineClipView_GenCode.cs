@@ -17,7 +17,7 @@ namespace Ux.Editor.Timeline
 		public VisualElement veMarkerContent;
 		public VisualElement veMarkerIcon;
 		public Label lbMarker;
-		public ScrollView scrInspector;
+		public VisualElement veInspector;
 		protected void CreateChildren()
 		{
 			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineClipView.uxml");
@@ -31,7 +31,7 @@ namespace Ux.Editor.Timeline
 			veMarkerContent =root.Q<VisualElement>("veMarkerContent");
 			veMarkerIcon =root.Q<VisualElement>("veMarkerIcon");
 			lbMarker =root.Q<Label>("lbMarker");
-			scrInspector =root.Q<ScrollView>("scrInspector");
+            veInspector = root.Q<VisualElement>("veInspector");
 		}
 	}
 }

@@ -1,8 +1,8 @@
-using System;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static GluonGui.WorkspaceWindow.Views.Checkin.Operations.CheckinViewDeleteOperation;
 namespace Ux.Editor.Timeline
 {
     public enum Status
@@ -70,7 +70,7 @@ namespace Ux.Editor.Timeline
         {
             if (e.button == 0)
             {
-
+                TimelineEditor.InspectorContent.FreshInspector(Asset, UpdateAsset);
             }
             else if (e.button == 1)
             {
@@ -92,13 +92,18 @@ namespace Ux.Editor.Timeline
                 this.ShowMenu();
             }
         }
-
+        bool UpdateAsset()
+        {
+            UpdateView();
+            return TrackItem.IsValid();
+        }
         public void Init(TimelineClipAsset asset, TimelineTrackItem track)
         {
             Asset = asset;
             TrackItem = track;
             color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
         }
+
         bool IsPointInTriangle(Point p, Point a, Point b, Point c)
         {
             bool b1, b2, b3;
@@ -191,9 +196,9 @@ namespace Ux.Editor.Timeline
                     Asset.StartFrame = now;
                     break;
                 case Status.Right:
-                    if (now < Asset.StartFrame)
+                    if (now < Asset.StartFrame + 1)
                     {
-                        now = Asset.StartFrame;
+                        now = Asset.StartFrame + 1;
                     }
                     Asset.EndFrame = now;
                     break;
@@ -242,7 +247,7 @@ namespace Ux.Editor.Timeline
         }
         public void UpdateView()
         {
-            lbType.text = Asset.Name;
+            lbType.text = Asset.clipName;
             var lineWidth = 1;
             if (TrackItem.IsValid())
             {
@@ -258,6 +263,7 @@ namespace Ux.Editor.Timeline
             }
             else
             {
+                BringToFront();
                 content.style.borderLeftWidth = lineWidth;
                 content.style.borderRightWidth = lineWidth;
                 content.style.borderTopWidth = lineWidth;

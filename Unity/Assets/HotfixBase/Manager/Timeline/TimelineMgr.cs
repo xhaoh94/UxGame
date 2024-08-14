@@ -6,7 +6,7 @@ namespace Ux
 {
     public class TimelineMgr:Singleton<TimelineMgr>
     {
-        public float FrameRate = 60f;
+        public float FrameRate = 24;
         public float DeltaTime
         {
             get

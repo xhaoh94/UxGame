@@ -28,7 +28,7 @@ namespace Ux
                 Component.PlayableGraph.DestroySubgraph(MixerRoot);
             }
         }
-        public void Add(TLAnimationLayer layer)
+        public void Connect(TLAnimationLayer layer)
         {
             if (layer == null)
                 return;
@@ -65,7 +65,7 @@ namespace Ux
                 }
             }
         }
-        public void Remove(TLAnimationLayer layer)
+        public void Disconnect(TLAnimationLayer layer)
         {
             if (layer == null)
                 return;            
@@ -74,10 +74,12 @@ namespace Ux
                 var mixer = _mixers[i];
                 if(mixer == layer)
                 {
+                    mixer.Disconnect();
                     _mixers[i] = null;
                     break;
                 }
             }
+            //全断开了，那么此组件可销毁了
             int index = _mixers.FindIndex(x => x != null);
             if (index == -1)
             {

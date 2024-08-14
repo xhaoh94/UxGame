@@ -47,7 +47,7 @@ namespace Ux.Editor.Timeline
                     {
                         tName = temName.Substring(0, tName.Length - 5);
                     }
-                    track.Name = tName;
+                    track.trackName = tName;
                     AddTrackItem(track);
                 }
 
@@ -63,7 +63,7 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
-            if (trackItemDic.ContainsKey(trackAsset.Name))
+            if (trackItemDic.ContainsKey(trackAsset.trackName))
             {
                 //TODO 改名
                 return;
@@ -73,16 +73,16 @@ namespace Ux.Editor.Timeline
 
             var item = new TimelineTrackItem(trackAsset);
             trackContent.Add(item);
-            trackItemDic.Add(trackAsset.Name, item);
+            trackItemDic.Add(trackAsset.trackName, item);
             TimelineEditor.RefreshEntity();
         }
         void RemoveTrackItem(TimelineTrackAsset trackAsset)
         {
-            if(trackItemDic.TryGetValue(trackAsset.Name,out var item))
+            if(trackItemDic.TryGetValue(trackAsset.trackName,out var item))
             {
                 item.Release();
                 trackContent.Remove(item);
-                trackItemDic.Remove(trackAsset.Name);
+                trackItemDic.Remove(trackAsset.trackName);
                 TimelineEditor.RefreshEntity();
             }
         }
@@ -96,7 +96,7 @@ namespace Ux.Editor.Timeline
                 {
                     var item = new TimelineTrackItem(track);
                     trackContent.Add(item);
-                    trackItemDic.Add(track.Name, item);
+                    trackItemDic.Add(track.trackName, item);
                 }
             }            
         }

@@ -25,12 +25,12 @@ namespace Ux
         public void Evaluate(float deltaTime)
         {            
             Time += deltaTime;
-            if (!Active && _asset.StartTime <= Time && Time <= _asset.EndTime)
+            if (!Active && Time >= _asset.StartTime  && Time <= _asset.EndTime)
             {
                 Active = true;
                 OnEnable();
             }
-            else if (Active && (Time < _asset.StartTime || _asset.EndTime < Time))
+            else if (Active && (Time < _asset.StartTime || Time > _asset.EndTime))
             {
                 
                 Active = false;

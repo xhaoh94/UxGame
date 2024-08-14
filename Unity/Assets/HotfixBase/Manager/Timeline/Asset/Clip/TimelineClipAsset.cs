@@ -8,7 +8,8 @@ namespace Ux
     [Serializable]
     public abstract class TimelineClipAsset
     {
-        public string Name;
+        public string clipName;
+
         #region Frame        
         // 开始帧        
         public int StartFrame;
@@ -16,7 +17,7 @@ namespace Ux
         public int EndFrame;
         // 开始帧->进入缓动帧 权重 0->1        
         public int InFrame;
-        // 退出缓动帧->结束帧 权重1->0        
+        // 退出缓动帧->结束帧 权重 1->0        
         public int OutFrame;
 
         #endregion

@@ -1,11 +1,14 @@
-﻿using System;
+﻿using Assets.Editor.Timeline;
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ux.Editor.Timeline.Animation;
 
 namespace Ux.Editor.Timeline
 {
     public static class TimelineEditor
     {
+        public static TimelineInspectorView InspectorContent { get; set; }
         public static VisualElement ClipContent { get; set; }
         public static System.Action OnWheelChanged { get; set; }
         public static System.Func<int, float> GetPositionByFrame { get; set; }
@@ -15,25 +18,52 @@ namespace Ux.Editor.Timeline
         public static System.Action SaveAssets { get; set; }
         public static System.Action RefreshEntity { get; set; }
 
+        public static float GetDuration(TimelineAsset asset)
+        {
+            float _duration = 0;
+            foreach (var track in asset.tracks)
+            {
+                var trackDuration = GetDuration(track);
+                if (_duration < trackDuration)
+                {
+                    _duration = trackDuration;
+                }
+            }
+            return _duration;            
+        }
+        public static float GetDuration(TimelineTrackAsset asset)
+        {
+            float _duration = 0;            
+            foreach (var clip in asset.clips)
+            {
+                if (_duration < clip.EndTime)
+                {
+                    _duration = clip.EndTime;
+                }
+            }            
+            return _duration;
+        }
         public static TimelineClipAsset CreateClipAsset(Type clipType,int start, UnityEngine.Object arg)
         {                  
             var clipAsset = Activator.CreateInstance(clipType);
             if (clipAsset is AnimationClipAsset aca)
             {
                 aca.StartFrame = start;
-                if (arg != null && arg is AnimationClip ac)
+                aca.EndFrame = start + 100;
+                if (arg != null)
                 {
-                    aca.clip = ac;
-                    aca.EndFrame = start + Mathf.RoundToInt(ac.length * TimelineMgr.Ins.FrameRate);
-                    aca.Name = ac.name;
-                }
-                else
-                {
-                    aca.EndFrame = start + 100;                    
+                    if (arg is AnimationClip ac)
+                    {
+                        aca.clip = ac;
+                        aca.EndFrame = start + Mathf.RoundToInt(ac.length * TimelineMgr.Ins.FrameRate);
+                        aca.clipName = ac.name;
+                    }
                 }
                 return aca;
             }
             return null;
         }
+
+
     }
 }

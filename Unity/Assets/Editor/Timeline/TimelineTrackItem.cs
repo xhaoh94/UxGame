@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
@@ -34,7 +35,7 @@ namespace Ux.Editor.Timeline
             Add(root);
             style.height = 30;
             Asset = asset;
-            inputName.SetValueWithoutNotify(asset.Name);
+            inputName.SetValueWithoutNotify(asset.trackName);
 
             var attr = asset.GetType().GetAttribute<TLTrackAttribute>();
             lbType.text = attr.Lb;
@@ -79,6 +80,7 @@ namespace Ux.Editor.Timeline
             TimelineEditor.OnWheelChanged -= OnWheelChanged;
         }
 
+
         void OnDragUpd(DragUpdatedEvent e)
         {
             DragAndDrop.visualMode = DragAndDropVisualMode.Move;
@@ -93,27 +95,34 @@ namespace Ux.Editor.Timeline
                 {
                     return;
                 }
-                var clipAsset = TimelineEditor.CreateClipAsset(ClipType,
-                    Mathf.CeilToInt(Asset.MaxTime / TimelineMgr.Ins.FrameRate), obj);
-                AddClipItem(clipAsset);
+                CreateClipAsset(obj);
             }
         }
         void OnPointerDown(PointerDownEvent e)
         {
             if (e.button == 0)
             {
-
+                TimelineEditor.InspectorContent.FreshInspector(Asset, UpdateAsset);
             }
             else if (e.button == 1)
             {
                 menu.AppendAction("Add Clip", e =>
                 {
-                    var clipAsset = TimelineEditor.CreateClipAsset(ClipType,
-                   Mathf.CeilToInt(Asset.MaxTime / TimelineMgr.Ins.FrameRate), null);
-                    AddClipItem(clipAsset);
+                    CreateClipAsset(null);
                 }, e => DropdownMenuAction.Status.Normal);
                 this.ShowMenu();
             }
+        }
+        void CreateClipAsset(UnityEngine.Object obj)
+        {
+            var clipAsset = TimelineEditor.CreateClipAsset(ClipType,
+                   Mathf.CeilToInt(TimelineEditor.GetDuration(Asset) / TimelineMgr.Ins.FrameRate), obj);
+            AddClipItem(clipAsset);
+        }
+        bool UpdateAsset()
+        {
+            inputName.SetValueWithoutNotify(Asset.trackName);
+            return true;
         }
         void RefreshView()
         {
@@ -329,8 +338,8 @@ namespace Ux.Editor.Timeline
         }
         int Intersect(TimelineClipAsset a, TimelineClipAsset b)
         {
-            if (a.StartFrame < b.StartFrame && a.EndFrame > b.EndFrame) return -1000;
-            if (b.StartFrame < a.StartFrame && b.EndFrame > a.EndFrame) return -1000;
+            if (a.StartFrame <= b.StartFrame && a.EndFrame >= b.EndFrame) return -1000;
+            if (b.StartFrame <= a.StartFrame && b.EndFrame >= a.EndFrame) return -1000;
 
             if (a.EndFrame > b.StartFrame && a.StartFrame < b.EndFrame)
             {
