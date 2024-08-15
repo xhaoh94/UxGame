@@ -35,18 +35,27 @@ namespace Ux.Editor.Timeline
         public TimelineClipAsset Asset { get; private set; }
         public TimelineTrackItem TrackItem { get; private set; }
         public DropdownMenu menu { get; }
-        public TimelineClipItem()
+        public TimelineClipItem(TimelineClipAsset asset, TimelineTrackItem track)
         {
+            Asset = asset;
+            TrackItem = track;
+            color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
+
             CreateChildren();
             Add(root);
-
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
             style.position = new StyleEnum<Position>(Position.Absolute);
             style.height = 30;
+            TimelineEditor.Bind(Asset, UpdateView);
         }
+        public void Release()
+        {
+            TimelineEditor.UnBind(Asset, UpdateView);
+        }
+
         void _OnDragUpd(DragUpdatedEvent e)
         {
             DragAndDrop.visualMode = DragAndDropVisualMode.Move;
@@ -70,7 +79,7 @@ namespace Ux.Editor.Timeline
         {
             if (e.button == 0)
             {
-                TimelineEditor.InspectorContent.FreshInspector(Asset, UpdateAsset);
+                TimelineEditor.InspectorContent.FreshInspector(Asset, ChcekValid);
             }
             else if (e.button == 1)
             {
@@ -92,17 +101,11 @@ namespace Ux.Editor.Timeline
                 this.ShowMenu();
             }
         }
-        bool UpdateAsset()
+        bool ChcekValid()
         {
-            UpdateView();
-            return TrackItem.IsValid();
+            return TrackItem.IsValid();         
         }
-        public void Init(TimelineClipAsset asset, TimelineTrackItem track)
-        {
-            Asset = asset;
-            TrackItem = track;
-            color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
-        }
+
 
         bool IsPointInTriangle(Point p, Point a, Point b, Point c)
         {
@@ -212,7 +215,7 @@ namespace Ux.Editor.Timeline
                     Asset.EndFrame += offFrame;
                     break;
             }
-
+            TimelineEditor.Run(Asset);
             UpdateView();
         }
 
@@ -228,6 +231,7 @@ namespace Ux.Editor.Timeline
             {
                 Asset.StartFrame = startFrame;
                 Asset.EndFrame = endFrame;
+                TimelineEditor.Run(Asset);
             }
             UpdateView();
         }

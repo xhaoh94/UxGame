@@ -68,6 +68,7 @@ namespace Ux.Editor.Timeline
             clipContent.Add(draw);
             TimelineEditor.ClipContent.Add(clipContent);
             TimelineEditor.OnWheelChanged += OnWheelChanged;
+            TimelineEditor.Bind(Asset, UpdateAsset);
             ElementDrag.Add(clipContent, TimelineEditor.ClipContent, OnStart, OnDrag, OnEnd);
             clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
             clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
@@ -78,6 +79,7 @@ namespace Ux.Editor.Timeline
         {
             TimelineEditor.ClipContent.Remove(this);
             TimelineEditor.OnWheelChanged -= OnWheelChanged;
+            TimelineEditor.UnBind(Asset, UpdateAsset);
         }
 
 
@@ -102,7 +104,7 @@ namespace Ux.Editor.Timeline
         {
             if (e.button == 0)
             {
-                TimelineEditor.InspectorContent.FreshInspector(Asset, UpdateAsset);
+                TimelineEditor.InspectorContent.FreshInspector(Asset, null);
             }
             else if (e.button == 1)
             {
@@ -119,17 +121,20 @@ namespace Ux.Editor.Timeline
                    Mathf.CeilToInt(TimelineEditor.GetDuration(Asset) / TimelineMgr.Ins.FrameRate), obj);
             AddClipItem(clipAsset);
         }
-        bool UpdateAsset()
+        void UpdateAsset()
+        {            
+            inputName.SetValueWithoutNotify(Asset.trackName);            
+        }
+        partial void _OnInputNameChanged(ChangeEvent<string> e)
         {
-            inputName.SetValueWithoutNotify(Asset.trackName);
-            return true;
+            Asset.trackName = e.newValue;
+            TimelineEditor.Run(Asset);
         }
         void RefreshView()
         {
             foreach (var clipAsset in Asset.clips)
             {
-                var item = new TimelineClipItem();
-                item.Init(clipAsset, this);
+                var item = new TimelineClipItem(clipAsset, this);                
                 Items.Add(item);
                 clipParent.Add(item);
             }
@@ -148,8 +153,7 @@ namespace Ux.Editor.Timeline
             }
             Asset.clips.Add(clipAsset);
             TimelineEditor.SaveAssets();
-            var item = new TimelineClipItem();
-            item.Init(clipAsset, this);
+            var item = new TimelineClipItem(clipAsset, this);            
             Items.Add(item);
             clipParent.Add(item);
             item.UpdateView();

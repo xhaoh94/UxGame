@@ -1,4 +1,5 @@
 ﻿using Assets.Editor.Timeline;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,10 +21,16 @@ namespace Ux.Editor.Timeline.Animation
             txtStartFrame.labelElement.style.minWidth = 15;
             txtEndTime.labelElement.style.minWidth = 15;
             txtEndFrame.labelElement.style.minWidth = 15;
-            FreshView();
+
+            ofClip.objectType = typeof(AnimationClip);
+
+            OnFreshView();
         }
-        void FreshView()
+        protected override void OnFreshView()
         {
+            txtName.SetValueWithoutNotify(_asset.clipName);
+            ofClip.SetValueWithoutNotify(_asset.clip);
+
             txtStartTime.SetValueWithoutNotify(_asset.StartTime);
             txtStartFrame.SetValueWithoutNotify(_asset.StartFrame);
 
@@ -39,35 +46,40 @@ namespace Ux.Editor.Timeline.Animation
             lbDurationTime.text = $"{_asset.EndTime - _asset.StartTime}秒";
             lbDurationFrame.text = $"{_asset.EndFrame - _asset.StartFrame}帧";
 
+            btnDuration.style.display = DisplayStyle.None;
+            if (_asset.clip != null)
+            {
+                var tFrame = _asset.clip.length * TimelineMgr.Ins.FrameRate;
+                if (Mathf.RoundToInt(tFrame) != _asset.EndFrame - _asset.StartFrame)
+                {
+                    btnDuration.style.display = DisplayStyle.Flex;
+                }
+            }
         }
+
         int startFrame;
         int endFrame;
         void _TxtFBlur(FocusInEvent e)
-        {            
+        {
             startFrame = _asset.StartFrame;
             endFrame = _asset.EndFrame;
         }
         void _TxtUpEvent(MouseUpEvent e)
-        {            
+        {
             _CheckValid();
         }
         void _TxtSBlur(FocusOutEvent e)
-        {            
+        {
             _CheckValid();
         }
 
         void _CheckValid()
         {
-            if (CallBack())
-            {
-                FreshView();
-            }
-            else
+            if (!ChcekValid())
             {
                 _asset.StartFrame = startFrame;
                 _asset.EndFrame = endFrame;
-                CallBack();
-                FreshView();
+                TimelineEditor.Run(_asset);
             }
         }
 
@@ -79,31 +91,64 @@ namespace Ux.Editor.Timeline.Animation
             {
                 frame = 0;
             }
+            var oldFrame = _asset.StartFrame;
             _asset.StartFrame = frame;
-            CallBack();
-            FreshView();
+            if (tgMove.value)
+            {
+                var off = _asset.StartFrame - oldFrame;
+                _asset.EndFrame += off;
+            }
+            TimelineEditor.Run(_asset);
         }
         partial void _OnTxtEndFrameChanged(ChangeEvent<int> e)
         {
             var frame = e.newValue;
-            if (frame < _asset.StartFrame + 1)
+            if (tgMove.value)
+            {
+                var oldFrame = _asset.EndFrame;
+                var off = _asset.EndFrame - oldFrame;
+                if (_asset.StartFrame + off < 0)
+                {
+                    off = -_asset.StartFrame;
+                }
+                _asset.StartFrame += off;
+                _asset.EndFrame += off;
+            }
+            else if (frame < _asset.StartFrame + 1)
             {
                 frame = _asset.StartFrame + 1;
+                _asset.EndFrame = frame;
             }
-            _asset.EndFrame = frame;
-            CallBack();
-            FreshView();
+            TimelineEditor.Run(_asset);
         }
 
+        partial void _OnTxtNameChanged(ChangeEvent<string> e)
+        {
+            _asset.clipName = e.newValue;
+            TimelineEditor.Run(_asset);
+        }
 
         partial void _OnOfClipChanged(ChangeEvent<Object> e)
         {
-            throw new System.NotImplementedException();
+            if (e.newValue is AnimationClip clip)
+            {
+                _asset.clip = clip;
+                _asset.clipName = clip.name;
+                TimelineEditor.Run(_asset);
+            }
         }
 
         partial void _OnBtnDurationClick()
         {
-            throw new System.NotImplementedException();
+            var tFrame = _asset.clip.length * TimelineMgr.Ins.FrameRate;
+            var oldEndFrame = _asset.EndFrame;
+            _asset.EndFrame = _asset.StartFrame + Mathf.RoundToInt(tFrame);
+            TimelineEditor.Run(_asset);
+            if (!ChcekValid())
+            {
+                _asset.EndFrame = oldEndFrame;
+                //TimelineEditor.Run(_asset);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
@@ -29,9 +30,14 @@ namespace Ux.Editor.Timeline
 
         public void CreateGUI()
         {
+            TimelineEditor.SaveAssets = SaveAssets;
+            TimelineEditor.RefreshEntity = RefreshEntity;
+            TimelineEditor.MarkerMove = MarkerMove;
+            TimelineEditor.ResetActionMap();
+
             CreateChildren();
             root.style.flexGrow = 1f;
-            rootVisualElement.Add(root);            
+            rootVisualElement.Add(root);
 
             ofEntity.objectType = typeof(GameObject);
             ofTimeline.objectType = typeof(TimelineAsset);
@@ -44,9 +50,47 @@ namespace Ux.Editor.Timeline
             _OnOfEntityChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
             _OnOfTimelineChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
 
-            TimelineEditor.SaveAssets = SaveAssets;
-            TimelineEditor.RefreshEntity = RefreshEntity;
-            TimelineEditor.MarkerMove = SetFrame;
+        }
+
+        bool keyCtrl = false;
+        bool keyS = false;
+        bool save = false;
+        private void OnGUI()
+        {
+            switch (Event.current.type)
+            {
+                case UnityEngine.EventType.KeyDown:
+                    switch (Event.current.keyCode)
+                    {
+                        case KeyCode.LeftControl:
+                            keyCtrl = true;
+                            break;
+                        case KeyCode.S:
+                            keyS = true;
+                            break;
+                    }
+                    break;
+                case UnityEngine.EventType.KeyUp:
+                    switch (Event.current.keyCode)
+                    {
+                        case KeyCode.LeftControl:
+                            keyCtrl = false;
+                            save = false;
+                            break;
+                        case KeyCode.S:
+                            keyS = false;
+                            save = false;
+                            break;
+                    }
+                    break;
+            }
+
+            if (keyCtrl && keyS && !save)
+            {
+                Log.Debug("±£´æ");
+                save = true;
+                SaveAssets();
+            }
         }
 
 
@@ -97,7 +141,7 @@ namespace Ux.Editor.Timeline
                 }
                 TimelineEditor.Asset = asset;
                 RefreshEntity();
-                trackView.RefreshView();                
+                trackView.RefreshView();
             }
         }
 
@@ -161,7 +205,7 @@ namespace Ux.Editor.Timeline
             if (asset == null) return;
             entity?.Get<TimelineComponent>()?.Play(asset);
         }
-        public void SetFrame(int frame)
+        void MarkerMove(int frame)
         {
             var time = TimelineMgr.Ins.FrameConvertTime(frame);
             entity?.Get<TimelineComponent>()?.Evaluate(time);

@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine.UIElements;
 using Ux;
+using Ux.Editor.Timeline;
 using Ux.Editor.Timeline.Animation;
 
 namespace Assets.Editor.Timeline
@@ -13,20 +14,31 @@ namespace Assets.Editor.Timeline
         public TimelineInspectorBase(object asset)
         {
             _asset = asset;
+            TimelineEditor.Bind(asset, OnFreshView);
         }
         public bool IsSame(object obj)
         {
             return _asset == obj;
         }
-        public void SetCallBack(Func<bool> callback)
+        public void SetChcekValid(Func<bool> callback)
         {
-            _callback =callback;
+            _callback = callback;
         }
-        protected bool CallBack()
+        protected bool ChcekValid()
         {
-           return _callback.Invoke();
+            if (_callback != null)
+            {
+                return _callback.Invoke();
+            }
+            return true;
         }
 
+        public void Release()
+        {
+            TimelineEditor.UnBind(_asset, OnFreshView);
+        }
+
+        protected virtual void OnFreshView() { }
     }
     public class TimelineInspectorView
     {
@@ -37,7 +49,7 @@ namespace Assets.Editor.Timeline
             this.root = root;
         }
 
-        public void FreshInspector(object asset, Func<bool> callback)
+        public void FreshInspector(object asset, Func<bool> chcekValid)
         {
             if (current != null)
             {
@@ -45,6 +57,7 @@ namespace Assets.Editor.Timeline
                 {
                     return;
                 }
+                current.Release();
                 root.Remove(current);
                 current = null;
             }
@@ -58,7 +71,7 @@ namespace Assets.Editor.Timeline
             }
             if (current != null)
             {
-                current.SetCallBack(callback);
+                current.SetChcekValid(chcekValid);
                 root.Add(current);
             }
         }

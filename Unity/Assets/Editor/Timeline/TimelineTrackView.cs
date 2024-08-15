@@ -16,7 +16,7 @@ namespace Ux.Editor.Timeline
             }
         }        
 
-        Dictionary<string, TimelineTrackItem> trackItemDic = new Dictionary<string, TimelineTrackItem>();
+        Dictionary<TimelineTrackAsset, TimelineTrackItem> trackItemDic = new ();
         public TimelineTrackView()
         {
             CreateChildren();            
@@ -63,9 +63,8 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
-            if (trackItemDic.ContainsKey(trackAsset.trackName))
-            {
-                //TODO 改名
+            if (trackItemDic.ContainsKey(trackAsset))
+            {                
                 return;
             }
             TimelineEditor.Asset.tracks.Add(trackAsset);
@@ -73,16 +72,16 @@ namespace Ux.Editor.Timeline
 
             var item = new TimelineTrackItem(trackAsset);
             trackContent.Add(item);
-            trackItemDic.Add(trackAsset.trackName, item);
+            trackItemDic.Add(trackAsset, item);
             TimelineEditor.RefreshEntity();
         }
         void RemoveTrackItem(TimelineTrackAsset trackAsset)
         {
-            if(trackItemDic.TryGetValue(trackAsset.trackName,out var item))
+            if(trackItemDic.TryGetValue(trackAsset,out var item))
             {
                 item.Release();
                 trackContent.Remove(item);
-                trackItemDic.Remove(trackAsset.trackName);
+                trackItemDic.Remove(trackAsset);
                 TimelineEditor.RefreshEntity();
             }
         }
@@ -96,7 +95,7 @@ namespace Ux.Editor.Timeline
                 {
                     var item = new TimelineTrackItem(track);
                     trackContent.Add(item);
-                    trackItemDic.Add(track.trackName, item);
+                    trackItemDic.Add(track, item);
                 }
             }            
         }

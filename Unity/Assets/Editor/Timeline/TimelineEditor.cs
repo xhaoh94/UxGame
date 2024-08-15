@@ -1,5 +1,6 @@
 ﻿using Assets.Editor.Timeline;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Ux.Editor.Timeline.Animation;
@@ -29,22 +30,22 @@ namespace Ux.Editor.Timeline
                     _duration = trackDuration;
                 }
             }
-            return _duration;            
+            return _duration;
         }
         public static float GetDuration(TimelineTrackAsset asset)
         {
-            float _duration = 0;            
+            float _duration = 0;
             foreach (var clip in asset.clips)
             {
                 if (_duration < clip.EndTime)
                 {
                     _duration = clip.EndTime;
                 }
-            }            
+            }
             return _duration;
         }
-        public static TimelineClipAsset CreateClipAsset(Type clipType,int start, UnityEngine.Object arg)
-        {                  
+        public static TimelineClipAsset CreateClipAsset(Type clipType, int start, UnityEngine.Object arg)
+        {
             var clipAsset = Activator.CreateInstance(clipType);
             if (clipAsset is AnimationClipAsset aca)
             {
@@ -65,5 +66,36 @@ namespace Ux.Editor.Timeline
         }
 
 
+        static Dictionary<object, HashSet<Action>> assetActionMap = new();
+        public static void ResetActionMap()
+        {
+            assetActionMap.Clear();
+        }
+        public static void Bind(object asset, Action action)
+        {
+            if (!assetActionMap.TryGetValue(asset, out var actions))
+            {
+                actions = new HashSet<Action>();
+                assetActionMap.Add(asset, actions);
+            }
+            actions.Add(action);
+        }
+        public static void UnBind(object asset, Action action)
+        {
+            if (assetActionMap.TryGetValue(asset, out var actions))
+            {
+                actions.Remove(action);
+            }
+        }
+        public static void Run(object asset)
+        {
+            if (assetActionMap.TryGetValue(asset, out var actions))
+            {
+                foreach (var item in actions)
+                {
+                    item.Invoke();
+                }
+            }            
+        }
     }
 }

@@ -22,7 +22,7 @@ namespace Ux.Editor
         [MenuItem("Assets/UIElements/CodeGenByUxml", false)]
         public static void GenCode()
         {
-            VisualTreeAsset[] activeGos = Selection.GetFiltered<VisualTreeAsset>(SelectionMode.Unfiltered);            
+            VisualTreeAsset[] activeGos = Selection.GetFiltered<VisualTreeAsset>(SelectionMode.Unfiltered);
             foreach (Object obj in activeGos)
             {
                 _GenCode(obj);
@@ -68,8 +68,9 @@ namespace Ux.Editor
             write.Writeln($"protected VisualElement root;");
             foreach (var element in listElement)
             {
-                var (name, type) = _Parse(element);
-                if (!string.IsNullOrEmpty(name))
+                var map = _Parse(element);
+                if (map.TryGetValue("name", out var name) &&
+                    map.TryGetValue("typeName", out var type))
                 {
                     write.Writeln($"public {type} {name};");
                 }
@@ -83,10 +84,15 @@ namespace Ux.Editor
 
             foreach (var element in listElement)
             {
-                var (name, type) = _Parse(element);
-                if (!string.IsNullOrEmpty(name))
-                {                    
+                var map = _Parse(element);
+                if (map.TryGetValue("name", out var name) &&
+                    map.TryGetValue("typeName", out var type))
+                {
                     write.Writeln($"{name} =root.Q<{type}>(\"{name}\");");
+                    if (map.ContainsKey("readonly"))
+                    {
+                        continue;
+                    }
                     if (_RegisterValueChangedCallback.ContainsKey(type))
                     {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Changed";
@@ -116,8 +122,10 @@ namespace Ux.Editor
 
             foreach (var element in listElement)
             {
-                var (name, type) = _Parse(element);
-                if (!string.IsNullOrEmpty(name))
+                var map = _Parse(element);
+                if (map.TryGetValue("name", out var name) &&
+                    map.TryGetValue("typeName", out var type) &&
+                    !map.ContainsKey("readonly"))
                 {
                     if (_RegisterValueChangedCallback.TryGetValue(type, out var evt))
                     {
@@ -146,28 +154,22 @@ namespace Ux.Editor
 
             write.Export($"{dir}/GenCode/", $"{clsName}_GenCode");
         }
-        static (string, string) _Parse(object obj)
+        static Dictionary<string, string> _Parse(object obj)
         {
             var flag = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
             var typeName = obj.GetType().BaseType.GetField("m_FullTypeName", flag).GetValue(obj).ToString();
             typeName = typeName.Substring(typeName.LastIndexOf(".") + 1);
             IList properties = obj.GetType().BaseType.GetField("m_Properties", flag).GetValue(obj) as IList;
-            bool name = false;
-            foreach (var property in properties)
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            for (int i = 0; i < properties.Count; i += 2)
             {
-                if (property.Equals("name"))
-                {
-                    name = true;
-                    continue;
-                }
-                if (name)
-                {
-                    return (property.ToString(), typeName);
-                }
+                var key = properties[i];
+                var value = properties[i + 1];
+                map[key.ToString()] = value.ToString();
             }
-            return (null, null);
+            map["typeName"] = typeName;
+            return map;
         }
-
     }
 
 }

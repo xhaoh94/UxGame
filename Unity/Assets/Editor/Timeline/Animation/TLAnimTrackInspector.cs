@@ -1,4 +1,5 @@
 using Assets.Editor.Timeline;
+using UnityEditor.VersionControl;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline.Animation
 {
@@ -10,14 +11,18 @@ namespace Ux.Editor.Timeline.Animation
             CreateChildren();
             Add(root);
             _asset = asset;
-            txtName.SetValueWithoutNotify(asset.trackName);
+            OnFreshView();
         }
         partial void _OnTxtNameChanged(ChangeEvent<string> e)
         {
             _asset.trackName = e.newValue;
-            CallBack();
+            TimelineEditor.Run(_asset);
         }
 
+        protected override void OnFreshView()
+        {
+            txtName.SetValueWithoutNotify(_asset.trackName);
+        }
     }
 
 }

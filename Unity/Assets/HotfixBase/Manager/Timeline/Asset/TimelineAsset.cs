@@ -5,6 +5,9 @@ namespace Ux
 {
     public class TimelineAsset : ScriptableObject
     {
+        //ÔËĞĞÖ¡ÂÊ
+        public int FrameRate;
+
         [SerializeReference]
         public List<TimelineTrackAsset> tracks = new List<TimelineTrackAsset>();
     }

@@ -1,4 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:TextField picking-mode="Ignore" label="Name" name="txtName" />
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
+        <ui:Toggle label="Move" name="tgMove" />
+        <ui:Label tabindex="-1" text="（勾选情况下，更改时为整体移动模式）" parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: lower-left; font-size: 8px; height: 15px; color: rgb(192, 187, 79);" />
+    </ui:VisualElement>
     <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
         <ui:Label tabindex="-1" text="Start" parse-escape-sequences="true" display-tooltip-when-elided="true" style="width: 100px; -unity-text-align: middle-left; margin-left: 0;" />
         <ui:IntegerField value="42" name="txtStartFrame" label="帧" is-delayed="false" style="flex-shrink: 1; flex-grow: 1; margin-left: 0; width: 100px;" />
