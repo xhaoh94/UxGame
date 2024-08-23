@@ -1,6 +1,5 @@
 ﻿using UnityEngine.Animations;
 using UnityEngine.Playables;
-using static UnityEngine.Rendering.DebugUI;
 
 namespace Ux
 {
@@ -22,8 +21,8 @@ namespace Ux
         {
             base.OnDestroy();
             animAsset = null;
-            _inputPort = 0;            
-            if (_source.IsValid())
+            _inputPort = 0;
+            if (PlayableGraph.IsValid() && _source.IsValid())
             {
                 PlayableGraph.DestroySubgraph(_source);
             }
@@ -34,25 +33,28 @@ namespace Ux
         }
         protected override void OnDisable()
         {
-            PlayableGraph.Disconnect(Track.Mixer, _inputPort);
+            if (PlayableGraph.IsValid() && Track.Mixer.IsValid())
+            {
+                PlayableGraph.Disconnect(Track.Mixer, _inputPort);
+            }
         }
         protected override void OnEvaluate(float deltaTime)
         {
             if (Active)
             {
-                float _time = Time - animAsset.StartTime; 
+                float _time = Time - animAsset.StartTime;
                 _source.SetTime(_time);
                 var _inTime = animAsset.InTime;
                 var _outTime = animAsset.OutTime;
                 var _startTime = animAsset.StartTime;
                 var _endTime = animAsset.EndTime;
-                if ((_inTime== 0 || Time >= _inTime) && (_outTime == 0 || Time <= _outTime))
+                if ((_inTime == 0 || Time >= _inTime) && (_outTime == 0 || Time <= _outTime))
                 {
-                    Weight = 1;                    
+                    Weight = 1;
                 }
                 else if (Time < _inTime)
                 {
-                    Weight = _time / (_inTime - _startTime);                    
+                    Weight = _time / (_inTime - _startTime);
                 }
                 else if (Time > _outTime)
                 {
@@ -63,7 +65,7 @@ namespace Ux
             {
                 Weight = 0;
             }
-        }        
+        }
         /// <summary>
         /// 权重值
         /// </summary>
@@ -72,7 +74,7 @@ namespace Ux
             set
             {
                 Track.Mixer.SetInputWeight(_inputPort, value);
-            }            
+            }
         }
     }
 }

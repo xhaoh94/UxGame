@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
@@ -15,6 +15,11 @@ namespace Ux.Editor.Timeline
     }
     public partial class TimelineWindow : EditorWindow
     {
+        public enum PlayMode
+        {
+            Loop,
+            Once,
+        }
         static TimelineWindow wnd;
         [MenuItem("UxGame/工具/时间轴", false, 521)]
         public static void ShowExample()
@@ -22,18 +27,20 @@ namespace Ux.Editor.Timeline
             wnd = GetWindow<TimelineWindow>();
             wnd.titleContent = new GUIContent("时间轴");
         }
-
         static string Path = "Assets/Data/Res/Timeline";
 
-        public TimelineAsset asset => ofTimeline.value as TimelineAsset;
-        TLEntity entity;
+        double _lastTime;
+        float _playTime;
+        TLEntity _entity;
+        List<int> _frameSelects = new List<int>() { 30, 60 };
 
         public void CreateGUI()
         {
-            TimelineEditor.SaveAssets = SaveAssets;
-            TimelineEditor.RefreshEntity = RefreshEntity;
-            TimelineEditor.MarkerMove = MarkerMove;
-            TimelineEditor.ResetActionMap();
+            IsPlaying = false;
+            SaveAssets = _SaveAssets;
+            RefreshEntity = _RefreshEntity;
+            MarkerMove = _MarkerMove;
+            ResetActionMap();
 
             CreateChildren();
             root.style.flexGrow = 1f;
@@ -42,6 +49,23 @@ namespace Ux.Editor.Timeline
             ofEntity.objectType = typeof(GameObject);
             ofTimeline.objectType = typeof(TimelineAsset);
 
+            var framePopupField = new PopupField<int>(_frameSelects, 0);
+            framePopupField.label = "帧率";
+            framePopupField.RegisterValueChangedCallback(evt =>
+            {
+                if (Asset.SetFrameRate(evt.newValue))
+                {
+                    TimelineMgr.Ins.FrameRate = evt.newValue;
+                    SaveAssets();
+                    RefreshClip();
+                }
+            });
+            framePopupField.value = (int)TimelineMgr.Ins.FrameRate;
+            framePopupField.labelElement.style.minWidth = 30;
+            frameContent.Add(framePopupField);
+
+            playMode.Init(PlayMode.Once);
+            playMode.labelElement.style.minWidth = 30;
 
             createView.style.display = DisplayStyle.None;
 
@@ -90,23 +114,76 @@ namespace Ux.Editor.Timeline
                 Log.Debug("保存");
                 save = true;
                 SaveAssets();
-            }
+            }            
         }
 
+        void OnPlay()
+        {
+            if (IsPlaying)
+            {
+                var deltaTime = (float)(EditorApplication.timeSinceStartup - _lastTime);
+                _lastTime = EditorApplication.timeSinceStartup;
+                _playTime += deltaTime;
+                var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);
+                //Log.Debug("_playTime:" + _playTime);
+                Log.Debug("frame:" + frame);
+                clipView.SetNowFrame(frame);
+                Timeline?.Evaluate(deltaTime);
+                if (Timeline.Current.IsDone)
+                {
+                    switch (playMode.value)
+                    {
+                        case PlayMode.Once:
+                            _OnBtnPauseClick();
+                            break;
+                        case PlayMode.Loop:
+                            _playTime = 0;
+                            break;
+                    }
+                }
+            }
+        }
 
         private void OnDestroy()
         {
-            if (entity != null)
+            UnityEditor.EditorApplication.update -= OnPlay;
+            if (_entity != null)
             {
-                entity.Destroy();
-                entity = null;
+                _entity.Destroy();
+                _entity = null;
             }
         }
 
+        partial void _OnBtnPlayClick()
+        {
+            if (!IsValid())
+            {
+                return;
+            }
+            _lastTime = EditorApplication.timeSinceStartup;
+            UnityEditor.EditorApplication.update += OnPlay;
+            IsPlaying = true;
+            _playTime = 0;
+            Log.Debug("xxPlay:" + Time.time);
+        }
+        partial void _OnBtnPauseClick()
+        {
+            if (!IsValid())
+            {
+                return;
+            }
+            UnityEditor.EditorApplication.update -= OnPlay;
+            IsPlaying = false;
+            Log.Debug("xxPause:"+Time.time);
+        }
+        partial void _OnPlayModeChanged(ChangeEvent<System.Enum> e)
+        {
+
+        }
         partial void _OnOfEntityChanged(ChangeEvent<Object> e)
         {
-            entity?.Destroy();
-            entity = null;
+            _entity?.Destroy();
+            _entity = null;
             ofEntity.SetValueWithoutNotify(e.newValue);
             if (e.newValue is GameObject obj)
             {
@@ -116,10 +193,10 @@ namespace Ux.Editor.Timeline
                 }
                 var model = Instantiate(obj);
 
-                entity?.Destroy();
-                entity = Entity.Create<TLEntity>();
-                entity.Link(model);
-                entity.Add<TimelineComponent>();
+                _entity?.Destroy();
+                _entity = Entity.Create<TLEntity>();
+                _entity.Link(model);
+                Timeline = _entity.Add<TimelineComponent>();
 
                 if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long _))
                 {
@@ -128,7 +205,6 @@ namespace Ux.Editor.Timeline
                 RefreshEntity();
             }
         }
-
         partial void _OnOfTimelineChanged(ChangeEvent<Object> e)
         {
             ofTimeline.SetValueWithoutNotify(e.newValue);
@@ -139,12 +215,15 @@ namespace Ux.Editor.Timeline
                 {
                     SettingTools.SavePlayerPrefs("timeline_asset", guid);
                 }
-                TimelineEditor.Asset = asset;
+                Asset = asset;
+                if (Asset.SetFrameRate(TimelineMgr.Ins.FrameRate))
+                {
+                    SaveAssets();
+                }
                 RefreshEntity();
-                trackView.RefreshView();
+                RefreshView();
             }
         }
-
         partial void _OnBtnCreateClick()
         {
             if (createView.style.display == DisplayStyle.None)
@@ -156,7 +235,6 @@ namespace Ux.Editor.Timeline
                 createView.style.display = DisplayStyle.None;
             }
         }
-
         partial void _OnInputPathChanged(ChangeEvent<string> e)
         {
             var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", Path, "");
@@ -192,23 +270,21 @@ namespace Ux.Editor.Timeline
             ofTimeline.SetValueWithoutNotify(asset);
         }
 
-        void SaveAssets()
+        void _SaveAssets()
         {
-            if (asset != null)
-            {
-                EditorUtility.SetDirty(asset);
-                AssetDatabase.SaveAssets();
-            }
+            if (Asset == null) return;
+            EditorUtility.SetDirty(Asset);
+            AssetDatabase.SaveAssets();
         }
-        void RefreshEntity()
+        void _RefreshEntity()
         {
-            if (asset == null) return;
-            entity?.Get<TimelineComponent>()?.Play(asset);
+            if (Asset == null) return;
+            Timeline?.Play(Asset);
         }
-        void MarkerMove(int frame)
+        void _MarkerMove(int frame)
         {
             var time = TimelineMgr.Ins.FrameConvertTime(frame);
-            entity?.Get<TimelineComponent>()?.Evaluate(time);
+            Timeline?.Evaluate(time);
         }
     }
 

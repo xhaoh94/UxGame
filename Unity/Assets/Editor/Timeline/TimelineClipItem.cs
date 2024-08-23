@@ -49,11 +49,11 @@ namespace Ux.Editor.Timeline
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
             style.position = new StyleEnum<Position>(Position.Absolute);
             style.height = 30;
-            TimelineEditor.Bind(Asset, UpdateView);
+            TimelineWindow.Bind(Asset, UpdateView);
         }
         public void Release()
         {
-            TimelineEditor.UnBind(Asset, UpdateView);
+            TimelineWindow.UnBind(Asset, UpdateView);
         }
 
         void _OnDragUpd(DragUpdatedEvent e)
@@ -71,15 +71,15 @@ namespace Ux.Editor.Timeline
                     return;
                 }
                 (Asset as AnimationClipAsset).clip = clip;
-                TimelineEditor.SaveAssets();
-                TimelineEditor.RefreshEntity();
+                TimelineWindow.SaveAssets();
+                TimelineWindow.RefreshEntity();
             }
         }
         void OnPointerDown(PointerDownEvent e)
         {
             if (e.button == 0)
             {
-                TimelineEditor.InspectorContent.FreshInspector(Asset, ChcekValid);
+                TimelineWindow.InspectorContent.FreshInspector(Asset, ChcekValid);
             }
             else if (e.button == 1)
             {
@@ -124,9 +124,9 @@ namespace Ux.Editor.Timeline
         {
             if (frame >= Asset.StartFrame && frame <= Asset.EndFrame)
             {
-                var x = TimelineEditor.GetPositionByFrame(frame);
-                var sx = TimelineEditor.GetPositionByFrame(Asset.StartFrame);
-                var ex = TimelineEditor.GetPositionByFrame(Asset.EndFrame);
+                var x = TimelineWindow.GetPositionByFrame(frame);
+                var sx = TimelineWindow.GetPositionByFrame(Asset.StartFrame);
+                var ex = TimelineWindow.GetPositionByFrame(Asset.EndFrame);
                 if (x - sx < 20)
                 {
                     Status = Status.Left;
@@ -140,7 +140,7 @@ namespace Ux.Editor.Timeline
                     if (Asset.InFrame > 0)
                     {
                         var pos = this.WorldToLocal(Event.current.mousePosition);
-                        var ix = TimelineEditor.GetPositionByFrame(Asset.InFrame);
+                        var ix = TimelineWindow.GetPositionByFrame(Asset.InFrame);
                         var a = new Point(sx, 0);
                         var b = new Point(sx, 30);
                         var c = new Point(ix, 30);
@@ -156,7 +156,7 @@ namespace Ux.Editor.Timeline
                     if (Asset.OutFrame > 0)
                     {
                         var pos = this.WorldToLocal(Event.current.mousePosition);
-                        var ox = TimelineEditor.GetPositionByFrame(Asset.OutFrame);
+                        var ox = TimelineWindow.GetPositionByFrame(Asset.OutFrame);
                         var a = new Point(ox, 0);
                         var b = new Point(ex, 0);
                         var c = new Point(ex, 30);
@@ -215,7 +215,7 @@ namespace Ux.Editor.Timeline
                     Asset.EndFrame += offFrame;
                     break;
             }
-            TimelineEditor.Run(Asset);
+            TimelineWindow.Run(Asset);
             UpdateView();
         }
 
@@ -231,7 +231,7 @@ namespace Ux.Editor.Timeline
             {
                 Asset.StartFrame = startFrame;
                 Asset.EndFrame = endFrame;
-                TimelineEditor.Run(Asset);
+                TimelineWindow.Run(Asset);
             }
             UpdateView();
         }
@@ -239,12 +239,12 @@ namespace Ux.Editor.Timeline
         public void RefreshWidth()
         {
             var sx = Asset.InFrame > 0 ?
-               TimelineEditor.GetPositionByFrame(Asset.InFrame) :
-               TimelineEditor.GetPositionByFrame(Asset.StartFrame);
+               TimelineWindow.GetPositionByFrame(Asset.InFrame) :
+               TimelineWindow.GetPositionByFrame(Asset.StartFrame);
 
             var ex = Asset.OutFrame > 0 ?
-                TimelineEditor.GetPositionByFrame(Asset.OutFrame) :
-                TimelineEditor.GetPositionByFrame(Asset.EndFrame);
+                TimelineWindow.GetPositionByFrame(Asset.OutFrame) :
+                TimelineWindow.GetPositionByFrame(Asset.EndFrame);
 
             style.left = sx;
             style.width = ex - sx;

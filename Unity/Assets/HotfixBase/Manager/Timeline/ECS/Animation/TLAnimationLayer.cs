@@ -8,6 +8,7 @@ namespace Ux
     {
         public Timeline Timeline => ParentAs<Timeline>();
         public TimelineComponent Component => Timeline.Component;
+        public PlayableGraph PlayableGraph => Component.PlayableGraph;
         public TLAnimationRoot Root { get; private set; }
         public AnimationMixerPlayable Mixer { get; private set; }
 
@@ -17,18 +18,21 @@ namespace Ux
         private bool _isFading = false;
         void IAwakeSystem.OnAwake()
         {
-            Mixer = AnimationMixerPlayable.Create(Component.PlayableGraph);
-            Root = Component.GetOrAdd<TLAnimationRoot>();            
+            Mixer = AnimationMixerPlayable.Create(PlayableGraph);
+            Root = Component.GetOrAdd<TLAnimationRoot>();
             Root.Connect(this);
         }
         protected override void OnDestroy()
         {
-            Root.Disconnect(this);
-            Root = null;
-            if (Mixer.IsValid())
+            if (PlayableGraph.IsValid())
             {
-                Component.PlayableGraph.DestroySubgraph(Mixer);
+                Root.Disconnect(this);
+                if (Mixer.IsValid())
+                {                    
+                    PlayableGraph.DestroySubgraph(Mixer);
+                }
             }
+            Root = null;
         }
 
         /// <summary>
@@ -79,7 +83,7 @@ namespace Ux
             Weight = 0;
 
             // 连接
-            Component.PlayableGraph.Connect(Mixer, 0, Root.MixerRoot, parentInputPort);
+            PlayableGraph.Connect(Mixer, 0, Root.MixerRoot, parentInputPort);
         }
 
         /// <summary>
@@ -91,7 +95,10 @@ namespace Ux
             _fadeSpeed = 0;
             _fadeWeight = 0;
             // 断开
-            Component.PlayableGraph.Disconnect(Root.MixerRoot, InputPort);
+            if (PlayableGraph.IsValid() && Root.MixerRoot.IsValid())
+            {
+                PlayableGraph.Disconnect(Root.MixerRoot, InputPort);
+            }
             InputPort = 0;
         }
 

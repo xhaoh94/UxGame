@@ -53,13 +53,14 @@ namespace Ux.Editor.Timeline
 
                 btnAddTrack.menu.AppendAction(temName, TrackMenuAction, TrackMenuFun, ta);
             }
-            
+
+            TimelineWindow.RefreshView = _RefreshView;
         }
 
 
         void AddTrackItem(TimelineTrackAsset trackAsset)
         {
-            if (TimelineEditor.Asset == null)
+            if (TimelineWindow.Asset == null)
             {
                 return;
             }
@@ -67,13 +68,13 @@ namespace Ux.Editor.Timeline
             {                
                 return;
             }
-            TimelineEditor.Asset.tracks.Add(trackAsset);
-            TimelineEditor.SaveAssets();
+            TimelineWindow.Asset.tracks.Add(trackAsset);
+            TimelineWindow.SaveAssets();
 
             var item = new TimelineTrackItem(trackAsset);
             trackContent.Add(item);
             trackItemDic.Add(trackAsset, item);
-            TimelineEditor.RefreshEntity();
+            TimelineWindow.RefreshEntity();
         }
         void RemoveTrackItem(TimelineTrackAsset trackAsset)
         {
@@ -82,16 +83,17 @@ namespace Ux.Editor.Timeline
                 item.Release();
                 trackContent.Remove(item);
                 trackItemDic.Remove(trackAsset);
-                TimelineEditor.RefreshEntity();
+                TimelineWindow.RefreshEntity();
             }
         }
-        public void RefreshView()
+        void _RefreshView()
         {
+            TimelineWindow.ClipContent.Clear();
             trackContent.Clear();
             trackItemDic.Clear();
-            if (TimelineEditor.Asset!=null)
+            if (TimelineWindow.Asset!=null)
             {                
-                foreach (var track in TimelineEditor.Asset.tracks)
+                foreach (var track in TimelineWindow.Asset.tracks)
                 {
                     var item = new TimelineTrackItem(track);
                     trackContent.Add(item);

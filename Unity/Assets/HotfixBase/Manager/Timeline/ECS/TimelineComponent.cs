@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -21,22 +17,9 @@ namespace Ux
             set => _playSpeed = value;
         }
 
-        bool _isPlaying;
-        public bool IsPlaying
-        {
-            get => _isPlaying;
-            set
-            {
-                if (_isPlaying == value)
-                    return;
-
-                _isPlaying = value;
-            }
-        }
         void IAwakeSystem.OnAwake()
         {
-            PlaySpeed = 1;
-            IsPlaying = false;
+            PlaySpeed = 1;            
             PlayableGraph = PlayableGraph.Create(Parent.Viewer.name);
         }
         protected override void OnDestroy()
@@ -47,9 +30,9 @@ namespace Ux
 
         void IFixedUpdateSystem.OnFixedUpdate()
         {
-            if (_isPlaying)
+            if (Current != null)
             {
-                Evaluate(Time.deltaTime * PlaySpeed);
+                Evaluate(Time.fixedDeltaTime * PlaySpeed);
             }
         }
 
@@ -57,10 +40,10 @@ namespace Ux
         {
             if (Last != null)
             {
-                Last.Destroy();
+                Remove(Last);
                 Last = null;
             }
-            if (Current!=null)
+            if (Current != null)
             {
                 if (Application.isPlaying)
                 {
@@ -70,7 +53,7 @@ namespace Ux
                 {
                     Remove(Current);
                 }
-            }            
+            }
             Current = Add<Timeline, TimelineAsset>(timeline);
         }
 

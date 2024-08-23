@@ -79,7 +79,7 @@ namespace Ux.Editor.Timeline.Animation
             {
                 _asset.StartFrame = startFrame;
                 _asset.EndFrame = endFrame;
-                TimelineEditor.Run(_asset);
+                TimelineWindow.Run(_asset);
             }
         }
 
@@ -98,7 +98,7 @@ namespace Ux.Editor.Timeline.Animation
                 var off = _asset.StartFrame - oldFrame;
                 _asset.EndFrame += off;
             }
-            TimelineEditor.Run(_asset);
+            TimelineWindow.Run(_asset);
         }
         partial void _OnTxtEndFrameChanged(ChangeEvent<int> e)
         {
@@ -119,13 +119,13 @@ namespace Ux.Editor.Timeline.Animation
                 frame = _asset.StartFrame + 1;
                 _asset.EndFrame = frame;
             }
-            TimelineEditor.Run(_asset);
+            TimelineWindow.Run(_asset);
         }
 
         partial void _OnTxtNameChanged(ChangeEvent<string> e)
         {
             _asset.clipName = e.newValue;
-            TimelineEditor.Run(_asset);
+            TimelineWindow.Run(_asset);
         }
 
         partial void _OnOfClipChanged(ChangeEvent<Object> e)
@@ -134,7 +134,7 @@ namespace Ux.Editor.Timeline.Animation
             {
                 _asset.clip = clip;
                 _asset.clipName = clip.name;
-                TimelineEditor.Run(_asset);
+                TimelineWindow.Run(_asset);
             }
         }
 
@@ -143,7 +143,7 @@ namespace Ux.Editor.Timeline.Animation
             var tFrame = _asset.clip.length * TimelineMgr.Ins.FrameRate;
             var oldEndFrame = _asset.EndFrame;
             _asset.EndFrame = _asset.StartFrame + Mathf.RoundToInt(tFrame);
-            TimelineEditor.Run(_asset);
+            TimelineWindow.Run(_asset);
             if (!ChcekValid())
             {
                 _asset.EndFrame = oldEndFrame;

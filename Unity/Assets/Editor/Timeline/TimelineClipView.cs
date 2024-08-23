@@ -50,10 +50,10 @@ namespace Ux.Editor.Timeline
 
             veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
 
-            TimelineEditor.InspectorContent = new TimelineInspectorView(veInspector);
-            TimelineEditor.ClipContent = veClipContent;
-            TimelineEditor.GetPositionByFrame = GetPositionByFrame;
-            TimelineEditor.GetFrameByMousePosition = GetFrameByMousePosition;
+            TimelineWindow.InspectorContent = new TimelineInspectorView(veInspector);
+            TimelineWindow.ClipContent = veClipContent;
+            TimelineWindow.GetPositionByFrame = GetPositionByFrame;
+            TimelineWindow.GetFrameByMousePosition = GetFrameByMousePosition;
         }
 
 
@@ -67,6 +67,10 @@ namespace Ux.Editor.Timeline
 
         void OnWheel(WheelEvent wheelEvent)
         {
+            if (!TimelineWindow.IsValid())
+            {
+                return;
+            }
             //下：正  上：负        
             FrameScale -= wheelEvent.delta.y / 100;
             if (FrameScale > 5)
@@ -96,7 +100,7 @@ namespace Ux.Editor.Timeline
             veMarkerContent.MarkDirtyRepaint();
             veMarkerIcon.MarkDirtyRepaint();
             UpdateMarkerPos();
-            TimelineEditor.OnWheelChanged?.Invoke();
+            TimelineWindow.RefreshClip?.Invoke();
         }
         float GetPositionByFrame(int frame)
         {
@@ -132,28 +136,31 @@ namespace Ux.Editor.Timeline
         }
         void OnMarkerDrag(Vector2 e)
         {
+            if (!TimelineWindow.IsValid())
+            {
+                return;
+            }
+
             var frame = GetFrameByMousePosition();
             if (frame != nowFrame)
             {
-                lbMarker.text = nowFrame.ToString();
-                UpdateMarkerPos();
-                TimelineEditor.MarkerMove?.Invoke(frame - nowFrame);
-                nowFrame = frame;
+                TimelineWindow.MarkerMove?.Invoke(frame - nowFrame);
+                SetNowFrame(frame);
             }
+        }
+        public void SetNowFrame(int frame)
+        {
+            if (frame == nowFrame) return;
+            lbMarker.text = nowFrame.ToString();
+            nowFrame = frame;
+            UpdateMarkerPos();
         }
 
         void UpdateMarkerPos()
         {
-            try
-            {
-                var pos = veMarkerIcon.transform.position;
-                pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
-                veMarkerIcon.transform.position = pos;
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-            }
+            var pos = veMarkerIcon.transform.position;
+            pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
+            veMarkerIcon.transform.position = pos;
         }
         void OnDrawLine(MeshGenerationContext mgc)
         {

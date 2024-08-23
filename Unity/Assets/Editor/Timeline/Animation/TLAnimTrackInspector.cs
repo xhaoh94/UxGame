@@ -16,7 +16,7 @@ namespace Ux.Editor.Timeline.Animation
         partial void _OnTxtNameChanged(ChangeEvent<string> e)
         {
             _asset.trackName = e.newValue;
-            TimelineEditor.Run(_asset);
+            TimelineWindow.Run(_asset);
         }
 
         protected override void OnFreshView()

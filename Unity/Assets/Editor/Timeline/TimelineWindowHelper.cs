@@ -7,17 +7,24 @@ using Ux.Editor.Timeline.Animation;
 
 namespace Ux.Editor.Timeline
 {
-    public static class TimelineEditor
+    public partial class TimelineWindow
     {
         public static TimelineInspectorView InspectorContent { get; set; }
         public static VisualElement ClipContent { get; set; }
-        public static System.Action OnWheelChanged { get; set; }
         public static System.Func<int, float> GetPositionByFrame { get; set; }
         public static System.Func<int> GetFrameByMousePosition { get; set; }
         public static System.Action<int> MarkerMove { get; set; }
+        public static TimelineComponent Timeline { get; set; }
         public static TimelineAsset Asset { get; set; }
         public static System.Action SaveAssets { get; set; }
         public static System.Action RefreshEntity { get; set; }
+        public static System.Action RefreshView { get; set; }
+        public static System.Action RefreshClip { get; set; }
+        public static bool IsPlaying { get; set; }
+        public static bool IsValid()
+        {
+            return Asset != null && Timeline != null;
+        }
 
         public static float GetDuration(TimelineAsset asset)
         {

@@ -1,6 +1,4 @@
-﻿using UnityEngine.Playables;
-
-namespace Ux
+﻿namespace Ux
 {
     public abstract class TimelineClip : Entity, IAwakeSystem<TimelineClipAsset>
     {
@@ -13,6 +11,7 @@ namespace Ux
         {            
             _asset = asset;
             OnStart(asset);
+            Time = 0;
         }
         protected override void OnDestroy()
         {

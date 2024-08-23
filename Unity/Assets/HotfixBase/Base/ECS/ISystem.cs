@@ -288,37 +288,23 @@ namespace Ux
 #if UNITY_EDITOR
             if (!UnityEngine.Application.isPlaying)
             {
-                if (this is IUpdateSystem updateSystem)
-                {
-                    UnityEditor.EditorApplication.update += updateSystem.OnUpdate;
-                }
-                if (this is ILateUpdateSystem lateUpdateSystem)
-                {
-                    UnityEditor.EditorApplication.update += lateUpdateSystem.OnLateUpdate;
-                }
-                if (this is IFixedUpdateSystem fixedUpdateSystem)
-                {
-                    UnityEditor.EditorApplication.update += fixedUpdateSystem.OnFixedUpdate;
-                }
                 return;
             }
 #endif
+            if (this is IUpdateSystem updateSystem)
             {
-                if (this is IUpdateSystem updateSystem)
-                {
-                    GameMain.Ins.AddUpdate(updateSystem.OnUpdate);
+                GameMain.Ins.AddUpdate(updateSystem.OnUpdate);
 
-                }
+            }
 
-                if (this is ILateUpdateSystem lateUpdateSystem)
-                {
-                    GameMain.Ins.AddLateUpdate(lateUpdateSystem.OnLateUpdate);
-                }
+            if (this is ILateUpdateSystem lateUpdateSystem)
+            {
+                GameMain.Ins.AddLateUpdate(lateUpdateSystem.OnLateUpdate);
+            }
 
-                if (this is IFixedUpdateSystem fixedUpdateSystem)
-                {
-                    GameMain.Ins.AddFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
-                }
+            if (this is IFixedUpdateSystem fixedUpdateSystem)
+            {
+                GameMain.Ins.AddFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
@@ -358,36 +344,22 @@ namespace Ux
 #if UNITY_EDITOR
             if (!UnityEngine.Application.isPlaying)
             {
-                if (this is IUpdateSystem updateSystem)
-                {
-                    UnityEditor.EditorApplication.update -= updateSystem.OnUpdate;
-                }
-                if (this is ILateUpdateSystem lateUpdateSystem)
-                {
-                    UnityEditor.EditorApplication.update -= lateUpdateSystem.OnLateUpdate;
-                }
-                if (this is IFixedUpdateSystem fixedUpdateSystem)
-                {
-                    UnityEditor.EditorApplication.update -= fixedUpdateSystem.OnFixedUpdate;
-                }
                 return;
             }
 #endif
+            if (this is IUpdateSystem updateSystem)
             {
-                if (this is IUpdateSystem updateSystem)
-                {
-                    GameMain.Ins.RemoveUpdate(updateSystem.OnUpdate);
-                }
+                GameMain.Ins.RemoveUpdate(updateSystem.OnUpdate);
+            }
 
-                if (this is ILateUpdateSystem lateUpdateSystem)
-                {
-                    GameMain.Ins.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
-                }
+            if (this is ILateUpdateSystem lateUpdateSystem)
+            {
+                GameMain.Ins.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
+            }
 
-                if (this is IFixedUpdateSystem fixedUpdateSystem)
-                {
-                    GameMain.Ins.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
-                }
+            if (this is IFixedUpdateSystem fixedUpdateSystem)
+            {
+                GameMain.Ins.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
             }
 
             if (this is IApplicationQuitSystem applicationQuit)

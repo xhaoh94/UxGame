@@ -23,6 +23,8 @@ namespace Ux.Editor.Timeline
 		public Button btnOk;
 		public Button btnPlay;
 		public Button btnPause;
+		public EnumField playMode;
+		public VisualElement frameContent;
 		protected void CreateChildren()
 		{
 			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Timeline/Uxml/TimelineWindow.uxml");
@@ -51,6 +53,9 @@ namespace Ux.Editor.Timeline
 			btnPlay.clicked += () => _OnBtnPlayClick();
 			btnPause =root.Q<Button>("btnPause");
 			btnPause.clicked += () => _OnBtnPauseClick();
+			playMode =root.Q<EnumField>("playMode");
+			playMode.RegisterValueChangedCallback(e => _OnPlayModeChanged(e));
+			frameContent =root.Q<VisualElement>("frameContent");
 		}
 		partial void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e);
 		partial void _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object> e);
@@ -61,5 +66,6 @@ namespace Ux.Editor.Timeline
 		partial void _OnBtnOkClick();
 		partial void _OnBtnPlayClick();
 		partial void _OnBtnPauseClick();
+		partial void _OnPlayModeChanged(ChangeEvent<Enum> e);
 	}
 }

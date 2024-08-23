@@ -66,10 +66,10 @@ namespace Ux.Editor.Timeline
             draw.style.right = 0;
             draw.generateVisualContent += OnDrawContent;
             clipContent.Add(draw);
-            TimelineEditor.ClipContent.Add(clipContent);
-            TimelineEditor.OnWheelChanged += OnWheelChanged;
-            TimelineEditor.Bind(Asset, UpdateAsset);
-            ElementDrag.Add(clipContent, TimelineEditor.ClipContent, OnStart, OnDrag, OnEnd);
+            TimelineWindow.ClipContent.Add(clipContent);
+            TimelineWindow.RefreshClip += OnWheelChanged;
+            TimelineWindow.Bind(Asset, UpdateAsset);
+            ElementDrag.Add(clipContent, TimelineWindow.ClipContent, OnStart, OnDrag, OnEnd);
             clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
             clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
 
@@ -77,9 +77,9 @@ namespace Ux.Editor.Timeline
         }
         public void Release()
         {
-            TimelineEditor.ClipContent.Remove(this);
-            TimelineEditor.OnWheelChanged -= OnWheelChanged;
-            TimelineEditor.UnBind(Asset, UpdateAsset);
+            TimelineWindow.ClipContent.Remove(clipContent);
+            TimelineWindow.RefreshClip -= OnWheelChanged;
+            TimelineWindow.UnBind(Asset, UpdateAsset);
         }
 
 
@@ -104,7 +104,7 @@ namespace Ux.Editor.Timeline
         {
             if (e.button == 0)
             {
-                TimelineEditor.InspectorContent.FreshInspector(Asset, null);
+                TimelineWindow.InspectorContent.FreshInspector(Asset, null);
             }
             else if (e.button == 1)
             {
@@ -117,8 +117,8 @@ namespace Ux.Editor.Timeline
         }
         void CreateClipAsset(UnityEngine.Object obj)
         {
-            var clipAsset = TimelineEditor.CreateClipAsset(ClipType,
-                   Mathf.CeilToInt(TimelineEditor.GetDuration(Asset) / TimelineMgr.Ins.FrameRate), obj);
+            var clipAsset = TimelineWindow.CreateClipAsset(ClipType,
+                   Mathf.CeilToInt(TimelineWindow.GetDuration(Asset) / TimelineMgr.Ins.FrameRate), obj);
             AddClipItem(clipAsset);
         }
         void UpdateAsset()
@@ -128,7 +128,7 @@ namespace Ux.Editor.Timeline
         partial void _OnInputNameChanged(ChangeEvent<string> e)
         {
             Asset.trackName = e.newValue;
-            TimelineEditor.Run(Asset);
+            TimelineWindow.Run(Asset);
         }
         void RefreshView()
         {
@@ -152,12 +152,12 @@ namespace Ux.Editor.Timeline
                 return;
             }
             Asset.clips.Add(clipAsset);
-            TimelineEditor.SaveAssets();
+            TimelineWindow.SaveAssets();
             var item = new TimelineClipItem(clipAsset, this);            
             Items.Add(item);
             clipParent.Add(item);
             item.UpdateView();
-            TimelineEditor.RefreshEntity();
+            TimelineWindow.RefreshEntity();
         }
 
 
@@ -167,7 +167,7 @@ namespace Ux.Editor.Timeline
             var _temItems = new List<TimelineClipItem>();
             selectItem = null;
             if (Items.Count == 0) return;
-            lastFrame = TimelineEditor.GetFrameByMousePosition();
+            lastFrame = TimelineWindow.GetFrameByMousePosition();
             foreach (var item in Items)
             {
                 item.ToDown(lastFrame);
@@ -186,7 +186,7 @@ namespace Ux.Editor.Timeline
         }
         void OnDrag(Vector2 e)
         {
-            var now = TimelineEditor.GetFrameByMousePosition();
+            var now = TimelineWindow.GetFrameByMousePosition();
             selectItem?.ToDrag(now, lastFrame);
             lastFrame = now;
         }
@@ -209,12 +209,12 @@ namespace Ux.Editor.Timeline
             foreach (var item in Items)
             {
                 var asset = item.Asset;
-                var sx = TimelineEditor.GetPositionByFrame(asset.StartFrame);
-                var ex = TimelineEditor.GetPositionByFrame(asset.EndFrame);
+                var sx = TimelineWindow.GetPositionByFrame(asset.StartFrame);
+                var ex = TimelineWindow.GetPositionByFrame(asset.EndFrame);
 
                 if (asset.InFrame > 0)
                 {
-                    var ix = TimelineEditor.GetPositionByFrame(asset.InFrame);
+                    var ix = TimelineWindow.GetPositionByFrame(asset.InFrame);
                     paint2D.MoveTo(new Vector2(sx, minY));
                     paint2D.LineTo(new Vector2(ix, maxY));
                     //paint2D.LineTo(new Vector2(ix, maxY));
@@ -255,8 +255,8 @@ namespace Ux.Editor.Timeline
             foreach (var item in Items)
             {
                 var asset = item.Asset;
-                var sx = TimelineEditor.GetPositionByFrame(asset.StartFrame);
-                var ex = TimelineEditor.GetPositionByFrame(asset.EndFrame);
+                var sx = TimelineWindow.GetPositionByFrame(asset.StartFrame);
+                var ex = TimelineWindow.GetPositionByFrame(asset.EndFrame);
 
                 if (asset.InFrame > 0)
                 {
@@ -284,7 +284,7 @@ namespace Ux.Editor.Timeline
 
                     mixVe.Add(ve);
                     ve.style.display = DisplayStyle.Flex;
-                    var ix = TimelineEditor.GetPositionByFrame(asset.InFrame);
+                    var ix = TimelineWindow.GetPositionByFrame(asset.InFrame);
                     ve.style.width = ix - sx;
                     ve.style.height = 30;
                     ve.style.left = sx;

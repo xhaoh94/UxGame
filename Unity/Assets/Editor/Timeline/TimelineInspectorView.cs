@@ -14,7 +14,7 @@ namespace Assets.Editor.Timeline
         public TimelineInspectorBase(object asset)
         {
             _asset = asset;
-            TimelineEditor.Bind(asset, OnFreshView);
+            TimelineWindow.Bind(asset, OnFreshView);
         }
         public bool IsSame(object obj)
         {
@@ -35,7 +35,7 @@ namespace Assets.Editor.Timeline
 
         public void Release()
         {
-            TimelineEditor.UnBind(_asset, OnFreshView);
+            TimelineWindow.UnBind(_asset, OnFreshView);
         }
 
         protected virtual void OnFreshView() { }

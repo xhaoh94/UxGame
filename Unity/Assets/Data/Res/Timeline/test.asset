@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1420382afa24de4e8b1a9fce371ab3e, type: 3}
   m_Name: test
   m_EditorClassIdentifier: 
-  FrameRate: 0
+  FrameRate: 60
   tracks:
   - rid: 7328207989263302656
   references:
@@ -24,23 +24,13 @@ MonoBehaviour:
         trackName: Animation
         clips:
         - rid: 7328207989263302658
-        - rid: 7328207989263302657
         Layer: 0
-    - rid: 7328207989263302657
-      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
-      data:
-        clipName: Run
-        StartFrame: 54
-        EndFrame: 102
-        InFrame: 70
-        OutFrame: 0
-        clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
     - rid: 7328207989263302658
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Stand
         StartFrame: 0
-        EndFrame: 70
+        EndFrame: 60
         InFrame: 0
-        OutFrame: 54
+        OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}

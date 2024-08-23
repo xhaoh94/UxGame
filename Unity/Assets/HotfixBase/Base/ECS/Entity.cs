@@ -529,17 +529,9 @@ namespace Ux
                 Log.Error("Entity为空");
                 return false;
             }
-            //if (IsComponent)
-            //{
-            //    return Parent.RemoveChild(entity, isDestroy);
-            //}
-            //else
-            //{
-            //entity._parentByComponent?._RemoveChild(entity);
             var b = _Remove(entity);
             entity._Destroy(isDestroy);
-            return b;
-            //}
+            return b;            
         }
         bool _Remove(Entity entity)
         {

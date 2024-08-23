@@ -24,10 +24,13 @@ namespace Ux
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            _DisConnect();
-            if (Mixer.IsValid())
+            if (PlayableGraph.IsValid())
             {
-                PlayableGraph.DestroySubgraph(Mixer);
+                _DisConnect();
+                if (Mixer.IsValid())
+                {
+                    PlayableGraph.DestroySubgraph(Mixer);
+                }
             }
             Asset = null;
             _layerMixer = null;
@@ -55,9 +58,9 @@ namespace Ux
 
         void _DisConnect()
         {
-            if (Component.PlayableGraph.IsValid())
+            if (_layerMixer.Mixer.IsValid())
             {
-                Component.PlayableGraph.Disconnect(_layerMixer.Mixer, Asset.Layer);
+                PlayableGraph.Disconnect(_layerMixer.Mixer, Asset.Layer);
             }
         }
     }
