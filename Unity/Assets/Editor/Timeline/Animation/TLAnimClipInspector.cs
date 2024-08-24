@@ -16,10 +16,8 @@ namespace Ux.Editor.Timeline.Animation
             txtStartFrame.RegisterCallback<FocusInEvent>(_TxtFBlur);
             txtStartFrame.RegisterCallback<FocusOutEvent>(_TxtSBlur);
             txtStartFrame.RegisterCallback<MouseUpEvent>(_TxtUpEvent);
-
-            txtStartTime.labelElement.style.minWidth = 15;
-            txtStartFrame.labelElement.style.minWidth = 15;
-            txtEndTime.labelElement.style.minWidth = 15;
+            
+            txtStartFrame.labelElement.style.minWidth = 15;            
             txtEndFrame.labelElement.style.minWidth = 15;
 
             ofClip.objectType = typeof(AnimationClip);
@@ -31,20 +29,20 @@ namespace Ux.Editor.Timeline.Animation
             txtName.SetValueWithoutNotify(_asset.clipName);
             ofClip.SetValueWithoutNotify(_asset.clip);
 
-            txtStartTime.SetValueWithoutNotify(_asset.StartTime);
+            lbStartTime.text= $" 秒 {_asset.StartTime}";
             txtStartFrame.SetValueWithoutNotify(_asset.StartFrame);
 
-            txtEndTime.SetValueWithoutNotify(_asset.EndTime);
+            lbEndTime.text = $" 秒 {_asset.EndTime}";
             txtEndFrame.SetValueWithoutNotify(_asset.EndFrame);
 
-            lbInTime.text = $"{_asset.InTime}秒";
-            lbInFrame.text = $"{_asset.InFrame}帧";
+            lbInTime.text = $"秒  {_asset.InTime}";
+            lbInFrame.text = $"帧  {_asset.InFrame}";
 
-            lbOutTime.text = $"{_asset.OutTime}秒";
-            lbOutFrame.text = $"{_asset.OutFrame}帧";
+            lbOutTime.text = $"秒  {_asset.OutTime}";
+            lbOutFrame.text = $"帧  {_asset.OutFrame}";
 
-            lbDurationTime.text = $"{_asset.EndTime - _asset.StartTime}秒";
-            lbDurationFrame.text = $"{_asset.EndFrame - _asset.StartFrame}帧";
+            lbDurationTime.text = $"秒  {_asset.EndTime - _asset.StartTime}";
+            lbDurationFrame.text = $"帧  {_asset.EndFrame - _asset.StartFrame}";
 
             btnDuration.style.display = DisplayStyle.None;
             if (_asset.clip != null)

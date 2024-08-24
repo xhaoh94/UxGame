@@ -4,6 +4,7 @@ namespace Ux
 {
     public class Timeline : Entity, IAwakeSystem<TimelineAsset>
     {
+        public float Time { get; private set; }
         public TimelineAsset Asset { get; private set; }
         public TimelineComponent Component => ParentAs<TimelineComponent>();
         List<TimelineTrack> _tacks = new();
@@ -27,6 +28,7 @@ namespace Ux
         
         public void Evaluate(float deltaTime)
         {
+            Time += deltaTime;
             IsDone = true;
             foreach (var tack in _tacks)
             {

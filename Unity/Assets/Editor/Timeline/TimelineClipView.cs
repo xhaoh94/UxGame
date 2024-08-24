@@ -28,7 +28,7 @@ namespace Ux.Editor.Timeline
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
 
         //当前所在帧
-        int nowFrame = 0;
+        public int CurFrame { get; private set; } = 0;
 
 
         public TimelineClipView()
@@ -39,23 +39,27 @@ namespace Ux.Editor.Timeline
             RegisterCallback<WheelEvent>(OnWheel);
             RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
            
-
             ElementDrag.Add(scrClipView, this, OnScrDrag, 2);
 
          
             veLineContent.generateVisualContent += OnDrawLine;
-
             veMarkerContent.generateVisualContent += OnDrawMarker;
-            ElementDrag.Add(veMarkerContent, this, OnMarkerStar, OnMarkerDrag);
-
+           
             veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
+            RegisterCallback<GeometryChangedEvent>(OnMarkerGeometryChanged);
 
             TimelineWindow.InspectorContent = new TimelineInspectorView(veInspector);
             TimelineWindow.ClipContent = veClipContent;
             TimelineWindow.GetPositionByFrame = GetPositionByFrame;
             TimelineWindow.GetFrameByMousePosition = GetFrameByMousePosition;
+           
         }
 
+        public void Init()
+        {
+            ElementDrag.Add(veMarkerContent, this.parent, OnMarkerStar, OnMarkerDrag);
+            UpdateMarkerText();
+        }
 
 
         void OnGeometryChanged(GeometryChangedEvent changedEvent)
@@ -142,24 +146,34 @@ namespace Ux.Editor.Timeline
             }
 
             var frame = GetFrameByMousePosition();
-            if (frame != nowFrame)
-            {
-                TimelineWindow.MarkerMove?.Invoke(frame - nowFrame);
-                SetNowFrame(frame);
+            if (frame != CurFrame)
+            {                
+                SetNowFrame(frame, TimelineMgr.Ins.FrameConvertTime(frame - CurFrame));
             }
         }
-        public void SetNowFrame(int frame)
+
+        public void SetNowFrame(int frame,float deltaTime)
         {
-            if (frame == nowFrame) return;
-            lbMarker.text = nowFrame.ToString();
-            nowFrame = frame;
+            TimelineWindow.MarkerMove?.Invoke(deltaTime);
+            if (frame == CurFrame) return;            
+            CurFrame = frame;
+            UpdateMarkerText();
+        }
+       
+        void OnMarkerGeometryChanged(GeometryChangedEvent e)
+        {
+            UpdateMarkerPos();
+        }
+        void UpdateMarkerText()
+        {
+            lbMarker.text = CurFrame.ToString();
             UpdateMarkerPos();
         }
 
         void UpdateMarkerPos()
         {
             var pos = veMarkerIcon.transform.position;
-            pos.x = GetPositionByFrame(nowFrame) - (veMarkerIcon.worldBound.width / 2);
+            pos.x = GetPositionByFrame(CurFrame) - (veMarkerIcon.worldBound.width / 2);            
             veMarkerIcon.transform.position = pos;
         }
         void OnDrawLine(MeshGenerationContext mgc)

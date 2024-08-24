@@ -76,13 +76,14 @@ namespace Ux.Editor.Timeline
             }
         }
         void OnPointerDown(PointerDownEvent e)
-        {
+        {            
             if (e.button == 0)
             {
                 TimelineWindow.InspectorContent.FreshInspector(Asset, ChcekValid);
             }
             else if (e.button == 1)
             {
+                if (!TimelineWindow.IsValid()) return;
                 menu.AppendAction("ÐÞÕý³¤¶È", e =>
                 {
                     var clip = (Asset as AnimationClipAsset).clip;

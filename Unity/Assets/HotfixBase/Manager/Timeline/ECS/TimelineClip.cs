@@ -2,7 +2,7 @@
 {
     public abstract class TimelineClip : Entity, IAwakeSystem<TimelineClipAsset>
     {
-        public float Time { get; private set; }
+        public float Time => ParentAs<TimelineTrack>().Time;
         public bool Active { get; private set; }
         public bool IsDone => _asset.EndTime <= Time;
 
@@ -10,20 +10,17 @@
         void IAwakeSystem<TimelineClipAsset>.OnAwake(TimelineClipAsset asset)
         {            
             _asset = asset;
-            OnStart(asset);
-            Time = 0;
+            OnStart(asset);            
         }
         protected override void OnDestroy()
         {
             _asset = null;
-            Active=false;
-            Time = 0;
+            Active=false;            
         }
 
 
         public void Evaluate(float deltaTime)
-        {            
-            Time += deltaTime;
+        {                        
             if (!Active && Time >= _asset.StartTime  && Time <= _asset.EndTime)
             {
                 Active = true;

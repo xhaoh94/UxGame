@@ -20,7 +20,7 @@ namespace Ux.Editor.Timeline
             Loop,
             Once,
         }
-        static TimelineWindow wnd;
+        public static TimelineWindow wnd;
         [MenuItem("UxGame/工具/时间轴", false, 521)]
         public static void ShowExample()
         {
@@ -45,6 +45,7 @@ namespace Ux.Editor.Timeline
             CreateChildren();
             root.style.flexGrow = 1f;
             rootVisualElement.Add(root);
+            clipView.Init();
 
             ofEntity.objectType = typeof(GameObject);
             ofTimeline.objectType = typeof(TimelineAsset);
@@ -114,7 +115,7 @@ namespace Ux.Editor.Timeline
                 Log.Debug("保存");
                 save = true;
                 SaveAssets();
-            }            
+            }
         }
 
         void OnPlay()
@@ -124,11 +125,8 @@ namespace Ux.Editor.Timeline
                 var deltaTime = (float)(EditorApplication.timeSinceStartup - _lastTime);
                 _lastTime = EditorApplication.timeSinceStartup;
                 _playTime += deltaTime;
-                var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);
-                //Log.Debug("_playTime:" + _playTime);
-                Log.Debug("frame:" + frame);
-                clipView.SetNowFrame(frame);
-                Timeline?.Evaluate(deltaTime);
+                var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);                
+                clipView.SetNowFrame(frame, deltaTime);                
                 if (Timeline.Current.IsDone)
                 {
                     switch (playMode.value)
@@ -137,44 +135,58 @@ namespace Ux.Editor.Timeline
                             _OnBtnPauseClick();
                             break;
                         case PlayMode.Loop:
-                            _playTime = 0;
+                            _ResetPlay();
                             break;
                     }
                 }
             }
         }
+        void _ResetPlay()
+        {
+            _playTime = 0;
+            _lastTime = EditorApplication.timeSinceStartup;            
+            _MarkerMove(-Timeline.Current.Time);
+        }
 
         private void OnDestroy()
         {
-            UnityEditor.EditorApplication.update -= OnPlay;
+            if (IsPlaying)
+            {
+                IsPlaying = false;
+                UnityEditor.EditorApplication.update -= OnPlay;
+            }
             if (_entity != null)
             {
                 _entity.Destroy();
                 _entity = null;
             }
         }
+        partial void _OnBtnLastFrameClick()
+        {
+            if (!IsValid()) return;        
+            if(clipView.CurFrame > 0)
+            {
+                clipView.SetNowFrame(clipView.CurFrame-1, -TimelineMgr.Ins.FrameConvertTime(1));
+            }
+        }
+        partial void _OnBtnNextFrameClick()
+        {
+            if (!IsValid()) return;
+            clipView.SetNowFrame(clipView.CurFrame + 1, TimelineMgr.Ins.FrameConvertTime(1));
+        }
 
         partial void _OnBtnPlayClick()
         {
-            if (!IsValid())
-            {
-                return;
-            }
-            _lastTime = EditorApplication.timeSinceStartup;
+            if (!IsValid()) return;            
+            _ResetPlay();
             UnityEditor.EditorApplication.update += OnPlay;
-            IsPlaying = true;
-            _playTime = 0;
-            Log.Debug("xxPlay:" + Time.time);
+            IsPlaying = true;            
         }
         partial void _OnBtnPauseClick()
-        {
-            if (!IsValid())
-            {
-                return;
-            }
+        {            
+            if (!IsPlaying) return;
             UnityEditor.EditorApplication.update -= OnPlay;
-            IsPlaying = false;
-            Log.Debug("xxPause:"+Time.time);
+            IsPlaying = false;            
         }
         partial void _OnPlayModeChanged(ChangeEvent<System.Enum> e)
         {
@@ -281,10 +293,10 @@ namespace Ux.Editor.Timeline
             if (Asset == null) return;
             Timeline?.Play(Asset);
         }
-        void _MarkerMove(int frame)
+        void _MarkerMove(float deltaTime)
         {
-            var time = TimelineMgr.Ins.FrameConvertTime(frame);
-            Timeline?.Evaluate(time);
+            if (Timeline == null) return;                   
+            Timeline.Evaluate(deltaTime);
         }
     }
 

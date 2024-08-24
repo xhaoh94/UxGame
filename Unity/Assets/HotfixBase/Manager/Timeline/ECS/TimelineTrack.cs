@@ -8,6 +8,7 @@ namespace Ux
         public PlayableGraph PlayableGraph => Component.PlayableGraph;
         public TimelineComponent Component => Timeline.Component;
         public Timeline Timeline => ParentAs<Timeline>();
+        public float Time => Timeline.Time;
         public bool IsDone { get; private set; }
 
         List<TimelineClip> _clips = new();

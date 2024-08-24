@@ -8,10 +8,19 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 namespace Ux
-{    
+{        
     public class AnimationClipAsset : TimelineClipAsset
-    {              
+    {
+        [Serializable]
+        public enum PostExtrapolate
+        {
+            None,
+            Hold,
+            Loop
+        }
         public AnimationClip clip;
+        public PostExtrapolate PrePost;
+        public PostExtrapolate LastPost;
         public override Type ClipType => typeof(TLAnimationClip);
     }
 }

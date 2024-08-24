@@ -21,6 +21,8 @@ namespace Ux.Editor.Timeline
 		public Button btnPath;
 		public TextField inputName;
 		public Button btnOk;
+		public Button btnLastFrame;
+		public Button btnNextFrame;
 		public Button btnPlay;
 		public Button btnPause;
 		public EnumField playMode;
@@ -49,6 +51,10 @@ namespace Ux.Editor.Timeline
 			inputName.RegisterValueChangedCallback(e => _OnInputNameChanged(e));
 			btnOk =root.Q<Button>("btnOk");
 			btnOk.clicked += () => _OnBtnOkClick();
+			btnLastFrame =root.Q<Button>("btnLastFrame");
+			btnLastFrame.clicked += () => _OnBtnLastFrameClick();
+			btnNextFrame =root.Q<Button>("btnNextFrame");
+			btnNextFrame.clicked += () => _OnBtnNextFrameClick();
 			btnPlay =root.Q<Button>("btnPlay");
 			btnPlay.clicked += () => _OnBtnPlayClick();
 			btnPause =root.Q<Button>("btnPause");
@@ -64,6 +70,8 @@ namespace Ux.Editor.Timeline
 		partial void _OnBtnPathClick();
 		partial void _OnInputNameChanged(ChangeEvent<string> e);
 		partial void _OnBtnOkClick();
+		partial void _OnBtnLastFrameClick();
+		partial void _OnBtnNextFrameClick();
 		partial void _OnBtnPlayClick();
 		partial void _OnBtnPauseClick();
 		partial void _OnPlayModeChanged(ChangeEvent<Enum> e);

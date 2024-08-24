@@ -1,34 +1,34 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <ui:TextField picking-mode="Ignore" label="Name" name="txtName" />
+    <ui:TextField picking-mode="Ignore" label="Name" name="txtName" style="margin-left: 4px;" />
     <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
-        <ui:Toggle label="Move" name="tgMove" />
+        <ui:Toggle label="Move" name="tgMove" style="margin-left: 4px;" />
         <ui:Label tabindex="-1" text="（勾选情况下，更改时为整体移动模式）" parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: lower-left; font-size: 8px; height: 15px; color: rgb(192, 187, 79);" />
     </ui:VisualElement>
-    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px; padding-left: 4px;">
         <ui:Label tabindex="-1" text="Start" parse-escape-sequences="true" display-tooltip-when-elided="true" style="width: 100px; -unity-text-align: middle-left; margin-left: 0;" />
-        <ui:IntegerField value="42" name="txtStartFrame" label="帧" is-delayed="false" style="flex-shrink: 1; flex-grow: 1; margin-left: 0; width: 100px;" />
-        <ui:FloatField value="100.55" name="txtStartTime" label="秒" readonly="true" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: flex-start; align-self: auto; margin-left: 0; width: 100px; flex-direction: row;" />
+        <ui:IntegerField value="42" name="txtStartFrame" label="帧" is-delayed="false" style="flex-shrink: 0; flex-grow: 0; margin-left: 0; width: 100px;" />
+        <ui:Label tabindex="-1" text="12.5秒" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbStartTime" style="width: 100px; -unity-text-align: middle-left;" />
     </ui:VisualElement>
-    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
+    <ui:VisualElement name="VisualElement" style="flex-grow: 0; flex-direction: row; height: 20px; padding-left: 4px;">
         <ui:Label tabindex="-1" text="End" parse-escape-sequences="true" display-tooltip-when-elided="true" style="width: 100px; -unity-text-align: middle-left; margin-left: 0;" />
-        <ui:IntegerField value="42" name="txtEndFrame" label="帧" is-delayed="false" style="flex-shrink: 1; flex-grow: 1; margin-left: 0; width: 100px;" />
-        <ui:FloatField value="100.55" name="txtEndTime" label="秒" readonly="true" style="flex-grow: 1; flex-shrink: 1; align-items: stretch; justify-content: flex-start; align-self: auto; margin-left: 0; width: 100px; flex-direction: row;" />
+        <ui:IntegerField value="42" name="txtEndFrame" label="帧" is-delayed="false" style="flex-shrink: 0; flex-grow: 0; margin-left: 0; width: 100px;" />
+        <ui:Label tabindex="-1" text="12.5秒" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbEndTime" style="width: 100px; -unity-text-align: middle-left;" />
     </ui:VisualElement>
-    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px; padding-left: 4px; padding-right: 0; margin-right: 0;">
         <ui:Label tabindex="-1" text="Duration" parse-escape-sequences="true" display-tooltip-when-elided="true" style="width: 100px; -unity-text-align: middle-left; margin-left: 0;" />
+        <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbDurationFrame" style="width: 107px; -unity-text-align: middle-left;" />
         <ui:Label tabindex="-1" text="12.5秒" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbDurationTime" style="width: 100px; -unity-text-align: middle-left;" />
-        <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbDurationFrame" style="width: 100px; -unity-text-align: middle-left;" />
         <ui:Button text="修正" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnDuration" />
     </ui:VisualElement>
-    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px; padding-left: 4px;">
         <ui:Label tabindex="-1" text="In" parse-escape-sequences="true" display-tooltip-when-elided="true" style="width: 100px; -unity-text-align: middle-left; margin-left: 0;" />
+        <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbInFrame" style="width: 107px; -unity-text-align: middle-left;" />
         <ui:Label tabindex="-1" text="12.5秒" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbInTime" style="width: 100px; -unity-text-align: middle-left;" />
-        <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbInFrame" style="width: 100px; -unity-text-align: middle-left;" />
     </ui:VisualElement>
-    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px;">
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row; height: 20px; padding-left: 4px;">
         <ui:Label tabindex="-1" text="Out" parse-escape-sequences="true" display-tooltip-when-elided="true" style="width: 100px; -unity-text-align: middle-left; margin-left: 0;" />
+        <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbOutFrame" style="width: 107px; -unity-text-align: middle-left;" />
         <ui:Label tabindex="-1" text="12.5秒" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbOutTime" style="width: 100px; -unity-text-align: middle-left;" />
-        <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbOutFrame" style="width: 100px; -unity-text-align: middle-left;" />
     </ui:VisualElement>
-    <uie:ObjectField label="Clip" name="ofClip" />
+    <uie:ObjectField label="Clip" name="ofClip" style="margin-left: 4px;" />
 </ui:UXML>

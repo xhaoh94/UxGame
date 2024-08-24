@@ -13,7 +13,7 @@ namespace Ux.Editor.Timeline
         public static VisualElement ClipContent { get; set; }
         public static System.Func<int, float> GetPositionByFrame { get; set; }
         public static System.Func<int> GetFrameByMousePosition { get; set; }
-        public static System.Action<int> MarkerMove { get; set; }
+        public static System.Action<float> MarkerMove { get; set; }
         public static TimelineComponent Timeline { get; set; }
         public static TimelineAsset Asset { get; set; }
         public static System.Action SaveAssets { get; set; }
@@ -23,7 +23,7 @@ namespace Ux.Editor.Timeline
         public static bool IsPlaying { get; set; }
         public static bool IsValid()
         {
-            return Asset != null && Timeline != null;
+            return Asset != null && Timeline != null && !IsPlaying;
         }
 
         public static float GetDuration(TimelineAsset asset)

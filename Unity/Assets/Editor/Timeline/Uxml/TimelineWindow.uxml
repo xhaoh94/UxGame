@@ -22,9 +22,11 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+                    <ui:Button text="上一帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnLastFrame" />
+                    <ui:Button text="下一帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnNextFrame" />
                     <ui:Button text="播放" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnPlay" />
                     <ui:Button text="暂停" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnPause" />
-                    <ui:EnumField label="播放模式" type="UnityEngine.TextAlignment, UnityEngine.TextRenderingModule" value="Center" name="playMode" />
+                    <ui:EnumField label="模式" type="UnityEngine.TextAlignment, UnityEngine.TextRenderingModule" value="Center" name="playMode" />
                     <ui:VisualElement name="frameContent" style="flex-grow: 0;" />
                 </ui:VisualElement>
             </uie:Toolbar>

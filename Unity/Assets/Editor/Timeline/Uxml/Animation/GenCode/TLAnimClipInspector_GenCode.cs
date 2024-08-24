@@ -13,16 +13,16 @@ namespace Ux.Editor.Timeline.Animation
 		public TextField txtName;
 		public Toggle tgMove;
 		public IntegerField txtStartFrame;
-		public FloatField txtStartTime;
+		public Label lbStartTime;
 		public IntegerField txtEndFrame;
-		public FloatField txtEndTime;
-		public Label lbDurationTime;
+		public Label lbEndTime;
 		public Label lbDurationFrame;
+		public Label lbDurationTime;
 		public Button btnDuration;
-		public Label lbInTime;
 		public Label lbInFrame;
-		public Label lbOutTime;
+		public Label lbInTime;
 		public Label lbOutFrame;
+		public Label lbOutTime;
 		public ObjectField ofClip;
 		protected void CreateChildren()
 		{
@@ -36,18 +36,18 @@ namespace Ux.Editor.Timeline.Animation
 			tgMove.RegisterValueChangedCallback(e => _OnTgMoveChanged(e));
 			txtStartFrame =root.Q<IntegerField>("txtStartFrame");
 			txtStartFrame.RegisterValueChangedCallback(e => _OnTxtStartFrameChanged(e));
-			txtStartTime =root.Q<FloatField>("txtStartTime");
+			lbStartTime =root.Q<Label>("lbStartTime");
 			txtEndFrame =root.Q<IntegerField>("txtEndFrame");
 			txtEndFrame.RegisterValueChangedCallback(e => _OnTxtEndFrameChanged(e));
-			txtEndTime =root.Q<FloatField>("txtEndTime");
-			lbDurationTime =root.Q<Label>("lbDurationTime");
+			lbEndTime =root.Q<Label>("lbEndTime");
 			lbDurationFrame =root.Q<Label>("lbDurationFrame");
+			lbDurationTime =root.Q<Label>("lbDurationTime");
 			btnDuration =root.Q<Button>("btnDuration");
 			btnDuration.clicked += () => _OnBtnDurationClick();
-			lbInTime =root.Q<Label>("lbInTime");
 			lbInFrame =root.Q<Label>("lbInFrame");
-			lbOutTime =root.Q<Label>("lbOutTime");
+			lbInTime =root.Q<Label>("lbInTime");
 			lbOutFrame =root.Q<Label>("lbOutFrame");
+			lbOutTime =root.Q<Label>("lbOutTime");
 			ofClip =root.Q<ObjectField>("ofClip");
 			ofClip.RegisterValueChangedCallback(e => _OnOfClipChanged(e));
 		}
