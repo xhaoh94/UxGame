@@ -14,6 +14,7 @@ namespace Ux.Editor.Timeline.Animation
 		public Toggle tgMove;
 		public IntegerField txtStartFrame;
 		public Label lbStartTime;
+		public VisualElement VisualElement;
 		public IntegerField txtEndFrame;
 		public Label lbEndTime;
 		public Label lbDurationFrame;
@@ -23,6 +24,8 @@ namespace Ux.Editor.Timeline.Animation
 		public Label lbInTime;
 		public Label lbOutFrame;
 		public Label lbOutTime;
+		public EnumField pre;
+		public EnumField post;
 		public ObjectField ofClip;
 		protected void CreateChildren()
 		{
@@ -37,6 +40,7 @@ namespace Ux.Editor.Timeline.Animation
 			txtStartFrame =root.Q<IntegerField>("txtStartFrame");
 			txtStartFrame.RegisterValueChangedCallback(e => _OnTxtStartFrameChanged(e));
 			lbStartTime =root.Q<Label>("lbStartTime");
+			VisualElement =root.Q<VisualElement>("VisualElement");
 			txtEndFrame =root.Q<IntegerField>("txtEndFrame");
 			txtEndFrame.RegisterValueChangedCallback(e => _OnTxtEndFrameChanged(e));
 			lbEndTime =root.Q<Label>("lbEndTime");
@@ -48,6 +52,10 @@ namespace Ux.Editor.Timeline.Animation
 			lbInTime =root.Q<Label>("lbInTime");
 			lbOutFrame =root.Q<Label>("lbOutFrame");
 			lbOutTime =root.Q<Label>("lbOutTime");
+			pre =root.Q<EnumField>("pre");
+			pre.RegisterValueChangedCallback(e => _OnPreChanged(e));
+			post =root.Q<EnumField>("post");
+			post.RegisterValueChangedCallback(e => _OnPostChanged(e));
 			ofClip =root.Q<ObjectField>("ofClip");
 			ofClip.RegisterValueChangedCallback(e => _OnOfClipChanged(e));
 		}
@@ -56,6 +64,8 @@ namespace Ux.Editor.Timeline.Animation
 		partial void _OnTxtStartFrameChanged(ChangeEvent<int> e);
 		partial void _OnTxtEndFrameChanged(ChangeEvent<int> e);
 		partial void _OnBtnDurationClick();
+		partial void _OnPreChanged(ChangeEvent<Enum> e);
+		partial void _OnPostChanged(ChangeEvent<Enum> e);
 		partial void _OnOfClipChanged(ChangeEvent<UnityEngine.Object> e);
 	}
 }

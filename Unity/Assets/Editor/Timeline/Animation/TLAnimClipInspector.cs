@@ -1,7 +1,7 @@
 ﻿using Assets.Editor.Timeline;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Ux.AnimationClipAsset;
 
 namespace Ux.Editor.Timeline.Animation
 {
@@ -43,6 +43,11 @@ namespace Ux.Editor.Timeline.Animation
 
             lbDurationTime.text = $"秒  {_asset.EndTime - _asset.StartTime}";
             lbDurationFrame.text = $"帧  {_asset.EndFrame - _asset.StartFrame}";
+
+            pre.Init(_asset.pre);
+            post.Init(_asset.post);
+            pre.style.display = _asset.PreFrame >= 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            post.style.display = _asset.PostFrame >=0 ? DisplayStyle.Flex : DisplayStyle.None;
 
             btnDuration.style.display = DisplayStyle.None;
             if (_asset.clip != null)
@@ -144,9 +149,18 @@ namespace Ux.Editor.Timeline.Animation
             TimelineWindow.Run(_asset);
             if (!ChcekValid())
             {
-                _asset.EndFrame = oldEndFrame;
-                //TimelineEditor.Run(_asset);
+                _asset.EndFrame = oldEndFrame;                
             }
+        }
+        partial void _OnPreChanged(ChangeEvent<System.Enum> e)
+        {
+            _asset.pre = (PostExtrapolate)e.newValue;
+            TimelineWindow.Run(_asset);
+        }
+        partial void _OnPostChanged(ChangeEvent<System.Enum> e)
+        {
+            _asset.post = (PostExtrapolate)e.newValue;
+            TimelineWindow.Run(_asset);
         }
     }
 }

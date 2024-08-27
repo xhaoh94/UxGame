@@ -260,7 +260,13 @@ PlayableDirector:
   - key: {fileID: 2950827578400547698, guid: d0317cdc230f633458c73d9d69af7081, type: 2}
     value: {fileID: 2090300534}
   m_ExposedReferences:
-    m_References: []
+    m_References:
+    - cfe957980948a424e88970957e2500b9: {fileID: 2090300536}
+--- !u!1 &2090300536 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 666591284647352860, guid: de987f42dcbe5b14aad5188fd7cc698b, type: 3}
+  m_PrefabInstance: {fileID: 2090300532}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

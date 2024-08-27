@@ -2,10 +2,9 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static GluonGui.WorkspaceWindow.Views.Checkin.Operations.CheckinViewDeleteOperation;
 namespace Ux.Editor.Timeline
 {
-    public enum Status
+    public enum DragStatus
     {
         None,
         Left,
@@ -30,7 +29,7 @@ namespace Ux.Editor.Timeline
     }
     public partial class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
-        public Status Status { get; private set; }
+        public DragStatus Status { get; private set; }
         Color color;
         public TimelineClipAsset Asset { get; private set; }
         public TimelineTrackItem TrackItem { get; private set; }
@@ -118,7 +117,7 @@ namespace Ux.Editor.Timeline
 
             return ((b1 == b2) && (b2 == b3));
         }
-        bool isDrag => Status != Status.None;
+        bool isDrag => Status != DragStatus.None;
         int startFrame;
         int endFrame;
         public void ToDown(int frame)
@@ -130,11 +129,11 @@ namespace Ux.Editor.Timeline
                 var ex = TimelineWindow.GetPositionByFrame(Asset.EndFrame);
                 if (x - sx < 20)
                 {
-                    Status = Status.Left;
+                    Status = DragStatus.Left;
                 }
                 else if (ex - x < 20)
                 {
-                    Status = Status.Right;
+                    Status = DragStatus.Right;
                 }
                 else
                 {
@@ -150,7 +149,7 @@ namespace Ux.Editor.Timeline
                         //交叉多边形的下部分
                         if (isInTriangle)
                         {
-                            Status = Status.None;
+                            Status = DragStatus.None;
                             return;
                         }
                     }
@@ -166,29 +165,29 @@ namespace Ux.Editor.Timeline
                         //交叉多边形的上部分
                         if (isInTriangle)
                         {
-                            Status = Status.None;
+                            Status = DragStatus.None;
                             return;
                         }
                     }
-                    Status = Status.Move;
+                    Status = DragStatus.Move;
                 }
 
                 startFrame = Asset.StartFrame;
                 endFrame = Asset.EndFrame;
                 return;
             }
-            Status = Status.None;
+            Status = DragStatus.None;
         }
 
         public void ToDrag(int now, int last)
         {
-            if (Status == Status.None)
+            if (Status == DragStatus.None)
             {
                 return;
             }
             switch (Status)
             {
-                case Status.Left:
+                case DragStatus.Left:
                     if (now < 0)
                     {
                         now = 0;
@@ -199,14 +198,14 @@ namespace Ux.Editor.Timeline
                     }
                     Asset.StartFrame = now;
                     break;
-                case Status.Right:
+                case DragStatus.Right:
                     if (now < Asset.StartFrame + 1)
                     {
                         now = Asset.StartFrame + 1;
                     }
                     Asset.EndFrame = now;
                     break;
-                case Status.Move:
+                case DragStatus.Move:
                     var offFrame = now - last;
                     if (Asset.StartFrame + offFrame < 0)
                     {
@@ -222,11 +221,11 @@ namespace Ux.Editor.Timeline
 
         public void ToUp()
         {
-            if (Status == Status.None)
+            if (Status == DragStatus.None)
             {
                 return;
             }
-            Status = Status.None;
+            Status = DragStatus.None;
 
             if (!TrackItem.IsValid())
             {

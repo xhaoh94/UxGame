@@ -30,5 +30,9 @@
         <ui:Label tabindex="-1" text="60帧" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbOutFrame" style="width: 107px; -unity-text-align: middle-left;" />
         <ui:Label tabindex="-1" text="12.5秒" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lbOutTime" style="width: 100px; -unity-text-align: middle-left;" />
     </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 0;">
+        <ui:EnumField label="Pre-Extrapolate" type="UnityEngine.TextAlignment, UnityEngine.TextRenderingModule" value="Center" name="pre" />
+        <ui:EnumField label="Post-Extrapolate" type="UnityEngine.TextAlignment, UnityEngine.TextRenderingModule" value="Center" name="post" />
+    </ui:VisualElement>
     <uie:ObjectField label="Clip" name="ofClip" style="margin-left: 4px;" />
 </ui:UXML>

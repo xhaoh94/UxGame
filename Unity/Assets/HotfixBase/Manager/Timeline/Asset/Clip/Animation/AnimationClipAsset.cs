@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Animations;
-using UnityEngine.Playables;
 
 namespace Ux
-{        
+{
     public class AnimationClipAsset : TimelineClipAsset
     {
         [Serializable]
@@ -18,9 +12,23 @@ namespace Ux
             Hold,
             Loop
         }
+        //动画片段
         public AnimationClip clip;
-        public PostExtrapolate PrePost;
-        public PostExtrapolate LastPost;
+
+        //镜头外 -前处理
+        public PostExtrapolate pre;
+
+        //镜头外 -后处理
+        public PostExtrapolate post;
         public override Type ClipType => typeof(TLAnimationClip);
+
+
+        public int PreFrame;
+        //[HideInInspector]
+        public int PostFrame;
+
+        public float PreTime => PreFrame / TimelineMgr.Ins.FrameRate;
+        public float PostTime => PostFrame / TimelineMgr.Ins.FrameRate;
+
     }
 }

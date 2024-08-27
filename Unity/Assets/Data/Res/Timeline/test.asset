@@ -18,12 +18,26 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: 823040030046683136
+      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        clipName: Run
+        StartFrame: 60
+        EndFrame: 120
+        InFrame: 0
+        OutFrame: 0
+        clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
+        pre: 1
+        post: 1
+        PreFrame: 0
+        PostFrame: 0
     - rid: 7328207989263302656
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         trackName: Animation
         clips:
         - rid: 7328207989263302658
+        - rid: 823040030046683136
         Layer: 0
     - rid: 7328207989263302658
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
@@ -34,3 +48,7 @@ MonoBehaviour:
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}
+        pre: 1
+        post: 0
+        PreFrame: 0
+        PostFrame: 0

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
@@ -101,7 +100,7 @@ namespace Ux.Editor.Timeline
             }
         }
         void OnPointerDown(PointerDownEvent e)
-        {            
+        {
             if (e.button == 0)
             {
                 TimelineWindow.InspectorContent.FreshInspector(Asset, null);
@@ -123,8 +122,8 @@ namespace Ux.Editor.Timeline
             AddClipItem(clipAsset);
         }
         void UpdateAsset()
-        {            
-            inputName.SetValueWithoutNotify(Asset.trackName);            
+        {
+            inputName.SetValueWithoutNotify(Asset.trackName);
         }
         partial void _OnInputNameChanged(ChangeEvent<string> e)
         {
@@ -135,7 +134,7 @@ namespace Ux.Editor.Timeline
         {
             foreach (var clipAsset in Asset.clips)
             {
-                var item = new TimelineClipItem(clipAsset, this);                
+                var item = new TimelineClipItem(clipAsset, this);
                 Items.Add(item);
                 clipParent.Add(item);
             }
@@ -154,7 +153,7 @@ namespace Ux.Editor.Timeline
             }
             Asset.clips.Add(clipAsset);
             TimelineWindow.SaveAssets();
-            var item = new TimelineClipItem(clipAsset, this);            
+            var item = new TimelineClipItem(clipAsset, this);
             Items.Add(item);
             clipParent.Add(item);
             item.UpdateView();
@@ -172,7 +171,7 @@ namespace Ux.Editor.Timeline
             foreach (var item in Items)
             {
                 item.ToDown(lastFrame);
-                if (item.Status != Status.None)
+                if (item.Status != DragStatus.None)
                 {
                     _temItems.Add(item);
                 }
@@ -218,17 +217,7 @@ namespace Ux.Editor.Timeline
                     var ix = TimelineWindow.GetPositionByFrame(asset.InFrame);
                     paint2D.MoveTo(new Vector2(sx, minY));
                     paint2D.LineTo(new Vector2(ix, maxY));
-                    //paint2D.LineTo(new Vector2(ix, maxY));
-                    //paint2D.LineTo(new Vector2(ix, minY));
                 }
-                //if (asset.OutFrame > 0)
-                //{
-                //    var ox = Timeline.GetPositionByFrame(asset.OutFrame);
-                //    paint2D.MoveTo(new Vector2(ox, minY));
-                //    paint2D.LineTo(new Vector2(ox, maxY));
-                //    paint2D.LineTo(new Vector2(ex, maxY));
-                //    paint2D.LineTo(new Vector2(ox, minY));
-                //}
             }
 
             paint2D.Stroke();
@@ -323,6 +312,27 @@ namespace Ux.Editor.Timeline
             {
                 item1.Asset.InFrame = 0;
                 item1.Asset.OutFrame = 0;
+                AnimationClipAsset animA = null;
+                if (item1.Asset is AnimationClipAsset _animA)
+                {
+                    animA = _animA;
+                    int preFrame = 0;
+                    int postFrame = int.MaxValue;
+                    foreach (var item2 in Items)
+                    {
+                        if (item1 == item2) continue;
+                        if (item1.Asset.StartFrame > item2.Asset.StartFrame && preFrame < item2.Asset.EndFrame)
+                        {
+                            preFrame = item2.Asset.EndFrame;
+                        }
+                        if (item1.Asset.StartFrame < item2.Asset.StartFrame && postFrame > item2.Asset.StartFrame)
+                        {
+                            postFrame = item2.Asset.StartFrame;
+                        }
+                    }
+                    animA.PreFrame = _animA.pre != AnimationClipAsset.PostExtrapolate.None ? preFrame : -1;
+                    animA.PostFrame = _animA.post != AnimationClipAsset.PostExtrapolate.None ? postFrame : -1;
+                }
                 foreach (var item2 in Items)
                 {
                     if (item1 == item2) continue;
@@ -336,7 +346,12 @@ namespace Ux.Editor.Timeline
                             item1.Asset.InFrame = item2.Asset.EndFrame;
                             break;
                     }
+                    if (t != -1000 && animA != null && item2.Asset is AnimationClipAsset animB)
+                    {
+                        Extrapolate(animA, animB);
+                    }
                 }
+
                 item1.RefreshWidth();
             }
             ClipMarkDirtyRepaint();
@@ -354,8 +369,22 @@ namespace Ux.Editor.Timeline
                 }
                 return -1;
             }
-
             return 0;
+        }
+
+        void Extrapolate(AnimationClipAsset a, AnimationClipAsset b)
+        {
+            if (a.StartFrame == 0 || a.InFrame > 0 ||
+                (a.StartFrame > b.StartFrame && b.post != AnimationClipAsset.PostExtrapolate.None) ||
+                a.PreFrame == a.StartFrame)
+            {
+                a.PreFrame = -1;
+            }
+
+            if (a.OutFrame > 0)
+            {
+                a.PostFrame = -1;
+            }
         }
     }
 }
