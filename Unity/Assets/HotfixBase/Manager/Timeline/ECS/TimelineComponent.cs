@@ -21,6 +21,8 @@ namespace Ux
         {
             PlaySpeed = 1;            
             PlayableGraph = PlayableGraph.Create(Parent.Viewer.name);
+            PlayableGraph.Play();
+            PlayableGraph.Stop();
         }
         protected override void OnDestroy()
         {
@@ -54,13 +56,14 @@ namespace Ux
                     Remove(Current);
                 }
             }
-            Current = Add<Timeline, TimelineAsset>(timeline);
+            Current = Add<Timeline, TimelineAsset>(timeline);            
         }
 
         public void Evaluate(float deltaTime)
-        {
+        {                
             if (PlayableGraph.IsValid())
             {
+                //Log.Debug("xxxxxxxxxxx:"+ deltaTime);
                 PlayableGraph.Evaluate(deltaTime);
                 Current?.Evaluate(deltaTime);
                 if (Last != null)

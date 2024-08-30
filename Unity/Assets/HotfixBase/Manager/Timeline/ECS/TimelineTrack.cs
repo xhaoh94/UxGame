@@ -8,12 +8,12 @@ namespace Ux
         public PlayableGraph PlayableGraph => Component.PlayableGraph;
         public TimelineComponent Component => Timeline.Component;
         public Timeline Timeline => ParentAs<Timeline>();
-        public float Time => Timeline.Time;
+        public double Time => Timeline.Time;
         public bool IsDone { get; private set; }
 
         List<TimelineClip> _clips = new();
         void IAwakeSystem<TimelineTrackAsset>.OnAwake(TimelineTrackAsset asset)
-        {            
+        {
             OnStart(asset);
             foreach (var clipAsset in asset.clips)
             {
@@ -24,6 +24,7 @@ namespace Ux
         protected override void OnDestroy()
         {
             _clips.Clear();
+            IsDone = false;
         }
 
         public void Evaluate(float deltaTime)

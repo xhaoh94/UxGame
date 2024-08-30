@@ -22,7 +22,7 @@ namespace Ux
         public PostExtrapolate post;
         public override Type ClipType => typeof(TLAnimationClip);
 
-
+        //[HideInInspector]
         public int PreFrame;
         //[HideInInspector]
         public int PostFrame;

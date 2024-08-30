@@ -10,7 +10,7 @@ namespace Ux
         public TimelineComponent Component => Timeline.Component;
         public PlayableGraph PlayableGraph => Component.PlayableGraph;
         public TLAnimationRoot Root { get; private set; }
-        public AnimationMixerPlayable Mixer { get; private set; }
+        public AnimationLayerMixerPlayable Mixer { get; private set; }
 
 
         private float _fadeSpeed = 0f;
@@ -18,7 +18,7 @@ namespace Ux
         private bool _isFading = false;
         void IAwakeSystem.OnAwake()
         {
-            Mixer = AnimationMixerPlayable.Create(PlayableGraph);
+            Mixer = AnimationLayerMixerPlayable.Create(PlayableGraph);
             Root = Component.GetOrAdd<TLAnimationRoot>();
             Root.Connect(this);
         }

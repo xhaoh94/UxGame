@@ -74,7 +74,7 @@ namespace Ux.Editor.Timeline
 
             _OnOfEntityChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
             _OnOfTimelineChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
-
+            //clipView.SetNowFrame(1, TimelineMgr.Ins.FrameRate);
         }
 
         bool keyCtrl = false;
@@ -125,8 +125,8 @@ namespace Ux.Editor.Timeline
                 var deltaTime = (float)(EditorApplication.timeSinceStartup - _lastTime);
                 _lastTime = EditorApplication.timeSinceStartup;
                 _playTime += deltaTime;
-                var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);                
-                clipView.SetNowFrame(frame, deltaTime);                
+                var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);
+                clipView.SetNowFrame(frame, deltaTime);
                 if (Timeline.Current.IsDone)
                 {
                     switch (playMode.value)
@@ -144,8 +144,8 @@ namespace Ux.Editor.Timeline
         void _ResetPlay()
         {
             _playTime = 0;
-            _lastTime = EditorApplication.timeSinceStartup;            
-            _MarkerMove(-Timeline.Current.Time);
+            _lastTime = EditorApplication.timeSinceStartup;
+            _MarkerMove((float)-Timeline.Current.Time);
         }
 
         private void OnDestroy()
@@ -163,10 +163,10 @@ namespace Ux.Editor.Timeline
         }
         partial void _OnBtnLastFrameClick()
         {
-            if (!IsValid()) return;        
-            if(clipView.CurFrame > 0)
+            if (!IsValid()) return;
+            if (clipView.CurFrame > 0)
             {
-                clipView.SetNowFrame(clipView.CurFrame-1, -TimelineMgr.Ins.FrameConvertTime(1));
+                clipView.SetNowFrame(clipView.CurFrame - 1, -TimelineMgr.Ins.FrameConvertTime(1));
             }
         }
         partial void _OnBtnNextFrameClick()
@@ -177,21 +177,18 @@ namespace Ux.Editor.Timeline
 
         partial void _OnBtnPlayClick()
         {
-            if (!IsValid()) return;            
+            if (!IsValid()) return;
             _ResetPlay();
             UnityEditor.EditorApplication.update += OnPlay;
-            IsPlaying = true;            
+            IsPlaying = true;
         }
         partial void _OnBtnPauseClick()
-        {            
+        {
             if (!IsPlaying) return;
             UnityEditor.EditorApplication.update -= OnPlay;
-            IsPlaying = false;            
+            IsPlaying = false;
         }
-        partial void _OnPlayModeChanged(ChangeEvent<System.Enum> e)
-        {
 
-        }
         partial void _OnOfEntityChanged(ChangeEvent<Object> e)
         {
             _entity?.Destroy();
@@ -291,11 +288,12 @@ namespace Ux.Editor.Timeline
         void _RefreshEntity()
         {
             if (Asset == null) return;
-            Timeline?.Play(Asset);
+            if (Timeline == null) return;
+            Timeline.Play(Asset);
         }
         void _MarkerMove(float deltaTime)
         {
-            if (Timeline == null) return;                   
+            if (Timeline == null) return;
             Timeline.Evaluate(deltaTime);
         }
     }

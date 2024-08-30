@@ -147,12 +147,15 @@ namespace Ux.Editor.Timeline
 
             var frame = GetFrameByMousePosition();
             if (frame != CurFrame)
-            {                
+            {    
+                //Log.Debug($"[{frame} - {CurFrame} = {frame - CurFrame}], {TimelineMgr.Ins.FrameConvertTime(frame - CurFrame)}");
                 SetNowFrame(frame, TimelineMgr.Ins.FrameConvertTime(frame - CurFrame));
+                CurFrame = frame;
+                UpdateMarkerText();
             }
         }
 
-        public void SetNowFrame(int frame,float deltaTime)
+        public void SetNowFrame(int frame, float deltaTime)
         {
             TimelineWindow.MarkerMove?.Invoke(deltaTime);
             if (frame == CurFrame) return;            

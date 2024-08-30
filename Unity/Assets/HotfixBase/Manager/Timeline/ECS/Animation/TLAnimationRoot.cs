@@ -25,7 +25,7 @@ namespace Ux
             if (MixerRoot.IsValid())
             {
                 Component.PlayableGraph.DestroySubgraph(MixerRoot);
-            }
+            }            
         }
         public void Connect(TLAnimationLayer layer)
         {
