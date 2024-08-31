@@ -39,7 +39,7 @@ namespace Ux
         void _Connect()
         {
             int inputCount = _layerMixer.Mixer.GetInputCount();
-            int layer = Asset.Layer;
+            int layer = Asset.layer;
             if (layer == 0 && inputCount == 0)
             {
                 _layerMixer.Mixer.SetInputCount(1);
@@ -53,6 +53,11 @@ namespace Ux
             }
 
             PlayableGraph.Connect(Mixer, 0, _layerMixer.Mixer, layer);
+            if (Asset.isAdditive)
+            {
+                //_layerMixer.Mixer.SetLayerAdditive((uint)layer, true);
+                _layerMixer.Mixer.SetLayerMaskFromAvatarMask((uint)layer, Asset.avatarMask);
+            }
             _layerMixer.Mixer.SetInputWeight(layer, 1);
         }
 
@@ -60,7 +65,7 @@ namespace Ux
         {
             if (_layerMixer.Mixer.IsValid())
             {
-                PlayableGraph.Disconnect(_layerMixer.Mixer, Asset.Layer);
+                PlayableGraph.Disconnect(_layerMixer.Mixer, Asset.layer);
             }
         }
     }

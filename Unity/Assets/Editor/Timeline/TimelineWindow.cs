@@ -126,7 +126,7 @@ namespace Ux.Editor.Timeline
                 _lastTime = EditorApplication.timeSinceStartup;
                 _playTime += deltaTime;
                 var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);
-                clipView.SetNowFrame(frame, deltaTime);
+                clipView.SetNowFrame(frame);
                 if (Timeline.Current.IsDone)
                 {
                     switch (playMode.value)
@@ -145,7 +145,7 @@ namespace Ux.Editor.Timeline
         {
             _playTime = 0;
             _lastTime = EditorApplication.timeSinceStartup;
-            _MarkerMove((float)-Timeline.Current.Time);
+            clipView.SetNowFrame(0);
         }
 
         private void OnDestroy()
@@ -166,13 +166,13 @@ namespace Ux.Editor.Timeline
             if (!IsValid()) return;
             if (clipView.CurFrame > 0)
             {
-                clipView.SetNowFrame(clipView.CurFrame - 1, -TimelineMgr.Ins.FrameConvertTime(1));
+                clipView.SetNowFrame(clipView.CurFrame - 1);
             }
         }
         partial void _OnBtnNextFrameClick()
         {
             if (!IsValid()) return;
-            clipView.SetNowFrame(clipView.CurFrame + 1, TimelineMgr.Ins.FrameConvertTime(1));
+            clipView.SetNowFrame(clipView.CurFrame + 1);
         }
 
         partial void _OnBtnPlayClick()
@@ -291,10 +291,10 @@ namespace Ux.Editor.Timeline
             if (Timeline == null) return;
             Timeline.Play(Asset);
         }
-        void _MarkerMove(float deltaTime)
+        void _MarkerMove(int frame,int oldFrame)
         {
             if (Timeline == null) return;
-            Timeline.Evaluate(deltaTime);
+            Timeline.Evaluate(frame, oldFrame);
         }
     }
 

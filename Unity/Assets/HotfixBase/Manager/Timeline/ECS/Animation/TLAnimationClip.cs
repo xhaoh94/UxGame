@@ -14,15 +14,14 @@ namespace Ux
         TLAnimationTrack Track => ParentAs<TLAnimationTrack>();
         public PlayableGraph PlayableGraph => Track.Component.PlayableGraph;
         AnimationClipAsset animAsset;
-        float _setTime = -1;
-        float _setWeight = -1;
         protected override void OnStart(TimelineClipAsset asset)
         {
             animAsset = asset as AnimationClipAsset;
             _source = AnimationClipPlayable.Create(PlayableGraph, animAsset.clip);
             _source.SetDuration(animAsset.clip.length);
             _inputPort = Track.Asset.clips.IndexOf(animAsset);
-            PlayableGraph.Connect(_source, 0, Track.Mixer, _inputPort);            
+            PlayableGraph.Connect(_source, 0, Track.Mixer, _inputPort);
+            _source.Pause();
         }
 
         protected override void OnStop()
@@ -34,8 +33,6 @@ namespace Ux
                 PlayableGraph.DestroySubgraph(_source);
             }
             _inputPort = 0;
-            _setTime = -1;
-            _setWeight = -1;
         }
         protected override void OnEnable()
         {
@@ -47,7 +44,7 @@ namespace Ux
         }
         protected override void OnEvaluate(float deltaTime)
         {
-            float curTime = (float)Time;
+            float curTime = Time;
             float setTime = 0;
             float setWeight = 0;
             switch (Status)
@@ -138,23 +135,17 @@ namespace Ux
         /// </summary>
         void SetWeight(float value)
         {
-            if (_setWeight != value)
+            if (_source.IsValid())
             {
-                if (_source.IsValid())
-                {
-                    Track.Mixer.SetInputWeight(_inputPort, value);
-                }
+                Track.Mixer.SetInputWeight(_inputPort, value);
             }
         }
 
         void SetTime(float value)
         {
-            if (_setTime != value)
+            if (_source.IsValid())
             {
-                if (_source.IsValid())
-                {
-                    _source.SetTime(value);
-                }
+                _source.SetTime(value);
             }
         }
 

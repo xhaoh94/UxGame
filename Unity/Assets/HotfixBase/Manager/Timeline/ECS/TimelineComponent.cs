@@ -19,10 +19,10 @@ namespace Ux
 
         void IAwakeSystem.OnAwake()
         {
-            PlaySpeed = 1;            
+            PlaySpeed = 1;
             PlayableGraph = PlayableGraph.Create(Parent.Viewer.name);
-            PlayableGraph.Play();
-            PlayableGraph.Stop();
+            PlayableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+            PlayableGraph.Play();            
         }
         protected override void OnDestroy()
         {
@@ -34,7 +34,21 @@ namespace Ux
         {
             if (Current != null)
             {
-                Evaluate(Time.fixedDeltaTime * PlaySpeed);
+                if (PlayableGraph.IsValid())
+                {
+                    var deltaTime = Time.fixedDeltaTime * PlaySpeed;
+                    //PlayableGraph.Evaluate(deltaTime);
+                    Current?.Evaluate(deltaTime);
+                    if (Last != null)
+                    {
+                        Last.Evaluate(deltaTime);
+                        if (Last.IsDone)
+                        {
+                            Remove(Last);
+                            Last = null;
+                        }
+                    }
+                }
             }
         }
 
@@ -56,19 +70,19 @@ namespace Ux
                     Remove(Current);
                 }
             }
-            Current = Add<Timeline, TimelineAsset>(timeline);            
+            Current = Add<Timeline, TimelineAsset>(timeline);
         }
 
-        public void Evaluate(float deltaTime)
-        {                
+
+        public void Evaluate(int frame, int oldFrame)
+        {
             if (PlayableGraph.IsValid())
             {
-                //Log.Debug("xxxxxxxxxxx:"+ deltaTime);
-                PlayableGraph.Evaluate(deltaTime);
-                Current?.Evaluate(deltaTime);
+                //PlayableGraph.Evaluate(TimelineMgr.Ins.FrameConvertTime(frame - oldFrame));
+                Current?.Evaluate(frame);
                 if (Last != null)
                 {
-                    Last.Evaluate(deltaTime);
+                    Last.Evaluate(frame);
                     if (Last.IsDone)
                     {
                         Remove(Last);

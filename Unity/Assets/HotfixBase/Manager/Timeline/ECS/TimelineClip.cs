@@ -10,7 +10,7 @@
             Post,
             Stop
         }
-        public double Time => ParentAs<TimelineTrack>().Time;
+        public float Time => ParentAs<TimelineTrack>().Time;
         public TLClipStatus Status { get; private set; }
         public bool IsDone => _asset.EndTime <= Time;
 
@@ -32,7 +32,7 @@
         public void Evaluate(float deltaTime)
         {
             var _curTime = Time;
-            if (Status != TLClipStatus.Ing && _curTime >= _asset.StartTime && _curTime <= _asset.EndTime)
+            if (Status != TLClipStatus.Ing && _curTime >= _asset.StartTime && _curTime < _asset.EndTime)
             {
                 Status = TLClipStatus.Ing;
                 OnEnable();
@@ -45,7 +45,7 @@
                 }
                 Status = TLClipStatus.Pre;
             }
-            else if (Status != TLClipStatus.Post && _curTime > _asset.EndTime)
+            else if (Status != TLClipStatus.Post && _curTime >= _asset.EndTime)
             {
                 if (Status == TLClipStatus.Ing)
                 {

@@ -20,7 +20,7 @@ namespace Ux
         {
             Mixer = AnimationLayerMixerPlayable.Create(PlayableGraph);
             Root = Component.GetOrAdd<TLAnimationRoot>();
-            Root.Connect(this);
+            Root.Connect(this);            
         }
         protected override void OnDestroy()
         {
@@ -81,7 +81,7 @@ namespace Ux
             _fadeWeight = 0;
             _isFading = false;
             Weight = 0;
-
+            
             // 连接
             PlayableGraph.Connect(Mixer, 0, Root.MixerRoot, parentInputPort);
         }

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Ux
 {
@@ -6,8 +7,9 @@ namespace Ux
     [TLTrackClipType(typeof(AnimationClipAsset))]
     public class AnimationTrackAsset : TimelineTrackAsset
     {        
-        public int Layer;        
-
+        public int layer;
+        public bool isAdditive;
+        public AvatarMask avatarMask; 
         public override Type TrackType=> typeof(TLAnimationTrack);              
 
     }   

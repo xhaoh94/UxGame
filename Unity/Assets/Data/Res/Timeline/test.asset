@@ -15,6 +15,7 @@ MonoBehaviour:
   FrameRate: 60
   tracks:
   - rid: 7328207989263302656
+  - rid: 6446680376923652096
   references:
     version: 2
     RefIds:
@@ -22,15 +23,37 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Run
-        StartFrame: 60
-        EndFrame: 120
+        StartFrame: 0
+        EndFrame: 60
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
         pre: 1
         post: 1
-        PreFrame: 0
-        PostFrame: 0
+        PreFrame: -1
+        PostFrame: 60
+    - rid: 6446680376923652096
+      type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        trackName: AnimationTest
+        clips:
+        - rid: 6446680376923652097
+        layer: 1
+        isAdditive: 1
+        avatarMask: {fileID: 31900000, guid: f6eb9dfc056c5fa468a96def751c605b, type: 2}
+    - rid: 6446680376923652097
+      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        clipName: Attack
+        StartFrame: 0
+        EndFrame: 70
+        InFrame: 0
+        OutFrame: 0
+        clip: {fileID: 1827226128182048838, guid: 322c20f524063cd42812c4ed3659b85f, type: 3}
+        pre: 0
+        post: 0
+        PreFrame: -1
+        PostFrame: -1
     - rid: 7328207989263302656
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
@@ -38,17 +61,19 @@ MonoBehaviour:
         clips:
         - rid: 7328207989263302658
         - rid: 823040030046683136
-        Layer: 0
+        layer: 0
+        isAdditive: 0
+        avatarMask: {fileID: 0}
     - rid: 7328207989263302658
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Stand
-        StartFrame: 0
-        EndFrame: 60
+        StartFrame: 60
+        EndFrame: 120
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}
         pre: 1
         post: 0
-        PreFrame: 0
-        PostFrame: 0
+        PreFrame: -1
+        PostFrame: -1
