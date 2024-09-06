@@ -53,10 +53,13 @@ namespace Ux
             }
 
             PlayableGraph.Connect(Mixer, 0, _layerMixer.Mixer, layer);
+            if (Asset.avatarMask != null)
+            {
+                _layerMixer.Mixer.SetLayerMaskFromAvatarMask((uint)layer, Asset.avatarMask);
+            }
             if (Asset.isAdditive)
             {
-                //_layerMixer.Mixer.SetLayerAdditive((uint)layer, true);
-                _layerMixer.Mixer.SetLayerMaskFromAvatarMask((uint)layer, Asset.avatarMask);
+                _layerMixer.Mixer.SetLayerAdditive((uint)layer, true);
             }
             _layerMixer.Mixer.SetInputWeight(layer, 1);
         }

@@ -1,4 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:TextField picking-mode="Ignore" label="Name" name="txtName" />
+    <ui:IntegerField label="Layer" value="0" name="inputLayer" />
     <uie:ObjectField label="Avatar Mask" name="ofAvatarMask" />
+    <ui:Toggle label="IsAdditive" name="tgAdditive" />
 </ui:UXML>
