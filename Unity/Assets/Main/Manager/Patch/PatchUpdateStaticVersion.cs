@@ -14,25 +14,21 @@ namespace Ux
         async UniTaskVoid GetStaticVersion()
         {
             // 更新资源版本号
-            var succeed = await YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);
+            var succeed = await YooMgr.Ins.ForEachPackage(UpdateStaticVersionAsync);            
             if (succeed)
             {
                 PatchMgr.Enter<PatchUpdateManifest>();
             }
             else
             {
-                OnStaticVersionUpdateFailed();
+                Action callback = () =>
+                {
+                    PatchMgr.Ins.Enter<PatchUpdateStaticVersion>();
+                };
+                PatchMgr.View.ShowMessageBox($"获取资源版本失败，请检测网络状态。", "确定", callback);
             }
         }
 
-        void OnStaticVersionUpdateFailed()
-        {
-            Action callback = () =>
-            {
-                PatchMgr.Ins.Enter<PatchUpdateStaticVersion>();
-            };
-            PatchMgr.View.ShowMessageBox($"获取资源版本失败，请检测网络状态。", "确定", callback);
-        }
 
         async UniTask<bool> UpdateStaticVersionAsync(YooPackage package)
         {

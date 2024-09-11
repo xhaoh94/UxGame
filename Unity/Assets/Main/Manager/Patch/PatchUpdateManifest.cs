@@ -17,24 +17,19 @@ namespace Ux
             // 强制卸载所有资源
             YooMgr.Ins.ForceUnloadAllAssets();
             // 更新补丁清单
-            var succeed = await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);
+            var succeed = await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);            
             if (succeed)
             {
                 PatchMgr.Enter<PatchCreateDownloader>();
             }
             else
             {
-                OnPatchManifestUpdateFailed();
+                Action callback = () =>
+                {
+                    PatchMgr.Ins.Enter<PatchUpdateManifest>();
+                };
+                PatchMgr.View.ShowMessageBox($"获取补丁清单失败，请检测网络状态。", "确定", callback);
             }
-        }
-
-        void OnPatchManifestUpdateFailed()
-        {
-            Action callback = () =>
-            {
-                PatchMgr.Ins.Enter<PatchUpdateManifest>();
-            };
-            PatchMgr.View.ShowMessageBox($"获取补丁清单失败，请检测网络状态。", "确定", callback);
         }
 
         async UniTask<bool> UpdateManifestAsync(YooPackage package)

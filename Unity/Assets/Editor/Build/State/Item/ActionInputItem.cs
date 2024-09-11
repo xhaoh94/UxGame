@@ -16,16 +16,16 @@ namespace Ux.Editor.Build.State
         void CreateView()
         {
             _enumKey = this.Q<EnumField>("enumKey");
-            _enumKey.Init(StateConditionBase.Input.Attack);
+            _enumKey.Init(StateConditionBase.InputType.Attack);
             _enumKey.RegisterValueChangedCallback(e =>
             {
-                data.inputType = (StateConditionBase.Input)e.newValue;
+                data.inputType = (StateConditionBase.InputType)e.newValue;
             });
             _enumType = this.Q<EnumField>("enumType");
-            _enumType.Init(StateConditionBase.Trigger.Down);
+            _enumType.Init(StateConditionBase.TriggerType.Down);
             _enumType.RegisterValueChangedCallback(e =>
             {
-                data.triggerType = (StateConditionBase.Trigger)e.newValue;
+                data.triggerType = (StateConditionBase.TriggerType)e.newValue;
             });
         }
 

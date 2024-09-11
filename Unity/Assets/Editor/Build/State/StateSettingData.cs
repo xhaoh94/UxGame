@@ -31,16 +31,16 @@ namespace Ux.Editor.Build.State
         [Serializable]
         public class StateCondition
         {
-            public StateConditionBase.Type Type;
+            public StateConditionBase.ConditionType Type;
 
             public string key;            
 
-            public StateConditionBase.State stateType;
+            public StateConditionBase.StateType stateType;
             public List<string> states = new List<string>();
 
-            public StateConditionBase.Trigger triggerType;
+            public StateConditionBase.TriggerType triggerType;
             public Key keyType;
-            public StateConditionBase.Input inputType;
+            public StateConditionBase.InputType inputType;
 
             public string customName;
             public string customValue;

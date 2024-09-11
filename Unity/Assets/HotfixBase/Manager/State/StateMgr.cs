@@ -1,12 +1,5 @@
 using Cysharp.Threading.Tasks;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Playables;
-using UnityEngine.Timeline;
 
 namespace Ux
 {
@@ -26,12 +19,9 @@ namespace Ux
             return data;
         }
 
-        Dictionary<long, List<IUnitState>> _unitStates =
-            new Dictionary<long, List<IUnitState>>();
-        Dictionary<long, Dictionary<StateConditionBase.Type, HashSet<IUnitState>>> _typeStates =
-            new Dictionary<long, Dictionary<StateConditionBase.Type, HashSet<IUnitState>>>();
-        Dictionary<long, HashSet<string>> _tempBoolVar =
-            new Dictionary<long, HashSet<string>>();
+        Dictionary<long, List<IUnitState>> _unitStates =new ();
+        Dictionary<long, Dictionary<StateConditionBase.ConditionType, HashSet<IUnitState>>> _typeStates = new ();
+        Dictionary<long, HashSet<string>> _tempBoolVar =new ();
         protected override void OnCreated()
         {
             base.OnCreated();
@@ -62,7 +52,7 @@ namespace Ux
             return dict.Contains(key);
         }
 
-        public void Update(long id, StateConditionBase.Type type)
+        public void Update(long id, StateConditionBase.ConditionType type)
         {
             if (!_typeStates.TryGetValue(id, out var temDict))
             {
@@ -78,10 +68,10 @@ namespace Ux
                 if (state.IsMute) continue;
                 if (state.IsValid)
                 {
-                    if (state.Machine.CurrentNode != state)
-                    {
+                    //if (state.Machine.CurrentNode != state)
+                    //{
                         state.Machine.Enter(state.Name);
-                    }
+                    //}
                     break;
                 }
             }
@@ -97,10 +87,10 @@ namespace Ux
                 if (state.IsMute) continue;
                 if (state.IsValid)
                 {
-                    if (state.Machine.CurrentNode != state)
-                    {                        
+                    //if (state.Machine.CurrentNode != state)
+                    //{                        
                         state.Machine.Enter(state.Name);
-                    }
+                    //}
                     break;
                 }
             }
@@ -145,16 +135,16 @@ namespace Ux
 
             if (!_typeStates.TryGetValue(id, out var temDict))
             {
-                temDict = new Dictionary<StateConditionBase.Type, HashSet<IUnitState>>();
+                temDict = new Dictionary<StateConditionBase.ConditionType, HashSet<IUnitState>>();
                 _typeStates.Add(id, temDict);
             }
             foreach (var conditin in unitState.Conditions)
             {
                 conditin.Init(unitState);
-                if (!temDict.TryGetValue(conditin.ConditionType, out var units))
+                if (!temDict.TryGetValue(conditin.Condition, out var units))
                 {
                     units = new HashSet<IUnitState>();
-                    temDict.Add(conditin.ConditionType, units);
+                    temDict.Add(conditin.Condition, units);
                 }
                 units.Add(unitState);
             }

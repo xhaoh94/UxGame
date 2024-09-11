@@ -12,10 +12,10 @@ namespace Ux.Editor.Build.State
             visualAsset.CloneTree(this);
 
             _conditionType = this.Q<EnumField>("conditionType");
-            _conditionType.Init(StateConditionBase.Type.State);
+            _conditionType.Init(StateConditionBase.ConditionType.State);
             _conditionType.RegisterValueChangedCallback(evt =>
             {
-                data.Type = (StateConditionBase.Type)evt.newValue;
+                data.Type = (StateConditionBase.ConditionType)evt.newValue;
                 cb?.Invoke();
             });
             _content = this.Q<VisualElement>("content");

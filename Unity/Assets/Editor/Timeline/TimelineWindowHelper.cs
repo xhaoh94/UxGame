@@ -13,7 +13,7 @@ namespace Ux.Editor.Timeline
         public static VisualElement ClipContent { get; set; }
         public static System.Func<int, float> GetPositionByFrame { get; set; }
         public static System.Func<int> GetFrameByMousePosition { get; set; }
-        public static System.Action<int,int> MarkerMove { get; set; }
+        public static System.Action<int> MarkerMove { get; set; }
         public static TimelineComponent Timeline { get; set; }
         public static TimelineAsset Asset { get; set; }
         public static System.Action SaveAssets { get; set; }

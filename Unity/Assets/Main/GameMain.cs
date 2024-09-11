@@ -4,11 +4,24 @@ using YooAsset;
 
 namespace Ux
 {
+    public class GameStateMachine: StateMachine
+    {
+        public IStateNode StateNode { get; private set; }
+        public override IStateNode Enter(string nodeName)
+        {
+            if (StateNode != null)
+            {
+                Exit(StateNode.Name);
+            }
+            StateNode = base.Enter(nodeName);
+            return StateNode;
+        }
+    }
     public class GameMain : MonoBehaviour
     {
         public static GameMain Ins { get; private set; }
 
-        public static StateMachine Machine { get; private set; }
+        public static GameStateMachine Machine { get; private set; }
 
         [SerializeField]
         public EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
@@ -24,7 +37,7 @@ namespace Ux
             }
             Ins = this;
             zstring.Init(Log.Error);
-            Machine = StateMachine.CreateByPool();
+            Machine = StateMachine.Create<GameStateMachine>();
             DontDestroyOnLoad(gameObject);
             Application.targetFrameRate = 60;
             Application.runInBackground = true;

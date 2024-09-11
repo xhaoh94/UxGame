@@ -21,7 +21,7 @@ namespace Ux
             }
             else
             {
-                Log.Debug("没有发现需要下载的资源");
+                Log.Debug("没有发现需要下载的资源");                
                 PatchMgr.Enter<PatchDone>();
             }
         }
@@ -32,7 +32,7 @@ namespace Ux
             int totalCnt = PatchMgr.Downloader.TotalDownloadCount;
 
             Action callback = () =>
-            {
+            {                
                 PatchMgr.Ins.Enter<PatchDownloadWebFiles>();
             };
             PatchMgr.View.ShowMessageBox($"下载更新{totalCnt}文件，总大小{totalSizeMB}MB", "更新", callback);

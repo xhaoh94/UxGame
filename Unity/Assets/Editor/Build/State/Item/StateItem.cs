@@ -23,10 +23,10 @@ namespace Ux.Editor.Build.State
         {
 
             _validType = this.Q<EnumField>("validType");
-            _validType.Init(StateConditionBase.State.Any);
+            _validType.Init(StateConditionBase.StateType.Any);
             _validType.RegisterValueChangedCallback(e =>
             {
-                data.stateType = (StateConditionBase.State)e.newValue;
+                data.stateType = (StateConditionBase.StateType)e.newValue;
                 Refresh();
             });
 
@@ -39,7 +39,7 @@ namespace Ux.Editor.Build.State
         }
         void Refresh()
         {
-            _content.style.display = data.stateType == StateConditionBase.State.Any ?
+            _content.style.display = data.stateType == StateConditionBase.StateType.Any ?
                 DisplayStyle.None : DisplayStyle.Flex;
             btnAdd.style.display = _content.style.display;
         }

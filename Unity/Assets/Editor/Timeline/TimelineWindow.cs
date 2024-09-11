@@ -291,10 +291,10 @@ namespace Ux.Editor.Timeline
             if (Timeline == null) return;
             Timeline.Play(Asset);
         }
-        void _MarkerMove(int frame,int oldFrame)
+        void _MarkerMove(int frame)
         {
             if (Timeline == null) return;
-            Timeline.Evaluate(frame, oldFrame);
+            Timeline.Set(frame);
         }
     }
 

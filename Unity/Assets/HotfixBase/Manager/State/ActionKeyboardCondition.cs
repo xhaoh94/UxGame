@@ -9,13 +9,13 @@ namespace Ux
 {
     public class ActionKeyboardCondition : StateConditionBase
     {
-        public override Type ConditionType => Type.Action_Keyboard;
+        public override ConditionType Condition => ConditionType.Action_Keyboard;
         public Key Key { get; }
-        public Trigger Tri { get; }
-        public ActionKeyboardCondition(Key key, Trigger trigger)
+        public TriggerType Trigger { get; }
+        public ActionKeyboardCondition(Key key, TriggerType trigger)
         {
-            this.Key = key;
-            this.Tri = trigger;
+            Key = key;
+            Trigger = trigger;
         }
 
         public override bool IsValid
@@ -25,13 +25,13 @@ namespace Ux
                 var btn = Keyboard.current[Key];
                 if (btn != null)
                 {
-                    switch (Tri)
+                    switch (Trigger)
                     {
-                        case Trigger.Down:                            
+                        case TriggerType.Down:                            
                             return btn.wasPressedThisFrame;
-                        case Trigger.Up:                            
+                        case TriggerType.Up:                            
                             return btn.wasReleasedThisFrame;
-                        case Trigger.Pressed:
+                        case TriggerType.Pressed:
                             return btn.isPressed;
                     }
                 }

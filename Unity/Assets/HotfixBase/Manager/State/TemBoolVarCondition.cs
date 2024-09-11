@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ux
+﻿namespace Ux
 {
     public class TemBoolVarCondition : StateConditionBase
     {
-        public override Type ConditionType => Type.TempBoolVar;
+        public override ConditionType Condition => ConditionType.TempBoolVar;
         public string Key { get; }        
 
-        public TemBoolVarCondition(string _key)
+        public TemBoolVarCondition(string key)
         {
-            this.Key = _key;            
+            Key = key;            
         }
 
         public override bool IsValid

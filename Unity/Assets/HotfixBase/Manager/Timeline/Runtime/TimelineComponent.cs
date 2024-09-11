@@ -74,15 +74,14 @@ namespace Ux
         }
 
 
-        public void Evaluate(int frame, int oldFrame)
+        public void Set(int frame)
         {
             if (PlayableGraph.IsValid())
-            {
-                //PlayableGraph.Evaluate(TimelineMgr.Ins.FrameConvertTime(frame - oldFrame));
-                Current?.Evaluate(frame);
+            {                
+                Current?.Set(frame);
                 if (Last != null)
                 {
-                    Last.Evaluate(frame);
+                    Last.Set(frame);
                     if (Last.IsDone)
                     {
                         Remove(Last);

@@ -4,11 +4,9 @@ namespace Ux
     {
         string Name { get; }
         StateMachine Machine { get; }
-        void Create(StateMachine machine, object args = null, bool isFromPool = true);
-        bool CheckValid();
+        void Create(StateMachine machine, object args = null, bool isFromPool = true);        
         void Enter();
-        void Exit();
-        void Update();
+        void Exit();        
         void Release();
     }
     public abstract class StateNode : IStateNode
@@ -30,8 +28,7 @@ namespace Ux
             _isFromPool = isFromPool;
             Machine = machine;
             OnCreate(args);
-        }
-        bool IStateNode.CheckValid() { return OnCheckValid(); }
+        }        
         void IStateNode.Enter()
         {
             OnEnter();
@@ -41,16 +38,9 @@ namespace Ux
             OnExit();
         }
 
-        void IStateNode.Update()
-        {
-            OnUpdate();
-        }
-
-        protected virtual void OnCreate(object args = null) { }
-        protected virtual bool OnCheckValid() { return true; }
+        protected virtual void OnCreate(object args = null) { }        
         protected virtual void OnEnter() { }
-        protected virtual void OnExit() { }
-        protected virtual void OnUpdate() { }
+        protected virtual void OnExit() { }        
         protected virtual void OnRelease() { }
     }
 }

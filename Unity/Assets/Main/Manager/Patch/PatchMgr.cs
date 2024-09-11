@@ -1,8 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
-using UnityEngine;
-using YooAsset;
-namespace Ux
+﻿namespace Ux
 {
     public class PatchMgr : Singleton<PatchMgr>
     {
@@ -14,6 +10,7 @@ namespace Ux
         /// 状态机
         /// </summary>
         StateMachine machine;
+        PatchStateNode patchState;
         /// <summary>
         /// 开启初始化流程
         /// </summary>
@@ -24,7 +21,7 @@ namespace Ux
                 IsDone = false;
                 _isRun = true;
                 View = PatchView.Show();                
-                machine = StateMachine.CreateByPool();
+                machine = StateMachine.Create<StateMachine>();
                 machine.AddNode(new PatchInit());
                 machine.AddNode(new PatchUpdateStaticVersion());
                 machine.AddNode(new PatchUpdateManifest());
@@ -50,7 +47,11 @@ namespace Ux
 
         public void Enter<TNode>() where TNode : PatchStateNode
         {
-            machine.Enter<TNode>();
+            if (patchState != null)
+            {
+                machine.Exit(patchState.Name);
+            }
+            patchState = machine.Enter<TNode>();
         }
     }
 }

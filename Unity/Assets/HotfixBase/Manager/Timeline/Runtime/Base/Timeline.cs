@@ -43,7 +43,7 @@ namespace Ux
             }
         }
 
-        public void Evaluate(int frame)
+        public void Set(int frame)
         {
             var oldTime = Time;
             Time = TimelineMgr.Ins.FrameConvertTime(frame);            

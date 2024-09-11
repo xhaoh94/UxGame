@@ -75,7 +75,7 @@ namespace Ux
 
         public void OnKey(InputAction.CallbackContext context)
         {
-            StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Action_Keyboard);
+            StateMgr.Ins.Update(Unit.ID, StateConditionBase.ConditionType.Action_Keyboard);
             //if (context.performed)
             //{
             //    if (this.triggerData != null)

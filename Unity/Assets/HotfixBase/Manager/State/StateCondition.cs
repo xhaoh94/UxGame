@@ -3,45 +3,50 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEditor;
 
 namespace Ux
 {
     public class StateCondition : StateConditionBase
     {
-        public override Type ConditionType => Type.State;
-        public StateConditionBase.State StateType { get; }
+        public override ConditionType Condition => ConditionType.State;
+        public StateType State { get; }
         public HashSet<string> States { get; }
 
-        public StateCondition(StateConditionBase.State _type, HashSet<string> _states)
+        public StateCondition(StateType type, HashSet<string> states)
         {
-            StateType = _type;
-            States = _states;
+            State = type;
+            States = states;
         }
 
         public override bool IsValid
         {
             get
             {
-                switch (StateType)
+                switch (State)
                 {
-                    case State.Any: return true;
-                    case State.Include:
+                    case StateType.Any: return true;
+                    case StateType.Include:
                         {
-                            var cur = UnitState.Machine.CurrentNode;
-                            if (cur != null)
+                            foreach (var state in States)
                             {
-                                return States.Contains(cur.Name);
+                                if (!UnitState.Machine.Contains(state))
+                                {
+                                    return false;
+                                }
                             }
-                            break;
+                            return true;                            
                         }
-                    case State.Exclude:
+                    case StateType.Exclude:
                         {
-                            var cur = UnitState.Machine.CurrentNode;
-                            if (cur != null)
+                            foreach (var state in States)
                             {
-                                return !States.Contains(cur.Name);
+                                if (UnitState.Machine.Contains(state))
+                                {
+                                    return false;
+                                }
                             }
-                            break;
+                            return true;
                         }
                 }
                 return false;

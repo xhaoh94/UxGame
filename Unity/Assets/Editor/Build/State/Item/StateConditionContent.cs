@@ -45,19 +45,19 @@ namespace Ux.Editor.Build.State
             }
             switch (data.Type)
             {
-                case StateConditionBase.Type.State:
+                case StateConditionBase.ConditionType.State:
                     item = new StateItem();
                     break;
-                case StateConditionBase.Type.TempBoolVar:
+                case StateConditionBase.ConditionType.TempBoolVar:
                     item = new TempBoolVarItem();
                     break;
-                case StateConditionBase.Type.Action_Keyboard:
+                case StateConditionBase.ConditionType.Action_Keyboard:
                     item = new ActionKeyboardItem();
                     break;
-                case StateConditionBase.Type.Action_Input:
+                case StateConditionBase.ConditionType.Action_Input:
                     item = new ActionInputItem();
                     break;
-                case StateConditionBase.Type.Custom:
+                case StateConditionBase.ConditionType.Custom:
                     item = new CustomItem();
                     break;
             }

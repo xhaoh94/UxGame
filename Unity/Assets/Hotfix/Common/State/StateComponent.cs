@@ -5,7 +5,7 @@
         public UnitStateMachine Machine { get; private set; }
         public void OnAwake()
         {
-            Machine = StateMachine.CreateByPool<UnitStateMachine>(true, this);
+            Machine = StateMachine.CreateByPool<UnitStateMachine>(this);
             Machine.InitGroup("HeroZs", Parent.ID);
         }
 
@@ -21,10 +21,10 @@
         {
             Machine.ForEach<IUnitState>((unit) =>
             {
-                if (unit is IUnitAnimState animState)
-                {
-                    animState.Set(anim);
-                }
+                //if (unit is IUnitAnimState animState)
+                //{
+                //    animState.Set(anim);
+                //}
             });
         }
         [ListenAddEntity(typeof(PlayableDirectorComponent))]
@@ -32,10 +32,10 @@
         {
             Machine.ForEach<IUnitState>((unit) =>
             {
-                if (unit is IUnitTimelineState timeLineState)
-                {
-                    timeLineState.Set(director);
-                }
+                //if (unit is IUnitTimelineState timeLineState)
+                //{
+                //    timeLineState.Set(director);
+                //}
             });
         }
     }

@@ -38,7 +38,7 @@ namespace Ux
         private void DownloadComplete(bool succeed)
         {
             if (succeed)
-            {
+            {                
                 PatchMgr.Enter<PatchDone>();
             }
             else

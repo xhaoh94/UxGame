@@ -23,10 +23,10 @@ namespace Ux.Editor.Build.State
                 data.keyType = (Key)e.newValue;
             });
             _enumType = this.Q<EnumField>("enumType");
-            _enumType.Init(StateConditionBase.Trigger.Down);
+            _enumType.Init(StateConditionBase.TriggerType.Down);
             _enumType.RegisterValueChangedCallback(e =>
             {
-                data.triggerType = (StateConditionBase.Trigger)e.newValue;
+                data.triggerType = (StateConditionBase.TriggerType)e.newValue;
             });
         }
 

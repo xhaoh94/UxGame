@@ -7,7 +7,7 @@ namespace Ux
 	{
 		readonly static Dictionary<string, HashSet<Type>> _stateGroup = new Dictionary<string, HashSet<Type>>()
 		{
-			{ "HeroZs",new HashSet<Type>() { typeof(HeroZSSkill08_4), typeof(HeroZSSkill08_3), typeof(HeroZSSkill08_2), typeof(HeroZSSkill08_1), typeof(HeroZSAttack), typeof(HeroZSRun), typeof(HeroZSIdle),}},
+			//{ "HeroZs",new () { typeof(HeroZSSkill08_4), typeof(HeroZSSkill08_3), typeof(HeroZSSkill08_2), typeof(HeroZSSkill08_1), typeof(HeroZSAttack), typeof(HeroZSRun), typeof(HeroZSIdle),}},
 		};
 		public static void InitGroup(this UnitStateMachine machine, string group, long OwnerID)
 		{

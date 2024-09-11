@@ -4,7 +4,6 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Ux.Editor.Build.UI;
 namespace Ux.Editor.Build.State
 {
     public partial class StateWindow : EditorWindow
@@ -66,11 +65,11 @@ namespace Ux.Editor.Build.State
                     write.Writeln($"public partial class {data.ClsName} : {nameof(UnitStateBase)}");
                     break;
                 case StateViewType.Anim:
-                    write.Writeln($"public partial class {data.ClsName} : {nameof(UnitStateAnim)}");
+                    //write.Writeln($"public partial class {data.ClsName} : {nameof(UnitStateAnim)}");
                     resName = Path.GetFileNameWithoutExtension(data.AnimName);
                     break;
                 case StateViewType.Timeline:
-                    write.Writeln($"public partial class {data.ClsName} : {nameof(UnitStateTimeLine)}");
+                    //write.Writeln($"public partial class {data.ClsName} : {nameof(UnitStateTimeLine)}");
                     resName = Path.GetFileNameWithoutExtension(data.TimeLineName);
                     break;
             }
@@ -96,8 +95,8 @@ namespace Ux.Editor.Build.State
             {
                 switch (condition.Type)
                 {
-                    case StateConditionBase.Type.State:
-                        if (condition.stateType == StateConditionBase.State.Any)
+                    case StateConditionBase.ConditionType.State:
+                        if (condition.stateType == StateConditionBase.StateType.Any)
                         {
                             write.Writeln($"CreateCondition(nameof({nameof(StateCondition)}),StateConditionBase.State.Any, null),");
                         }
@@ -113,16 +112,16 @@ namespace Ux.Editor.Build.State
                             write.Writeln("),", false);
                         }
                         break;
-                    case StateConditionBase.Type.TempBoolVar:
+                    case StateConditionBase.ConditionType.TempBoolVar:
                         write.Writeln($"CreateCondition(nameof({nameof(TemBoolVarCondition)}),\"{condition.key}\"),");
                         break;
-                    case StateConditionBase.Type.Action_Keyboard:
+                    case StateConditionBase.ConditionType.Action_Keyboard:
                         write.Writeln($"CreateCondition(nameof({nameof(ActionKeyboardCondition)}),UnityEngine.InputSystem.Key.{condition.keyType}, StateConditionBase.Trigger.{condition.triggerType}),");
                         break;
-                    case StateConditionBase.Type.Action_Input:
+                    case StateConditionBase.ConditionType.Action_Input:
                         write.Writeln($"CreateCondition(nameof({nameof(ActionInputCondition)}),StateConditionBase.Input.{condition.inputType}, StateConditionBase.Trigger.{condition.triggerType}),");
                         break;
-                    case StateConditionBase.Type.Custom:
+                    case StateConditionBase.ConditionType.Custom:
                         if (string.IsNullOrEmpty(condition.customValue))
                         {
                             write.Writeln($"CreateCondition(\"{condition.customName}\"),");
@@ -158,7 +157,7 @@ namespace Ux.Editor.Build.State
             var temData = new List<StateSettingData.StateData>();
             foreach (var group in Setting.groups)
             {
-                write.Write($"{{ \"{group}\",new HashSet<Type>() {{");
+                write.Write($"{{ \"{group}\",new () {{");
                 temData.Clear();
                 temData.AddRange(Setting.StateSettings);
                 temData.Sort((a, b) =>

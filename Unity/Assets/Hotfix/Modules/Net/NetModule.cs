@@ -13,7 +13,7 @@ namespace Ux
                 case SocketCode.ConnectionTimeout:
                     Action callback = () =>
                     {
-                        if (!(GameMain.Machine.CurrentNode is StateLogin))
+                        if (!(GameMain.Machine.StateNode is StateLogin))
                         {
                             GameMain.Machine.Enter<StateLogin>();
                         }

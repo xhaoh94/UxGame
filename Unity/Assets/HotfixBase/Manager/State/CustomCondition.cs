@@ -10,7 +10,7 @@ namespace Ux
     {
         public override bool IsValid => false;
 
-        public override Type ConditionType => Type.Custom;
+        public override ConditionType Condition => ConditionType.Custom;
         public CustomCondition()
         {
 

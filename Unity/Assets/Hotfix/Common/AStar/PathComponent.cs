@@ -51,7 +51,7 @@ namespace Ux
                 {
                     IsRun = true;
                     StateMgr.Ins.AddTempBoolVar(Unit.ID, "_move");
-                    StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.TempBoolVar);
+                    StateMgr.Ins.Update(Unit.ID, StateConditionBase.ConditionType.TempBoolVar);
                 }
             }
         }

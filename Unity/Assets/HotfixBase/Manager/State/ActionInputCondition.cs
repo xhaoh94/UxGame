@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ux
+﻿namespace Ux
 {
     public class ActionInputCondition : StateConditionBase
     {
-        public override Type ConditionType => Type.Action_Input;
-        public Input Inp { get; }
-        public Trigger Tri { get; }
-        public ActionInputCondition(Input input, Trigger trigger)
+        public override ConditionType Condition => ConditionType.Action_Input;
+        public InputType Input { get; }
+        public TriggerType Trigger { get; }
+        public ActionInputCondition(InputType input, TriggerType trigger)
         {
-            this.Inp = input;
-            this.Tri = trigger;
+            Input = input;
+            Trigger = trigger;
         }
 
         public override bool IsValid

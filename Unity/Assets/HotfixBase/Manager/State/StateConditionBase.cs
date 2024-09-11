@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ux
+﻿namespace Ux
 {
     public abstract class StateConditionBase
     {
-        public enum Type
+        public enum ConditionType
         {
             State,
             TempBoolVar,            
@@ -16,29 +10,33 @@ namespace Ux
             Action_Input,
             Custom,
         }
-        public enum State
+        public enum StateType
         {
             Any,
-            //包括
+            /// <summary>
+            /// 包括
+            /// </summary>
             Include,
-            //排除
+            /// <summary>
+            /// 排除
+            /// </summary>
             Exclude
         }
-        public enum Input
+        public enum InputType
         {
             Attack,
             Skill01,
             Skill02,
             Skill03,
         }
-        public enum Trigger
+        public enum TriggerType
         {
             Down,
             Up,
             Pressed,
         }
         public abstract bool IsValid { get; }
-        public abstract Type ConditionType { get; }
+        public abstract ConditionType Condition { get; }
         public IUnitState UnitState { get; private set; }
         public void Init(IUnitState state)
         {

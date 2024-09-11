@@ -1,6 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using System.Collections;
-using UnityEngine;
 using YooAsset;
 
 namespace Ux
@@ -14,8 +12,7 @@ namespace Ux
 
         async UniTaskVoid Initialize(EPlayMode playMode)
         {
-            await YooMgr.Ins.Initialize(playMode);
-
+            await YooMgr.Ins.Initialize(playMode);            
             if (playMode == EPlayMode.EditorSimulateMode)
             {
                 PatchMgr.Enter<PatchDone>();
