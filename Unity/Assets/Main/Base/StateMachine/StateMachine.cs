@@ -3,16 +3,18 @@ using System.Collections.Generic;
 
 namespace Ux
 {
-    public class StateMachine
+    public interface IStateMachine
+    {
+
+    }
+    public class StateMachine: IStateMachine
     {
         private readonly Dictionary<string, IStateNode> _nodes = new Dictionary<string, IStateNode>(100);
-        List<IStateNode> _playings = new List<IStateNode>();
         bool _isFromPool;
         /// <summary>
         /// 状态机持有者
         /// </summary>
         public object Owner { private set; get; }
-        public List<IStateNode> PlayingNodes => _playings;
 
         public static T Create<T>(object owner = null) where T : StateMachine, new()
         {
@@ -26,7 +28,7 @@ namespace Ux
             stateMachine.Init(true, owner);
             return stateMachine;
         }
-        protected void Init(bool isFromPool,object owner = null)
+        protected void Init(bool isFromPool, object owner = null)
         {
             _isFromPool = isFromPool;
             Owner = owner;
@@ -39,45 +41,55 @@ namespace Ux
             Owner = null;
             _nodes.ForEachValue(x => x.Release());
             _nodes.Clear();
-            _playings.Clear();
 
             if (_isFromPool)
                 Pool.Push(this);
             _isFromPool = false;
         }
         protected virtual void OnRelease() { }
+
+        protected virtual bool IsCanEnter(IStateNode node) { return true; }
+        protected virtual bool IsCanExit(IStateNode node) { return true; }
         /// <summary>
         /// 启动状态机
         /// </summary>
-        public TNode Enter<TNode>() where TNode : IStateNode
+        public void Enter<TNode>() where TNode : IStateNode
         {
-            return (TNode)Enter(typeof(TNode).Name);
+            Enter(typeof(TNode).Name);
         }
 
-        
-        public virtual IStateNode Enter(string nodeName)
+
+        public void Enter(string nodeName)
         {
             if (string.IsNullOrEmpty(nodeName))
             {
                 Log.Error("节点名字为空");
-                return null;
+                return;
             }
 
             IStateNode node = GetNode(nodeName);
             if (node == null)
             {
                 Log.Error($"找不到节点 : {nodeName}");
-                return null;
-            }            
-
-            if (_playings.Contains(node))
-            {
-                return node;
+                return;
             }
-            _playings.Add(node);
-            node.Enter();
-            return node;
+            Enter(node);
         }
+        public void Enter(IStateNode node)
+        {
+            if (!IsCanEnter(node))
+            {
+                return;
+            }
+
+            OnEnter(node);
+            node.Enter();
+        }
+        protected virtual void OnEnter(IStateNode node)
+        {
+
+        }
+
         public void Exit<TNode>() where TNode : IStateNode
         {
             Exit(typeof(TNode).Name);
@@ -96,26 +108,23 @@ namespace Ux
                 Log.Error($"找不到节点 : {nodeName}");
                 return;
             }
-            node.Exit();
-            _playings.Remove(node);
+            Exit(node);
         }
-
-        public bool Contains(string entryNode)
+        public void Exit(IStateNode node)
         {
-            if (string.IsNullOrEmpty(entryNode))
+            if (!IsCanExit(node))
             {
-                Log.Error("节点名字为空");
-                return false;
+                return;
             }
 
-            IStateNode node = GetNode(entryNode);
-            if (node == null)
-            {
-                Log.Error($"找不到节点 : {entryNode}");
-                return false;
-            }
-            return _playings.Contains(node);
+            OnExit(node);
+            node.Exit();
         }
+        protected virtual void OnExit(IStateNode node)
+        {
+
+        }
+
         /// <summary>
         /// 加入一个节点
         /// </summary>
@@ -145,7 +154,7 @@ namespace Ux
                 Log.Error($"节点重复添加 : {nodeName}");
             }
         }
-        private IStateNode GetNode(string nodeName)
+        public IStateNode GetNode(string nodeName)
         {
             _nodes.TryGetValue(nodeName, out IStateNode result);
             return result;
@@ -154,10 +163,6 @@ namespace Ux
         public void ForEach<T>(Action<T> action) where T : IStateNode
         {
             _nodes.ForEachValue(a => action?.Invoke((T)a));
-        }
-        public void ForEachPlaying(Action<IStateNode> action)
-        {
-            _playings.ForEach(a => action?.Invoke(a));
         }
     }
 }

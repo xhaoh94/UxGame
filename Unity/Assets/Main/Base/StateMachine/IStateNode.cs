@@ -2,9 +2,8 @@ namespace Ux
 {
     public interface IStateNode
     {
-        string Name { get; }
-        StateMachine Machine { get; }
-        void Create(StateMachine machine, object args = null, bool isFromPool = true);        
+        string Name { get; }        
+        void Create(IStateMachine machine, object args = null, bool isFromPool = true);        
         void Enter();
         void Exit();        
         void Release();
@@ -13,7 +12,7 @@ namespace Ux
     {
         bool _isFromPool;
         public virtual string Name => GetType().Name;
-        public StateMachine Machine { get; private set; }
+        public IStateMachine Machine { get; private set; }
         public void Release()
         {
             OnRelease();
@@ -23,7 +22,7 @@ namespace Ux
                 Pool.Push(this);
             }
         }
-        void IStateNode.Create(StateMachine machine, object args, bool isFromPool)
+        void IStateNode.Create(IStateMachine machine, object args, bool isFromPool)
         {
             _isFromPool = isFromPool;
             Machine = machine;

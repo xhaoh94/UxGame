@@ -9,7 +9,9 @@ namespace Ux
         bool IsMute { get; }
         int Priority { get; }
         bool IsValid { get; }
+        bool IsAdditive { get; }
         long OwnerID { get; }
+        UnitStateMachine StateMachine { get; }
         List<StateConditionBase> Conditions { get; }
     }
 
@@ -19,6 +21,8 @@ namespace Ux
     //}
     public abstract class UnitStateBase : StateNode, IUnitState
     {
+        public UnitStateMachine StateMachine => Machine as UnitStateMachine;
+        public virtual bool IsAdditive { get; } = false;
         public virtual bool IsMute { get; }
         public virtual int Priority { get; }
         public virtual string ResName { get; } = null;

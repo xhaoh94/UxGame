@@ -7,14 +7,13 @@ namespace Ux
     public class GameStateMachine: StateMachine
     {
         public IStateNode StateNode { get; private set; }
-        public override IStateNode Enter(string nodeName)
+        protected override void OnEnter(IStateNode node)
         {
             if (StateNode != null)
             {
-                Exit(StateNode.Name);
+                Exit(StateNode);
             }
-            StateNode = base.Enter(nodeName);
-            return StateNode;
+            StateNode = node;            
         }
     }
     public class GameMain : MonoBehaviour

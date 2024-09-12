@@ -30,7 +30,7 @@ namespace Ux
                         {
                             foreach (var state in States)
                             {
-                                if (!UnitState.Machine.Contains(state))
+                                if (!UnitState.StateMachine.IsPlaying(state))
                                 {
                                     return false;
                                 }
@@ -41,7 +41,7 @@ namespace Ux
                         {
                             foreach (var state in States)
                             {
-                                if (UnitState.Machine.Contains(state))
+                                if (UnitState.StateMachine.IsPlaying(state))
                                 {
                                     return false;
                                 }

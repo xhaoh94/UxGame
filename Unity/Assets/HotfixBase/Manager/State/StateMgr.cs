@@ -19,9 +19,9 @@ namespace Ux
             return data;
         }
 
-        Dictionary<long, List<IUnitState>> _unitStates =new ();
-        Dictionary<long, Dictionary<StateConditionBase.ConditionType, HashSet<IUnitState>>> _typeStates = new ();
-        Dictionary<long, HashSet<string>> _tempBoolVar =new ();
+        Dictionary<long, Dictionary<StateConditionBase.ConditionType, HashSet<IUnitState>>> _typeStates = new();
+        Dictionary<long, List<IUnitState>> _unitStates = new();
+        Dictionary<long, HashSet<string>> _tempBoolVar = new();
         protected override void OnCreated()
         {
             base.OnCreated();
@@ -48,7 +48,7 @@ namespace Ux
             if (!_tempBoolVar.TryGetValue(id, out var dict))
             {
                 return false;
-            }            
+            }
             return dict.Contains(key);
         }
 
@@ -68,11 +68,15 @@ namespace Ux
                 if (state.IsMute) continue;
                 if (state.IsValid)
                 {
-                    //if (state.Machine.CurrentNode != state)
-                    //{
-                        state.Machine.Enter(state.Name);
-                    //}
-                    break;
+                    state.StateMachine.Enter(state);
+                    if (!state.IsAdditive)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    state.StateMachine.Exit(state);
                 }
             }
         }
@@ -87,11 +91,22 @@ namespace Ux
                 if (state.IsMute) continue;
                 if (state.IsValid)
                 {
-                    //if (state.Machine.CurrentNode != state)
-                    //{                        
-                        state.Machine.Enter(state.Name);
-                    //}
-                    break;
+                    if (state.IsAdditive)
+                    {
+                        state.StateMachine.Enter(state);
+                    }
+                    else
+                    {
+                        state.StateMachine.Enter(state.Name);
+                        break;
+                    }
+                }
+                else
+                {
+                    if (state.IsAdditive)
+                    {
+                        state.StateMachine.Exit(state);
+                    }
                 }
             }
         }
@@ -135,7 +150,7 @@ namespace Ux
 
             if (!_typeStates.TryGetValue(id, out var temDict))
             {
-                temDict = new Dictionary<StateConditionBase.ConditionType, HashSet<IUnitState>>();
+                temDict = new();
                 _typeStates.Add(id, temDict);
             }
             foreach (var conditin in unitState.Conditions)
@@ -149,5 +164,6 @@ namespace Ux
                 units.Add(unitState);
             }
         }
+
     }
 }

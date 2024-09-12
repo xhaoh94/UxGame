@@ -1,16 +1,27 @@
 ﻿namespace Ux
 {
+    public class PatchStateMachine : StateMachine
+    {
+        IStateNode patchState;
+        protected override void OnEnter(IStateNode node)
+        {
+            if (patchState != null)
+            {
+                Exit(patchState);
+            }
+            patchState = node;
+        }
+    }
     public class PatchMgr : Singleton<PatchMgr>
     {
         private bool _isRun = false;
         public bool IsDone { get; private set; }
         public PatchView View { get; private set; }
-        public Downloader Downloader { get;  set; }
+        public Downloader Downloader { get; set; }
         /// <summary>
         /// 状态机
         /// </summary>
-        StateMachine machine;
-        PatchStateNode patchState;
+        PatchStateMachine machine;
         /// <summary>
         /// 开启初始化流程
         /// </summary>
@@ -20,8 +31,8 @@
             {
                 IsDone = false;
                 _isRun = true;
-                View = PatchView.Show();                
-                machine = StateMachine.Create<StateMachine>();
+                View = PatchView.Show();
+                machine = StateMachine.Create<PatchStateMachine>();
                 machine.AddNode(new PatchInit());
                 machine.AddNode(new PatchUpdateStaticVersion());
                 machine.AddNode(new PatchUpdateManifest());
@@ -47,11 +58,7 @@
 
         public void Enter<TNode>() where TNode : PatchStateNode
         {
-            if (patchState != null)
-            {
-                machine.Exit(patchState.Name);
-            }
-            patchState = machine.Enter<TNode>();
+            machine.Enter<TNode>();
         }
     }
 }
