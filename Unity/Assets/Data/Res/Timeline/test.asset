@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1420382afa24de4e8b1a9fce371ab3e, type: 3}
   m_Name: test
   m_EditorClassIdentifier: 
-  FrameRate: 60
+  frameRate: 60
   tracks:
   - rid: 7328207989263302656
   - rid: 6446680376923652096
@@ -23,8 +23,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Run
-        StartFrame: 0
-        EndFrame: 60
+        StartFrame: -2147483648
+        EndFrame: 0
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
@@ -45,8 +45,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Attack
-        StartFrame: 0
-        EndFrame: 70
+        StartFrame: -2147483648
+        EndFrame: 0
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 322c20f524063cd42812c4ed3659b85f, type: 3}
@@ -68,8 +68,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Stand
-        StartFrame: 60
-        EndFrame: 120
+        StartFrame: -2147483648
+        EndFrame: 0
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}

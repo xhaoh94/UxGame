@@ -31,7 +31,7 @@ namespace Ux.Editor
         }
         static void _GenCode(Object activeGo)
         {
-            var tree = (Selection.activeObject as VisualTreeAsset);
+            var tree = (activeGo as VisualTreeAsset);
             if (tree == null)
             {
                 Log.Error("需要uxml类型");

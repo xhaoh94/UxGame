@@ -6,16 +6,16 @@ namespace Ux
     public class TimelineAsset : ScriptableObject
     {
         //ÔËÐÐÖ¡ÂÊ
-        public float FrameRate;
+        public float frameRate;
 
         [SerializeReference]
         public List<TimelineTrackAsset> tracks = new List<TimelineTrackAsset>();
 
         public bool SetFrameRate(float frameRate)
         {
-            if (frameRate == FrameRate) return false;
-            var rate = frameRate / FrameRate;
-            FrameRate = frameRate;
+            if (frameRate == this.frameRate) return false;
+            var rate = frameRate / this.frameRate;
+            this.frameRate = frameRate;
             foreach (var track in tracks)
             {
                 int lastEnd = -1;

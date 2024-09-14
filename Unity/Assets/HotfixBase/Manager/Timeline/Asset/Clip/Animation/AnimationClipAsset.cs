@@ -22,9 +22,9 @@ namespace Ux
         public PostExtrapolate post;
         public override Type ClipType => typeof(TLAnimationClip);
 
-        //[HideInInspector]
+        [HideInInspector]
         public int PreFrame;
-        //[HideInInspector]
+        [HideInInspector]
         public int PostFrame;
 
         public float PreTime => PreFrame / TimelineMgr.Ins.FrameRate;
