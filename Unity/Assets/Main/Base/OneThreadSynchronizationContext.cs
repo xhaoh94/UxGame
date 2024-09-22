@@ -16,7 +16,7 @@ namespace Ux
         public OneThreadSynchronizationContext()
         {
             SynchronizationContext.SetSynchronizationContext(this);
-            GameMain.Ins.AddUpdate(_Update);
+            GameMethod.Update += _Update;
         }
 
         void _Update()

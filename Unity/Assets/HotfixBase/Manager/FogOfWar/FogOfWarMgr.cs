@@ -150,14 +150,14 @@ namespace Ux
             _InitFinalRenderer();
             _InitBlurCamera();
             _InitFOWCamera();
-            GameMain.Ins.AddUpdate(_Update);
+            GameMethod.Update += _Update;            
             EventMgr.Ins.Send(MainEventType.FOG_OF_WAR_INIT);
         }
         public void Destroy()
         {
             _init = false;
             _units.Clear();
-            GameMain.Ins.RemoveUpdate(_Update);
+            GameMethod.Update -= _Update;            
             _mainCamera = null;
             if (_FogOfWar != null)
             {

@@ -1,6 +1,4 @@
-using dnlib.DotNet;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -33,7 +31,7 @@ namespace Ux
 
         protected override void OnCreated()
         {
-            GameMain.Ins.AddUpdate(_Update);
+            GameMethod.Update += _Update;            
         }
 
         Type ___hotfixEvtAttribute;

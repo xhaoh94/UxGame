@@ -17,7 +17,7 @@ namespace Ux
 
         protected override void OnCreated()
         {
-            GameMain.Ins.AddFixedUpdate(_Update);
+            GameMethod.FixedUpdate += _Update;            
             EventMgr.Ins.On<ClientSocket>(MainEventType.NET_DISPOSE, this, OnSocketDispose);
         }
         /// <summary>

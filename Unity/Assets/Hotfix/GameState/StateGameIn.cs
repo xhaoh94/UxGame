@@ -8,6 +8,7 @@
         }
         protected override async void OnEnter()
         {
+            Entity.Init();
             await SceneModule.Ins.EnterScene("Map001");
             await UIMgr.Ins.Show<UI.MainView>().Task();
             UIMgr.Ins.Hide<UI.LoginView>();
@@ -17,6 +18,7 @@
 
         protected override void OnExit()
         {
+            Entity.Release();
             UIMgr.Ins.Hide<UI.MainView>();
             SceneModule.Ins.LeaveScene();
         }

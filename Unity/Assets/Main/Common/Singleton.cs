@@ -1,6 +1,4 @@
-﻿using Ux;
-using System;
-using UnityEngine;
+﻿using System;
 
 public class Singleton<T> where T : class, new()
 {

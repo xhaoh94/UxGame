@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Ux
@@ -14,8 +13,19 @@ namespace Ux
             public int farme;
         }
         static readonly Queue<DelayFn> _delayFn = new Queue<DelayFn>();
-        static bool _isRunning = false;
-        static void _DelayInvoke()
+        public static void Init()
+        {
+            GameMethod.LateUpdate += _DequeueDelay;
+        }
+        public static void Release()
+        {
+            GameMethod.LateUpdate -= _DequeueDelay;
+        }
+        static void _EnqueueDelay(Action fn)
+        {
+            _delayFn.Enqueue(new DelayFn() { delayFn = fn, farme = TimeMgr.Ins.TotalFrame });
+        }    
+        static void _DequeueDelay()
         {
             var _exeNum = 0;
             var max = 200;
@@ -27,16 +37,6 @@ namespace Ux
                 _delayFn.Dequeue().delayFn.Invoke();
             }
         }
-        static void EnqueueDelay(Action fn)
-        {
-            _delayFn.Enqueue(new DelayFn() { delayFn = fn, farme = TimeMgr.Ins.TotalFrame });
-            if (!_isRunning)
-            {
-                _isRunning = true;
-                GameMain.Ins.AddLateUpdate(_DelayInvoke);
-            }
-        }
-
 
 
 #if UNITY_EDITOR        
@@ -738,7 +738,7 @@ namespace Ux
 
             if (Application.isPlaying)
             {
-                EnqueueDelay(_DelayDestroy);
+                _EnqueueDelay(_DelayDestroy);
             }
             else
             {

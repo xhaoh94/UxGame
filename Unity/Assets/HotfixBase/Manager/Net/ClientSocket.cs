@@ -174,7 +174,7 @@ namespace Ux
                 {
                     try
                     {
-                        this.OnSend();
+                        OnSend();
                     }
                     catch (Exception e)
                     {

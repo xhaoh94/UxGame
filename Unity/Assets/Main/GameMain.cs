@@ -4,6 +4,14 @@ using YooAsset;
 
 namespace Ux
 {
+    public static class GameMethod
+    {
+        public static Action Update;
+        public static Action LateUpdate;
+        public static Action FixedUpdate;
+        public static Action Quit;
+        public static Action LowMemory;
+    }
     public class GameStateMachine: StateMachine
     {
         public IStateNode StateNode { get; private set; }
@@ -16,6 +24,7 @@ namespace Ux
             StateNode = node;            
         }
     }
+
     public class GameMain : MonoBehaviour
     {
         public static GameMain Ins { get; private set; }
@@ -30,11 +39,11 @@ namespace Ux
 
         void Awake()
         {
+            Ins = this;
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
             }
-            Ins = this;
             zstring.Init(Log.Error);
             Machine = StateMachine.Create<GameStateMachine>();
             DontDestroyOnLoad(gameObject);
@@ -61,15 +70,6 @@ namespace Ux
             PatchMgr.Ins.Run();
         }
 
-        public void AddUpdate(Action action)
-        {
-            _update += action;
-        }
-        public void RemoveUpdate(Action action)
-        {
-            _update -= action;
-        }
-        Action _update;
         void Update()
         {
 #if UNITY_EDITOR
@@ -83,7 +83,7 @@ namespace Ux
 #endif
             try
             {
-                _update?.Invoke();
+                GameMethod.Update?.Invoke();                
             }
             catch (Exception e)
             {
@@ -91,74 +91,40 @@ namespace Ux
             }
         }
 
-        public void AddLateUpdate(Action action)
-        {
-            _lateUpdate += action;
-        }
-        public void RemoveLateUpdate(Action action)
-        {
-            _lateUpdate -= action;
-        }
-        Action _lateUpdate;
         void LateUpdate()
         {
             try
             {
-                _lateUpdate?.Invoke();
+                GameMethod.LateUpdate?.Invoke();
             }
             catch (Exception e)
             {
                 Log.Error(e);
             }
         }
-        public void AddFixedUpdate(Action action)
-        {
-            _fixedUpdate += action;
-        }
-        public void RemoveFixedUpdate(Action action)
-        {
-            _fixedUpdate -= action;
-        }
-        Action _fixedUpdate;
+               
         private void FixedUpdate()
         {
             try
             {
-                _fixedUpdate?.Invoke();
+                GameMethod.FixedUpdate?.Invoke();
             }
             catch (Exception e)
             {
                 Log.Error(e);
             }
         }
-        public void AddQuit(Action action)
-        {
-            _quit += action;
-        }
-        public void RemoveQuit(Action action)
-        {
-            _quit -= action;
-        }
-        Action _quit;
+
         private void OnApplicationQuit()
         {
-            _quit?.Invoke();
+            GameMethod.Quit?.Invoke();
         }
 
-        public void AddLowMemory(Action action)
-        {
-            _lowMemory += action;
-        }
-        public void RemoveLowMemory(Action action)
-        {
-            _lowMemory -= action;
-        }
-        Action _lowMemory;
         void OnLowMemory()
         {
             YooMgr.Ins.OnLowMemory();
             Pool.Clear();
-            _lowMemory?.Invoke();
+            GameMethod.LowMemory?.Invoke();
         }
     }
 }

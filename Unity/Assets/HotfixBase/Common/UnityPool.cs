@@ -28,7 +28,7 @@ public static class UnityPool
 #endif
     public static void Init()
     {
-        GameMain.Ins.AddLowMemory(Clear);
+        GameMethod.LowMemory += Clear;        
     }
     public static T Get<T>(string location, Func<T> create = null) where T : UnityEngine.Object
     {

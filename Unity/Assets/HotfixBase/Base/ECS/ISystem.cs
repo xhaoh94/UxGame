@@ -293,23 +293,22 @@ namespace Ux
 #endif
             if (this is IUpdateSystem updateSystem)
             {
-                GameMain.Ins.AddUpdate(updateSystem.OnUpdate);
-
+                GameMethod.Update += updateSystem.OnUpdate;     
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
-                GameMain.Ins.AddLateUpdate(lateUpdateSystem.OnLateUpdate);
+                GameMethod.LateUpdate += lateUpdateSystem.OnLateUpdate;                
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
             {
-                GameMain.Ins.AddFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+                GameMethod.FixedUpdate += fixedUpdateSystem.OnFixedUpdate;                
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                GameMain.Ins.AddQuit(applicationQuit.OnApplicationQuit);
+                GameMethod.Quit += applicationQuit.OnApplicationQuit;                
             }
             var temPar = Parent;
             if (temPar != null)
@@ -348,23 +347,23 @@ namespace Ux
             }
 #endif
             if (this is IUpdateSystem updateSystem)
-            {
-                GameMain.Ins.RemoveUpdate(updateSystem.OnUpdate);
+            {                
+                GameMethod.Update -= updateSystem.OnUpdate;
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
-            {
-                GameMain.Ins.RemoveLateUpdate(lateUpdateSystem.OnLateUpdate);
+            {                
+                GameMethod.LateUpdate -= lateUpdateSystem.OnLateUpdate;
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
-            {
-                GameMain.Ins.RemoveFixedUpdate(fixedUpdateSystem.OnFixedUpdate);
+            {                
+                GameMethod.FixedUpdate -= fixedUpdateSystem.OnFixedUpdate;
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
-            {
-                GameMain.Ins.RemoveQuit(applicationQuit.OnApplicationQuit);
+            {                
+                GameMethod.Quit -= applicationQuit.OnApplicationQuit;
             }
 
 
