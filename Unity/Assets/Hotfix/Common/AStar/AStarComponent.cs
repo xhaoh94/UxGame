@@ -23,7 +23,7 @@ namespace Ux
         async UniTaskVoid _Load()
         {
             IsLoadComplete = false;
-            var ta = await ResMgr.Ins.LoadAssetAsync<TextAsset>("map001graph");
+            var ta = await ResMgr.Ins.LoadAssetAsync<TextAsset>($"{PathHelper.Res.Prefab}/Map/Map001/map001graph");
             AstarPath.data.DeserializeGraphs(ta.bytes);
             IsLoadComplete = true;
         }

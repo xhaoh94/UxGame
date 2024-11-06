@@ -1,34 +1,14 @@
 ﻿using System;
+using UnityEditor;
 using UnityEngine.UIElements;
 using Ux.Editor.State.Item;
 namespace Ux.Editor.State
 {
     public partial class StateWindow
     {
-        StateConditionBase CreateCondition(StateConditionBase.ConditionType condition)
+        void OnCreateCondition()
         {
-            Type type = null;
-            switch (condition)
-            {
-                case StateConditionBase.ConditionType.State:
-                    type = typeof(StateCondition);
-                    break;
-                case StateConditionBase.ConditionType.TempBoolVar:
-                    type = typeof(TemBoolVarCondition);
-                    break;
-                case StateConditionBase.ConditionType.Action_Keyboard:
-                    type = typeof(ActionKeyboardCondition);
-                    break;
-                case StateConditionBase.ConditionType.Action_Input:
-                    type = typeof(ActionInputCondition);
-                    break;
-            }
-            if (type == null)
-            {
-                Log.Error($"没有找到名字为{condition}的条件");
-                return null;
-            }
-            return (StateConditionBase)Activator.CreateInstance(type);
+            _OnBtnConditionCancelClick();
         }
 
         partial void _OnBtnAddConditionClick()
@@ -38,12 +18,26 @@ namespace Ux.Editor.State
         }
         partial void _OnBtnConditionCreateClick()
         {
-            var element = MakeConditionItem();
-            var data = CreateCondition((StateConditionBase.ConditionType)enumCondition.value);
-            SelectItem.conditions.Add(data);            
-            BindConditionItem(element, conditionContent.childCount, data);
-            conditionContent.Add(element);
             veConditionCreate.style.display = DisplayStyle.None;
+            var conditionType = (StateConditionBase.ConditionType)enumCondition.value;
+            var addCondition = StateWindow.Asset.conditions.Find(x => x.Condition == conditionType);
+            if (addCondition == null)
+            {
+                addCondition = CreateCondition(conditionType);
+                StateWindow.Asset.conditions.Add(addCondition);
+            }
+            else
+            {
+                if (addCondition.isMute == false)
+                {
+                    Log.Error("同一状态机重复创建相同条件");
+                    return;
+                }
+                StateWindow.SetMute(addCondition, false);                
+            }
+            var element = MakeConditionItem();
+            BindConditionItem(element, addCondition);
+            conditionContent.Add(element);
         }
         partial void _OnBtnConditionCancelClick()
         {
@@ -53,11 +47,15 @@ namespace Ux.Editor.State
         void RefreshCondition()
         {
             conditionContent.Clear();
-            for (int i = 0; i < SelectItem.conditions.Count; i++)
+            for (int i = 0; i < StateWindow.Asset.conditions.Count; i++)
             {
-                var element = MakeConditionItem();
-                BindConditionItem(element, i, SelectItem.conditions[i]);
-                conditionContent.Add(element);
+                var condition = StateWindow.Asset.conditions[i];
+                if (condition.isMute == false)
+                {
+                    var element = MakeConditionItem();
+                    BindConditionItem(element, StateWindow.Asset.conditions[i]);
+                    conditionContent.Add(element);
+                }
             }
         }
 
@@ -66,13 +64,12 @@ namespace Ux.Editor.State
             var element = new StateConditionContent();
             return element;
         }
-        private void BindConditionItem(StateConditionContent element, int index, StateConditionBase condition)
+        private void BindConditionItem(StateConditionContent element, StateConditionBase condition)
         {
             var btn = element.Q<Button>("Sub");
             btn.clicked += () =>
             {
-                conditionContent.RemoveAt(index);
-                SelectItem.conditions.RemoveAt(index);
+                element.SetData(null);
             };
             element.SetData(condition);
         }

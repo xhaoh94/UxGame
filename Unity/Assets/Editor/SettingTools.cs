@@ -37,7 +37,7 @@ namespace Ux.Editor
             if (Directory.Exists(path))
             {
                 DirectoryInfo direction = new DirectoryInfo(path);
-                FileInfo[] files = direction.GetFiles("*");
+                FileInfo[] files = direction.GetFiles("*", SearchOption.AllDirectories);
                 for (int i = 0; i < files.Length; i++)
                 {
                     //忽略关联文件
@@ -48,7 +48,9 @@ namespace Ux.Editor
                     //Debug.Log("文件名:" + files[i].Name);
                     //Debug.Log("文件绝对路径:" + files[i].FullName);
                     //Debug.Log("文件所在目录:" + files[i].DirectoryName);
-                    var asset =AssetDatabase.LoadAssetAtPath<T>(files[i].FullName);
+                    var fPath = files[i].FullName.Replace("\\","/");
+                    fPath = fPath.Substring(fPath.IndexOf("Assets"));
+                    var asset =AssetDatabase.LoadAssetAtPath<T>(fPath);
                     assets.Add(asset);
                 }
             }

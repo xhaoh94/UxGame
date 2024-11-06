@@ -8,8 +8,7 @@ using UnityEngine.Rendering.Universal;
 namespace Ux
 {
     public partial class FogOfWarMgr : Singleton<FogOfWarMgr>
-    {
-        const string _location = "FogOfWar";
+    {         
         const string _visable = "FogOfWar";
 
         bool _init;
@@ -135,7 +134,7 @@ namespace Ux
                 return;
             }
             _init = true;
-            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>(_location);
+            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>($"{PathHelper.Res.Prefab}/Common/FogOfWar.prefab");
 
             Width = width;
             Height = height;

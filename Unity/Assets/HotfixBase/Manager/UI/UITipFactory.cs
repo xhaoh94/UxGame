@@ -31,7 +31,7 @@ namespace Ux
         void _Hide(UITip tip)
         {
             _showed.Remove(tip.ID);
-            if (tip.IsDestroy)
+            if (tip.HideDestroyTime >= 0)
             {
                 _waitDels.Add(tip.ID, tip);
             }
@@ -113,7 +113,7 @@ namespace Ux
                 Log.Error("没有指定Dialog面板,请检查是否已初始化SetDefalutType");
                 return;
             }
-            _CheckPos();            
+            _CheckPos();
             UIMgr.Ins.Show(id, IUIParam.Create(new TipData(_Show, _Hide, content)));
         }
 

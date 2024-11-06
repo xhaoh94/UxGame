@@ -12,8 +12,6 @@ namespace Ux
     {
         //显示超时
         const float _showTimeout = 5f;
-        //待销毁时间
-        const float _waitDelTime = 10f;
         //对话弹窗
         public static readonly UIMessageBoxFactory MessageBox = new UIMessageBoxFactory();
         //提示
@@ -27,12 +25,12 @@ namespace Ux
 #endif
 
         //界面缓存，关闭不销毁的界面会缓存起来
-        private readonly Dictionary<int, IUI> _cacel = new Dictionary<int, IUI>();
+        private readonly Dictionary<int, IUI> _cache = new Dictionary<int, IUI>();
 
         //临时界面缓存，关闭销毁的界面，如果父界面没销毁，
         //会临时缓存起来，等父界面关闭了，再销毁
-        private readonly Dictionary<int, IUI> _temCacel = new Dictionary<int, IUI>();
-        private readonly Dictionary<int, List<int>> _parentTemCacel = new Dictionary<int, List<int>>();
+        private readonly Dictionary<int, IUI> _temCache = new Dictionary<int, IUI>();
+        private readonly Dictionary<int, List<int>> _parentTemCache = new Dictionary<int, List<int>>();
 
         //正在显示中的ui列表
         private readonly List<int> _showing = new List<int>();
@@ -92,30 +90,30 @@ namespace Ux
         {
             MessageBox?.Clear();
             Tip?.Clear();
-            if (_cacel.Count > 0)
+            if (_cache.Count > 0)
             {
-                var ids = _cacel.Keys.ToList();
+                var ids = _cache.Keys.ToList();
                 for (var i = ids.Count - 1; i >= 0; i--)
                 {
                     var id = ids[i];
-                    if (!_cacel.TryGetValue(id, out IUI ui)) continue;
+                    if (!_cache.TryGetValue(id, out IUI ui)) continue;
                     Dispose(ui);
                 }
 
-                _cacel.Clear();
+                _cache.Clear();
             }
 
-            if (_temCacel.Count > 0)
+            if (_temCache.Count > 0)
             {
-                var ids = _temCacel.Keys.ToList();
+                var ids = _temCache.Keys.ToList();
                 for (var i = ids.Count - 1; i >= 0; i--)
                 {
                     var id = ids[i];
-                    if (!_temCacel.TryGetValue(id, out IUI ui)) continue;
+                    if (!_temCache.TryGetValue(id, out IUI ui)) continue;
                     Dispose(ui);
                 }
 
-                _temCacel.Clear();
+                _temCache.Clear();
             }
 
             if (_waitDels.Count > 0)
@@ -375,17 +373,17 @@ namespace Ux
             }
             else
             {
-                if (_temCacel.TryGetValue(id, out ui))
+                if (_temCache.TryGetValue(id, out ui))
                 {
-                    _temCacel.Remove(id);
+                    _temCache.Remove(id);
                     var temBottomId = ui.Data.GetParentID();
-                    if (_parentTemCacel.TryGetValue(temBottomId, out var temList))
+                    if (_parentTemCache.TryGetValue(temBottomId, out var temList))
                     {
                         if (temList.Remove(id))
                         {
                             if (temList.Count == 0)
                             {
-                                _parentTemCacel.Remove(temBottomId);
+                                _parentTemCache.Remove(temBottomId);
                             }
                         }
                     }
@@ -393,9 +391,9 @@ namespace Ux
                     __Debugger_TemCacel_Event();
 #endif
                 }
-                else if (_cacel.TryGetValue(id, out ui))
+                else if (_cache.TryGetValue(id, out ui))
                 {
-                    _cacel.Remove(id);
+                    _cache.Remove(id);
 #if UNITY_EDITOR
                     __Debugger_Cacel_Event();
 #endif
@@ -558,22 +556,22 @@ namespace Ux
         {
             var id = ui.ID;
             var parentID = ui.Data.GetParentID();
-            if (ui.IsDestroy)
+            if (ui.HideDestroyTime >= 0)
             {
                 //存在父界面，且父界面还没关闭，则放入临时缓存中
                 if (parentID != id && IsShow(parentID))
                 {
-                    if (_temCacel.ContainsKey(id))
+                    if (_temCache.ContainsKey(id))
                     {
                         Log.Error($"界面[{ui.Name}]多次放入临时缓存列表");
                         return;
                     }
 
-                    _temCacel.Add(id, ui);
-                    if (!_parentTemCacel.TryGetValue(parentID, out var temList))
+                    _temCache.Add(id, ui);
+                    if (!_parentTemCache.TryGetValue(parentID, out var temList))
                     {
                         temList = new List<int>();
-                        _parentTemCacel.Add(parentID, temList);
+                        _parentTemCache.Add(parentID, temList);
                     }
 
                     temList.Add(id);
@@ -588,7 +586,6 @@ namespace Ux
                         Log.Error($"界面[{ui.Name}]多次放入待删除列表");
                         return;
                     }
-
                     var wd = Pool.Get<WaitDel>();
                     wd.Init(ui);
                     _waitDels.Add(id, wd);
@@ -600,13 +597,13 @@ namespace Ux
             else
             {
                 //不销毁的界面放进缓存列表
-                if (_cacel.ContainsKey(id))
+                if (_cache.ContainsKey(id))
                 {
                     Log.Error($"界面[{ui.Name}]多次放入缓存列表");
                     return;
                 }
 
-                _cacel.Add(id, ui);
+                _cache.Add(id, ui);
 #if UNITY_EDITOR
                 __Debugger_Cacel_Event();
 #endif
@@ -615,13 +612,13 @@ namespace Ux
             //如果此界面是最底层的界面，则将属于此界面的临时缓存界面从列表清除
             if (id == parentID)
             {
-                if (_parentTemCacel.TryGetValue(id, out var temList) && temList.Count > 0)
+                if (_parentTemCache.TryGetValue(id, out var temList) && temList.Count > 0)
                 {
                     foreach (var cacelId in temList)
                     {
-                        if (_temCacel.TryGetValue(cacelId, out var temUI))
+                        if (_temCache.TryGetValue(cacelId, out var temUI))
                         {
-                            _temCacel.Remove(cacelId);
+                            _temCache.Remove(cacelId);
                             _CheckDestroy(temUI);
                         }
                     }

@@ -76,7 +76,7 @@ namespace Ux
             if (UnityEditor.EditorApplication.isPlaying)
             {
                 _Debugger_Cacels.Clear();
-                foreach (var kv in Ins._cacel)
+                foreach (var kv in Ins._cache)
                 {
                     _Debugger_Cacels.Add(kv.Value.Name);
                 }
@@ -90,7 +90,7 @@ namespace Ux
             if (UnityEditor.EditorApplication.isPlaying)
             {
                 _Debugger_TemCacels.Clear();
-                foreach (var kv in Ins._temCacel)
+                foreach (var kv in Ins._temCache)
                 {
                     _Debugger_TemCacels.Add(kv.Value.Name);
                 }

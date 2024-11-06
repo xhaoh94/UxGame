@@ -35,9 +35,9 @@ namespace Ux.UI
             GObject.asCom.AddChild(loader);
 
             testUIModel.CloneMaterial = true;
-            testUIModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
+            testUIModel.Load($"{PathHelper.Res.Prefab}/Unit/Hero_ZS.prefab").Play("Hero_ZS@Stand");
 
-            testRtModel.Load("Hero_ZS").Play("Hero_ZS@Stand");
+            testRtModel.Load($"{PathHelper.Res.Prefab}/Unit/Hero_ZS.prefab").Play("Hero_ZS@Stand");
 
             testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
             //this.DoTimer(5, 1, () =>

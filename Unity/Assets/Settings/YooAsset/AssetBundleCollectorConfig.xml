@@ -1,30 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<root Version="v2.0.0">
-	<Common ShowPackageView="False" ShowEditorAlias="False" UniqueBundleName="True" />
-	<Package PackageName="MainPackage" PackageDesc="主包" AutoAddressable="True" LocationToLower="False" IncludeAssetGUID="False" IgnoreDefaultType="True">
-		<Group GroupActiveRule="EnableGroup" GroupName="Builtin" GroupDesc="内置资源" AssetTags="builtin">
-			<Collector CollectPath="Assets/Data/Res/Prefab/FogOfWar" CollectGUID="03ba04db73f99bd42b2378dbe96da11b" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
-			<Collector CollectPath="Assets/Data/Res/Texture" CollectGUID="44c4d93bd00271241a1cffdca263e47b" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
-			<Collector CollectPath="Assets/Data/Res/Prefab/Common" CollectGUID="9dfef7769977a774bb51fbe27ef660e3" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackSeparately" FilterRule="CollectAll" UserData="" AssetTags="" />
-		</Group>
-		<Group GroupActiveRule="EnableGroup" GroupName="Preload" GroupDesc="预加载" AssetTags="preload">
-			<Collector CollectPath="Assets/Data/Res/Prefab/Map" CollectGUID="81531e71e6b35264bad074572c22b908" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
-			<Collector CollectPath="Assets/Data/Res/Prefab/Hero" CollectGUID="380af11a1e9ffcb479ee49926358d18c" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
-			<Collector CollectPath="Assets/Data/Res/Timeline" CollectGUID="de523ac24d0eef34d83b36ad0bf292a6" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackSeparately" FilterRule="CollectAll" UserData="" AssetTags="" />
-			<Collector CollectPath="Assets/Data/Res/Atlas" CollectGUID="bbf62020395cb4c489585f2ffd312862" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackSeparately" FilterRule="CollectAll" UserData="" AssetTags="" />
-		</Group>
-		<Group GroupActiveRule="EnableGroup" GroupName="Code" GroupDesc="代码" AssetTags="builtin">
-			<Collector CollectPath="Assets/Scenes/Hotfix.unity" CollectGUID="8637324786e1dda489f776e4e1cf2fed" CollectType="MainAssetCollector" AddressRule="AddressByGroupAndFileName" PackRule="PackSeparately" FilterRule="CollectAll" UserData="" AssetTags="" />
-			<Collector CollectPath="Assets/Data/Res/Code" CollectGUID="5136dcfd732443e4fbcedd13488bb8d5" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackSeparately" FilterRule="CollectAll" UserData="" AssetTags="" />
-		</Group>
-		<Group GroupActiveRule="EnableGroup" GroupName="Config" GroupDesc="配置表" AssetTags="builtin">
-			<Collector CollectPath="Assets/Data/Res/Config" CollectGUID="8f52838e936dc4e42976f151a4bf6d17" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
-		</Group>
-		<Group GroupActiveRule="EnableGroup" GroupName="UI" GroupDesc="UI界面" AssetTags="">
-			<Collector CollectPath="Assets/Data/Res/UI" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackTopDirectory" FilterRule="CollectBuiltinUI" UserData="" AssetTags="builtin" />
-			<Collector CollectPath="Assets/Data/Res/UI" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackTopDirectory" FilterRule="CollectPreloadUI" UserData="" AssetTags="preload" />
-			<Collector CollectPath="Assets/Data/Res/UI/Bag" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="lazyload_bag" />
-			<Collector CollectPath="Assets/Data/Res/UI/Multiple" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="lazyload_multiple" />
-		</Group>
-	</Package>
+<root Version="v2.1">
+  <Common ShowPackageView="False" ShowEditorAlias="False" UniqueBundleName="True" />
+  <Package PackageName="MainPackage" PackageDesc="主包" AutoAddressable="False" LocationToLower="False" IncludeAssetGUID="False" IgnoreRuleName="NormalIgnoreRule">
+    <Group GroupActiveRule="EnableGroup" GroupName="Builtin" GroupDesc="内置资源" AssetTags="builtin">
+      <Collector CollectPath="Assets/Data/Res/Prefab/FogOfWar" CollectGUID="03ba04db73f99bd42b2378dbe96da11b" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Prefab/Common" CollectGUID="9dfef7769977a774bb51fbe27ef660e3" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Preload" GroupDesc="预加载" AssetTags="preload">
+      <Collector CollectPath="Assets/Data/Res/Prefab/Map" CollectGUID="81531e71e6b35264bad074572c22b908" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Prefab/Hero" CollectGUID="380af11a1e9ffcb479ee49926358d18c" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Timeline" CollectGUID="de523ac24d0eef34d83b36ad0bf292a6" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/State" CollectGUID="6f674d35e7cacd841b1c1d4feac8c10a" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Code" GroupDesc="代码" AssetTags="builtin">
+      <Collector CollectPath="Assets/Data/Res/Code" CollectGUID="5136dcfd732443e4fbcedd13488bb8d5" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="Config" GroupDesc="配置" AssetTags="builtin">
+      <Collector CollectPath="Assets/Data/Res/Config" CollectGUID="8f52838e936dc4e42976f151a4bf6d17" CollectType="MainAssetCollector" AddressRule="AddressByFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+    </Group>
+    <Group GroupActiveRule="EnableGroup" GroupName="UI" GroupDesc="UI界面" AssetTags="">
+      <Collector CollectPath="Assets/Data/Res/UI" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackTopDirectory" FilterRule="CollectBuiltinUI" UserData="" AssetTags="builtin" />
+      <Collector CollectPath="Assets/Data/Res/UI" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackTopDirectory" FilterRule="CollectPreloadUI" UserData="" AssetTags="preload" />
+      <Collector CollectPath="Assets/Data/Res/UI/Bag" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="lazyload_bag" />
+      <Collector CollectPath="Assets/Data/Res/UI/Multiple" CollectGUID="" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="lazyload_multiple" />
+    </Group>
+  </Package>
 </root>

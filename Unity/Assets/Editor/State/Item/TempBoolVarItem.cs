@@ -3,7 +3,7 @@ namespace Ux.Editor.State.Item
 {
     public partial class TempBoolVarItem : StateItemBase<TemBoolVarCondition>
     {
-        public TempBoolVarItem(StateConditionBase data) : base(data)
+        public TempBoolVarItem()
         {
             CreateChildren();
             Add(root);

@@ -13,7 +13,7 @@ namespace Ux
         protected override void LoadExternal()
         {
             //base.LoadExternal();
-            var sa = ResMgr.Ins.LoadAsset<SpriteAtlas>("items", YooType.Main);
+            var sa = ResMgr.Ins.LoadAsset<SpriteAtlas>($"{PathHelper.Res.Atlas}/items", YooType.Main);
             var sp = sa.GetSprite(url);
             if (sp == null)
             {

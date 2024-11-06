@@ -11,7 +11,7 @@ namespace Ux
 
         protected override string ResName => null;
 
-        public override bool IsDestroy => false;
+        public override int HideDestroyTime => -1;
         public override UIType Type => UIType.Fixed;
         public override UIBlur Blur => UIBlur.None | UIBlur.Blur | UIBlur.Fixed;
         protected UIMessageBoxFactory.MessageBoxData messageBoxData;

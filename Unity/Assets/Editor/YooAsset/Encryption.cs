@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Ux;
 using YooAsset;
 
 /// <summary>
@@ -14,7 +15,7 @@ public class FileOffsetEncryption : IEncryptionServices
         if (fileInfo.BundleName.Contains("_gameres_audio"))
         {
             int offset = 32;
-            byte[] fileData = File.ReadAllBytes(fileInfo.FilePath);
+            byte[] fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
             var encryptedData = new byte[fileData.Length + offset];
             Buffer.BlockCopy(fileData, 0, encryptedData, offset, fileData.Length);
 
@@ -41,7 +42,7 @@ public class FileStreamEncryption : IEncryptionServices
     {
         if (fileInfo.BundleName.Contains("_gameres_audio"))
         {
-            var fileData = File.ReadAllBytes(fileInfo.FilePath);
+            var fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
             for (int i = 0; i < fileData.Length; i++)
             {
                 fileData[i] ^= BundleStream.KEY;

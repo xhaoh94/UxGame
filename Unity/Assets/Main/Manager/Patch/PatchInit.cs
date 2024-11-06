@@ -1,4 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
+using UnityEngine;
 using YooAsset;
 
 namespace Ux
@@ -12,14 +14,19 @@ namespace Ux
 
         async UniTaskVoid Initialize(EPlayMode playMode)
         {
-            await YooMgr.Ins.Initialize(playMode);            
-            if (playMode == EPlayMode.EditorSimulateMode)
-            {
-                PatchMgr.Enter<PatchDone>();
+            var succeed = await YooMgr.Ins.Initialize(playMode);
+            if (succeed)
+            {                
+                PatchMgr.Enter<PatchUpdateStaticVersion>();                
             }
             else
             {
-                PatchMgr.Enter<PatchUpdateStaticVersion>();
+                // 如果初始化失败弹出提示界面            
+                Action callback = () =>
+                {
+                    Application.Quit();
+                };
+                PatchMgr.Ins.View.ShowMessageBox("初始化失败", "确定", callback);
             }
         }
 

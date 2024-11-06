@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Ux
 {
@@ -38,6 +39,8 @@ namespace Ux
             Up,
             Pressed,
         }
+        [HideInInspector]
+        public bool isMute;
         public abstract bool IsValid { get; }
         public abstract ConditionType Condition { get; }
         public IUnitState UnitState { get; private set; }

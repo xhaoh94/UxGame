@@ -27,7 +27,7 @@ namespace Ux
                 Component.PlayableGraph.DestroySubgraph(MixerRoot);
             }            
         }
-        public void Connect(TLAnimationLayer layer)
+        public void Connect(TLAnimationLayer layer,bool isAdditive)
         {
             if (layer == null)
                 return;
@@ -58,8 +58,8 @@ namespace Ux
                 {
                     mixer.StartWeightFade(1f, 0.3f);
                 }
-                else
-                {
+                else if(!isAdditive)
+                {                    
                     mixer.StartWeightFade(0f, 0.3f);
                 }
             }

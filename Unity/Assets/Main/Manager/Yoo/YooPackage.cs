@@ -1,5 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
+using System.IO;
+using UnityEngine;
 using YooAsset;
 
 namespace Ux
@@ -12,11 +14,27 @@ namespace Ux
         //原生文件,由于微信小游戏不支持多Pacage,所以暂时不用原生文件。如果要读取原生文件，放到Main里面，用TextAsset方式读取
         RawFile,
     }
+    public interface IYooPackage
+    {
+        UniTask<bool> Initialize(EPlayMode playMode);
+    }
+    public class YooMainPackage : YooPackage
+    {
+        public override YooType YooType => YooType.Main;
+        public override string Name => "MainPackage";
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
+    }
+    public class YooRawFilePackage : YooPackage
+    {
+        public override YooType YooType => YooType.RawFile;
+        public override string Name => "RawFilePackage";
+        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
+    }
+
     public abstract class YooPackage : IYooPackage
     {
         public abstract YooType YooType { get; }
-        public abstract string Name { get; }
-        public abstract Type DecryptionType { get; }
+        public abstract string Name { get; }        
         public abstract EDefaultBuildPipeline EDefaultBuildPipeline { get; }
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
@@ -34,59 +52,56 @@ namespace Ux
         {
             // 创建资源包            
             _CreatePackage();
-
-            InitializeParameters initializeParameters = null;
-            IDecryptionServices decryptionServices = null;
-            if (DecryptionType != null)
-            {
-                decryptionServices = Activator.CreateInstance(DecryptionType) as IDecryptionServices;
-            }
+            InitializationOperation initializationOperation = null;            
             switch (playMode)
             {
 #if UNITY_EDITOR
                 // 编辑器模拟模式
                 case EPlayMode.EditorSimulateMode:
                     {
-                        initializeParameters = new EditorSimulateModeParameters
-                        {
-                            SimulateManifestFilePath = EditorSimulateModeHelper.SimulateBuild(EDefaultBuildPipeline, Name)
-                        };
+                        var simulateBuildResult = EditorSimulateModeHelper.SimulateBuild(EDefaultBuildPipeline, Name);
+                        var createParameters = new EditorSimulateModeParameters();
+                        createParameters.EditorFileSystemParameters = FileSystemParameters.CreateDefaultEditorFileSystemParameters(simulateBuildResult);
+                        initializationOperation = Package.InitializeAsync(createParameters);
                         break;
                     }
 #endif
                 // 单机模式
                 case EPlayMode.OfflinePlayMode:
                     {
-                        initializeParameters = new OfflinePlayModeParameters();
+                        var createParameters = new OfflinePlayModeParameters();
+                        createParameters.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                        initializationOperation = Package.InitializeAsync(createParameters);
                         break;
                     }
                 // 联机模式
                 case EPlayMode.HostPlayMode:
                     {
-                        initializeParameters = new HostPlayModeParameters
-                        {
-                            BuildinQueryServices = new GameQueryServices(),
-                            DeliveryQueryServices = new DeliveryQueryServices(),
-                            DeliveryLoadServices = new DeliveryLoadServices(),
-                            RemoteServices = new RemoteServices(Global.GetHostServerURL(), Global.GetFallbackHostServerURL())
-                        };
+                        IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
+                            Global.GetFallbackHostServerURL());
+                        var createParameters = new HostPlayModeParameters();
+                        createParameters.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                        createParameters.CacheFileSystemParameters = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices);
+                        initializationOperation = Package.InitializeAsync(createParameters);
                         break;
                     }
                 // WebGL运行模式
                 case EPlayMode.WebPlayMode:
                     {
-                        initializeParameters = new WebPlayModeParameters()
-                        {
-                            BuildinQueryServices = new GameQueryServices(),
-                            RemoteServices = new RemoteServices(Global.GetHostServerURL(), Global.GetFallbackHostServerURL()),
-                        };
+                        var createParameters = new WebPlayModeParameters();
+#if UNITY_WEBGL && WEIXINMINIGAME && !UNITY_EDITOR
+			            IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
+                            Global.GetFallbackHostServerURL());
+                        createParameters.WebFileSystemParameters = WechatFileSystemCreater.CreateWechatFileSystemParameters(remoteServices);
+#else
+                        createParameters.WebFileSystemParameters = FileSystemParameters.CreateDefaultWebFileSystemParameters();
+#endif
+                        initializationOperation = Package.InitializeAsync(createParameters);
                         break;
                     }
                 default:
                     throw new ArgumentOutOfRangeException();
-            }
-            initializeParameters.DecryptionServices = decryptionServices;
-            var initializationOperation = Package.InitializeAsync(initializeParameters);
+            }                        
             await initializationOperation;
             if (initializationOperation.Status != EOperationStatus.Succeed)
             {
@@ -121,25 +136,127 @@ namespace Ux
         }
         #endregion
 
+        #region 解密
+        /// <summary>
+        /// 资源文件流加载解密类
+        /// </summary>
+        class FileStreamDecryption : IDecryptionServices
+        {
+            /// <summary>
+            /// 同步方式获取解密的资源包对象
+            /// 注意：加载流对象在资源包对象释放的时候会自动释放
+            /// </summary>
+            AssetBundle IDecryptionServices.LoadAssetBundle(DecryptFileInfo fileInfo, out Stream managedStream)
+            {
+                BundleStream bundleStream = new BundleStream(fileInfo.FileLoadPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                managedStream = bundleStream;
+                return AssetBundle.LoadFromStream(bundleStream, fileInfo.FileLoadCRC, GetManagedReadBufferSize());
+            }
+
+            /// <summary>
+            /// 异步方式获取解密的资源包对象
+            /// 注意：加载流对象在资源包对象释放的时候会自动释放
+            /// </summary>
+            AssetBundleCreateRequest IDecryptionServices.LoadAssetBundleAsync(DecryptFileInfo fileInfo, out Stream managedStream)
+            {
+                BundleStream bundleStream = new BundleStream(fileInfo.FileLoadPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                managedStream = bundleStream;
+                return AssetBundle.LoadFromStreamAsync(bundleStream, fileInfo.FileLoadCRC, GetManagedReadBufferSize());
+            }
+
+            /// <summary>
+            /// 获取解密的字节数据
+            /// </summary>
+            byte[] IDecryptionServices.ReadFileData(DecryptFileInfo fileInfo)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            /// <summary>
+            /// 获取解密的文本数据
+            /// </summary>
+            string IDecryptionServices.ReadFileText(DecryptFileInfo fileInfo)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            private static uint GetManagedReadBufferSize()
+            {
+                return 1024;
+            }
+        }
+
+        /// <summary>
+        /// 资源文件偏移加载解密类
+        /// </summary>
+        class FileOffsetDecryption : IDecryptionServices
+        {
+            /// <summary>
+            /// 同步方式获取解密的资源包对象
+            /// 注意：加载流对象在资源包对象释放的时候会自动释放
+            /// </summary>
+            AssetBundle IDecryptionServices.LoadAssetBundle(DecryptFileInfo fileInfo, out Stream managedStream)
+            {
+                managedStream = null;
+                return AssetBundle.LoadFromFile(fileInfo.FileLoadPath, fileInfo.FileLoadCRC, GetFileOffset());
+            }
+
+            /// <summary>
+            /// 异步方式获取解密的资源包对象
+            /// 注意：加载流对象在资源包对象释放的时候会自动释放
+            /// </summary>
+            AssetBundleCreateRequest IDecryptionServices.LoadAssetBundleAsync(DecryptFileInfo fileInfo, out Stream managedStream)
+            {
+                managedStream = null;
+                return AssetBundle.LoadFromFileAsync(fileInfo.FileLoadPath, fileInfo.FileLoadCRC, GetFileOffset());
+            }
+
+            /// <summary>
+            /// 获取解密的字节数据
+            /// </summary>
+            byte[] IDecryptionServices.ReadFileData(DecryptFileInfo fileInfo)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            /// <summary>
+            /// 获取解密的文本数据
+            /// </summary>
+            string IDecryptionServices.ReadFileText(DecryptFileInfo fileInfo)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            private static ulong GetFileOffset()
+            {
+                return 32;
+            }
+        }
+        #endregion
     }
 
-    public interface IYooPackage
+    /// <summary>
+    /// 资源文件解密流
+    /// </summary>
+    public class BundleStream : FileStream
     {
-        UniTask<bool> Initialize(EPlayMode playMode);
-    }
-    public class YooMainPackage : YooPackage
-    {
-        public override YooType YooType => YooType.Main;
-        public override string Name => "MainPackage";
-        public override Type DecryptionType => null;
+        public const byte KEY = 64;
 
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
-    }  
-    public class YooRawFilePackage : YooPackage
-    {
-        public override YooType YooType => YooType.RawFile;
-        public override string Name => "RawFilePackage";
-        public override Type DecryptionType => null;
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
+        public BundleStream(string path, FileMode mode, FileAccess access, FileShare share) : base(path, mode, access, share)
+        {
+        }
+        public BundleStream(string path, FileMode mode) : base(path, mode)
+        {
+        }
+
+        public override int Read(byte[] array, int offset, int count)
+        {
+            var index = base.Read(array, offset, count);
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] ^= KEY;
+            }
+            return index;
+        }
     }
 }

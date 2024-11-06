@@ -63,7 +63,7 @@ namespace Ux.UI
     [TabTitle("T1")]
     partial class Multiple1TabView
     {
-        public override bool IsDestroy => false;
+        public override int HideDestroyTime => -1;
         //protected override IUIAnim ShowAnim => new UITransition(t0);
         //protected override IUIAnim HideAnim => new UITransition(t1);        
         partial void OnBtn1Click(EventContext e)
@@ -78,7 +78,7 @@ namespace Ux.UI
     [TabTitle("T2")]
     partial class Multiple2TabView
     {
-        public override bool IsDestroy => false;
+        public override int HideDestroyTime => -1;
         protected override IUIAnim ShowAnim => new UIAnimTransition(t0);
         protected override IUIAnim HideAnim => new UIAnimTransition(t1);
         protected override void OnShow()
@@ -95,7 +95,7 @@ namespace Ux.UI
     [TabTitle("T3")]
     partial class Multiple3TabView
     {
-        public override bool IsDestroy => false;
+        public override int HideDestroyTime => -1;
         partial void OnBtn1Click(EventContext e)
         {
             UIMgr.Ins.Show<UI.Stack3View>();

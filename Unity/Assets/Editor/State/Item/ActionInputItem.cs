@@ -5,7 +5,7 @@ namespace Ux.Editor.State.Item
 {
     public partial class ActionInputItem : StateItemBase<ActionInputCondition>
     {
-        public ActionInputItem(StateConditionBase data) : base(data)
+        public ActionInputItem()
         {
             CreateChildren();
             Add(root);

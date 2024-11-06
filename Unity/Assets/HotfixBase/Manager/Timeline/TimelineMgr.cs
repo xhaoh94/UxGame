@@ -15,6 +15,10 @@ namespace Ux
         {
             return Mathf.FloorToInt(time * FrameRate);
         }
-
+        public TimelineAsset LoadAsset(string assetName)
+        {
+            var asset = ResMgr.Ins.LoadAsset<TimelineAsset>($"{PathHelper.Res.Timeline}/{assetName}");
+            return asset;
+        }
     }
 }

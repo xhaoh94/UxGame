@@ -2,7 +2,7 @@
   "dependencies": {
     "com.code-philosophy.hybridclr": "https://gitee.com/focus-creative-games/hybridclr_unity.git",
     "com.greenbamboogames.playablegraphmonitor": "2.5.9",
-    "com.tuyoogame.yooasset": "2.1.1",
+    "com.tuyoogame.yooasset": "2.2.4-preview",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.animation.rigging": "1.2.1",
@@ -17,7 +17,7 @@
     "com.unity.postprocessing": "3.4.0",
     "com.unity.render-pipelines.universal": "14.0.11",
     "com.unity.test-framework": "1.1.33",
-    "com.unity.textmeshpro": "3.0.6",
+    "com.unity.textmeshpro": "3.0.9",
     "com.unity.timeline": "1.7.6",
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.ai": "1.0.0",

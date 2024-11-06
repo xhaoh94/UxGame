@@ -23,10 +23,11 @@ namespace Ux
         const string _ecs_root_pool = "_$ecs_root_pool$_";        
         public GameObject Model { get; private set; }
         public AnimComponent Anim => Get<AnimComponent>();
+        public TimelineComponent Timeline => Get<TimelineComponent>();
         public StateComponent State => Get<StateComponent>();
         public SeekerComponent Seeker => Get<SeekerComponent>();
         public PathComponent Path => Get<PathComponent>();
-        public PlayableDirectorComponent Director => Get<PlayableDirectorComponent>();
+        //public PlayableDirectorComponent Director => Get<PlayableDirectorComponent>();
 
         #region Get-Set
         private Vector3 _postion;
@@ -86,15 +87,7 @@ namespace Ux
         public void OnAwake(PlayerData playerData)
         {
             _playerData = playerData;
-            Add<StateComponent>();
-            Add<PathComponent>();
-            if (playerData.self)
-            {
-                Add<OperateComponent>();
-            }
-            Visible = new BoolValue(OnVisableChanged);          
-            
-            var root =UnityPool.Get(_ecs_root_pool, () => new GameObject());
+            var root = UnityPool.Get(_ecs_root_pool, () => new GameObject());
             root.name = _playerData.name;
             if (_playerData.self)
             {
@@ -102,6 +95,17 @@ namespace Ux
                 //Map.Camera.SetLookAt(root.transform);
             }
             Link(root);
+
+            Add<StateComponent>();
+            Add<TimelineComponent>();
+            Add<PathComponent>();
+            if (playerData.self)
+            {
+                Add<OperateComponent>();
+            }
+            Visible = new BoolValue(OnVisableChanged);          
+            
+           
             LoadModel().Forget();
             Position = _playerData.pos;
         }
@@ -120,8 +124,8 @@ namespace Ux
  
             Add<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
             Add<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
-            Add<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
-            Director.SetBinding("Anim Track", Viewer.GetComponentInChildren<Animator>());
+            //Add<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
+            //Director.SetBinding("Anim Track", Viewer.GetComponentInChildren<Animator>());
             StateMgr.Ins.Update(ID);
         }
 

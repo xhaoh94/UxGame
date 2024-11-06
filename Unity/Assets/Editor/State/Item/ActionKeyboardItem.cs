@@ -6,7 +6,7 @@ namespace Ux.Editor.State.Item
 {
     public partial class ActionKeyboardItem : StateItemBase<ActionKeyboardCondition>
     {
-        public ActionKeyboardItem(StateConditionBase data) : base(data)
+        public ActionKeyboardItem()
         {
             CreateChildren();
             Add(root);            

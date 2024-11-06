@@ -1,15 +1,12 @@
 ﻿using FairyGUI;
-using FairyGUI.Utils;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static Ux.UIModel;
-using NativeBlendMode = UnityEngine.Rendering.BlendMode;
 
 namespace Ux
 {
     public class RTModel : UIObject
-    {
+    {           
         public GameObject Model { get; private set; }
         public Camera Camera { get; private set; }
 
@@ -78,8 +75,8 @@ namespace Ux
             _width = (int)container.width;
             _height = (int)container.height;
 
-            this._image = new Image();
-            __container.SetNativeObject(this._image);
+            _image = new Image();
+            __container.SetNativeObject(_image);
 
             OnHideCallBack += _Release;
         }
@@ -87,10 +84,10 @@ namespace Ux
         protected override void OnDispose()
         {
             base.OnDispose();
-            if (this._image != null)
+            if (_image != null)
             {
-                this._image.Dispose();
-                this._image = null;
+                _image.Dispose();
+                _image = null;
             }
         }
 
@@ -116,7 +113,7 @@ namespace Ux
             }
             return _Set(model, false, angle, scale);
         }
-        public RTModel _Set(GameObject model, bool isLoad, float angle, float scale)
+        RTModel _Set(GameObject model, bool isLoad, float angle, float scale)
         {
             _CreateCamera();
             _CreateTexture();
@@ -127,12 +124,12 @@ namespace Ux
             }
 
             _isInLoad = isLoad;
-            this.Model = model;
+            Model = model;
             _srcLayer = model.layer;
             model.transform.localPosition = new Vector3(0, -1f, 5);
             model.transform.localScale = new Vector3(scale, scale, scale);
             model.transform.localEulerAngles = new Vector3(0, angle, 0);
-            model.SetParent(this._root, false);
+            model.SetParent(_root, false);
             model.SetLayer(LayerMask.NameToLayer(Layers.RTModel));
 
 
@@ -152,7 +149,7 @@ namespace Ux
         void _CreateCamera()
         {
             if (Camera != null) return;
-            var go = ResMgr.Ins.LoadAsset<GameObject>("RTModelCamera");
+            var go = ResMgr.Ins.LoadAsset<GameObject>($"{PathHelper.Res.Prefab}/Common/RTModelCamera.prefab");
             Camera = go.GetComponent<Camera>();
             _posz = GetPosZ();
             Camera.transform.position = new Vector3(0, 1000, _posz);
@@ -171,15 +168,15 @@ namespace Ux
             _renderTexture.anisoLevel = 0;
             _renderTexture.useMipMap = false;
 
-            this._image.texture = new NTexture(_renderTexture);
+            _image.texture = new NTexture(_renderTexture);
 
-            Timers.inst.AddUpdate(this.Render);
-            Render();
+            Timers.inst.AddUpdate(_Render);
+            _Render();
 
         }
         void _Release()
         {
-            Timers.inst.Remove(this.Render);
+            Timers.inst.Remove(_Render);
 
             _entity?.Destroy();
             _entity = null;
@@ -210,9 +207,9 @@ namespace Ux
                 _renderTexture = null;
             }
 
-            if (this._image != null)
+            if (_image != null)
             {
-                this._image.texture = null;
+                _image.texture = null;
             }
 
             _curAnim = null;
@@ -235,11 +232,11 @@ namespace Ux
         }
 
 
-        void Render(object param = null)
+        void _Render(object param = null)
         {
-            Camera.targetTexture = this._renderTexture;
+            Camera.targetTexture = _renderTexture;
             RenderTexture old = RenderTexture.active;
-            RenderTexture.active = this._renderTexture;
+            RenderTexture.active = _renderTexture;
             GL.Clear(true, true, Color.clear);
             Camera.Render();
             RenderTexture.active = old;

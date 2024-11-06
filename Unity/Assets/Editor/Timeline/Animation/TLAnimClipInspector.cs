@@ -16,8 +16,8 @@ namespace Ux.Editor.Timeline.Animation
             txtStartFrame.RegisterCallback<FocusInEvent>(_TxtFBlur);
             txtStartFrame.RegisterCallback<FocusOutEvent>(_TxtSBlur);
             txtStartFrame.RegisterCallback<MouseUpEvent>(_TxtUpEvent);
-            
-            txtStartFrame.labelElement.style.minWidth = 15;            
+
+            txtStartFrame.labelElement.style.minWidth = 15;
             txtEndFrame.labelElement.style.minWidth = 15;
 
             ofClip.objectType = typeof(AnimationClip);
@@ -29,7 +29,7 @@ namespace Ux.Editor.Timeline.Animation
             txtName.SetValueWithoutNotify(_asset.clipName);
             ofClip.SetValueWithoutNotify(_asset.clip);
 
-            lbStartTime.text= $" 秒 {_asset.StartTime}";
+            lbStartTime.text = $" 秒 {_asset.StartTime}";
             txtStartFrame.SetValueWithoutNotify(_asset.StartFrame);
 
             lbEndTime.text = $" 秒 {_asset.EndTime}";
@@ -46,8 +46,8 @@ namespace Ux.Editor.Timeline.Animation
 
             pre.Init(_asset.pre);
             post.Init(_asset.post);
-            pre.style.display = _asset.PreFrame >= 0 ? DisplayStyle.Flex : DisplayStyle.None;
-            post.style.display = _asset.PostFrame >=0 ? DisplayStyle.Flex : DisplayStyle.None;
+            pre.style.display = (_asset.PreFrame >= 0 && _asset.PreFrame < _asset.StartFrame) ? DisplayStyle.Flex : DisplayStyle.None;
+            post.style.display = _asset.PostFrame >= 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
             btnDuration.style.display = DisplayStyle.None;
             if (_asset.clip != null)
@@ -149,7 +149,7 @@ namespace Ux.Editor.Timeline.Animation
             TimelineWindow.Run(_asset);
             if (!ChcekValid())
             {
-                _asset.EndFrame = oldEndFrame;                
+                _asset.EndFrame = oldEndFrame;
             }
         }
         partial void _OnPreChanged(ChangeEvent<System.Enum> e)

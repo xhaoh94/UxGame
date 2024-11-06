@@ -6,7 +6,7 @@
         public void OnAwake()
         {
             Machine = StateMachine.CreateByPool<UnitStateMachine>(this);
-            Machine.InitGroup("HeroZs", Parent.ID);
+            Machine.InitGroup("HeroZS", Parent.ID);
         }
 
         protected override void OnDestroy()

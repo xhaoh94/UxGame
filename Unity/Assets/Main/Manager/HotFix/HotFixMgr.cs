@@ -15,12 +15,7 @@ namespace Ux
             "Unity.HotfixBase",
             "Assembly-CSharp"
         };
-
-        public const string HotfixScene = "Code_Hotfix";
-
-        private const string AotPrefix = "Code/{0}";
-        private const string HotPrefix = "Code_{0}";
-
+                  
         private List<Type> _hotfixTypes;
 
         public void Init()
@@ -32,8 +27,7 @@ namespace Ux
                 return;
             }
 
-            YooMgr.Ins.GetPackage(YooType.Main).Package.
-                LoadSceneAsync(HotfixScene);
+            YooMgr.Ins.GetPackage(YooType.Main).Package.LoadSceneAsync("Assets/Scenes/Hotfix.unity");
         }
 
         public List<Assembly> Assemblys { get; private set; } = new List<Assembly>();
@@ -44,8 +38,9 @@ namespace Ux
             LoadMetadataForAOTAssembly();
             foreach (var hotfixName in HotfixAssembly)
             {
-                byte[] assBytes = null;
-                using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(string.Format(HotPrefix, $"{hotfixName}.dll")))
+                byte[] assBytes = null;                
+                var codePath =$"Assets/Data/Res/Code/{hotfixName}.dll";
+                using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(codePath))
                 {
                     assBytes = handle.GetAssetObject<TextAsset>().bytes;
                     if (assBytes == null)
@@ -80,7 +75,7 @@ namespace Ux
             const HomologousImageMode mode = HomologousImageMode.Consistent;
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
-                var dllName = string.Format(AotPrefix, aotDllName);
+                var dllName =$"Code/{aotDllName}";
                 var ta = Resources.Load<TextAsset>(dllName);
                 byte[] assBytes = ta.bytes;
                 if (assBytes == null)

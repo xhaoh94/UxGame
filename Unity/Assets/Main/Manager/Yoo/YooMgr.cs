@@ -14,28 +14,17 @@ namespace Ux
         };
 
         readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();
-        public async UniTask Initialize(EPlayMode playMode)
+        public async UniTask<bool> Initialize(EPlayMode playMode)
         {
             if (YooAssets.Initialized)
             {
                 Log.Error($"{nameof(YooAssets)} is initialized !");
-                return;
+                return false;
             }
             // 初始化资源系统
             YooAssets.Initialize();
             // 初始化资源包
-            var succeed = await InitializePackage(playMode);
-
-            if (succeed || playMode == EPlayMode.EditorSimulateMode)
-            {
-                return;
-            }
-            // 如果初始化失败弹出提示界面            
-            Action callback = () =>
-            {
-                PatchMgr.Ins.Enter<PatchInit>();
-            };
-            PatchMgr.Ins.View.ShowMessageBox("初始化失败", "确定", callback);
+            return await InitializePackage(playMode);            
         }
         async UniTask<bool> InitializePackage(EPlayMode playMode)
         {
@@ -97,18 +86,18 @@ namespace Ux
         }
 
         #region 资源卸载
-        public void ForceUnloadAllAssets()
+        public void UnloadAllAssetsAsync()
         {
-            ForEachPackage(x => x.Package.ForceUnloadAllAssets());
+            ForEachPackage(x => x.Package.UnloadAllAssetsAsync());
         }
-        public void UnloadUnusedAssets()
+        public void UnloadUnusedAssetsAsync()
         {
-            ForEachPackage(x => x.Package.UnloadUnusedAssets());
+            ForEachPackage(x => x.Package.UnloadUnusedAssetsAsync());
         }
         #endregion
         public void OnLowMemory()
         {
-            UnloadUnusedAssets();
+            UnloadUnusedAssetsAsync();
         }
     }
 }

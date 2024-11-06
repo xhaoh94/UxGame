@@ -2,7 +2,7 @@
 
 namespace Ux
 {
-    public class TimerHelper
+    public static class TimerHelper
     {
         public const string format1 = "yyyy-MM-dd HH:mm:ss";
         public const string format2 = "yyyy年MM月dd日 HH小时mm分ss秒";

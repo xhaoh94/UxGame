@@ -61,7 +61,7 @@ namespace Ux
         void _Hide(UIMessageBox box)
         {
             _showed.Remove(box.ID);
-            if (box.IsDestroy)
+            if (box.HideDestroyTime >= 0)
             {
                 _waitDels.Add(box.ID, box);
             }

@@ -14,7 +14,7 @@ namespace Ux
         string Name { get; }
         int ID { get; }
         IUIData Data { get; }
-        bool IsDestroy { get; }
+        int HideDestroyTime { get; }
         bool Visable { get; set; }
         IFilter Filter { get; set; }
         void InitData(IUIData data, CallBackData initData);
@@ -26,11 +26,11 @@ namespace Ux
     public enum UIType
     {
         /// <summary>
-        /// 不会关闭任何界面，但会被Stack界面关闭（Stack界面关闭的时候，会自动重新打开）
+        /// 打开时不会关闭任何界面，但会被Stack界面打开的时候关闭（Stack界面关闭的时候，会自动重新打开）
         /// </summary>
         Normal,
         /// <summary>
-        /// 会关闭除Fixed之外的界面，也会被其他Stack界面关闭（Stack界面关闭的时候，会自动重新打开） 
+        /// 打开时会关闭除Fixed之外的界面，也会被其他Stack界面打开的时候关闭（Stack界面关闭的时候，会自动重新打开） 
         /// </summary>
         Stack,
         /// <summary>
@@ -225,7 +225,7 @@ namespace Ux
             public void Init(IUI _ui)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Ins.DoOnce(_waitDelTime, this, Exe); //一段时间后执行删除                
+                timeKey = TimeMgr.Ins.DoOnce(_ui.HideDestroyTime, this, Exe); //一段时间后执行删除                
             }
 
             void Release()

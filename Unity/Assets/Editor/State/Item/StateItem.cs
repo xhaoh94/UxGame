@@ -3,22 +3,9 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.State.Item
 {
-    public class StateItemBase<T> : TemplateContainer where T : StateConditionBase
-    {
-        protected T ConditionData { get; private set; }
-        public StateItemBase(StateConditionBase data)
-        {
-            ConditionData = (T)data;
-            OnData();
-        }        
-        protected virtual void OnData()
-        {
-
-        }
-    }
     public partial class StateItem : StateItemBase<StateCondition>
     {
-        public StateItem(StateConditionBase data):base(data)
+        public StateItem()
         {            
             CreateChildren();
             Add(root);

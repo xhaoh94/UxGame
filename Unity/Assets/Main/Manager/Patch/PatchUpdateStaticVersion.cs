@@ -32,7 +32,7 @@ namespace Ux
 
         async UniTask<bool> UpdateStaticVersionAsync(YooPackage package)
         {
-            var operation = package.Package.UpdatePackageVersionAsync();
+            var operation = package.Package.RequestPackageVersionAsync();
             await operation;
             if (operation.Status == EOperationStatus.Succeed)
             {

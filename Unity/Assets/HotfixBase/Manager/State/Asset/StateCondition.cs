@@ -8,7 +8,7 @@ namespace Ux
     {
         public override ConditionType Condition => ConditionType.State;
         public StateType State;
-        public List<string> States;
+        public List<string> States = new();
 
         public override bool IsValid
         {

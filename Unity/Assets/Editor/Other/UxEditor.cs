@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEngine;
 using Ux.Editor.Build.Config;
 using Ux.Editor.Build.Proto;
 using Ux.Editor.Build.UI;
@@ -41,7 +43,19 @@ namespace Ux.Editor
         [MenuItem("UxGame/初始化", false, 10)]
         public static void Init()
         {
-            Export().Forget();
+            //Export().Forget();
+            //var test = new BinaryHeap<int>((a, b) => { return b - a; });
+            //while (test.Count < 10)
+            //{
+            //    var num = UnityEngine.Random.Range(0, 100);
+            //    Log.Debug(num);
+            //    test.Push(num);
+            //}
+            //Log.Info(test._list);
+            //test.Sort();
+            //Log.Info(test._list);
+
+            WayfindingMgr.Ins.Test();
         }
         [MenuItem("UxGame/切换到/Boot", false, 1000)]
         public static void ChangeBoot()

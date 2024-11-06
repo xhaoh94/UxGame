@@ -4,14 +4,6 @@ using YooAsset;
 
 namespace Ux
 {
-    public static class GameMethod
-    {
-        public static Action Update;
-        public static Action LateUpdate;
-        public static Action FixedUpdate;
-        public static Action Quit;
-        public static Action LowMemory;
-    }
     public class GameStateMachine: StateMachine
     {
         public IStateNode StateNode { get; private set; }

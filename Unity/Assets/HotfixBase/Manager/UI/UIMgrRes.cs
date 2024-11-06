@@ -145,13 +145,9 @@ namespace Ux
         }
 
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
-        {
-            zstring resName;
-            using (zstring.Block())
-            {
-                resName = pkg;
-                resName = zstring.Format("{0}_{1}_fui", resName, resName);
-            }
+        {            
+            
+            string resName =$"{PathHelper.Res.UI}/{pkg}/{pkg}_fui";
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
@@ -195,11 +191,7 @@ namespace Ux
         private async void _LoadTextureFn(string name, string ex, Type type, PackageItem item)
         {
             if (type != typeof(Texture)) return;
-            zstring resName;
-            using (zstring.Block())
-            {
-                resName = zstring.Format("{0}_{1}", item.owner.name, name);
-            }
+            string resName = $"{PathHelper.Res.UI}/{item.owner.name}/{name}";            
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();

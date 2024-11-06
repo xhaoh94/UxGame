@@ -22,10 +22,11 @@ namespace Ux
     public abstract class UnitStateBase : StateNode, IUnitState
     {
         public UnitStateMachine StateMachine => Machine as UnitStateMachine;
+        public StateAsset Asset { get; private set; }
+        public virtual bool IsMute => Asset.isMute;
+        public virtual int Priority => Asset.priority;
         public virtual bool IsAdditive { get; } = false;
-        public virtual bool IsMute { get; }
-        public virtual int Priority { get; }
-        public virtual string ResName { get; } = null;
+        public virtual string AssetName { get; } = null;
         public List<StateConditionBase> Conditions { get; protected set; }
         public virtual bool IsValid
         {
@@ -44,44 +45,15 @@ namespace Ux
         void IUnitState.Set(long id)
         {
             OwnerID = id;
-            InitConditions();
+            InitConditions();            
         }
         protected virtual void InitConditions()
         {
-
+            if(string.IsNullOrEmpty(AssetName)) return;
+            Asset = ResMgr.Ins.LoadAsset<StateAsset>($"{AssetName}");
+            Conditions = Asset.conditions;
         }
-
-        protected virtual StateConditionBase CreateCondition(string condition, params object[] args)
-        {
-            if (string.IsNullOrEmpty(condition))
-            {
-                Log.Error($"状态[{Name}]CreateCondition条件为空");
-                return null;
-            }
-            Type type = null;
-            switch (condition)
-            {
-                case nameof(StateCondition):
-                    type = typeof(StateCondition);
-                    break;
-                case nameof(TemBoolVarCondition):
-                    type = typeof(TemBoolVarCondition);
-                    break;
-                case nameof(ActionKeyboardCondition):
-                    type = typeof(ActionKeyboardCondition);
-                    break;
-                case nameof(ActionInputCondition):
-                    type = typeof(ActionInputCondition);
-                    break;
-            }
-            if (type == null)
-            {
-                Log.Error($"没有找到名字为{condition}的条件");
-                return null;
-            }
-            return (StateConditionBase)Activator.CreateInstance(type, args);
-        }
-
+                
 
         protected override void OnRelease()
         {

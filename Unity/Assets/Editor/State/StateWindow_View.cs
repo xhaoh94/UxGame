@@ -1,70 +1,88 @@
-﻿using UnityEngine.UIElements;
+﻿using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEngine.UIElements;
 namespace Ux.Editor.State
 {
     partial class StateWindow
     {
-        void OnCreateView()
+        partial void _OnBtnChangeGroupClick()
         {
-            viewType.Init(StateViewType.None);
+            isAddGroup = false;
+            veStateCreate.style.display = DisplayStyle.Flex;
+            popupGroup.choices = groupAssets.Keys.ToList();
+            popupGroup.value = txtGroup.text;
+            popupGroup.style.display = DisplayStyle.None;
+            btnStateAdd.style.display = DisplayStyle.Flex;            
+            _OnBtnStateAddClick();
         }
-        partial void _OnTxtGroupChanged(ChangeEvent<string> e)
-        {
-            var newGroup = e.newValue;
-            if (newGroup != SelectItem.group)
+        void _OnTxtGroupChanged(string newGroup)
+        {            
+            if (newGroup != StateWindow.Asset.group)
             {
-                if (groupAssets.TryGetValue(SelectItem.group, out var oldAssets))
+                txtGroup.SetValueWithoutNotify(newGroup);
+                if (groupAssets.TryGetValue(StateWindow.Asset.group, out var oldAssets))
                 {
-                    oldAssets.Remove(SelectItem);
-                    //if(stateAssets.Count == 0)
-                    //{
-                    //    groupAssets.Remove(SelectItem.group);
-                    //}
+                    oldAssets.Remove(StateWindow.Asset);
+                    if (oldAssets.Count == 0)
+                    {
+                        groupAssets.Remove(StateWindow.Asset.group);
+                        UnSelectGroup(StateWindow.Asset.group);
+                    }
                 }
-                SelectItem.group = newGroup;
+                var oldPath = $"{AssetPath}/{StateWindow.Asset.group}/{StateWindow.Asset.name}.asset";
+                var dir = $"{AssetPath}/{newGroup}";
+                var newPath = $"{dir}/{StateWindow.Asset.name}.asset";
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                AssetDatabase.MoveAsset(oldPath, newPath);
+                StateWindow.Asset.group = newGroup;
                 if (!groupAssets.TryGetValue(newGroup, out var newAssets))
                 {
                     newAssets = new();
                     groupAssets.Add(newGroup, newAssets);                    
                 }
-                newAssets.Add(SelectItem);
+                newAssets.Add(StateWindow.Asset);
                 RefreshGroup();
                 SelectGroup(newGroup);
             }
         }
         partial void _OnTxtPriChanged(ChangeEvent<int> e)
         {
-            SelectItem.priority = e.newValue;
+            StateWindow.Asset.priority = e.newValue;
         }
         partial void _OnTgMuteChanged(ChangeEvent<bool> e)
         {
-            SelectItem.isMute = e.newValue;
+            StateWindow.Asset.isMute = e.newValue;
         }
 
         partial void _OnTxtNameChanged(ChangeEvent<string> e)
         {
-            SelectItem.stateName = e.newValue;
+            StateWindow.Asset.stateName = e.newValue;
             OnUpdateListView();
         }
         partial void _OnTxtDescChanged(ChangeEvent<string> e)
         {
-            SelectItem.stateDesc = e.newValue;
+            StateWindow.Asset.stateDesc = e.newValue;
             OnUpdateListView();
         }
 
 
         void RefreshView()
         {
-            if (SelectItem == null)
+            if (StateWindow.Asset == null)
             {
                 infoView.style.display = DisplayStyle.None;
                 return;
             }
             infoView.style.display = DisplayStyle.Flex;
-            txtGroup.SetValueWithoutNotify(SelectItem.group);
-            txtPri.SetValueWithoutNotify(SelectItem.priority);
-            tgMute.SetValueWithoutNotify(SelectItem.isMute);
-            txtName.SetValueWithoutNotify(SelectItem.stateName);
-            txtDesc.SetValueWithoutNotify(SelectItem.stateDesc);
+            txtGroup.SetValueWithoutNotify(StateWindow.Asset.group);
+            txtPri.SetValueWithoutNotify(StateWindow.Asset.priority);
+            tgMute.SetValueWithoutNotify(StateWindow.Asset.isMute);
+            txtName.SetValueWithoutNotify(StateWindow.Asset.stateName);
+            txtDesc.SetValueWithoutNotify(StateWindow.Asset.stateDesc);
             RefreshCondition();
         }
     }

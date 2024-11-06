@@ -15,7 +15,7 @@ namespace Ux
         private async UniTaskVoid UpdateManifest()
         {            
             // 强制卸载所有资源
-            YooMgr.Ins.ForceUnloadAllAssets();
+            //YooMgr.Ins.UnloadAllAssetsAsync();
             // 更新补丁清单
             var succeed = await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);            
             if (succeed)

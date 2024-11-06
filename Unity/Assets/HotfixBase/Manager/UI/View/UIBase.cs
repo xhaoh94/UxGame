@@ -15,7 +15,10 @@ namespace Ux
 
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
-        public virtual bool IsDestroy => true;
+        /// <summary>
+        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默认60秒
+        /// </summary>
+        public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
 

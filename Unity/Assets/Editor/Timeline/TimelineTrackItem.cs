@@ -330,8 +330,10 @@ namespace Ux.Editor.Timeline
                             postFrame = item2.Asset.StartFrame;
                         }
                     }
-                    animA.PreFrame = _animA.pre != AnimationClipAsset.PostExtrapolate.None ? preFrame : -1;
-                    animA.PostFrame = _animA.post != AnimationClipAsset.PostExtrapolate.None ? postFrame : -1;
+                    //animA.PreFrame = _animA.pre != AnimationClipAsset.PostExtrapolate.None ? preFrame : -1;
+                    //animA.PostFrame = _animA.post != AnimationClipAsset.PostExtrapolate.None ? postFrame : -1;
+                    animA.PreFrame = preFrame;
+                    animA.PostFrame = postFrame;
                 }
                 foreach (var item2 in Items)
                 {

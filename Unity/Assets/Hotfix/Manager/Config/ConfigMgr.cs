@@ -5,8 +5,7 @@ using UnityEngine;
 namespace Ux
 {
     public class ConfigMgr : Singleton<ConfigMgr>
-    {
-        private const string Prefix = "Config_{0}";
+    {        
         public cfg.Tables Tables { get; private set; }
         public void Init()
         {
@@ -18,24 +17,19 @@ namespace Ux
                 : (System.Delegate)new System.Func<string, JSONNode>(LoadJson);
             Tables = (cfg.Tables)tablesCtor.Invoke(new object[] { loader });
         }
-        zstring GetKey(string file)
+        string GetPath(string file)
         {
-            zstring key;
-            using (zstring.Block())
-            {
-                key = zstring.Format(Prefix, file);
-            }
-            return key;
+            return $"{PathHelper.Res.Config}/{file}";
         }
         private JSONNode LoadJson(string file)
         {
-            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetKey(file));
+            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetPath(file));
             return JSON.Parse(ta.text);
         }
 
         private ByteBuf LoadByteBuf(string file)
         {
-            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetKey(file));
+            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetPath(file));
             return new ByteBuf(ta.bytes);
         }
     }

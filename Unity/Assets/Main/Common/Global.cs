@@ -1,30 +1,39 @@
-﻿using UnityEngine;
-
-public class Global
+﻿using System;
+using UnityEngine;
+namespace Ux
 {
-    public static int DownloadingMaxNum => 10;
-    public static int FailedTryAgain => 3;    
-
-    public static string GetHostServerURL()
+    public static class GameMethod
     {
-        string hostServerIP = "http://127.0.0.1:0709";
-        string runtimePlatform = GetRuntimePlatform();
-
-        return $"{hostServerIP}/{runtimePlatform}";
+        public static Action Update;
+        public static Action LateUpdate;
+        public static Action FixedUpdate;
+        public static Action Quit;
+        public static Action LowMemory;
     }
-    public static string GetFallbackHostServerURL()
+    public class Global
     {
-        string hostServerIP = "http://127.0.0.1:0709";
-        string runtimePlatform = GetRuntimePlatform();
+        public static int DownloadingMaxNum => 10;
+        public static int FailedTryAgain => 3;
+        public static string GetHostServerURL()
+        {
+            string hostServerIP = "http://127.0.0.1:0709";
+            string runtimePlatform = GetRuntimePlatform();
 
-        return $"{hostServerIP}/{runtimePlatform}";
-    }
+            return $"{hostServerIP}/{runtimePlatform}";
+        }
+        public static string GetFallbackHostServerURL()
+        {
+            string hostServerIP = "http://127.0.0.1:0709";
+            string runtimePlatform = GetRuntimePlatform();
 
-    static string GetRuntimePlatform()
-    {
-        string runtimePlatform = "StandaloneWindows64";
+            return $"{hostServerIP}/{runtimePlatform}";
+        }
+
+        static string GetRuntimePlatform()
+        {
+            string runtimePlatform = "StandaloneWindows64";
 #if UNITY_EDITOR
-        runtimePlatform = UnityEditor.EditorUserBuildSettings.activeBuildTarget.ToString();
+            runtimePlatform = UnityEditor.EditorUserBuildSettings.activeBuildTarget.ToString();
 #else
         switch (Application.platform)
         {            
@@ -36,7 +45,9 @@ public class Global
                 break;
         }
 #endif
-        return runtimePlatform;
-    }
+            return runtimePlatform;
+        }
 
+    }
 }
+

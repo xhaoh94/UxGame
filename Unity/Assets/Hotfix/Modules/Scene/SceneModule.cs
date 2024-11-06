@@ -7,7 +7,7 @@ namespace Ux
 {
     [Module]
     public class SceneModule : ModuleBase<SceneModule>
-    {
+    {        
         public World World { get; private set; }
         protected override void OnRelease()
         {
@@ -20,7 +20,7 @@ namespace Ux
             {
                 World = Entity.Create<World>();
             }
-            var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(mapName);
+            var go = await ResMgr.Ins.LoadAssetAsync<GameObject>($"{PathHelper.Res.Prefab}/Map/{mapName}/{mapName}.prefab");
             var map = World.Add<Scene, GameObject>(go);
             World.EnterScene(map);
 
@@ -28,7 +28,7 @@ namespace Ux
             data.data = LoginModule.Ins.resp.Self;
             data.self = true;
             data.name = "name_" + data.data.roleId;
-            data.res = "Hero_ZS";
+            data.res = $"{PathHelper.Res.Prefab}/Unit/Hero_ZS.prefab";
             map.AddPlayer(data);
 
             //foreach (var other in resp.Others)

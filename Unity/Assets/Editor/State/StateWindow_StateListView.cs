@@ -1,17 +1,30 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static Ux.Editor.State.StateSettingData;
 namespace Ux.Editor.State
 {
     partial class StateWindow
     {
+        bool isAddGroup;
         private int _lastModifyExportIndex = 0;
         List<StateAsset> assets = new();
+        PopupField<string> popupGroup;
         void OnCreateListView()
         {
             _lastModifyExportIndex = 0;
+            _OnBtnStateCancelClick();
+
+            popupGroup = new PopupField<string>();
+            popupGroup.label = "所属组";
+            popupGroup.labelElement.style.minWidth = 50;
+            popupGroup.style.flexGrow = 1;
+            txtStateGroup.labelElement.style.minWidth = 50;
+            txtStateCreateName.labelElement.style.minWidth = 50;
+            txtStateGroup.parent.Add(popupGroup);
+            OnUpdateListView();
         }
 
         partial void _OnInputSearchChanged(ChangeEvent<string> e)
@@ -25,35 +38,96 @@ namespace Ux.Editor.State
         }
         partial void _OnBtnAddClick()
         {
-            veStateCreate.style.display = DisplayStyle.Flex;            
+            isAddGroup = true;
+            veStateCreate.style.display = DisplayStyle.Flex;
+            popupGroup.choices = groupAssets.Keys.ToList();
+            if (popupGroup.choices.Count > 0)
+            {
+                popupGroup.value = popupGroup.choices[0];
+                popupGroup.style.display = DisplayStyle.None;
+                btnStateAdd.style.display = DisplayStyle.Flex;
+            }
+            else
+            {
+                popupGroup.style.display = DisplayStyle.Flex;
+                btnStateAdd.style.display = DisplayStyle.None;
+            }
+            _OnBtnStateAddClick();
+        }
+        partial void _OnBtnStateAddClick()
+        {
+            if (isAddGroup)
+            {
+                txtStateCreateName.isReadOnly = false;
+                btnStateCreate.text = "创建";
+            }
+            else
+            {
+                txtStateCreateName.SetValueWithoutNotify(StateWindow.Asset.stateName);
+                txtStateCreateName.isReadOnly = true;
+                btnStateCreate.text = "更改";
+            }
+            if (popupGroup.style.display == DisplayStyle.None)
+            {
+                popupGroup.style.display = DisplayStyle.Flex;
+                txtStateGroup.style.display = DisplayStyle.None;
+                btnStateAdd.text = "+";
+            }
+            else
+            {
+                popupGroup.style.display = DisplayStyle.None;
+                txtStateGroup.style.display = DisplayStyle.Flex;
+                btnStateAdd.text = "←";
+            }
         }
         partial void _OnBtnStateCreateClick()
         {
-            var newAsset = ScriptableObject.CreateInstance<StateAsset>();
-            newAsset.group = selectGroup;
-            newAsset.name = txtStateCreateName.text;
-            AssetDatabase.CreateAsset(newAsset, $"{AssetPath}/{selectGroup}/{newAsset.name}.asset");
-
-            //var item = new StateSettingData.StateData();
-            //Setting.StateSettings.Add(item);
-            OnUpdateListView();
-            veStateCreate.style.display = DisplayStyle.None;
+            string newGroup = txtStateGroup.text;
+            if (popupGroup.style.display == DisplayStyle.Flex)
+            {
+                newGroup = popupGroup.value;
+            }
+            if (isAddGroup)
+            {
+                var newAsset = ScriptableObject.CreateInstance<StateAsset>();
+                newAsset.group = newGroup;
+                newAsset.stateName = txtStateCreateName.text;
+                var dir = $"{AssetPath}/{newAsset.group}";
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                AssetDatabase.CreateAsset(newAsset, $"{dir}/{newAsset.stateName}.asset");
+                if (!groupAssets.TryGetValue(newAsset.group, out var temList))
+                {
+                    temList = new List<StateAsset>();
+                    groupAssets.Add(newAsset.group, temList);
+                }
+                temList.Add(newAsset);
+                SelectGroup(newGroup);
+                veStateCreate.style.display = DisplayStyle.None;
+            }
+            else
+            {
+                _OnTxtGroupChanged(newGroup);
+                veStateCreate.style.display = DisplayStyle.None;
+            }
         }
 
         partial void _OnBtnStateCancelClick()
         {
             veStateCreate.style.display = DisplayStyle.None;
         }
-        
+
         partial void _OnBtnRemoveClick()
         {
-            if (SelectItem == null)
+            if (StateWindow.Asset == null)
             {
                 return;
             }
-            if (groupAssets.TryGetValue(selectGroup, out var stateAssets))
+            if (groupAssets.TryGetValue(StateWindow.Asset.group, out var stateAssets))
             {
-                stateAssets.Remove(SelectItem);
+                stateAssets.Remove(StateWindow.Asset);
             }
             OnUpdateListView();
         }
@@ -90,6 +164,7 @@ namespace Ux.Editor.State
                 return;
             }
             _lastModifyExportIndex = listView.selectedIndex;
+            StateWindow.Asset = listView.selectedItem as StateAsset;
             RefreshView();
         }
 
@@ -99,21 +174,24 @@ namespace Ux.Editor.State
             listView.Clear();
             listView.ClearSelection();
             assets.Clear();
-            if (groupAssets.TryGetValue(selectGroup, out var stateAssets))
+            foreach (var group in showGroups)
             {
-                if (!string.IsNullOrEmpty(inputSearch.text))
+                if (groupAssets.TryGetValue(group, out var stateAssets))
                 {
-                    foreach (var asset in stateAssets)
+                    if (!string.IsNullOrEmpty(inputSearch.text))
                     {
-                        if (asset.stateName.Contains(inputSearch.text))
+                        foreach (var asset in stateAssets)
                         {
-                            assets.Add(asset);
+                            if (asset.stateName.Contains(inputSearch.text))
+                            {
+                                assets.Add(asset);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    assets.AddRange(stateAssets);
+                    else
+                    {
+                        assets.AddRange(stateAssets);
+                    }
                 }
             }
 

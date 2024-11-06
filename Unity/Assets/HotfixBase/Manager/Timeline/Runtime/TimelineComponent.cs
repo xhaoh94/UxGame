@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -8,6 +9,7 @@ namespace Ux
     {
         public Timeline Current { get; private set; }
         public Timeline Last { get; private set; }
+        List<Timeline> _additives = new List<Timeline>();
         public PlayableGraph PlayableGraph { get; private set; }
 
         float _playSpeed = 1;
@@ -20,9 +22,9 @@ namespace Ux
         void IAwakeSystem.OnAwake()
         {
             PlaySpeed = 1;
-            PlayableGraph = PlayableGraph.Create(Parent.Viewer.name);
+            PlayableGraph = PlayableGraph.Create(Parent.Name);
             PlayableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-            PlayableGraph.Play();            
+            PlayableGraph.Play();
         }
         protected override void OnDestroy()
         {
@@ -48,36 +50,53 @@ namespace Ux
                             Last = null;
                         }
                     }
+                    for (var i = _additives.Count - 1; i >= 0; i--)
+                    {
+                        var additive = _additives[i];
+                        additive.Evaluate(deltaTime);
+                        if (additive.IsDone)
+                        {
+                            Remove(additive);
+                            _additives.RemoveAt(i);
+                        }
+                    }
                 }
             }
         }
 
-        public void Play(TimelineAsset timeline)
+        public void Play(TimelineAsset timeline, bool isAdditive = false)
         {
-            if (Last != null)
+            if (isAdditive)
             {
-                Remove(Last);
-                Last = null;
+                _additives.Insert(0, Add<Timeline, TimelineAsset, bool>(timeline, isAdditive));
             }
-            if (Current != null)
+            else
             {
-                if (Application.isPlaying)
+                if (Last != null)
                 {
-                    Last = Current;
+                    Remove(Last);
+                    Last = null;
                 }
-                else
+                if (Current != null)
                 {
-                    Remove(Current);
+                    if (Application.isPlaying)
+                    {
+                        Last = Current;
+                    }
+                    else
+                    {
+                        Remove(Current);
+                    }
                 }
+                Current = Add<Timeline, TimelineAsset, bool>(timeline, isAdditive);
             }
-            Current = Add<Timeline, TimelineAsset>(timeline);
         }
 
 
         public void Set(int frame)
         {
             if (PlayableGraph.IsValid())
-            {                
+            {
                 Current?.Set(frame);
                 if (Last != null)
                 {

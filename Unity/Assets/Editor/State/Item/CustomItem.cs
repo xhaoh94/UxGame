@@ -4,7 +4,7 @@ namespace Ux.Editor.State.Item
 {
     public partial class CustomItem : StateItemBase<CustomCondition>
     {
-        public CustomItem(StateConditionBase data) : base(data)
+        public CustomItem()
         {
             CreateChildren();
             Add(root);            

@@ -18,38 +18,30 @@ MonoBehaviour:
   Packages:
   - PackageName: MainPackage
     PackageDesc: "\u4E3B\u5305"
-    EnableAddressable: 1
+    EnableAddressable: 0
     LocationToLower: 0
     IncludeAssetGUID: 0
-    IgnoreDefaultType: 1
     AutoCollectShaders: 1
+    IgnoreRuleName: NormalIgnoreRule
     Groups:
     - GroupName: Builtin
       GroupDesc: "\u5185\u7F6E\u8D44\u6E90"
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Prefab/FogOfWar
-        CollectorGUID: 03ba04db73f99bd42b2378dbe96da11b
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-      - CollectPath: Assets/Data/Res/Texture
-        CollectorGUID: 44c4d93bd00271241a1cffdca263e47b
-        CollectorType: 0
-        AddressRuleName: AddressByFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
       - CollectPath: Assets/Data/Res/Prefab/Common
         CollectorGUID: 9dfef7769977a774bb51fbe27ef660e3
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Scenes/Hotfix.unity
+        CollectorGUID: 8637324786e1dda489f776e4e1cf2fed
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
@@ -66,11 +58,11 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/Prefab/Hero
-        CollectorGUID: 380af11a1e9ffcb479ee49926358d18c
+      - CollectPath: Assets/Data/Res/Prefab/Unit
+        CollectorGUID: fc832313cf58974478c3ac031ba7f277
         CollectorType: 0
         AddressRuleName: AddressByFileName
-        PackRuleName: PackTopDirectory
+        PackRuleName: PackSeparately
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
@@ -78,7 +70,15 @@ MonoBehaviour:
         CollectorGUID: de523ac24d0eef34d83b36ad0bf292a6
         CollectorType: 0
         AddressRuleName: AddressByFileName
-        PackRuleName: PackSeparately
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/Data/Res/State
+        CollectorGUID: 6f674d35e7cacd841b1c1d4feac8c10a
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
@@ -86,7 +86,7 @@ MonoBehaviour:
         CollectorGUID: bbf62020395cb4c489585f2ffd312862
         CollectorType: 0
         AddressRuleName: AddressByFileName
-        PackRuleName: PackSeparately
+        PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
@@ -95,31 +95,23 @@ MonoBehaviour:
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Scenes/Hotfix.unity
-        CollectorGUID: 8637324786e1dda489f776e4e1cf2fed
-        CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackSeparately
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
       - CollectPath: Assets/Data/Res/Code
         CollectorGUID: 5136dcfd732443e4fbcedd13488bb8d5
         CollectorType: 0
-        AddressRuleName: AddressByFolderAndFileName
-        PackRuleName: PackSeparately
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
     - GroupName: Config
-      GroupDesc: "\u914D\u7F6E\u8868"
+      GroupDesc: "\u914D\u7F6E"
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
       - CollectPath: Assets/Data/Res/Config
         CollectorGUID: 8f52838e936dc4e42976f151a4bf6d17
         CollectorType: 0
-        AddressRuleName: AddressByFolderAndFileName
+        AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
