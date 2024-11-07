@@ -17,7 +17,7 @@ namespace Ux.Editor.Build.Config
         Client,
         Server
     }
-    public class ConfigWindow : EditorWindow
+    public partial class ConfigWindow : EditorWindow
     {
         [MenuItem("UxGame/工具/配置", false, 530)]
         public static void ShowConfigWindon()
@@ -26,103 +26,30 @@ namespace Ux.Editor.Build.Config
             window.minSize = new Vector2(800, 500);
         }
 
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
 
         private List<string> GenTypes = new List<string>() { "code_cs_unity_bin,data_bin", "code_cs_unity_json,data_json" };
         private List<string> ServiceTypes = new List<string>() { "client", "server" };
-
-
-        TextField _txtDllFile;
-        Button _btnDllFile;
-
-        TextField _txtDefineFile;
-        Button _btnDefineFile;
-
-        TextField _txtInputDataPath;
-        Button _btnInputDataPath;
-
-        TextField _txtOutCodePath;
-        Button _btnOutCodePath;
-
-        TextField _txtOutDataPath;
-        Button _btnOutDataPath;
+        
 
         PopupField<string> _genType;
         PopupField<string> _serviceType;
+        ConfigSettingData Setting;
 
-        Button _btnExport;
 
+       
         public void CreateGUI()
         {
             try
             {
-                var Setting = ConfigSettingData.LoadConfig();
-                VisualElement root = rootVisualElement;
-
-                m_VisualTreeAsset.CloneTree(root);
-
-                _txtDllFile = root.Q<TextField>("txtDllFile");
-                _txtDllFile.SetValueWithoutNotify(Setting.DllFile);
-                _txtDllFile.RegisterValueChangedCallback(evt =>
-                {
-                    Setting.DllFile = evt.newValue;
-                });
-                _btnDllFile = root.Q<Button>("btnDllFile");
-                _btnDllFile.clicked += () =>
-                {
-                    BuildHelper.OpenFilePanel(Setting.DllFile, "Client&Server Dll", _txtDllFile, "dll");
-                };
-
-                _txtDefineFile = root.Q<TextField>("txtDefineFile");
-                _txtDefineFile.SetValueWithoutNotify(Setting.DefineFile);
-                _txtDefineFile.RegisterValueChangedCallback(evt =>
-                {
-                    Setting.DefineFile = evt.newValue;
-                });
-                _btnDefineFile = root.Q<Button>("btnDefineFile");
-                _btnDefineFile.clicked += () =>
-                {
-                    BuildHelper.OpenFilePanel(Setting.DefineFile, "Root.xml", _txtDefineFile, "xml");
-                };
-
-
-                _txtInputDataPath = root.Q<TextField>("txtInputDataPath");
-                _txtInputDataPath.SetValueWithoutNotify(Setting.InputDataPath);
-                _txtInputDataPath.RegisterValueChangedCallback(evt =>
-                {
-                    Setting.InputDataPath = evt.newValue;
-                });
-                _btnInputDataPath = root.Q<Button>("btnInputDataPath");
-                _btnInputDataPath.clicked += () =>
-                {
-                    BuildHelper.OpenFolderPanel(Setting.InputDataPath, "请选择配置目录", _txtInputDataPath);
-                };
-
-                _txtOutCodePath = root.Q<TextField>("txtOutCodePath");
-                _txtOutCodePath.SetValueWithoutNotify(Setting.OutCodePath);
-                _txtOutCodePath.RegisterValueChangedCallback(evt =>
-                {
-                    Setting.OutCodePath = evt.newValue;
-                });
-                _btnOutCodePath = root.Q<Button>("btnOutCodePath");
-                _btnOutCodePath.clicked += () =>
-                {
-                    BuildHelper.OpenFolderPanel(Setting.OutCodePath, "导出代码目录", _txtOutCodePath);
-                };
-
-                _txtOutDataPath = root.Q<TextField>("txtOutDataPath");
-                _txtOutDataPath.SetValueWithoutNotify(Setting.OutDataPath);
-                _txtOutDataPath.RegisterValueChangedCallback(evt =>
-                {
-                    Setting.OutDataPath = evt.newValue;
-                });
-                _btnOutDataPath = root.Q<Button>("btnOutDataPath");
-                _btnOutDataPath.clicked += () =>
-                {
-                    BuildHelper.OpenFolderPanel(Setting.OutDataPath, "导出数据目录", _txtOutDataPath);
-                };
-
+                Setting = ConfigSettingData.LoadConfig();
+                CreateChildren();
+                rootVisualElement.Add(root);
+                
+                txtDllFile.SetValueWithoutNotify(Setting.DllFile);                    
+                txtDefineFile.SetValueWithoutNotify(Setting.DefineFile);                
+                txtInputDataPath.SetValueWithoutNotify(Setting.InputDataPath);                
+                txtOutCodePath.SetValueWithoutNotify(Setting.OutCodePath);                                     
+                txtOutDataPath.SetValueWithoutNotify(Setting.OutDataPath);                
 
                 var popContainer = root.Q("popContainer");
                 var index = GenTypes.IndexOf(Setting.GenType);
@@ -146,9 +73,6 @@ namespace Ux.Editor.Build.Config
                     Setting.ServiceType = evt.newValue;
                 });
                 popContainer.Add(_serviceType);
-
-                _btnExport = root.Q<Button>("btnExport");
-                _btnExport.clicked += OnBtnExportClick;
             }
             catch (Exception e)
             {
@@ -161,11 +85,51 @@ namespace Ux.Editor.Build.Config
             ConfigSettingData.SaveConfig();
             AssetDatabase.Refresh();
         }
-
-        void OnBtnExportClick()
+        partial void _OnTxtDllFileChanged(ChangeEvent<string> e)
+        {
+            Setting.DllFile = e.newValue;
+        }
+        partial void _OnBtnDllFileClick()
+        {
+            BuildHelper.OpenFilePanel(Setting.DllFile, "Client&Server Dll", txtDllFile, "dll");
+        }
+        partial void _OnTxtDefineFileChanged(ChangeEvent<string> e)
+        {
+            Setting.DefineFile = e.newValue;
+        }
+        partial void _OnBtnDefineFileClick()
+        {
+            BuildHelper.OpenFilePanel(Setting.DefineFile, "Root.xml", txtDefineFile, "xml");
+        }
+        partial void _OnTxtInputDataPathChanged(ChangeEvent<string> e)
+        {
+            Setting.InputDataPath = e.newValue;
+        }
+        partial void _OnBtnInputDataPathClick()
+        {
+            BuildHelper.OpenFolderPanel(Setting.InputDataPath, "请选择配置目录", txtInputDataPath);
+        }
+        partial void _OnTxtOutCodePathChanged(ChangeEvent<string> e)
+        {
+            Setting.OutCodePath = e.newValue;
+        }
+        partial void _OnBtnOutCodePathClick()
+        {
+            BuildHelper.OpenFolderPanel(Setting.OutCodePath, "导出代码目录", txtOutCodePath);
+        }
+        partial void _OnTxtOutDataPathChanged(ChangeEvent<string> e)
+        {
+            Setting.OutDataPath = e.newValue;
+        }
+        partial void _OnBtnOutDataPathClick()
+        {
+            BuildHelper.OpenFolderPanel(Setting.OutDataPath, "导出数据目录", txtOutDataPath);
+        }
+        partial void _OnBtnExportClick()
         {
             Export().Forget();
         }
+
 
         public static async UniTask Export()
         {

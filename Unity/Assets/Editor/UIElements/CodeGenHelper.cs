@@ -88,8 +88,8 @@ namespace Ux.Editor
                 if (map.TryGetValue("name", out var name) &&
                     map.TryGetValue("typeName", out var type))
                 {
-                    write.Writeln($"{name} =root.Q<{type}>(\"{name}\");");
-                    if (map.ContainsKey("readonly"))
+                    write.Writeln($"{name} = root.Q<{type}>(\"{name}\");");
+                    if (map.TryGetValue("readonly",out var _tv) && _tv == "true")
                     {
                         continue;
                     }
@@ -125,7 +125,7 @@ namespace Ux.Editor
                 var map = _Parse(element);
                 if (map.TryGetValue("name", out var name) &&
                     map.TryGetValue("typeName", out var type) &&
-                    !map.ContainsKey("readonly"))
+                    (!map.TryGetValue("readonly",out var _tv) || _tv == "false"))
                 {
                     if (_RegisterValueChangedCallback.TryGetValue(type, out var evt))
                     {
