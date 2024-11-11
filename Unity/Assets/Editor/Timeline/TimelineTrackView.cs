@@ -4,8 +4,12 @@ using UnityEngine.UIElements;
 using YooAsset.Editor;
 namespace Ux.Editor.Timeline
 {
+#if UNITY_6000_0_OR_NEWER
+    [UxmlElement]
+#endif
     public partial class TimelineTrackView : VisualElement
     {
+#if !UNITY_6000_0_OR_NEWER
         public new class UxmlFactory : UxmlFactory<TimelineTrackView, UxmlTraits> { }
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
@@ -14,7 +18,8 @@ namespace Ux.Editor.Timeline
                 base.focusIndex.defaultValue = 0;
                 base.focusable.defaultValue = true;
             }
-        }        
+        }   
+#endif
 
         Dictionary<TimelineTrackAsset, TimelineTrackItem> trackItemDic = new ();
         public TimelineTrackView()

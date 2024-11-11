@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Debugger.Res
 {
-    public class ResDebuggerWindow : EditorWindow
+    public partial class ResDebuggerWindow : EditorWindow
     {
         [MenuItem("UxGame/调试/资源", false, 401)]
         public static void ShowExample()
@@ -13,8 +13,7 @@ namespace Ux.Editor.Debugger.Res
             var window = GetWindow<ResDebuggerWindow>("资源调试工具", true, DebuggerEditorDefine.DebuggerWindowTypes);
             window.minSize = new Vector2(800, 500);
         }
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
+
 
         DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef> _listPackageRef;
 
@@ -26,10 +25,10 @@ namespace Ux.Editor.Debugger.Res
         public void CreateGUI()
         {
             UIMgr.__Debugger_Pkg_CallBack = OnUpdateData;
-            VisualElement root = rootVisualElement;
-            m_VisualTreeAsset.CloneTree(root);
+            CreateChildren();
+            rootVisualElement.Add(root);
 
-            _listPackageRef = new DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef>(root.Q<VisualElement>("veList"));
+            _listPackageRef = new DebuggerObjectSearchListView<ResDebuggerItem, UIPkgRef>(veList);
             UIMgr.__Debugger_Pkg_Event();
         }
 

@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 using static Ux.Editor.Build.UI.UIMemberData;
 namespace Ux.Editor.Build.UI
 {
-    public class UICodeMemberItem : TemplateContainer
+    public partial class UICodeMemberItem : TemplateContainer
     {
         private List<string> _evtList1 = new List<string>
     {
@@ -21,113 +21,81 @@ namespace Ux.Editor.Build.UI
         "列表点击",
     };
         private VisualTreeAsset _visualAsset;
-
-        TextField _txtName;
-        TextField _txtType;
-        TextField _txtCustomType;
-        TextField _txtRes;
-        Toggle _tgExport;
-        Toggle _tgCreate;
-        VisualElement _evt;
-        PopupField<string> _enumEvt;
-        VisualElement _doubleEvt;
-        IntegerField _dCnt;
-        FloatField _dGapTime;
-        VisualElement _longEvt;
-        FloatField _lFirst;
-        FloatField _lGapTime;
-        IntegerField _lCnt;
-        FloatField _lRadius;
         Action _saveCb;
+        PopupField<string> enumEvt;
         public UICodeMemberItem(Action saveCb)
         {
             _saveCb = saveCb;
-            // 加载布局文件		
-            _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/UI/UICodeMemberItem.uxml");
-            if (_visualAsset == null)
-                return;
-
-            var _root = _visualAsset.CloneTree();
-            _root.style.flexGrow = 1f;
+            CreateChildren();
+            Add(root);
             style.flexGrow = 1f;
-            Add(_root);
-            CreateView();
         }
 
-        /// <summary>
-        /// 初始化页面
-        /// </summary>
-        void CreateView()
+        partial void _OnTgExportChanged(ChangeEvent<bool> e)
         {
-            _txtName = this.Q<TextField>("txtName");
-            _txtType = this.Q<TextField>("txtType");
-            _txtCustomType = this.Q<TextField>("txtCustomType");
-
-            _txtRes = this.Q<TextField>("txtRes");
-            _tgExport = this.Q<Toggle>("tgExport");
-            _tgExport.RegisterValueChangedCallback(evt =>
+            if (data != null)
             {
-                if (data != null)
-                {
-                    data.isCreateVar = evt.newValue;
-                    _saveCb?.Invoke();
-                }
-            });
-            _tgCreate = this.Q<Toggle>("tgCreate");
-            _tgCreate.RegisterValueChangedCallback(evt =>
-            {
-                if (data != null)
-                {
-                    data.isCreateIns = evt.newValue;
-                    _saveCb?.Invoke();
-                }
-            });
-
-            _evt = this.Q<VisualElement>("evt");
-
-            _doubleEvt = this.Q<VisualElement>("doubleEvt");
-            _dCnt = this.Q<IntegerField>("dCnt");
-            _dCnt.RegisterValueChangedCallback(evt => { ChangeEvtType(); });
-            _dGapTime = this.Q<FloatField>("dGapTime");
-            _dGapTime.RegisterValueChangedCallback(evt => { ChangeEvtType(); });
-
-            _longEvt = this.Q<VisualElement>("longEvt");
-            _lFirst = this.Q<FloatField>("lFirst");
-            _lFirst.RegisterValueChangedCallback(evt => { ChangeEvtType(); });
-
-            _lGapTime = this.Q<FloatField>("lGapTime");
-            _lGapTime.RegisterValueChangedCallback(evt => { ChangeEvtType(); });
-
-            _lCnt = this.Q<IntegerField>("lCnt");
-            _lCnt.RegisterValueChangedCallback(evt => { ChangeEvtType(); });
-
-            _lRadius = this.Q<FloatField>("lRadius");
-            _lRadius.RegisterValueChangedCallback(evt => { ChangeEvtType(); });
+                data.isCreateVar = e.newValue;
+                _saveCb?.Invoke();
+            }
         }
+        partial void _OnTgCreateChanged(ChangeEvent<bool> e)
+        {
+            if (data != null)
+            {
+                data.isCreateIns = e.newValue;
+                _saveCb?.Invoke();
+            }
+        }
+        partial void _OnDCntChanged(ChangeEvent<int> e)
+        {
+            ChangeEvtType();
+        }
+        partial void _OnDGapTimeChanged(ChangeEvent<float> e)
+        {
+            ChangeEvtType();
+        }
+        partial void _OnLFirstChanged(ChangeEvent<float> e)
+        {
+            ChangeEvtType();
+        }
+        partial void _OnLGapTimeChanged(ChangeEvent<float> e)
+        {
+            ChangeEvtType();
+        }
+        partial void _OnLCntChanged(ChangeEvent<int> e)
+        {
+            ChangeEvtType();
+        }
+        partial void _OnLRadiusChanged(ChangeEvent<float> e)
+        {
+            ChangeEvtType();
+        }
+
         UIMemberData data;
         public void SetData(UIMemberData data)
         {
             this.data = data;
-            _txtName.SetValueWithoutNotify(data.name);
-            _txtType.SetValueWithoutNotify(data.defaultType);
-            _txtCustomType.SetValueWithoutNotify(data.customType);
+            txtName.SetValueWithoutNotify(data.name);
+            txtType.SetValueWithoutNotify(data.defaultType);
+            txtCustomType.SetValueWithoutNotify(data.customType);
             if (!string.IsNullOrEmpty(data.pkg) && !string.IsNullOrEmpty(data.res))
             {
-                _txtRes.SetValueWithoutNotify($"{data.res}@{data.pkg}");
-                _txtRes.style.display = DisplayStyle.Flex;
+                txtRes.SetValueWithoutNotify($"{data.res}@{data.pkg}");
+                txtRes.style.display = DisplayStyle.Flex;
             }
             else
             {
-                _txtRes.style.display = DisplayStyle.None;
+                txtRes.style.display = DisplayStyle.None;
             }
 
             var comData = data.comData;
 
-            _tgExport.style.display = DisplayStyle.None;
-            _tgCreate.style.display = DisplayStyle.None;
-            _evt.style.display = DisplayStyle.None;
-            _doubleEvt.style.display = DisplayStyle.None;
-            _longEvt.style.display = DisplayStyle.None;
+            tgExport.style.display = DisplayStyle.None;
+            tgCreate.style.display = DisplayStyle.None;
+            evt.style.display = DisplayStyle.None;
+            doubleEvt.style.display = DisplayStyle.None;
+            longEvt.style.display = DisplayStyle.None;
 
             if (comData.IsTabFrame)
             {
@@ -152,21 +120,21 @@ namespace Ux.Editor.Build.UI
                     if (temData.Name == data.name) return;
                 }
             }
-            _tgExport.style.display = DisplayStyle.Flex;
-            _tgCreate.style.display = DisplayStyle.Flex;
-            _tgExport.SetValueWithoutNotify(data.isCreateVar);
-            _tgCreate.SetValueWithoutNotify(data.isCreateIns);
+            tgExport.style.display = DisplayStyle.Flex;
+            tgCreate.style.display = DisplayStyle.Flex;
+            tgExport.SetValueWithoutNotify(data.isCreateVar);
+            tgCreate.SetValueWithoutNotify(data.isCreateIns);
 
 
             switch (data.defaultType)
             {
                 case nameof(FairyGUI.GButton):
                     CreateEnumEvt(_evtList1);
-                    _evt.style.display = DisplayStyle.Flex;
+                    evt.style.display = DisplayStyle.Flex;
                     break;
                 case nameof(FairyGUI.GList):
                     CreateEnumEvt(_evtList2);
-                    _evt.style.display = DisplayStyle.Flex;
+                    evt.style.display = DisplayStyle.Flex;
                     break;
                 default:
                     return;
@@ -180,8 +148,8 @@ namespace Ux.Editor.Build.UI
             switch (data.evtType)
             {
                 case "多击":
-                    _doubleEvt.style.display = DisplayStyle.Flex;
-                    _longEvt.style.display = DisplayStyle.None;
+                    doubleEvt.style.display = DisplayStyle.Flex;
+                    longEvt.style.display = DisplayStyle.None;
                     MemberEvtDouble dContent;
                     if (string.IsNullOrEmpty(data.evtParam))
                     {
@@ -193,12 +161,12 @@ namespace Ux.Editor.Build.UI
                     {
                         dContent = JsonConvert.DeserializeObject<MemberEvtDouble>(data.evtParam);
                     }
-                    _dCnt.SetValueWithoutNotify(dContent.dCnt);
-                    _dGapTime.SetValueWithoutNotify(dContent.dGapTime);
+                    dCnt.SetValueWithoutNotify(dContent.dCnt);
+                    dGapTime.SetValueWithoutNotify(dContent.dGapTime);
                     break;
                 case "长按":
-                    _doubleEvt.style.display = DisplayStyle.None;
-                    _longEvt.style.display = DisplayStyle.Flex;
+                    doubleEvt.style.display = DisplayStyle.None;
+                    longEvt.style.display = DisplayStyle.Flex;
                     MemberEvtLong lContent;
                     if (string.IsNullOrEmpty(data.evtParam))
                     {
@@ -212,14 +180,14 @@ namespace Ux.Editor.Build.UI
                     {
                         lContent = JsonConvert.DeserializeObject<MemberEvtLong>(data.evtParam);
                     }
-                    _lFirst.SetValueWithoutNotify(lContent.lFirst);
-                    _lGapTime.SetValueWithoutNotify(lContent.lGapTime);
-                    _lCnt.SetValueWithoutNotify(lContent.lCnt);
-                    _lRadius.SetValueWithoutNotify(lContent.lRadius);
+                    lFirst.SetValueWithoutNotify(lContent.lFirst);
+                    lGapTime.SetValueWithoutNotify(lContent.lGapTime);
+                    lCnt.SetValueWithoutNotify(lContent.lCnt);
+                    lRadius.SetValueWithoutNotify(lContent.lRadius);
                     break;
                 default:
-                    _doubleEvt.style.display = DisplayStyle.None;
-                    _longEvt.style.display = DisplayStyle.None;
+                    doubleEvt.style.display = DisplayStyle.None;
+                    longEvt.style.display = DisplayStyle.None;
                     break;
             }
         }
@@ -230,17 +198,17 @@ namespace Ux.Editor.Build.UI
             {
                 case "多击":
                     var dContent = new MemberEvtDouble();
-                    dContent.dCnt = _dCnt.value;
-                    dContent.dGapTime = _dGapTime.value;
+                    dContent.dCnt = dCnt.value;
+                    dContent.dGapTime = dGapTime.value;
                     data.evtParam = JsonConvert.SerializeObject(dContent);
                     _saveCb?.Invoke();
                     break;
                 case "长按":
                     var lContent = new MemberEvtLong();
-                    lContent.lFirst = _lFirst.value;
-                    lContent.lGapTime = _lGapTime.value;
-                    lContent.lCnt = _lCnt.value;
-                    lContent.lRadius = _lRadius.value;
+                    lContent.lFirst = lFirst.value;
+                    lContent.lGapTime = lGapTime.value;
+                    lContent.lCnt = lCnt.value;
+                    lContent.lRadius = lRadius.value;
                     data.evtParam = JsonConvert.SerializeObject(lContent);
                     _saveCb?.Invoke();
                     break;
@@ -252,19 +220,19 @@ namespace Ux.Editor.Build.UI
         }
         void CreateEnumEvt(List<string> choices)
         {
-            if (_enumEvt == null)
+            if (enumEvt == null)
             {
-                _enumEvt = new PopupField<string>(choices, choices.IndexOf(data.evtType));
-                _enumEvt.label = "点击事件";
-                _enumEvt.style.width = 280;
+                enumEvt = new PopupField<string>(choices, choices.IndexOf(data.evtType));
+                enumEvt.label = "点击事件";
+                enumEvt.style.width = 280;
                 //_enumEvt.style.flexGrow = 1f;
-                _enumEvt.RegisterValueChangedCallback(evt =>
+                enumEvt.RegisterValueChangedCallback(evt =>
                 {
                     data.evtType = evt.newValue;
                     CheckEvtType();
                     ChangeEvtType();
                 });
-                _evt.Add(_enumEvt);
+                evt.Add(enumEvt);
             }
         }
     }

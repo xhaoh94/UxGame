@@ -37,7 +37,7 @@ public class DualKawaseBlurRenderFeature : ScriptableRendererFeature
                 };
             }
         }
-
+        
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (dualKawaseBlurMat == null) return;

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Debugger.UI
 {
-    public class UIDebuggerWindow : EditorWindow
+    public partial class UIDebuggerWindow : EditorWindow
     {
         [MenuItem("UxGame/调试/UI", false, 400)]
         public static void ShowExample()
@@ -12,8 +12,6 @@ namespace Ux.Editor.Debugger.UI
             var window = GetWindow<UIDebuggerWindow>("UI调试工具", true, DebuggerEditorDefine.DebuggerWindowTypes);
             window.minSize = new Vector2(800, 500);
         }
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
 
         private DebuggerObjectSearchListView<UIDebuggerItem, IUIData> _listUI;
         private DebuggerStringListView _listShowed;
@@ -33,16 +31,16 @@ namespace Ux.Editor.Debugger.UI
             UIMgr.__Debugger_TemCacel_CallBack = OnUpdateTemCacel;
             UIMgr.__Debugger_WaitDel_CallBack = OnUpdateWaitDel;
 
-            VisualElement root = rootVisualElement;
-            m_VisualTreeAsset.CloneTree(root);
+            CreateChildren();
+            rootVisualElement.Add(root);
 
-            _listUI = new DebuggerObjectSearchListView<UIDebuggerItem, IUIData>(root.Q<VisualElement>("veList"), 5);
-            _listShowed = new DebuggerStringListView(root.Q<ListView>("listShowed"), OnBtnClick);
-            _listStack = new DebuggerObjectListView<UIDebuggerStackItem, UIMgr.UIStack>(root.Q<ListView>("listStack"), OnBtnClick);
-            _listShowing = new DebuggerStringListView(root.Q<ListView>("listShowing"), OnBtnClick);
-            _listCacel = new DebuggerStringListView(root.Q<ListView>("listCacel"), OnBtnClick);
-            _listTemCacel = new DebuggerStringListView(root.Q<ListView>("listTemCacel"), OnBtnClick);
-            _listWaitDel = new DebuggerStringListView(root.Q<ListView>("listWaitDel"), OnBtnClick);
+            _listUI = new DebuggerObjectSearchListView<UIDebuggerItem, IUIData>(veList, 5);
+            _listShowed = new DebuggerStringListView(listShowed, OnBtnClick);
+            _listStack = new DebuggerObjectListView<UIDebuggerStackItem, UIMgr.UIStack>(listStack, OnBtnClick);
+            _listShowing = new DebuggerStringListView(listShowing, OnBtnClick);
+            _listCacel = new DebuggerStringListView(listCacel, OnBtnClick);
+            _listTemCacel = new DebuggerStringListView(listTemCacel, OnBtnClick);
+            _listWaitDel = new DebuggerStringListView(listWaitDel, OnBtnClick);
 
             UIMgr.__Debugger_Event();
         }

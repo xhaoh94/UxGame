@@ -26,7 +26,7 @@ namespace Ux.Editor.Build.UI
     public enum UIExtendComponent
     {
         Object,
-        TabFrame,        
+        TabFrame,
         ItemRenderer,
         UIModel,
         RTModel,
@@ -60,237 +60,50 @@ namespace Ux.Editor.Build.UI
             window.minSize = new Vector2(800, 600);
         }
 
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
 
         private string lastPkg;
         private string lastRes;
         private UICodeButton selectItem;
 
-
-        TextField inputCodePath;
-        TextField inputNS;
-        Toggle tgIgnore;
-
-        TextField inputSearch;
-        ScrollView svPkg;
-        ScrollView svMember;
-
-        IMGUIContainer comContaine;
-        Toggle tgExport;
-        VisualElement elementExport;
-        Toggle tgUseGlobal;
-        IMGUIContainer settContainer;
-        TextField inputCodePath_select;
-        Toggle tgIgnore_select;
-        TextField inputNS_select;
-        TextField inputClsName;
-        DropdownField ddExt;
-
         Dictionary<string, TextField> nameTextField = new Dictionary<string, TextField>();
 
-        VisualElement elementContent;
         VisualElement tabViewElement;
         VisualElement messageBoxElement;
         VisualElement tipElement;
         VisualElement modelElement;
 
-
         public void CreateGUI()
         {
             UICodeGenSettingData.Load();
-            VisualElement root = rootVisualElement;            
-            m_VisualTreeAsset.CloneTree(root);
-            try
-            {
-                inputCodePath = root.Q<TextField>("inputCodePath");
-                inputCodePath.SetValueWithoutNotify(UICodeGenSettingData.CodeGenPath);
-                inputCodePath.RegisterValueChangedCallback(e => { FreshComponentData(); });
+            CreateChildren();
+            rootVisualElement.Add(root);
+            inputCodePath.SetValueWithoutNotify(UICodeGenSettingData.CodeGenPath);
+            inputNS.SetValueWithoutNotify(UICodeGenSettingData.DefaultNs);
+            tgIgnore.SetValueWithoutNotify(UICodeGenSettingData.IngoreDefault);
+            comContaine.style.display = DisplayStyle.None;
+            settContainer.style.display = DisplayStyle.None;
 
-                var btnCodePath = root.Q<Button>("btnCodePath");
-                btnCodePath.clicked += OnBtnCodeGenPathClick;
-
-                inputNS = root.Q<TextField>("inputNS");
-                inputNS.SetValueWithoutNotify(UICodeGenSettingData.DefaultNs);
-                inputCodePath.RegisterValueChangedCallback(e =>
-                {
-                    UICodeGenSettingData.DefaultNs = e.newValue;
-                });
-
-                tgIgnore = root.Q<Toggle>("tgIgnore");
-                tgIgnore.SetValueWithoutNotify(UICodeGenSettingData.IngoreDefault);
-                tgIgnore.RegisterValueChangedCallback(e =>
-                {
-                    UICodeGenSettingData.IngoreDefault = e.newValue;
-                    FreshComponentData();
-                });
-
-                var btnShow = root.Q<Button>("btnShow");
-                btnShow.clicked += OnAllShow;
-                var btnHide = root.Q<Button>("btnHide");
-                btnHide.clicked += OnAllHide;
-
-                var btnFresh = root.Q<Button>("btnFresh");
-                btnFresh.clicked += () =>
-                {
-                    lastPkg = lastRes = string.Empty;
-                    if (selectItem != null)
-                    {
-                        lastPkg = selectItem.comData.pkgName;
-                        lastRes = selectItem.comData.resName;
-                    }
-                    UICodeGenSettingData.Save();
-                    UICodeGenSettingData.Load();
-                    FreshPkgData();
-                    if (!string.IsNullOrEmpty(lastPkg) && !string.IsNullOrEmpty(lastRes))
-                    {
-                        for (int i = 0; i < svPkg.childCount; i++)
-                        {
-                            var foldout = svPkg.ElementAt(i) as UICodeFoldout;
-                            for (var k = 0; k < foldout.childCount; k++)
-                            {
-                                var element = foldout.ElementAt(k) as UICodeButton;
-                                if (element.pi == null) continue;
-                                if (element.pi.owner.name == lastPkg &&
-                                element.pi.name == lastRes)
-                                {
-                                    foldout.value = true;
-                                    OnCodeButtonClick(element);
-                                    goto b;
-                                }
-                            }
-                        }
-                    b:;
-                        lastPkg = lastRes = string.Empty;
-                    }
-
-                };
-                var btnSearch = root.Q<Button>("btnSearch");
-                btnSearch.clicked += OnSearch;
-                inputSearch = root.Q<TextField>("inputSearch");
-
-                svPkg = root.Q<ScrollView>("svPkg");
-                svMember = root.Q<ScrollView>("svMember");
-
-                comContaine = root.Q<IMGUIContainer>("comContaine");
-                comContaine.style.display = DisplayStyle.None;
-
-                tgExport = root.Q<Toggle>("tgExport");
-                tgExport.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
-                elementExport = root.Q<VisualElement>("elementExport");
-
-                tgUseGlobal = root.Q<Toggle>("tgUseGlobal");
-                tgUseGlobal.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
-                settContainer = root.Q<IMGUIContainer>("settContainer");
-                settContainer.style.display = DisplayStyle.None;
-
-                inputCodePath_select = root.Q<TextField>("inputCodePath_select");
-                inputCodePath.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                var btnCodePath_select = root.Q<Button>("btnCodePath_select");
-                btnCodePath_select.clicked += OnBtnCodeGenPathSelectClick;
-
-                tgIgnore_select = root.Q<Toggle>("tgIgnore_select");
-                tgIgnore_select.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
-                inputNS_select = root.Q<TextField>("inputNS_select");
-                inputNS_select.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-                inputClsName = root.Q<TextField>("inputClsName");
-                inputClsName.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
-                ddExt = root.Q<DropdownField>("ddExt");
-                var keys = UIEditorTools.CheckExt();
-                ddExt.choices = keys;
-                ddExt.index = 0;
-                ddExt.RegisterValueChangedCallback(e => { SaveSelectItemData(); });
-
-                elementContent = root.Q<VisualElement>("elementContent");
-
-                tabViewElement = new VisualElement();
-                elementContent.Add(tabViewElement);
-
-                messageBoxElement = new VisualElement();
-                elementContent.Add(messageBoxElement);
-
-                tipElement = new VisualElement();
-                elementContent.Add(tipElement);
-
-                modelElement = new VisualElement();
-                elementContent.Add(modelElement);
+            var keys = UIEditorTools.CheckExt();
+            ddExt.choices = keys;
+            ddExt.index = 0;
 
 
-                var btnGenSelectItem = root.Q<Button>("btnGenSelectItem");
-                btnGenSelectItem.clicked += OnBtnGenClick;
-                var btnGenAll = root.Q<Button>("btnGenAll");
-                btnGenAll.clicked += OnBtnGenAllClick;
+            tabViewElement = new VisualElement();
+            elementContent.Add(tabViewElement);
 
-                FreshPkgData();
-            }
-            catch
-            {
+            messageBoxElement = new VisualElement();
+            elementContent.Add(messageBoxElement);
 
-            }
+            tipElement = new VisualElement();
+            elementContent.Add(tipElement);
+
+            modelElement = new VisualElement();
+            elementContent.Add(modelElement);
+
+            FreshPkgData();
         }
 
-        void OnSearch()
-        {
-            var str = inputSearch.text.ToLower();
-            if (string.IsNullOrEmpty(str))
-            {
-                for (int i = 0; i < svPkg.childCount; i++)
-                {
-                    var foldout = svPkg.ElementAt(i) as UICodeFoldout;
-                    bool hit = false;
-                    var itemDatas = UIEditorTools.GetPackageItems(foldout.pkg);
-                    List<string> pid = new List<string>();
-                    foreach (var pi in itemDatas)
-                    {
-                        var pName = pi.name.ToLower();
-                        if (pName.IndexOf(str) >= 0)
-                        {
-                            hit = true;
-                            pid.Add(pi.id);
-                        }
-                    }
-                    foldout.value = hit;
-                    foldout.style.display = hit ? DisplayStyle.Flex : DisplayStyle.None;
-                    if (pid.Count > 0)
-                    {
-                        for (var k = 0; k < foldout.childCount; k++)
-                        {
-                            var element = foldout.ElementAt(k) as UICodeButton;
-                            if (pid.Contains(element.pi.id))
-                            {
-                                element.style.display = DisplayStyle.Flex;
-                            }
-                            else
-                            {
-                                element.style.display = DisplayStyle.None;
-                            }
-                        }
-                    }
-                }
-            }
-            selectItem = null;
-            FreshComponentData();
-        }
-        void OnAllShow()
-        {
-            for (int i = 0; i < svPkg.childCount; i++)
-            {
-                var foldout = svPkg.ElementAt(i) as UICodeFoldout;
-                foldout.value = true;
-            }
-        }
-        void OnAllHide()
-        {
-            for (int i = 0; i < svPkg.childCount; i++)
-            {
-                var foldout = svPkg.ElementAt(i) as UICodeFoldout;
-                foldout.value = false;
-            }
-        }
+
         void FreshComContaine()
         {
             if (selectItem == null)
@@ -449,37 +262,7 @@ namespace Ux.Editor.Build.UI
             }
         }
 
-        void OnBtnCodeGenPathSelectClick()
-        {
-            var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", UICodeGenSettingData.CodeGenPath, "");
-            if (temPath.Length == 0)
-            {
-                return;
-            }
 
-            if (!Directory.Exists(temPath))
-            {
-                EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-                return;
-            }
-            inputCodePath_select.SetValueWithoutNotify(temPath);
-        }
-        void OnBtnCodeGenPathClick()
-        {
-            var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", UICodeGenSettingData.CodeGenPath, "");
-            if (temPath.Length == 0)
-            {
-                return;
-            }
-
-            if (!Directory.Exists(temPath))
-            {
-                EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
-                return;
-            }
-            UICodeGenSettingData.CodeGenPath = temPath;
-            inputCodePath.SetValueWithoutNotify(temPath);
-        }
         private void FreshPkgData()
         {
             AssetDatabase.Refresh();
@@ -581,6 +364,202 @@ namespace Ux.Editor.Build.UI
             }
 
             FreshComContaine();
+        }
+
+        ///////////////////////////////////////////////////////////
+        partial void _OnInputCodePathChanged(ChangeEvent<string> e)
+        {
+            FreshComponentData();
+        }
+        partial void _OnBtnCodePathClick()
+        {
+            var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", UICodeGenSettingData.CodeGenPath, "");
+            if (temPath.Length == 0)
+            {
+                return;
+            }
+
+            if (!Directory.Exists(temPath))
+            {
+                EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
+                return;
+            }
+            UICodeGenSettingData.CodeGenPath = temPath;
+            inputCodePath.SetValueWithoutNotify(temPath);
+        }
+        partial void _OnInputNSChanged(ChangeEvent<string> e)
+        {
+            UICodeGenSettingData.DefaultNs = e.newValue;
+        }
+        partial void _OnTgIgnoreChanged(ChangeEvent<bool> e)
+        {
+            UICodeGenSettingData.IngoreDefault = e.newValue;
+            FreshComponentData();
+        }
+        partial void _OnBtnShowClick()
+        {
+            for (int i = 0; i < svPkg.childCount; i++)
+            {
+                var foldout = svPkg.ElementAt(i) as UICodeFoldout;
+                foldout.value = true;
+            }
+        }
+        partial void _OnBtnHideClick()
+        {
+            for (int i = 0; i < svPkg.childCount; i++)
+            {
+                var foldout = svPkg.ElementAt(i) as UICodeFoldout;
+                foldout.value = false;
+            }
+        }
+        partial void _OnBtnFreshClick()
+        {
+            lastPkg = lastRes = string.Empty;
+            if (selectItem != null)
+            {
+                lastPkg = selectItem.comData.pkgName;
+                lastRes = selectItem.comData.resName;
+            }
+            UICodeGenSettingData.Save();
+            UICodeGenSettingData.Load();
+            FreshPkgData();
+            if (!string.IsNullOrEmpty(lastPkg) && !string.IsNullOrEmpty(lastRes))
+            {
+                for (int i = 0; i < svPkg.childCount; i++)
+                {
+                    var foldout = svPkg.ElementAt(i) as UICodeFoldout;
+                    for (var k = 0; k < foldout.childCount; k++)
+                    {
+                        var element = foldout.ElementAt(k) as UICodeButton;
+                        if (element.pi == null) continue;
+                        if (element.pi.owner.name == lastPkg &&
+                        element.pi.name == lastRes)
+                        {
+                            foldout.value = true;
+                            OnCodeButtonClick(element);
+                            goto b;
+                        }
+                    }
+                }
+b:;
+                lastPkg = lastRes = string.Empty;
+            }
+        }
+        partial void _OnBtnSearchClick()
+        {
+            var str = inputSearch.text.ToLower();
+            if (string.IsNullOrEmpty(str))
+            {
+                for (int i = 0; i < svPkg.childCount; i++)
+                {
+                    var foldout = svPkg.ElementAt(i) as UICodeFoldout;
+                    bool hit = false;
+                    var itemDatas = UIEditorTools.GetPackageItems(foldout.pkg);
+                    List<string> pid = new List<string>();
+                    foreach (var pi in itemDatas)
+                    {
+                        var pName = pi.name.ToLower();
+                        if (pName.IndexOf(str) >= 0)
+                        {
+                            hit = true;
+                            pid.Add(pi.id);
+                        }
+                    }
+                    foldout.value = hit;
+                    foldout.style.display = hit ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (pid.Count > 0)
+                    {
+                        for (var k = 0; k < foldout.childCount; k++)
+                        {
+                            var element = foldout.ElementAt(k) as UICodeButton;
+                            if (pid.Contains(element.pi.id))
+                            {
+                                element.style.display = DisplayStyle.Flex;
+                            }
+                            else
+                            {
+                                element.style.display = DisplayStyle.None;
+                            }
+                        }
+                    }
+                }
+            }
+            selectItem = null;
+            FreshComponentData();
+        }
+        partial void _OnTgExportChanged(ChangeEvent<bool> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnTgUseGlobalChanged(ChangeEvent<bool> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnInputCodePath_selectChanged(ChangeEvent<string> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnBtnCodePath_selectClick()
+        {
+            var temPath = EditorUtility.OpenFolderPanel("请选择生成路径", UICodeGenSettingData.CodeGenPath, "");
+            if (temPath.Length == 0)
+            {
+                return;
+            }
+
+            if (!Directory.Exists(temPath))
+            {
+                EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
+                return;
+            }
+            inputCodePath_select.SetValueWithoutNotify(temPath);
+        }
+        partial void _OnTgIgnore_selectChanged(ChangeEvent<bool> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnInputNS_selectChanged(ChangeEvent<string> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnInputClsNameChanged(ChangeEvent<string> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnDdExtChanged(ChangeEvent<string> e)
+        {
+            SaveSelectItemData();
+        }
+        partial void _OnBtnGenSelectItemClick()
+        {
+            if (selectItem != null)
+            {
+                if (UIEditorTools.GetGComBy(selectItem.pi, out var com) && OnExport(com))
+                {
+                    Log.Debug("UI代码生成");
+                    EditorUtility.DisplayDialog("提示", "导出选中组件成功", "确定");
+                }
+                else
+                {
+                    EditorUtility.DisplayDialog("提示", "导出选中组件失败", "确定");
+                }
+            }
+        }
+        partial void _OnBtnGenAllClick()
+        {
+            var genPath = UICodeGenSettingData.CodeGenPath;
+            if (Directory.Exists(genPath))
+            {
+                Directory.Delete(genPath, true);
+            }
+            if (Export())
+            {
+                EditorUtility.DisplayDialog("提示", "导出所有组件成功", "确定");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("提示", "导出所有组件失败", "确定");
+            }
         }
     }
 }

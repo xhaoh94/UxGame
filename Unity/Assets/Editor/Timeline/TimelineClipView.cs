@@ -5,8 +5,12 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
+#if UNITY_6000_0_OR_NEWER
+    [UxmlElement]
+#endif
     public partial class TimelineClipView : VisualElement
     {
+#if !UNITY_6000_0_OR_NEWER
         public new class UxmlFactory : UxmlFactory<TimelineClipView, UxmlTraits> { }
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
@@ -16,7 +20,7 @@ namespace Ux.Editor.Timeline
                 base.focusable.defaultValue = true;
             }
         }
-
+#endif
         int StartFrame => Mathf.CeilToInt(ScrClipViewOffsetX / FrameWidth);
         int EndFrame => Mathf.FloorToInt(ScrClipViewContentWidth + scrClipView.scrollOffset.x / FrameWidth);
 
@@ -35,16 +39,16 @@ namespace Ux.Editor.Timeline
         {
             CreateChildren();
             Add(root);
-          
+
             RegisterCallback<WheelEvent>(OnWheel);
             RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-           
+
             ElementDrag.Add(scrClipView, this, OnScrDrag, 2);
 
-         
+
             veLineContent.generateVisualContent += OnDrawLine;
             veMarkerContent.generateVisualContent += OnDrawMarker;
-           
+
             veMarkerIcon.generateVisualContent += OnDrawMarkerLine;
             RegisterCallback<GeometryChangedEvent>(OnMarkerGeometryChanged);
 
@@ -52,7 +56,7 @@ namespace Ux.Editor.Timeline
             TimelineWindow.ClipContent = veClipContent;
             TimelineWindow.GetPositionByFrame = GetPositionByFrame;
             TimelineWindow.GetFrameByMousePosition = GetFrameByMousePosition;
-           
+
         }
 
         public void Init()
@@ -147,8 +151,8 @@ namespace Ux.Editor.Timeline
 
             var frame = GetFrameByMousePosition();
             if (frame != CurFrame)
-            {     
-                SetNowFrame(frame); 
+            {
+                SetNowFrame(frame);
             }
         }
 
@@ -159,7 +163,7 @@ namespace Ux.Editor.Timeline
             CurFrame = frame;
             UpdateMarkerText();
         }
-       
+
         void OnMarkerGeometryChanged(GeometryChangedEvent e)
         {
             UpdateMarkerPos();
@@ -173,7 +177,7 @@ namespace Ux.Editor.Timeline
         void UpdateMarkerPos()
         {
             var pos = veMarkerIcon.transform.position;
-            pos.x = GetPositionByFrame(CurFrame) - (veMarkerIcon.worldBound.width / 2);            
+            pos.x = GetPositionByFrame(CurFrame) - (veMarkerIcon.worldBound.width / 2);
             veMarkerIcon.transform.position = pos;
         }
         void OnDrawLine(MeshGenerationContext mgc)

@@ -9,7 +9,7 @@ using static Ux.Editor.Build.UI.UIClassifySettingData;
 
 namespace Ux.Editor.Build.UI
 {
-    public class UIClassifyWindow : EditorWindow
+    public partial class UIClassifyWindow : EditorWindow
     {
         [MenuItem("UxGame/工具/UI/资源分类", false, 511)]
         public static void ShowExample()
@@ -29,7 +29,7 @@ namespace Ux.Editor.Build.UI
                 package.PackageName = "MainPackage";
                 packages.Add(package);
             }
-            var group= package.Groups.Find(x => x.GroupName == "UI");
+            var group = package.Groups.Find(x => x.GroupName == "UI");
             if (group == null)
             {
                 group = new AssetBundleCollectorGroup();
@@ -39,7 +39,7 @@ namespace Ux.Editor.Build.UI
                 package.Groups.Add(group);
             }
             group.Collectors.Clear();
-                     
+
             #region Builtin                       
             var collectorBuiltin = new AssetBundleCollector();
             collectorBuiltin.AssetTags = "builtin";
@@ -90,74 +90,49 @@ namespace Ux.Editor.Build.UI
             }
         }
 
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
 
-        VisualElement builtin;
-        VisualElement lazyload;
         public void CreateGUI()
         {
             _ResClassifySettings = null;
-            VisualElement root = rootVisualElement;
-            m_VisualTreeAsset.CloneTree(root);
-            try
-            {
-                var pathField = root.Q<ObjectField>("pathField");
-                var pathObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(ResClassifySettings.path);
-                if (pathObject != null)
-                    pathObject.name = ResClassifySettings.path;
-                pathField.SetValueWithoutNotify(pathObject);
-                pathField.RegisterValueChangedCallback(evt =>
-                {
-                    ResClassifySettings.path = AssetDatabase.GetAssetPath(evt.newValue);
-                    pathField.value.name = ResClassifySettings.path;
-                });
+            CreateChildren();
+            rootVisualElement.Add(root);
+            var pathObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(ResClassifySettings.path);
+            if (pathObject != null)
+                pathObject.name = ResClassifySettings.path;
+            pathField.SetValueWithoutNotify(pathObject);
 
-                var helpBox = new HelpBox("不在预加载资源或懒加载资源的，都是内置资源，出包的时候会打进包体里的", HelpBoxMessageType.Info);
-                helpBox.style.fontSize = 30;
-
-                root.Insert(0, helpBox);
-                builtin = root.Q<VisualElement>("buildin");
-                builtin.style.unityParagraphSpacing = 10;
-
-                lazyload = root.Q<VisualElement>("lazyload");
-                lazyload.style.unityParagraphSpacing = 10;
-
-                var btnBuildinAdd = root.Q<Button>("btnBuildinAdd");
-                btnBuildinAdd.clicked += OnBtnBuildinAdd;
-                var btnLazyloadAdd = root.Q<Button>("btnLazyloadAdd");
-                btnLazyloadAdd.clicked += OnBtnLazyloadAdd;
-
-                var btnApply = root.Q<Button>("btnApply");
-                btnApply.clicked += OnBtnCreate;
-                var btnLoad = root.Q<Button>("btnLoad");
-                btnLoad.clicked += ResetRc;
-                UpdateBuildIn();
-                UpdateLazyload();
-            }
-            catch
-            {
-
-            }
+            var helpBox = new HelpBox("不在预加载资源或懒加载资源的，都是内置资源，出包的时候会打进包体里的", HelpBoxMessageType.Info);
+            helpBox.style.fontSize = 30;
+            root.Insert(0, helpBox);
+            buildin.style.unityParagraphSpacing = 10;
+            lazyload.style.unityParagraphSpacing = 10;
+            UpdateBuildIn();
+            UpdateLazyload();
         }
-        void OnBtnBuildinAdd()
+
+        partial void _OnPathFieldChanged(ChangeEvent<Object> e)
+        {
+            ResClassifySettings.path = AssetDatabase.GetAssetPath(e.newValue);
+            pathField.value.name = ResClassifySettings.path;
+        }
+        partial void _OnBtnBuildinAddClick()
         {
             var element = MakeBuildinItem();
-            BindBuildinItem(element, builtin.childCount);
-            builtin.Add(element);
+            BindBuildinItem(element, buildin.childCount);
+            buildin.Add(element);
         }
-        void OnBtnLazyloadAdd()
+        partial void _OnBtnLazyloadAddClick()
         {
             var element = MakeLazyloadItem();
             BindLazyloadItem(element, lazyload.childCount);
             lazyload.Add(element);
         }
-        void OnBtnCreate()
+        partial void _OnBtnApplyClick()
         {
             List<string> builtins = new List<string>();
-            for (int i = 0; i < builtin.childCount; i++)
+            for (int i = 0; i < buildin.childCount; i++)
             {
-                var ele = builtin.ElementAt(i);
+                var ele = buildin.ElementAt(i);
                 var tf = ele.Q<TextField>("Label");
                 if (string.IsNullOrEmpty(tf.value)) continue;
                 builtins.Add(tf.value);
@@ -177,23 +152,24 @@ namespace Ux.Editor.Build.UI
             CreateYooAssetUIGroup();
             if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("提示", "创建成功!", "ok"))
             {
-                ResetRc();
+                _OnBtnLoadClick();
             }
         }
-        void ResetRc()
+        partial void _OnBtnLoadClick()
         {
             _ResClassifySettings = null;
             UpdateBuildIn();
             UpdateLazyload();
         }
+
         private void UpdateBuildIn()
         {
-            builtin.Clear();
+            buildin.Clear();
             for (int i = 0; i < ResClassifySettings.proloads.Length; i++)
             {
                 var element = MakeBuildinItem();
                 BindBuildinItem(element, i, ResClassifySettings.proloads[i]);
-                builtin.Add(element);
+                buildin.Add(element);
             }
         }
         private void UpdateLazyload()
@@ -234,7 +210,7 @@ namespace Ux.Editor.Build.UI
             var btn = element.Q<Button>("Sub");
             btn.clicked += () =>
             {
-                builtin.RemoveAt(index);
+                buildin.RemoveAt(index);
             };
             if (!string.IsNullOrEmpty(pkg))
             {

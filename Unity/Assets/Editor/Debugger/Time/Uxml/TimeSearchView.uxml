@@ -1,0 +1,19 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <engine:VisualElement name="veContent" enabled="true" style="flex-grow: 0; display: flex; visibility: visible;">
+        <engine:VisualElement style="flex-direction: row;">
+            <engine:TextField picking-mode="Ignore" name="inputSearch" label="模糊搜索" style="flex-grow: 1; flex-shrink: 0;" />
+            <engine:Button text="X" display-tooltip-when-elided="true" name="btnClear" />
+        </engine:VisualElement>
+        <editor:Toolbar name="TopBar" style="height: 25px; margin-left: 1px; margin-right: 1px;">
+            <editor:ToolbarButton text="执行方法" display-tooltip-when-elided="true" name="TopBar0" style="width: 300px; -unity-text-align: middle-left; flex-grow: 0;" />
+            <editor:ToolbarButton text="Handle" display-tooltip-when-elided="true" name="TopBar1" style="width: 150px; -unity-text-align: middle-left; flex-grow: 1;" />
+        </editor:Toolbar>
+        <engine:ListView focusable="true" virtualization-method="DynamicHeight" name="list" style="flex-grow: 0;" />
+        <engine:VisualElement name="vePage" style="flex-direction: row; align-items: center; justify-content: center; display: flex;">
+            <engine:Button text="上一页" display-tooltip-when-elided="true" name="btnLast" />
+            <editor:IntegerField value="1" name="inputPage" style="width: 100px;" />
+            <engine:Label text="/10" display-tooltip-when-elided="true" name="txtPage" />
+            <engine:Button text="下一页" display-tooltip-when-elided="true" name="btnNext" />
+        </engine:VisualElement>
+    </engine:VisualElement>
+</engine:UXML>

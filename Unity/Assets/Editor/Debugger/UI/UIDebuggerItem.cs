@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Debugger.UI
 {
-    public class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
+    public partial class UIDebuggerItem : TemplateContainer, IDebuggerListItem<IUIData>
     {
         private VisualTreeAsset _visualAsset;
 

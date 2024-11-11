@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 using static Ux.TimeMgr;
 namespace Ux.Editor.Debugger.Time
 {
-    public class TimeDebuggerItemSub1 : TemplateContainer, IDebuggerListItem<TimeHandle>
+    public partial class TimeDebuggerItemSub1 : TemplateContainer, IDebuggerListItem<TimeHandle>
     {
         private VisualTreeAsset _visualAsset;
 

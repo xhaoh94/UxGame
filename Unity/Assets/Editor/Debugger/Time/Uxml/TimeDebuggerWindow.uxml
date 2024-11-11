@@ -1,0 +1,25 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; justify-content: flex-start; align-items: center; flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" label="本地时间" value="0" readonly="true" name="txtLocalTime" style="flex-grow: 1; flex-shrink: 1;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; justify-content: flex-start; align-items: center; flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" label="服务器时间" value="0" readonly="true" name="txtServerTime" style="flex-grow: 1; flex-shrink: 1;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; justify-content: flex-start; align-items: center; flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" label="当前游戏运行总时间" value="0" readonly="true" name="txtTime" style="flex-grow: 1; flex-shrink: 1;" />
+            <ui:Label text="秒" display-tooltip-when-elided="true" name="Label" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 1;">
+            <ui:TextField picking-mode="Ignore" label="当前游戏运行总帧数" value="0" readonly="true" name="txtFrame" style="flex-grow: 1;" />
+            <ui:Label text="帧" display-tooltip-when-elided="true" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <uie:Toolbar>
+        <uie:ToolbarButton text="时间" display-tooltip-when-elided="true" name="tbBtnTime" />
+        <uie:ToolbarButton text="帧" display-tooltip-when-elided="true" name="tbBtnFrame" style="flex-direction: column;" />
+        <uie:ToolbarButton text="时间戳" display-tooltip-when-elided="true" name="tbBtnTimeStamp" />
+        <uie:ToolbarButton text="Cron表达式" display-tooltip-when-elided="true" name="tbBtnCron" />
+    </uie:Toolbar>
+    <ui:ScrollView name="scr" style="flex-grow: 1;" />
+</ui:UXML>

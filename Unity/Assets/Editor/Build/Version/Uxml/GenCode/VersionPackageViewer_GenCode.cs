@@ -1,4 +1,5 @@
 ﻿//自动生成的代码，请勿修改!!!
+//CodeGen By [Assets/UIElements/CodeGenByUxml]
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -9,30 +10,31 @@ namespace Ux.Editor.Build.Version
 	public partial class VersionPackageViewer
 	{
 		protected VisualElement root;
-		protected VisualElement exportElement;
-		protected Toggle tgCollectSV;
-		protected EnumField pipelineType;
-		protected EnumField nameStyleType;
-		protected EnumField compressionType;
-		protected TextField inputBuiltinTags;
-		protected VisualElement encryptionContainer;
+		public VisualElement exportElement;
+		public Toggle tgCollectSV;
+		public EnumField pipelineType;
+		public EnumField nameStyleType;
+		public EnumField compressionType;
+		public TextField inputBuiltinTags;
+		public VisualElement encryptionContainer;
 		protected void CreateChildren()
 		{
-			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Version/VersionPackageViewer.uxml");
+			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Version/Uxml/VersionPackageViewer.uxml");
 			if (_visualAsset == null) return;
 			root = _visualAsset.CloneTree();
-			exportElement =root.Q<VisualElement>("exportElement");
-			tgCollectSV =root.Q<Toggle>("tgCollectSV");
+			root.style.flexGrow = 1f;
+			exportElement = root.Q<VisualElement>("exportElement");
+			tgCollectSV = root.Q<Toggle>("tgCollectSV");
 			tgCollectSV.RegisterValueChangedCallback(e => _OnTgCollectSVChanged(e));
-			pipelineType =root.Q<EnumField>("pipelineType");
+			pipelineType = root.Q<EnumField>("pipelineType");
 			pipelineType.RegisterValueChangedCallback(e => _OnPipelineTypeChanged(e));
-			nameStyleType =root.Q<EnumField>("nameStyleType");
+			nameStyleType = root.Q<EnumField>("nameStyleType");
 			nameStyleType.RegisterValueChangedCallback(e => _OnNameStyleTypeChanged(e));
-			compressionType =root.Q<EnumField>("compressionType");
+			compressionType = root.Q<EnumField>("compressionType");
 			compressionType.RegisterValueChangedCallback(e => _OnCompressionTypeChanged(e));
-			inputBuiltinTags =root.Q<TextField>("inputBuiltinTags");
+			inputBuiltinTags = root.Q<TextField>("inputBuiltinTags");
 			inputBuiltinTags.RegisterValueChangedCallback(e => _OnInputBuiltinTagsChanged(e));
-			encryptionContainer =root.Q<VisualElement>("encryptionContainer");
+			encryptionContainer = root.Q<VisualElement>("encryptionContainer");
 		}
 		partial void _OnTgCollectSVChanged(ChangeEvent<bool> e);
 		partial void _OnPipelineTypeChanged(ChangeEvent<Enum> e);

@@ -3,23 +3,16 @@ using UnityEditor;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Debugger.Event
 {
-    public class EventDebuggerItem : TemplateContainer, IDebuggerListItem<EventList>
+    public partial class EventDebuggerItem : TemplateContainer, IDebuggerListItem<EventList>
     {
         private VisualTreeAsset _visualAsset;
-
-        Label _txtID;
+        
         DebuggerStringListView _list;
         public EventDebuggerItem()
         {
-            // 加载布局文件		
-            _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Event/EventDebuggerItem.uxml");
-            if (_visualAsset == null)
-                return;
-
-            var _root = _visualAsset.CloneTree();
-            _root.style.flexGrow = 1f;
+            CreateChildren();
             style.flexGrow = 1f;
-            Add(_root);
+            Add(root);
             CreateView();
         }
 
@@ -27,14 +20,13 @@ namespace Ux.Editor.Debugger.Event
         /// 初始化页面
         /// </summary>
         void CreateView()
-        {
-            _txtID = this.Q<Label>("txtID");
-            _list = new DebuggerStringListView(this.Q<ListView>("listEvt"));
+        {            
+            _list = new DebuggerStringListView(listEvt);
         }
 
         public void SetData(EventList data)
         {
-            _txtID.text = data._eventType;
+            txtID.text = data._eventType;
             _list.SetData(data.events);
         }
 

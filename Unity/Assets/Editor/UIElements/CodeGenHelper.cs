@@ -17,6 +17,7 @@ namespace Ux.Editor
             { nameof(FloatField),$"ChangeEvent<float>" },
             { nameof(IntegerField),$"ChangeEvent<int>" },
             { nameof(ObjectField),$"ChangeEvent<UnityEngine.Object>" },
+            { nameof(DropdownField),$"ChangeEvent<string>" },
         };
 
         [MenuItem("Assets/UIElements/CodeGenByUxml", false)]
@@ -89,7 +90,7 @@ namespace Ux.Editor
                     map.TryGetValue("typeName", out var type))
                 {
                     write.Writeln($"{name} = root.Q<{type}>(\"{name}\");");
-                    if (map.TryGetValue("readonly",out var _tv) && _tv == "true")
+                    if (map.TryGetValue("readonly", out var _tv) && _tv == "true")
                     {
                         continue;
                     }
@@ -98,7 +99,7 @@ namespace Ux.Editor
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Changed";
                         write.Writeln($"{name}.RegisterValueChangedCallback(e => {fnName}(e));");
                     }
-                    if (type == nameof(Button))
+                    if (type == nameof(Button) || type == nameof(ToolbarButton))
                     {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Click";
                         write.Writeln($"{name}.clicked += () => {fnName}();");
@@ -125,14 +126,14 @@ namespace Ux.Editor
                 var map = _Parse(element);
                 if (map.TryGetValue("name", out var name) &&
                     map.TryGetValue("typeName", out var type) &&
-                    (!map.TryGetValue("readonly",out var _tv) || _tv == "false"))
+                    (!map.TryGetValue("readonly", out var _tv) || _tv == "false"))
                 {
                     if (_RegisterValueChangedCallback.TryGetValue(type, out var evt))
                     {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Changed";
                         write.Writeln($"partial void {fnName}({evt} e);");
                     }
-                    if (type == nameof(Button))
+                    if (type == nameof(Button)||type == nameof(ToolbarButton))
                     {
                         var fnName = $"_On{char.ToUpper(name[0])}{name.Substring(1)}Click";
                         write.Writeln($"partial void {fnName}();");

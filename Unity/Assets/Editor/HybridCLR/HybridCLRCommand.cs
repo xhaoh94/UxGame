@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 
 namespace Ux.Editor.HybridCLR
@@ -18,8 +19,8 @@ namespace Ux.Editor.HybridCLR
 
         [UnityEditor.Callbacks.DidReloadScripts]
         private static void OnScriptsReloaded()
-        {
-            var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
+        {                            
+            var dfs = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Split(';');
             var v = dfs.Contains("HOTFIX_CODE");
             if (v != SettingsUtil.Enable)
             {
@@ -39,7 +40,7 @@ namespace Ux.Editor.HybridCLR
                 EditorUtility.DisplayDialog("错误", "编译中，请稍后再尝试！", "ok");
                 return;
             }
-            var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
+            var dfs = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Split(';');
             var symbols = dfs.ToList();
             if (symbols.Contains("HOTFIX_CODE"))
             {
@@ -48,7 +49,7 @@ namespace Ux.Editor.HybridCLR
             }
             SettingsUtil.Enable = true;
             symbols.Add("HOTFIX_CODE");
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
+            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, string.Join(";", symbols));
         }
 
         [MenuItem("HybridCLR/切换热更模式/开", true, 2000)]
@@ -69,7 +70,7 @@ namespace Ux.Editor.HybridCLR
                 EditorUtility.DisplayDialog("错误", "编译中，请稍后再尝试！", "ok");
                 return;
             }
-            var dfs = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone).Split(';');
+            var dfs = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Split(';');
             //PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone, out var dfs);
             var symbols = dfs.ToList();
             if (!symbols.Contains("HOTFIX_CODE"))
@@ -79,8 +80,7 @@ namespace Ux.Editor.HybridCLR
             }
             SettingsUtil.Enable = false;
             symbols.Remove("HOTFIX_CODE");
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, string.Join(";", symbols));
-            //PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, symbols.ToArray());
+            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, string.Join(";", symbols));            
         }
         [MenuItem("HybridCLR/切换热更模式/关", true, 2001)]
         public static bool ValidateCloseHotfixCode()

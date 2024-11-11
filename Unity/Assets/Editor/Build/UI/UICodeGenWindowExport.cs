@@ -26,39 +26,7 @@ namespace Ux.Editor.Build.UI
             }
             Log.Debug("---------------------------------------->完成生成UI代码文件<---------------------------------------");
             return true;
-        }
-        void OnBtnGenClick()
-        {
-            if (selectItem != null)
-            {
-                if (UIEditorTools.GetGComBy(selectItem.pi, out var com) && OnExport(com))
-                {
-                    Log.Debug("UI代码生成");
-                    EditorUtility.DisplayDialog("提示", "导出选中组件成功", "确定");
-                }
-                else
-                {
-                    EditorUtility.DisplayDialog("提示", "导出选中组件失败", "确定");
-                }
-            }
-        }
-
-        void OnBtnGenAllClick()
-        {
-            var genPath = UICodeGenSettingData.CodeGenPath;
-            if (Directory.Exists(genPath))
-            {
-                Directory.Delete(genPath, true);
-            }
-            if (Export())
-            {
-                EditorUtility.DisplayDialog("提示", "导出所有组件成功", "确定");
-            }
-            else
-            {
-                EditorUtility.DisplayDialog("提示", "导出所有组件失败", "确定");
-            }
-        }
+        }        
         static bool OnExport(FairyGUI.UIPackage pkg)
         {
             var pis = UIEditorTools.GetPackageItems(pkg);
@@ -426,7 +394,5 @@ namespace Ux.Editor.Build.UI
             write.Export(temPath, clsName);
             return true;
         }
-
-
     }
 }

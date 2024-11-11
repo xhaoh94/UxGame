@@ -6,17 +6,27 @@ using UnityEngine.UIElements;
 using static Ux.TimeMgr;
 namespace Ux.Editor.Debugger.Time
 {
-    public class TimeDebuggerWindow : EditorWindow
+    partial class TimeSearchView
+    {
+        public TimeSearchView(VisualElement parent)
+        {
+            CreateChildren();
+            parent.Add(root);
+        }
+        public static DebuggerObjectSearchListView<TimeDebuggerItem<A,B>, TimeList> Create<A, B>(VisualElement parent, int num) where A : TemplateContainer, IDebuggerListItem<B>, new()
+        {
+            var view = new TimeSearchView(parent);
+            return new DebuggerObjectSearchListView<TimeDebuggerItem<A, B>, TimeList>(view.root, num);
+        }
+    }
+    public partial class TimeDebuggerWindow : EditorWindow
     {
         [MenuItem("UxGame/调试/定时器", false, 403)]
         public static void ShowExample()
         {
             var window = GetWindow<TimeDebuggerWindow>("定时器调试工具", true, DebuggerEditorDefine.DebuggerWindowTypes);
             window.minSize = new Vector2(800, 500);
-        }
-
-        [SerializeField]
-        private VisualTreeAsset m_VisualTreeAsset = default;
+        }       
 
         ToolbarButton _tbBtnTime;
         ToolbarButton _tbBtnFrame;
@@ -40,8 +50,9 @@ namespace Ux.Editor.Debugger.Time
             __Debugger_Frame_CallBack = OnUpdateFrame;
             __Debugger_TimeStamp_CallBack = OnUpdateTimeStamp;
             __Debugger_Cron_CallBack = OnUpdateCron;
-            VisualElement root = rootVisualElement;
-            m_VisualTreeAsset.CloneTree(root);
+            CreateChildren();
+            rootVisualElement.Add(root);
+
             _tbBtnTime = root.Q<ToolbarButton>("tbBtnTime");
             _tbBtnTime.clicked += () => { OnChangeType(TimeType.Time); };
             _tbBtnFrame = root.Q<ToolbarButton>("tbBtnFrame");
@@ -56,11 +67,11 @@ namespace Ux.Editor.Debugger.Time
             _txtLocalTime = root.Q<TextField>("txtLocalTime");
             _txtServerTime = root.Q<TextField>("txtServerTime");
 
-
-            _time = new DebuggerObjectSearchListView<TimeDebuggerItem<TimeDebuggerItemSub1, TimeHandle>, TimeList>(root.Q<VisualElement>("veTime"), 4);
-            _frame = new DebuggerObjectSearchListView<TimeDebuggerItem<TimeDebuggerItemSub1, TimeHandle>, TimeList>(root.Q<VisualElement>("veFrame"), 4);
-            _timeStamp = new DebuggerObjectSearchListView<TimeDebuggerItem<TimeDebuggerItemSub2TimeStamp, TimeStampHandle>, TimeList>(root.Q<VisualElement>("veTimeStamp"), 5);
-            _timeCron = new DebuggerObjectSearchListView<TimeDebuggerItem<TimeDebuggerItemSub2Cron, CronHandle>, TimeList>(root.Q<VisualElement>("veCron"), 5);
+            
+            _time = TimeSearchView.Create< TimeDebuggerItemSub1 ,TimeHandle >(scr,4);
+            _frame = TimeSearchView.Create<TimeDebuggerItemSub1, TimeHandle>(scr, 4);
+            _timeStamp = TimeSearchView.Create<TimeDebuggerItemSub2TimeStamp, TimeStampHandle>(scr, 5); 
+            _timeCron = TimeSearchView.Create<TimeDebuggerItemSub2Cron, CronHandle>(scr, 5);
             OnChangeType(TimeType.Time, true);
         }
 
