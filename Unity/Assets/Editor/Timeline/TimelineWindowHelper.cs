@@ -1,6 +1,8 @@
 ﻿using Assets.Editor.Timeline;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Ux.Editor.Timeline.Animation;
@@ -17,6 +19,7 @@ namespace Ux.Editor.Timeline
         public static TimelineComponent Timeline { get; set; }
         public static TimelineAsset Asset { get; set; }
         public static System.Action SaveAssets { get; set; }
+        public static System.Action<string, UnityEngine.Object> RefreshBinds { get; set; }
         public static System.Action RefreshEntity { get; set; }
         public static System.Action RefreshView { get; set; }
         public static System.Action RefreshClip { get; set; }
@@ -51,21 +54,34 @@ namespace Ux.Editor.Timeline
             }
             return _duration;
         }
-        public static TimelineClipAsset CreateClipAsset(Type clipType, int start, UnityEngine.Object arg)
+        public static float GetDurationFrame(TimelineTrackAsset asset)
+        {
+            int _duration = 0;
+            foreach (var clip in asset.clips)
+            {
+                if (_duration < clip.EndFrame)
+                {
+                    _duration = clip.EndFrame;
+                }
+            }
+            return _duration;
+        }
+        public static TimelineClipAsset CreateClipAsset(Type clipType, int start, string retPath)
         {
             var clipAsset = Activator.CreateInstance(clipType);
             if (clipAsset is AnimationClipAsset aca)
             {
                 aca.StartFrame = start;
                 aca.EndFrame = start + 100;
-                if (arg != null)
+                if (!string.IsNullOrEmpty(retPath))
                 {
-                    if (arg is AnimationClip ac)
+                    var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
+                    if (clip != null)
                     {
-                        aca.clip = ac;
-                        aca.EndFrame = start + Mathf.RoundToInt(ac.length * TimelineMgr.Ins.FrameRate);
-                        aca.clipName = ac.name;
-                    }
+                        aca.clip = clip;
+                        aca.EndFrame = start + Mathf.RoundToInt(aca.clip.length * TimelineMgr.Ins.FrameRate);
+                        aca.clipName = aca.clip.name;
+                    }   
                 }
                 return aca;
             }
@@ -102,7 +118,7 @@ namespace Ux.Editor.Timeline
                 {
                     item.Invoke();
                 }
-            }            
+            }
         }
     }
 }

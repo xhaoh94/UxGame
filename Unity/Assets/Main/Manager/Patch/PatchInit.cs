@@ -9,7 +9,7 @@ namespace Ux
     {
         protected override void OnEnter()
         {
-            Initialize(GameMain.Ins.PlayMode).Forget();
+            Initialize(GameMain.Ins.PlayMode).Forget();            
         }
 
         async UniTaskVoid Initialize(EPlayMode playMode)

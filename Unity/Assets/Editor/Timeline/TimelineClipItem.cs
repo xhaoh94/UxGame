@@ -78,7 +78,7 @@ namespace Ux.Editor.Timeline
         {            
             if (e.button == 0)
             {
-                TimelineWindow.InspectorContent.FreshInspector(Asset, ChcekValid);
+                FreshInspector();
             }
             else if (e.button == 1)
             {
@@ -98,6 +98,10 @@ namespace Ux.Editor.Timeline
                         UpdateView();
                     }
                 }, e => DropdownMenuAction.Status.Normal);
+                menu.AppendAction("É¾³ý", e =>
+                {
+                    TrackItem.RemoveClipItem(this);                    
+                }, e => DropdownMenuAction.Status.Normal);
                 this.ShowMenu();
             }
         }
@@ -106,6 +110,10 @@ namespace Ux.Editor.Timeline
             return TrackItem.IsValid();         
         }
 
+        public void FreshInspector()
+        {
+            TimelineWindow.InspectorContent.FreshInspector(Asset, ChcekValid);
+        }
 
         bool IsPointInTriangle(Point p, Point a, Point b, Point c)
         {

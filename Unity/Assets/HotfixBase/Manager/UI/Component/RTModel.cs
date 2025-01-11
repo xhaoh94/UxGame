@@ -149,7 +149,7 @@ namespace Ux
         void _CreateCamera()
         {
             if (Camera != null) return;
-            var go = ResMgr.Ins.LoadAsset<GameObject>($"{PathHelper.Res.Prefab}/Common/RTModelCamera.prefab");
+            var go = ResMgr.Ins.LoadAsset<GameObject>(string.Format(PathHelper.Res.Prefab, "RTModelCamera"));
             Camera = go.GetComponent<Camera>();
             _posz = GetPosZ();
             Camera.transform.position = new Vector3(0, 1000, _posz);

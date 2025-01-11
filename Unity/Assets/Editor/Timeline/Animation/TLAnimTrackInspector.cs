@@ -7,17 +7,14 @@ namespace Ux.Editor.Timeline.Animation
     public partial class TLAnimTrackInspector : TimelineInspectorBase
     {
         AnimationTrackAsset _asset;
-        public TLAnimTrackInspector(AnimationTrackAsset asset):base(asset)
+        public TLAnimTrackInspector(AnimationTrackAsset asset) : base(asset)
         {
             CreateChildren();
             Add(root);
             _asset = asset;
+            ofAnimator.objectType = typeof(Animator);
+            ofAvatarMask.objectType = typeof(AvatarMask);
             OnFreshView();
-        }
-        partial void _OnInputLayerChanged(ChangeEvent<int> e)
-        {
-            _asset.layer = e.newValue;
-            TimelineWindow.Run(_asset);
         }
         partial void _OnOfAvatarMaskChanged(ChangeEvent<Object> e)
         {
@@ -33,13 +30,29 @@ namespace Ux.Editor.Timeline.Animation
         {
             _asset.trackName = e.newValue;
             TimelineWindow.Run(_asset);
+            if (!string.IsNullOrEmpty(_asset.trackName) && ofAnimator.value != null)
+            {
+                TimelineWindow.RefreshBinds(_asset.trackName, ofAnimator.value);
+            }
+        }
+        partial void _OnOfAnimatorChanged(ChangeEvent<Object> e)
+        {            
+            if (!string.IsNullOrEmpty(_asset.trackName) && ofAnimator.value != null)
+            {
+                TimelineWindow.RefreshBinds(_asset.trackName, ofAnimator.value);
+            }
+            TimelineWindow.RefreshEntity();
         }
 
         protected override void OnFreshView()
         {
             txtName.SetValueWithoutNotify(_asset.trackName);
-            inputLayer.SetValueWithoutNotify(_asset.layer);
             ofAvatarMask.SetValueWithoutNotify(_asset.avatarMask);
+            var animator = TimelineWindow.Timeline.GetBindObj<Animator>(_asset.trackName);
+            if (animator != null)
+            {
+                ofAnimator.SetValueWithoutNotify(animator);
+            }
             tgAdditive.SetValueWithoutNotify(_asset.isAdditive);
             tgAdditive.style.display = _asset.avatarMask == null ? DisplayStyle.None : DisplayStyle.Flex;
         }

@@ -147,7 +147,7 @@ namespace Ux
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
         {            
             
-            string resName =$"{PathHelper.Res.UI}/{pkg}/{pkg}_fui";
+            string resName = string.Format(PathHelper.Res.UI,pkg,"fui");
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
@@ -191,7 +191,8 @@ namespace Ux
         private async void _LoadTextureFn(string name, string ex, Type type, PackageItem item)
         {
             if (type != typeof(Texture)) return;
-            string resName = $"{PathHelper.Res.UI}/{item.owner.name}/{name}";            
+            //string resName = $"{PathHelper.Res.UI}/{item.owner.name}/{name}";
+            string resName = string.Format(PathHelper.Res.UI, item.owner.name, name);
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();

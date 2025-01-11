@@ -8,13 +8,13 @@ namespace Ux
     {
         public class Res
         {
-            public static string Root = "Assets/Data/Res";
-            public static string UI = $"{Root}/UI";            
-            public static string State = $"{Root}/State";
-            public static string Config = $"{Root}/Config";
-            public static string Prefab = $"{Root}/Prefab";
-            public static string Timeline = $"{Root}/Timeline";
-            public static string Atlas = $"{Root}/Atlas";
+            public const string Root = "Assets/Data/Res";
+            public const string UI = "UI_{0}_{1}";     
+            public const string State = "State_{0}";
+            public const string Timeline = "Timeline_{0}";
+            public const string Config = "Config_{0}";
+            public const string Prefab = "Prefab_{0}";
+            public const string Atlas = "Atlas_{0}";
         }
         
     }

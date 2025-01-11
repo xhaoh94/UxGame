@@ -70,8 +70,7 @@ namespace Ux.Editor.Timeline
             TimelineWindow.Bind(Asset, UpdateAsset);
             ElementDrag.Add(clipContent, TimelineWindow.ClipContent, OnStart, OnDrag, OnEnd);
             clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
-            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
-
+            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);            
             RefreshView();
         }
         public void Release()
@@ -91,12 +90,7 @@ namespace Ux.Editor.Timeline
             if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
             {
                 string retPath = DragAndDrop.paths[0];
-                var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(retPath);
-                if (obj == null)
-                {
-                    return;
-                }
-                CreateClipAsset(obj);
+                CreateClipAsset(retPath);
             }
         }
         void OnPointerDown(PointerDownEvent e)
@@ -115,10 +109,10 @@ namespace Ux.Editor.Timeline
                 this.ShowMenu();
             }
         }
-        void CreateClipAsset(UnityEngine.Object obj)
+        void CreateClipAsset(string retPath)
         {
             var clipAsset = TimelineWindow.CreateClipAsset(ClipType,
-                   Mathf.CeilToInt(TimelineWindow.GetDuration(Asset) / TimelineMgr.Ins.FrameRate), obj);
+                   Mathf.CeilToInt(TimelineWindow.GetDuration(Asset) * TimelineMgr.Ins.FrameRate), retPath);
             AddClipItem(clipAsset);
         }
         void UpdateAsset()
@@ -158,8 +152,24 @@ namespace Ux.Editor.Timeline
             clipParent.Add(item);
             item.UpdateView();
             TimelineWindow.RefreshEntity();
+            item.FreshInspector();
         }
-
+        public void RemoveClipItem(TimelineClipItem item)
+        {
+            if (!Asset.clips.Contains(item.Asset))
+            {
+                return;
+            }
+            Asset.clips.Remove(item.Asset);
+            TimelineWindow.SaveAssets();
+            Items.Remove(item);
+            clipParent.Remove(item);
+            TimelineWindow.RefreshEntity();
+            if (Items.Count > 0)
+            {
+                Items[0].FreshInspector();                
+            }
+        }
 
 
         void OnStart()
@@ -182,16 +192,22 @@ namespace Ux.Editor.Timeline
                 return a.Status - b.Status;
             });
 
-            selectItem = _temItems[0];
+            if (_temItems.Count > 0)
+            {
+                selectItem = _temItems[0];
+            }
         }
         void OnDrag(Vector2 e)
         {
+            if (selectItem == null) return;
+            Undo.RecordObject(TimelineWindow.Asset, "drag");            
             var now = TimelineWindow.GetFrameByMousePosition();
             selectItem?.ToDrag(now, lastFrame);
             lastFrame = now;
         }
         void OnEnd()
         {
+            if (selectItem == null) return;
             foreach (var item in Items)
             {
                 item.ToUp();

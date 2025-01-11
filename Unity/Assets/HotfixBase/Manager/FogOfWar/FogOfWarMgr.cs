@@ -134,7 +134,7 @@ namespace Ux
                 return;
             }
             _init = true;
-            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>($"{PathHelper.Res.Prefab}/Common/FogOfWar.prefab");
+            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>(string.Format(PathHelper.Res.Prefab, "FogOfWar"));
 
             Width = width;
             Height = height;

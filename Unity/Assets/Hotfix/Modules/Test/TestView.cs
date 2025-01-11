@@ -35,18 +35,18 @@ namespace Ux.UI
             GObject.asCom.AddChild(loader);
 
             testUIModel.CloneMaterial = true;
-            testUIModel.Load($"{PathHelper.Res.Prefab}/Unit/Hero_ZS.prefab").Play("Hero_ZS@Stand");
+            testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
 
-            testRtModel.Load($"{PathHelper.Res.Prefab}/Unit/Hero_ZS.prefab").Play("Hero_ZS@Stand");
+            testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
 
             testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
-            //this.DoTimer(5, 1, () =>
-            //{
-            //    testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
-            //    //testList.List.ScrollToView(7);
-            //    EventMgr.Ins.Run(11111111);
-            //});
-            //EventMgr.Ins.Run(11111111);
+            this.DoTimer(5, 1, () =>
+            {
+                testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
+                //testList.List.ScrollToView(7);
+                EventMgr.Ins.Run(11111111);
+            });
+            EventMgr.Ins.Run(11111111);
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
@@ -75,13 +75,13 @@ namespace Ux.UI
         {
             Log.Debug("单击");
             UIMgr.Tip.Show("单击");
-            testRtModel.Load("Hero_CK").Play("Hero_CK@Stand");
+            testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {
             Log.Debug("双击");
             UIMgr.Tip.Show("双击");
-            testUIModel.Load("Hero_CK").Play("Hero_CK@Stand");
+            testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
         }
         partial void OnBtnLongClickLongPress(ref bool isBreak)
         {

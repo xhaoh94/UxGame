@@ -13,5 +13,10 @@ namespace Ux
 
         public abstract Type TrackType { get; }
 
+        public virtual void SetBindObj(UnityEngine.Object obj)
+        {
+
+        }
+
     }
 }

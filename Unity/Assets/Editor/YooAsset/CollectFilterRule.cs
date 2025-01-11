@@ -10,3 +10,11 @@ public class CollectBuiltinUI : IFilterRule
         return true;
     }
 }
+
+public class CollectPreloadUI : IFilterRule
+{
+    public bool IsCollectAsset(FilterRuleData data)
+    {
+        return UIClassifySettingData.IsProload(data.AssetPath);
+    }
+}

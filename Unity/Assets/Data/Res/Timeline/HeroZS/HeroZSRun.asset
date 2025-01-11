@@ -15,6 +15,8 @@ MonoBehaviour:
   frameRate: 60
   tracks:
   - rid: 2064898422907863041
+  - rid: 6422346566737854464
+  - rid: 6422346566737854532
   references:
     version: 2
     RefIds:
@@ -24,7 +26,6 @@ MonoBehaviour:
         trackName: Animation
         clips:
         - rid: 2064898422907863042
-        layer: 0
         isAdditive: 0
         avatarMask: {fileID: 0}
     - rid: 2064898422907863042
@@ -36,6 +37,48 @@ MonoBehaviour:
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
+        pre: 0
+        post: 2
+        PreFrame: -1
+        PostFrame: 48
+    - rid: 6422346566737854464
+      type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        trackName: Animation2
+        clips:
+        - rid: 6422346566737854465
+        isAdditive: 0
+        avatarMask: {fileID: 0}
+    - rid: 6422346566737854465
+      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        clipName: IDLE
+        StartFrame: 0
+        EndFrame: 80
+        InFrame: 0
+        OutFrame: 0
+        clip: {fileID: 1827226128182048838, guid: a7c07e57cf733bc4c810776fa6d592dd, type: 3}
+        pre: 0
+        post: 2
+        PreFrame: 0
+        PostFrame: 2147483647
+    - rid: 6422346566737854532
+      type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        trackName: Animation3
+        clips:
+        - rid: 6422346566737854533
+        isAdditive: 0
+        avatarMask: {fileID: 0}
+    - rid: 6422346566737854533
+      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        clipName: Stand
+        StartFrame: 19
+        EndFrame: 79
+        InFrame: 0
+        OutFrame: 0
+        clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}
         pre: 0
         post: 2
         PreFrame: 0

@@ -20,7 +20,8 @@ namespace Ux
             {
                 World = Entity.Create<World>();
             }
-            var go = await ResMgr.Ins.LoadAssetAsync<GameObject>($"{PathHelper.Res.Prefab}/Map/{mapName}/{mapName}.prefab");
+            var path = string.Format(PathHelper.Res.Prefab, mapName);
+            var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(path);
             var map = World.Add<Scene, GameObject>(go);
             World.EnterScene(map);
 
@@ -28,7 +29,7 @@ namespace Ux
             data.data = LoginModule.Ins.resp.Self;
             data.self = true;
             data.name = "name_" + data.data.roleId;
-            data.res = $"{PathHelper.Res.Prefab}/Unit/Hero_ZS.prefab";
+            data.res = string.Format(PathHelper.Res.Prefab, "Hero_ZS");
             map.AddPlayer(data);
 
             //foreach (var other in resp.Others)

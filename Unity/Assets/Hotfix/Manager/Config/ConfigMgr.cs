@@ -19,7 +19,7 @@ namespace Ux
         }
         string GetPath(string file)
         {
-            return $"{PathHelper.Res.Config}/{file}";
+            return string.Format(PathHelper.Res.Config,file);
         }
         private JSONNode LoadJson(string file)
         {

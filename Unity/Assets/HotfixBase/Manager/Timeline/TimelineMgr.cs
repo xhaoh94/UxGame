@@ -17,7 +17,8 @@ namespace Ux
         }
         public TimelineAsset LoadAsset(string assetName)
         {
-            var asset = ResMgr.Ins.LoadAsset<TimelineAsset>($"{PathHelper.Res.Timeline}/{assetName}");
+            var assetPaht = string.Format(PathHelper.Res.Timeline, assetName);
+            var asset = ResMgr.Ins.LoadAsset<TimelineAsset>(assetPaht);
             return asset;
         }
     }

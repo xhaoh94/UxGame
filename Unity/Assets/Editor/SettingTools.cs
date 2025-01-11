@@ -66,6 +66,7 @@ namespace Ux.Editor
             string assPath = AssetDatabase.GUIDToAssetPath(id);
             return AssetDatabase.LoadAssetAtPath<T>(assPath);
         }
+
         public static void SavePlayerPrefs(string key, string id)
         {
             PlayerPrefs.SetString(key, id);

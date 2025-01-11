@@ -28,7 +28,6 @@
             OnStop();
         }
 
-
         public void Evaluate(float deltaTime)
         {
             var _curTime = Time;

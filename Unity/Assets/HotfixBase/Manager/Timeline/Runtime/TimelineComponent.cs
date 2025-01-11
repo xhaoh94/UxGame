@@ -10,6 +10,7 @@ namespace Ux
         public Timeline Current { get; private set; }
         public Timeline Last { get; private set; }
         List<Timeline> _additives = new List<Timeline>();
+        Dictionary<string, object> _bindObjs = new ();
         public PlayableGraph PlayableGraph { get; private set; }
 
         float _playSpeed = 1;
@@ -68,7 +69,9 @@ namespace Ux
         {
             if (isAdditive)
             {
-                _additives.Insert(0, Add<Timeline, TimelineAsset, bool>(timeline, isAdditive));
+                var additive = Add<Timeline, TimelineAsset, bool>(timeline, isAdditive);
+                additive.StartWeightFade(1, 0.3f);
+                _additives.Insert(0, additive);
             }
             else
             {
@@ -89,10 +92,33 @@ namespace Ux
                     }
                 }
                 Current = Add<Timeline, TimelineAsset, bool>(timeline, isAdditive);
+                Current?.StartWeightFade(1, 0.3f);
+                Last?.StartWeightFade(0, 0.3f);
             }
         }
 
-
+        public void SetBindObj(string key,object obj)
+        {
+            _bindObjs[key] = obj;
+            if (PlayableGraph.IsValid())
+            {
+                Current?.OnBinding();
+                Last?.OnBinding();
+                for (var i = _additives.Count - 1; i >= 0; i--)
+                {
+                    var additive = _additives[i];
+                    additive.OnBinding();
+                }
+            }
+        }
+        public T GetBindObj<T>(string key)
+        {
+            if (_bindObjs.TryGetValue(key,out var obj))
+            {
+                return (T)obj;
+            }
+            return default;
+        }
         public void Set(int frame)
         {
             if (PlayableGraph.IsValid())
@@ -105,6 +131,17 @@ namespace Ux
                     {
                         Remove(Last);
                         Last = null;
+                    }
+                }
+
+                for (var i = _additives.Count - 1; i >= 0; i--)
+                {
+                    var additive = _additives[i];
+                    additive.Set(frame);
+                    if (additive.IsDone)
+                    {
+                        Remove(additive);
+                        _additives.RemoveAt(i);
                     }
                 }
             }

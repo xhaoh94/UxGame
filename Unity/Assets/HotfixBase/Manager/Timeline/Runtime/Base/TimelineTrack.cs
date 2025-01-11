@@ -26,7 +26,10 @@ namespace Ux
             _clips.Clear();
             IsDone = false;
         }
+        public virtual void OnBinding()
+        {
 
+        }
         public void Evaluate(float deltaTime)
         {
             IsDone = true;
@@ -43,5 +46,6 @@ namespace Ux
 
         protected abstract void OnStart(TimelineTrackAsset asset);
         protected abstract void OnEvaluate(float deltaTime);
+        public virtual void StartWeightFade(float destWeight, float fadeDuration) { }
     }
 }

@@ -17,11 +17,14 @@ namespace Ux
         protected override void OnStart(TimelineClipAsset asset)
         {
             animAsset = asset as AnimationClipAsset;
-            _source = AnimationClipPlayable.Create(PlayableGraph, animAsset.clip);
-            _source.SetDuration(animAsset.clip.length);
-            _inputPort = Track.Asset.clips.IndexOf(animAsset);
-            PlayableGraph.Connect(_source, 0, Track.Mixer, _inputPort);
-            _source.Pause();
+            if (animAsset.clip != null)
+            {
+                _source = AnimationClipPlayable.Create(PlayableGraph, animAsset.clip);
+                _source.SetDuration(animAsset.clip.length);
+                _inputPort = Track.Asset.clips.IndexOf(animAsset);
+                PlayableGraph.Connect(_source, 0, Track.Mixer, _inputPort);
+                _source.Pause();
+            }
         }
 
         protected override void OnStop()
@@ -44,6 +47,7 @@ namespace Ux
         }
         protected override void OnEvaluate(float deltaTime)
         {
+            if (animAsset.clip == null) return;
             float curTime = Time;
             float setTime = 0;
             float setWeight = 0;

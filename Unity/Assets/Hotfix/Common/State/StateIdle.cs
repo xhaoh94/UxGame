@@ -10,7 +10,7 @@ namespace Ux
         protected override void OnEnter()
         {
             base.OnEnter();
-            var asset = TimelineMgr.Ins.LoadAsset("HeroZS/HeroZSIdle");
+            var asset = TimelineMgr.Ins.LoadAsset("HeroZSIdle");
             Unit.Timeline.Play(asset);
         }
     }
@@ -24,7 +24,7 @@ namespace Ux
         protected override void OnEnter()
         {
             base.OnEnter();
-            var asset = TimelineMgr.Ins.LoadAsset("HeroZS/HeroZSRun");
+            var asset = TimelineMgr.Ins.LoadAsset("HeroZSRun");
             Unit.Timeline.Play(asset);
             GameMethod.Update += OnUpdate;
         }

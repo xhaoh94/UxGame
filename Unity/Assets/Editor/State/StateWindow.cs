@@ -53,7 +53,7 @@ namespace Ux.Editor.State
             write.StartBlock();
             write.Writeln($"public partial class {data.stateName} : {nameof(UnitStateBase)}");
             write.StartBlock();
-            write.Writeln($"public override string AssetName => \"{PathHelper.Res.State}/{data.group}/{data.stateName}.asset\";");
+            write.Writeln($"public override string AssetName => \"{string.Format(PathHelper.Res.State, data.stateName)}\";");
             write.EndBlock();
             write.EndBlock();
             write.Export($"{CodePath}/", data.stateName);

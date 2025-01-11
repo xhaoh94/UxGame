@@ -20,6 +20,7 @@ namespace Ux
                 _tacks.Add(track);
             }
             Time = 0;
+            OnBinding();
         }
 
         protected override void OnDestroy()
@@ -29,6 +30,14 @@ namespace Ux
             Time = 0;
             IsDone = false;
             IsAdditive = false;
+        }
+
+        public void OnBinding()
+        {
+            foreach (var tack in _tacks)
+            {
+                tack.OnBinding();
+            }
         }
 
         public void Evaluate(float deltaTime)
@@ -57,6 +66,14 @@ namespace Ux
                 {
                     IsDone = false;
                 }
+            }
+        }
+
+        public void StartWeightFade(float destWeight, float fadeDuration)
+        {
+            foreach (var tack in _tacks)
+            {
+                tack.StartWeightFade(destWeight,fadeDuration);
             }
         }
     }

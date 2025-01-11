@@ -21,13 +21,11 @@ namespace Ux
     public class Unit : Entity, IAwakeSystem<PlayerData>
     {
         const string _ecs_root_pool = "_$ecs_root_pool$_";        
-        public GameObject Model { get; private set; }
-        public AnimComponent Anim => Get<AnimComponent>();
+        public GameObject Model { get; private set; }        
         public TimelineComponent Timeline => Get<TimelineComponent>();
         public StateComponent State => Get<StateComponent>();
         public SeekerComponent Seeker => Get<SeekerComponent>();
-        public PathComponent Path => Get<PathComponent>();
-        //public PlayableDirectorComponent Director => Get<PlayableDirectorComponent>();
+        public PathComponent Path => Get<PathComponent>();        
 
         #region Get-Set
         private Vector3 _postion;
@@ -121,8 +119,7 @@ namespace Ux
             Model = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
             Model.SetParent(Viewer.transform);
             Model.layer = Layer;
- 
-            Add<AnimComponent, Animator>(Model.GetComponentInChildren<Animator>());
+             
             Add<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
             //Add<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
             //Director.SetBinding("Anim Track", Viewer.GetComponentInChildren<Animator>());

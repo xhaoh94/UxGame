@@ -46,17 +46,16 @@ namespace Ux.Editor.Build.UI
             collectorBuiltin.CollectPath = ResClassifySettings.path;
             collectorBuiltin.PackRuleName = typeof(PackTopDirectory).Name;
             collectorBuiltin.FilterRuleName = typeof(CollectBuiltinUI).Name;
-            collectorBuiltin.AddressRuleName = nameof(AddressByFolderAndFileName);
+            collectorBuiltin.AddressRuleName = nameof(AddressByGroupAndFileName);
             group.Collectors.Add(collectorBuiltin);
             #endregion
 
             #region Preload
-            var collectorPreload = new AssetBundleCollector();
-            collectorPreload.AssetTags = "preload";
+            var collectorPreload = new AssetBundleCollector();            
             collectorPreload.CollectPath = ResClassifySettings.path;
             collectorPreload.PackRuleName = typeof(PackTopDirectory).Name;
             collectorPreload.FilterRuleName = typeof(CollectPreloadUI).Name;
-            collectorPreload.AddressRuleName = nameof(AddressByFolderAndFileName);
+            collectorPreload.AddressRuleName = nameof(AddressByGroupAndFileName);
             group.Collectors.Add(collectorPreload);
             #endregion
 
@@ -69,7 +68,7 @@ namespace Ux.Editor.Build.UI
                 var collector = new AssetBundleCollector();
                 collector.CollectPath = dir;
                 collector.AssetTags = lazyload.value;
-                collector.AddressRuleName = nameof(AddressByFolderAndFileName);
+                collector.AddressRuleName = nameof(AddressByGroupAndFileName);
                 group.Collectors.Add(collector);
             }
             #endregion

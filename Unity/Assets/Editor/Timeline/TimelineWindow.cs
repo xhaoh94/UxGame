@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -5,12 +6,22 @@ using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
 {
+    struct BindData
+    {
+        public int index;
+        public Type type;
+        public BindData(int i, Type t)
+        {
+            index = i;
+            type = t;
+        }
+    }
     public class TLEntity : Entity
     {
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            Object.DestroyImmediate(Viewer.gameObject);
+            UnityEngine.Object.DestroyImmediate(Viewer.gameObject);
         }
     }
     public partial class TimelineWindow : EditorWindow
@@ -28,17 +39,19 @@ namespace Ux.Editor.Timeline
             wnd.titleContent = new GUIContent(" ±º‰÷·");
         }
         static string Path = "Assets/Data/Res/Timeline";
-
+        bool isCreateing = false;
         double _lastTime;
         float _playTime;
         TLEntity _entity;
         List<int> _frameSelects = new List<int>() { 30, 60 };
-
+        Dictionary<string, Dictionary<string, BindData>> _binds = new();
         public void CreateGUI()
         {
+            isCreateing = true;
             IsPlaying = false;
             SaveAssets = _SaveAssets;
             RefreshEntity = _RefreshEntity;
+            RefreshBinds = _RefreshBinds;
             MarkerMove = _MarkerMove;
             ResetActionMap();
 
@@ -72,9 +85,13 @@ namespace Ux.Editor.Timeline
 
             inputPath.SetValueWithoutNotify(Path);
 
-            _OnOfEntityChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
-            _OnOfTimelineChanged(ChangeEvent<Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
+            _OnOfEntityChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
+            _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
             //clipView.SetNowFrame(1, TimelineMgr.Ins.FrameRate);
+            _OnBindObjs();
+            RefreshEntity();
+            RefreshView();
+            isCreateing = false;
         }
 
         bool keyCtrl = false;
@@ -93,6 +110,9 @@ namespace Ux.Editor.Timeline
                         case KeyCode.S:
                             keyS = true;
                             break;
+                        case KeyCode.Delete:
+
+                            break;
                     }
                     break;
                 case UnityEngine.EventType.KeyUp:
@@ -106,8 +126,9 @@ namespace Ux.Editor.Timeline
                             keyS = false;
                             save = false;
                             break;
+    
                     }
-                    break;
+                    break;                    
             }
 
             if (keyCtrl && keyS && !save)
@@ -189,7 +210,7 @@ namespace Ux.Editor.Timeline
             IsPlaying = false;
         }
 
-        partial void _OnOfEntityChanged(ChangeEvent<Object> e)
+        partial void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e)
         {
             _entity?.Destroy();
             _entity = null;
@@ -211,10 +232,14 @@ namespace Ux.Editor.Timeline
                 {
                     SettingTools.SavePlayerPrefs("timeline_entity", guid);
                 }
-                RefreshEntity();
+                if (!isCreateing)
+                {
+                    _OnBindObjs();
+                    RefreshEntity();
+                }
             }
         }
-        partial void _OnOfTimelineChanged(ChangeEvent<Object> e)
+        partial void _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object> e)
         {
             ofTimeline.SetValueWithoutNotify(e.newValue);
             if (e.newValue is TimelineAsset asset)
@@ -229,8 +254,52 @@ namespace Ux.Editor.Timeline
                 {
                     SaveAssets();
                 }
-                RefreshEntity();
-                RefreshView();
+                if (!isCreateing)
+                {
+                    _OnBindObjs();
+                    RefreshEntity();
+                    RefreshView();
+                }
+            }
+        }
+
+        void _OnBindObjs()
+        {
+            if (Asset == null) return;
+            if (Timeline == null) return;
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ofEntity.value, out var guid, out long _))
+            {
+                if (!_binds.TryGetValue(guid, out var dict))
+                {
+                    var str = PlayerPrefs.GetString(guid, string.Empty);
+                    if (!string.IsNullOrEmpty(str))
+                    {
+                        try
+                        {
+                            dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, BindData>>(str);
+                            _binds[guid] = dict;
+                        }
+                        catch
+                        {
+                            PlayerPrefs.DeleteKey(guid);
+                        }
+                    }
+                }
+                if (dict != null)
+                {
+                    foreach (var (k, v) in dict)
+                    {
+                        foreach (var track in Asset.tracks)
+                        {
+                            if (track.trackName == k)
+                            {
+                                var components = _entity.Viewer.transform.GetComponentsInChildren(v.type, true);
+                                Timeline.SetBindObj(k, components[v.index]);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
         partial void _OnBtnCreateClick()
@@ -284,6 +353,32 @@ namespace Ux.Editor.Timeline
             if (Asset == null) return;
             EditorUtility.SetDirty(Asset);
             AssetDatabase.SaveAssets();
+        }
+
+        void _RefreshBinds(string key, UnityEngine.Object obj)
+        {
+            if (ofEntity.value is GameObject gameObject)
+            {
+                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(gameObject, out var guid, out long _))
+                {
+                    var t = obj.GetType();
+                    var components = _entity.Viewer.transform.GetComponentsInChildren(t, true);
+                    for (int index = 0; index < components.Length; index++)
+                    {
+                        if (components[index] == obj)
+                        {
+                            if (!_binds.TryGetValue(guid, out var dict))
+                            {
+                                dict = new Dictionary<string, BindData>();
+                            }
+                            dict[key] = new BindData(index, t);
+                            var str = Newtonsoft.Json.JsonConvert.SerializeObject(dict);
+                            SettingTools.SavePlayerPrefs(guid, str);
+                            break;
+                        }
+                    }
+                }
+            }
         }
         void _RefreshEntity()
         {
