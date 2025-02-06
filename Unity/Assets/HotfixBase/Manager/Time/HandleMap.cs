@@ -181,7 +181,7 @@ namespace Ux
                 {
                     if (endIndex - startIndex <= 10)
                     {
-                        int insertIndex = -1;
+                        int insertIndex = endIndex;
                         for (var i = startIndex; i < endIndex; i++)
                         {
                             if (handle.Compare(_handles[i]) < 0)
@@ -189,10 +189,6 @@ namespace Ux
                                 insertIndex = i;
                                 break;
                             }
-                        }
-                        if (insertIndex == -1)
-                        {
-                            insertIndex = endIndex;
                         }
                         _handles.Insert(insertIndex, handle);
                         return;
@@ -214,11 +210,20 @@ namespace Ux
                         endIndex = index;
                     }
 
-                    loopCnt++;
-                    if (loopCnt > 1000)
+                    if (++loopCnt > 1000)
                     {
                         Log.Error("排序循环超时");
-                        break;
+                        int safeInsertIndex = _handles.Count;
+                        for (int i = 0; i < _handles.Count; i++)
+                        {
+                            if (handle.Compare(_handles[i]) < 0)
+                            {
+                                safeInsertIndex = i;
+                                break;
+                            }
+                        }
+                        _handles.Insert(safeInsertIndex, handle);
+                       return;
                     }
                 }
             }
