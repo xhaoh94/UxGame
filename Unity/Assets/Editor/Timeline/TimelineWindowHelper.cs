@@ -11,6 +11,7 @@ namespace Ux.Editor.Timeline
 {
     public partial class TimelineWindow
     {
+        public static UxUndo Undo { get; private set; }
         public static TimelineInspectorView InspectorContent { get; set; }
         public static VisualElement ClipContent { get; set; }
         public static System.Func<int, float> GetPositionByFrame { get; set; }
@@ -28,7 +29,6 @@ namespace Ux.Editor.Timeline
         {
             return Asset != null && Timeline != null && !IsPlaying;
         }
-
         public static float GetDuration(TimelineAsset asset)
         {
             float _duration = 0;
@@ -54,18 +54,7 @@ namespace Ux.Editor.Timeline
             }
             return _duration;
         }
-        public static float GetDurationFrame(TimelineTrackAsset asset)
-        {
-            int _duration = 0;
-            foreach (var clip in asset.clips)
-            {
-                if (_duration < clip.EndFrame)
-                {
-                    _duration = clip.EndFrame;
-                }
-            }
-            return _duration;
-        }
+
         public static TimelineClipAsset CreateClipAsset(Type clipType, int start, string retPath)
         {
             var clipAsset = Activator.CreateInstance(clipType);
@@ -120,5 +109,7 @@ namespace Ux.Editor.Timeline
                 }
             }
         }
+
+
     }
 }

@@ -17,6 +17,7 @@ MonoBehaviour:
   - rid: 2064898422907863041
   - rid: 6422346566737854464
   - rid: 6422346566737854532
+  - rid: 6422346859002986562
   references:
     version: 2
     RefIds:
@@ -39,8 +40,8 @@ MonoBehaviour:
         clip: {fileID: 1827226128182048838, guid: 5b7a8fcc2fc984f4ba78a3be49e4e594, type: 3}
         pre: 0
         post: 2
-        PreFrame: -1
-        PostFrame: 48
+        PreFrame: 0
+        PostFrame: 2147483647
     - rid: 6422346566737854464
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
@@ -74,8 +75,8 @@ MonoBehaviour:
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         clipName: Stand
-        StartFrame: 19
-        EndFrame: 79
+        StartFrame: 54
+        EndFrame: 114
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: d3ee577c03ec0354ea681cd9e8dfe501, type: 3}
@@ -83,3 +84,8 @@ MonoBehaviour:
         post: 2
         PreFrame: 0
         PostFrame: 2147483647
+    - rid: 6422346859002986562
+      type: {class: ParticleAssetTrack, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        trackName: ParticleAsset
+        clips: []

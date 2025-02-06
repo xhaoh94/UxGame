@@ -1,9 +1,6 @@
-﻿using Codice.CM.Common;
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
-using static UnityEngine.Rendering.DebugUI;
 
 namespace Ux
 {

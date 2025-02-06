@@ -47,6 +47,7 @@ namespace Ux.Editor.Timeline
         Dictionary<string, Dictionary<string, BindData>> _binds = new();
         public void CreateGUI()
         {
+            Undo = new UxUndo();
             isCreateing = true;
             IsPlaying = false;
             SaveAssets = _SaveAssets;
@@ -91,7 +92,7 @@ namespace Ux.Editor.Timeline
             _OnBindObjs();
             RefreshEntity();
             RefreshView();
-            isCreateing = false;
+            isCreateing = false;            
         }
 
         bool keyCtrl = false;

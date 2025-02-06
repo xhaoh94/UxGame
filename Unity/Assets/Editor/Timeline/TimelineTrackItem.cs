@@ -70,7 +70,7 @@ namespace Ux.Editor.Timeline
             TimelineWindow.Bind(Asset, UpdateAsset);
             ElementDrag.Add(clipContent, TimelineWindow.ClipContent, OnStart, OnDrag, OnEnd);
             clipContent.RegisterCallback<DragUpdatedEvent>(OnDragUpd);
-            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);            
+            clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
             RefreshView();
         }
         public void Release()
@@ -124,8 +124,19 @@ namespace Ux.Editor.Timeline
             Asset.trackName = e.newValue;
             TimelineWindow.Run(Asset);
         }
+
         void RefreshView()
         {
+            if (Items.Count > 0)
+            {
+                foreach (var item in Items)
+                {
+                    //Items.Remove(item);
+                    clipParent.Remove(item);
+                }
+                Items.Clear();
+            }
+
             foreach (var clipAsset in Asset.clips)
             {
                 var item = new TimelineClipItem(clipAsset, this);
@@ -145,6 +156,10 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
+            TimelineWindow.Undo.RegUndo("track_add_clip_item", TimelineWindow.Asset, () => {
+                TimelineWindow.SaveAssets();
+                RefreshView();
+            });
             Asset.clips.Add(clipAsset);
             TimelineWindow.SaveAssets();
             var item = new TimelineClipItem(clipAsset, this);
@@ -160,6 +175,10 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
+            TimelineWindow.Undo.RegUndo("track_remove_clip_item", TimelineWindow.Asset, () => {
+                TimelineWindow.SaveAssets();
+                RefreshView();
+            });
             Asset.clips.Remove(item.Asset);
             TimelineWindow.SaveAssets();
             Items.Remove(item);
@@ -167,7 +186,7 @@ namespace Ux.Editor.Timeline
             TimelineWindow.RefreshEntity();
             if (Items.Count > 0)
             {
-                Items[0].FreshInspector();                
+                Items[0].FreshInspector();
             }
         }
 
@@ -194,13 +213,13 @@ namespace Ux.Editor.Timeline
 
             if (_temItems.Count > 0)
             {
+                TimelineWindow.Undo.RegUndo("drag_track", TimelineWindow.Asset, RefreshView);
                 selectItem = _temItems[0];
             }
         }
         void OnDrag(Vector2 e)
         {
             if (selectItem == null) return;
-            Undo.RecordObject(TimelineWindow.Asset, "drag");            
             var now = TimelineWindow.GetFrameByMousePosition();
             selectItem?.ToDrag(now, lastFrame);
             lastFrame = now;
