@@ -34,6 +34,21 @@ namespace Ux
                 }
             };
             GameMain.Machine.Enter<StateGameIn>();
+            TimeMgr.Ins.DoTimer(10, 1, this, Test1);
+            TimeMgr.Ins.DoTimer(9, 1, this, Test2);
+            TimeMgr.Ins.DoTimer(80, 1, this, Test3);
+        }
+        void Test1()
+        {
+            Log.Info("1");
+        }
+        void Test2()
+        {
+            Log.Info("2");
+        }
+        void Test3()
+        {
+            Log.Info("3");
         }
         struct LoginReslut
         {

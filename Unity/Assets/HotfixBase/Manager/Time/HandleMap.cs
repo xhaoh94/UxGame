@@ -141,13 +141,13 @@ namespace Ux
             }
 
             void OnRun()
-            {               
+            {
 #if UNITY_EDITOR
                 __isEvent = false;
 #endif
                 if (_handles.Count <= 0) return;
 
-                for (var i = _handles.Count - 1; i >= 0; i--)
+                for (var i = 0; i < _handles.Count; i++)
                 {
                     var handler = _handles[i];
                     switch (handler.Run())
@@ -174,48 +174,44 @@ namespace Ux
 
             private void Sort(IHandle handle)
             {
-                var stratIndex = 0;
+                var startIndex = 0;
                 var endIndex = _handles.Count;
                 int loopCnt = 0;
                 while (true)
                 {
-                    if (endIndex - stratIndex <= 10)
+                    if (endIndex - startIndex <= 10)
                     {
                         int insertIndex = -1;
-                        for (var i = stratIndex; i < endIndex; i++)
+                        for (var i = startIndex; i < endIndex; i++)
                         {
-                            if (handle.Compare(_handles[i]) >= 0)
+                            if (handle.Compare(_handles[i]) < 0)
                             {
                                 insertIndex = i;
                                 break;
                             }
                         }
-
-                        if (insertIndex != -1)
+                        if (insertIndex == -1)
                         {
-                            _handles.Insert(insertIndex, handle);
+                            insertIndex = endIndex;
                         }
-                        else
-                        {
-                            _handles.Add(handle);
-                        }
-
+                        _handles.Insert(insertIndex, handle);
                         return;
                     }
 
-                    var index = stratIndex + ((endIndex - stratIndex) >> 1);
-                    if (handle.Compare(_handles[index]) == 0)
+                    var index = startIndex + ((endIndex - startIndex) >> 1);
+                    int compareResult = handle.Compare(_handles[index]);
+                    if (compareResult == 0)
                     {
                         _handles.Insert(index, handle);
                         return;
                     }
-                    else if (handle.Compare(_handles[index]) > 0)
+                    else if (compareResult > 0)
                     {
-                        endIndex = index;
+                        startIndex = index + 1;
                     }
                     else
                     {
-                        stratIndex = index;
+                        endIndex = index;
                     }
 
                     loopCnt++;
