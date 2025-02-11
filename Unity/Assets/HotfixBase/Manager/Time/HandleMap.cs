@@ -176,30 +176,12 @@ namespace Ux
             {
                 var startIndex = 0;
                 var endIndex = _handles.Count;
-                int loopCnt = 0;
-                while (true)
-                {
-                    if (endIndex - startIndex <= 10)
-                    {
-                        int insertIndex = -1;
-                        for (var i = startIndex; i < endIndex; i++)
-                        {
-                            if (handle.Compare(_handles[i]) < 0)
-                            {
-                                insertIndex = i;
-                                break;
-                            }
-                        }
-                        if (insertIndex == -1)
-                        {
-                            insertIndex = endIndex;
-                        }
-                        _handles.Insert(insertIndex, handle);
-                        return;
-                    }
 
+                while (startIndex < endIndex)
+                {
                     var index = startIndex + ((endIndex - startIndex) >> 1);
                     int compareResult = handle.Compare(_handles[index]);
+
                     if (compareResult == 0)
                     {
                         _handles.Insert(index, handle);
@@ -213,14 +195,10 @@ namespace Ux
                     {
                         endIndex = index;
                     }
-
-                    loopCnt++;
-                    if (loopCnt > 1000)
-                    {
-                        Log.Error("排序循环超时");
-                        break;
-                    }
                 }
+
+                // 如果未找到合适位置，插入到 startIndex
+                _handles.Insert(startIndex, handle);
             }
 
             public void Add(IHandle handle)
