@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 6d0a2fa0c7008814795dc7f5f3bd4b19
+timeCreated: 1461750571
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/HitTest/MeshColliderHitTest.cs
+  uploadId: 755911

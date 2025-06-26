@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Ux
 {
-    [TLTrack("¶¯»­", 111, 212, 201)]
+    [TLTrack("ÌØÐ§", 111, 212, 201)]
     [TLTrackClipType(typeof(ParticleClipAsset))]
     public class ParticleAssetTrack : TimelineTrackAsset
     {

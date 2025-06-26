@@ -88,12 +88,10 @@ namespace IngameDebugConsole
 			{ typeof( RectOffset ), ParseRectOffset },
 			{ typeof( Bounds ), ParseBounds },
 			{ typeof( GameObject ), ParseGameObject },
-#if UNITY_2017_2_OR_NEWER
 			{ typeof( Vector2Int ), ParseVector2Int },
 			{ typeof( Vector3Int ), ParseVector3Int },
 			{ typeof( RectInt ), ParseRectInt },
 			{ typeof( BoundsInt ), ParseBoundsInt },
-#endif
 		};
 
 		// All the readable names of accepted types
@@ -124,8 +122,12 @@ namespace IngameDebugConsole
 		// CompareInfo used for case-insensitive command name comparison
 		internal static readonly CompareInfo caseInsensitiveComparer = new CultureInfo( "en-US" ).CompareInfo;
 
-		static DebugLogConsole()
+		[RuntimeInitializeOnLoadMethod( RuntimeInitializeLoadType.SubsystemRegistration )] // Configurable Enter Play Mode: https://docs.unity3d.com/Manual/DomainReloading.html
+		private static void ResetStatics()
 		{
+			methods.Clear();
+			OnCommandExecuted = null;
+
 #if !IDG_DISABLE_HELP_COMMAND
 			AddCommand( "help", "Prints all commands", LogAllCommands );
 			AddCommand<string>( "help", "Prints all matching commands", LogAllCommandsWithName );
@@ -197,17 +199,23 @@ namespace IngameDebugConsole
 		{
 			try
 			{
+				List<ConsoleAttribute> methods = new List<ConsoleAttribute>();
 				foreach( Type type in assembly.GetExportedTypes() )
 				{
 					foreach( MethodInfo method in type.GetMethods( BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly ) )
 					{
-						foreach( object attribute in method.GetCustomAttributes( typeof( ConsoleMethodAttribute ), false ) )
+						foreach( ConsoleAttribute consoleAttribute in method.GetCustomAttributes( typeof(ConsoleAttribute), false ) )
 						{
-							ConsoleMethodAttribute consoleMethod = attribute as ConsoleMethodAttribute;
-							if( consoleMethod != null )
-								AddCommand( consoleMethod.Command, consoleMethod.Description, method, null, consoleMethod.ParameterNames );
+							consoleAttribute.SetMethod(method);
+							methods.Add(consoleAttribute);
 						}
 					}
+				}
+
+				methods.Sort((a, b) => a.Order.CompareTo(b.Order));
+				for (int i = 0; i < methods.Count; i++)
+				{
+					methods[i].Load();
 				}
 			}
 			catch( NotSupportedException ) { }
@@ -298,24 +306,16 @@ namespace IngameDebugConsole
 			stringBuilder.Append( "Temporary Cache Path: " ).Append( Application.temporaryCachePath ).Append( "\n" );
 			stringBuilder.Append( "Device ID: " ).Append( SystemInfo.deviceUniqueIdentifier ).Append( "\n" );
 			stringBuilder.Append( "Max Texture Size: " ).Append( SystemInfo.maxTextureSize ).Append( "\n" );
-#if UNITY_5_6_OR_NEWER
 			stringBuilder.Append( "Max Cubemap Size: " ).Append( SystemInfo.maxCubemapSize ).Append( "\n" );
-#endif
 			stringBuilder.Append( "Accelerometer: " ).Append( SystemInfo.supportsAccelerometer ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "Gyro: " ).Append( SystemInfo.supportsGyroscope ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "Location Service: " ).Append( SystemInfo.supportsLocationService ? "supported\n" : "not supported\n" );
-#if !UNITY_2019_1_OR_NEWER
-			stringBuilder.Append( "Image Effects: " ).Append( SystemInfo.supportsImageEffects ? "supported\n" : "not supported\n" );
-			stringBuilder.Append( "RenderToCubemap: " ).Append( SystemInfo.supportsRenderToCubemap ? "supported\n" : "not supported\n" );
-#endif
 			stringBuilder.Append( "Compute Shaders: " ).Append( SystemInfo.supportsComputeShaders ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "Shadows: " ).Append( SystemInfo.supportsShadows ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "Instancing: " ).Append( SystemInfo.supportsInstancing ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "Motion Vectors: " ).Append( SystemInfo.supportsMotionVectors ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "3D Textures: " ).Append( SystemInfo.supports3DTextures ? "supported\n" : "not supported\n" );
-#if UNITY_5_6_OR_NEWER
 			stringBuilder.Append( "3D Render Textures: " ).Append( SystemInfo.supports3DRenderTextures ? "supported\n" : "not supported\n" );
-#endif
 			stringBuilder.Append( "2D Array Textures: " ).Append( SystemInfo.supports2DArrayTextures ? "supported\n" : "not supported\n" );
 			stringBuilder.Append( "Cubemap Array Textures: " ).Append( SystemInfo.supportsCubemapArrayTextures ? "supported" : "not supported" );
 
@@ -439,7 +439,7 @@ namespace IngameDebugConsole
 			AddCommand( command, description, method, instance, parameterNames );
 		}
 
-		private static void AddCommand( string command, string description, MethodInfo method, object instance, string[] parameterNames )
+		internal static void AddCommand( string command, string description, MethodInfo method, object instance, string[] parameterNames )
 		{
 			if( string.IsNullOrEmpty( command ) )
 			{
@@ -1199,7 +1199,6 @@ namespace IngameDebugConsole
 			return ParseVector( input, typeof( Bounds ), out output );
 		}
 
-#if UNITY_2017_2_OR_NEWER
 		public static bool ParseVector2Int( string input, out object output )
 		{
 			return ParseVector( input, typeof( Vector2Int ), out output );
@@ -1219,7 +1218,6 @@ namespace IngameDebugConsole
 		{
 			return ParseVector( input, typeof( BoundsInt ), out output );
 		}
-#endif
 
 		public static bool ParseGameObject( string input, out object output )
 		{
@@ -1466,7 +1464,6 @@ namespace IngameDebugConsole
 
 				output = new Bounds( center, size );
 			}
-#if UNITY_2017_2_OR_NEWER
 			else if( vectorType == typeof( Vector3Int ) )
 			{
 				Vector3Int result = Vector3Int.zero;
@@ -1512,7 +1509,6 @@ namespace IngameDebugConsole
 
 				output = new BoundsInt( center, size );
 			}
-#endif
 			else
 			{
 				output = null;

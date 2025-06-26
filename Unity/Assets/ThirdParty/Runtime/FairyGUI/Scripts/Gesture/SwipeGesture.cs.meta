@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 7bed3df24eb979345a4d3ed9cd34ca0e
+timeCreated: 1464244762
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Gesture/SwipeGesture.cs
+  uploadId: 755911

@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 93a10729ff0ced14c97c9ae9d4771c4c
+timeCreated: 1464768262
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Filter/BlurFilter.cs
+  uploadId: 755911

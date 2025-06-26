@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 2f910c4392a714c41b421c296621562b
+timeCreated: 1545987172
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Mesh/RoundedRectMesh.cs
+  uploadId: 755911

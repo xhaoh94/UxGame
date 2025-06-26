@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 87f693de944eb7d4ab4ccb9b65af352a
+timeCreated: 1535374214
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Text/InputTextField.cs
+  uploadId: 755911

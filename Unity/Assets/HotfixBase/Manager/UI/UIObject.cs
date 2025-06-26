@@ -255,7 +255,7 @@ namespace Ux
             RemoveTag();
             if (IsRegisterFastMethod)
             {
-                EventMgr.Ins.___RegisterFastMethod(this);
+                EventMgr.Ins.RegisterFastMethod(this);
             }
             OnAddEvent();
             foreach (var component in Components)

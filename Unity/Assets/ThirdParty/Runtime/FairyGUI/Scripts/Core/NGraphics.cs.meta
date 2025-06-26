@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: b84f79fb60acc974cb58c5368b257716
+timeCreated: 1535374215
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/NGraphics.cs
+  uploadId: 755911

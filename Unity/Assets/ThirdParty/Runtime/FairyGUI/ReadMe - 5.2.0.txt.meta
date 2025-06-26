@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9a814d7124c0b7144b9667183a8f6fe3
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/ReadMe - 5.2.0.txt
+  uploadId: 755911

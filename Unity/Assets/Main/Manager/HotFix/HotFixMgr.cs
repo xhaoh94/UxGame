@@ -15,7 +15,7 @@ namespace Ux
             "Unity.HotfixBase",
             "Assembly-CSharp"
         };
-                  
+
         private List<Type> _hotfixTypes;
 
         public void Init()
@@ -34,30 +34,34 @@ namespace Ux
 
         void Load()
         {
-#if !UNITY_EDITOR && HOTFIX_CODE
-            LoadMetadataForAOTAssembly();
-            foreach (var hotfixName in HotfixAssembly)
+            //是否使用热更代码
+            if (GameMain.Ins.HotfixCode)
             {
-                byte[] assBytes = null;                
-                var codePath =$"Assets/Data/Res/Code/{hotfixName}.dll";
-                using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(codePath))
+                LoadMetadataForAOTAssembly();
+                foreach (var hotfixName in HotfixAssembly)
                 {
-                    assBytes = handle.GetAssetObject<TextAsset>().bytes;
-                    if (assBytes == null)
+                    byte[] assBytes = null;
+                    var codePath = $"Assets/Data/Res/Code/{hotfixName}.dll";
+                    using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(codePath))
                     {
-                        Log.Error($"HotFixMgr.Load 加载失败:{hotfixName}");
-                        continue;
+                        assBytes = handle.GetAssetObject<TextAsset>().bytes;
+                        if (assBytes == null)
+                        {
+                            Log.Error($"HotFixMgr.Load 加载失败:{hotfixName}");
+                            continue;
+                        }
+                        Assemblys.Add(Assembly.Load(assBytes));
                     }
-                    Assemblys.Add(Assembly.Load(assBytes));
                 }
             }
-#else
-            foreach (var hotfixName in HotfixAssembly)
+            else
             {
-                Assemblys.Add(AppDomain.CurrentDomain.GetAssemblies()
-                .First(assembly => assembly.GetName().Name == hotfixName));
+                foreach (var hotfixName in HotfixAssembly)
+                {
+                    Assemblys.Add(AppDomain.CurrentDomain.GetAssemblies()
+                    .First(assembly => assembly.GetName().Name == hotfixName));
+                }
             }
-#endif
         }
 
         /// <summary>
@@ -75,7 +79,7 @@ namespace Ux
             const HomologousImageMode mode = HomologousImageMode.Consistent;
             foreach (var aotDllName in AOTGenericReferences.PatchedAOTAssemblyList)
             {
-                var dllName =$"Code/{aotDllName}";
+                var dllName = $"Code/{aotDllName}";
                 var ta = Resources.Load<TextAsset>(dllName);
                 byte[] assBytes = ta.bytes;
                 if (assBytes == null)

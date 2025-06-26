@@ -44,9 +44,9 @@ namespace Ux.UI
             {
                 testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
                 //testList.List.ScrollToView(7);
-                EventMgr.Ins.Run(11111111);
+                //EventMgr.Ins.Run(11111111);
             });
-            EventMgr.Ins.Run(11111111);
+            //EventMgr.Ins.Run(11111111);
         }
         partial void OnBtnMultipleClick(EventContext e)
         {

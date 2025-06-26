@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 24d09ba8cf3faa74f8dcd1c86ad38588
+timeCreated: 1535374214
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/DisplayObject.cs
+  uploadId: 755911

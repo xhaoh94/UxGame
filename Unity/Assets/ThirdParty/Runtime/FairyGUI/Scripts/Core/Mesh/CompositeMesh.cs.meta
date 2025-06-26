@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: ba3d921c1f6e95f4e9105f45fd67bda5
+timeCreated: 1546159121
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Mesh/CompositeMesh.cs
+  uploadId: 755911

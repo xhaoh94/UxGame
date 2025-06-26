@@ -1,9 +1,16 @@
 fileFormatVersion: 2
 guid: cd79153f88fa7334ea6c5564c053bdca
+timeCreated: 1459224288
+licenseType: Store
 ShaderImporter:
-  externalObjects: {}
   defaultTextures: []
-  nonModifiableTextures: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Resources/Shaders/FairyGUI-BMFont.shader
+  uploadId: 755911

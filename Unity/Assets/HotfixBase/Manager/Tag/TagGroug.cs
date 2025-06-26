@@ -6,9 +6,7 @@ namespace Ux
 {
     public abstract class TagGroup : TagBase
     {
-        protected List<TagBase> _childs;
-
-        protected override IList<int> EvtTypes() { return null; }
+        protected List<TagBase> _childs;        
 
         protected override void OnInit()
         {

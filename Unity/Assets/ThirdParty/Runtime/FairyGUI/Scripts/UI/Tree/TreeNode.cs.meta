@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 6bfc19586c7b07e4b9193f658c390727
+timeCreated: 1467555753
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/UI/Tree/TreeNode.cs
+  uploadId: 755911

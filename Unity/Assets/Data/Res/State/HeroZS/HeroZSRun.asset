@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HeroZSRun
   m_EditorClassIdentifier: 
   group: HeroZS
-  priority: 0
+  priority: 1
   isMute: 0
   stateName: HeroZSRun
   stateDesc: 

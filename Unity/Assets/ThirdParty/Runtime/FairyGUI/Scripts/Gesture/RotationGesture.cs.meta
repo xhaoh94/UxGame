@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 155eda39968f1194d9b4b7bbd63596ee
+timeCreated: 1464244762
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Gesture/RotationGesture.cs
+  uploadId: 755911

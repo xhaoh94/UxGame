@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 2b99582678b83dc46986b02984c665a3
+timeCreated: 1460480287
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Editor/FairyGUI/StageCameraEditor.cs
+  uploadId: 755911

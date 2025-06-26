@@ -26,7 +26,10 @@ namespace Ux
             {
                 assembly.Initialize();
             });
-            EventMgr.Ins.___SetEvtAttribute<EvtAttribute>();            
+            EventMgr.Ins.SetEvtAttribute<EvtAttribute>();
+#if UNITY_EDITOR
+            EventMgr.Ins.SetHotfixEvtType(typeof(EventType));
+#endif
             UnityPool.Init();            
             ConfigMgr.Ins.Init();            
             UIMgr.MessageBox.SetDefalutType<CommonMessageBox>();

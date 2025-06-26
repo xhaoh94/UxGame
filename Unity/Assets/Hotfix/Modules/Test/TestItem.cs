@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 namespace Ux.UI
 {
     partial class TestItem
-    {
-
+    {        
         protected override void OnShow()
         {
             if (TryGetParam(out int index))
@@ -17,7 +16,7 @@ namespace Ux.UI
             }
             if (Index == 0)
             {
-                EventMgr.Ins.On(11111111, this, test);
+                //EventMgr.Ins.On(11111111, this, test);
             }
         }
 

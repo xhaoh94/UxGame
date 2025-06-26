@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 0ea7d5d9d5c232d4f9a312870329cbd2
+timeCreated: 1464535178
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/UI/EMRenderSupport.cs
+  uploadId: 755911

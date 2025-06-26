@@ -21,7 +21,7 @@ namespace Ux.Editor.Debugger.Event
             rootVisualElement.Add(root);
             EventMgr.__Debugger_CallBack = OnUpdateData;
             _list = new DebuggerObjectSearchListView<EventDebuggerItem, EventList>(veList, 10);
-            EventMgr.__Debugger_Event();
+            EventMgr.Debugger_Event();
         }
 
         private void OnUpdateData(Dictionary<string, EventList> dict)

@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
+using TMPro;
 #if UNITY_EDITOR && UNITY_2021_1_OR_NEWER
 using Screen = UnityEngine.Device.Screen; // To support Device Simulator on Unity 2021.1+
 #endif
@@ -27,11 +28,11 @@ namespace IngameDebugConsole
 		private DebugLogManager debugManager;
 
 		[SerializeField]
-		private Text newInfoCountText;
+		private TextMeshProUGUI newInfoCountText;
 		[SerializeField]
-		private Text newWarningCountText;
+		private TextMeshProUGUI newWarningCountText;
 		[SerializeField]
-		private Text newErrorCountText;
+		private TextMeshProUGUI newErrorCountText;
 
 		[SerializeField]
 		private Color alertColorInfo;
@@ -203,7 +204,7 @@ namespace IngameDebugConsole
 
 			if( debugManager.popupAvoidsScreenCutout )
 			{
-#if UNITY_2017_2_OR_NEWER && ( UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS )
+#if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS
 				Rect safeArea = Screen.safeArea;
 
 				int screenWidth = Screen.width;

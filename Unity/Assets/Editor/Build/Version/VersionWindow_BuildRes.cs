@@ -252,32 +252,25 @@ namespace Ux.Editor.Build.Version
                 case EBuildPipeline.BuiltinBuildPipeline:
                     buildParameters = new BuiltinBuildParameters()
                     {
-                        BuildMode = IsForceRebuild ? EBuildMode.ForceRebuild : EBuildMode.IncrementalBuild,
                         CompressOption = packageSetting.CompressOption,
-
                     };
                     pipeline = new BuiltinBuildPipeline();
                     break;
                 case EBuildPipeline.ScriptableBuildPipeline:
                     buildParameters = new ScriptableBuildParameters()
-                    {
-                        BuildMode = EBuildMode.IncrementalBuild,//SBP构建只能用热更模式
+                    {                        
                         CompressOption = packageSetting.CompressOption,
                     };
                     pipeline = new ScriptableBuildPipeline();
                     break;
                 case EBuildPipeline.RawFileBuildPipeline:
-                    buildParameters = new RawFileBuildParameters()
-                    {
-                        BuildMode = EBuildMode.ForceRebuild,//RawFile构建只能用强更模式                    
-                    };
+                    buildParameters = new RawFileBuildParameters();
                     pipeline = new RawFileBuildPipeline();
                     break;
                 default:
                     Log.Error("未知的构建模式");
                     return false;
-            }
-
+            }            
             buildParameters.BuildOutputRoot = temOutputRoot;
             buildParameters.BuildinFileRoot = StreamingAssetsRoot;
             buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
@@ -285,12 +278,14 @@ namespace Ux.Editor.Build.Version
             buildParameters.PackageName = packageName;
             buildParameters.PackageVersion = nowVersion;
             buildParameters.VerifyBuildingResult = true;
-            //buildParameters.SharedPackRule = CreateSharedPackRuleInstance();        
+            buildParameters.EnableSharePackRule = true;            
             buildParameters.FileNameStyle = packageSetting.NameStyleOption;
             buildParameters.BuildinFileCopyOption = IsForceRebuild
                 ? EBuildinFileCopyOption.OnlyCopyByTags : EBuildinFileCopyOption.None;
             buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
             buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
+            buildParameters.ClearBuildCacheFiles = IsForceRebuild ; //增量更新不清理构建缓存，启用增量构建，可以提高打包速度！
+            buildParameters.UseAssetDependencyDB = SelectItem.IsUseDb; //使用资源依赖关系数据库，可以提高打包速度！
 
 
 
@@ -392,7 +387,7 @@ namespace Ux.Editor.Build.Version
                 desPathList.Add(tPath);
             }
 
-            var reportFileName = YooAssetSettingsData.GetReportFileName(packageName, nowVersion);
+            var reportFileName = YooAssetSettingsData.GetBuildReportFileName(packageName, nowVersion);
             foreach (var file in files)
             {
                 var temFile = PathUtility.RegularPath(file);

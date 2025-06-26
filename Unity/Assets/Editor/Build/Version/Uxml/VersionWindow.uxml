@@ -2,7 +2,7 @@
     <ui:VisualElement style="flex-direction: row; flex-grow: 1;">
         <ui:VisualElement style="width: 200px; flex-grow: 0; background-color: rgb(67, 67, 67); border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px;">
             <ui:Label text="构建列表" display-tooltip-when-elided="true" style="background-color: rgb(89, 89, 89); -unity-text-align: upper-center; -unity-font-style: bold; border-left-width: 5px; border-right-width: 5px; border-top-width: 5px; border-bottom-width: 5px; font-size: 12px;" />
-            <ui:ListView focusable="true" name="listExport" item-height="20" virtualization-method="DynamicHeight" style="flex-grow: 1;" />
+            <ui:ListView focusable="true" name="listExport" virtualization-method="DynamicHeight" fixed-item-height="20" style="flex-grow: 1;" />
             <ui:VisualElement style="height: 20px; flex-direction: row; justify-content: center;">
                 <ui:Button text=" - " display-tooltip-when-elided="true" name="btnRemove" />
                 <ui:Button text=" + " display-tooltip-when-elided="true" name="btnAdd" />
@@ -16,16 +16,17 @@
                 <ui:TextField label="构建版本" name="txtVersion" readonly="true" style="display: flex; visibility: visible; opacity: 1; overflow: visible; flex-shrink: 1;" />
                 <uie:EnumField label="构建类型" name="buildType" style="flex-grow: 0; flex-shrink: 1;" />
                 <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
-                    <ui:TextField picking-mode="Ignore" label="资源文件构建目录" value="filler text" text="./Bundles" name="inputBundlePath" style="flex-grow: 1;" />
+                    <ui:TextField picking-mode="Ignore" label="资源文件构建目录" value="./Bundles" name="inputBundlePath" style="flex-grow: 1;" />
                     <ui:Button text="选择" display-tooltip-when-elided="true" name="btnBundlePath" style="flex-grow: 0;" />
                 </ui:VisualElement>
-                <ui:Toggle label="拷贝到..." name="tgCopy" style="height: 15px;" />
+                <ui:Toggle label="使用资源依赖关系数据库（可以提高打包速度！）" name="tgUseDb" value="true" style="height: auto;" />
+                <ui:Toggle label="是否拷贝" name="tgCopy" value="false" style="height: auto; flex-direction: row; flex-grow: 0;" />
                 <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
-                    <ui:TextField picking-mode="Ignore" label="拷贝目录" value="filler text" text="./Release" name="inputCopyPath" style="flex-grow: 1;" />
+                    <ui:TextField picking-mode="Ignore" label="拷贝到目录" value="./Release" name="inputCopyPath" style="flex-grow: 1;" />
                     <ui:Button text="选择" display-tooltip-when-elided="true" name="btnCopyPath" style="flex-grow: 0;" />
                 </ui:VisualElement>
-                <ui:Toggle label="清理沙盒缓存" name="tgClearSandBox" style="height: 15px;" />
-                <ui:Toggle label="编译热更DLL" name="tgCompileDLL" style="height: 15px;" />
+                <ui:Toggle label="清理沙盒缓存" name="tgClearSandBox" style="height: auto;" />
+                <ui:Toggle label="编译热更DLL" name="tgCompileDLL" style="height: auto;" />
                 <ui:Toggle label="生成AOT" name="tgCompileAot" />
                 <ui:Toggle label="UI代码" name="tgCompileUI" />
                 <ui:Toggle label="配置文件" name="tgCompileConfig" />
@@ -35,7 +36,7 @@
                 <ui:Toggle label="是否生成可执行文件" name="tgExe" />
                 <ui:VisualElement name="exeElement" style="background-color: rgba(0, 0, 0, 0); flex-grow: 1;">
                     <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
-                        <ui:TextField picking-mode="Ignore" label="可执行文件构建目录" value="filler text" text="./Release" name="inputExePath" style="flex-grow: 1;" />
+                        <ui:TextField picking-mode="Ignore" label="可执行文件构建目录" value="./Release" name="inputExePath" style="flex-grow: 1;" />
                         <ui:Button text="选择" display-tooltip-when-elided="true" name="btnExePath" style="flex-grow: 0;" />
                     </ui:VisualElement>
                     <uie:EnumField label="编译类型" name="compileType" style="flex-grow: 0; flex-shrink: 1;" />

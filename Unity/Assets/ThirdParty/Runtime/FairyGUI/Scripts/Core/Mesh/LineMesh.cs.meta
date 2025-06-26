@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 6d1935a924fabf74a92c72b22a042279
+timeCreated: 1546519483
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Mesh/LineMesh.cs
+  uploadId: 755911

@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 35dcb233f95ffd54c94f09d731db89ae
+timeCreated: 1535374214
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Editor/FairyGUI/EditorToolSet.cs
+  uploadId: 755911

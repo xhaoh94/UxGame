@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using YooAsset;
 namespace Ux
 {
     public class PatchDownloadWebFiles : PatchStateNode
@@ -9,18 +10,13 @@ namespace Ux
             base.OnEnter();
             BeginDownload();
         }
-        void OnDownloadProgressCallback(int totalDownloadCount, int currentDownloadCount, long totalDownloadSizeBytes, long currentDownloadSizeBytes)
+        void OnDownloadUpdateDataCallback(DownloadUpdateData data)
         {
-            DownloadProgressUpdate msg = new DownloadProgressUpdate();
-            msg.TotalDownloadCount = totalDownloadCount;
-            msg.CurrentDownloadCount = currentDownloadCount;
-            msg.TotalDownloadSizeBytes = totalDownloadSizeBytes;
-            msg.CurrentDownloadSizeBytes = currentDownloadSizeBytes;
-            PatchMgr.View.OnDownloadProgressUpdate(msg);
+            PatchMgr.View.OnDownloadUpdateData(data);
         }
-        void OnDownloadErrorCallback(string fileName, string error)
+        void OnDownloadErrorCallback(DownloadErrorData data)
         {
-            Log.Error($"文件下载失败:{fileName},error:{error}");
+            Log.Error($"文件下载失败:{data.FileName},error:{data.ErrorInfo}");
             Action callback = () =>
             {
                 Application.Quit();
@@ -32,7 +28,7 @@ namespace Ux
         {
             // 注册下载回调
             PatchMgr.Downloader.OnDownloadErrorCallback = OnDownloadErrorCallback;
-            PatchMgr.Downloader.OnDownloadProgressCallback = OnDownloadProgressCallback;
+            PatchMgr.Downloader.OnDownloadUpdateDataCallback = OnDownloadUpdateDataCallback;
             PatchMgr.Downloader.BeginDownload(DownloadComplete);
         }
         private void DownloadComplete(bool succeed)
@@ -54,12 +50,5 @@ namespace Ux
             };
             PatchMgr.View.ShowMessageBox("资源下载失败，请检查是否磁盘空间不足", "确定", callback);
         }
-    }
-    public struct DownloadProgressUpdate
-    {
-        public int TotalDownloadCount;
-        public int CurrentDownloadCount;
-        public long TotalDownloadSizeBytes;
-        public long CurrentDownloadSizeBytes;
     }
 }

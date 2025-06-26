@@ -1,9 +1,16 @@
 fileFormatVersion: 2
 guid: f83d3bb1d90aaf54d8aed0783317662f
+timeCreated: 1465913243
+licenseType: Store
 ShaderImporter:
-  externalObjects: {}
   defaultTextures: []
-  nonModifiableTextures: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Resources/Shaders/AddOn/FairyGUI-BlurFilter.shader
+  uploadId: 755911

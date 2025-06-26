@@ -22,12 +22,12 @@ namespace Ux
         /// <summary>
         /// 当下载进度发生变化
         /// </summary>
-        public OnDownloadProgress OnDownloadProgressCallback { set; get; }
+        public DownloadUpdate OnDownloadUpdateDataCallback { set; get; }
 
         /// <summary>
         /// 当某个文件下载失败
         /// </summary>
-        public OnDownloadError OnDownloadErrorCallback { set; get; }
+        public DownloadError OnDownloadErrorCallback { set; get; }
 
         /// <summary>
         /// 下载文件总数量
@@ -246,8 +246,8 @@ namespace Ux
             IsBeginDownload = true;
             foreach (var handle in _handles)
             {
-                handle.OnDownloadErrorCallback = OnDownloadErrorCallback;
-                handle.OnDownloadProgressCallback = _OnDownloadProgressCallback;
+                handle.DownloadErrorCallback = OnDownloadErrorCallback;
+                handle.DownloadUpdateCallback = _OnDownloadUpdateDataCallback;
                 handle.BeginDownload();
                 await handle.ToUniTask();
                 // 检测下载结果
@@ -257,9 +257,9 @@ namespace Ux
             return true;
         }
 
-        void _OnDownloadProgressCallback(int totalDownloadCount, int currentDownloadCount, long totalDownloadSizeBytes, long currentDownloadSizeBytes)
+        void _OnDownloadUpdateDataCallback(DownloadUpdateData data)
         {
-            OnDownloadProgressCallback?.Invoke(TotalDownloadCount, CurrentDownloadCount, TotalDownloadBytes, CurrentDownloadBytes);
+            OnDownloadUpdateDataCallback?.Invoke(data);
         }
 
     }

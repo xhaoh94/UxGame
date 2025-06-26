@@ -150,7 +150,7 @@ namespace Ux
             _InitBlurCamera();
             _InitFOWCamera();
             GameMethod.Update += _Update;            
-            EventMgr.Ins.Send(MainEventType.FOG_OF_WAR_INIT);
+            EventMgr.Ins.Run(MainEventType.FOG_OF_WAR_INIT);
         }
         public void Destroy()
         {

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 
 namespace Ux
-{
-    public abstract class TagBase
+{    
+    public abstract class TagBase:IEventTrigger
     {
         public int TagId { get; private set; }
         private bool _inited;
@@ -29,7 +29,6 @@ namespace Ux
         /// 事件列表，用于驱动红点是否需要重新检测
         /// </summary>
         /// <returns></returns>
-        protected abstract IList<int> EvtTypes();
 
         protected abstract bool OnCheck();
 
@@ -81,16 +80,13 @@ namespace Ux
         void _Init()
         {
             _inited = true;
-            var mcs = this.EvtTypes();
-            if (mcs is { Count: > 0 })
-            {
-                foreach (var mc in mcs)
-                {
-                    EventMgr.Ins.On(mc,this, _DoMessage);
-                }
-            }
-
+            EventMgr.Ins.RegisterEventTrigger(this);
             OnInit();
+            _DoMessage();
+        }
+
+        void IEventTrigger.OnTriggerEvent()
+        {
             _DoMessage();
         }
 

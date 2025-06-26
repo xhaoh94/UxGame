@@ -1,15 +1,14 @@
 fileFormatVersion: 2
-guid: 9db4b805af4ffb847af71bb7a9618e6e
+guid: 3613e6a08c3e07c47937410768813692
+timeCreated: 1565948029
+licenseType: Store
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
   iconMap: {}
   executionOrder: {}
-  defineConstraints: []
   isPreloaded: 0
   isOverridable: 0
-  isExplicitlyReferenced: 0
-  validateReferences: 1
   platformData:
   - first:
       Any: 
@@ -23,6 +22,11 @@ PluginImporter:
       settings:
         DefaultValueInitialized: true
   - first:
+      Facebook: WebGL
+    second:
+      enabled: 1
+      settings: {}
+  - first:
       WebGL: WebGL
     second:
       enabled: 1
@@ -30,3 +34,10 @@ PluginImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Extensions/WebGLTextInput/WebGLTextInput.jslib
+  uploadId: 755911

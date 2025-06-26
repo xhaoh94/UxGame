@@ -21,21 +21,18 @@ namespace Ux
     public class YooMainPackage : YooPackage
     {
         public override YooType YooType => YooType.Main;
-        public override string Name => "MainPackage";
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.ScriptableBuildPipeline;
+        public override string Name => "MainPackage";        
     }
     public class YooRawFilePackage : YooPackage
     {
         public override YooType YooType => YooType.RawFile;
-        public override string Name => "RawFilePackage";
-        public override EDefaultBuildPipeline EDefaultBuildPipeline => EDefaultBuildPipeline.RawFileBuildPipeline;
+        public override string Name => "RawFilePackage";        
     }
 
     public abstract class YooPackage : IYooPackage
     {
         public abstract YooType YooType { get; }
-        public abstract string Name { get; }        
-        public abstract EDefaultBuildPipeline EDefaultBuildPipeline { get; }
+        public abstract string Name { get; }                
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
         void _CreatePackage()
@@ -59,19 +56,22 @@ namespace Ux
                 // 编辑器模拟模式
                 case EPlayMode.EditorSimulateMode:
                     {
-                        var simulateBuildResult = EditorSimulateModeHelper.SimulateBuild(EDefaultBuildPipeline, Name);
-                        var createParameters = new EditorSimulateModeParameters();
-                        createParameters.EditorFileSystemParameters = FileSystemParameters.CreateDefaultEditorFileSystemParameters(simulateBuildResult);
-                        initializationOperation = Package.InitializeAsync(createParameters);
+                        var simulateBuildResult = EditorSimulateModeHelper.SimulateBuild(Name);
+                        var packageRoot = simulateBuildResult.PackageRootDirectory;                        
+                        var editorFileSystemParams = FileSystemParameters.CreateDefaultEditorFileSystemParameters(packageRoot);
+                        var initParameters = new EditorSimulateModeParameters();
+                        initParameters.EditorFileSystemParameters = editorFileSystemParams;
+                        initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
 #endif
                 // 单机模式
                 case EPlayMode.OfflinePlayMode:
                     {
-                        var createParameters = new OfflinePlayModeParameters();
-                        createParameters.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
-                        initializationOperation = Package.InitializeAsync(createParameters);
+                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                        var initParameters = new OfflinePlayModeParameters();
+                        initParameters.BuildinFileSystemParameters = buildinFileSystemParams;
+                        initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
                 // 联机模式
@@ -79,24 +79,25 @@ namespace Ux
                     {
                         IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
                             Global.GetFallbackHostServerURL());
-                        var createParameters = new HostPlayModeParameters();
-                        createParameters.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
-                        createParameters.CacheFileSystemParameters = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices);
-                        initializationOperation = Package.InitializeAsync(createParameters);
+                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                        var cacheFileSystemParams = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices);
+                        var initParameters = new HostPlayModeParameters();
+                        initParameters.BuildinFileSystemParameters = buildinFileSystemParams;
+                        initParameters.CacheFileSystemParameters = cacheFileSystemParams;
+                        initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
                 // WebGL运行模式
                 case EPlayMode.WebPlayMode:
                     {
-                        var createParameters = new WebPlayModeParameters();
-#if UNITY_WEBGL && WEIXINMINIGAME && !UNITY_EDITOR
-			            IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
+                        IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
                             Global.GetFallbackHostServerURL());
-                        createParameters.WebFileSystemParameters = WechatFileSystemCreater.CreateWechatFileSystemParameters(remoteServices);
-#else
-                        createParameters.WebFileSystemParameters = FileSystemParameters.CreateDefaultWebFileSystemParameters();
-#endif
-                        initializationOperation = Package.InitializeAsync(createParameters);
+                        var webServerFileSystemParams = FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
+                        var webRemoteFileSystemParams = FileSystemParameters.CreateDefaultWebRemoteFileSystemParameters(remoteServices); //支持跨域下载
+                        var initParameters = new WebPlayModeParameters();
+                        initParameters.WebServerFileSystemParameters = webServerFileSystemParams;
+                        initParameters.WebRemoteFileSystemParameters = webRemoteFileSystemParams;
+                        initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
                 default:
@@ -134,129 +135,6 @@ namespace Ux
                 return $"{_fallbackHostServer}/{fileName}";
             }
         }
-        #endregion
-
-        #region 解密
-        /// <summary>
-        /// 资源文件流加载解密类
-        /// </summary>
-        class FileStreamDecryption : IDecryptionServices
-        {
-            /// <summary>
-            /// 同步方式获取解密的资源包对象
-            /// 注意：加载流对象在资源包对象释放的时候会自动释放
-            /// </summary>
-            AssetBundle IDecryptionServices.LoadAssetBundle(DecryptFileInfo fileInfo, out Stream managedStream)
-            {
-                BundleStream bundleStream = new BundleStream(fileInfo.FileLoadPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                managedStream = bundleStream;
-                return AssetBundle.LoadFromStream(bundleStream, fileInfo.FileLoadCRC, GetManagedReadBufferSize());
-            }
-
-            /// <summary>
-            /// 异步方式获取解密的资源包对象
-            /// 注意：加载流对象在资源包对象释放的时候会自动释放
-            /// </summary>
-            AssetBundleCreateRequest IDecryptionServices.LoadAssetBundleAsync(DecryptFileInfo fileInfo, out Stream managedStream)
-            {
-                BundleStream bundleStream = new BundleStream(fileInfo.FileLoadPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                managedStream = bundleStream;
-                return AssetBundle.LoadFromStreamAsync(bundleStream, fileInfo.FileLoadCRC, GetManagedReadBufferSize());
-            }
-
-            /// <summary>
-            /// 获取解密的字节数据
-            /// </summary>
-            byte[] IDecryptionServices.ReadFileData(DecryptFileInfo fileInfo)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            /// <summary>
-            /// 获取解密的文本数据
-            /// </summary>
-            string IDecryptionServices.ReadFileText(DecryptFileInfo fileInfo)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            private static uint GetManagedReadBufferSize()
-            {
-                return 1024;
-            }
-        }
-
-        /// <summary>
-        /// 资源文件偏移加载解密类
-        /// </summary>
-        class FileOffsetDecryption : IDecryptionServices
-        {
-            /// <summary>
-            /// 同步方式获取解密的资源包对象
-            /// 注意：加载流对象在资源包对象释放的时候会自动释放
-            /// </summary>
-            AssetBundle IDecryptionServices.LoadAssetBundle(DecryptFileInfo fileInfo, out Stream managedStream)
-            {
-                managedStream = null;
-                return AssetBundle.LoadFromFile(fileInfo.FileLoadPath, fileInfo.FileLoadCRC, GetFileOffset());
-            }
-
-            /// <summary>
-            /// 异步方式获取解密的资源包对象
-            /// 注意：加载流对象在资源包对象释放的时候会自动释放
-            /// </summary>
-            AssetBundleCreateRequest IDecryptionServices.LoadAssetBundleAsync(DecryptFileInfo fileInfo, out Stream managedStream)
-            {
-                managedStream = null;
-                return AssetBundle.LoadFromFileAsync(fileInfo.FileLoadPath, fileInfo.FileLoadCRC, GetFileOffset());
-            }
-
-            /// <summary>
-            /// 获取解密的字节数据
-            /// </summary>
-            byte[] IDecryptionServices.ReadFileData(DecryptFileInfo fileInfo)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            /// <summary>
-            /// 获取解密的文本数据
-            /// </summary>
-            string IDecryptionServices.ReadFileText(DecryptFileInfo fileInfo)
-            {
-                throw new System.NotImplementedException();
-            }
-
-            private static ulong GetFileOffset()
-            {
-                return 32;
-            }
-        }
-        #endregion
-    }
-
-    /// <summary>
-    /// 资源文件解密流
-    /// </summary>
-    public class BundleStream : FileStream
-    {
-        public const byte KEY = 64;
-
-        public BundleStream(string path, FileMode mode, FileAccess access, FileShare share) : base(path, mode, access, share)
-        {
-        }
-        public BundleStream(string path, FileMode mode) : base(path, mode)
-        {
-        }
-
-        public override int Read(byte[] array, int offset, int count)
-        {
-            var index = base.Read(array, offset, count);
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] ^= KEY;
-            }
-            return index;
-        }
-    }
+        #endregion      
+    }    
 }

@@ -35,7 +35,7 @@ namespace Ux
             //IsRun = true;
             //StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Custom);
 
-            MoveVector2 = new Vector2(points[0].X, points[0].Y);
+            MoveVector2 = new Vector2(points[0].X, points[0].Z);
             if (MoveVector2 == Vector2.zero)
             {
                 if (IsRun)

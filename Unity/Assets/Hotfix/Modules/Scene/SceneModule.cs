@@ -66,8 +66,8 @@ namespace Ux
         public void SendMove(Vector2 vector2)
         {
             var resp = new Pb.BcstUnitMove() { roleId = 1, pointIndex = 0 };
-            resp.Points.Add(new Pb.Vector3() { X = vector2.x, Y = vector2.y });
-            EventMgr.Ins.Send(EventType.UNIT_MOVE, resp);
+            resp.Points.Add(new Pb.Vector3() { X = vector2.x,Y = 0, Z = vector2.y });
+            EventMgr.Ins.Run(EventType.UNIT_MOVE, resp);
         }
         #endregion
 
@@ -77,25 +77,25 @@ namespace Ux
         [Net(Pb.BCST.Bcst_UnitIntoView)]
         void _BcstUnitIntoView(Pb.BcstUnitIntoView param)
         {
-            EventMgr.Ins.Send(EventType.UNIT_INTO_VIEW, param);
+            EventMgr.Ins.Run(EventType.UNIT_INTO_VIEW, param);
         }
 
         [Net(Pb.BCST.Bcst_UnitOutofView)]
         void _BcstUnitOutofView(Pb.BcstUnitOutofView param)
         {
-            EventMgr.Ins.Send(EventType.UNIT_OUTOF_VIEW, param);
+            EventMgr.Ins.Run(EventType.UNIT_OUTOF_VIEW, param);
         }
 
         [Net(Pb.BCST.Bcst_UnitMove)]
         void _BcstUnitMove(Pb.BcstUnitMove param)
         {
-            EventMgr.Ins.Send(EventType.UNIT_MOVE, param);
+            EventMgr.Ins.Run(EventType.UNIT_MOVE, param);
         }
 
         [Net(Pb.BCST.Bcst_UnitUpdatePosition)]
         void _BcstUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
         {
-            EventMgr.Ins.Send(EventType.UNIT_UPDATE_POSITION, param);
+            EventMgr.Ins.Run(EventType.UNIT_UPDATE_POSITION, param);
         }
         #endregion
     }

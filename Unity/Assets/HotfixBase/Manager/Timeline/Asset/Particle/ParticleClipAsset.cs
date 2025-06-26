@@ -7,6 +7,7 @@ namespace Ux
     {
         public override Type ClipType => typeof(TLParticleClip);
        
-        public ParticleSystem particle;
+        public ParticleSystem particleSystem;
+
     }
 }

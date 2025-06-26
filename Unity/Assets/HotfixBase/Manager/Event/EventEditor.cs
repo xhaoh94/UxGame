@@ -26,30 +26,62 @@ public readonly struct EventList
 
 namespace Ux
 {
-    public interface IEvenEditor
-    {
-        long On(string eTypeStr, int eType, FastMethodInfo action);
-
-        long On(string eTypeStr, int eType, object tag, Action action);
-
-        long On<A>(string eTypeStr, int eType, object tag, Action<A> action);
-
-        long On<A, B>(string eTypeStr, int eType, object tag, Action<A, B> action);
-        long On<A, B, C>(string eTypeStr, int eType, object tag, Action<A, B, C> action);
-    }
-    public partial class EventMgr: IEvenEditor
+    public partial class EventMgr
     {
         private readonly Dictionary<string, EventList> type2editor = new Dictionary<string, EventList>();
-
-        public static void __Debugger_Event()
+        public static Action<Dictionary<string, EventList>> __Debugger_CallBack;
+        private Type _hotfixEvtType;
+        public static void Debugger_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_CallBack?.Invoke(Ins.type2editor);
+                __Debugger_CallBack?.Invoke(EventMgr.Ins.type2editor);
+            }
+        }
+        public void SetHotfixEvtType(Type type)
+        {
+            _hotfixEvtType = type;
+        }
+        void _EditorRemove(IEvent evt)
+        {
+            string eTypeStr;
+            if (evt.EType < (int)MainEventType.END)
+            {
+                eTypeStr = $"MainEventType.{Enum.GetName(typeof(MainEventType), evt.EType)}";
+            }
+            else
+            {
+                eTypeStr = $"EventType.{Enum.GetName(_hotfixEvtType, evt.EType)}";
+            }
+            if (type2editor.TryGetValue(eTypeStr, out var t2eList))
+            {
+                if (t2eList.Remove(evt.MethodName))
+                {
+                    type2editor.Remove(eTypeStr);
+                    Debugger_Event();
+                }
             }
         }
 
-        public static Action<Dictionary<string, EventList>> __Debugger_CallBack;
+        void _EditorAdd(IEvent evt)
+        {
+            string eTypeStr;
+            if (evt.EType < (int)MainEventType.END)
+            {
+                eTypeStr = $"MainEventType.{Enum.GetName(typeof(MainEventType), evt.EType)}";
+            }
+            else
+            {
+                eTypeStr = $"EventType.{Enum.GetName(_hotfixEvtType, evt.EType)}";
+            }            
+            if (!type2editor.TryGetValue(eTypeStr, out var t2eList))
+            {
+                t2eList = new EventList(eTypeStr);
+                type2editor.Add(eTypeStr, t2eList);
+            }
+            t2eList.Add(evt.MethodName);
+            Debugger_Event();
+        }
     }
 }
 

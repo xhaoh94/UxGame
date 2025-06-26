@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: a2f78faa29e5e1547837f976bf4b39f2
+timeCreated: 1541149029
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Editor/FairyGUI/DisplayObjectEditor.cs
+  uploadId: 755911

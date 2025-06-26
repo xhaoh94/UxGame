@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: a4878a5e9a94c1d429c827f93ca3072b
+timeCreated: 1535374215
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/UI/Gears/GearColor.cs
+  uploadId: 755911

@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: d68e5b2a3af5c444689f459a8b265df7
+timeCreated: 1476166204
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/UI/Gears/IAnimationGear.cs
+  uploadId: 755911

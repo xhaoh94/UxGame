@@ -88,7 +88,7 @@ namespace Ux.Editor.Build.Version
                 txtVersion.SetEnabled(false);
 
                 //编译类型            
-                buildType.Init(BuildType.IncrementalBuild);
+                buildType.Init(BuildType.IncrementalBuild);   
 
                 // 是否编译热更DLL            
                 tgCompileDLL.SetValueWithoutNotify(true);                
@@ -146,6 +146,10 @@ namespace Ux.Editor.Build.Version
             SelectItem.BundlePath = e.newValue;
         }
 
+        partial void _OnTgUseDbChanged(ChangeEvent<bool> e)
+        {
+            SelectItem.IsUseDb = e.newValue;
+        }
         partial void _OnTgCopyChanged(ChangeEvent<bool> e)
         {
             SelectItem.IsCopyTo = e.newValue;
@@ -294,6 +298,7 @@ namespace Ux.Editor.Build.Version
             inputExePath.SetValueWithoutNotify(SelectItem.ExePath);
             compileType.SetValueWithoutNotify(SelectItem.CompileType);
             inputBundlePath.SetValueWithoutNotify(SelectItem.BundlePath);
+            tgUseDb.SetValueWithoutNotify(SelectItem.IsUseDb);
             tgCopy.SetValueWithoutNotify(SelectItem.IsCopyTo);
             inputCopyPath.SetValueWithoutNotify(SelectItem.CopyPath);
             tgExe.SetValueWithoutNotify(SelectItem.IsExportExecutable);

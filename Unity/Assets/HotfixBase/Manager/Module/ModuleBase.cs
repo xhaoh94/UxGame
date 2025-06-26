@@ -29,7 +29,7 @@ namespace Ux
         }
         public void Init()
         {
-            EventMgr.Ins.___RegisterFastMethod(this);
+            EventMgr.Ins.RegisterFastMethod(this);
             OnInit();
         }
         protected virtual void OnInit() { }

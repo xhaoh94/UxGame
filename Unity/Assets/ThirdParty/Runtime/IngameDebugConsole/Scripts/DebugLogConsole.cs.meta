@@ -10,3 +10,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68068
+  packageName: In-game Debug Console
+  packageVersion: 1.8.1
+  assetPath: Assets/ThirdParty/Runtime/IngameDebugConsole/Scripts/DebugLogConsole.cs
+  uploadId: 757793

@@ -97,13 +97,13 @@ namespace Ux
             });
         }
 
-        public void OnDownloadProgressUpdate(DownloadProgressUpdate message)
+        public void OnDownloadUpdateData(DownloadUpdateData data)
         {
             barHotfix.gameObject.Visible(true);
-            barHotfix.value = (float)message.CurrentDownloadCount / message.TotalDownloadCount;
-            string currentSizeMB = (message.CurrentDownloadSizeBytes / 1048576f).ToString("f1");
-            string totalSizeMB = (message.TotalDownloadSizeBytes / 1048576f).ToString("f1");
-            txtStatus.text = $"{message.CurrentDownloadCount}/{message.TotalDownloadCount} {currentSizeMB}MB/{totalSizeMB}MB";
+            barHotfix.value = (float)data.CurrentDownloadCount / data.TotalDownloadCount;
+            string currentSizeMB = (data.TotalDownloadBytes / 1048576f).ToString("f1");
+            string totalSizeMB = (data.TotalDownloadBytes / 1048576f).ToString("f1");
+            txtStatus.text = $"{data.CurrentDownloadCount}/{data.TotalDownloadCount} {currentSizeMB}MB/{totalSizeMB}MB";
         }
 
 

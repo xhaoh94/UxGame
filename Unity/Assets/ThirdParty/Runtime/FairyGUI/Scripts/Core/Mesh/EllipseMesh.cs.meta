@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 7ea96854995120948847301fb48d1675
+timeCreated: 1545987173
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Mesh/EllipseMesh.cs
+  uploadId: 755911

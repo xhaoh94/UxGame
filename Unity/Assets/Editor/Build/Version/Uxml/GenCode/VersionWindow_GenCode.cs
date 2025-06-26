@@ -20,6 +20,7 @@ namespace Ux.Editor.Build.Version
 		public EnumField buildType;
 		public TextField inputBundlePath;
 		public Button btnBundlePath;
+		public Toggle tgUseDb;
 		public Toggle tgCopy;
 		public TextField inputCopyPath;
 		public Button btnCopyPath;
@@ -70,6 +71,8 @@ namespace Ux.Editor.Build.Version
 			inputBundlePath.RegisterValueChangedCallback(e => _OnInputBundlePathChanged(e));
 			btnBundlePath = root.Q<Button>("btnBundlePath");
 			btnBundlePath.clicked += () => _OnBtnBundlePathClick();
+			tgUseDb = root.Q<Toggle>("tgUseDb");
+			tgUseDb.RegisterValueChangedCallback(e => _OnTgUseDbChanged(e));
 			tgCopy = root.Q<Toggle>("tgCopy");
 			tgCopy.RegisterValueChangedCallback(e => _OnTgCopyChanged(e));
 			inputCopyPath = root.Q<TextField>("inputCopyPath");
@@ -116,6 +119,7 @@ namespace Ux.Editor.Build.Version
 		partial void _OnBuildTypeChanged(ChangeEvent<Enum> e);
 		partial void _OnInputBundlePathChanged(ChangeEvent<string> e);
 		partial void _OnBtnBundlePathClick();
+		partial void _OnTgUseDbChanged(ChangeEvent<bool> e);
 		partial void _OnTgCopyChanged(ChangeEvent<bool> e);
 		partial void _OnInputCopyPathChanged(ChangeEvent<string> e);
 		partial void _OnBtnCopyPathClick();

@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 19869d6307205b84a81aef6031ba1f33
+timeCreated: 1461750571
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/HitTest/HitTestContext.cs
+  uploadId: 755911

@@ -7,147 +7,149 @@ namespace Ux
 {
     public partial class EventMgr
     {
-
-        interface IEventExe
+        public partial class EventSystem
         {
-            void Exe(ref int exeCnt);
-        }
-
-        readonly struct EventExe : IEventExe
-        {
-            readonly int eType;
-
-            public EventExe(int _eType)
+            interface IEventExe
             {
-                eType = _eType;
+                void Exe(EventSystem system, ref int exeCnt);
             }
 
-            public void Exe(ref int exeCnt)
+            readonly struct EventExe : IEventExe
             {
-                if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                var enumerator = keys.GetEnumerator();
-                while (enumerator.MoveNext())
+                readonly int _eType;                
+
+                public EventExe(int eType)
                 {
-                    var key = enumerator.Current;
-                    if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
+                    _eType = eType;                   
+                }
+
+                public void Exe(EventSystem system,ref int exeCnt)
+                {
+                    if (!system._eTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    var enumerator = keys.GetEnumerator();
+                    while (enumerator.MoveNext())
                     {
-                        aEvent?.Run();
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
+                        var key = enumerator.Current;
+                        if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
+                        if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            aEvent?.Run();
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
                     }
                 }
             }
-        }
 
-        readonly struct EventExe<A> : IEventExe
-        {
-            readonly int eType;
-            readonly A a;
-
-            public EventExe(int _eType, A _a)
+            readonly struct EventExe<A> : IEventExe
             {
-                eType = _eType;
-                a = _a;
-            }
+                readonly int eType;
+                readonly A a;
 
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                var enumerator = keys.GetEnumerator();
-                while (enumerator.MoveNext())
+                public EventExe(int _eType, A _a)
                 {
-                    var key = enumerator.Current;
-                    if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
+                    eType = _eType;
+                    a = _a;
+                }
+
+                public void Exe(EventSystem system, ref int exeCnt)
+                {
+                    if (!system._eTypeKeys.TryGetValue(eType, out var keys)) return;
+                    var enumerator = keys.GetEnumerator();
+                    while (enumerator.MoveNext())
                     {
-                        aEvent?.Run(a);
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
+                        var key = enumerator.Current;
+                        if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
+                        if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            aEvent?.Run(a);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
                     }
                 }
             }
-        }
 
-        readonly struct EventExe<A, B> : IEventExe
-        {
-            readonly int eType;
-            readonly A a;
-            readonly B b;
-
-            public EventExe(int _eType, A _a, B _b)
+            readonly struct EventExe<A, B> : IEventExe
             {
-                eType = _eType;
-                a = _a;
-                b = _b;
-            }
+                readonly int eType;
+                readonly A a;
+                readonly B b;
 
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                var enumerator = keys.GetEnumerator();
-                while (enumerator.MoveNext())
+                public EventExe(int _eType, A _a, B _b)
                 {
-                    var key = enumerator.Current;
-                    if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
+                    eType = _eType;
+                    a = _a;
+                    b = _b;
+                }
+
+                public void Exe(EventSystem system, ref int exeCnt)
+                {
+                    if (!system._eTypeKeys.TryGetValue(eType, out var keys)) return;
+                    var enumerator = keys.GetEnumerator();
+                    while (enumerator.MoveNext())
                     {
-                        aEvent?.Run(a, b);
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
+                        var key = enumerator.Current;
+                        if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
+                        if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            aEvent?.Run(a, b);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
                     }
                 }
             }
-        }
 
-        readonly struct EventExe<A, B, C> : IEventExe
-        {
-            readonly int eType;
-            readonly A a;
-            readonly B b;
-            readonly C c;
-
-            public EventExe(int _eType, A _a, B _b, C _c)
+            readonly struct EventExe<A, B, C> : IEventExe
             {
-                eType = _eType;
-                a = _a;
-                b = _b;
-                c = _c;
-            }
+                readonly int eType;
+                readonly A a;
+                readonly B b;
+                readonly C c;
 
-            public void Exe(ref int exeCnt)
-            {
-                if (!Ins._eTypeKeys.TryGetValue(eType, out var keys)) return;
-                var enumerator = keys.GetEnumerator();
-                while (enumerator.MoveNext())
+                public EventExe(int _eType, A _a, B _b, C _c)
                 {
-                    var key = enumerator.Current;
-                    if (!Ins._keyEvent.TryGetValue(key, out var aEvent)) continue;
-                    if (Ins._waitDels.Count > 0 && Ins._waitDels.Contains(key)) continue;
-                    try
+                    eType = _eType;
+                    a = _a;
+                    b = _b;
+                    c = _c;
+                }
+
+                public void Exe(EventSystem system, ref int exeCnt)
+                {
+                    if (!system._eTypeKeys.TryGetValue(eType, out var keys)) return;
+                    var enumerator = keys.GetEnumerator();
+                    while (enumerator.MoveNext())
                     {
-                        aEvent?.Run(a, b, c);
-                        exeCnt++;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e);
+                        var key = enumerator.Current;
+                        if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
+                        if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            aEvent?.Run(a, b, c);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
                     }
                 }
             }
-        }
 
+        }
     }
 }

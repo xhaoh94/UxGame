@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 48e1b5ac4a90a5649962a3e75fd666c2
+timeCreated: 1531222519
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Tween/GTweener.cs
+  uploadId: 755911

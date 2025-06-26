@@ -70,8 +70,7 @@ namespace Ux
         bool _isDestroyed;
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
-        Entity _parent;
-        //Entity _parentByComponent;
+        Entity _parent;        
 
         /// <summary>
         /// 获取父类实体，如果父类是组件的时候，会循环往上获取，直到获取到为实体为止
@@ -80,13 +79,6 @@ namespace Ux
         {
             get
             {
-                //var temPar = _parent;
-                //{
-                //    while (temPar is { IsComponent: true })
-                //        temPar = temPar._parent;
-                //}
-
-                //return temPar;
                 return _parent;
             }
             set
@@ -98,11 +90,11 @@ namespace Ux
 
                 if (value == null)
                 {
-                    _ = /*IsComponent ? _parent?.RemoveComponent(this) :*/ _parent?.Remove(this);
+                    _parent?.Remove(this);
                 }
                 else
                 {
-                    _ = /*IsComponent ? value.AddComponent(this) :*/ value.Add(this);
+                    value.Add(this);
                 }
             }
         }
@@ -140,11 +132,6 @@ namespace Ux
         /// <param name="gameObject">显示对象</param>        
         public void Link(GameObject gameObject)
         {
-            //if (IsComponent)
-            //{
-            //    Log.Error("组件无法设置显示对象");
-            //    return;
-            //}
             Viewer = gameObject.GetOrAddComponent<EntityViewer>();
 #if UNITY_EDITOR
             Viewer.SetEntity(this, Hierarchy);
@@ -171,11 +158,6 @@ namespace Ux
                 return false;
             }
 
-            //if (entity.IsComponent)
-            //{
-            //    Log.Error("AddChild不能添加组件类型");
-            //    return false;
-            //}
 
             if (entity == this)
             {
@@ -191,19 +173,6 @@ namespace Ux
             }
             var entityID = entity.ID;
 
-            //if (IsComponent)
-            //{
-            //    var temParent = Parent;
-            //    if (temParent == null)
-            //    {
-            //        Log.Error("父实体为空，无法添加子实体");
-            //        return false;
-            //    }
-            //    entity._parentByComponent = this;
-            //    temParent._AddChild(entity);
-            //}
-            //else
-            //{
             if (entity._parent == this)
             {
                 return true;
@@ -214,7 +183,6 @@ namespace Ux
 #if UNITY_EDITOR
             entity.Hierarchy.SetParent(Hierarchy.transform);
 #endif
-            //}
 
             _entitys.Add(entityID, entity);
             var type = entity.GetType();

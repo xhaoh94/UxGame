@@ -29,6 +29,9 @@ namespace Ux
         [SerializeField]
         bool IngameDebug = true;
 
+        [SerializeField]        
+        public bool HotfixCode = false;
+
         void Awake()
         {
             Ins = this;
@@ -53,11 +56,14 @@ namespace Ux
         void Start()
         {
 #if !UNITY_EDITOR
-            if (PlayMode == EPlayMode.EditorSimulateMode)
-                PlayMode = EPlayMode.HostPlayMode;
+            if (PlayMode == EPlayMode.EditorSimulateMode) PlayMode = EPlayMode.HostPlayMode;
+#endif
+
+#if !UNITY_EDITOR && HOTFIX_CODE
+            if (!HotfixCode) HotfixCode = true;
 #endif
             Log.Debug($"资源系统运行模式：{PlayMode}");
-
+            Log.Debug($"是否启用热更代码：{HotfixCode}");
             // 运行补丁流程
             PatchMgr.Ins.Run();
         }

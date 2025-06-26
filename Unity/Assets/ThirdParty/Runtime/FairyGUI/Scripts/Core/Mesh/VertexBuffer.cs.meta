@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 8d5501e8f84e40e47835611ab3896029
+timeCreated: 1545987173
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Mesh/VertexBuffer.cs
+  uploadId: 755911

@@ -294,8 +294,8 @@ namespace Ux
                 }
                 _showed.Add(uiid, ui);
                 _showing.Remove(uiid);
-                EventMgr.Ins.Send(MainEventType.UI_SHOW, uiid);
-                EventMgr.Ins.Send(MainEventType.UI_SHOW, ui.GetType());
+                EventMgr.Ins.Run(MainEventType.UI_SHOW, uiid);
+                EventMgr.Ins.Run(MainEventType.UI_SHOW, ui.GetType());
             }
 
             uis.Clear();
@@ -547,8 +547,8 @@ namespace Ux
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
 #endif
-            EventMgr.Ins.Send(MainEventType.UI_HIDE, id);
-            EventMgr.Ins.Send(MainEventType.UI_HIDE, ui.GetType());
+            EventMgr.Ins.Run(MainEventType.UI_HIDE, id);
+            EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
 
             _HideCallBack_Blur(ui);
         }

@@ -31,3 +31,10 @@ PluginImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68068
+  packageName: In-game Debug Console
+  packageVersion: 1.8.1
+  assetPath: Assets/ThirdParty/Runtime/IngameDebugConsole/Android/IngameDebugConsole.aar
+  uploadId: 757793

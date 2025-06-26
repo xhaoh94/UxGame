@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 3048174c9aaf2e840953e3cab497a426
+timeCreated: 1531222519
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Tween/TweenManager.cs
+  uploadId: 755911

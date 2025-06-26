@@ -107,7 +107,7 @@ namespace Ux
         {
             if (!_activeDisconnect)
             {
-                EventMgr.Ins.Send(MainEventType.NET_SOCKET_CODE, Address, e);
+                EventMgr.Ins.Run(MainEventType.NET_SOCKET_CODE, Address, e);
             }
             Dispose();
         }
@@ -164,7 +164,7 @@ namespace Ux
             IsConnected = true;
             _connectCallback?.Invoke();
             _connect1Callback?.Invoke(_connect1Param);
-            EventMgr.Ins.Send(MainEventType.NET_CONNECTED, Address);
+            EventMgr.Ins.Run(MainEventType.NET_CONNECTED, Address);
         }
         public virtual void Update()
         {
@@ -448,7 +448,7 @@ namespace Ux
             recvBytes.Dispose();
             Address = string.Empty;
             OnDispose();
-            EventMgr.Ins.Send(MainEventType.NET_DISPOSE, this);
+            EventMgr.Ins.Run(MainEventType.NET_DISPOSE, this);
         }
         protected virtual void OnDispose() { }
     }

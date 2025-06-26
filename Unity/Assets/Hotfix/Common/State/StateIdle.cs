@@ -25,6 +25,7 @@ namespace Ux
         {
             base.OnEnter();
             var asset = TimelineMgr.Ins.LoadAsset("HeroZSRun");
+            Unit.Timeline.SetBindObj("Animator", Unit.Viewer.GetComponentInChildren<Animator>());
             Unit.Timeline.Play(asset);
             GameMethod.Update += OnUpdate;
         }

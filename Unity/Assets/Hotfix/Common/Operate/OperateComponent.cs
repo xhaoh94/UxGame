@@ -42,6 +42,7 @@ namespace Ux
             if (context.performed)
             {
                 var moveVector2 = context.ReadValue<Vector2>();
+                Log.Info("move{0}", moveVector2);
                 SceneModule.Ins.SendMove(moveVector2);
             }
             else

@@ -2,6 +2,10 @@
 
 namespace Ux
 {
+    public interface IEventTrigger
+    {
+        void OnTriggerEvent();
+    }
     public partial class EventMgr
     {
         public interface IEvent
@@ -9,15 +13,14 @@ namespace Ux
             void Run();
             void Run(object a);
             void Run(object a, object b);
-            void Run(object a, object b, object c);
             void Release();
+            void Run(object a, object b, object c);
 
             long Key { get; }
             int EType { get; }
             object Tag { get; }
             Delegate Method { get; }
 #if UNITY_EDITOR
-            string ETypeStr { get; }
             string MethodName { get; }
 #endif
         }
@@ -28,15 +31,8 @@ namespace Ux
             public int EType { get; protected set; }
             public object Tag { get; protected set; }
             public abstract Delegate Method { get; }
-#if UNITY_EDITOR
-            public string ETypeStr { get; protected set; }
-
+#if UNITY_EDITOR            
             public virtual string MethodName => Method.MethodName();
-
-            public void Init(string eTypeStr)
-            {
-                ETypeStr = eTypeStr;
-            }
 #endif
 
 
@@ -47,9 +43,6 @@ namespace Ux
 
             public void Release()
             {
-#if UNITY_EDITOR
-                ETypeStr = string.Empty;
-#endif
                 Tag = null;
                 Key = 0;
                 EType = 0;

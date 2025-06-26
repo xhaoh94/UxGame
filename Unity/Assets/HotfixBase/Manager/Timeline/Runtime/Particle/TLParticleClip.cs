@@ -39,7 +39,7 @@ namespace Ux
 
         void SetTime(float value)
         {
-            clipAsset.particle.time = value;
+            clipAsset.particleSystem.time = value;
         }
     }
 }

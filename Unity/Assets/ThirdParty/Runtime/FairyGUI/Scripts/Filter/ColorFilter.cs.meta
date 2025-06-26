@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: f03204401ceeb6d4dad6b55e0889c0ae
+timeCreated: 1464768266
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Filter/ColorFilter.cs
+  uploadId: 755911

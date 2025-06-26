@@ -2,95 +2,38 @@ using System;
 
 public static class Log
 {
-    public static void Trace(string msg)
+    public static void Trace(object msg)
     {
-        UnityEngine.Debug.Log(msg);
+        Trace("{0}", msg);
     }
 
     
-    public static void Debug(string msg)
-    {
-        UnityEngine.Debug.Log(msg);
-    }
     public static void Debug(object msg)
     {
-        try
-        {
-            UnityEngine.Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
-        }
-        catch
-        {
-            UnityEngine.Debug.Log(msg.ToString());
-        }
+        Debug("{0}", msg);
     }
 
-    public static void Info(string msg)
-    {
-        UnityEngine.Debug.Log(msg);
-    }
     public static void Info(object msg)
-    {
-        try
-        {
-            UnityEngine.Debug.Log(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
-        }
-        catch
-        {
-            UnityEngine.Debug.Log(msg.ToString());
-        }
+    {        
+        Info("{0}", msg);
     }
 
-    public static void Warning(string msg)
-    {
-        UnityEngine.Debug.LogWarning(msg);
-    }
+
     public static void Warning(object msg)
-    {        
-        try
-        {
-            UnityEngine.Debug.LogWarning(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
-        }
-        catch
-        {
-            UnityEngine.Debug.LogWarning(msg.ToString());
-        }
+    {
+        Warning("{0}", msg);
     }
 
-    public static void Error(string msg)
-    {
-        UnityEngine.Debug.LogError(msg);
-    }
 
-    public static void Error(Exception e)
-    {
-        UnityEngine.Debug.LogException(e);
-    }
     public static void Error(object msg)
-    {        
-        try
-        {
-            UnityEngine.Debug.LogError(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
-        }
-        catch
-        {
-            UnityEngine.Debug.LogError(msg.ToString());
-        }
+    {
+        Error("{0}", msg);
     }
 
-    public static void Fatal(string msg)
-    {
-        UnityEngine.Debug.LogAssertion(msg);
-    }
+
     public static void Fatal(object msg)
-    {        
-        try
-        {
-            UnityEngine.Debug.LogAssertion(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
-        }
-        catch
-        {
-            UnityEngine.Debug.LogAssertion(msg.ToString());
-        }
+    {
+        Fatal("{0}", msg);
     }
 
     public static void Trace(string message, params object[] args)

@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 274275eaa3fbbc94697cbe90a0fb52f1
+timeCreated: 1545987172
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Core/Mesh/MeshFactory.cs
+  uploadId: 755911

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using YooAsset;
 using YooAsset.Editor;
 namespace Ux.Editor.Build.Version
 {
@@ -38,6 +39,7 @@ namespace Ux.Editor.Build.Version
         public string BundlePath = "./Bundles";
         public string ExePath = "./bin";
         public string CopyPath = "./CDN";
+        public bool IsUseDb = true;
         public bool IsClearSandBox = true;
         public bool IsExportExecutable = true;
         public string ResVersion = string.Empty;

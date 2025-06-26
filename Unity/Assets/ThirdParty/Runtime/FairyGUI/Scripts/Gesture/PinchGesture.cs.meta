@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: dc85a819551042448a16308b82054c89
+timeCreated: 1464244766
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/Gesture/PinchGesture.cs
+  uploadId: 755911

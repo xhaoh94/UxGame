@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: e872cd17b52152a4fa250c830b9bb8cd
+timeCreated: 1476166204
+licenseType: Store
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -9,3 +11,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 49479
+  packageName: FairyGUI
+  packageVersion: 5.2.0
+  assetPath: Assets/ThirdParty/Runtime/FairyGUI/Scripts/UI/Gears/IColorGear.cs
+  uploadId: 755911

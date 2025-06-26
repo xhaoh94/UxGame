@@ -91,11 +91,9 @@ namespace Ux
     {
         class Event
         {
-            readonly Dictionary<Type, List<FastMethodInfo>>
-                _eventAdd = new Dictionary<Type, List<FastMethodInfo>>();
+            readonly Dictionary<Type, List<FastMethodInfo>> _eventAdd = new();
 
-            readonly Dictionary<Type, List<FastMethodInfo>> _eventRemove =
-                new Dictionary<Type, List<FastMethodInfo>>();
+            readonly Dictionary<Type, List<FastMethodInfo>> _eventRemove = new();
 
             public void AddSystem(Entity entity)
             {
@@ -172,16 +170,16 @@ namespace Ux
                     _eventAdd.Remove(key);
                 }
             }
-            public void On(Entity target)
+            public void On(Entity entity)
             {
-                var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
+                var methods = entity.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
                                                           BindingFlags.Public | BindingFlags.NonPublic);
                 foreach (var method in methods)
                 {
                     var addAttrs = method.GetCustomAttributes(typeof(ListenAddEntityAttribute)).ToArray();
                     if (addAttrs.Length > 0)
                     {
-                        var fastMethod = new FastMethodInfo(target, method);
+                        var fastMethod = new FastMethodInfo(entity, method);
                         if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
                         if (!_eventAdd.TryGetValue(evtAttr.ListenType, out var list))
                         {
@@ -195,7 +193,7 @@ namespace Ux
                     var removeAttrs = method.GetCustomAttributes(typeof(ListenRemoveEntityAttribute)).ToArray();
                     if (removeAttrs.Length > 0)
                     {
-                        var fastMethod = new FastMethodInfo(target, method);
+                        var fastMethod = new FastMethodInfo(entity, method);
                         if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
                         if (!_eventRemove.TryGetValue(evtAttr.ListenType, out var list))
                         {
@@ -293,22 +291,22 @@ namespace Ux
 #endif
             if (this is IUpdateSystem updateSystem)
             {
-                GameMethod.Update += updateSystem.OnUpdate;     
+                GameMethod.Update += updateSystem.OnUpdate;
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
-                GameMethod.LateUpdate += lateUpdateSystem.OnLateUpdate;                
+                GameMethod.LateUpdate += lateUpdateSystem.OnLateUpdate;
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
             {
-                GameMethod.FixedUpdate += fixedUpdateSystem.OnFixedUpdate;                
+                GameMethod.FixedUpdate += fixedUpdateSystem.OnFixedUpdate;
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                GameMethod.Quit += applicationQuit.OnApplicationQuit;                
+                GameMethod.Quit += applicationQuit.OnApplicationQuit;
             }
             var temPar = Parent;
             if (temPar != null)
@@ -326,7 +324,7 @@ namespace Ux
             {
                 if (this is IEventSystem)
                 {
-                    EventMgr.Ins.___RegisterFastMethod(this);
+                    EventMgr.Ins.RegisterFastMethod(this);
                 }
 
                 _is_init = true;
@@ -347,22 +345,22 @@ namespace Ux
             }
 #endif
             if (this is IUpdateSystem updateSystem)
-            {                
+            {
                 GameMethod.Update -= updateSystem.OnUpdate;
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
-            {                
+            {
                 GameMethod.LateUpdate -= lateUpdateSystem.OnLateUpdate;
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
-            {                
+            {
                 GameMethod.FixedUpdate -= fixedUpdateSystem.OnFixedUpdate;
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
-            {                
+            {
                 GameMethod.Quit -= applicationQuit.OnApplicationQuit;
             }
 

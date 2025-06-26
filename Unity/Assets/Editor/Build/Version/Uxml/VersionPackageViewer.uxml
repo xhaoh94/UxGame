@@ -2,7 +2,7 @@
     <ui:VisualElement name="exportElement" style="flex-grow: 1;">
         <ui:Toggle label="收集着色体变体" name="tgCollectSV" />
         <uie:EnumField label="构建管线" name="pipelineType" style="flex-shrink: 1;" />
-        <uie:EnumField label="资源命名格式" name="nameStyleType" style="height: 20px; flex-shrink: 1;" />
+        <uie:EnumField label="资源命名格式" name="nameStyleType" style="height: auto; flex-shrink: 1;" />
         <uie:EnumField label="压缩方式" value="Center" name="compressionType" style="flex-shrink: 1;" />
         <ui:TextField picking-mode="Ignore" label="首包资源标签" name="inputBuiltinTags" />
         <ui:VisualElement label="加密方式" name="encryptionContainer" style="height: auto;" />
