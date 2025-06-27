@@ -4,20 +4,25 @@ using System.Reflection;
 
 namespace Ux
 {
-    public class FastMethodInfo
+    public struct FastMethodInfo
     {
         private delegate object ReturnValueDelegate(object instance, object[] arguments);
 
         private delegate void VoidDelegate(object instance, object[] arguments);
 
         public object Target { get; }
+        public System.Delegate Method => _delegate;
+        public bool IsValid => _delegate != null;
+
         readonly MethodInfo _methodInfo;
+        readonly ReturnValueDelegate _delegate;
 
         public FastMethodInfo(object target, MethodInfo methodInfo)
         {
+            _delegate = null;
             Target = target;
             _methodInfo = methodInfo;
-            if (this._methodInfo == null)
+            if (_methodInfo == null)
             {
                 Log.Error("FastMethodInfo MethodInfo 为空");
                 return;
@@ -43,23 +48,21 @@ namespace Ux
             {
                 var voidDelegate = Expression
                     .Lambda<VoidDelegate>(callExpression, instanceExpression, argumentsExpression).Compile();
-                Delegate = (instance, arguments) =>
+                _delegate = (instance, arguments) =>
                 {
                     voidDelegate(instance, arguments);
                     return null;
                 };
             }
             else
-                Delegate = Expression.Lambda<ReturnValueDelegate>(Expression.Convert(callExpression, typeof(object)),
+                _delegate = Expression.Lambda<ReturnValueDelegate>(Expression.Convert(callExpression, typeof(object)),
                     instanceExpression, argumentsExpression).Compile();
         }
 
-        private ReturnValueDelegate Delegate { get; }
-        public System.Delegate Method => Delegate;
 
         public object Invoke(params object[] arguments)
         {
-            return Delegate?.Invoke(Target, arguments);
+            return _delegate?.Invoke(Target, arguments);
         }
 
 #if UNITY_EDITOR

@@ -54,7 +54,7 @@ namespace Ux
         }
 
         public sealed class EventFastMethodData : EventBaseData
-        {            
+        {
             public override Delegate Method => _method.Method;
             FastMethodInfo _method;
 
@@ -71,27 +71,27 @@ namespace Ux
 
             protected override void OnRelease()
             {
-                _method = null;
+                _method = default;
             }
 
             public override void Run()
             {
-                _method?.Invoke();
+                if (_method.IsValid) _method.Invoke();
             }
 
             public override void Run(object a)
             {
-                _method?.Invoke(a);
+                if (_method.IsValid) _method.Invoke(a);
             }
 
             public override void Run(object a, object b)
             {
-                _method?.Invoke(a, b);
+                if (_method.IsValid) _method.Invoke(a, b);
             }
 
             public override void Run(object a, object b, object c)
             {
-                _method?.Invoke(a, b, c);
+                if (_method.IsValid) _method.Invoke(a, b, c);
             }
         }
 

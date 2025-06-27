@@ -53,6 +53,7 @@ namespace Ux
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
 
         private readonly CallBackData _initData;
+
         //UI层级
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
         {
@@ -82,11 +83,15 @@ namespace Ux
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
-            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBefore_Stack);
+            _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBeforePopStack);
+        }
+        protected override void OnCreated()
+        {
+            GameMethod.LowMemory += _LowMemory;
         }
 
-        //内存不足时，清理缓存
-        void OnRelease()
+        //清理缓存
+        void _LowMemory()
         {
             MessageBox?.Clear();
             Tip?.Clear();
@@ -136,7 +141,7 @@ namespace Ux
 
         public void Release()
         {
-            OnRelease();
+            _LowMemory();
             //清理掉动态创建的UI数据
             if (_dymUIData.Count > 0)
             {
@@ -241,7 +246,7 @@ namespace Ux
 
         void _ShowCallBack(IUI ui, IUIParam param, bool isStack)
         {
-            _ShowCallBack_Stack(ui, param, isStack);
+            _ShowedPushStack(ui, param, isStack);
             _ShowCallBack_Blur(ui);
         }
 

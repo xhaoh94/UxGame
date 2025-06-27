@@ -41,10 +41,9 @@ namespace Ux
     public partial class UIMgr
     {
         private readonly YooPackage _yoo = YooMgr.Ins.GetPackage(YooType.Main);
-        private readonly Dictionary<string, UIPkgRef> _pkgToRef = new Dictionary<string, UIPkgRef>();
+        private readonly Dictionary<string, UIPkgRef> _pkgToRef = new();
 
-        private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles =
-            new Dictionary<string, List<AssetHandle>>();
+        private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles = new();
 
         private readonly HashSet<string> _pkgToLoading = new HashSet<string>();
 
@@ -79,7 +78,7 @@ namespace Ux
                 }
                 else
                 {
-                    Log.Warning("卸载没有引用计数的包:" + pkg);
+                    Log.Error("卸载没有引用计数的包:" + pkg);
                 }
             }
 
@@ -145,9 +144,9 @@ namespace Ux
         }
 
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
-        {            
-            
-            string resName = string.Format(PathHelper.Res.UI,pkg,"fui");
+        {
+
+            string resName = string.Format(PathHelper.Res.UI, pkg, "fui");
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();

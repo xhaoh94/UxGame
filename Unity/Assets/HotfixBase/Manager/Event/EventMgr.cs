@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Ux
 {
-
     public partial class EventMgr : Singleton<EventMgr>
     {
        //全局事件,不允许直接监听int,必须使用EvenType或MainEventType枚举
@@ -11,7 +10,12 @@ namespace Ux
         
         protected override void OnCreated()
         {
-            _defaultSystem = CreateSystem(200);            
+            GameMethod.LowMemory += _LowMemory;
+            _defaultSystem = CreateSystem(200);
+        }
+        void _LowMemory()
+        {
+            _fastMethodRefDic.Clear();
         }
 
         public EventSystem CreateSystem(int exeLimit = int.MaxValue)

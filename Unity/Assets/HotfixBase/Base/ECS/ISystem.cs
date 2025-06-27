@@ -89,11 +89,95 @@ namespace Ux
 
     public partial class Entity
     {
-        class Event
+        public struct FastMethodRef
         {
-            readonly Dictionary<Type, List<FastMethodInfo>> _eventAdd = new();
+            Type _type;
+            FastMethodInfo _methodInfo;
+            public FastMethodRef(Type type, FastMethodInfo methodInfo)
+            {
+                _type = type;
+                _methodInfo = methodInfo;
+            }
+            public void On(Dictionary<Type, List<FastMethodInfo>> dic)
+            {
+                if (!dic.TryGetValue(_type, out var list))
+                {
+                    list = new List<FastMethodInfo>();
+                    dic.Add(_type, list);
+                }
 
-            readonly Dictionary<Type, List<FastMethodInfo>> _eventRemove = new();
+                list.Add(_methodInfo);
+            }
+        }
+        public struct FastMethodRefList
+        {
+            List<FastMethodRef> _refAddList;
+            List<FastMethodRef> _refRemoveList;
+            public FastMethodRefList(List<FastMethodRef> refAddList, List<FastMethodRef> refRemoveList)
+            {
+                _refAddList = refAddList;
+                _refRemoveList = refRemoveList;
+            }
+            public void On(Event evt)
+            {
+                if (_refAddList != null && _refAddList.Count > 0)
+                {
+                    foreach (var refList in _refAddList)
+                    {
+                        refList.On(evt._eventAdd);
+                    }
+                }
+                if (_refRemoveList != null && _refRemoveList.Count > 0)
+                {
+                    foreach (var refList in _refRemoveList)
+                    {
+                        refList.On(evt._eventRemove);
+                    }
+                }
+            }
+        }
+
+        bool _isCheckFastMethod;
+        FastMethodRefList _fastMethodRefList;
+        FastMethodRefList _GetFastMethodRefList()
+        {
+            if (!_isCheckFastMethod)
+            {
+                _isCheckFastMethod = true;
+                var methods = GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
+                                                                      BindingFlags.Public | BindingFlags.NonPublic);
+                List<FastMethodRef> addList = null;
+                List<FastMethodRef> removeList = null;
+                foreach (var method in methods)
+                {
+                    var addAttrs = method.GetCustomAttributes(typeof(ListenAddEntityAttribute)).ToArray();
+                    if (addAttrs.Length > 0)
+                    {
+                        if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
+                        var fastMethod = new FastMethodInfo(this, method);
+                        addList ??= new List<FastMethodRef>();
+                        addList.Add(new FastMethodRef(evtAttr.ListenType, fastMethod));
+                    }
+
+                    var removeAttrs = method.GetCustomAttributes(typeof(ListenRemoveEntityAttribute)).ToArray();
+                    if (removeAttrs.Length > 0)
+                    {
+                        if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
+                        var fastMethod = new FastMethodInfo(this, method);
+                        removeList ??= new List<FastMethodRef>();
+                        removeList.Add(new FastMethodRef(evtAttr.ListenType, fastMethod));
+                    }
+                }
+                _fastMethodRefList = new FastMethodRefList(addList, removeList);
+            }
+            return _fastMethodRefList;
+        }
+        
+        public class Event
+        {
+            public readonly Dictionary<Type, List<FastMethodInfo>> _eventAdd = new();
+
+            public readonly Dictionary<Type, List<FastMethodInfo>> _eventRemove = new();
 
             public void AddSystem(Entity entity)
             {
@@ -172,38 +256,7 @@ namespace Ux
             }
             public void On(Entity entity)
             {
-                var methods = entity.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                                          BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var method in methods)
-                {
-                    var addAttrs = method.GetCustomAttributes(typeof(ListenAddEntityAttribute)).ToArray();
-                    if (addAttrs.Length > 0)
-                    {
-                        var fastMethod = new FastMethodInfo(entity, method);
-                        if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
-                        if (!_eventAdd.TryGetValue(evtAttr.ListenType, out var list))
-                        {
-                            list = new List<FastMethodInfo>();
-                            _eventAdd.Add(evtAttr.ListenType, list);
-                        }
-
-                        list.Add(fastMethod);
-                    }
-
-                    var removeAttrs = method.GetCustomAttributes(typeof(ListenRemoveEntityAttribute)).ToArray();
-                    if (removeAttrs.Length > 0)
-                    {
-                        var fastMethod = new FastMethodInfo(entity, method);
-                        if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
-                        if (!_eventRemove.TryGetValue(evtAttr.ListenType, out var list))
-                        {
-                            list = new List<FastMethodInfo>();
-                            _eventRemove.Add(evtAttr.ListenType, list);
-                        }
-
-                        list.Add(fastMethod);
-                    }
-                }
+                entity._GetFastMethodRefList().On(this);                
             }
 
             public void Clear()

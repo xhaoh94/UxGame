@@ -14,6 +14,11 @@ namespace Ux
         };
 
         readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();
+
+        protected override void OnCreated()
+        {
+            GameMethod.LowMemory += UnloadUnusedAssetsAsync;
+        }
         public async UniTask<bool> Initialize(EPlayMode playMode)
         {
             if (YooAssets.Initialized)
@@ -95,9 +100,5 @@ namespace Ux
             ForEachPackage(x => x.Package.UnloadUnusedAssetsAsync());
         }
         #endregion
-        public void OnLowMemory()
-        {
-            UnloadUnusedAssetsAsync();
-        }
     }
 }

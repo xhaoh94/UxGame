@@ -29,7 +29,7 @@ namespace Ux
 
 
         //显示完成后，把ui放进栈
-        void _ShowCallBack_Stack(IUI ui, IUIParam param, bool checkStack)
+        void _ShowedPushStack(IUI ui, IUIParam param, bool checkStack)
         {
             var uiType = ui.Type;
             if (!checkStack || uiType == UIType.Fixed)
@@ -47,22 +47,17 @@ namespace Ux
                 {
                     lastStack.ID = ui.ID;
                     lastStack.Param = param;
-#if UNITY_EDITOR
-                    lastStack.IDStr = ui.Name;
-#endif
                     _stack[_stack.Count - 1] = lastStack;
-
 #if UNITY_EDITOR
                     __Debugger_Stack_Event();
 #endif
                     return;
                 }
             }
-#if UNITY_EDITOR
-            _stack.Add(new UIStack(parentID, ui.Name, ui.ID, param, uiType));
-            __Debugger_Stack_Event();
-#else
+
             _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
+#if UNITY_EDITOR            
+            __Debugger_Stack_Event();            
 #endif
 
             if (uiType == UIType.Stack)
@@ -81,40 +76,9 @@ namespace Ux
                     }
                 }
             }
-        }
-
-        void _HideByStack(UIStack stack, int index)
-        {
-            bool needCopyParam = true;
-            IUI ui = null;
-            var id = stack.ParentID;
-            if (_showing.Contains(id))
-            {
-                if (!_createdDels.Contains(id)) _createdDels.Add(id);                
-            }
-            else if (_showed.TryGetValue(id, out ui) && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
-            {
-                ui = null;
-                needCopyParam = false;
-            }
-
-            if (needCopyParam)
-            {
-                //Hide之后，参数会被回收。所以提前拷贝参数对象
-                var copyParam = stack.Param?.Copy();
-                //重新赋值参数
-                if (copyParam != null)
-                {
-                    stack.Param = copyParam;
-                    stack.ParamIsNew = true;
-                    _stack[index] = stack;
-                }
-            }
-            ui?.DoHide(false, false);
-        }
-
+        }               
         //关闭界面前，检测栈中界面，是否重新打开
-        bool _HideBefore_Stack(IUI ui, bool checkStack = false)
+        bool _HideBeforePopStack(IUI ui, bool checkStack = false)
         {
             if (_stack.Count > 0)
             {
@@ -165,10 +129,38 @@ namespace Ux
             }
             return isBreak;
         }
-        public void _ShowByStack(UIStack stack)
+        void _ShowByStack(UIStack stack)
         {
             _ShowAsync<IUI>(stack.ID, stack.Param, false, false).Forget();
         }
+        void _HideByStack(UIStack stack, int index)
+        {
+            bool needCopyParam = true;
+            IUI ui = null;
+            var id = stack.ParentID;
+            if (_showing.Contains(id))
+            {
+                if (!_createdDels.Contains(id)) _createdDels.Add(id);
+            }
+            else if (_showed.TryGetValue(id, out ui) && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
+            {
+                ui = null;
+                needCopyParam = false;
+            }
 
+            if (needCopyParam)
+            {
+                //Hide之后，参数会被回收。所以提前拷贝参数对象
+                var copyParam = stack.Param?.Copy();
+                //重新赋值参数
+                if (copyParam != null)
+                {
+                    stack.Param = copyParam;
+                    stack.ParamIsNew = true;
+                    _stack[index] = stack;
+                }
+            }
+            ui?.DoHide(false, false);
+        }
     }
 }

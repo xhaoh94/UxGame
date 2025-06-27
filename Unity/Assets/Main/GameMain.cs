@@ -119,8 +119,7 @@ namespace Ux
         }
 
         void OnLowMemory()
-        {
-            YooMgr.Ins.OnLowMemory();
+        {            
             Pool.Clear();
             GameMethod.LowMemory?.Invoke();
         }

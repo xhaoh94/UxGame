@@ -105,26 +105,16 @@ namespace Ux
             public bool ParamIsNew;
             public readonly UIType Type;
 #if UNITY_EDITOR
-            public string IDStr;
-            public UIStack(int parentID, string idStr, int id, IUIParam param, UIType type)
-            {
-                ParentID = parentID;
-                IDStr = idStr;
-                ID = id;
-                Param = param;
-                ParamIsNew = false;
-                Type = type;
-            }
-#else
-          public UIStack(int parentID, int id, IUIParam param, UIType type)
-            {
-                ParentID = parentID;
-                ID = id;
-                Param = param;
-                ParamIsNew = false;
-                Type = type;
-            }
+            public string IDStr => UIMgr.Ins.GetUIData(ID).Name;
 #endif
+            public UIStack(int parentID, int id, IUIParam param, UIType type)
+            {
+                ParentID = parentID;
+                ID = id;
+                Param = param;
+                ParamIsNew = false;
+                Type = type;
+            }
         }
         public readonly struct UIParse
         {

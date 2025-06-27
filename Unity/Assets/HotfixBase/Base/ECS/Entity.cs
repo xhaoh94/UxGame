@@ -15,7 +15,7 @@ namespace Ux
         static readonly Queue<DelayFn> _delayFn = new Queue<DelayFn>();
         public static void Init()
         {
-            GameMethod.LateUpdate += _DequeueDelay;
+            GameMethod.LateUpdate += _DequeueDelay;            
         }
         public static void Release()
         {

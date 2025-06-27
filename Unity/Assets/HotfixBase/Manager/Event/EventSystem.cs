@@ -8,6 +8,25 @@ namespace Ux
 {
     public partial class EventMgr
     {
+        public struct FastMethodRef
+        {
+            Attribute[] _attributes;
+            FastMethodInfo _methodInfo;
+            public FastMethodRef(Attribute[] attributes, FastMethodInfo methodInfo)
+            {
+                _attributes = attributes;
+                _methodInfo = methodInfo;
+            }
+            public void On(EventMgr.EventSystem system)
+            {
+                foreach (var attr in _attributes)
+                {
+                    var evtAttr = (IEvtAttribute)attr;
+                    system.On(evtAttr.EType, _methodInfo);
+                }
+            }
+        }
+        Dictionary<long, List<FastMethodRef>> _fastMethodRefDic = new();
         public partial class EventSystem
         {
             //每帧执行上限-超出上限，下一帧处理
@@ -46,7 +65,7 @@ namespace Ux
                 _actionKeys.Clear();
                 _waitExes.Clear();
                 _waitAdds.Clear();
-                _waitDels.Clear();                
+                _waitDels.Clear();
                 Pool.Push(this);
             }
 
@@ -68,7 +87,7 @@ namespace Ux
             void _RegisterEventTrigger(Type type, IEventTrigger eventObject)
             {
                 var evtAttrs = eventObject.GetType().GetCustomAttributes(type).ToArray();
-                if (!evtAttrs.Any()) return;                
+                if (!evtAttrs.Any()) return;
                 foreach (var attr in evtAttrs)
                 {
                     var evtAttr = (IEvtAttribute)attr;
@@ -87,17 +106,28 @@ namespace Ux
 
             void _RegisterFastMethod(Type type, object target)
             {
-                var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                                          BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var method in methods)
+                var key = IDGenerater.GenerateId(target.GetHashCode(), type.GetHashCode());
+                if (!Ins._fastMethodRefDic.TryGetValue(key, out var refList))
                 {
-                    var evtAttrs = method.GetCustomAttributes(type).ToArray();
-                    if (!evtAttrs.Any()) continue;
-                    var fastMethod = new FastMethodInfo(target, method);
-                    foreach (var attr in evtAttrs)
+                    var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
+                                                          BindingFlags.Public | BindingFlags.NonPublic);
+                    foreach (var method in methods)
                     {
-                        var evtAttr = (IEvtAttribute)attr;
-                        On(evtAttr.EType, fastMethod);
+                        var evtAttrs = method.GetCustomAttributes(type).ToArray();
+                        if (!evtAttrs.Any()) continue;
+                        if (refList == null)
+                        {
+                            refList = new List<FastMethodRef>();
+                            Ins._fastMethodRefDic.Add(key, refList);
+                        }                        
+                        refList.Add(new FastMethodRef(evtAttrs, new FastMethodInfo(target, method)));
+                    }
+                }
+                if (refList != null && refList.Count > 0)
+                {
+                    foreach (var refMethod in refList)
+                    {
+                        refMethod.On(this);
                     }
                 }
             }
@@ -115,7 +145,7 @@ namespace Ux
 
             private long _GetKey(int eType, FastMethodInfo action)
             {
-                if (action == null) return 0;
+                if (!action.IsValid) return 0;
                 return _GetKey(eType, action.Method, action.Target);
             }
 
@@ -218,7 +248,7 @@ namespace Ux
                 while (_waitExes.Count > 0 && _exeCnt < _exeLimit)
                 {
                     var exe = _waitExes.Dequeue();
-                    exe.Exe(this,ref _exeCnt);
+                    exe.Exe(this, ref _exeCnt);
                 }
             }
 
