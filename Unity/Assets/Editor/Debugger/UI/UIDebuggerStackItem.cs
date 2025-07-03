@@ -39,7 +39,7 @@ namespace Ux.Editor.Debugger.UI
         {
             this.data = data;
             var lb0 = this.Q<Label>("Label0");
-            lb0.text = data.IDStr;
+            lb0.text = UIMgr.Ins.GetUIData(data.ID).Name;
         }
     }
 }

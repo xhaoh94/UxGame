@@ -55,7 +55,7 @@ namespace Ux.Editor.Build.Version
                 setting.PiplineOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageBuildPipeline(pkgName);
                 setting.CompressOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageCompressOption(pkgName, setting.PiplineOption);
                 setting.NameStyleOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageFileNameStyle(pkgName, setting.PiplineOption);
-                setting.EncyptionClassName = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageEncyptionClassName(pkgName, setting.PiplineOption);
+                setting.EncyptionClassName = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageEncyptionServicesClassName(pkgName, setting.PiplineOption);
                 PackageBuilds.Add(setting);
             }
             return setting;
@@ -73,8 +73,9 @@ namespace Ux.Editor.Build.Version
         public bool IsCollectShaderVariant = false;
         public string PackageName = string.Empty;
         public string EncyptionClassName = string.Empty;
+        public string ManifestClassName = string.Empty;
         public ECompressOption CompressOption = ECompressOption.LZ4;
-        public EBuildPipeline PiplineOption = EBuildPipeline.ScriptableBuildPipeline;
+        public string PiplineOption = EBuildPipeline.ScriptableBuildPipeline.ToString();
         public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;
         public string BuildTags = "builtin";
 

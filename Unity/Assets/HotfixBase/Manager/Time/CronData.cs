@@ -471,15 +471,20 @@ namespace Ux
 
         private bool _isParse;
 
-        private static Dictionary<string, CronData> _cacel;
+        private static OverdueMap<string, CronData> _caches;
 
         public static CronData Create(string cron)
         {
-            if (_cacel != null && _cacel.TryGetValue(cron, out var data)) return data;
+            if (_caches != null && _caches.TryGetValue(cron, out var data)) return data;
             data = new CronData(cron);
-            (_cacel ?? new Dictionary<string, CronData>()).Add(cron, data);
+            (_caches ?? new OverdueMap<string, CronData>(60)).Add(cron, data);
             return data;
         }
+        public static void Release()
+        {
+            _caches?.Clear();
+        }
+
         string yearCron;
         void Parse(string cron)
         {

@@ -3,6 +3,7 @@ using Microsoft.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 namespace Ux
 {
@@ -11,6 +12,25 @@ namespace Ux
         Success,
         Error,
         ConnectionTimeout,//连接服务器超时
+    }
+    public interface IRpcCompletionSource
+    {
+        void SetResult(object result);
+        void SetException(Exception ex);
+        void SetCanceled();
+    }
+    public struct RpcCompletionSourceAdapter<T> : IRpcCompletionSource
+    {
+        private readonly AutoResetUniTaskCompletionSource<T> _source;
+
+        public RpcCompletionSourceAdapter(AutoResetUniTaskCompletionSource<T> source)
+        {
+            _source = source;
+        }
+
+        public void SetResult(object result) => _source.TrySetResult((T)result);
+        public void SetException(Exception ex) => _source.TrySetException(ex);
+        public void SetCanceled() => _source.TrySetCanceled();
     }
     public abstract class ClientSocket
     {
@@ -50,20 +70,19 @@ namespace Ux
         protected bool IsDisposed { get; private set; }
         protected virtual bool IsCheckUpdate => !IsDisposed && IsConnected;
 
-        private readonly PacketParser parser;
-        protected readonly ByteArray recvBytes = new ByteArray();
-        protected readonly ByteArray sendBytes = new ByteArray();
+        protected readonly ByteBuffer recvBytes = new ByteBuffer();
+        protected readonly ByteBuffer sendBytes = new ByteBuffer();
 
-        private MemoryStream sendStream;
-        private MemoryStream recvStream;
+        private readonly PacketParser _parser;
+        private MemoryStream _sendStream;
+        private MemoryStream _recvStream;
 
 
-        Dictionary<uint, AutoResetUniTaskCompletionSource<object>> rpcMethod = new Dictionary<uint, AutoResetUniTaskCompletionSource<object>>();
-        Dictionary<uint, Type> rpcType = new Dictionary<uint, Type>();
-        Dictionary<uint, float> rpcTime = new Dictionary<uint, float>();
+        Dictionary<uint, IRpcCompletionSource> _rpcMethod = new Dictionary<uint, IRpcCompletionSource>();
+        Dictionary<uint, Type> _rpcType = new Dictionary<uint, Type>();
+        Dictionary<uint, float> _rpcTime = new Dictionary<uint, float>();
         List<uint> _rpcDels = new List<uint>();
-        Dictionary<uint, Type> cmdType = new Dictionary<uint, Type>();
-        Dictionary<uint, FastMethodInfo> cmdMethod = new Dictionary<uint, FastMethodInfo>();
+        Dictionary<uint, Type> _cmdType = new Dictionary<uint, Type>();
 
         Action _connectCallback;
         Action<object> _connect1Callback;
@@ -72,9 +91,9 @@ namespace Ux
         public ClientSocket(string address)
         {
             Address = address;
-            sendStream = RecyclableMemoryStreamManager.Instance.GetStream("message", ushort.MaxValue);
-            recvStream = RecyclableMemoryStreamManager.Instance.GetStream("message", ushort.MaxValue);
-            this.parser = new PacketParser(this.recvBytes);
+            _sendStream = RecyclableMemoryStreamManager.Instance.GetStream("message", ushort.MaxValue);
+            _recvStream = RecyclableMemoryStreamManager.Instance.GetStream("message", ushort.MaxValue);
+            this._parser = new PacketParser(this.recvBytes);
             this.IsConnected = false;
             this.IsSending = false;
             ModuleMgr.ForEach(mol =>
@@ -95,9 +114,9 @@ namespace Ux
                         if (parames.Length == 1)
                         {
                             var p = parames[0].ParameterType;
-                            cmdType.Add(net.cmd, p);
+                            _cmdType.Add(net.cmd, p);
                         }
-                        cmdMethod.Add(net.cmd, new FastMethodInfo(mol, method));
+                        (NetMgr.Ins as INetEvent).Bind(net.cmd, new FastMethodInfo(mol, method));
                     }
                 }
             });
@@ -187,32 +206,35 @@ namespace Ux
                     {
                         SendHeartbeat();
                     }
-#if !UNITY_EDITOR
-                    if (rpcTime.Count > 0)
+                    _CheckRpcTimeout();
+                }
+            }
+        }
+        void _CheckRpcTimeout()
+        {
+            if (_rpcTime.Count > 0)
+            {
+                var currentTime = TimeMgr.Ins.TotalTime;
+                foreach (var kv in _rpcTime)
+                {
+                    if (currentTime - kv.Value >= RPC_TimeOut)
                     {
-                        foreach (var kv in rpcTime)
-                        {
-                            if (TimeMgr.Ins.TotalTime - kv.Value >= RPC_TimeOut)
-                            {
-                                _rpcDels.Add(kv.Key);
-                            }
-                        }
-                        if (_rpcDels.Count > 0)
-                        {
-                            foreach (var rpcId in _rpcDels)
-                            {
-                                rpcType.Remove(rpcId);
-                                if (rpcMethod.TryGetValue(rpcId, out var method))
-                                {
-                                    method.TrySetException(new Exception("RPC超时"));
-                                    rpcMethod.Remove(rpcId);
-                                }
-                                rpcTime.Remove(rpcId);
-                            }
-                            _rpcDels.Clear();
-                        }
+                        _rpcDels.Add(kv.Key);
                     }
-#endif
+                }
+                if (_rpcDels.Count > 0)
+                {
+                    foreach (var rpcId in _rpcDels)
+                    {
+                        _rpcType.Remove(rpcId);
+                        if (_rpcMethod.TryGetValue(rpcId, out var method))
+                        {
+                            method.SetException(new Exception("RPC超时"));
+                            _rpcMethod.Remove(rpcId);
+                        }
+                        _rpcTime.Remove(rpcId);
+                    }
+                    _rpcDels.Clear();
                 }
             }
         }
@@ -227,7 +249,7 @@ namespace Ux
             {
                 try
                 {
-                    if (!this.parser.Parse())
+                    if (!_parser.Parse())
                     {
                         break;
                     }
@@ -238,7 +260,7 @@ namespace Ux
                     return false;
                 }
 
-                var packetSize = this.parser.PacketSize();
+                var packetSize = this._parser.PacketSize();
                 if (packetSize == 0)
                 {
                     Log.Error("空包？");
@@ -256,16 +278,14 @@ namespace Ux
                         var cmd = recvBytes.PopUInt32();
                         packetSize -= 4;
                         message = ReadToMessage(FindType(cmd), packetSize);
-                        Dispatch(cmd, message);
+                        (NetMgr.Ins as INetEvent).Run(cmd, message);
                         break;
                     case OpType.RPC_RESPONSE:
                         cmd = recvBytes.PopUInt32();
                         packetSize -= 4;
                         var rpcId = recvBytes.PopUInt32();
                         packetSize -= 4;
-#if !UNITY_EDITOR
-                        rpcTime.Remove(rpcId);
-#endif
+                        _rpcTime.Remove(rpcId);
                         message = ReadToMessage(FindRPCType(rpcId), packetSize);
                         DispatchRPC(rpcId, message);
                         break;
@@ -279,8 +299,8 @@ namespace Ux
             {
                 if (type != null)
                 {
-                    recvBytes.PopToMemoryStream(recvStream, 0, packetSize);
-                    return recvStream.ReadToMessage(type, 0);
+                    recvBytes.PopToMemoryStream(_recvStream, 0, packetSize);
+                    return _recvStream.ReadMessage(type, 0);
                 }
                 //就算没注册对应的类型，也需要把剩余的数据去除，不然会一直缓存着
                 recvBytes.PopTransferred(packetSize);
@@ -289,51 +309,37 @@ namespace Ux
         }
         Type FindRPCType(uint rpcId)
         {
-            if (rpcType.TryGetValue(rpcId, out var type))
+            if (_rpcType.TryGetValue(rpcId, out var type))
             {
-                rpcType.Remove(rpcId);
+                _rpcType.Remove(rpcId);
                 return type;
             }
             return null;
         }
         void DispatchRPC(uint rpcId, object message)
         {
-            if (rpcMethod.TryGetValue(rpcId, out var method))
+            if (_rpcMethod.TryGetValue(rpcId, out var method))
             {
                 try
                 {
-                    method.TrySetResult(message);
+                    method.SetResult(message);
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex);
                 }
-                rpcMethod.Remove(rpcId);
+                _rpcMethod.Remove(rpcId);
             }
         }
         Type FindType(uint cmd)
         {
-            if (cmdType.TryGetValue(cmd, out var type))
+            if (_cmdType.TryGetValue(cmd, out var type))
             {
                 return type;
             }
-            return null;
+            return (NetMgr.Ins as INetEvent).FindType(cmd);
         }
 
-        void Dispatch(uint cmd, object message)
-        {
-            if (cmdMethod.TryGetValue(cmd, out var method))
-            {
-                try
-                {
-                    method.Invoke(message);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                }
-            }
-        }
         #endregion
 
         #region 心跳
@@ -381,40 +387,41 @@ namespace Ux
             {
                 throw new Exception("Socket已经被Dispose了");
             }
-            sendStream.WriteToMessage(message, 0);
+            _sendStream.WriteMessage(message, 0);
             //因为前面WriteToMessage的时候Seek(0, SeekOrigin.Begin)，            
             //所以真实长度是Position而不是Length，Length是包含缓存部分的   
 
-            var msgLen = 1 + 4 + sendStream.Position;
+            var msgLen = 1 + 4 + _sendStream.Position;
             this.sendBytes.PushUInt16((ushort)msgLen);
             this.sendBytes.PushByte((byte)OpType.C_S_C);
             this.sendBytes.PushUInt32(cmd);
-            this.sendBytes.PushStream(sendStream);
+            this.sendBytes.PushByStream(_sendStream);
             isNeedSend = true;
         }
-        public UniTask<object> Call<TMessage>(uint cmd, object message)
+        public UniTask<TResponse> Call<TRequest, TResponse>(uint cmd, TRequest message)
+            where TRequest : class where TResponse : class
         {
             if (this.IsDisposed)
             {
                 throw new Exception("Socket已经被Dispose了");
             }
             var rpxID = GetRpxID();
-            rpcType.Add(rpxID, typeof(TMessage));
-            var task = AutoResetUniTaskCompletionSource<object>.Create();
-            rpcMethod.Add(rpxID, task);
+            _rpcType.Add(rpxID, typeof(TRequest));
+            var task = AutoResetUniTaskCompletionSource<TResponse>.Create();
+            _rpcMethod.Add(rpxID, new RpcCompletionSourceAdapter<TResponse>(task));
 
-            sendStream.WriteToMessage(message, 0);
+            _sendStream.WriteMessage(message, 0);
             //因为前面WriteToMessage的时候Seek(0, SeekOrigin.Begin)，            
             //所以真实长度是Position而不是Length，Length是包含缓存部分的   
-            var msgLen = 1 + 4 + 4 + sendStream.Position;
+            var msgLen = 1 + 4 + 4 + _sendStream.Position;
             this.sendBytes.PushUInt16((ushort)msgLen);
             this.sendBytes.PushByte((byte)OpType.RPC_REQUIRE);
             this.sendBytes.PushUInt32(cmd);
             this.sendBytes.PushUInt32(rpxID);
-            this.sendBytes.PushStream(sendStream);
+            this.sendBytes.PushByStream(_sendStream);
             isNeedSend = true;
 #if !UNITY_EDITOR
-            rpcTime.Add(rpxID, TimeMgr.Ins.TotalTime);
+            _rpcTime.Add(rpxID, TimeMgr.Ins.TotalTime);
 #endif
             return task.Task;
         }
@@ -428,22 +435,17 @@ namespace Ux
             IsSending = false;
             isNeedSend = false;
             _activeDisconnect = false;
-            foreach (var kv in rpcMethod)
+            foreach (var kv in _rpcMethod)
             {
-                kv.Value.TrySetCanceled();
+                kv.Value.SetCanceled();
             }
-            rpcTime.Clear();
+            _rpcTime.Clear();
             _rpcDels.Clear();
-            rpcMethod.Clear();
-            rpcMethod = null;
-            rpcType.Clear();
-            rpcType = null;
-            cmdType.Clear();
-            cmdType = null;
-            cmdMethod.Clear();
-            cmdMethod = null;
-            sendStream.Dispose();
-            recvStream.Dispose();
+            _rpcMethod.Clear();
+            _rpcType.Clear();
+            _cmdType.Clear();
+            _sendStream.Dispose();
+            _recvStream.Dispose();
             sendBytes.Dispose();
             recvBytes.Dispose();
             Address = string.Empty;

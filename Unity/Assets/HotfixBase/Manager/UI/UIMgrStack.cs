@@ -12,19 +12,20 @@ namespace Ux
         /// <summary>
         /// 界面栈
         /// </summary>
-        List<UIStack> _stack = new List<UIStack>();
-        Stack<UIStack> _backs = new Stack<UIStack>();
+        List<UIStack> _uiStacks = new List<UIStack>();
+        Stack<UIStack> _backStacks = new Stack<UIStack>();
 
         void _ClearStack()
         {
-            foreach (var stack in _stack)
+            foreach (var stack in _uiStacks)
             {
                 if (stack.ParamIsNew)
                 {
                     stack.Param?.Release();
                 }
             }
-            _stack.Clear();
+            _uiStacks.Clear();
+            _backStacks.Clear();
         }
 
 
@@ -40,14 +41,14 @@ namespace Ux
             }
 
             var parentID = ui.Data.GetParentID();
-            if (_stack.Count > 0)
+            if (_uiStacks.Count > 0)
             {
-                var lastStack = _stack[_stack.Count - 1];
+                var lastStack = _uiStacks[_uiStacks.Count - 1];
                 if (lastStack.ParentID == parentID)
                 {
                     lastStack.ID = ui.ID;
                     lastStack.Param = param;
-                    _stack[_stack.Count - 1] = lastStack;
+                    _uiStacks[_uiStacks.Count - 1] = lastStack;
 #if UNITY_EDITOR
                     __Debugger_Stack_Event();
 #endif
@@ -55,79 +56,79 @@ namespace Ux
                 }
             }
 
-            _stack.Add(new UIStack(parentID, ui.ID, param, uiType));
+            _uiStacks.Add(new UIStack(parentID, ui.ID, param, uiType));
 #if UNITY_EDITOR            
-            __Debugger_Stack_Event();            
+            __Debugger_Stack_Event();
 #endif
 
             if (uiType == UIType.Stack)
             {
-                for (var i = _stack.Count - 2; i >= 0; i--)
+                for (var i = _uiStacks.Count - 2; i >= 0; i--)
                 {
-                    var preStack = _stack[i];
-                    var id = preStack.ParentID;
-                    if (id != ui.ID)
+                    var preStack = _uiStacks[i];                    
+                    if (preStack.ParentID == ui.ID)
                     {
-                        _HideByStack(preStack, i);
+                        continue;
                     }
+                    _HideByStack(preStack, i);
                     if (preStack.Type == UIType.Stack)
                     {
                         break;
                     }
                 }
             }
-        }               
+        }
         //关闭界面前，检测栈中界面，是否重新打开
         bool _HideBeforePopStack(IUI ui, bool checkStack = false)
         {
-            if (_stack.Count > 0)
+            if (_uiStacks.Count > 0)
             {
-                var lastIndex = _stack.Count - 1;
-                var last = _stack[lastIndex];
+                var lastIndex = _uiStacks.Count - 1;
+                var last = _uiStacks[lastIndex];
                 if (last.ID == ui.ID || last.ParentID == ui.ID)
                 {
-                    _stack.RemoveAt(lastIndex);
+                    _uiStacks.RemoveAt(lastIndex);
 #if UNITY_EDITOR
                     __Debugger_Stack_Event();
 #endif
                 }
             }
-            bool isBreak = false;
+            bool shouldBreak = false;
             if (checkStack && ui.Type == UIType.Stack)
             {
-                _backs.Clear();
-                for (int i = _stack.Count - 1; i >= 0; i--)
+                _backStacks.Clear();
+                for (int i = _uiStacks.Count - 1; i >= 0; i--)
                 {
-                    var preStack = _stack[i];
+                    var preStack = _uiStacks[i];
                     if (preStack.ParamIsNew)
                     {
                         preStack.ParamIsNew = false;
-                        _stack[i] = preStack;
+                        _uiStacks[i] = preStack;
                     }
                     if (preStack.Type == UIType.Stack)
                     {
                         if (ui.ID == preStack.ID)
                         {
-                            isBreak = true;
+                            shouldBreak = true;
                         }
                         else
                         {
-                            _backs.Push(preStack);
+                            _backStacks.Push(preStack);
                         }
                         break;
                     }
                     else
                     {
-                        _backs.Push(preStack);
+                        _backStacks.Push(preStack);
                     }
                 }
-                while (_backs.Count > 0)
+                while (_backStacks.Count > 0)
                 {
-                    var preStack = _backs.Pop();
+                    var preStack = _backStacks.Pop();
                     _ShowByStack(preStack);
                 }
             }
-            return isBreak;
+            return shouldBreak;
         }
         void _ShowByStack(UIStack stack)
         {
@@ -157,7 +158,7 @@ namespace Ux
                 {
                     stack.Param = copyParam;
                     stack.ParamIsNew = true;
-                    _stack[index] = stack;
+                    _uiStacks[index] = stack;
                 }
             }
             ui?.DoHide(false, false);

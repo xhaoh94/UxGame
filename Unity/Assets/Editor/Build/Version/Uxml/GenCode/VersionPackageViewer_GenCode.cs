@@ -17,6 +17,7 @@ namespace Ux.Editor.Build.Version
 		public EnumField compressionType;
 		public TextField inputBuiltinTags;
 		public VisualElement encryptionContainer;
+		public VisualElement manifestContainer;
 		protected void CreateChildren()
 		{
 			var _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Build/Version/Uxml/VersionPackageViewer.uxml");
@@ -35,6 +36,7 @@ namespace Ux.Editor.Build.Version
 			inputBuiltinTags = root.Q<TextField>("inputBuiltinTags");
 			inputBuiltinTags.RegisterValueChangedCallback(e => _OnInputBuiltinTagsChanged(e));
 			encryptionContainer = root.Q<VisualElement>("encryptionContainer");
+			manifestContainer = root.Q<VisualElement>("manifestContainer");
 		}
 		partial void _OnTgCollectSVChanged(ChangeEvent<bool> e);
 		partial void _OnPipelineTypeChanged(ChangeEvent<Enum> e);

@@ -10,11 +10,15 @@ namespace Ux.Editor.Build.Version
     partial class VersionPackageViewer
     {
         private List<Type> _encryptionServicesClassTypes;
-        private List<string> _encryptionServicesClassNames;    
+        private List<string> _encryptionServicesClassNames;
+
+        private List<Type> _manifestServicesClassTypes;
+        private List<string> _manifestServicesClassNames;
         BuildPackageSetting PackageSetting;
 
 
-        PopupField<string> encryption;        
+        PopupField<string> _popupFieldEncryption;
+        PopupField<string> _popupFieldManifest;
         public VersionPackageViewer(VisualElement parent)
         {
             CreateChildren();
@@ -24,19 +28,38 @@ namespace Ux.Editor.Build.Version
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
             if (_encryptionServicesClassNames.Count > 0)
             {
-                encryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-                encryption.label = "加密方法";
-                encryption.RegisterValueChangedCallback(evt =>
+                _popupFieldEncryption = new PopupField<string>(_encryptionServicesClassNames, 0);
+                _popupFieldEncryption.label = "资源加密";
+                _popupFieldEncryption.RegisterValueChangedCallback(evt =>
                 {
                     PackageSetting.EncyptionClassName = evt.newValue;
                 });
-                encryptionContainer.Add(encryption);
+                encryptionContainer.Add(_popupFieldEncryption);
             }
             else
             {
-                encryption = new PopupField<string>();
-                encryption.label = "加密方法";
-                encryptionContainer.Add(encryption);
+                _popupFieldEncryption = new PopupField<string>();
+                _popupFieldEncryption.label = "资源加密";
+                encryptionContainer.Add(_popupFieldEncryption);
+            }
+
+            _manifestServicesClassTypes = GetManifestServicesClassTypes();
+            _manifestServicesClassNames = _manifestServicesClassTypes.Select(t => t.FullName).ToList();
+            if (_manifestServicesClassNames.Count > 0)
+            {
+                _popupFieldManifest = new PopupField<string>(_manifestServicesClassNames, 0);
+                _popupFieldManifest.label = "清单加密";
+                _popupFieldManifest.RegisterValueChangedCallback(evt =>
+                {
+                    PackageSetting.ManifestClassName = evt.newValue;
+                });
+                manifestContainer.Add(_popupFieldManifest);
+            }
+            else
+            {
+                _popupFieldManifest = new PopupField<string>();
+                _popupFieldManifest.label = "清单加密";
+                manifestContainer.Add(_popupFieldManifest);
             }
         }
         partial void _OnTgCollectSVChanged(ChangeEvent<bool> e)
@@ -45,7 +68,7 @@ namespace Ux.Editor.Build.Version
         }
         partial void _OnPipelineTypeChanged(ChangeEvent<Enum> e)
         {
-            PackageSetting.PiplineOption = (EBuildPipeline)e.newValue;
+            PackageSetting.PiplineOption = e.newValue.ToString();
             RefreshElement();
         }
         partial void _OnCompressionTypeChanged(ChangeEvent<Enum> e)
@@ -65,7 +88,7 @@ namespace Ux.Editor.Build.Version
         {
             PackageSetting = packageSetting;
             tgCollectSV.SetValueWithoutNotify(packageSetting.IsCollectShaderVariant);
-            pipelineType.SetValueWithoutNotify(PackageSetting.PiplineOption);
+            pipelineType.SetValueWithoutNotify((EBuildPipeline)Enum.Parse(typeof(EBuildPipeline), PackageSetting.PiplineOption));
             nameStyleType.SetValueWithoutNotify(PackageSetting.NameStyleOption);
             compressionType.SetValueWithoutNotify(PackageSetting.CompressOption);
             inputBuiltinTags.SetValueWithoutNotify(PackageSetting.BuildTags);
@@ -75,15 +98,15 @@ namespace Ux.Editor.Build.Version
             {
                 PackageSetting.EncyptionClassName = _encryptionServicesClassNames[0];
             }
-            encryption.SetValueWithoutNotify(PackageSetting.EncyptionClassName);
+            _popupFieldEncryption.SetValueWithoutNotify(PackageSetting.EncyptionClassName);
 
+            if (string.IsNullOrEmpty(PackageSetting.ManifestClassName) &&
+                _manifestServicesClassNames.Count > 0)
+            {
+                PackageSetting.ManifestClassName = _manifestServicesClassNames[0];
+            }
+            _popupFieldManifest.SetValueWithoutNotify(PackageSetting.ManifestClassName);
 
-            //if (string.IsNullOrEmpty(SelectItem.PlatformConfig.SharedPackRule) &&
-            //    _sharedPackRuleClassNames.Count > 0)
-            //{
-            //    SelectItem.PlatformConfig.SharedPackRule = _sharedPackRuleClassNames[0];
-            //}
-            //_sharedPackRule.SetValueWithoutNotify(SelectItem.PlatformConfig.SharedPackRule);        
         }
 
         public void RefreshElement(bool IsForceRebuild)
@@ -92,42 +115,35 @@ namespace Ux.Editor.Build.Version
             pipelineType.SetEnabled(b);
             nameStyleType.SetEnabled(b);
             compressionType.SetEnabled(b);
-            encryption.SetEnabled(b);
-            //_sharedPackRule.SetEnabled(IsForceRebuild);
+            _popupFieldEncryption.SetEnabled(b);
+            _popupFieldManifest.SetEnabled(b);            
             inputBuiltinTags.SetEnabled(b);
             RefreshElement();
         }
         void RefreshElement()
         {
             compressionType.style.display =
-                PackageSetting.PiplineOption == EBuildPipeline.RawFileBuildPipeline ? DisplayStyle.None : DisplayStyle.Flex;
+                PackageSetting.PiplineOption == EBuildPipeline.RawFileBuildPipeline.ToString() ? DisplayStyle.None : DisplayStyle.Flex;
         }
         #region 构建包裹相关
         // 构建包裹相关
 
         private IEncryptionServices CreateEncryptionServicesInstance()
         {
-            if (encryption.index < 0)
+            if (_popupFieldEncryption.index < 0)
                 return null;
-            var classType = _encryptionServicesClassTypes[encryption.index];
+            var classType = _encryptionServicesClassTypes[_popupFieldEncryption.index];
             return (IEncryptionServices)Activator.CreateInstance(classType);
         }
-        //private ISharedPackRule CreateSharedPackRuleInstance()
-        //{
-        //    if (_sharedPackRule.index < 0)
-        //        return null;
-        //    var classType = _sharedPackRuleClassTypes[_sharedPackRule.index];
-        //    return (ISharedPackRule)Activator.CreateInstance(classType);
-        //}
 
         private static List<Type> GetEncryptionServicesClassTypes()
         {
             return EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
         }
-        //private static List<Type> GetSharedPackRuleClassTypes()
-        //{
-        //    return EditorTools.GetAssignableTypes(typeof(ISharedPackRule));
-        //}
+        private static List<Type> GetManifestServicesClassTypes()
+        {
+            return EditorTools.GetAssignableTypes(typeof(IManifestServices));
+        }
         #endregion
     }
 

@@ -30,18 +30,13 @@ namespace Ux
         {
             get
             {
-                //foreach (var component in Components)
-                //{
-                //    var state = component.State;
-                //    if (state is UIState.ShowAnim or UIState.HideAnim)
-                //    {
-                //        return state;
-                //    }
-                //}
-                foreach (var state in Components.Select(t => t.State)
-                             .Where(state => state is UIState.ShowAnim or UIState.HideAnim))
+                foreach (var component in Components)
                 {
-                    return state;
+                    var state = component.State;
+                    if (state is UIState.ShowAnim or UIState.HideAnim)
+                    {
+                        return state;
+                    }
                 }
                 return _state;
             }

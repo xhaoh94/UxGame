@@ -64,7 +64,7 @@ namespace Ux
                 Password = password
             };
             //请求登录获取Gate服务器登录Token
-            var s2clogin = await NetMgr.Ins.Call<Pb.S2CLoginGame>(CS.C2S_LoginGame, c2slogin);
+            var s2clogin = await NetMgr.Ins.Call<Pb.C2SLoginGame, Pb.S2CLoginGame>(CS.C2S_LoginGame, c2slogin);
             if (s2clogin == null)
             {
                 Log.Error("请求登录失败");
@@ -95,8 +95,8 @@ namespace Ux
             data.Account = login.account;
             data.roleMask = login.mask;
             data.Sceneid = 1;
-            data.Token = login.token;
-            resp = await NetMgr.Ins.Call<Pb.S2CEnterScene>(CS.C2S_EnterScene, data);
+            data.Token = login.token;            
+            resp = await NetMgr.Ins.Call<Pb.C2SEnterScene, Pb.S2CEnterScene>(CS.C2S_EnterScene, data);
             if (resp.Error == Pb.ErrCode.UnKnown)
             {
                 Log.Error("请求进入场景失败");

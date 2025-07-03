@@ -6,5 +6,6 @@
         <uie:EnumField label="压缩方式" value="Center" name="compressionType" style="flex-shrink: 1;" />
         <ui:TextField picking-mode="Ignore" label="首包资源标签" name="inputBuiltinTags" />
         <ui:VisualElement label="加密方式" name="encryptionContainer" style="height: auto;" />
+        <ui:VisualElement label="加密方式" name="manifestContainer" style="height: auto;" />
     </ui:VisualElement>
 </ui:UXML>

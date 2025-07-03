@@ -21,8 +21,12 @@ namespace Ux
         public EventSystem CreateSystem(int exeLimit = int.MaxValue)
         {
             var system = Pool.Get<EventSystem>();
-            system.Init(exeLimit);
+            (system as IEventSystem).Init(exeLimit);
             return system;
+        }
+        public void ReleaseSystem(EventSystem eventSystem)
+        {
+            (eventSystem as IEventSystem).Release();
         }
        
         public void SetEvtAttribute<T>() where T : Attribute, IEvtAttribute

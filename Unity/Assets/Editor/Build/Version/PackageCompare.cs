@@ -5,17 +5,17 @@ namespace Ux.Editor.Build.Version
 {
     public class PackageCompare
     {
-        public static void CompareManifest(string path1, string path2, List<string> changeList)
+        public static void CompareManifest(string path1, string path2, List<string> changeList, IManifestServices manifestServices)
         {
             changeList.Clear();
 
             // 加载补丁清单1
             byte[] bytesData1 = FileUtility.ReadAllBytes(path1);
-            var manifest1 = ManifestTools.DeserializeFromBinary(bytesData1);
+            var manifest1 = ManifestTools.DeserializeFromBinary(bytesData1, manifestServices);
 
             // 加载补丁清单1
             byte[] bytesData2 = FileUtility.ReadAllBytes(path2);
-            var manifest2 = ManifestTools.DeserializeFromBinary(bytesData2);
+            var manifest2 = ManifestTools.DeserializeFromBinary(bytesData2, manifestServices);
 
             // 拷贝文件列表
             foreach (var bundle2 in manifest2.BundleList)

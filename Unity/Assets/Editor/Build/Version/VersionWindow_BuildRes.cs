@@ -246,8 +246,8 @@ namespace Ux.Editor.Build.Version
 
             BuildParameters buildParameters = null;
             IBuildPipeline pipeline = null;
-
-            switch (packageSetting.PiplineOption)
+            var pipelineOption = (EBuildPipeline)Enum.Parse(typeof(EBuildPipeline), packageSetting.PiplineOption);
+            switch (pipelineOption)
             {
                 case EBuildPipeline.BuiltinBuildPipeline:
                     buildParameters = new BuiltinBuildParameters()
@@ -284,6 +284,7 @@ namespace Ux.Editor.Build.Version
                 ? EBuildinFileCopyOption.OnlyCopyByTags : EBuildinFileCopyOption.None;
             buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
             buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
+            buildParameters.ManifestServices = CreateManifestServicesInstance(packageSetting.ManifestClassName);
             buildParameters.ClearBuildCacheFiles = IsForceRebuild ; //增量更新不清理构建缓存，启用增量构建，可以提高打包速度！
             buildParameters.UseAssetDependencyDB = SelectItem.IsUseDb; //使用资源依赖关系数据库，可以提高打包速度！
 
@@ -340,7 +341,7 @@ namespace Ux.Editor.Build.Version
                 var path1 = $"{buildPath}/{lastVersion}/{lastBinaryFileName}";
                 var path2 = $"{temBuildPath}/{nowVersion}/{nowBinaryFileName}";
                 List<string> changedList = new List<string>();
-                PackageCompare.CompareManifest(path1, path2, changedList);
+                PackageCompare.CompareManifest(path1, path2, changedList, buildParameters.ManifestServices);
                 var diffPath = $"{buildPath}/Difference/{lastVersion}_{nowVersion}";
                 if (Directory.Exists(diffPath))
                 {
@@ -431,13 +432,15 @@ namespace Ux.Editor.Build.Version
             else
                 return null;
         }
-        ////private ISharedPackRule CreateSharedPackRuleInstance()
-        ////{
-        ////    if (_sharedPackRule.index < 0)
-        ////        return null;
-        ////    var classType = _sharedPackRuleClassTypes[_sharedPackRule.index];
-        ////    return (ISharedPackRule)Activator.CreateInstance(classType);
-        ////}
+        private IManifestServices CreateManifestServicesInstance(string manifestClassName)
+        {
+            var manifestClassTypes = EditorTools.GetAssignableTypes(typeof(IManifestServices));
+            var classType = manifestClassTypes.Find(x => x.FullName.Equals(manifestClassName));
+            if (classType != null)
+                return (IManifestServices)Activator.CreateInstance(classType);
+            else
+                return null;
+        }
 
         #endregion
     }

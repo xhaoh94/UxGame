@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SJ;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -6,14 +7,15 @@ namespace Ux
 {
     public partial class EvalMgr
     {
+        const float _timeout = 60f;
 
-        static IDictionary<string, MatchData> Operator1MdDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> Operator2MdDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> FnMdDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, MatchData> VariableMdDict = new Dictionary<string, MatchData>();
-        static IDictionary<string, string[]> ArgSplitDict = new Dictionary<string, string[]>();
-        static IDictionary<string, ArgBool> ArgDict = new Dictionary<string, ArgBool>();
-        static IDictionary<string, ValueBool> ValueDict = new Dictionary<string, ValueBool>();
+        static OverdueMap<string,MatchData> Operator1MdDict = new OverdueMap<string, MatchData>(_timeout);
+        static OverdueMap<string, MatchData> Operator2MdDict = new OverdueMap<string, MatchData>(_timeout);
+        static OverdueMap<string, MatchData> FnMdDict = new OverdueMap<string, MatchData>(_timeout);
+        static OverdueMap<string, MatchData> VariableMdDict = new OverdueMap<string, MatchData>(_timeout);
+        static OverdueMap<string, string[]>  ArgSplitDict = new OverdueMap<string, string[]>(_timeout);
+        static OverdueMap<string, ArgBool>  ArgDict = new OverdueMap<string, ArgBool> (_timeout);
+        static OverdueMap<string, ValueBool>  ValueDict = new OverdueMap<string, ValueBool>(_timeout);
 
         static IDictionary<string, Func<double, double, double>> SymbolFnDict = new Dictionary<string, Func<double, double, double>>()
         {
@@ -81,12 +83,12 @@ namespace Ux
                 Data = data;
             }
         }
-        class VariableType
+        class VariableParser
         {
             public string Key { get; }
             protected MatchData match;
-            protected EvalParse ep;
-            public VariableType(string key, EvalParse ep, MatchData match)
+            protected EvalParser ep;
+            public VariableParser(string key, EvalParser ep, MatchData match)
             {
                 this.Key = key;
                 this.ep = ep;
@@ -192,7 +194,7 @@ namespace Ux
                 return false;
             }
 
-            bool TryParse(IDictionary<string, MatchData> dict, Regex regex, ref zstring input, ref double v)
+            bool TryParse(OverdueMap<string,MatchData> dict, Regex regex, ref zstring input, ref double v)
             {
                 if (!dict.TryGetValue(input, out var match))
                 {
@@ -245,9 +247,9 @@ namespace Ux
 
             public virtual double Value => GetValue(match.V1);
         }
-        class FunctionType : VariableType
+        class FunctionParser : VariableParser
         {
-            public FunctionType(string key, EvalParse ep, MatchData match) : base(key, ep, match)
+            public FunctionParser(string key, EvalParser ep, MatchData match) : base(key, ep, match)
             {
             }
             public override double Value
@@ -294,15 +296,15 @@ namespace Ux
                 }
             }
         }
-        class EvalParse
+        class EvalParser
         {
             public Dictionary<string, double> values = new Dictionary<string, double>();
             public string text;
 
-            List<VariableType> _queue = new List<VariableType>();
+            List<VariableParser> _queue = new List<VariableParser>();
             string _argValue;
 
-            public EvalParse(string _text)
+            public void Init(string _text)
             {
                 text = _text;
                 zstring input;
@@ -312,6 +314,14 @@ namespace Ux
                     _ParseFn(0, ref input);
                     _argValue = input.ToString();
                 }
+            }
+            public void Release()
+            {
+                _argValue = null;
+                text = null;
+                values.Clear();
+                _queue.Clear();
+                Pool.Push(this);
             }
             void _ParseVar(int argIndex, ref zstring input)
             {
@@ -335,7 +345,7 @@ namespace Ux
                 }
 
                 var argKey = zstring.Format(ArgStr, argIndex);
-                _queue.Add(new VariableType(zstring.Format(ArgStr, argIndex), this, match));
+                _queue.Add(new VariableParser(zstring.Format(ArgStr, argIndex), this, match));
                 input = input.Replace(match.Value, argKey);
             }
 
@@ -367,11 +377,11 @@ namespace Ux
                 var argKey = zstring.Format(ArgStr, argIndex);
                 if (string.IsNullOrEmpty(match.V2))
                 {
-                    _queue.Add(new VariableType(argKey, this, match));
+                    _queue.Add(new VariableParser(argKey, this, match));
                 }
                 else
                 {
-                    _queue.Add(new FunctionType(argKey, this, match));
+                    _queue.Add(new FunctionParser(argKey, this, match));
                 }
 
                 input = input.Replace(match.Value, argKey);
@@ -409,5 +419,7 @@ namespace Ux
                 }
             }
         }
+
+
     }
 }

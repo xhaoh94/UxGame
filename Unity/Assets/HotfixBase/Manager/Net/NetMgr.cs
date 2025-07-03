@@ -4,20 +4,32 @@ using System.Collections.Generic;
 
 namespace Ux
 {
+    public interface INetEvent
+    {
+        void Bind(uint cmd, object tag, Action action);
+        void Bind<A>(uint cmd, object tag, Action<A> action);
+        void Bind(uint cmd, FastMethodInfo action);
+        Type FindType(uint cmd);
+        void Run(uint cmd, object message);
+    }
     public enum NetType
     {
         KCP,
         TCP,
         WebSocket,
     }
-    public class NetMgr : Singleton<NetMgr>
+    public class NetMgr : Singleton<NetMgr>, INetEvent
     {
         readonly List<ClientSocket> _clientSockets = new List<ClientSocket>();
         ClientSocket _clientSocket;
+        EventMgr.EventSystem _eventSystem;
+        Dictionary<uint, Type> _cmdType = new Dictionary<uint, Type>();
 
         protected override void OnCreated()
         {
-            GameMethod.FixedUpdate += _Update;            
+            //一帧最多几条消息
+            _eventSystem = EventMgr.Ins.CreateSystem(200);
+            GameMethod.FixedUpdate += _Update;
             EventMgr.Ins.On<ClientSocket>(MainEventType.NET_DISPOSE, this, OnSocketDispose);
         }
         /// <summary>
@@ -89,13 +101,14 @@ namespace Ux
         public void Send(uint cmd, object message)
         {
             _clientSocket?.Send(cmd, message);
-        }
-        public async UniTask<TMessage> Call<TMessage>(uint cmd, object message)
+        }        
+        public async UniTask<TResponse> Call<TRequest, TResponse>(uint cmd, TRequest message) 
+            where TRequest : class where TResponse : class
         {
             try
-            {
-                var response = await _clientSocket.Call<TMessage>(cmd, message);
-                return (TMessage)response;
+            {                
+                var response = await _clientSocket.Call<TRequest, TResponse>(cmd, message);
+                return (TResponse)response;
             }
             catch (Exception ex)
             {
@@ -103,7 +116,7 @@ namespace Ux
                 {
                     Log.Error(ex);
                 }
-                return default(TMessage);
+                return default(TResponse);
             }
         }
         void _Update()
@@ -123,8 +136,6 @@ namespace Ux
             }
             _clientSockets.Clear();
         }
-
-
         void OnSocketDispose(ClientSocket clientSocket)
         {
             _clientSockets.Remove(clientSocket);
@@ -133,5 +144,36 @@ namespace Ux
                 _clientSocket = null;
             }
         }
+
+
+        #region Event
+        public void Bind(uint cmd, object tag, Action action)
+        {
+            _eventSystem.On((int)cmd, tag, action);
+        }
+
+        public void Bind<A>(uint cmd, object tag, Action<A> action)
+        {
+            _cmdType[cmd] = typeof(A);
+            _eventSystem.On((int)cmd, tag, action);
+        }
+        void INetEvent.Bind(uint cmd, FastMethodInfo action)
+        {
+            _eventSystem.On((int)cmd,action);
+        }
+        Type INetEvent.FindType(uint cmd)
+        {
+            if (_cmdType.TryGetValue(cmd, out var type))
+            {
+                return type;
+            }
+            return null;
+        }
+        void INetEvent.Run(uint cmd, object message)
+        {            
+            _eventSystem.Run((int)cmd, message);
+        }
+
+        #endregion
     }
 }

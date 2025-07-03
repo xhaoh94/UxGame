@@ -54,7 +54,7 @@ namespace YooAsset.Editor
 
             // 加载补丁清单
             byte[] bytesData = FileUtility.ReadAllBytes(manifestFilePath);
-            PackageManifest manifest = ManifestTools.DeserializeFromBinary(bytesData);
+            PackageManifest manifest = ManifestTools.DeserializeFromBinary(bytesData, null);
 
             // 拷贝核心文件
             {

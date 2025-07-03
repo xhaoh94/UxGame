@@ -72,7 +72,7 @@ namespace Ux
 
 
 
-        public void Setup_AfterAdd(ByteBuffer buffer, int beginPos)
+        public void Setup_AfterAdd(FairyGUI.Utils.ByteBuffer buffer, int beginPos)
         {
             ProgressBar.Setup_AfterAdd(buffer, beginPos);
         }

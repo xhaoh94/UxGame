@@ -10,13 +10,13 @@ namespace Ux
 
     public class PacketParser
     {
-        private readonly ByteArray buffer;
+        private readonly ByteBuffer buffer;
         private int packetSize;
         private ParserState state;
         private bool isOK;
         private readonly int packetSizeLength = 2;
 
-        public PacketParser(ByteArray buffer)
+        public PacketParser(ByteBuffer buffer)
         {
             this.buffer = buffer;
         }

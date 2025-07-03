@@ -1,70 +1,6 @@
-using System;
 using System.IO;
-using System.Text;
-using System.Collections;
 using UnityEngine;
-using NUnit.Framework;
 using YooAsset;
-
-/// <summary>
-/// 文件流加密方式
-/// </summary>
-public class FileStreamEncryption : IEncryptionServices
-{
-    public EncryptResult Encrypt(EncryptFileInfo fileInfo)
-    {
-        // 说明：对TestRes3资源目录进行加密
-        if (fileInfo.BundleName.Contains("_testres3_"))
-        {
-            var fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
-            for (int i = 0; i < fileData.Length; i++)
-            {
-                fileData[i] ^= BundleStream.KEY;
-            }
-
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = true;
-            result.EncryptedData = fileData;
-            return result;
-        }
-        else
-        {
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = false;
-            return result;
-        }
-    }
-}
-
-/// <summary>
-/// 文件偏移加密方式
-/// </summary>
-public class FileOffsetEncryption : IEncryptionServices
-{
-    public EncryptResult Encrypt(EncryptFileInfo fileInfo)
-    {
-        // 说明：对TestRes3资源目录进行加密
-        if (fileInfo.BundleName.Contains("_testres3_"))
-        {
-            int offset = 32;
-            byte[] fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
-            var encryptedData = new byte[fileData.Length + offset];
-            Buffer.BlockCopy(fileData, 0, encryptedData, offset, fileData.Length);
-
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = true;
-            result.EncryptedData = encryptedData;
-            return result;
-        }
-        else
-        {
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = false;
-            return result;
-        }
-    }
-}
-
 
 /// <summary>
 /// 资源文件解密流
@@ -121,6 +57,13 @@ public class FileStreamDecryption : IDecryptionServices
         decryptResult.CreateRequest = AssetBundle.LoadFromStreamAsync(bundleStream, fileInfo.FileLoadCRC, GetManagedReadBufferSize());
         return decryptResult;
     }
+    /// <summary>
+    /// 后备方式获取解密的资源包对象
+    /// </summary>
+    DecryptResult IDecryptionServices.LoadAssetBundleFallback(DecryptFileInfo fileInfo)
+    {
+        return new DecryptResult();
+    }
 
     /// <summary>
     /// 获取解密的字节数据
@@ -172,6 +115,15 @@ public class FileOffsetDecryption : IDecryptionServices
         decryptResult.CreateRequest = AssetBundle.LoadFromFileAsync(fileInfo.FileLoadPath, fileInfo.FileLoadCRC, GetFileOffset());
         return decryptResult;
     }
+
+    /// <summary>
+    /// 后备方式获取解密的资源包对象
+    /// </summary>
+    DecryptResult IDecryptionServices.LoadAssetBundleFallback(DecryptFileInfo fileInfo)
+    {
+        return new DecryptResult();
+    }
+
 
     /// <summary>
     /// 获取解密的字节数据

@@ -27,7 +27,12 @@ namespace Ux
             }
         }
         Dictionary<long, List<FastMethodRef>> _fastMethodRefDic = new();
-        public partial class EventSystem
+        public interface IEventSystem
+        {
+            void Init(int exeLimit);
+            void Release();
+        }
+        public partial class EventSystem: IEventSystem
         {
             //每帧执行上限-超出上限，下一帧处理
             int _exeLimit = 200;
@@ -51,12 +56,12 @@ namespace Ux
             private readonly List<IEvent> _waitAdds = new();
             private readonly List<long> _waitDels = new();
 
-            public void Init(int exeLimit)
+            void IEventSystem.Init(int exeLimit)
             {
                 _exeLimit = exeLimit;
                 GameMethod.Update += _Update;
             }
-            public void Release()
+            void IEventSystem.Release()
             {
                 GameMethod.Update -= _Update;
                 _keyEvent.Clear();

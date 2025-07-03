@@ -11,6 +11,8 @@
             NetMgr.Ins.Release();
             TagMgr.Ins.Release();
             UIMgr.Ins.Release();
+            EvalMgr.Ins.Release();
+            TimeMgr.Ins.Release();
             ModuleMgr.Ins.Release();
             ModuleMgr.Ins.Create();
             await UIMgr.Ins.Show<UI.LoginView>().Task();

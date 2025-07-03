@@ -50,7 +50,7 @@ namespace Ux.Editor.Debugger.UI
         }
         private void OnBtnClick(Ux.UIMgr.UIStack data)
         {
-            _listUI.Search(data.IDStr);
+            _listUI.Search(UIMgr.Ins.GetUIData(data.ID).Name);
         }
 
         private void OnUpdateUI(Dictionary<string, IUIData> dict)

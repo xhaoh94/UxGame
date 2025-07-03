@@ -104,9 +104,7 @@ namespace Ux
             public IUIParam Param;
             public bool ParamIsNew;
             public readonly UIType Type;
-#if UNITY_EDITOR
-            public string IDStr => UIMgr.Ins.GetUIData(ID).Name;
-#endif
+
             public UIStack(int parentID, int id, IUIParam param, UIType type)
             {
                 ParentID = parentID;
@@ -114,7 +112,7 @@ namespace Ux
                 Param = param;
                 ParamIsNew = false;
                 Type = type;
-            }
+            }            
         }
         public readonly struct UIParse
         {

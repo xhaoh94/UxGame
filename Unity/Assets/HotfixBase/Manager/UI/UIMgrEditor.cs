@@ -53,7 +53,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Stack_CallBack?.Invoke(Ins._stack);
+                __Debugger_Stack_CallBack?.Invoke(Ins._uiStacks);
             }
         }
         static List<string> _Debugger_Showings = new List<string>();

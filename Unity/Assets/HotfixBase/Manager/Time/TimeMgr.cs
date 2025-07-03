@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Ux
 {
     public partial class TimeMgr : Singleton<TimeMgr>
-    {        
+    {
         public float TotalTime => Time.unscaledTime;
         public int TotalFrame => Time.frameCount;
 
@@ -24,6 +24,19 @@ namespace Ux
             ServerTime = new ServerTime();
             GameMethod.Update += _Update;
             GameMethod.FixedUpdate += _FixedUpdate;
+            GameMethod.LowMemory += _OnLowMemory;
+        }
+        public void Release()
+        {
+            _timer.Clear();
+            _frame.Clear();
+            _timeStamp.Clear();
+            _cron.Clear();
+            _OnLowMemory();
+        }
+        void _OnLowMemory()
+        {
+            CronData.Release();
         }
         public void __SetServerTime(long timeStamp)
         {
@@ -96,14 +109,6 @@ namespace Ux
             _frame.RemoveAll(tag);
             _timeStamp.RemoveAll(tag);
             _cron.RemoveAll(tag);
-        }
-
-        public void Release()
-        {
-            _timer.Clear();
-            _frame.Clear();
-            _timeStamp.Clear();
-            _cron.Clear();
         }
 
         #endregion
@@ -688,11 +693,11 @@ namespace Ux
 
         #endregion TimeStamp
 
-        #region Cron表达式
+        #region Cron表达式                
 
         public long DoCron(string cron, object tag, Action action, bool isLocalTime = false)
         {
-            if (action == null) return 0;
+            if (action == null) return 0;            
             var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
             var exe = Pool.Get<HandleExe>();
             exe.Init(tag, action);
@@ -709,7 +714,7 @@ namespace Ux
 
         public long DoCron<A>(string cron, object tag, Action<A> action, A a, bool isLocalTime = false)
         {
-            if (action == null) return 0;
+            if (action == null) return 0;            
             var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
             var exe = Pool.Get<HandleExe<A>>();
             exe.Init(tag, action, a);
@@ -726,7 +731,7 @@ namespace Ux
 
         public long DoCron<A, B>(string cron, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
         {
-            if (action == null) return 0;
+            if (action == null) return 0;            
             var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
             var exe = Pool.Get<HandleExe<A, B>>();
             exe.Init(tag, action, a, b);
@@ -743,7 +748,7 @@ namespace Ux
 
         public long DoCron<A, B, C>(string cron, object tag, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
         {
-            if (action == null) return 0;
+            if (action == null) return 0;            
             var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
             var exe = Pool.Get<HandleExe<A, B, C>>();
             exe.Init(tag, action, a, b, c);

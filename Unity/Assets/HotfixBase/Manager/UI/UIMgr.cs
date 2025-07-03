@@ -465,14 +465,14 @@ namespace Ux
         void _HideAll(Func<int, bool> func)
         {
             _ClearStack();
-            foreach (var id in _showing.Where(id => !func(id)))
+            foreach (var id in _showing)
             {
+                if (func(id)) continue;
                 Hide(id, false);
             }
-
-            var ids = _showed.Keys.ToList();
-            foreach (var id in ids.Where(id => !func(id)))
+            foreach (var (id,_) in _showed)  
             {
+                if (func(id)) continue;
                 Hide(id, false);
             }
         }
@@ -537,7 +537,7 @@ namespace Ux
             }
 
             //如果界面是栈类型，但关闭时，不触发栈，则代表栈已被打乱，此时可清除栈了
-            if (!checkStack && _stack.Count > 0 && ui.Type == UIType.Stack)
+            if (!checkStack && _uiStacks.Count > 0 && ui.Type == UIType.Stack)
             {
                 _ClearStack();
             }
