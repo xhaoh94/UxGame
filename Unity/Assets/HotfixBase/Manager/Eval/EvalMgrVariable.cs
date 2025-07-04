@@ -19,7 +19,7 @@ namespace Ux
         public void AddVariable(string name, double value)
         {
             nameToVariable.Remove(name);
-            variables[name] = value;
+            variables[name] = value;            
         }
         /// <summary>
         /// 设置常量
@@ -29,7 +29,7 @@ namespace Ux
         public void AddVariable(string name, Func<double> func)
         {
             variables.Remove(name);
-            nameToVariable[name] = func;
+            nameToVariable[name] = func;            
         }
 
         public void RemoveVariables(string name)

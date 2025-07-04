@@ -45,7 +45,7 @@ namespace Ux
         }
         public void Add(K key, T value)
         {
-            if (_timeoutKey == 0)
+            if (_timeoutKey == 0 && Application.isPlaying)
             {
                 //每个一段时间清掉过期的缓存
                 _timeoutKey = TimeMgr.Ins.DoLoop(_timeout, this, _CheckTimeout);
@@ -57,10 +57,10 @@ namespace Ux
 
         public void Clear()
         {
+            _caches.Clear();
+            _timeouts.Clear();
             if (_timeoutKey > 0)
-            {
-                _caches.Clear();
-                _timeouts.Clear();
+            {               
                 TimeMgr.Ins.RemoveKey(_timeoutKey);
                 _timeoutKey = 0;
             }

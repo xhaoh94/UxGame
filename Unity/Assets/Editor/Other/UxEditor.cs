@@ -68,6 +68,24 @@ namespace Ux.Editor
             ChangeBoot();
             UnityEditor.EditorApplication.isPlaying = true;
         }
+
+        [MenuItem("UxGame/Test/Eval")]
+        public static void TestEval()
+        {
+            string eval = "max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c)))";
+            EvalMgr.Ins.AddVariable("a", 2);
+            EvalMgr.Ins.AddVariable("b", -1);
+            EvalMgr.Ins.AddVariable("c", 2);
+            EvalMgr.Ins.AddFunction("test", (nums) => {
+                return nums[0] + nums[1];
+            });
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            EvalMgr.Ins.Release();
+            var value = EvalMgr.Ins.Parse(eval);
+            sw.Stop();            
+            Log.Debug(eval+":{0},ms:{1}",value, sw.ElapsedMilliseconds);
+        }
     }
 
 }

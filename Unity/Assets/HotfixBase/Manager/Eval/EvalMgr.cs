@@ -7,7 +7,7 @@ namespace Ux
     public partial class EvalMgr : Singleton<EvalMgr>
     {
         static readonly Regex FnRegex = new Regex(
-            @"(?<!\d)(?<fnName>[a-zA-Z_]\w*)\((?<varName>(?:(?:arg#\d+)|[\w.,+*/%-])*)\)",
+            @"(?<!\d)(?<fnName>\w*)\((?<varName>(?:(?:arg#\d+)|[\w.,+*/%-])*)\)",
             RegexOptions.Compiled);
         static readonly Regex ArgRegex = new Regex(
             @"^-?arg#\d+$", 
@@ -32,7 +32,7 @@ namespace Ux
         }
         public void Release()
         {
-            _inputToExpssion.Clear();
+            _inputToExpssion?.Clear();
             Operator1MdDict.Clear();
             Operator2MdDict.Clear();
             FnMdDict.Clear();
