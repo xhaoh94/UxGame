@@ -15,7 +15,7 @@ namespace Ux
         }
         void _LowMemory()
         {
-            _fastMethodRefDic.Clear();
+            _fastMethodRefMap.Clear();
         }
 
         public EventSystem CreateSystem(int exeLimit = int.MaxValue)

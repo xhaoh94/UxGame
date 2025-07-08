@@ -38,8 +38,7 @@ namespace Ux
             if (IngameDebug)
             {
                 Instantiate(Resources.Load<GameObject>("IngameDebugConsloe/IngameDebugConsole"));
-            }
-            zstring.Init(Log.Error);
+            }            
             Machine = StateMachine.Create<GameStateMachine>();
             DontDestroyOnLoad(gameObject);
             Application.targetFrameRate = 60;

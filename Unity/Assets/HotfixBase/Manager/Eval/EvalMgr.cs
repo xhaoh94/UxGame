@@ -1,77 +1,38 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Ux
 {
     public partial class EvalMgr : Singleton<EvalMgr>
     {
-        static readonly Regex FnRegex = new Regex(
-            @"(?<!\d)(?<fnName>\w*)\((?<varName>(?:(?:arg#\d+)|[\w.,+*/%-])*)\)",
-            RegexOptions.Compiled);
-        static readonly Regex ArgRegex = new Regex(
-            @"^-?arg#\d+$", 
-            RegexOptions.Compiled);
-        static readonly Regex VariableRegex = new Regex(
-            @"[\w#.*+%/\-,-]+",
-            RegexOptions.Compiled);
-        static readonly Regex Operator1 = new Regex(
-            @"(?<var1>-?(?:(?:arg#\d+)|[\w.])+)(?<tag>[*/%])(?<var2>-?(?:(?:arg#\d+)|[\w.])+)", 
-            RegexOptions.Compiled);
-        static readonly Regex Operator2 = new Regex(
-            @"(?<var1>^-?(?:(?:arg#\d+)|[\w.])+)(?<tag>[+-])(?<var2>-?(?:(?:arg#\d+)|[\w.])+)",
-            RegexOptions.Compiled);
-        static readonly string ArgStr = "arg#{0}";
-
-        OverdueMap<string,EvalParser> _inputToExpssion;
+        OverdueMap<string, FormulaParser> _cache;
+        const float _timeout = 60f;
         long _timeoutKey;
         protected override void OnCreated()
         {
-            InitGlobalFunc();
             GameMethod.LowMemory += Release;
         }
         public void Release()
         {
-            _inputToExpssion?.Clear();
-            Operator1MdDict.Clear();
-            Operator2MdDict.Clear();
-            FnMdDict.Clear();
-            VariableMdDict.Clear();
-            ArgSplitDict.Clear();
-            ArgDict.Clear();
-            ValueDict.Clear();
+            _cache?.Clear();
         }
-        void _ReleaseParset(EvalParser evalParser)
+        void _CheckTimeout(FormulaParser formulaParser)
         {
-            //回收对象池
-            evalParser.Release();
+            formulaParser.Release();
         }
-
-
-        public double Parse(string input)
-        {            
-            _inputToExpssion ??= new OverdueMap<string, EvalParser>(_timeout, _ReleaseParset);
-            if (!_inputToExpssion.TryGetValue(input, out var e))
-            {
-                e = Pool.Get<EvalParser>();
-                e.Init(input);
-                _inputToExpssion.Add(input, e);
-            }
-            return e.Value;
-        }
-        public string Desc(string input)
+        public double Parse(string expression)
         {
-            _inputToExpssion ??= new OverdueMap<string, EvalParser>(_timeout, _ReleaseParset);
-            if (!_inputToExpssion.TryGetValue(input, out var e))
+            expression = Regex.Replace(expression, @"\s+", "").ToLowerInvariant();
+            _cache ??= new OverdueMap<string, FormulaParser>(_timeout, _CheckTimeout);
+            if (!_cache.TryGetValue(expression, out var e))
             {
-                e = Pool.Get<EvalParser>();
-                e.Init(input);
-                _inputToExpssion.Add(input, e);
+                e = Pool.Get<FormulaParser>().Init(expression);
+                _cache.Add(expression, e);
             }
-            return e.Desc;
+            return e.Evaluate();
         }
-
-
     }
 }
 

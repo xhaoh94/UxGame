@@ -26,7 +26,7 @@ namespace Ux
                 }
             }
         }
-        Dictionary<long, List<FastMethodRef>> _fastMethodRefDic = new();
+        OverdueMap<long, List<FastMethodRef>> _fastMethodRefMap;        
         public interface IEventSystem
         {
             void Init(int exeLimit);
@@ -111,8 +111,9 @@ namespace Ux
 
             void _RegisterFastMethod(Type type, object target)
             {
+                Ins._fastMethodRefMap ??= new OverdueMap<long, List<FastMethodRef>>(100);
                 var key = IDGenerater.GenerateId(target.GetHashCode(), type.GetHashCode());
-                if (!Ins._fastMethodRefDic.TryGetValue(key, out var refList))
+                if (!Ins._fastMethodRefMap.TryGetValue(key, out var refList))
                 {
                     var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
                                                           BindingFlags.Public | BindingFlags.NonPublic);
@@ -123,7 +124,7 @@ namespace Ux
                         if (refList == null)
                         {
                             refList = new List<FastMethodRef>();
-                            Ins._fastMethodRefDic.Add(key, refList);
+                            Ins._fastMethodRefMap.Add(key, refList);
                         }                        
                         refList.Add(new FastMethodRef(evtAttrs, new FastMethodInfo(target, method)));
                     }

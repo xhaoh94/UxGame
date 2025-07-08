@@ -1,8 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Ux.Editor.Build.Config;
 using Ux.Editor.Build.Proto;
 using Ux.Editor.Build.UI;
@@ -72,20 +74,21 @@ namespace Ux.Editor
         [MenuItem("UxGame/Test/Eval")]
         public static void TestEval()
         {
-            string eval = "max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c)))";
+            string eval = "10+max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c)))";
             EvalMgr.Ins.AddVariable("a", 2);
             EvalMgr.Ins.AddVariable("b", -1);
-            EvalMgr.Ins.AddVariable("c", 2);
-            EvalMgr.Ins.AddFunction("test", (nums) => {
+            EvalMgr.Ins.AddVariable("c", 3);
+            EvalMgr.Ins.AddFunction("test", (nums) =>
+            {
                 return nums[0] + nums[1];
             });
+            EvalMgr.Ins.Release();
+
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-            EvalMgr.Ins.Release();
             var value = EvalMgr.Ins.Parse(eval);
-            sw.Stop();            
-            Log.Debug(eval+":{0},ms:{1}",value, sw.ElapsedMilliseconds);
+            sw.Stop();
+            Log.Debug(eval + ":{0},ms:{1}", value, sw.ElapsedMilliseconds);
         }
     }
-
 }
