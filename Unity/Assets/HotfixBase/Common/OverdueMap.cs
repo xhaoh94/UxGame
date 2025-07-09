@@ -33,7 +33,6 @@ namespace Ux
         }
         public bool TryGetValue(K key, out T value)
         {
-
             if (_caches.TryGetValue(key, out var overdueData))
             {
                 value = overdueData.Value;

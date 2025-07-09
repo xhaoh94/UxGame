@@ -6,8 +6,37 @@ namespace Ux
 {
     public partial class EvalMgr
     {
+        const char charEmpty = '\0';
         public partial class FormulaParser
-        {
+        {            
+            static Dictionary<char, Token> _opToken = new Dictionary<char, Token>()
+            {
+                {'-',new Token(TokenType.Operator,'-') },
+                {'+',new Token(TokenType.Operator,'+') },
+                {'*',new Token(TokenType.Operator,'*') },
+                {'/',new Token(TokenType.Operator,'/') },
+                {'%',new Token(TokenType.Operator,'%') },
+                {'(',new Token(TokenType.LeftParen,'(') },
+                {')',new Token(TokenType.RightParen,')') },
+                {',',new Token(TokenType.Comma,',') },
+            };
+            static Dictionary<char, Func<double, double, double>> _opFunc = new()
+            {
+                { '+',(a,b) => a+b },
+                { '-',(a,b) => a-b },
+                { '*',(a,b) => a*b },
+                { '/',(a,b) => _CheckDivisionByZero(b) ? 0 : a/b },
+                { '%',(a,b) => _CheckDivisionByZero(b) ? 0 : a%b },
+            };
+            static bool _CheckDivisionByZero(double divisor)
+            {
+                if (divisor == 0)
+                {
+                    Log.Error("除数不可为0");
+                    return true;
+                }
+                return false;
+            }
             // AST节点类型
             private abstract class Node
             {
@@ -17,7 +46,7 @@ namespace Ux
                     OnRelease();
                     Pool.Push(this);
                 }
-                protected virtual void OnRelease() { }
+                protected abstract void OnRelease();
             }
             //数字节点
             private class NumberNode : Node
@@ -53,7 +82,8 @@ namespace Ux
                     {
                         return func();
                     }
-                    throw new ArgumentException($"未知的变量名: {_name}");
+                    Log.Error($"未知的变量名: {_name}");
+                    return 0;
                 }
                 protected override void OnRelease()
                 {
@@ -72,13 +102,16 @@ namespace Ux
                 }
                 public override double Evaluate()
                 {
-                    double value = _operand.Evaluate();
-                    return _op switch
+                    switch (_op)
                     {
-                        '+' => value,
-                        '-' => -value,
-                        _ => throw new ArgumentException($"未知的一元运算符: {_op}")
-                    };
+                        case '+':
+                            return _operand.Evaluate();
+                        case '-':
+                            return _operand.Evaluate() * -1;
+                        default:
+                            Log.Error($"未知的一元运算符 {_op}");
+                            return 0;
+                    }
                 }
                 protected override void OnRelease()
                 {
@@ -101,14 +134,12 @@ namespace Ux
                 {
                     double left = _left.Evaluate();
                     double right = _right.Evaluate();
-                    return _op switch
+                    if (_opFunc.TryGetValue(_op, out var fn))
                     {
-                        '+' => left + right,
-                        '-' => left - right,
-                        '*' => left * right,
-                        '/' => right == 0 ? throw new DivideByZeroException("除数不可为0") : left / right,
-                        _ => throw new ArgumentException($"未知的运算符: {_op}")
-                    };
+                        return fn(left, right);
+                    }
+                    Log.Error($"未知的运算符: {_op}");
+                    return 0;
                 }
                 protected override void OnRelease()
                 {
@@ -135,7 +166,8 @@ namespace Ux
                     {
                         if (!nameToDoubleFunc.TryGetValue(_name, out func))
                         {
-                            throw new ArgumentException($"未知的函数： {_name}");
+                            Log.Error($"未知的函数： {_name}");
+                            return 0;
                         }
                     }
                     var argCount = _arguments != null ? _arguments.Count : 0;
@@ -165,29 +197,17 @@ namespace Ux
                 }
             }
 
-            // 增强的词法分析器
+            // 词法分析器
             private class Lexer
             {
                 private string _input;
                 private int _position;
-                private char Current => _position < _input.Length ? _input[_position] : '\0';
-                List<Token> _tokens = new List<Token>();
-
-
-                public void Init(string input)
-                {
+                private char Current => _position < _input.Length ? _input[_position] : charEmpty;
+                
+                public void Tokenize(string input, List<Token> tokens)
+                {                                    
                     _input = input;
-                }
-                public void Release()
-                {
-                    _input = null;
                     _position = 0;
-                    _tokens.Clear();
-                    Pool.Push(this);
-                }
-
-                public List<Token> Tokenize()
-                {
                     while (_position < _input.Length)
                     {
                         if (char.IsWhiteSpace(Current))
@@ -198,38 +218,25 @@ namespace Ux
 
                         if (char.IsDigit(Current) || Current == '.')
                         {
-                            _tokens.Add(ReadNumber());
+                            tokens.Add(ReadNumber());
                         }
                         else if (char.IsLetter(Current) || Current == '_')
                         {
-                            _tokens.Add(ReadIdentifier());
-                        }
-                        else if (Current == '+' || Current == '-' || Current == '*' || Current == '/')
-                        {
-                            _tokens.Add(new Token(TokenType.Operator, Current));
-                            _position++;
-                        }
-                        else if (Current == '(')
-                        {
-                            _tokens.Add(new Token(TokenType.LeftParen, Current));
-                            _position++;
-                        }
-                        else if (Current == ')')
-                        {
-                            _tokens.Add(new Token(TokenType.RightParen, Current));
-                            _position++;
-                        }
-                        else if (Current == ',')
-                        {
-                            _tokens.Add(new Token(TokenType.Comma, Current));
-                            _position++;
+                            tokens.Add(ReadIdentifier());
                         }
                         else
                         {
-                            throw new ArgumentException($"无效字符: '{Current}'=> position {_position}");
+                            if (_opToken.TryGetValue(Current, out var token))
+                            {
+                                tokens.Add(token);
+                                _position++;
+                            }
+                            else
+                            {
+                                Log.Error($"无效字符: '{Current}'=> position {_position}");
+                            }
                         }
                     }
-                    return _tokens;
                 }
 
                 private Token ReadNumber()
@@ -255,9 +262,9 @@ namespace Ux
                     }
                     // 使用 Span 避免字符串分配
                     var span = _input.AsSpan(start, _position - start);
-                    if (double.TryParse(span, out double value))
-                        return new Token(TokenType.Number, value);
-                    throw new ArgumentException($"无效数字: '{span.ToString()}'");
+                    if (!double.TryParse(span, out double value))
+                        Log.Error($"无效数字: '{span.ToString()}'");
+                    return new Token(TokenType.Number, value);
                 }
 
                 private Token ReadIdentifier()
@@ -268,7 +275,7 @@ namespace Ux
                         _position++;
                     }
                     // 使用 Span 避免字符串分配
-                    var span = _input.AsSpan(start, _position - start);                    
+                    var span = _input.AsSpan(start, _position - start);
                     return new Token(TokenType.Identifier, span.ToString());
                 }
             }
@@ -286,7 +293,7 @@ namespace Ux
                 public Token(TokenType type, string value)
                 {
                     (Type, StrValue) = (type, value);
-                    CharValue = '\0';
+                    CharValue = charEmpty;
                     NumValue = 0;
 
                 }
@@ -299,27 +306,29 @@ namespace Ux
                 public Token(TokenType type, double value)
                 {
                     (Type, NumValue) = (type, value);
-                    CharValue = '\0';
+                    CharValue = charEmpty;
                     StrValue = null;
                 }
             }
 
 
-            // 重新设计的语法分析器
+            // 语法分析器
             private class Parser
             {
                 private List<Token> _tokens;
                 private int _position;
+                private Lexer _lexer;
                 private Token Current => _position < _tokens.Count ? _tokens[_position] : default;
-
-                public void Init(List<Token> tokens)
+                public void Init(string expression)
                 {
-                    _tokens = tokens;
+                    _lexer ??= new Lexer();
+                    _tokens ??= new List<Token>();
+                    _lexer.Tokenize(expression, _tokens);
                 }
 
                 public void Release()
                 {
-                    _tokens = null;
+                    _tokens?.Clear();
                     _position = 0;
                     Pool.Push(this);
                 }
@@ -331,7 +340,8 @@ namespace Ux
                         // 如果是逗号或右括号，可能是函数参数的一部分，允许继续
                         if (Current.Type != TokenType.Comma && Current.Type != TokenType.RightParen)
                         {
-                            throw new ArgumentException($"token 解析错误: {Current}");
+                            Log.Error($"token 解析错误: {Current}");
+                            return null;
                         }
                     }
                     return node;
@@ -383,7 +393,11 @@ namespace Ux
                 //解析基础元素
                 private Node ParsePrimary()
                 {
-                    if (Current.Type == TokenType.None) throw new ArgumentException("解析错误");
+                    if (Current.Type == TokenType.None)
+                    {
+                        Log.Error("解析错误");
+                        return null;
+                    }
 
                     switch (Current.Type)
                     {
@@ -397,7 +411,8 @@ namespace Ux
                             return ParseParenthesizedExpression();
 
                         default:
-                            throw new ArgumentException($"token 解析错误: {Current}");
+                            Log.Error($"token 解析错误: {Current}");
+                            return null;
                     }
                 }
 
@@ -430,7 +445,11 @@ namespace Ux
                             // 解析参数表达式
                             arguments.Add(ParseExpression());
 
-                            if (Current.Type == TokenType.None) throw new ArgumentException("函数调用中输入意外结束");
+                            if (Current.Type == TokenType.None)
+                            {
+                                Log.Error("函数调用中输入意外结束");
+                                return null;
+                            }
 
                             if (Current.Type == TokenType.RightParen)
                             {
@@ -439,7 +458,10 @@ namespace Ux
                             }
 
                             if (Current.Type != TokenType.Comma)
-                                throw new ArgumentException($"非预期的逗号或右括号： {Current}");
+                            {
+                                Log.Error($"非预期的逗号或右括号： {Current}");
+                                return null;
+                            }
 
                             _position++; // 跳过 ','
                         }
@@ -457,13 +479,16 @@ namespace Ux
                     Node node = ParseExpression();
 
                     if (Current.Type != TokenType.RightParen)
-                        throw new ArgumentException("函数调用中输入意外结束");
+                    {
+                        Log.Error("函数调用中输入意外结束");
+                        return null;
+                    }
 
                     _position++; // 跳过 ')'
                     return node;
                 }
             }
-
+            //根节点
             Node _ast;
             public FormulaParser Init(string expression)
             {
@@ -471,13 +496,10 @@ namespace Ux
                 {
                     return this;
                 }
-                var lexer = Pool.Get<Lexer>();
-                lexer.Init(expression);
                 var parser = Pool.Get<Parser>();
-                parser.Init(lexer.Tokenize());
+                parser.Init(expression);
                 _ast = parser.ParseExpression();
                 parser.Release();
-                lexer.Release();
                 return this;
             }
             public void Release()
