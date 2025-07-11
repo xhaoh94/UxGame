@@ -67,17 +67,17 @@
 
 ## 辅助工具
 
-![UI](C:\Users\Administrator\Desktop\ui.png)
+![UI](https://github.com/xhaoh94/UxGame/IMG/blob/main/ui.png)
 
-![Res](C:\Users\Administrator\Desktop\res.png)
+![Res](https://github.com/xhaoh94/UxGame/IMG/blob/main/res.png)
 
-![Event](C:\Users\Administrator\Desktop\event.png)
+![Event](https://github.com/xhaoh94/UxGame/IMG/blob/main/event.png)
 
-![Time](C:\Users\Administrator\Desktop\time.png)
+![Time](https://github.com/xhaoh94/UxGame/IMG/blob/main/time.png)
 
-![tool](C:\Users\Administrator\Desktop\tool.png)
+![tool](https://github.com/xhaoh94/UxGame/IMG/blob/main/tool.png)
 
-![uiGen](C:\Users\Administrator\Desktop\uiGen.png)
+![uiGen](https://github.com/xhaoh94/UxGame/IMG/blob/main/uiGen.png)
 
-![构建](C:\Users\Administrator\Desktop\build.png)
+![构建](https://github.com/xhaoh94/UxGame/IMG/blob/main/build.png)
 
