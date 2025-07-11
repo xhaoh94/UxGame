@@ -56,7 +56,24 @@
 
 - 自定义函数，除了内置常规数字函数，可随意自定义函数名，执行你想要的逻辑
 - 自定义变量，字符串公式，变量不可缺少，一个计算战力的公式 hp+atk ,通过传入变量数值，轻松获取战力数值
-
+  ```c#
+  string eval = "10+max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c)))";
+  EvalMgr.Ins.AddVariable("a", 2);
+  EvalMgr.Ins.AddVariable("b", -1);
+  EvalMgr.Ins.AddVariable("c", 3);
+  EvalMgr.Ins.AddFunction("test", (nums) =>
+  {
+      return nums[0] + nums[1];
+  });
+  EvalMgr.Ins.Release();
+  
+  System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+  sw.Start();
+  var value = EvalMgr.Ins.Parse(eval);
+  sw.Stop();
+  //10+max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c))):50,ms:5
+  Log.Debug(eval + ":{0},ms:{1}", value, sw.ElapsedMilliseconds);
+  ```
 ## 其他开发中功能
 
 - Timeline 用于战斗编辑，实现了Animator，但是其他上层业务逻辑还没实现其他的，现在牛马生活，天天到家已经快12点了，没动力了
