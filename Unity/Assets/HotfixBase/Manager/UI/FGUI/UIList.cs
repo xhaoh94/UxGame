@@ -227,7 +227,7 @@ namespace Ux
 
             if (renderer == null)
             {
-                renderer = Pool.Get(temType) as IItemRenderer;
+                renderer = Pool.Get<IItemRenderer>(temType);
                 renderer.Init(item, this);
                 _renderers[item] = renderer;
             }

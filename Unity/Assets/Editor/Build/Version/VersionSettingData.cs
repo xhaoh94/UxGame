@@ -75,7 +75,7 @@ namespace Ux.Editor.Build.Version
         public string EncyptionClassName = string.Empty;
         public string ManifestClassName = string.Empty;
         public ECompressOption CompressOption = ECompressOption.LZ4;
-        public string PiplineOption = EBuildPipeline.ScriptableBuildPipeline.ToString();
+        public string PiplineOption = Enum.GetName(typeof(EBuildPipeline), EBuildPipeline.ScriptableBuildPipeline);
         public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;
         public string BuildTags = "builtin";
 

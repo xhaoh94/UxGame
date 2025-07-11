@@ -24,6 +24,10 @@ namespace Ux.Editor.Build.Version
             CreateChildren();
             root.style.flexGrow = 1f;
             parent.Add(root);
+            pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
+            nameStyleType.Init(EFileNameStyle.HashName);
+            compressionType.Init(ECompressOption.LZ4);
+
             _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
             if (_encryptionServicesClassNames.Count > 0)

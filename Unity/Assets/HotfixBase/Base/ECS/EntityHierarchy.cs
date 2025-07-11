@@ -1,10 +1,4 @@
 #if UNITY_EDITOR
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 
 namespace Ux
@@ -32,7 +26,7 @@ namespace Ux
             if (entity != null)
             {
                 viewer.infos = new EEInfos(entity, true);
-            }
+            }            
             if (Application.isPlaying)
             {
                 if (_ecs == null)

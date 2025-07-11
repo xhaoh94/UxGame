@@ -1,317 +1,83 @@
-# U3D+HybridCLR+YooAssate+FGUI 简易框架
+# U3D+HybridCLR+YooAssest+FGUI 缝合怪
 
-#### 介绍
-**UxGame 是一个包含一整套 C#热更和资源热更的简易框架** 
-##
-包含事件管理器、定时器管理器、红点管理器、UI管理器、编辑器可视化查看、一键打包功能等
-#### 模块
-模块是单例对象，是数据的存放处，和与Socket交互的地方。继承ModuleBase且挂载Module特性的对象会被作为一个模块。
+# 只是加了一些平时开发觉得有用的东西
 
-```
-[Module]
-public class LoginModule : ModuleBase<LoginModule>
-{
-    protected override void OnInit()
-    {
-        base.OnInit();
-    }
-}
-```
+## HybridCLR + YooAssest 集成
 
+- c#热更新+资源热更新，通过可视化工具+YooAssets打包，可一键直接构建到指定目录，包括资源差异化分析，拷贝指定目录。配合DHFS（本地资源服务器），可以实现编辑器模式热更逻辑运行测试
 
-<details> <summary>事件管理器</summary>
-事件驱动，常见的观察者模式核心部分。可通过注册监听消息，来实现模块间的解耦和数据更改。
-消息的监听和派发并不是同步的，管理器内部有参数可以调整，一帧最多派发多少的消息
+## Event
 
-```
-[Module]
-public class LoginModule : ModuleBase<LoginModule>
-{
-    protected override void OnInit()
-    {
-        base.OnInit();
-        long key = EventMgr.Ins.On(EventType.Test, this, Test);//监听Test消息类型的消息
-        EventMgr.Ins.RemoveByKey(key);//取消此Key的监听事件
-        EventMgr.Ins.Off(EventType.Test, this, Test);//取消监听Test消息类型的消息
-        EventMgr.Ins.OffAll(this);//取消所有此this上的所有监听事件
-        EventMgr.Ins.Send(EventType.Test);//派发消息
+- 独立的事件系统+单例默认事件系统
+- 通过特性注册，减少N多重复代码（通过反射实现，虽然内部实现了对象池，但是还是建议只在初始化模块这种只会实例化一次的地方使用
+- 事件队列+可同步调用接口，默认事件走队列触发，每帧事件有触发上限，解决一帧触发极多事件导致掉帧。部分需同步触发事件，也可调用接口直接触发。
+- 一键取消关联对象所有事件监听，避免事件漏取消状况（注册事件时带标签，默认传注册实例化对象）在需要对象取消监听时，只需要传此对象去取消监听即可，无需所有事件都再重复走一遍取消流程 
 
-        //如果要监听带参数的，也可以使用泛型监听
-        EventMgr.Ins.On<string>(EventType.Test,this, TestStr);//监听带参数的消息
-        EventMgr.Ins.Send(EventType.Test, "test");//带参数的消息派发
-    }
-    //在模块和UI中，可使用特性快速监听事件，但是此方式注册的事件将无法销毁，是长存的。
-    //除非你调用了EventMgr.Ins.OffAll(this)
-    [Evt(EventType.Test)]
-    void Test()
-    {
-    }
-    //带参数的也可以使用特性快速监听，不需要指定类型，但是派发消息时，需要跟参数类型对应
-    [Evt(EventType.Test)]
-    void TestStr(string str)
-    {
-    }
-}
+- 可视化工具，默认事件系统会存储所有事件展示在可视化工具里，可随时查看事件是否有泄漏
 
-```
-</details>
+## Net
 
-<details> <summary>定时器管理器</summary>
-定时器，可按照注册的频率和触发次数完成回调的管理器
-定时器有4种，时间、帧数、时间戳、Corn表达式
+- 内部集成了TCP、KCP、WebSocket
+- 自定义RPC流程，同个方法内即可实现请求->响应。代码嘎嘎好看。（rpc这个需跟服务器约束规则，参考即可）
 
-```
-//每5秒执行Test方法，执行1次
-long Key = TimeMgr.Ins.DoTimer(5, 1,this, Test);
-//每5秒执行Test方法，执行10次，执行完毕后触发TestComplete回调
-TimeMgr.Ins.DoTimer(5, 10,this, Test,TestComplete);
+- 可定义数据序列号大小端，轻松解决跟服务器端不一致问题
 
-//每5帧执行Test方法，执行1次
-TimeMgr.Ins.DoFrame(5, 1,this, Test);
-//每5帧执行Test方法，执行10次，执行完毕后触发TestComplete回调
-TimeMgr.Ins.DoFrame(5, 10, this,Test,TestComplete);
-//达到时间戳后触发
-TimeMgr.Ins.DoTimeStamp(DateTime.Now, this, Test);
-//基于Cron表达式，监听触发事件
-TimeMgr.Ins.DoCron("0 0/2 * * * ?", this, Test);
+## Res
 
-//可以通过注册时返回的Key取消注册
-TimeMgr.Ins.RemoveKey(Key);
+- 二次封装的YooAssets加载接口，加载gameObject对象会自动挂载脚本，等对象销毁时，回收handle。
+- 资源懒加载，通过可视化工具可定义资源标签，部分资源可以在游戏内再加载
+- 可视化工具，暂实现了UI包的引用计数
 
-//指定取消Test方法的定时器
-TimeMgr.Ins.RemoveTimer(Test);
-TimeMgr.Ins.RemoveFrame(Test);
-TimeMgr.Ins.RemoveTimeStamp(Test);
-TimeMgr.Ins.RemoveCron(Test);
+## Time
 
-//取消注册在次对象上的所有定时器
-TimeMgr.Ins.RemoveAll(this);
+ **集成多种定时器，每种定时器注册时都会进行排序插入，当队列不满足触发条件会直接中断后续定时器，减少循环次数**
+
+- 计时定时器，可定义初始触发时间+后续间隔时间+触发次数+触发完毕回调
+- 帧数定时器，可定义初始触发帧数+后续间隔帧数+触发次数+触发完毕回调
+- 时间戳定时器，指定时间戳到达触发
+- Cron表达式触发器
+- 可视化工具，你所注册的所有触发器都可以在这里查看
+
+## UI
+
+**二次封装FairyGUI，使用特性注册或代码动态注册，逻辑与资源的拆分，界面可自定义对应资源包，实现异步加载、懒加载、界面模糊、界面栈、界面动画、自定义界面嵌套（A界面嵌套了B、C界面，打开B、C界面时会自动根据嵌套先打开A界面）。通过可视化工具可自动生成代码绑定、自动绑定点击事件、类型自定义**
+
+- 常规界面 UIView 
+- 弹窗界面 UIWindow,封装的FairyGUI.Window
+- 嵌套界面 UITabView 
+- 辅助界面 UITip（提示语）、UIMessageBox（弹窗确认）。
+- UIModel、RTModel 傻瓜式在2D显示3D模型
+- 循环列表UIList，同个列表可自定义多个不同Item，通过你自定义规则，给你生成不同的Item
+- 可视化工具，你所有注册的UI界面的状态与缓存都在这可以查看
+
+## Eval 公式解析器
+
+使用抽象树+AST、对象池，高性能解析字符串公式，相同的公式，在预热后基本无消耗。实现了基础加减乘除取余。
+
+- 自定义函数，除了内置常规数字函数，可随意自定义函数名，执行你想要的逻辑
+- 自定义变量，字符串公式，变量不可缺少，一个计算战力的公式 hp+atk ,通过传入变量数值，轻松获取战力数值
+
+## 其他开发中功能
+
+- Timeline 用于战斗编辑，实现了Animator，但是其他上层业务逻辑还没实现其他的，现在牛马生活，天天到家已经快12点了，没动力了
+- Condition 条件系统，这个只能根据不同的游戏定制
+- Tag 红点系统，其实已经是实现了的，只不过有部分逻辑也得根据游戏来定制
 
 
-```
-</details>
 
-<details> <summary>红点管理器</summary>
-红点系统，此红点系统以树形结构，以事件驱动检测，子红点检查True时，将不会检测其他子红点
+## 辅助工具
 
-```
-//继承TagGroup的可以作为红点的上级树
-[Tag]
-public class TagTest : TagGroup
-{
-    protected override void OnInitChildren()
-    {
-        AddChild<TagTsetChild>();//添加单例子红点
-        AddChild<TagTsetChildDym>(1,null);//添加动态子红点
-    }
-}
-[Tag]
-public class TagTsetChild : TagBase
-{
-    protected override IList<int> EvtTypes()
-    {
-        //监听重新检查的事件，当有此消息派发时，红点会重新检测
-        return new List<int>(){(int)EventType.Test};
-    }
-    protected override bool OnCheck()
-    {
-        //业务逻辑处理是否红点
-        return true;
-    }
-}
-//实现Tag特性后，此红点为单例红点，可通过TagMgr.Ins.GetTag获取红点对象
-var tag = TagMgr.Ins.GetTag<TagTest>();
-//绑定显示对象和红点，当红点变化时，对象会自动显示或隐藏
-TagMgr.Ins.On(tag,GObject);
+![UI](C:\Users\Administrator\Desktop\ui.png)
 
-//有时候我们的红点不并确认，可能需要读表或是其他时候才知道需要注册红点，此时可以注册动态红点，动态红点不需要实现Tag特性，但是获取此红点的时候，需要先拿到父红点，以此类推下来
+![Res](C:\Users\Administrator\Desktop\res.png)
 
-//实现Tag特性后，此红点为单例红点，可通过TagMgr.Ins.GetTag获取红点对象
-var tag = TagMgr.Ins.GetTag<TagTest>();
-var tagChild = tag.Find<TagTsetChildDym>(1);
-//绑定显示对象和红点，当红点变化时，对象会自动显示或隐藏
-TagMgr.Ins.On(tagChild ,GObject);
+![Event](C:\Users\Administrator\Desktop\event.png)
 
-public class TagTsetChildDym : TagBase
-{
-    protected override IList<int> EvtTypes()
-    {
-       //监听重新检查的事件，当有此消息派发时，红点会重新检测
-        return new List<int>(){(int)EventType.Test};
-    }
-    protected override bool OnCheck()
-    {
-        //业务逻辑处理是否红点
-        return true;
-    }
-}
-```
-</details>
+![Time](C:\Users\Administrator\Desktop\time.png)
 
-<details> <summary>UI</summary>
-UI是基于FGUI构造的一个系统，且可懒加载的UI框架。
+![tool](C:\Users\Administrator\Desktop\tool.png)
 
-通过工具栏->UxGame->构建->UI->代码生成，可快速通过FGUI包里的组件生成代码。
-![输入图片说明](https://foruda.gitee.com/images/1701757416305083929/059b3938_2080624.png "屏幕截图")
-组件的字段是否生成都可以可视化操作。
-![输入图片说明](https://foruda.gitee.com/images/1701757218395467830/af3296b4_2080624.png "屏幕截图")
-UI主要有4个类型
-- 普通界面是普通的GComponetn生成的,继承于UIView
-- 弹窗则又GWindow生成，继承于UIWindow
-- 对话框，继承于UIDialog.
-- 子界面继承于UITabView。子界面可指定对于的父界面（UIView、UIWindow),被指定的父界面，则需要拥有特定的组件UITabFrame。
+![uiGen](C:\Users\Administrator\Desktop\uiGen.png)
 
-UITabFrame是一个约定好的组件，里面需要一个子界面的容器，一个标签列表（用于切换子界面），一个关闭按钮。这些都是可以通过工具栏的可视化代码生成而指定的。
-![输入图片说明](https://foruda.gitee.com/images/1701757391141557237/a5f25fe6_2080624.png "屏幕截图")
+![构建](C:\Users\Administrator\Desktop\build.png)
 
-生成出来的代码会给你指定资源包和所属资源组件，且给生成按钮对应的点击事件（可选择是否生成）
-
-```
-//自动生成的代码，请勿修改!!!
-using FairyGUI;
-namespace Ux.UI
-{
-	[Package("Multiple","Common")]
-	[Lazyload("lazyload_multiple")]
-	public partial class MultipleView : UIView
-	{
-		protected override string PkgName => "Multiple";
-		protected override string ResName => "MultipleView";
-
-		protected Common1TabFrame mCommonBg;
-		protected Transition t0;
-		protected Transition t1;
-		protected override void CreateChildren()
-		{
-			try
-			{
-				var gCom = ObjAs<GComponent>();
-				mCommonBg = new Common1TabFrame(gCom.GetChildAt(0), this);
-				t0 = gCom.GetTransitionAt(0);
-				t1 = gCom.GetTransitionAt(1);
-			}
-			catch (System.Exception e)
-			{
-				 Log.Error(e);
-			}
-		}
-		public override void AddChild(UITabView child)
-		{
-			mCommonBg?.AddChild(child);
-		}
-		protected void RefreshTab(int selectIndex = 0, bool scrollItToView = true)
-		{
-			mCommonBg?.Refresh(selectIndex,scrollItToView);
-		}
-		protected UITabView GetCurrentTab()
-		{
-			return mCommonBg?.SelectItem;
-		}
-		protected void SetTabRenderer<T>() where T : UITabBtn
-		{
-			mCommonBg?.SetTabRenderer<T>();
-		}
-	}
-}
-
-```
-
-```
-//UI特性，注册了此特性的UI界面可以通过 UIMgr.Ins.Show打开
-    [UI]
-    partial class MultipleView
-    {
-        //public override bool IsDestroy => false;
-        protected override UILayer Layer => UILayer.Normal;
-        protected override IUIAnim ShowAnim => new UITransition(t0);
-        protected override IUIAnim HideAnim => new UITransition(t1);
-
-        protected override void OnShow(object param)
-        {
-            base.OnShow(param);
-        }
-
-        protected override void OnHide()
-        {
-            base.OnHide();
-        }
-    }
-//注册UI，且指定父类为MultipleView
-    [UI(typeof(MultipleView))]
-    [TabTitle("T1")]
-    partial class Multiple1TabView
-    {
-    }
-//注册UI，且指定父类为MultipleView
-    [UI(typeof(MultipleView))]
-    [TabTitle("T2")]
-    partial class Multiple2TabView
-    {
-    }
-//注册UI，且指定父类为MultipleView
-    [UI(typeof(MultipleView))]
-    [TabTitle("T3")]
-    partial class Multiple3TabView
-    {
-
-    }
-
-//打开界面
-UIMgr.Ins.Show<MultipleView>();
-```
-![输入图片说明](https://foruda.gitee.com/images/1701757970645054826/0d43ab9b_2080624.png "屏幕截图")
-![输入图片说明](https://foruda.gitee.com/images/1701758015993398444/ce7c99e0_2080624.png "屏幕截图")
-
-```
-//如上就可以通过标签切换当前显示的子界面，当然也可以直接通过代码打开子界面
-UIMgr.Ins.Show<Multiple3TabView>();
-```
-
-#### 如何定义懒加载的界面
-![输入图片说明](https://foruda.gitee.com/images/1701758223111998341/a11e4943_2080624.png "屏幕截图")
-
-通过工具栏打开资源分类，可指定哪些包打上懒加载标签，和内置资源。且代码生成界面的时候，会给界面打上懒加载标签特性。
-此时打开懒加载的界面时，如果未加载就会先下载资源（编辑器模式下，需要把资源正常打包出去，且YooAssate的模式改为HostPlayMode)
-![输入图片说明](https://foruda.gitee.com/images/1701758253169524130/fd520be2_2080624.png "屏幕截图")
-
-![输入图片说明](https://foruda.gitee.com/images/1701758612816881778/e4ef7b7c_2080624.png "屏幕截图")
-
-#### 如何动态添加界面
-当我们需要开发一些逻辑一样，只是界面不同的需求时，动态界面是很方便的
-
-例如，当我们需要开发一个累计7日登录活动的时候，和一个累计30日登录
-这里面其实逻辑是一致的，只是登录的天数不同。这时候可以通过动态的注册界面，换掉对应的界面资源，而保留界面逻辑即可。
-
-```
-var par = new UITestData(3333, typeof(LoginTestUI));
-UIMgr.Ins.RegisterUI(par);
-var data1 = new UITestData(333301, typeof(LoginTestSub), new UITestTabData(3333, "测试2"));
-UIMgr.Ins.RegisterUI(data1);
-var data3 = new UITestData(333302, typeof(LoginTestSub), new UITestTabData(3333, "测试3"));
-UIMgr.Ins.RegisterUI(data3);
-```
-
-
-</details>
-
-<details> <summary>可视化工具</summary>
-
-![输入图片说明](https://foruda.gitee.com/images/1701758708873462796/c009efa1_2080624.png "屏幕截图")
-
-可视化工具可以让游戏运行时，查看一些状态数据，例如注册了多少UI，当前打开的界面，缓存的界面，待删除界面
-![输入图片说明](https://foruda.gitee.com/images/1701758847501751330/06dee0d8_2080624.png "屏幕截图")
-
-当前资源引用
-![输入图片说明](https://foruda.gitee.com/images/1701758876691790159/a11d451c_2080624.png "屏幕截图")
-
-注册的事件
-![输入图片说明](https://foruda.gitee.com/images/1701758906144834383/778d1ac8_2080624.png "屏幕截图")
-
-注册的定时器
-![输入图片说明](https://foruda.gitee.com/images/1701758936441914665/075764cc_2080624.png "屏幕截图")
-</details>
-
-<details> <summary>多人游戏</summary>
-配合[gox](http://https://gitee.com/xhaoh94/gox)实现的多人联机demo
-[输入链接说明](http://)
-</details>

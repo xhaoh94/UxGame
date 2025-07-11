@@ -94,7 +94,7 @@ namespace Ux
             {
                 return null;
             }
-            tag = (TagBase)Pool.Get(type);
+            tag = Pool.Get<TagBase>(type);
             tag.Init(type);
             _keyToMap.Add(type, tag);
             return (T)tag;

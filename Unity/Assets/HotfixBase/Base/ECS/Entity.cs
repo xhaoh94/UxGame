@@ -114,7 +114,7 @@ namespace Ux
 
         public static Entity Create(long id, Type type, bool isFromPool = true)
         {
-            var entity = (isFromPool ? Pool.Get(type) : Activator.CreateInstance(type)) as Entity;
+            var entity = isFromPool ? Pool.Get<Entity>(type) : Activator.CreateInstance(type) as Entity;
             if (entity == null) return null;
 #if UNITY_EDITOR
             entity.Hierarchy = EntityHierarchy.Create(entity);
