@@ -1,16 +1,12 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement>
         <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
-            <ui:TextField picking-mode="Ignore" label="Client&amp;Server Dll" value="filler text" name="txtDllFile" readonly="false" style="flex-grow: 1;" />
+            <ui:TextField picking-mode="Ignore" label="Luban.dll" value="filler text" name="txtDllFile" readonly="false" style="flex-grow: 1;" />
             <ui:Button text="选择" display-tooltip-when-elided="true" name="btnDllFile" style="flex-grow: 0;" />
         </ui:VisualElement>
         <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
-            <ui:TextField picking-mode="Ignore" label="Root.xml" value="filler text" name="txtDefineFile" style="flex-grow: 1;" />
+            <ui:TextField picking-mode="Ignore" label="Lunban.conf" value="filler text" name="txtDefineFile" style="flex-grow: 1;" />
             <ui:Button text="选择" display-tooltip-when-elided="true" name="btnDefineFile" style="flex-grow: 0;" />
-        </ui:VisualElement>
-        <ui:VisualElement style="flex-direction: row; flex-grow: 0;">
-            <ui:TextField picking-mode="Ignore" name="txtInputDataPath" label="配置目录" style="flex-grow: 1;" />
-            <ui:Button text="选择" display-tooltip-when-elided="true" name="btnInputDataPath" style="flex-grow: 0;" />
         </ui:VisualElement>
         <ui:Foldout text="导出设置">
             <ui:VisualElement style="flex-direction: row; flex-grow: 0;">

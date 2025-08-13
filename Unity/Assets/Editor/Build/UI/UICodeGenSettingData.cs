@@ -450,7 +450,7 @@ namespace Ux.Editor.Build.UI
             if (ins == null)
             {
                 IsDirty = false;
-                ins = SettingTools.GetSingletonAssets<UICodeGenSettingData>("Assets/Setting/Build/UI");
+                ins = SettingTools.GetSingletonAssets<UICodeGenSettingData>("Assets/Settings/Build/UI");
                 freshComDataList.Clear();
             }
         }

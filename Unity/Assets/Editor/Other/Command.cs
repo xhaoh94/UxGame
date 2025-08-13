@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using UnityEditor.UI;
 namespace Ux.Editor
 {
 
@@ -9,16 +10,25 @@ namespace Ux.Editor
     internal class CommandAttribute : Attribute
     {
         public readonly string option;
+        public readonly string valuePrefix;
         public readonly bool newLine;
 
         public CommandAttribute(string option, bool newLine = true)
         {
             this.option = option;
+            this.valuePrefix = string.Empty;
+            this.newLine = newLine;
+        }
+        public CommandAttribute(string option,string valuePrefix, bool newLine = true)
+        {
+            this.option = option;
+            this.valuePrefix = valuePrefix;
             this.newLine = newLine;
         }
         public CommandAttribute(bool newLine = true)
         {
             this.option = string.Empty;
+            this.valuePrefix = string.Empty;
             this.newLine = newLine;
         }
     }

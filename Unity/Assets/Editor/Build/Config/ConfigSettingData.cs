@@ -11,34 +11,29 @@ namespace Ux.Editor.Build.Config
     {
 
         [CommandPathAttribute]
-        [Command(false)]
-        public string DllFile = "../Luban/Tools/Luban.ClientServer/Luban.ClientServer.dll";
+        [Command()]
+        public string DllFile = "../DataTables/Luban/Luban.dll";
 
-        [Command("--job")]
-        [HideInInspector]
-        public string Job = "cfg --";
+        [Command("-t")]
+        public string ServiceType = "client";
 
-        [CommandPathAttribute]
-        [Command("--define_file")]
-        public string DefineFile = "../Luban/Defines/__root__.xml";
+        [Command("-c")]
+        public string GenCodeType = "cs-simple-json";
 
-        [CommandPathAttribute]
-        [Command("--input_data_dir")]
-        public string InputDataPath = "../Luban/Datas";
+        [Command("-d")]
+        public string GenDataType = "json";
 
         [CommandPathAttribute]
-        [Command("--output_code_dir")]
+        [Command("--conf")]
+        public string ConfFile = "../DataTables/luban.conf";
+
+        [CommandPathAttribute]
+        [Command("-x", "outputCodeDir=")]
         public string OutCodePath = "Assets/Hotfix/CodeGen/Config";
 
         [CommandPathAttribute]
-        [Command("--output_data_dir")]
+        [Command("-x", "outputDataDir=", false)]
         public string OutDataPath = "Assets/Data/Res/Config";
-
-        [Command("--gen_types")]
-        public string GenType = "code_cs_unity_bin,data_bin";
-
-        [Command("--service")]
-        public string ServiceType = "client";
 
 
 
@@ -54,7 +49,8 @@ namespace Ux.Editor.Build.Config
         public static ConfigSettingData Setting;
         public string GetCommand()
         {
-            string line_end = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? " ^" : " \\";
+            //string line_end = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? " ^" : " \\";
+            string line_end = " ";
 
             StringBuilder sb = new StringBuilder();
 
@@ -90,7 +86,10 @@ namespace Ux.Editor.Build.Config
                 {
                     value = Path.GetFullPath(value).Replace("\\", "/");
                 }
-
+                if (!string.IsNullOrEmpty(command.valuePrefix))
+                {
+                    value = $"{command.valuePrefix}{value}";
+                }
                 if (string.IsNullOrEmpty(command.option))
                 {
                     sb.Append($" {value} ");
@@ -103,10 +102,9 @@ namespace Ux.Editor.Build.Config
 
                 if (command.newLine)
                 {
-                    sb.Append($"{line_end} \n");
+                    sb.Append($"{line_end}");
                 }
-            }
-
+            }            
             return sb.ToString();
         }
 
@@ -115,7 +113,7 @@ namespace Ux.Editor.Build.Config
         {
             if (Setting == null)
             {
-                Setting = SettingTools.GetSingletonAssets<ConfigSettingData>("Assets/Setting/Build/Config");
+                Setting = SettingTools.GetSingletonAssets<ConfigSettingData>("Assets/Settings/Build/Config");
             }
             return Setting;
         }

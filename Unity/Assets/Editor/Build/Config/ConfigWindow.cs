@@ -27,11 +27,17 @@ namespace Ux.Editor.Build.Config
         }
 
 
-        private List<string> GenTypes = new List<string>() { "code_cs_unity_bin,data_bin", "code_cs_unity_json,data_json" };
+        private List<string> GenCodeTypes = new List<string>() {
+            "cs-newtonsoft-json", "cs-bin"
+        };
+        private List<string> GenDataTypes = new List<string>() {
+            "json","bin",
+        };
         private List<string> ServiceTypes = new List<string>() { "client", "server" };
         
 
-        PopupField<string> _genType;
+        PopupField<string> _genCodeType;
+        PopupField<string> _genDataType;
         PopupField<string> _serviceType;
         ConfigSettingData Setting;
 
@@ -46,22 +52,32 @@ namespace Ux.Editor.Build.Config
                 rootVisualElement.Add(root);
                 
                 txtDllFile.SetValueWithoutNotify(Setting.DllFile);                    
-                txtDefineFile.SetValueWithoutNotify(Setting.DefineFile);                
-                txtInputDataPath.SetValueWithoutNotify(Setting.InputDataPath);                
+                txtDefineFile.SetValueWithoutNotify(Setting.ConfFile);                                     
                 txtOutCodePath.SetValueWithoutNotify(Setting.OutCodePath);                                     
                 txtOutDataPath.SetValueWithoutNotify(Setting.OutDataPath);                
 
                 var popContainer = root.Q("popContainer");
-                var index = GenTypes.IndexOf(Setting.GenType);
+                var index = GenCodeTypes.IndexOf(Setting.GenCodeType);
                 if (index < 0) index = 0;
-                _genType = new PopupField<string>(GenTypes, index);
-                _genType.label = "生成数类型";
-                _genType.style.width = 500;
-                _genType.RegisterValueChangedCallback(evt =>
+                _genCodeType = new PopupField<string>(GenCodeTypes, index);
+                _genCodeType.label = "生成代码类型";
+                _genCodeType.style.width = 500;
+                _genCodeType.RegisterValueChangedCallback(evt =>
                 {
-                    Setting.GenType = evt.newValue;
+                    Setting.GenCodeType = evt.newValue;
                 });
-                popContainer.Add(_genType);
+                popContainer.Add(_genCodeType);
+
+                index = GenDataTypes.IndexOf(Setting.GenDataType);
+                if (index < 0) index = 0;
+                _genDataType = new PopupField<string>(GenDataTypes, index);
+                _genDataType.label = "生成数据类型";
+                _genDataType.style.width = 500;
+                _genDataType.RegisterValueChangedCallback(evt =>
+                {
+                    Setting.GenDataType = evt.newValue;
+                });
+                popContainer.Add(_genDataType);
 
                 index = ServiceTypes.IndexOf(Setting.ServiceType);
                 if (index < 0) index = 0;
@@ -91,23 +107,15 @@ namespace Ux.Editor.Build.Config
         }
         partial void _OnBtnDllFileClick()
         {
-            BuildHelper.OpenFilePanel(Setting.DllFile, "Client&Server Dll", txtDllFile, "dll");
+            BuildHelper.OpenFilePanel(Setting.DllFile, "Luban.Dll", txtDllFile, "dll");
         }
         partial void _OnTxtDefineFileChanged(ChangeEvent<string> e)
         {
-            Setting.DefineFile = e.newValue;
+            Setting.ConfFile = e.newValue;
         }
         partial void _OnBtnDefineFileClick()
         {
-            BuildHelper.OpenFilePanel(Setting.DefineFile, "Root.xml", txtDefineFile, "xml");
-        }
-        partial void _OnTxtInputDataPathChanged(ChangeEvent<string> e)
-        {
-            Setting.InputDataPath = e.newValue;
-        }
-        partial void _OnBtnInputDataPathClick()
-        {
-            BuildHelper.OpenFolderPanel(Setting.InputDataPath, "请选择配置目录", txtInputDataPath);
+            BuildHelper.OpenFilePanel(Setting.ConfFile, "luban.conf", txtDefineFile, "conf");
         }
         partial void _OnTxtOutCodePathChanged(ChangeEvent<string> e)
         {

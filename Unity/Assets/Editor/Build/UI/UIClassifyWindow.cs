@@ -83,7 +83,7 @@ namespace Ux.Editor.Build.UI
             {
                 if (_ResClassifySettings == null)
                 {
-                    _ResClassifySettings = SettingTools.GetSingletonAssets<UIClassifySettingData>("Assets/Setting/Build/UI");
+                    _ResClassifySettings = SettingTools.GetSingletonAssets<UIClassifySettingData>("Assets/Settings/Build/UI");
                 }
                 return _ResClassifySettings;
             }

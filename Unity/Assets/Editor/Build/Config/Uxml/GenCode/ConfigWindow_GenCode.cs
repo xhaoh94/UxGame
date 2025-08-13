@@ -14,8 +14,6 @@ namespace Ux.Editor.Build.Config
 		public Button btnDllFile;
 		public TextField txtDefineFile;
 		public Button btnDefineFile;
-		public TextField txtInputDataPath;
-		public Button btnInputDataPath;
 		public TextField txtOutDataPath;
 		public Button btnOutDataPath;
 		public TextField txtOutCodePath;
@@ -36,10 +34,6 @@ namespace Ux.Editor.Build.Config
 			txtDefineFile.RegisterValueChangedCallback(e => _OnTxtDefineFileChanged(e));
 			btnDefineFile = root.Q<Button>("btnDefineFile");
 			btnDefineFile.clicked += () => _OnBtnDefineFileClick();
-			txtInputDataPath = root.Q<TextField>("txtInputDataPath");
-			txtInputDataPath.RegisterValueChangedCallback(e => _OnTxtInputDataPathChanged(e));
-			btnInputDataPath = root.Q<Button>("btnInputDataPath");
-			btnInputDataPath.clicked += () => _OnBtnInputDataPathClick();
 			txtOutDataPath = root.Q<TextField>("txtOutDataPath");
 			txtOutDataPath.RegisterValueChangedCallback(e => _OnTxtOutDataPathChanged(e));
 			btnOutDataPath = root.Q<Button>("btnOutDataPath");
@@ -56,8 +50,6 @@ namespace Ux.Editor.Build.Config
 		partial void _OnBtnDllFileClick();
 		partial void _OnTxtDefineFileChanged(ChangeEvent<string> e);
 		partial void _OnBtnDefineFileClick();
-		partial void _OnTxtInputDataPathChanged(ChangeEvent<string> e);
-		partial void _OnBtnInputDataPathClick();
 		partial void _OnTxtOutDataPathChanged(ChangeEvent<string> e);
 		partial void _OnBtnOutDataPathClick();
 		partial void _OnTxtOutCodePathChanged(ChangeEvent<string> e);

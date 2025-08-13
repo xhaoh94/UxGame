@@ -105,7 +105,7 @@ namespace Ux.Editor.Build.Proto
         {
             if (Setting == null)
             {
-                Setting = SettingTools.GetSingletonAssets<ProtoSettingData>("Assets/Setting/Build/Proto");
+                Setting = SettingTools.GetSingletonAssets<ProtoSettingData>("Assets/Settings/Build/Proto");
             }
             return Setting;
         }

@@ -1,4 +1,4 @@
-using Bright.Serialization;
+using Luban;
 using SimpleJSON;
 using UnityEngine;
 
@@ -17,19 +17,19 @@ namespace Ux
                 : (System.Delegate)new System.Func<string, JSONNode>(LoadJson);
             Tables = (cfg.Tables)tablesCtor.Invoke(new object[] { loader });
         }
-        string GetPath(string file)
+        string _GetPath(string file)
         {
             return string.Format(PathHelper.Res.Config,file);
         }
         private JSONNode LoadJson(string file)
         {
-            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetPath(file));
+            var ta = ResMgr.Ins.LoadAsset<TextAsset>(_GetPath(file));
             return JSON.Parse(ta.text);
         }
 
         private ByteBuf LoadByteBuf(string file)
         {
-            var ta = ResMgr.Ins.LoadAsset<TextAsset>(GetPath(file));
+            var ta = ResMgr.Ins.LoadAsset<TextAsset>(_GetPath(file));
             return new ByteBuf(ta.bytes);
         }
     }

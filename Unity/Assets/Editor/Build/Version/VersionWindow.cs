@@ -471,7 +471,7 @@ namespace Ux.Editor.Build.Version
         #region 初始化   
         void LoadConfig()
         {
-            Setting = SettingTools.GetSingletonAssets<VersionSettingData>("Assets/Setting/Build/Version");
+            Setting = SettingTools.GetSingletonAssets<VersionSettingData>("Assets/Settings/Build/Version");
         }
         void SaveConfig()
         {
