@@ -13,14 +13,14 @@ namespace Ux.Editor.Build.Version
 
                 var path = Path.Combine(SelectItem.ExePath, compile.ToString(), buildTarget.ToString());
                 BuildPlayerOptions buildPlayerOptions = BuildHelper.GetBuildPlayerOptions(buildTarget, options, path, "Game");
-                Log.Debug("---------------------------------------->开始程序打包<---------------------------------------");
+                Log.Debug("---------------------------------------->寮�濮嬫瀯寤篍XE<---------------------------------------");
                 var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
                 if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
                 {
-                    Log.Debug("---------------------------------------->打包失败<---------------------------------------");
+                    Log.Debug("---------------------------------------->鏋勫缓EXE澶辫触<---------------------------------------");
                     return false;
                 }
-                Log.Debug("---------------------------------------->完成程序打包<---------------------------------------");
+                Log.Debug("---------------------------------------->鏋勫缓EXE鎴愬姛<---------------------------------------");
                 EditorUtility.RevealInFinder(Path.GetFullPath(path));
             }
             return true;

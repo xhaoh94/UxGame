@@ -32,12 +32,12 @@ namespace Ux
             {
                 if (divisor == 0)
                 {
-                    Log.Error("³ıÊı²»¿ÉÎª0");
+                    Log.Error("é™¤æ•°ä¸èƒ½ä¸º0");
                     return true;
                 }
                 return false;
             }
-            // AST½ÚµãÀàĞÍ
+            // ASTï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
             private abstract class Node
             {
                 public abstract double Evaluate();
@@ -48,7 +48,7 @@ namespace Ux
                 }
                 protected abstract void OnRelease();
             }
-            //Êı×Ö½Úµã
+            //ï¿½ï¿½ï¿½Ö½Úµï¿½
             private class NumberNode : Node
             {
                 private double _value;
@@ -63,7 +63,7 @@ namespace Ux
                     _value = 0;
                 }
             }
-            //±äÁ¿½Úµã
+            //å‡½æ•°èŠ‚ç‚¹
             private class VariableNode : Node
             {
                 private string _name;
@@ -82,7 +82,7 @@ namespace Ux
                     {
                         return func();
                     }
-                    Log.Error($"Î´ÖªµÄ±äÁ¿Ãû: {_name}");
+                    Log.Error($"æœªçŸ¥çš„å˜é‡å: {_name}");
                     return 0;
                 }
                 protected override void OnRelease()
@@ -90,7 +90,7 @@ namespace Ux
                     _name = null;
                 }
             }
-            //Ò»ÔªÔËËã·û½Úµã
+            //Ò»Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½
             private class UnaryNode : Node
             {
                 private char _op;
@@ -109,7 +109,7 @@ namespace Ux
                         case '-':
                             return _operand.Evaluate() * -1;
                         default:
-                            Log.Error($"Î´ÖªµÄÒ»ÔªÔËËã·û {_op}");
+                            Log.Error($"æœªçŸ¥çš„ä¸€å…ƒè¿ç®—ç¬¦ {_op}");
                             return 0;
                     }
                 }
@@ -119,7 +119,7 @@ namespace Ux
                     _operand = null;
                 }
             }
-            //ÔËËã·û½Úµã
+            //äºŒå…ƒèŠ‚ç‚¹
             private class BinaryNode : Node
             {
                 private char _op;
@@ -138,7 +138,7 @@ namespace Ux
                     {
                         return fn(left, right);
                     }
-                    Log.Error($"Î´ÖªµÄÔËËã·û: {_op}");
+                    Log.Error($"æœªçŸ¥çš„äºŒå…ƒè¿ç®—ç¬¦: {_op}");
                     return 0;
                 }
                 protected override void OnRelease()
@@ -149,7 +149,7 @@ namespace Ux
                     _right = null;
                 }
             }
-            //º¯Êı½Úµã
+            //ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½
             private class FunctionNode : Node
             {
                 private string _name;
@@ -166,7 +166,7 @@ namespace Ux
                     {
                         if (!nameToDoubleFunc.TryGetValue(_name, out func))
                         {
-                            Log.Error($"Î´ÖªµÄº¯Êı£º {_name}");
+                            Log.Error($"æœªçŸ¥çš„å‡½æ•°å {_name}");
                             return 0;
                         }
                     }
@@ -197,7 +197,7 @@ namespace Ux
                 }
             }
 
-            // ´Ê·¨·ÖÎöÆ÷
+            // å†å²è®°å½•å™¨
             private class Lexer
             {
                 private string _input;
@@ -233,7 +233,7 @@ namespace Ux
                             }
                             else
                             {
-                                Log.Error($"ÎŞĞ§×Ö·û: '{Current}'=> position {_position}");
+                                Log.Error($"æ— æ•ˆå­—ç¬¦: '{Current}'=> position {_position}");
                             }
                         }
                     }
@@ -260,10 +260,10 @@ namespace Ux
                             break;
                         }
                     }
-                    // Ê¹ÓÃ Span ±ÜÃâ×Ö·û´®·ÖÅä
+                    // Ê¹ï¿½ï¿½ Span ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     var span = _input.AsSpan(start, _position - start);
                     if (!double.TryParse(span, out double value))
-                        Log.Error($"ÎŞĞ§Êı×Ö: '{span.ToString()}'");
+                        Log.Error($"æ— æ•ˆæ•°å­—: '{span.ToString()}'");
                     return new Token(TokenType.Number, value);
                 }
 
@@ -274,7 +274,7 @@ namespace Ux
                     {
                         _position++;
                     }
-                    // Ê¹ÓÃ Span ±ÜÃâ×Ö·û´®·ÖÅä
+                    // Ê¹ï¿½ï¿½ Span ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     var span = _input.AsSpan(start, _position - start);
                     return new Token(TokenType.Identifier, span.ToString());
                 }
@@ -312,7 +312,7 @@ namespace Ux
             }
 
 
-            // Óï·¨·ÖÎöÆ÷
+            // ï¿½ï·¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             private class Parser
             {
                 private List<Token> _tokens;
@@ -337,16 +337,16 @@ namespace Ux
                     var node = ParseAdditive();
                     if (Current.Type != TokenType.None)
                     {
-                        // Èç¹ûÊÇ¶ººÅ»òÓÒÀ¨ºÅ£¬¿ÉÄÜÊÇº¯Êı²ÎÊıµÄÒ»²¿·Ö£¬ÔÊĞí¼ÌĞø
+                        // ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Çºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                         if (Current.Type != TokenType.Comma && Current.Type != TokenType.RightParen)
                         {
-                            Log.Error($"token ½âÎö´íÎó: {Current}");
+                            Log.Error($"token ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {Current}");
                             return null;
                         }
                     }
                     return node;
                 }
-                //½âÎö¼Ó¼õ
+                //è§£æåŠ å‡
                 private Node ParseAdditive()
                 {
                     var left = ParseMultiplicative();
@@ -362,7 +362,7 @@ namespace Ux
 
                     return left;
                 }
-                //½âÎö³Ë³ı
+                //ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½
                 private Node ParseMultiplicative()
                 {
                     var left = ParseUnary();
@@ -378,7 +378,7 @@ namespace Ux
 
                     return left;
                 }
-                //½âÒ»Ôª·ûºÅ£¬ÀıÈç-x¡¢+x
+                //ï¿½ï¿½Ò»Ôªï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½-xï¿½ï¿½+x
                 private Node ParseUnary()
                 {
                     if (Current.Type == TokenType.Operator &&
@@ -390,12 +390,12 @@ namespace Ux
                     }
                     return ParsePrimary();
                 }
-                //½âÎö»ù´¡ÔªËØ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½
                 private Node ParsePrimary()
                 {
                     if (Current.Type == TokenType.None)
                     {
-                        Log.Error("½âÎö´íÎó");
+                        Log.Error("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                         return null;
                     }
 
@@ -411,7 +411,7 @@ namespace Ux
                             return ParseParenthesizedExpression();
 
                         default:
-                            Log.Error($"token ½âÎö´íÎó: {Current}");
+                            Log.Error($"token ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {Current}");
                             return null;
                     }
                 }
@@ -427,68 +427,69 @@ namespace Ux
                     string name = Current.StrValue;
                     _position++;
 
-                    // ¼ì²éÊÇ·ñÊÇº¯Êıµ÷ÓÃ
+                    // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Çºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     if (Current.Type == TokenType.LeftParen)
                     {
-                        _position++; // Ìø¹ı '('                        
-                        // ´¦ÀíÎŞ²ÎÊıÇé¿ö
+                        _position++; // ï¿½ï¿½ï¿½ï¿½ '('                        
+                        // è§£ææ— å‚æ•°å‡½æ•°
                         if (Current.Type == TokenType.RightParen)
                         {
-                            _position++; // Ìø¹ı ')'
+                            _position++; // ï¿½ï¿½ï¿½ï¿½ ')'
                             return Pool.Get<FunctionNode>().Init(name, null);
                         }
 
                         var arguments = Pool.Get<List<Node>>();
-                        // ½âÎö²ÎÊıÁĞ±í
+                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½
                         while (true)
                         {
-                            // ½âÎö²ÎÊı±í´ïÊ½
+                            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
                             arguments.Add(ParseExpression());
 
                             if (Current.Type == TokenType.None)
                             {
-                                Log.Error("º¯Êıµ÷ÓÃÖĞÊäÈëÒâÍâ½áÊø");
+                                Log.Error("ç¼ºå°‘å³æ‹¬å·æˆ–å‚æ•°");
                                 return null;
                             }
 
                             if (Current.Type == TokenType.RightParen)
                             {
-                                _position++; // Ìø¹ı ')'
+                                _position++; // ï¿½ï¿½ï¿½ï¿½ ')'
                                 break;
                             }
 
                             if (Current.Type != TokenType.Comma)
                             {
-                                Log.Error($"·ÇÔ¤ÆÚµÄ¶ººÅ»òÓÒÀ¨ºÅ£º {Current}");
+                                Log.Error($"ï¿½ï¿½Ô¤ï¿½ÚµÄ¶ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ {Current}");
                                 return null;
                             }
 
-                            _position++; // Ìø¹ı ','
+                            _position++; // ï¿½ï¿½ï¿½ï¿½ ','
                         }
 
                         return Pool.Get<FunctionNode>().Init(name, arguments);
                     }
 
-                    // ÆÕÍ¨±äÁ¿
+                    // ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½
                     return Pool.Get<VariableNode>().Init(name);
                 }
 
+                //è§£ææ‹¬å·è¡¨è¾¾å¼
                 private Node ParseParenthesizedExpression()
                 {
-                    _position++; // Ìø¹ı '('
+                    _position++; // ï¿½ï¿½ï¿½ï¿½ '('
                     Node node = ParseExpression();
 
                     if (Current.Type != TokenType.RightParen)
                     {
-                        Log.Error("º¯Êıµ÷ÓÃÖĞÊäÈëÒâÍâ½áÊø");
+                        Log.Error("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                         return null;
                     }
 
-                    _position++; // Ìø¹ı ')'
+                    _position++; // ï¿½ï¿½ï¿½ï¿½ ')'
                     return node;
                 }
             }
-            //¸ù½Úµã
+            //ï¿½ï¿½ï¿½Úµï¿½
             Node _ast;
             public FormulaParser Init(string expression)
             {

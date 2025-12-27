@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Ux
 {
-    [TLTrack("¶¯»­", 111, 212, 201)]
+    [TLTrack("åŠ¨ç”»", 111, 212, 201)]
     [TLTrackClipType(typeof(AnimationClipAsset))]
     public class AnimationTrackAsset : TimelineTrackAsset
     {                

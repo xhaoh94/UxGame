@@ -53,7 +53,7 @@ namespace Ux.Editor.Build.UI
     public partial class UICodeGenWindow : EditorWindow
     {
 
-        [MenuItem("UxGame/¹¤¾ß/UI/´úÂëÉú³É", false, 510)]
+        [MenuItem("UxGame/å·¥å…·/UI/ä»£ç ç”Ÿæˆ", false, 510)]
         public static void ShowExample()
         {
             var window = GetWindow<UICodeGenWindow>("UICodeGenWindow", true);
@@ -373,7 +373,7 @@ namespace Ux.Editor.Build.UI
         }
         partial void _OnBtnCodePathClick()
         {
-            var temPath = EditorUtility.OpenFolderPanel("ÇëÑ¡ÔñÉú³ÉÂ·¾¶", UICodeGenSettingData.CodeGenPath, "");
+            var temPath = EditorUtility.OpenFolderPanel("è¯·é€‰æ‹©ç”Ÿæˆè·¯å¾„", UICodeGenSettingData.CodeGenPath, "");
             if (temPath.Length == 0)
             {
                 return;
@@ -381,7 +381,7 @@ namespace Ux.Editor.Build.UI
 
             if (!Directory.Exists(temPath))
             {
-                EditorUtility.DisplayDialog("´íÎó", "Â·¾¶²»´æÔÚ!", "ok");
+                EditorUtility.DisplayDialog("é”™è¯¯", "è·¯å¾„ä¸å­˜åœ¨!", "ok");
                 return;
             }
             UICodeGenSettingData.CodeGenPath = temPath;
@@ -501,7 +501,7 @@ b:;
         }
         partial void _OnBtnCodePath_selectClick()
         {
-            var temPath = EditorUtility.OpenFolderPanel("ÇëÑ¡ÔñÉú³ÉÂ·¾¶", UICodeGenSettingData.CodeGenPath, "");
+            var temPath = EditorUtility.OpenFolderPanel("è¯·é€‰æ‹©ç”Ÿæˆè·¯å¾„", UICodeGenSettingData.CodeGenPath, "");
             if (temPath.Length == 0)
             {
                 return;
@@ -509,7 +509,7 @@ b:;
 
             if (!Directory.Exists(temPath))
             {
-                EditorUtility.DisplayDialog("´íÎó", "Â·¾¶²»´æÔÚ!", "ok");
+                EditorUtility.DisplayDialog("é”™è¯¯", "è·¯å¾„ä¸å­˜åœ¨!", "ok");
                 return;
             }
             inputCodePath_select.SetValueWithoutNotify(temPath);
@@ -536,12 +536,12 @@ b:;
             {
                 if (UIEditorTools.GetGComBy(selectItem.pi, out var com) && OnExport(com))
                 {
-                    Log.Debug("UI´úÂëÉú³É");
-                    EditorUtility.DisplayDialog("ÌáÊ¾", "µ¼³öÑ¡ÖĞ×é¼ş³É¹¦", "È·¶¨");
+                    Log.Debug("UIä»£ç ç”Ÿæˆ");
+                    EditorUtility.DisplayDialog("æç¤º", "ç”Ÿæˆé€‰ä¸­ä»£ç æˆåŠŸ", "ç¡®å®š");
                 }
                 else
                 {
-                    EditorUtility.DisplayDialog("ÌáÊ¾", "µ¼³öÑ¡ÖĞ×é¼şÊ§°Ü", "È·¶¨");
+                    EditorUtility.DisplayDialog("æç¤º", "ç”Ÿæˆé€‰ä¸­ä»£ç å¤±è´¥", "ç¡®å®š");
                 }
             }
         }
@@ -554,11 +554,11 @@ b:;
             }
             if (Export())
             {
-                EditorUtility.DisplayDialog("ÌáÊ¾", "µ¼³öËùÓĞ×é¼ş³É¹¦", "È·¶¨");
+                EditorUtility.DisplayDialog("æç¤º", "ç”Ÿæˆæ‰€æœ‰ä»£ç æˆåŠŸ", "ç¡®å®š");
             }
             else
             {
-                EditorUtility.DisplayDialog("ÌáÊ¾", "µ¼³öËùÓĞ×é¼şÊ§°Ü", "È·¶¨");
+                EditorUtility.DisplayDialog("æç¤º", "ç”Ÿæˆæ‰€æœ‰ä»£ç å¤±è´¥", "ç¡®å®š");
             }
         }
     }

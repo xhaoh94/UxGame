@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 
 namespace Ux
 {
@@ -213,6 +214,7 @@ namespace Ux
         }
 
         public sealed class EventData<A, B, C> : EventBaseData
+
         {
             public override Delegate Method => _fn;
             Action<A, B, C> _fn;
@@ -248,6 +250,44 @@ namespace Ux
             protected override void OnRelease()
             {
                 _fn = null;
+            }
+        }
+        public sealed class EventAwaitData : EventBaseData
+        {
+            public override Delegate Method => null;
+            AutoResetUniTaskCompletionSource _fn;
+
+            public void Init(long key, int eType, object tag, AutoResetUniTaskCompletionSource fn)
+            {
+                Tag = tag;
+                Key = key;
+                EType = eType;
+                _fn = fn;
+            }
+
+            protected override void OnRelease()
+            {
+                _fn = null;
+            }
+
+            public override void Run()
+            {
+                 _fn.TrySetResult();
+            }
+
+            public override void Run(object a)
+            {
+                _fn.TrySetResult();
+            }
+
+            public override void Run(object a, object b)
+            {
+                _fn.TrySetResult();
+            }
+
+            public override void Run(object a, object b, object c)
+            {
+                _fn.TrySetResult();
             }
         }
     }

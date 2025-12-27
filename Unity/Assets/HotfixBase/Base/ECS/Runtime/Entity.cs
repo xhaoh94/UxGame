@@ -29,7 +29,7 @@ namespace Ux
         {
             var _exeNum = 0;
             var max = 200;
-            while (_delayFn.Count > 0 && (_exeNum++) < max) //一帧最多执行max次
+            while (_delayFn.Count > 0 && _exeNum++ < max) //一帧最多执行max次
             {
                 var fn = _delayFn.Peek();
                 //放进来后下一帧再销毁，以免同帧下销毁时，业务逻辑报错
@@ -68,13 +68,11 @@ namespace Ux
         public bool IsDestroy => _isDestroyed || _isDestroying;
         bool _isDestroying;
         bool _isDestroyed;
+ 
         readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
         readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
         Entity _parent;        
 
-        /// <summary>
-        /// 获取父类实体，如果父类是组件的时候，会循环往上获取，直到获取到为实体为止
-        /// </summary>
         public Entity Parent
         {
             get
@@ -123,7 +121,7 @@ namespace Ux
             entity._isDestroying = false;
             entity.IsFromPool = isFromPool;
             entity.ID = id;
-            entity.Name = $"{type.Name}_{id}";
+            entity.Name = $"{type.Name}_{id}";                 
             return entity;
         }
         /// <summary>
@@ -651,15 +649,6 @@ namespace Ux
                 Log.Error(Name + "已销毁");
                 return true;
             }
-            //if (IsComponent)
-            //{
-            //    var temParent = Parent;
-            //    if (temParent != null && temParent.IsDestroy)
-            //    {
-            //        Log.Error(temParent.Name + "已销毁");
-            //        return true;
-            //    }
-            //}
             return false;
         }
 
@@ -681,8 +670,7 @@ namespace Ux
             if (!isDestroy)
             {
                 _RemoveSystem();
-                _parent = null;
-                //_parentByComponent = null;
+                _parent = null;                
                 return;
             }
             if (IsDestroy) return;
@@ -694,8 +682,7 @@ namespace Ux
                 EventMgr.Ins.OffTag(this);
             }
 
-            RemoveAll();
-            //RemoveComponents();
+            RemoveAll();            
 
             if (_event != null)
             {
@@ -719,12 +706,10 @@ namespace Ux
             _isDestroyed = true;
             _isDestroying = false;
             OnDestroy();
-
-            //_parentByComponent = null;
+            
             _parent = null;
             _entitys.Clear();
             _typeToentitys.Clear();
-            //_components.Clear();
             _name = null;
             _is_init = false;
             ID = 0;

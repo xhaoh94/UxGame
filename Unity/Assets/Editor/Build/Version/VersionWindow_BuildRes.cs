@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+ï»¿using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,32 +49,32 @@ namespace Ux.Editor.Build.Version
 
         partial void _OnClearClick()
         {
-            if (EditorUtility.DisplayDialog("ÌáÊ¾", $"ÊÇ·ñÖØÖÃ¹¹½¨£¡\nÖØÖÃ»áÉ¾³ıËùÓĞ¹¹½¨Ïà¹ØÄ¿Â¼£¡", "È·¶¨", "È¡Ïû"))
+            if (EditorUtility.DisplayDialog("æç¤º", $"æ˜¯å¦æ¸…ç©ºæ„å»ºç¼“å­˜\nå°†åˆ é™¤æ‰€æœ‰æ„å»ºç›¸å…³çš„ç›®å½•ï¼Ÿ", "ç¡®å®š", "å–æ¶ˆ"))
             {
                 if (Directory.Exists(SelectItem.ExePath))
                 {
                     Directory.Delete(SelectItem.ExePath, true);
-                    Log.Debug($"É¾³ı¹¹½¨Ä¿Â¼£º{SelectItem.ExePath}");
+                    Log.Debug($"åˆ é™¤æ„å»ºç›®å½•ï¼š{SelectItem.ExePath}");
                 }
                 if (Directory.Exists(SelectItem.CopyPath))
                 {
                     Directory.Delete(SelectItem.CopyPath, true);
-                    Log.Debug($"É¾³ı¿½±´Ä¿Â¼£º{SelectItem.CopyPath}");
+                    Log.Debug($"åˆ é™¤å¤åˆ¶ç›®å½•ï¼š{SelectItem.CopyPath}");
                 }
 
                 if (EditorTools.DeleteDirectory(SandboxRoot))
                 {
-                    Log.Debug($"É¾³ıÉ³ºĞ»º´æ£º{SandboxRoot}");
+                    Log.Debug($"åˆ é™¤æ²™ç›’ç¼“å­˜ï¼š{SandboxRoot}");
                 }
 
-                // É¾³ıÆ½Ì¨×ÜÄ¿Â¼                        
+                // åˆ é™¤å¹³å°ç›®å½•                        
                 if (EditorTools.DeleteDirectory(BuildOutputRoot))
                 {
-                    Log.Debug($"É¾³ı×ÊÔ´Ä¿Â¼£º{BuildOutputRoot}");
+                    Log.Debug($"åˆ é™¤èµ„æºç›®å½•ï¼š{BuildOutputRoot}");
                 }
                 if (EditorTools.DeleteDirectory(TemBuildOutputRoot))
                 {
-                    Log.Debug($"É¾³ıÁÙÊ±×ÊÔ´Ä¿Â¼£º{TemBuildOutputRoot}");
+                    Log.Debug($"åˆ é™¤ä¸´æ—¶èµ„æºç›®å½•ï¼š{TemBuildOutputRoot}");
                 }
 
                 EditorTools.ClearFolder(StreamingAssetsRoot);
@@ -82,7 +82,7 @@ namespace Ux.Editor.Build.Version
                 SelectItem.Clear();
                 RefreshView();
                 AssetDatabase.Refresh();
-                Log.Debug("ÖØÖÃ³É¹¦");
+                Log.Debug("æ¸…é™¤æˆåŠŸ");
             }
         }
 
@@ -91,7 +91,7 @@ namespace Ux.Editor.Build.Version
             var packageValue = buildPackage.value;
             if (packageValue == 0)
             {
-                Log.Error("Ã»ÓĞÑ¡ÖĞÒª¹¹½¨µÄ×ÊÔ´°ü");
+                Log.Error("æ²¡æœ‰é€‰æ‹©è¦æ„å»ºçš„èµ„æºåŒ…");
                 return false;
             }
 
@@ -103,7 +103,7 @@ namespace Ux.Editor.Build.Version
                 {
                     if (EditorTools.DeleteDirectory(SandboxRoot))
                     {
-                        Log.Debug("---------------------------------------->É¾³ıÉ³ºĞ»º´æ<---------------------------------------");
+                        Log.Debug("---------------------------------------->åˆ é™¤æ²™ç›’ç¼“å­˜<---------------------------------------");
                     }
                 }
             }
@@ -134,7 +134,7 @@ namespace Ux.Editor.Build.Version
             {
                 UniTask<bool> CollectSVC(string packageName)
                 {
-                    Log.Debug($"---------------------------------------->{packageName}:ÊÕ¼¯×ÅÉ«Æ÷±äÖÖ<---------------------------------------");
+                    Log.Debug($"---------------------------------------->{packageName}:æ”¶é›†ç€è‰²å™¨å˜ä½“<---------------------------------------");
                     var collectPath = $"Assets/Data/Art/ShaderVariants/{packageName}";
                     string savePath = $"{collectPath}/{packageName}SV.shadervariants";
                     ShaderVariantCollectorSetting.SetFileSavePath(packageName, savePath);
@@ -147,7 +147,7 @@ namespace Ux.Editor.Build.Version
                     var task = AutoResetUniTaskCompletionSource<bool>.Create();
                     Action callback = () =>
                     {
-                        Log.Debug("------------------------------------>Éú³ÉYooAsset ×ÅÉ«Æ÷ÅäÖÃ<------------------------------");
+                        Log.Debug("------------------------------------>æ·»åŠ YooAsset ç€è‰²å™¨å˜ä½“<------------------------------");
                         var packages = AssetBundleCollectorSettingData.Setting.Packages;
                         var package = packages.Find(x => x.PackageName == packageName);
                         bool _IsDirty = false;
@@ -158,7 +158,7 @@ namespace Ux.Editor.Build.Version
                             {
                                 group = new AssetBundleCollectorGroup();
                                 group.AssetTags = "builtin";
-                                group.GroupDesc = "×ÅÉ«Æ÷";
+                                group.GroupDesc = "é¢œè‰²å˜ä½“";
                                 group.GroupName = "ShaderVariant";
                                 package.Groups.Add(group);
                             }
@@ -198,13 +198,13 @@ namespace Ux.Editor.Build.Version
                 {
                     AssetBundleCollectorSettingData.SaveFile();
                 }
-                Log.Debug("---------------------------------------->¿ªÊ¼×ÊÔ´´ò°ü<---------------------------------------");
+                Log.Debug("---------------------------------------->å¼€å§‹æ„å»ºèµ„æº<---------------------------------------");
                 foreach (var package in packages)
                 {
-                    Log.Debug($"---------------------------------------->{package}:¿ªÊ¼¹¹½¨×ÊÔ´°ü<---------------------------------------");
+                    Log.Debug($"---------------------------------------->{package}:å¼€å§‹æ„å»ºèµ„æº<---------------------------------------");
                     if (!BuildRes(buildTarget, package)) return false;
                 }
-                Log.Debug("---------------------------------------->Íê³É×ÊÔ´´ò°ü<---------------------------------------");
+                Log.Debug("---------------------------------------->å®Œæˆèµ„æºæ„å»º<---------------------------------------");
             }
             return true;
         }
@@ -213,11 +213,11 @@ namespace Ux.Editor.Build.Version
         {
             if (IsForceRebuild)
             {
-                // É¾³ıÆ½Ì¨×ÜÄ¿Â¼            
+                // åˆ é™¤å¹³å°ç›®å½•            
                 string platformDirectory = $"{BuildOutputRoot}/{packageName}/{buildTarget}";
                 if (EditorTools.DeleteDirectory(platformDirectory))
                 {
-                    Log.Debug($"É¾³ıÆ½Ì¨×ÜÄ¿Â¼£º{platformDirectory}");
+                    Log.Debug($"åˆ é™¤å¹³å°ç›®å½•ï¼š{platformDirectory}");
                 }
             }
 
@@ -241,7 +241,7 @@ namespace Ux.Editor.Build.Version
             {
                 nowVersion = AddVersion(lastVersion);
                 txtVersion.SetValueWithoutNotify(nowVersion);
-                Log.Warning("°æ±¾ºÅÎŞ¸üĞÂ£¬½«½øĞĞ×Ô¶¯¸üĞÂ£¡");
+                Log.Warning("ç‰ˆæœ¬å·æœªä¿®æ”¹ï¼Œç³»ç»Ÿå°†è‡ªåŠ¨é€’å¢");
             }
 
             BuildParameters buildParameters = null;
@@ -268,7 +268,7 @@ namespace Ux.Editor.Build.Version
                     pipeline = new RawFileBuildPipeline();
                     break;
                 default:
-                    Log.Error("Î´ÖªµÄ¹¹½¨Ä£Ê½");
+                    Log.Error("æœªçŸ¥çš„æ„å»ºæ¨¡å¼");
                     return false;
             }            
             buildParameters.BuildOutputRoot = temOutputRoot;
@@ -285,8 +285,8 @@ namespace Ux.Editor.Build.Version
             buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
             buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
             buildParameters.ManifestServices = CreateManifestServicesInstance(packageSetting.ManifestClassName);
-            buildParameters.ClearBuildCacheFiles = IsForceRebuild ; //ÔöÁ¿¸üĞÂ²»ÇåÀí¹¹½¨»º´æ£¬ÆôÓÃÔöÁ¿¹¹½¨£¬¿ÉÒÔÌá¸ß´ò°üËÙ¶È£¡
-            buildParameters.UseAssetDependencyDB = SelectItem.IsUseDb; //Ê¹ÓÃ×ÊÔ´ÒÀÀµ¹ØÏµÊı¾İ¿â£¬¿ÉÒÔÌá¸ß´ò°üËÙ¶È£¡
+            buildParameters.ClearBuildCacheFiles = IsForceRebuild ; //å¢é‡æ„å»ºæ—¶éœ€è¦æ¸…ç†æ„å»ºç¼“å­˜ï¼Œå¦åˆ™å¯èƒ½å¯¼è‡´æ„å»ºå¤±è´¥æˆ–æ„å»ºé€Ÿåº¦å˜æ…¢ï¼Œ
+            buildParameters.UseAssetDependencyDB = SelectItem.IsUseDb; //ä½¿ç”¨èµ„æºä¾èµ–å…³ç³»æ•°æ®åº“ï¼Œæå‡æ„å»ºé€Ÿåº¦ï¼Œ
 
 
 
@@ -294,15 +294,15 @@ namespace Ux.Editor.Build.Version
             if (!result.Success)
             {
                 var temVersion = FileUtility.ReadAllText(versionFile);
-                if (temVersion == nowVersion)//¹¹½¨Ê§°ÜÁË£¬µ«ÊÇYooAssetÈ´°Ñ°æ±¾ºÅ¸øĞŞ¸ÄÁË,ÕâÊ±ºòĞèÒª°Ñ°æ±¾ºÅ»Ø¹öÒ»ÏÂ
+                if (temVersion == nowVersion)//æ„å»ºå¤±è´¥äº†ï¼Œä½†YooAssetå´æŠŠç‰ˆæœ¬å·ç»™ä¿®æ”¹äº†ï¼Œè¿™æ—¶éœ€è¦æŠŠç‰ˆæœ¬å·æ”¹å›å»
                 {
                     File.WriteAllText(versionFile, lastVersion, System.Text.Encoding.UTF8);
                 }
-                Log.Error($"{packageName}:¹¹½¨×ÊÔ´°üÊ§°Ü");
+                Log.Error($"{packageName}:æ„å»ºèµ„æºå¤±è´¥");
                 return false;
             }
 
-            //²»¿½±´link.xml
+            // å¤„ç†link.xml
             //if (IsExportExecutable)
             //{
             //    var tLinkPath = $"{buildPath}/{nowVersion}/link.xml";
@@ -411,8 +411,8 @@ namespace Ux.Editor.Build.Version
             return true;
         }
 
-        #region ¹¹½¨°ü¹üÏà¹Ø
-        // ¹¹½¨°ü¹üÏà¹Ø
+        #region è¾…åŠ©æ–¹æ³•
+        // è¾…åŠ©æ–¹æ³•
         private List<string> GetBuildPackageNames()
         {
             List<string> result = new List<string>();

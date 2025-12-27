@@ -11,7 +11,7 @@ namespace Ux.Editor.Build.UI
 {
     public partial class UIClassifyWindow : EditorWindow
     {
-        [MenuItem("UxGame/工具/UI/资源分类", false, 511)]
+        [MenuItem("UxGame/锟斤拷锟斤拷/UI/锟斤拷源锟斤拷锟斤拷", false, 511)]
         public static void ShowExample()
         {
             var window = GetWindow<UIClassifyWindow>("UIClassifyWindow", true);
@@ -19,13 +19,13 @@ namespace Ux.Editor.Build.UI
         }
         public static void CreateYooAssetUIGroup()
         {
-            Log.Debug("------------------------------------>生成YooAsset UI收集器配置<------------------------------");
+            Log.Debug("------------------------------------>閰嶇疆YooAsset UI鍛藉悕绌洪棿<------------------------------");
             var packages = AssetBundleCollectorSettingData.Setting.Packages;
             var package = packages.Find(x => x.PackageName == "MainPackage");
             if (package == null)
             {
                 package = new AssetBundleCollectorPackage();
-                package.PackageDesc = "主包";
+                package.PackageDesc = "锟斤拷锟斤拷";
                 package.PackageName = "MainPackage";
                 packages.Add(package);
             }
@@ -34,7 +34,7 @@ namespace Ux.Editor.Build.UI
             {
                 group = new AssetBundleCollectorGroup();
                 group.AssetTags = string.Empty;
-                group.GroupDesc = "UI界面";
+                group.GroupDesc = "UI锟斤拷锟斤拷";
                 group.GroupName = "UI";
                 package.Groups.Add(group);
             }
@@ -100,7 +100,7 @@ namespace Ux.Editor.Build.UI
                 pathObject.name = ResClassifySettings.path;
             pathField.SetValueWithoutNotify(pathObject);
 
-            var helpBox = new HelpBox("不在预加载资源或懒加载资源的，都是内置资源，出包的时候会打进包体里的", HelpBoxMessageType.Info);
+            var helpBox = new HelpBox("锟斤拷锟斤拷预锟斤拷锟斤拷锟斤拷源锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷源锟侥ｏ拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷源锟斤拷锟斤拷锟斤拷锟斤拷时锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷", HelpBoxMessageType.Info);
             helpBox.style.fontSize = 30;
             root.Insert(0, helpBox);
             buildin.style.unityParagraphSpacing = 10;
@@ -149,7 +149,7 @@ namespace Ux.Editor.Build.UI
             ResClassifySettings.proloads = builtins.ToArray();
             ResClassifySettings.lazyloads = lazyloads.ToArray();
             CreateYooAssetUIGroup();
-            if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("提示", "创建成功!", "ok"))
+            if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("锟斤拷示", "锟斤拷锟斤拷锟缴癸拷!", "ok"))
             {
                 _OnBtnLoadClick();
             }
@@ -233,13 +233,13 @@ namespace Ux.Editor.Build.UI
                 VisualElement element2 = new VisualElement();
                 {
                     element2.style.flexGrow = 1f;
-                    var label = new TextField("资源包");
+                    var label = new TextField("锟斤拷源锟斤拷");
                     label.name = "Label1";
                     label.style.unityTextAlign = TextAnchor.MiddleLeft;
                     label.style.flexGrow = 1f;
                     label.style.height = 20f;
                     element2.Add(label);
-                    var label2 = new TextField("资源标签");
+                    var label2 = new TextField("璧勬簮鏍囩");
                     label2.name = "Label2";
                     label2.style.unityTextAlign = TextAnchor.MiddleLeft;
                     label2.style.flexGrow = 1f;

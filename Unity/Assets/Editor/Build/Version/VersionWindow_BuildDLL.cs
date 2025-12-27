@@ -11,7 +11,7 @@ namespace Ux.Editor.Build.Version
         {
             if (tgCompileDLL.value)
             {
-                Log.Debug("---------------------------------------->¿ªÊ¼±àÒëDLL<---------------------------------------");
+                Log.Debug("---------------------------------------->å¼€å§‹ç¼–è¯‘DLL<---------------------------------------");
                 HybridCLRCommand.ClearHOTDll();
                 await UxEditor.Export(tgCompileUI.value, tgCompileConfig.value, tgCompileProto.value, false);
                 var compile = (CompileType)compileType.value;
@@ -21,46 +21,46 @@ namespace Ux.Editor.Build.Version
                         !EditorUserBuildSettings.SwitchActiveBuildTarget(
                             BuildPipeline.GetBuildTargetGroup(target), target))
                     {
-                        Log.Debug("---------------------------------------->ÇÐ»»±àÒëÆ½Ì¨Ê§°Ü<---------------------------------------");
+                        Log.Debug("---------------------------------------->åˆ‡æ¢ç¼–è¯‘å¹³å°å¤±è´¥<---------------------------------------");
                         return false;
                     }
 
                     var installer = new InstallerController();
                     if (!installer.HasInstalledHybridCLR())
                     {
-                        Log.Debug("---------------------------------------->ÇëÏÈ°²×°HybridCLR<---------------------------------------");
+                        Log.Debug("---------------------------------------->è¯·å…ˆå®‰è£…HybridCLR<---------------------------------------");
                         return false;
                     }
 
                     HybridCLRCommand.ClearAOTDll();
-                    Log.Debug("---------------------------------------->Ö´ÐÐHybridCLRÔ¤±àÒë<---------------------------------------");
+                    Log.Debug("---------------------------------------->æ‰§è¡ŒHybridCLRé¢„ç¼–è¯‘<---------------------------------------");
                     CompileDllCommand.CompileDll(target, compile == CompileType.Development);
                     Il2CppDefGeneratorCommand.GenerateIl2CppDef();
 
-                    // Õâ¼¸¸öÉú³ÉÒÀÀµHotUpdateDlls
+                    // è¿™å‡ ä¸ªdllåœ¨HotUpdateDlls
                     LinkGeneratorCommand.GenerateLinkXml(target);
 
-                    // Éú³É²Ã¼ôºóµÄaot dll
+                    // ç”Ÿæˆè£å‰ªåŽçš„aot dll
                     StripAOTDllCommand.GenerateStripedAOTDlls(target);
 
-                    // ÇÅ½Óº¯ÊýÉú³ÉÒÀÀµÓÚAOT dll£¬±ØÐë±£Ö¤ÒÑ¾­build¹ý£¬Éú³ÉAOT dll
+                    // è¡¥å……æ³›åž‹çº¦æŸåˆ°AOT dllï¼Œå¹¶ä¿è¯å·²ç»buildè¿‡çš„æ³›åž‹AOT dll
                     MethodBridgeGeneratorCommand.GenerateMethodBridgeAndReversePInvokeWrapper(target);
                     AOTReferenceGeneratorCommand.GenerateAOTGenericReference(target);
                     //PrebuildCommand.GenerateAll();
 
-                    Log.Debug("---------------------------------------->½«AOTÔªÊý¾ÝDll¿½±´µ½×ÊÔ´´ò°üÄ¿Â¼<---------------------------------------");
+                    Log.Debug("---------------------------------------->å°†AOTå…ƒæ•°æ®Dllå¤åˆ¶åˆ°èµ„æºç›®å½•<---------------------------------------");
                     HybridCLRCommand.CopyAOTAssembliesToYooAssetPath(target);
                 }
                 else
                 {
-                    Log.Debug("---------------------------------------->Éú³ÉÈÈ¸üDLL<---------------------------------------");
+                    Log.Debug("---------------------------------------->ç¼–è¯‘çƒ­æ›´æ–°DLL<---------------------------------------");
                     CompileDllCommand.CompileDll(target, compile == CompileType.Development);
                 }
 
-                Log.Debug("---------------------------------------->½«ÈÈ¸üDLL¿½±´µ½×ÊÔ´´ò°üÄ¿Â¼<---------------------------------------");
+                Log.Debug("---------------------------------------->å°†çƒ­æ›´æ–°Dllå¤åˆ¶åˆ°èµ„æºç›®å½•<---------------------------------------");
                 HybridCLRCommand.CopyHotUpdateAssembliesToYooAssetPath(target);
 
-                Log.Debug("---------------------------------------->Íê³É±àÒëDLL<---------------------------------------");
+                Log.Debug("---------------------------------------->å®Œæˆç¼–è¯‘DLL<---------------------------------------");
             }
             return true;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Ux
@@ -64,6 +65,13 @@ namespace Ux
                     evtData.Init(key, eType, tag, action);
                 }
                 return key;
+            }
+
+            public UniTask Await(int eType, object tag){
+                var task = AutoResetUniTaskCompletionSource.Create();
+                var key = _GetKey(eType, task, tag);
+                _Add<EventAwaitData>(key);                
+                return task.Task;
             }
         }
         long IEventOn.On(int eType, object tag, Action action)

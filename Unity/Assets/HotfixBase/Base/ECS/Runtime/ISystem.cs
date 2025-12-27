@@ -331,7 +331,7 @@ namespace Ux
         }
 
         void _AddSystem()
-        {
+        {            
             if (this is IAddComponentSystem addConponentSystem)
             {
                 addConponentSystem.OnAddComponent();
@@ -377,7 +377,7 @@ namespace Ux
             {
                 if (this is IEventSystem)
                 {
-                    EventMgr.Ins.RegisterFastMethod(this);
+                    EventMgr.Ins.RegisterFastMethod(this);                    
                 }
 
                 _is_init = true;
@@ -427,8 +427,7 @@ namespace Ux
                     temPar._event.Off(this);
                 }
                 temPar._event.RemoveSystem(this);
-            }
-
+            }            
         }
     }
 

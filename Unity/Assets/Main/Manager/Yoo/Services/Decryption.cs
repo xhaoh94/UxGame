@@ -3,7 +3,7 @@ using UnityEngine;
 using YooAsset;
 
 /// <summary>
-/// ×ÊÔ´ÎÄ¼ş½âÃÜÁ÷
+/// èµ„æºæ–‡ä»¶æµè§£å¯†
 /// </summary>
 public class BundleStream : FileStream
 {
@@ -28,13 +28,13 @@ public class BundleStream : FileStream
 }
 
 /// <summary>
-/// ×ÊÔ´ÎÄ¼şÁ÷½âÃÜÀà
+/// èµ„æºæ–‡ä»¶æµè§£å¯†æœåŠ¡
 /// </summary>
 public class FileStreamDecryption : IDecryptionServices
 {
     /// <summary>
-    /// Í¬²½·½Ê½»ñÈ¡½âÃÜµÄ×ÊÔ´°ü¶ÔÏó
-    /// ×¢Òâ£º¼ÓÔØÁ÷¶ÔÏóÔÚ×ÊÔ´°ü¶ÔÏóÊÍ·ÅµÄÊ±ºò»á×Ô¶¯ÊÍ·Å
+    /// åŒæ­¥æ–¹å¼è·å–è§£å¯†çš„èµ„æºåŒ…
+    /// æ³¨æ„ï¼šå½“æµå¯¹è±¡è¢«é‡Šæ”¾çš„æ—¶å€™ï¼Œä¼šè‡ªåŠ¨é‡Šæ”¾
     /// </summary>
     DecryptResult IDecryptionServices.LoadAssetBundle(DecryptFileInfo fileInfo)
     {
@@ -46,8 +46,8 @@ public class FileStreamDecryption : IDecryptionServices
     }
 
     /// <summary>
-    /// Òì²½·½Ê½»ñÈ¡½âÃÜµÄ×ÊÔ´°ü¶ÔÏó
-    /// ×¢Òâ£º¼ÓÔØÁ÷¶ÔÏóÔÚ×ÊÔ´°ü¶ÔÏóÊÍ·ÅµÄÊ±ºò»á×Ô¶¯ÊÍ·Å
+    /// å¼‚æ­¥æ–¹å¼è·å–è§£å¯†çš„èµ„æºåŒ…
+    /// æ³¨æ„ï¼šå½“æµå¯¹è±¡è¢«é‡Šæ”¾çš„æ—¶å€™ï¼Œä¼šè‡ªåŠ¨é‡Šæ”¾
     /// </summary>
     DecryptResult IDecryptionServices.LoadAssetBundleAsync(DecryptFileInfo fileInfo)
     {
@@ -58,7 +58,7 @@ public class FileStreamDecryption : IDecryptionServices
         return decryptResult;
     }
     /// <summary>
-    /// ºó±¸·½Ê½»ñÈ¡½âÃÜµÄ×ÊÔ´°ü¶ÔÏó
+    /// å¤‡ç”¨æ–¹å¼è·å–è§£å¯†çš„èµ„æºåŒ…
     /// </summary>
     DecryptResult IDecryptionServices.LoadAssetBundleFallback(DecryptFileInfo fileInfo)
     {
@@ -66,7 +66,7 @@ public class FileStreamDecryption : IDecryptionServices
     }
 
     /// <summary>
-    /// »ñÈ¡½âÃÜµÄ×Ö½ÚÊı¾İ
+    /// è·å–è§£å¯†çš„å­—èŠ‚æ•°æ®
     /// </summary>
     byte[] IDecryptionServices.ReadFileData(DecryptFileInfo fileInfo)
     {
@@ -74,7 +74,7 @@ public class FileStreamDecryption : IDecryptionServices
     }
 
     /// <summary>
-    /// »ñÈ¡½âÃÜµÄÎÄ±¾Êı¾İ
+    /// è·å–è§£å¯†çš„æ–‡æœ¬æ•°æ®
     /// </summary>
     string IDecryptionServices.ReadFileText(DecryptFileInfo fileInfo)
     {
@@ -88,13 +88,13 @@ public class FileStreamDecryption : IDecryptionServices
 }
 
 /// <summary>
-/// ×ÊÔ´ÎÄ¼şÆ«ÒÆ½âÃÜÀà
+/// èµ„æºæ–‡ä»¶åç§»è§£å¯†
 /// </summary>
 public class FileOffsetDecryption : IDecryptionServices
 {
     /// <summary>
-    /// Í¬²½·½Ê½»ñÈ¡½âÃÜµÄ×ÊÔ´°ü¶ÔÏó
-    /// ×¢Òâ£º¼ÓÔØÁ÷¶ÔÏóÔÚ×ÊÔ´°ü¶ÔÏóÊÍ·ÅµÄÊ±ºò»á×Ô¶¯ÊÍ·Å
+    /// åŒæ­¥æ–¹å¼è·å–è§£å¯†çš„èµ„æºåŒ…
+    /// æ³¨æ„ï¼šå½“æµå¯¹è±¡è¢«é‡Šæ”¾çš„æ—¶å€™ï¼Œä¼šè‡ªåŠ¨é‡Šæ”¾
     /// </summary>
     DecryptResult IDecryptionServices.LoadAssetBundle(DecryptFileInfo fileInfo)
     {
@@ -105,8 +105,8 @@ public class FileOffsetDecryption : IDecryptionServices
     }
 
     /// <summary>
-    /// Òì²½·½Ê½»ñÈ¡½âÃÜµÄ×ÊÔ´°ü¶ÔÏó
-    /// ×¢Òâ£º¼ÓÔØÁ÷¶ÔÏóÔÚ×ÊÔ´°ü¶ÔÏóÊÍ·ÅµÄÊ±ºò»á×Ô¶¯ÊÍ·Å
+    /// å¼‚æ­¥æ–¹å¼è·å–è§£å¯†çš„èµ„æºåŒ…
+    /// æ³¨æ„ï¼šå½“æµå¯¹è±¡è¢«é‡Šæ”¾çš„æ—¶å€™ï¼Œä¼šè‡ªåŠ¨é‡Šæ”¾
     /// </summary>
     DecryptResult IDecryptionServices.LoadAssetBundleAsync(DecryptFileInfo fileInfo)
     {
@@ -117,7 +117,7 @@ public class FileOffsetDecryption : IDecryptionServices
     }
 
     /// <summary>
-    /// ºó±¸·½Ê½»ñÈ¡½âÃÜµÄ×ÊÔ´°ü¶ÔÏó
+    /// å¤‡ç”¨æ–¹å¼è·å–è§£å¯†çš„èµ„æºåŒ…
     /// </summary>
     DecryptResult IDecryptionServices.LoadAssetBundleFallback(DecryptFileInfo fileInfo)
     {
@@ -126,7 +126,7 @@ public class FileOffsetDecryption : IDecryptionServices
 
 
     /// <summary>
-    /// »ñÈ¡½âÃÜµÄ×Ö½ÚÊı¾İ
+    /// è·å–è§£å¯†çš„å­—èŠ‚æ•°æ®
     /// </summary>
     byte[] IDecryptionServices.ReadFileData(DecryptFileInfo fileInfo)
     {
@@ -134,7 +134,7 @@ public class FileOffsetDecryption : IDecryptionServices
     }
 
     /// <summary>
-    /// »ñÈ¡½âÃÜµÄÎÄ±¾Êı¾İ
+    /// è·å–è§£å¯†çš„æ–‡æœ¬æ•°æ®
     /// </summary>
     string IDecryptionServices.ReadFileText(DecryptFileInfo fileInfo)
     {
@@ -148,8 +148,8 @@ public class FileOffsetDecryption : IDecryptionServices
 }
 
 /// <summary>
-/// WebGLÆ½Ì¨½âÃÜÀà
-/// ×¢Òâ£ºWebGLÆ½Ì¨Ö§³ÖÄÚ´æ½âÃÜ
+/// WebGLå¹³å°è§£å¯†
+/// æ³¨æ„ï¼šWebGLå¹³å°ä¸æ”¯æŒæ–‡ä»¶æµ
 /// </summary>
 public class WebFileStreamDecryption : IWebDecryptionServices
 {

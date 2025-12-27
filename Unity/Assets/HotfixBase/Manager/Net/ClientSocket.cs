@@ -18,16 +18,21 @@ namespace Ux
         void SetResult(object result);
         void SetException(Exception ex);
         void SetCanceled();
+        void Release();
     }
-    public struct RpcCompletionSourceAdapter<T> : IRpcCompletionSource
+    public class RpcCompletionSourceAdapter<T> : IRpcCompletionSource
     {
-        private readonly AutoResetUniTaskCompletionSource<T> _source;
+        private AutoResetUniTaskCompletionSource<T> _source;
 
-        public RpcCompletionSourceAdapter(AutoResetUniTaskCompletionSource<T> source)
+        public void Init(AutoResetUniTaskCompletionSource<T> source)
         {
             _source = source;
         }
-
+        public void Release()
+        {
+            _source = null;
+            Pool.Push(this);
+        }
         public void SetResult(object result) => _source.TrySetResult((T)result);
         public void SetException(Exception ex) => _source.TrySetException(ex);
         public void SetCanceled() => _source.TrySetCanceled();
@@ -230,6 +235,7 @@ namespace Ux
                         if (_rpcMethod.TryGetValue(rpcId, out var method))
                         {
                             method.SetException(new Exception("RPC超时"));
+                            method.Release();
                             _rpcMethod.Remove(rpcId);
                         }
                         _rpcTime.Remove(rpcId);
@@ -323,6 +329,7 @@ namespace Ux
                 try
                 {
                     method.SetResult(message);
+                    method.Release();
                 }
                 catch (Exception ex)
                 {
@@ -408,7 +415,9 @@ namespace Ux
             var rpxID = GetRpxID();
             _rpcType.Add(rpxID, typeof(TRequest));
             var task = AutoResetUniTaskCompletionSource<TResponse>.Create();
-            _rpcMethod.Add(rpxID, new RpcCompletionSourceAdapter<TResponse>(task));
+            var adapter = Pool.Get<RpcCompletionSourceAdapter<TResponse>>();
+            adapter.Init(task);
+            _rpcMethod.Add(rpxID, adapter);
 
             _sendStream.WriteMessage(message, 0);
             //因为前面WriteToMessage的时候Seek(0, SeekOrigin.Begin)，            
@@ -438,6 +447,7 @@ namespace Ux
             foreach (var kv in _rpcMethod)
             {
                 kv.Value.SetCanceled();
+                kv.Value.Release();
             }
             _rpcTime.Clear();
             _rpcDels.Clear();

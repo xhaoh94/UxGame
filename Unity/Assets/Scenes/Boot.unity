@@ -150,6 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayMode: 0
   IngameDebug: 1
+  HotfixCode: 0
 --- !u!4 &563521568
 Transform:
   m_ObjectHideFlags: 0

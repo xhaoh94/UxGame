@@ -39,7 +39,7 @@ namespace Ux.Editor.State
             }
             if (type == null)
             {
-                Log.Error($"Ã»ÓĞÕÒµ½Ãû×ÖÎª{condition}µÄÌõ¼ş");
+                Log.Error($"æ²¡æœ‰æ‰¾åˆ°ç±»å‹ä¸º{condition}çš„æ¡ä»¶");
                 return null;
             }
             return (StateConditionBase)Activator.CreateInstance(type);

@@ -5,7 +5,7 @@ namespace Ux
 {
     public class TimelineAsset : ScriptableObject
     {
-        //ÔËĞĞÖ¡ÂÊ
+        //å¸§ç‡
         public float frameRate;
 
         [SerializeReference]

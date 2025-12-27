@@ -4,13 +4,13 @@ using YooAsset;
 
 
 /// <summary>
-/// ÎÄ¼şÁ÷¼ÓÃÜ·½Ê½
+/// æ–‡ä»¶æµåŠ å¯†æ–¹å¼
 /// </summary>
 public class FileStreamEncryption : IEncryptionServices
 {
     public EncryptResult Encrypt(EncryptFileInfo fileInfo)
     {
-        // ËµÃ÷£º¶ÔTestRes3×ÊÔ´Ä¿Â¼½øĞĞ¼ÓÃÜ
+        // è¯´æ˜ï¼šå¯¹TestRes3èµ„æºç›®å½•è¿›è¡ŒåŠ å¯†
         if (fileInfo.BundleName.Contains("_testres3_"))
         {
             var fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
@@ -34,13 +34,13 @@ public class FileStreamEncryption : IEncryptionServices
 }
 
 /// <summary>
-/// ÎÄ¼şÆ«ÒÆ¼ÓÃÜ·½Ê½
+/// æ–‡ä»¶åç§»åŠ å¯†æ–¹å¼
 /// </summary>
 public class FileOffsetEncryption : IEncryptionServices
 {
     public EncryptResult Encrypt(EncryptFileInfo fileInfo)
     {
-        // ËµÃ÷£º¶ÔTestRes3×ÊÔ´Ä¿Â¼½øĞĞ¼ÓÃÜ
+        // è¯´æ˜ï¼šå¯¹TestRes3èµ„æºç›®å½•è¿›è¡ŒåŠ å¯†
         if (fileInfo.BundleName.Contains("_testres3_"))
         {
             int offset = 32;

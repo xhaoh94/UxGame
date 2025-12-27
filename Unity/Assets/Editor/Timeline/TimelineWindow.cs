@@ -32,11 +32,11 @@ namespace Ux.Editor.Timeline
             Once,
         }
         public static TimelineWindow wnd;
-        [MenuItem("UxGame/¹¤¾ß/Ê±¼äÖá", false, 521)]
+        [MenuItem("UxGame/å·¥å…·/æ—¶é—´è½´", false, 521)]
         public static void ShowExample()
         {
             wnd = GetWindow<TimelineWindow>();
-            wnd.titleContent = new GUIContent("Ê±¼äÖá");
+            wnd.titleContent = new GUIContent("æ—¶é—´è½´");
         }
         static string Path = "Assets/Data/Res/Timeline";
         bool isCreateing = false;
@@ -65,7 +65,7 @@ namespace Ux.Editor.Timeline
             ofTimeline.objectType = typeof(TimelineAsset);
 
             var framePopupField = new PopupField<int>(_frameSelects, 0);
-            framePopupField.label = "Ö¡ÂÊ";
+            framePopupField.label = "å¸§ç‡";
             framePopupField.RegisterValueChangedCallback(evt =>
             {
                 if (Asset.SetFrameRate(evt.newValue))
@@ -134,7 +134,7 @@ namespace Ux.Editor.Timeline
 
             if (keyCtrl && keyS && !save)
             {
-                Log.Debug("±£´æ");
+                Log.Debug("ä¿å­˜");
                 save = true;
                 SaveAssets();
             }
@@ -316,7 +316,7 @@ namespace Ux.Editor.Timeline
         }
         partial void _OnInputPathChanged(ChangeEvent<string> e)
         {
-            var temPath = EditorUtility.OpenFolderPanel("ÇëÑ¡ÔñÉú³ÉÂ·¾¶", Path, "");
+            var temPath = EditorUtility.OpenFolderPanel("è¯·é€‰æ‹©ä¿å­˜è·¯å¾„", Path, "");
             if (temPath.Length == 0)
             {
                 return;
@@ -324,7 +324,7 @@ namespace Ux.Editor.Timeline
 
             if (!Directory.Exists(temPath))
             {
-                EditorUtility.DisplayDialog("´íÎó", "Â·¾¶²»´æÔÚ!", "ok");
+                EditorUtility.DisplayDialog("é”™è¯¯", "è·¯å¾„ä¸å­˜åœ¨!", "ok");
                 return;
             }
             inputPath.SetValueWithoutNotify(temPath);
@@ -333,13 +333,13 @@ namespace Ux.Editor.Timeline
         {
             if (string.IsNullOrEmpty(inputName.text))
             {
-                Log.Error("Ãû×Ö²»ÄÜÎª¿Õ");
+                Log.Error("åå­—ä¸èƒ½ä¸ºç©º");
                 return;
             }
             var assetName = $"{inputPath.text}/{inputName.text}.asset";
             if (File.Exists(assetName))
             {
-                Log.Error("ÖØ¸´´´½¨ÏàÍ¬µÄTimelineAsset");
+                Log.Error("é‡å¤åˆ›å»ºåŒåTimelineAsset");
                 return;
             }
 

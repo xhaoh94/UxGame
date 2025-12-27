@@ -19,7 +19,7 @@ namespace Ux.Editor.Build.Config
     }
     public partial class ConfigWindow : EditorWindow
     {
-        [MenuItem("UxGame/工具/配置", false, 530)]
+        [MenuItem("UxGame/宸ュ叿/閰嶇疆", false, 530)]
         public static void ShowConfigWindon()
         {
             var window = GetWindow<ConfigWindow>("ConfigWindow", true);
@@ -60,7 +60,7 @@ namespace Ux.Editor.Build.Config
                 var index = GenCodeTypes.IndexOf(Setting.GenCodeType);
                 if (index < 0) index = 0;
                 _genCodeType = new PopupField<string>(GenCodeTypes, index);
-                _genCodeType.label = "生成代码类型";
+                _genCodeType.label = "鐢熸垚浠ｇ爜绫诲瀷";
                 _genCodeType.style.width = 500;
                 _genCodeType.RegisterValueChangedCallback(evt =>
                 {
@@ -71,7 +71,7 @@ namespace Ux.Editor.Build.Config
                 index = GenDataTypes.IndexOf(Setting.GenDataType);
                 if (index < 0) index = 0;
                 _genDataType = new PopupField<string>(GenDataTypes, index);
-                _genDataType.label = "生成数据类型";
+                _genDataType.label = "鐢熸垚鏁版嵁绫诲瀷";
                 _genDataType.style.width = 500;
                 _genDataType.RegisterValueChangedCallback(evt =>
                 {
@@ -82,7 +82,7 @@ namespace Ux.Editor.Build.Config
                 index = ServiceTypes.IndexOf(Setting.ServiceType);
                 if (index < 0) index = 0;
                 _serviceType = new PopupField<string>(ServiceTypes, index);
-                _serviceType.label = "生成类型";
+                _serviceType.label = "鏈嶅姟绫诲瀷";
                 _serviceType.style.width = 500;
                 _serviceType.RegisterValueChangedCallback(evt =>
                 {
@@ -123,7 +123,7 @@ namespace Ux.Editor.Build.Config
         }
         partial void _OnBtnOutCodePathClick()
         {
-            BuildHelper.OpenFolderPanel(Setting.OutCodePath, "导出代码目录", txtOutCodePath);
+            BuildHelper.OpenFolderPanel(Setting.OutCodePath, "閫夋嫨杈撳嚭鐩綍", txtOutCodePath);
         }
         partial void _OnTxtOutDataPathChanged(ChangeEvent<string> e)
         {
@@ -131,7 +131,7 @@ namespace Ux.Editor.Build.Config
         }
         partial void _OnBtnOutDataPathClick()
         {
-            BuildHelper.OpenFolderPanel(Setting.OutDataPath, "导出数据目录", txtOutDataPath);
+            BuildHelper.OpenFolderPanel(Setting.OutDataPath, "閫夋嫨杈撳嚭鐩綍", txtOutDataPath);
         }
         partial void _OnBtnExportClick()
         {
@@ -146,7 +146,7 @@ namespace Ux.Editor.Build.Config
             {
                 return;
             }
-            Log.Debug("---------------------------------------->生成配置文件<---------------------------------------");
+            Log.Debug("---------------------------------------->鐢熸垚閰嶇疆鏂囦欢<---------------------------------------");
             UniTask ExportConfig()
             {
                 var configTask = AutoResetUniTaskCompletionSource.Create();

@@ -33,7 +33,7 @@ namespace Ux.Editor.Build.Proto
 
 
         /// <summary>
-        /// ´æ´¢ÅäÖÃÎÄ¼ş
+        /// ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
         /// </summary>
         public void SaveFile()
         {
@@ -61,8 +61,8 @@ namespace Ux.Editor.Build.Proto
 
                 var value = field_info.GetValue(this)?.ToString();
 
-                // µ±Ç°ÖµÎª¿Õ »òÕß False, »òÕß None(Enum Ä¬ÈÏÖµ)
-                // Ôò¼ÌĞøÑ­»·
+                // å½“å‰å€¼ä¸ºç©º æˆ– False æˆ– None(Enum é»˜è®¤å€¼)
+                // è·³è¿‡å¾ªç¯
                 if (string.IsNullOrEmpty(value) || string.Equals(value, "False") || string.Equals(value, "None"))
                 {
                     continue;
@@ -100,7 +100,7 @@ namespace Ux.Editor.Build.Proto
             return sb.ToString();
         }
 
-        #region ³õÊ¼»¯   
+        #region ï¿½ï¿½Ê¼ï¿½ï¿½   
         public static ProtoSettingData LoadConfig()
         {
             if (Setting == null)

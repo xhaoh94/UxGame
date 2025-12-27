@@ -10,7 +10,7 @@ namespace Ux.Editor.State
     public partial class StateWindow : EditorWindow
     {
 
-        [MenuItem("UxGame/¹¤¾ß/×´Ì¬»ú", false, 520)]
+        [MenuItem("UxGame/å·¥å…·/çŠ¶æ€æœº", false, 520)]
         public static void ShowExample()
         {
             StateWindow wnd = GetWindow<StateWindow>();
@@ -47,7 +47,7 @@ namespace Ux.Editor.State
             if (data == null) return;
             if (string.IsNullOrEmpty(data.stateName)) return;
             var write = new CodeGenWrite();
-            write.Writeln(@"//×Ô¶¯Éú³ÉµÄ´úÂë£¬ÇëÎğĞŞ¸Ä!!!");
+            write.Writeln(@"//è‡ªåŠ¨ç”Ÿæˆçš„ä»£ç ï¼Œè¯·å‹¿ä¿®æ”¹!!!");
             write.Writeln("using System.Collections.Generic;");
             write.Writeln($"namespace Ux");
             write.StartBlock();
@@ -62,7 +62,7 @@ namespace Ux.Editor.State
         {
             Directory.Delete(CodePath, true);
             var write = new CodeGenWrite();
-            write.Writeln(@"//×Ô¶¯Éú³ÉµÄ´úÂë£¬ÇëÎğĞŞ¸Ä!!!");
+            write.Writeln(@"//è‡ªåŠ¨ç”Ÿæˆçš„ä»£ç ï¼Œè¯·å‹¿ä¿®æ”¹!!!");
             write.Writeln("using System;");
             write.Writeln("using System.Collections.Generic;");
             write.Writeln($"namespace Ux");
@@ -127,7 +127,7 @@ namespace Ux.Editor.State
                 }
             }
 
-            EditorUtility.DisplayDialog("ÌáÊ¾", "µ¼³ö³É¹¦", "È·¶¨");
+            EditorUtility.DisplayDialog("æç¤º", "å¯¼å‡ºæˆåŠŸ", "ç¡®å®š");
         }
 
         private void OnDestroy()
@@ -136,17 +136,17 @@ namespace Ux.Editor.State
             AssetDatabase.Refresh();
         }
 
-        #region ³õÊ¼»¯   
+        #region åˆå§‹åŒ–   
         void LoadConfig()
         {
-            //»ñÈ¡Ö¸¶¨Â·¾¶ÏÂÃæµÄËùÓĞ×ÊÔ´ÎÄ¼ş  
+            //è·å–æŒ‡å®šè·¯å¾„ä¸‹çš„æ‰€æœ‰çŠ¶æ€èµ„æºæ–‡ä»¶  
             var listData = SettingTools.GetAssets<StateAsset>(AssetPath);
             foreach (var item in listData)
             {
                 var group = item.group;
                 if (string.IsNullOrEmpty(group))
                 {
-                    group = "Î´Öª";
+                    group = "æœªçŸ¥";
                 }
                 if (!groupAssets.TryGetValue(group, out var temList))
                 {

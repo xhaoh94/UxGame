@@ -33,7 +33,7 @@ namespace Ux.Editor.Build.Version
             if (_encryptionServicesClassNames.Count > 0)
             {
                 _popupFieldEncryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-                _popupFieldEncryption.label = "×ÊÔ´¼ÓÃÜ";
+                _popupFieldEncryption.label = "èµ„æºåŠ å¯†";
                 _popupFieldEncryption.RegisterValueChangedCallback(evt =>
                 {
                     PackageSetting.EncyptionClassName = evt.newValue;
@@ -43,7 +43,7 @@ namespace Ux.Editor.Build.Version
             else
             {
                 _popupFieldEncryption = new PopupField<string>();
-                _popupFieldEncryption.label = "×ÊÔ´¼ÓÃÜ";
+                _popupFieldEncryption.label = "èµ„æºåŠ å¯†";
                 encryptionContainer.Add(_popupFieldEncryption);
             }
 
@@ -52,7 +52,7 @@ namespace Ux.Editor.Build.Version
             if (_manifestServicesClassNames.Count > 0)
             {
                 _popupFieldManifest = new PopupField<string>(_manifestServicesClassNames, 0);
-                _popupFieldManifest.label = "Çåµ¥¼ÓÃÜ";
+                _popupFieldManifest.label = "ï¿½åµ¥ï¿½ï¿½ï¿½ï¿½";
                 _popupFieldManifest.RegisterValueChangedCallback(evt =>
                 {
                     PackageSetting.ManifestClassName = evt.newValue;
@@ -62,7 +62,7 @@ namespace Ux.Editor.Build.Version
             else
             {
                 _popupFieldManifest = new PopupField<string>();
-                _popupFieldManifest.label = "Çåµ¥¼ÓÃÜ";
+                _popupFieldManifest.label = "ï¿½åµ¥ï¿½ï¿½ï¿½ï¿½";
                 manifestContainer.Add(_popupFieldManifest);
             }
         }
@@ -129,8 +129,8 @@ namespace Ux.Editor.Build.Version
             compressionType.style.display =
                 PackageSetting.PiplineOption == EBuildPipeline.RawFileBuildPipeline.ToString() ? DisplayStyle.None : DisplayStyle.Flex;
         }
-        #region ¹¹½¨°ü¹üÏà¹Ø
-        // ¹¹½¨°ü¹üÏà¹Ø
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
         private IEncryptionServices CreateEncryptionServicesInstance()
         {

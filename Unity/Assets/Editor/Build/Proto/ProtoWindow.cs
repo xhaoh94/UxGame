@@ -9,7 +9,7 @@ namespace Ux.Editor.Build.Proto
 {
     public partial class ProtoWindow : EditorWindow
     {
-        [MenuItem("UxGame/工具/协议", false, 540)]
+        [MenuItem("UxGame/宸ュ叿/鍗忚", false, 540)]
         public static void ShowConfigWindon()
         {
             var window = GetWindow<ProtoWindow>("ProtoWindow", true);
@@ -39,7 +39,7 @@ namespace Ux.Editor.Build.Proto
                 var index = GenTypes.IndexOf(Setting.Type);
                 if (index < 0) index = 0;
                 _type = new PopupField<string>(GenTypes, index);
-                _type.label = "生成数类型";
+                _type.label = "鐢熸垚绫诲瀷";
                 _type.style.width = 500;
                 _type.RegisterValueChangedCallback(evt =>
                 {
@@ -81,7 +81,7 @@ namespace Ux.Editor.Build.Proto
         }
         partial void _OnBtnInPathClick()
         {
-            BuildHelper.OpenFolderPanel(Setting.InPath, "请选择Proto目录", txtInPath);
+            BuildHelper.OpenFolderPanel(Setting.InPath, "璇烽�夋嫨Proto鐩綍", txtInPath);
         }
         partial void _OnTxtOutPathChanged(ChangeEvent<string> e)
         {
@@ -89,7 +89,7 @@ namespace Ux.Editor.Build.Proto
         }
         partial void _OnBtnOutPathClick()
         {
-            BuildHelper.OpenFolderPanel(Setting.OutPath, "请选择导出目录", txtOutPath);
+            BuildHelper.OpenFolderPanel(Setting.OutPath, "璇烽�夋嫨瀵煎嚭鐩綍", txtOutPath);
         }
         partial void _OnTxtNamespaceChanged(ChangeEvent<string> e)
         {
@@ -107,7 +107,7 @@ namespace Ux.Editor.Build.Proto
             {
                 return;
             }
-            Log.Debug("---------------------------------------->生成Proto文件<---------------------------------------");
+            Log.Debug("---------------------------------------->瀵煎嚭Proto鏂囦欢<---------------------------------------");
             UniTask ExportProto()
             {
                 var task = AutoResetUniTaskCompletionSource.Create();

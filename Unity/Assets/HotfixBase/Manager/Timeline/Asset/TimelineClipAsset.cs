@@ -11,13 +11,13 @@ namespace Ux
         public string clipName;
 
         #region Frame        
-        // ¿ªÊ¼Ö¡        
+        // ï¿½ï¿½Ê¼Ö¡        
         public int StartFrame;
-        // ½áÊøÖ¡        
+        // ç»“æŸå¸§        
         public int EndFrame;
-        // ¿ªÊ¼Ö¡->½øÈë»º¶¯Ö¡ È¨ÖØ 0->1        
+        // ï¿½ï¿½Ê¼Ö¡->ï¿½ï¿½ï¿½ë»ºï¿½ï¿½Ö¡ È¨ï¿½ï¿½ 0->1        
         public int InFrame;
-        // ÍË³ö»º¶¯Ö¡->½áÊøÖ¡ È¨ÖØ 1->0        
+        // ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡->ï¿½ï¿½ï¿½ï¿½Ö¡ È¨ï¿½ï¿½ 1->0        
         public int OutFrame;
 
         #endregion

@@ -10,15 +10,15 @@ namespace Ux.Editor.Build.UI
     {
         private List<string> _evtList1 = new List<string>
     {
-        "ÎŞ",
-        "µ¥»÷",
-        "¶à»÷",
-        "³¤°´"
+        "ç‚¹å‡»",
+        "åŒå‡»",
+        "é•¿æŒ‰",
+        "æ‹–æ‹½"
     };
         private List<string> _evtList2 = new List<string>
     {
-        "ÎŞ",
-        "ÁĞ±íµã»÷",
+        "åŒå‡»",
+        "åˆ—è¡¨ç‚¹å‡»",
     };
         private VisualTreeAsset _visualAsset;
         Action _saveCb;
@@ -147,7 +147,7 @@ namespace Ux.Editor.Build.UI
         {
             switch (data.evtType)
             {
-                case "¶à»÷":
+                case "ï¿½ï¿½ï¿½":
                     doubleEvt.style.display = DisplayStyle.Flex;
                     longEvt.style.display = DisplayStyle.None;
                     MemberEvtDouble dContent;
@@ -164,7 +164,7 @@ namespace Ux.Editor.Build.UI
                     dCnt.SetValueWithoutNotify(dContent.dCnt);
                     dGapTime.SetValueWithoutNotify(dContent.dGapTime);
                     break;
-                case "³¤°´":
+                case "ï¿½ï¿½ï¿½ï¿½":
                     doubleEvt.style.display = DisplayStyle.None;
                     longEvt.style.display = DisplayStyle.Flex;
                     MemberEvtLong lContent;
@@ -196,14 +196,14 @@ namespace Ux.Editor.Build.UI
         {
             switch (data.evtType)
             {
-                case "¶à»÷":
+                case "ï¿½ï¿½ï¿½":
                     var dContent = new MemberEvtDouble();
                     dContent.dCnt = dCnt.value;
                     dContent.dGapTime = dGapTime.value;
                     data.evtParam = JsonConvert.SerializeObject(dContent);
                     _saveCb?.Invoke();
                     break;
-                case "³¤°´":
+                case "é•¿æŒ‰":
                     var lContent = new MemberEvtLong();
                     lContent.lFirst = lFirst.value;
                     lContent.lGapTime = lGapTime.value;
@@ -223,7 +223,7 @@ namespace Ux.Editor.Build.UI
             if (enumEvt == null)
             {
                 enumEvt = new PopupField<string>(choices, choices.IndexOf(data.evtType));
-                enumEvt.label = "µã»÷ÊÂ¼ş";
+                enumEvt.label = "æ·»åŠ äº‹ä»¶";
                 enumEvt.style.width = 280;
                 //_enumEvt.style.flexGrow = 1f;
                 enumEvt.RegisterValueChangedCallback(evt =>

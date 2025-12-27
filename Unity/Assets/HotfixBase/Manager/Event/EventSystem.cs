@@ -26,29 +26,29 @@ namespace Ux
                 }
             }
         }
-        OverdueMap<long, List<FastMethodRef>> _fastMethodRefMap;        
+        OverdueMap<long, List<FastMethodRef>> _fastMethodRefMap;
         public interface IEventSystem
         {
             void Init(int exeLimit);
             void Release();
         }
-        public partial class EventSystem: IEventSystem
+        public partial class EventSystem : IEventSystem
         {
-            //Ã¿Ö¡Ö´ĞĞÉÏÏŞ-³¬³öÉÏÏŞ£¬ÏÂÒ»Ö¡´¦Àí
+            //æ¯å¸§æ‰§è¡Œæ•°é‡-é˜²æ­¢å¡é¡¿ï¼Œä¸€å¸§æ‰§è¡Œ
             int _exeLimit = 200;
             int _exeCnt = 0;
 
             private readonly Dictionary<long, IEvent> _keyEvent = new();
             /// <summary>
-            /// ÊÂ¼şID¶ÔÓ¦µÄËùÓĞIEvent
+            /// äº‹ä»¶IDå¯¹åº”çš„IEvent
             /// </summary>
             private readonly Dictionary<int, HashSet<long>> _eTypeKeys = new();
             /// <summary>
-            /// ±êÇ©¶ÔÓ¦µÄËùÓĞIEvent
+            /// æ ‡ç­¾å¯¹åº”çš„IEvent
             /// </summary>
             private readonly Dictionary<int, HashSet<long>> _tagKeys = new();
             /// <summary>
-            /// º¯Êı¶ÔÓ¦µÄËùÓĞIEvent
+            /// åŠ¨ä½œå¯¹åº”çš„IEvent
             /// </summary>
             private readonly Dictionary<int, HashSet<long>> _actionKeys = new();
 
@@ -64,6 +64,11 @@ namespace Ux
             void IEventSystem.Release()
             {
                 GameMethod.Update -= _Update;
+                Clear();
+                Pool.Push(this);
+            }
+            public void Clear()
+            {
                 _keyEvent.Clear();
                 _eTypeKeys.Clear();
                 _tagKeys.Clear();
@@ -71,7 +76,6 @@ namespace Ux
                 _waitExes.Clear();
                 _waitAdds.Clear();
                 _waitDels.Clear();
-                Pool.Push(this);
             }
 
             Type _hotfixEvtAttribute;
@@ -125,7 +129,7 @@ namespace Ux
                         {
                             refList = new List<FastMethodRef>();
                             Ins._fastMethodRefMap.Add(key, refList);
-                        }                        
+                        }
                         refList.Add(new FastMethodRef(evtAttrs, new FastMethodInfo(target, method)));
                     }
                 }
@@ -159,10 +163,8 @@ namespace Ux
             {
                 if (_waitDels.Count > 0)
                 {
-                    var enumerator = _waitDels.GetEnumerator();
-                    while (enumerator.MoveNext())
+                    foreach (var key in _waitDels)
                     {
-                        var key = enumerator.Current;
                         if (!_keyEvent.TryGetValue(key, out var evt)) continue;
                         var eType = evt.EType;
                         if (_eTypeKeys.TryGetValue(eType, out var typeKeys))
@@ -203,10 +205,8 @@ namespace Ux
 
                 if (_waitAdds.Count > 0)
                 {
-                    var enumerator = _waitAdds.GetEnumerator();
-                    while (enumerator.MoveNext())
+                    foreach (var evt in _waitAdds)
                     {
-                        var evt = enumerator.Current;
                         _keyEvent.Add(evt.Key, evt);
                         var eType = evt.EType;
                         if (!_eTypeKeys.TryGetValue(eType, out var typeKeys))
@@ -254,13 +254,17 @@ namespace Ux
                 while (_waitExes.Count > 0 && _exeCnt < _exeLimit)
                 {
                     var exe = _waitExes.Dequeue();
-                    exe.Exe(this, ref _exeCnt);
+                    try
+                    {
+                        exe.Exe(this, ref _exeCnt);
+                    }
+                    finally
+                    {
+                        exe.Reset();
+                        Pool.Push(exe);
+                    }                                       
                 }
             }
-
-
-
-
             private T _Add<T>(long key) where T : IEvent
             {
                 if (key == 0) return default;
@@ -280,6 +284,12 @@ namespace Ux
             private T _Add<T>(out long key, int eType, object tag, Delegate action) where T : IEvent
             {
                 key = _GetKey(eType, action, tag);
+                return _Add<T>(key);
+            }
+
+            private T _Add<T>(out long key, int eType, object tag,T t) where T : IEvent
+            {
+                key = _GetKey(eType, t, tag);
                 return _Add<T>(key);
             }
 
@@ -311,16 +321,10 @@ namespace Ux
 
             public EventSystem RemoveByKey(IEnumerable<long> keys)
             {
-                using var enumerator = keys.GetEnumerator();
-                while (enumerator.MoveNext())
+                foreach (var key in keys)
                 {
-                    RemoveByKey(enumerator.Current);
+                    RemoveByKey(key);
                 }
-
-                //for (int i = keys.Count - 1; i >= 0; i--)
-                //{               
-                //    RemoveByKey(keys[i]);
-                //}
                 return this;
             }
 
@@ -343,28 +347,36 @@ namespace Ux
 
             public EventSystem Run(int eType)
             {
-                _waitExes.Enqueue(new EventExe(eType));
+                var exe = Pool.Get<EventExe>();
+                exe.Init(eType);
+                _waitExes.Enqueue(exe);
                 return this;
             }
 
             public EventSystem Run<A>(int eType, A a)
             {
-                _waitExes.Enqueue(new EventExe<A>(eType, a));
+                var exe = Pool.Get<EventExe<A>>();
+                exe.Init(eType, a);
+                _waitExes.Enqueue(exe);
                 return this;
             }
 
             public EventSystem Run<A, B>(int eType, A a, B b)
             {
-                _waitExes.Enqueue(new EventExe<A, B>(eType, a, b));
+                var exe = Pool.Get<EventExe<A, B>>();
+                exe.Init(eType, a, b);
+                _waitExes.Enqueue(exe);
                 return this;
             }
 
             public EventSystem Run<A, B, C>(int eType, A a, B b, C c)
             {
-                _waitExes.Enqueue(new EventExe<A, B, C>(eType, a, b, c));
+                var exe = Pool.Get<EventExe<A, B, C>>();
+                exe.Init(eType, a, b, c);
+                _waitExes.Enqueue(exe);
                 return this;
             }
-            //Á¢¼´µ÷ÓÃ
+            //ç«‹å³æ‰§è¡Œ
             public void Immediate()
             {
                 var tmp = _exeLimit;
