@@ -338,12 +338,10 @@ namespace Ux
                 if (_asyncs.Contains(id))
                 {
                     float time = Time.unscaledTime;
-                    while (true)
+                    await UniTask.WaitUntil(() =>
                     {
-                        await UniTask.Yield();                        
-                        if (!_asyncs.Contains(id)) break;                        
-                        if (Time.unscaledTime - time > _showTimeout) break; //超时                    
-                    }
+                        return !_asyncs.Contains(id) || Time.unscaledTime - time > _showTimeout;
+                    });
                 }
 
                 uis.Add(ui);
@@ -353,14 +351,14 @@ namespace Ux
             if (_showing.Contains(id))
             {
                 float time = Time.unscaledTime;
-                while (true)
+                await UniTask.WaitUntil(() =>
                 {
-                    await UniTask.Yield();
-                    if (_showed.TryGetValue(id, out ui)) break;
-                    if (!_showing.Contains(id)) break;
-                    if (_createdDels.Contains(id)) break;
-                    if (Time.unscaledTime - time > _showTimeout) break; //超时                    
-                }
+                    if (_showed.TryGetValue(id, out ui)) return true;
+                    if (!_showing.Contains(id)) return true;
+                    if (_createdDels.Contains(id)) return true;
+                    if (Time.unscaledTime - time > _showTimeout) return true; //超时
+                    return false;
+                });
 
                 if (ui == null) return false;
                 uis.Add(ui);
