@@ -9,13 +9,20 @@ namespace Ux
     }
     public partial class EventMgr
     {
+        public struct EventTask
+        {
+            public EventTask(long key, UniTask task)
+            {
+                Key = key;
+                Task = task;
+            }
+            public long Key { get; }
+            public UniTask Task { get; }
+        }
         public interface IEvent
         {
-            void Run();
-            void Run(object a);
-            void Run(object a, object b);
+            void Run(EventSystem system, params object[] args);
             void Release();
-            void Run(object a, object b, object c);
 
             long Key { get; }
             int EType { get; }
@@ -33,14 +40,11 @@ namespace Ux
             public object Tag { get; protected set; }
             public abstract Delegate Method { get; }
 #if UNITY_EDITOR            
-            public virtual string MethodName => Method.MethodName();
+            public virtual string MethodName => Method?.MethodName();
 #endif
 
 
-            public abstract void Run();
-            public abstract void Run(object a);
-            public abstract void Run(object a, object b);
-            public abstract void Run(object a, object b, object c);
+            public abstract void Run(EventSystem system,params object[] args);
 
             public void Release()
             {
@@ -75,24 +79,9 @@ namespace Ux
                 _method = default;
             }
 
-            public override void Run()
+            public override void Run(EventSystem system,params object[] args)
             {
                 if (_method.IsValid) _method.Invoke();
-            }
-
-            public override void Run(object a)
-            {
-                if (_method.IsValid) _method.Invoke(a);
-            }
-
-            public override void Run(object a, object b)
-            {
-                if (_method.IsValid) _method.Invoke(a, b);
-            }
-
-            public override void Run(object a, object b, object c)
-            {
-                if (_method.IsValid) _method.Invoke(a, b, c);
             }
         }
 
@@ -114,25 +103,11 @@ namespace Ux
                 _fn = null;
             }
 
-            public override void Run()
+            public override void Run(EventSystem system,params object[] args)
             {
                 _fn?.Invoke();
             }
 
-            public override void Run(object a)
-            {
-                _fn?.Invoke();
-            }
-
-            public override void Run(object a, object b)
-            {
-                _fn?.Invoke();
-            }
-
-            public override void Run(object a, object b, object c)
-            {
-                _fn?.Invoke();
-            }
         }
 
         public sealed class EventData<A> : EventBaseData
@@ -148,25 +123,12 @@ namespace Ux
                 _fn = fn;
             }
 
-            public override void Run()
+
+            public override void Run(EventSystem system,params object[] args)
             {
-                _fn?.Invoke(default(A));
+                if (args.Length > 0 && args[0] is A pA) _fn?.Invoke(pA);
             }
 
-            public override void Run(object a)
-            {
-                if (a is A pA) _fn?.Invoke(pA);
-            }
-
-            public override void Run(object a, object b)
-            {
-                if (a is A pA) _fn?.Invoke(pA);
-            }
-
-            public override void Run(object a, object b, object c)
-            {
-                if (a is A pA) _fn?.Invoke(pA);
-            }
 
             protected override void OnRelease()
             {
@@ -187,25 +149,12 @@ namespace Ux
                 _fn = fn;
             }
 
-            public override void Run()
+
+            public override void Run(EventSystem system,params object[] args)
             {
-                _fn?.Invoke(default(A), default(B));
+                if (args.Length > 1 && args[0] is A pA && args[1] is B pB) _fn?.Invoke(pA, pB);
             }
 
-            public override void Run(object a)
-            {
-                if (a is A pA) _fn?.Invoke(pA, default(B));
-            }
-
-            public override void Run(object a, object b)
-            {
-                if (a is A pA && b is B pB) _fn?.Invoke(pA, pB);
-            }
-
-            public override void Run(object a, object b, object c)
-            {
-                if (a is A pA && b is B pB) _fn?.Invoke(pA, pB);
-            }
 
             protected override void OnRelease()
             {
@@ -227,24 +176,10 @@ namespace Ux
                 _fn = fn;
             }
 
-            public override void Run()
-            {
-                _fn?.Invoke(default(A), default(B), default(C));
-            }
 
-            public override void Run(object a)
+            public override void Run(EventSystem system,params object[] args)
             {
-                if (a is A pA) _fn?.Invoke(pA, default(B), default(C));
-            }
-
-            public override void Run(object a, object b)
-            {
-                if (a is A pA && b is B pB) _fn?.Invoke(pA, pB, default(C));
-            }
-
-            public override void Run(object a, object b, object c)
-            {
-                if (a is A pA && b is B pB && c is C pC) _fn?.Invoke(pA, pB, pC);
+                if (args.Length > 2 && args[0] is A pA && args[1] is B pB && args[2] is C pC) _fn?.Invoke(pA, pB, pC);
             }
 
             protected override void OnRelease()
@@ -252,7 +187,7 @@ namespace Ux
                 _fn = null;
             }
         }
-        public sealed class EventAwaitData : EventBaseData
+        public sealed class EventTaskData : EventBaseData
         {
             public override Delegate Method => null;
             AutoResetUniTaskCompletionSource _fn;
@@ -270,25 +205,36 @@ namespace Ux
                 _fn = null;
             }
 
-            public override void Run()
+            public override void Run(EventSystem system,params object[] args)
             {
-                 _fn.TrySetResult();
-            }
-
-            public override void Run(object a)
-            {
-                _fn.TrySetResult();
-            }
-
-            public override void Run(object a, object b)
-            {
-                _fn.TrySetResult();
-            }
-
-            public override void Run(object a, object b, object c)
-            {
+                system.RemoveByKey(Key);
                 _fn.TrySetResult();
             }
         }
+        public sealed class EventTaskData<A> : EventBaseData
+        {
+            public override Delegate Method => null;
+            AutoResetUniTaskCompletionSource<A> _fn;
+
+            public void Init(long key, int eType, object tag, AutoResetUniTaskCompletionSource<A> fn)
+            {
+                Tag = tag;
+                Key = key;
+                EType = eType;
+                _fn = fn;
+            }
+
+            protected override void OnRelease()
+            {
+                _fn = null;
+            }
+
+            public override void Run(EventSystem system,params object[] args)
+            {
+                system.RemoveByKey(Key);
+                if (args.Length > 0 && args[0] is A pA) _fn.TrySetResult(pA);
+            }
+        }
+        
     }
 }

@@ -24,26 +24,57 @@ namespace Ux
     {
         private UIEvent _event;
         private List<UIObject> _components;
+        private List<UIObject> _animComponents;
         public List<UIObject> Components => _components ??= new List<UIObject>();
         private UIState _state = UIState.Hide;
+        private bool _stateDirty = true;
+        private UIState _cachedState = UIState.Hide;
         public virtual UIState State
         {
             get
             {
-                foreach (var component in Components)
+                if (!_stateDirty) return _cachedState;
+                if (_animComponents != null)
                 {
-                    var state = component.State;
-                    if (state is UIState.ShowAnim or UIState.HideAnim)
+                    foreach (var component in _animComponents)
                     {
-                        return state;
+                        var state = component.State;
+                        if (state is UIState.ShowAnim or UIState.HideAnim)
+                        {
+                            _cachedState = state;
+                            _stateDirty = false;
+                            return state;
+                        }
                     }
                 }
-                return _state;
+                _cachedState = _state;
+                _stateDirty = false;
+                return _cachedState;
             }
+            private set
+            {
+                _state = value;
+                MarkStateDirty();
+            }
+        }
+        private void MarkStateDirty()
+        {
+            _stateDirty = true;
+            Parent?.MarkStateDirty();
         }
 
         public virtual UIObject Parent { get; private set; }
         public GObject GObject { get; private set; }
+
+        public void AddComponent(UIObject component)
+        {
+            Components.Add(component);
+            if (component.ShowAnim != null || component.HideAnim != null)
+            {
+                _animComponents ??= new List<UIObject>();
+                _animComponents.Add(component);
+            }
+        }
 
         IUIParam _paramVo;
         IUIParam ParamVo
@@ -100,7 +131,7 @@ namespace Ux
         protected void Init(GObject gObj, UIObject parent = null)
         {
             if (gObj == null || GObject != null) return;
-            _event ??= Pool.Get<UIEvent>();           
+            _event ??= Pool.Get<UIEvent>();
             GObject = gObj;
             Parent = parent;
             CreateChildren();
@@ -156,7 +187,7 @@ namespace Ux
                     {
                         property.SetValue(this, com);
                     }
-                    Components.Add(com);
+                    AddComponent(com);
                 }
             }
         }
@@ -222,7 +253,7 @@ namespace Ux
         protected virtual void CreateChildren()
         {
             var component = GObject is Window ? ObjAs<Window>().contentPane : ObjAs<GComponent>();
-            if (component == null) return;            
+            if (component == null) return;
             try
             {
                 _ToCreateChildren(GetType(), component);
@@ -238,13 +269,13 @@ namespace Ux
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
             {
-                _state = UIState.ShowAnim;
+                State = UIState.ShowAnim;
                 ShowAnim?.SetToStart();
-                ShowAnim?.Play(() => { _state = UIState.Show; });
+                ShowAnim?.Play(() => { State = UIState.Show; });
             }
             else
             {
-                _state = UIState.Show;
+                State = UIState.Show;
                 ShowAnim?.SetToEnd();
             }
             RemoveTag();
@@ -280,7 +311,7 @@ namespace Ux
                     if (isCanceled)
                     {
                         ShowAnim?.SetToEnd();
-                        _state = UIState.Show;                           
+                        State = UIState.Show;
                     }
                 }
                 else
@@ -328,13 +359,13 @@ namespace Ux
             ShowAnim?.Stop();
             if (isAnim && HideAnim != null)
             {
-                _state = UIState.HideAnim;
+                State = UIState.HideAnim;
                 HideAnim?.SetToStart();
-                HideAnim?.Play(() => { _state = UIState.Hide; });
+                HideAnim?.Play(() => { State = UIState.Hide; });
             }
             else
             {
-                _state = UIState.Hide;
+                State = UIState.Hide;
                 HideAnim?.SetToEnd();
             }
 
@@ -360,7 +391,7 @@ namespace Ux
                     if (isCanceled)
                     {
                         HideAnim?.SetToEnd();
-                        _state = UIState.Hide;                        
+                        State = UIState.Hide;
                     }
                 }
                 else

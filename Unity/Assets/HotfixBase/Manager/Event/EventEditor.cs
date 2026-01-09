@@ -44,6 +44,10 @@ namespace Ux
         }
         void _EditorRemove(IEvent evt)
         {
+            if (string.IsNullOrEmpty(evt.MethodName))
+            {
+                return;
+            }
             string eTypeStr;
             if (evt.EType < (int)MainEventType.END)
             {
@@ -65,6 +69,10 @@ namespace Ux
 
         void _EditorAdd(IEvent evt)
         {
+            if (string.IsNullOrEmpty(evt.MethodName))
+            {
+                return;
+            }
             string eTypeStr;
             if (evt.EType < (int)MainEventType.END)
             {
@@ -73,7 +81,7 @@ namespace Ux
             else
             {
                 eTypeStr = $"EventType.{Enum.GetName(_hotfixEvtType, evt.EType)}";
-            }            
+            }
             if (!type2editor.TryGetValue(eTypeStr, out var t2eList))
             {
                 t2eList = new EventList(eTypeStr);

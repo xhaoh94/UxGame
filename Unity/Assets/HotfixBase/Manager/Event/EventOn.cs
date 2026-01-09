@@ -7,13 +7,15 @@ namespace Ux
 {
     public interface IEventOn
     {
+        EventMgr.EventTask Call(int eType, object tag);
+        EventMgr.EventTask Call<A>(int eType, object tag);
         long On(int eType, object tag, Action action);
         long On<A>(int eType, object tag, Action<A> action);
         long On<A, B>(int eType, object tag, Action<A, B> action);
         long On<A, B, C>(int eType, object tag, Action<A, B, C> action);
     }
-    partial class EventMgr: IEventOn
-    {        
+    partial class EventMgr : IEventOn
+    {
         partial class EventSystem
         {
             public long On(int eType, FastMethodInfo action)
@@ -67,11 +69,27 @@ namespace Ux
                 return key;
             }
 
-            public UniTask Await(int eType, object tag){
+            public EventTask Call(int eType, object tag)
+            {
                 var task = AutoResetUniTaskCompletionSource.Create();
-                var key = _GetKey(eType, task, tag);
-                _Add<EventAwaitData>(key);                
-                return task.Task;
+                var key = IDGenerater.GenerateId();
+                var evtData = _Add<EventTaskData>(key);
+                if (evtData != default)
+                {
+                    evtData.Init(key, eType, tag, task);
+                }
+                return new EventTask(key, task.Task);
+            }
+             public EventTask Call<A>(int eType, object tag)
+            {
+                var task = AutoResetUniTaskCompletionSource<A>.Create();
+                var key = IDGenerater.GenerateId();
+                var evtData = _Add<EventTaskData<A>>(key);
+                if (evtData != default)
+                {
+                    evtData.Init(key, eType, tag, task);
+                }
+                return new EventTask(key, task.Task);
             }
         }
         long IEventOn.On(int eType, object tag, Action action)
@@ -92,6 +110,14 @@ namespace Ux
         long IEventOn.On<A, B, C>(int eType, object tag, Action<A, B, C> action)
         {
             return _defaultSystem.On(eType, tag, action);
+        }
+        EventTask IEventOn.Call(int eType, object tag)
+        {
+            return _defaultSystem.Call(eType, tag);
+        }
+        EventTask IEventOn.Call<A>(int eType, object tag)
+        {
+            return _defaultSystem.Call<A>(eType, tag);
         }
     }
 }

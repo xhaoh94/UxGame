@@ -34,15 +34,16 @@ namespace Ux.UI
             loader.url = "130G_TieKuang";
             GObject.asCom.AddChild(loader);
 
-            testUIModel.CloneMaterial = true;
-            testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
+            // testUIModel.CloneMaterial = true;
+            // testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
 
-            testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
+            // testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
 
             testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
             this.DoTimer(5, 1, () =>
             {
                 testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
+                EventMgr.Ins.Run(EventType.Test_EventCall);
                 //testList.List.ScrollToView(7);
                 //EventMgr.Ins.Run(11111111);
             });

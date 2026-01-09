@@ -14,7 +14,7 @@ namespace Ux
         public UITabFrame(GObject container, UIObject parent)
         {
             Init(container, parent);
-            parent?.Components?.Add(this);
+            parent?.AddComponent(this);
         }
 
         #region 组件

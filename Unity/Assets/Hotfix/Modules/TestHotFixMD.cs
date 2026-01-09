@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 namespace Ux
 {
     [Module]
@@ -15,7 +17,13 @@ namespace Ux
             UIMgr.Ins.AddUIData(data1);
             var data3 = new UITestData(333302, typeof(LoginTestSub), new UITestTabData(3333, "测试3"));
             UIMgr.Ins.AddUIData(data3);
-
+            Test_EventCallAsync().Forget();
+        }
+        async UniTaskVoid Test_EventCallAsync()
+        {
+            Log.Info("Test_EventCall1111");
+            await EventMgr.Ins.Call(EventType.Test_EventCall, this).Task;
+            Log.Info("Test_EventCall2222");
         }
         protected override void OnRelease()
         {
@@ -29,7 +37,7 @@ namespace Ux
 
     }
 
-    [Package("Common", "Login")]    
+    [Package("Common", "Login")]
     public class LoginTestUI : UIView
     {
         public string aaa;

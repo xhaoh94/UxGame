@@ -29,14 +29,14 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
                     foreach (var key in keys)
                     {
                         if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
                         if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
                         try
                         {
-                            aEvent?.Run();
+                            aEvent?.Run(system);
                             exeCnt++;
                         }
                         catch (Exception e)
@@ -65,14 +65,14 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
                     foreach (var key in keys)
                     {
                         if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
                         if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
                         try
                         {
-                            aEvent?.Run(_a);
+                            aEvent?.Run(system, _a);
                             exeCnt++;
                         }
                         catch (Exception e)
@@ -105,14 +105,14 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
                     foreach (var key in keys)
                     {
                         if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
                         if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
                         try
                         {
-                            aEvent?.Run(_a, _b);
+                            aEvent?.Run(system, _a, _b);
                             exeCnt++;
                         }
                         catch (Exception e)
@@ -148,14 +148,14 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
                     foreach (var key in keys)
                     {
                         if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
                         if (system._waitDels.Count > 0 && system._waitDels.Contains(key)) continue;
                         try
                         {
-                            aEvent?.Run(_a, _b, _c);
+                            aEvent?.Run(system, _a, _b, _c);
                             exeCnt++;
                         }
                         catch (Exception e)

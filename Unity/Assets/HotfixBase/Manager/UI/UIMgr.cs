@@ -36,7 +36,7 @@ namespace Ux
         private readonly List<int> _showing = new List<int>();
 
         //异步中
-        private readonly HashSet<int> _asyncs= new HashSet<int>();
+        private readonly HashSet<int> _asyncs = new HashSet<int>();
 
         //已经显示的ui列表
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
@@ -340,8 +340,8 @@ namespace Ux
                     float time = Time.unscaledTime;
                     while (true)
                     {
-                        await UniTask.Yield();                        
-                        if (!_asyncs.Contains(id)) break;                        
+                        await UniTask.Yield();
+                        if (!_asyncs.Contains(id)) break;
                         if (Time.unscaledTime - time > _showTimeout) break; //超时                    
                     }
                 }
@@ -465,14 +465,15 @@ namespace Ux
         void _HideAll(Func<int, bool> func)
         {
             _ClearStack();
-            foreach (var id in _showing)
+            // 先收集要隐藏的ID
+            var toHideFromShowing = _showing.Where(id => !func(id)).ToList();
+            var toHideFromShowed = _showed.Keys.Where(id => !func(id)).ToList();
+            foreach (var id in toHideFromShowing)
             {
-                if (func(id)) continue;
                 Hide(id, false);
             }
-            foreach (var (id,_) in _showed)  
+            foreach (var id in toHideFromShowed)
             {
-                if (func(id)) continue;
                 Hide(id, false);
             }
         }

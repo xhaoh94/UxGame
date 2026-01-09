@@ -122,7 +122,7 @@ namespace Ux
         }
 
         UniTask IUI.DoShow(bool isAnim, int id, IUIParam param, bool checkStack)
-        {                     
+        {
             var task = AutoResetUniTaskCompletionSource.Create();
             switch (State)
             {
@@ -134,7 +134,7 @@ namespace Ux
                     }
                     _Show(id, param, checkStack);
                     task.TrySetResult();
-                    return task.Task;                    
+                    return task.Task;
                 case UIState.Hide:
                     AddToStage();
                     OnLayout();
@@ -156,7 +156,7 @@ namespace Ux
                 if (isAnim && ShowAnim != null)
                 {
                     _showToken = new CancellationTokenSource();
-                }                
+                }
                 ToShow(isAnim, id, param, checkStack, _showToken);
                 task.TrySetResult();
             }
@@ -175,7 +175,7 @@ namespace Ux
         }
 
         void IUI.DoHide(bool isAnim, bool checkStack)
-        {            
+        {
             //子界面不需要检测栈，由最顶层父界面控制
             if (_cbData != null && !(this is UITabView))
             {
@@ -194,7 +194,7 @@ namespace Ux
 
             if (_async)
             {
-                _asyncComplete = _DoHide;                
+                _asyncComplete = _DoHide;
             }
             else
             {
@@ -203,10 +203,7 @@ namespace Ux
             _ReleaseShowToken();
             void _DoHide()
             {
-                if (isAnim && HideAnim != null)
-                {
-                    _hideToken = new CancellationTokenSource();
-                }                
+                _hideToken = isAnim && HideAnim != null ? new CancellationTokenSource() : null;
                 ToHide(isAnim, checkStack, _hideToken);
             }
         }
@@ -237,7 +234,7 @@ namespace Ux
         void _ReleaseShowToken()
         {
             if (_showToken != null)
-            {                
+            {
                 _showToken.Cancel();
                 _showToken = null;
             }
@@ -245,7 +242,7 @@ namespace Ux
         void _ReleaseHideToken()
         {
             if (_hideToken != null)
-            {                
+            {
                 _hideToken.Cancel();
                 _hideToken = null;
             }

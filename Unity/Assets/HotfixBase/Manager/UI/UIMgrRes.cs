@@ -191,7 +191,7 @@ namespace Ux
         {
             if (type != typeof(Texture)) return;
             //string resName = $"{PathHelper.Res.UI}/{item.owner.name}/{name}";
-            string resName = string.Format(PathHelper.Res.UI, item.owner.name, name);
+            string resName = string.Format(PathHelper.Res.UIAtlas, name);
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();

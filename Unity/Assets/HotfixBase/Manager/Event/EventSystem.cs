@@ -37,12 +37,12 @@ namespace Ux
             //每帧执行数量-防止卡顿，一帧执行
             int _exeLimit = 200;
             int _exeCnt = 0;
-
+        
             private readonly Dictionary<long, IEvent> _keyEvent = new();
             /// <summary>
             /// 事件ID对应的IEvent
             /// </summary>
-            private readonly Dictionary<int, HashSet<long>> _eTypeKeys = new();
+            private readonly Dictionary<int, HashSet<long>> _eventTypeKeys = new();
             /// <summary>
             /// 标签对应的IEvent
             /// </summary>
@@ -70,7 +70,7 @@ namespace Ux
             public void Clear()
             {
                 _keyEvent.Clear();
-                _eTypeKeys.Clear();
+                _eventTypeKeys.Clear();
                 _tagKeys.Clear();
                 _actionKeys.Clear();
                 _waitExes.Clear();
@@ -167,18 +167,22 @@ namespace Ux
                     {
                         if (!_keyEvent.TryGetValue(key, out var evt)) continue;
                         var eType = evt.EType;
-                        if (_eTypeKeys.TryGetValue(eType, out var typeKeys))
+                        if (_eventTypeKeys.TryGetValue(eType, out var typeKeys))
                         {
                             typeKeys.Remove(key);
-                            if (typeKeys.Count == 0) _eTypeKeys.Remove(eType);
+                            if (typeKeys.Count == 0) _eventTypeKeys.Remove(eType);
                         }
 
-                        var actionHashCode = evt.Method.GetHashCode();
-                        if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                        if (evt.Method != null)
                         {
-                            aKeys.Remove(key);
-                            if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
+                            var actionHashCode = evt.Method.GetHashCode();
+                            if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                            {
+                                aKeys.Remove(key);
+                                if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
+                            }
                         }
+
 
                         var target = evt.Tag;
                         if (target != null)
@@ -209,10 +213,10 @@ namespace Ux
                     {
                         _keyEvent.Add(evt.Key, evt);
                         var eType = evt.EType;
-                        if (!_eTypeKeys.TryGetValue(eType, out var typeKeys))
+                        if (!_eventTypeKeys.TryGetValue(eType, out var typeKeys))
                         {
                             typeKeys = new();
-                            _eTypeKeys.Add(eType, typeKeys);
+                            _eventTypeKeys.Add(eType, typeKeys);
                         }
                         var key = evt.Key;
                         typeKeys.Add(key);
@@ -225,15 +229,18 @@ namespace Ux
                         }
 #endif
 
-
-                        var actionHashCode = evt.Method.GetHashCode();
-                        if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                        if (evt.Method != null)
                         {
-                            aKeys = new();
-                            _actionKeys.Add(actionHashCode, aKeys);
+                            var actionHashCode = evt.Method.GetHashCode();
+                            if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                            {
+                                aKeys = new();
+                                _actionKeys.Add(actionHashCode, aKeys);
+                            }
+
+                            aKeys.Add(key);
                         }
 
-                        aKeys.Add(key);
 
                         var target = evt.Tag;
                         if (target != null)
@@ -262,7 +269,7 @@ namespace Ux
                     {
                         exe.Reset();
                         Pool.Push(exe);
-                    }                                       
+                    }
                 }
             }
             private T _Add<T>(long key) where T : IEvent
@@ -287,7 +294,7 @@ namespace Ux
                 return _Add<T>(key);
             }
 
-            private T _Add<T>(out long key, int eType, object tag,T t) where T : IEvent
+            private T _Add<T>(out long key, int eType, object tag, T t) where T : IEvent
             {
                 key = _GetKey(eType, t, tag);
                 return _Add<T>(key);

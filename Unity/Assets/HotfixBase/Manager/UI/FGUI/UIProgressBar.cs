@@ -8,7 +8,7 @@ namespace Ux
         public UIProgressBar(GObject gObject, UIObject parent)
         {
             Init(gObject, parent);
-            parent?.Components?.Add(this);
+            parent?.AddComponent(this);
         }
         public GProgressBar ProgressBar => ObjAs<GProgressBar>();
         #region FairyGUI 属性-方法

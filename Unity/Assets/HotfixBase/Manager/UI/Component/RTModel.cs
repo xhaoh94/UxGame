@@ -70,8 +70,8 @@ namespace Ux
         public RTModel(GObject container, UIObject parent)
         {
             Init(container, parent);
-            parent?.Components?.Add(this);
-
+            parent?.AddComponent(this);
+            
             _width = (int)container.width;
             _height = (int)container.height;
 

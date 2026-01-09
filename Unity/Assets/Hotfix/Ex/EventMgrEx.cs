@@ -4,6 +4,14 @@ namespace Ux
 {
     public static class EventMgrEx
     {
+        public static EventMgr.EventTask Call(this EventMgr mgr, EventType eType, object tag)
+        {
+            return (mgr as IEventOn).Call((int)eType, tag);
+        }
+        public static EventMgr.EventTask Call<A>(this EventMgr mgr, EventType eType, object tag)
+        {
+            return (mgr as IEventOn).Call<A>((int)eType, tag);
+        }
         public static void On(this EventMgr mgr, EventType eType, object tag, Action action)
         {
             (mgr as IEventOn).On((int)eType, tag, action);

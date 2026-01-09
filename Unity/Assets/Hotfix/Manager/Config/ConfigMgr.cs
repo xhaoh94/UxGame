@@ -1,30 +1,30 @@
 using Luban;
-using SimpleJSON;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Ux
 {
     public class ConfigMgr : Singleton<ConfigMgr>
-    {        
+    {
         public cfg.Tables Tables { get; private set; }
         public void Init()
         {
             var tablesCtor = typeof(cfg.Tables).GetConstructors()[0];
             var loaderReturnType = tablesCtor.GetParameters()[0].ParameterType.GetGenericArguments()[1];
-            // ¸ù¾İcfg.TablesµÄ¹¹Ôìº¯ÊıµÄLoaderµÄ·µ»ØÖµÀàĞÍ¾ö¶¨Ê¹ÓÃjson»¹ÊÇByteBuf Loader
+            // æ ¹æ®cfg.Tablesçš„æ„é€ å‡½æ•°å‚æ•°Loaderçš„è¿”å›ç±»å‹åˆ›å»ºåŠ è½½å™¨;å†³å®šä½¿ç”¨jsonåŠ è½½å™¨è¿˜æ˜¯ByteBufåŠ è½½å™¨
             System.Delegate loader = loaderReturnType == typeof(ByteBuf) ?
                 new System.Func<string, ByteBuf>(LoadByteBuf)
-                : (System.Delegate)new System.Func<string, JSONNode>(LoadJson);
+                : (System.Delegate)new System.Func<string, JArray>(LoadJson);
             Tables = (cfg.Tables)tablesCtor.Invoke(new object[] { loader });
         }
         string _GetPath(string file)
         {
             return string.Format(PathHelper.Res.Config,file);
         }
-        private JSONNode LoadJson(string file)
+        private JArray LoadJson(string file)
         {
             var ta = ResMgr.Ins.LoadAsset<TextAsset>(_GetPath(file));
-            return JSON.Parse(ta.text);
+            return JArray.Parse(ta.text);
         }
 
         private ByteBuf LoadByteBuf(string file)

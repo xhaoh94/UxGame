@@ -38,7 +38,7 @@ namespace Ux
         public UIModel(GObject container, UIObject parent)
         {
             Init(container, parent);
-            parent?.Components?.Add(this);
+            parent?.AddComponent(this);
             OnHideCallBack += _Release;
         }
         protected override void CreateChildren()

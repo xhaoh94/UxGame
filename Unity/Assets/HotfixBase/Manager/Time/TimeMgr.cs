@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Ux
@@ -86,7 +87,7 @@ namespace Ux
 
             if (target == null)
             {
-                key = (long)IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode());
+                key = (long)IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), dic.GetHashCode());
             }
             else
             {

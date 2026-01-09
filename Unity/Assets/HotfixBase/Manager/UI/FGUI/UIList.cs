@@ -17,7 +17,7 @@ namespace Ux
         public UIList(GObject gObject, UIObject parent)
         {
             Init(gObject, parent);
-            parent?.Components?.Add(this);
+            parent?.AddComponent(this);
         }
         protected override void CreateChildren()
         {
