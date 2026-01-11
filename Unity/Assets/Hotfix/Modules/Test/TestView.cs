@@ -40,13 +40,13 @@ namespace Ux.UI
             // testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
 
             testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
-            this.DoTimer(5, 1, () =>
+            TimeMgr.Ins.Timer(5, this, () =>
             {
                 testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
                 EventMgr.Ins.Run(EventType.Test_EventCall);
                 //testList.List.ScrollToView(7);
                 //EventMgr.Ins.Run(11111111);
-            });
+            }).Count(1).Build();
             //EventMgr.Ins.Run(11111111);
         }
         partial void OnBtnMultipleClick(EventContext e)
@@ -94,7 +94,7 @@ namespace Ux.UI
             HideSelf();
         }
         partial void OnTestListItemClick(IItemRenderer e)
-        {            
+        {
             Log.Debug(e.Index);
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -167,7 +168,7 @@ namespace Ux.Editor.Build.UI
         void CreateText(List<CustomData> listData, VisualElement parent)
         {
             parent.style.display = DisplayStyle.Flex;
-            var code = parent.GetHashCode();
+            var code = RuntimeHelpers.GetHashCode(parent);
 
             foreach (var temData in listData)
             {
@@ -230,7 +231,7 @@ namespace Ux.Editor.Build.UI
 
         void FreshDict(VisualElement parent, List<CustomData> listData)
         {
-            var code = parent.GetHashCode();
+            var code = RuntimeHelpers.GetHashCode(parent);
             for (int i = 0; i < listData.Count; i++)
             {
                 var temData = listData[i];

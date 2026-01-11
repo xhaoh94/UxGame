@@ -1,6 +1,7 @@
 ﻿using FairyGUI;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 namespace Ux
 {
@@ -47,26 +48,26 @@ namespace Ux
         public void AddMultipleClick(GObject gObject, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
         {
             _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
-            if (_mulClickEvtList.ContainsKey(gObject.GetHashCode())) return;
+            if (_mulClickEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
             var item = Pool.Get<UIMultipleClickEventData>();
             item.Init(gObject, fn0, clickCnt, gapTime);
-            _mulClickEvtList.Add(gObject.GetHashCode(), item);
+            _mulClickEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
         }
         public void AddMultipleClick(GObject gObject, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
         {
             _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
-            if (_mulClickEvtList.ContainsKey(gObject.GetHashCode())) return;
+            if (_mulClickEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
             var item = Pool.Get<UIMultipleClickEventData>();
             item.Init(gObject, fn1, clickCnt, gapTime);
-            _mulClickEvtList.Add(gObject.GetHashCode(), item);
+            _mulClickEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
         }
         public void AddLongPress(GObject gObject, Func<bool> fn, float first, float delay, int loop, int holdRangeRadius)
         {
             _longPressEvtList ??= new Dictionary<int, UILongPressEventData>();
-            if (_longPressEvtList.ContainsKey(gObject.GetHashCode())) return;
+            if (_longPressEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
             var item = Pool.Get<UILongPressEventData>();
             item.Init(gObject, fn, first, delay, loop, holdRangeRadius);
-            _longPressEvtList.Add(gObject.GetHashCode(), item);
+            _longPressEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
         }
         public void AddEvent(EventListener listener, EventCallback1 fn)
         {
@@ -155,7 +156,7 @@ namespace Ux
             {
                 if (Time.unscaledTime - _beginTime < _gapTime)
                 {
-                    _timeKey = TimeMgr.Ins.DoOnce(_gapTime, this, SimulationClick);
+                    _timeKey = TimeMgr.Ins.Timer(_gapTime, this, SimulationClick).Count(1).Build();
                     _firstTime = Time.unscaledTime;
                 }
             }
@@ -259,7 +260,10 @@ namespace Ux
             _startPoint = _target.GlobalToLocal(new Vector2(e.inputEvent.x, e.inputEvent.y));
             _touchId = e.inputEvent.touchId;
             _nowCnt = 0;
-            _timeKey = TimeMgr.Ins.DoLoop(_first, _delay, this, _Loop);
+            _timeKey = TimeMgr.Ins.Timer(_delay, this, _Loop)
+            .Loop()
+            .First(_first)
+            .Build();
         }
 
         private void OnTouchEnd(EventContext e)

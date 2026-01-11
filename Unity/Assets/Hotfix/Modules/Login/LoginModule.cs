@@ -34,9 +34,9 @@ namespace Ux
                 }
             };
             GameMain.Machine.Enter<StateGameIn>();
-            TimeMgr.Ins.DoTimer(10, 1, this, Test1);
-            TimeMgr.Ins.DoTimer(9, 1, this, Test2);
-            TimeMgr.Ins.DoTimer(80, 1, this, Test3);
+            TimeMgr.Ins.Timer(10, this, Test1).Count(1).Build();
+            TimeMgr.Ins.Timer(9, this, Test2).Count(1).Build();
+            TimeMgr.Ins.Timer(80, this, Test3).Count(1).Build();
         }
         void Test1()
         {

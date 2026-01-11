@@ -82,18 +82,14 @@ namespace Ux
         private long GetKey(Delegate action, object tag, HandleMap dic)
         {
             if (action == null) return 0;
-            long key = 0;
-            var target = tag;
-
-            if (target == null)
+            if (tag == null)
             {
-                key = (long)IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), dic.GetHashCode());
+                return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), dic.GetHashCode());
             }
             else
             {
-                key = (long)IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), target.GetHashCode());
+                return IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), tag.GetHashCode());
             }
-            return key;
         }
 
         public void RemoveKey(long key)
@@ -127,271 +123,68 @@ namespace Ux
             return true;
         }
 
-        private long Create(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag, Action action,
-            Action complete)
+        /// <summary>时间定时器内部创建方法</summary>
+        private long CreateTimer(TimerBuilder builder)
         {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
+            if (!CheckCreate(builder.Func, builder.Delay)) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, _timer, builder.Func, builder.Tag);
             var exe = Pool.Get<HandleExe>();
-            exe.Init(tag, action);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete);
-            dic.Add(handle);
+            exe.Init(builder.Tag, builder.Func);
+
+            handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
+            _timer.Add(handle);
             return key;
         }
-
-        private long Create(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag, Action action,
-            Action<object> complete, object completeParam)
+        private long CreateTimer<A>(TimerBuilder<A> builder)
         {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
-            var exe = Pool.Get<HandleExe>();
-            exe.Init(tag, action);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
-            dic.Add(handle);
-            return key;
-        }
-
-        private long Create<A>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
-            Action<A> action, A a, Action complete)
-        {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
+            if (!CheckCreate(builder.Func, builder.Delay)) return 0;
+            var handle = CreateHandle<TimeHandle>(out var key, _timer, builder.Func, builder.Tag);
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(tag, action, a);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete);
-            dic.Add(handle);
+            exe.Init(builder.Tag, builder.Func, builder.Param);
+            handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
+            _timer.Add(handle);
             return key;
         }
 
-        private long Create<A>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
-            Action<A> action, A a, Action<object> complete, object completeParam)
+        public TimerBuilder Timer(float seconds, object tag, Action action)
         {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
-            var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(tag, action, a);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
-            dic.Add(handle);
-            return key;
+            var builder = Pool.Get<TimerBuilder>();
+            if (builder is ITimerBuilder initBuilder)
+            {
+                initBuilder.Init(seconds, false, CreateTimer);
+                initBuilder.Do(tag, action);
+            }
+            return builder;
         }
-
-        private long Create<A, B>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
-            Action<A, B> action, A a, B b, Action complete)
+        public TimerBuilder<A> Timer<A>(float seconds, object tag, Action<A> action, A param)
         {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
-            var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(tag, action, a, b);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete);
-            dic.Add(handle);
-            return key;
+            var builder = Pool.Get<TimerBuilder<A>>();
+            if (builder is ITimerBuilder<A> initBuilder)
+            {
+                initBuilder.Init(seconds, false, CreateTimer);
+                initBuilder.Do(tag, action, param);
+            }
+            return builder;
         }
-
-        private long Create<A, B>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
-            Action<A, B> action, A a, B b, Action<object> complete, object completeParam)
+        public TimerBuilder Frame(float frame, object tag, Action action)
         {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
-            var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(tag, action, a, b);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
-            dic.Add(handle);
-            return key;
+            var builder = Pool.Get<TimerBuilder>();
+            if (builder is ITimerBuilder initBuilder)
+            {
+                initBuilder.Init(frame, true, CreateTimer);
+                initBuilder.Do(tag, action);
+            }
+            return builder;
         }
-
-        private long Create<A, B, C>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
-            Action<A, B, C> action, A a, B b, C c, Action complete)
+        public TimerBuilder<A> Frame<A>(float frame, object tag, Action<A> action, A param)
         {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
-            var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(tag, action, a, b, c);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete);
-            dic.Add(handle);
-            return key;
-        }
-
-        private long Create<A, B, C>(bool useFrame, HandleMap dic, float first, float delay, int repeat, object tag,
-            Action<A, B, C> action, A a, B b, C c, Action<object> complete, object completeParam)
-        {
-            if (!CheckCreate(action, delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, action, tag);
-            var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(tag, action, a, b, c);
-            handle.Init(exe, key, first, delay, repeat, useFrame, complete, completeParam);
-            dic.Add(handle);
-            return key;
-        }
-
-
-        #region Time
-
-        /// <summary>
-        /// 循环回调
-        /// </summary>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="action">调用方法</param>
-        /// <returns></returns>
-        public long DoLoop(float delay, object tag, Action action)
-        {
-            return DoTimer(delay, 0, tag, action);
-        }
-
-        /// <summary>
-        /// 循环回调
-        /// </summary>
-        /// <param name="first">第一次触发秒数</param>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="action">调用方法</param>        
-        /// <returns></returns>
-        public long DoLoop(float first, float delay, object tag, Action action)
-        {
-            return DoTimer(first, delay, 0, tag, action);
-        }
-
-        /// <summary>
-        /// 单次回调
-        /// </summary>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="action">调用方法</param>
-        /// <returns></returns>
-        public long DoOnce(float delay, object tag, Action action)
-        {
-            return DoTimer(delay, 1, tag, action);
-        }
-
-        /// <summary>
-        /// 延时调用
-        /// </summary>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoTimer(float delay, int repeat, object tag, Action action,
-            Action complete = null)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, complete);
-        }
-
-        public long DoTimer(float firstTime, float delay, int repeat, object tag, Action action,
-            Action complete = null)
-        {
-            return Create(false, _timer, firstTime, delay, repeat, tag, action, complete);
-        }
-
-        public long DoTimer(float delay, int repeat, object tag, Action action,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, complete, completeParam);
-        }
-
-        public long DoTimer(float firstTime, float delay, int repeat, object tag, Action action,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, firstTime, delay, repeat, tag, action, complete, completeParam);
-        }
-
-        /// <summary>
-        /// 延时调用
-        /// </summary>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>
-        /// <param name="a">附加参数</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoTimer<A>(float delay, int repeat, object tag, Action<A> action, A a,
-            Action complete = null)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, a, complete);
-        }
-
-        public long DoTimer<A>(float firstTime, float delay, int repeat, object tag, Action<A> action, A a,
-            Action complete = null)
-        {
-            return Create(false, _timer, delay, firstTime, repeat, tag, action, a, complete);
-        }
-
-        public long DoTimer<A>(float delay, int repeat, object tag, Action<A> action, A a,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, a, complete, completeParam);
-        }
-
-        public long DoTimer<A>(float firstTime, float delay, int repeat, object tag, Action<A> action, A a,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, delay, firstTime, repeat, tag, action, a, complete, completeParam);
-        }
-
-        /// <summary>
-        /// 延时调用
-        /// </summary>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>
-        /// <param name="a">附加参数</param>
-        /// <param name="b">附加参数</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoTimer<A, B>(float delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action complete = null)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, complete);
-        }
-
-        public long DoTimer<A, B>(float firstTime, float delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action complete = null)
-        {
-            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, complete);
-        }
-
-        public long DoTimer<A, B>(float delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, complete, completeParam);
-        }
-
-        public long DoTimer<A, B>(float firstTime, float delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, complete, completeParam);
-        }
-
-        /// <summary>
-        /// 延时调用
-        /// </summary>
-        /// <param name="delay">延时秒数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>
-        /// <param name="a">附加参数</param>
-        /// <param name="b">附加参数</param>
-        /// <param name="c">附加参数</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoTimer<A, B, C>(float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action complete = null)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, c, complete);
-        }
-
-        public long DoTimer<A, B, C>(float firstTime, float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action complete = null)
-        {
-            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, c, complete);
-        }
-
-        public long DoTimer<A, B, C>(float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, -1, delay, repeat, tag, action, a, b, c, complete, completeParam);
-        }
-
-        public long DoTimer<A, B, C>(float firstTime, float delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action<object> complete, object completeParam)
-        {
-            return Create(false, _timer, firstTime, delay, repeat, tag, action, a, b, c, complete, completeParam);
+            var builder = Pool.Get<TimerBuilder<A>>();
+            if (builder is ITimerBuilder<A> initBuilder)
+            {
+                initBuilder.Init(frame, true, CreateTimer);
+                initBuilder.Do(tag, action, param);
+            }
+            return builder;
         }
 
         public void RemoveTimer(object tag, Action action)
@@ -408,159 +201,6 @@ namespace Ux
             _timer.Remove(key);
         }
 
-        public void RemoveTimer<A, B>(object tag, Action<A, B> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _timer);
-            _timer.Remove(key);
-        }
-
-        public void RemoveTimer<A, B, C>(object tag, Action<A, B, C> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _timer);
-            _timer.Remove(key);
-        }
-
-        #endregion Time
-
-        #region Frame
-
-        /// <summary>
-        /// 延帧调用
-        /// </summary>
-        /// <param name="delay">延时帧数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoFrame(int delay, int repeat, object tag, Action action,
-            Action complete = null)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, complete);
-        }
-
-        public long DoFrame(int first, int delay, int repeat, object tag, Action action,
-            Action complete = null)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, complete);
-        }
-
-        public long DoFrame(int delay, int repeat, object tag, Action action,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, complete, completeParam);
-        }
-
-        public long DoFrame(int first, int delay, int repeat, object tag, Action action,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, complete, completeParam);
-        }
-
-        /// <summary>
-        /// 延帧调用
-        /// </summary>
-        /// <param name="delay">延时帧数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>
-        /// <param name="a">附加参数</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoFrame<A>(int delay, int repeat, object tag, Action<A> action, A a,
-            Action complete = null)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, a, complete);
-        }
-
-        public long DoFrame<A>(int first, int delay, int repeat, object tag, Action<A> action, A a,
-            Action complete = null)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, a, complete);
-        }
-
-        public long DoFrame<A>(int delay, int repeat, object tag, Action<A> action, A a,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, a, complete, completeParam);
-        }
-
-        public long DoFrame<A>(int first, int delay, int repeat, object tag, Action<A> action, A a,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, a, complete, completeParam);
-        }
-
-        /// <summary>
-        /// 延帧调用
-        /// </summary>
-        /// <param name="delay">延时帧数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>        
-        /// <param name="a">附加参数</param>
-        /// <param name="b">附加参数</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoFrame<A, B>(int delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action complete = null)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, complete);
-        }
-
-        public long DoFrame<A, B>(int first, int delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action complete = null)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, a, b, complete);
-        }
-
-        public long DoFrame<A, B>(int delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, complete, completeParam);
-        }
-
-        public long DoFrame<A, B>(int first, int delay, int repeat, object tag, Action<A, B> action, A a, B b,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, a, b, complete, completeParam);
-        }
-
-        /// <summary>
-        /// 延帧调用
-        /// </summary>
-        /// <param name="delay">延时帧数</param>
-        /// <param name="repeat">调用次数 小于或等于0则循环 </param>
-        /// <param name="action">调用方法</param>        
-        /// <param name="a">附加参数</param>
-        /// <param name="b">附加参数</param>
-        /// <param name="c">附加参数</param>
-        /// <param name="complete">结束回调</param>
-        /// <returns></returns>
-        public long DoFrame<A, B, C>(int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action complete = null)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, c, complete);
-        }
-
-        public long DoFrame<A, B, C>(int first, int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action complete = null)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, a, b, c, complete);
-        }
-
-        public long DoFrame<A, B, C>(int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, -1, delay, repeat, tag, action, a, b, c, complete, completeParam);
-        }
-
-        public long DoFrame<A, B, C>(int first, int delay, int repeat, object tag, Action<A, B, C> action, A a, B b, C c,
-            Action<object> complete, object completeParam)
-        {
-            return Create(true, _frame, first, delay, repeat, tag, action, a, b, c, complete, completeParam);
-        }
-
-
         public void RemoveFrame(object tag, Action action)
         {
             if (action == null) return;
@@ -575,95 +215,54 @@ namespace Ux
             _frame.Remove(key);
         }
 
-        public void RemoveFrame<A, B>(object tag, Action<A, B> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _frame);
-            _frame.Remove(key);
-        }
-
-        public void RemoveFrame<A, B, C>(object tag, Action<A, B, C> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _frame);
-            _frame.Remove(key);
-        }
-
-        #endregion
 
         #endregion
 
         #region TimeStamp
 
-        public long DoTimeStamp(DateTime dt, object tag, Action action, bool isLocalTime = false)
+        private long CreateTimeStamp(TimeStampBuilder builder)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), tag, action, isLocalTime);
-        }
-
-        public long DoTimeStamp(long timeStamp, object tag, Action action, bool isLocalTime = false)
-        {
-            if (action == null) return 0;
-            if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);
+            if (builder.Func == null) return 0;
+            if ((builder.IsLocalTime ? LocalTime : ServerTime).TimeStamp > builder.TimeStamp) return 0;
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Func, builder.Tag);
             var exe = Pool.Get<HandleExe>();
-            exe.Init(tag, action);
-            handle.Init(exe, key, timeStamp, isLocalTime);
+            exe.Init(builder.Tag, builder.Func);
+            handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime);
             _timeStamp.Add(handle);
             return key;
         }
-
-        public long DoTimeStamp<A>(DateTime dt, object tag, Action<A> action, A a, bool isLocalTime = false)
+        private long CreateTimeStamp<A>(TimeStampBuilder<A> builder)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), tag, action, a);
-        }
-
-        public long DoTimeStamp<A>(long timeStamp, object tag, Action<A> action, A a, bool isLocalTime = false)
-        {
-            if (action == null) return 0;
-            if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);
+            if (builder.Func == null) return 0;
+            if ((builder.IsLocalTime ? LocalTime : ServerTime).TimeStamp > builder.TimeStamp) return 0;
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Func, builder.Tag);
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(tag, action, a);
-            handle.Init(exe, key, timeStamp, isLocalTime);
+            exe.Init(builder.Tag, builder.Func, builder.Param);
+            handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime);
             _timeStamp.Add(handle);
             return key;
         }
 
-        public long DoTimeStamp<A, B>(DateTime dt, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
+        public TimeStampBuilder TimeStamp(DateTime dt, object tag, Action action)
         {
-            return DoTimeStamp(dt.ToTimeStamp(), tag, action, a, b, isLocalTime);
+            var builder = Pool.Get<TimeStampBuilder>();
+            if (builder is ITimeStampBuilder initBuilder)
+            {
+                initBuilder.Init(dt.ToTimeStamp(), CreateTimeStamp);
+                initBuilder.Do(tag, action);
+            }
+            return builder;
         }
-
-        public long DoTimeStamp<A, B>(long timeStamp, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
+        public TimeStampBuilder<A> TimeStamp<A>(DateTime dt, object tag, Action<A> action, A param)
         {
-            if (action == null) return 0;
-            if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);
-            var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(tag, action, a, b);
-            handle.Init(exe, key, timeStamp, isLocalTime);
-            _timeStamp.Add(handle);
-            return key;
+            var builder = Pool.Get<TimeStampBuilder<A>>();
+            if (builder is ITimeStampBuilder<A> initBuilder)
+            {
+                initBuilder.Init(dt.ToTimeStamp(), CreateTimeStamp);
+                initBuilder.Do(tag, action, param);
+            }
+            return builder;
         }
-
-        public long DoTimeStamp<A, B, C>(DateTime dt, object tag, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
-        {
-            return DoTimeStamp(dt.ToTimeStamp(), tag, action, a, b, c, isLocalTime);
-        }
-
-        public long DoTimeStamp<A, B, C>(long timeStamp, object tag, Action<A, B, C> action, A a, B b, C c,
-            bool isLocalTime = false)
-        {
-            if (action == null) return 0;
-            if ((isLocalTime ? LocalTime : ServerTime).TimeStamp > timeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, action, tag);
-            var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(tag, action, a, b, c);
-            handle.Init(exe, key, timeStamp, isLocalTime);
-            _timeStamp.Add(handle);
-            return key;
-        }
-
         public void RemoveTimeStamp(object tag, Action action)
         {
             if (action == null) return;
@@ -678,31 +277,17 @@ namespace Ux
             _timeStamp.Remove(key);
         }
 
-        public void RemoveTimeStamp<A, B>(object tag, Action<A, B> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _timeStamp);
-            _timeStamp.Remove(key);
-        }
-
-        public void RemoveTimeStamp<A, B, C>(object tag, Action<A, B, C> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _timeStamp);
-            _timeStamp.Remove(key);
-        }
 
         #endregion TimeStamp
 
         #region Cron表达式                
-
-        public long DoCron(string cron, object tag, Action action, bool isLocalTime = false)
+        private long CreateCron(CronBuilder builder)
         {
-            if (action == null) return 0;            
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
+            if (builder.Func == null) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Func, builder.Tag);
             var exe = Pool.Get<HandleExe>();
-            exe.Init(tag, action);
-            if (!handle.Init(exe, key, cron, isLocalTime))
+            exe.Init(builder.Tag, builder.Func);
+            if (!handle.Init(exe, key, builder.CronExpression, builder.IsLocalTime))
             {
                 handle.Status = Status.WaitDel;
                 handle.Release();
@@ -712,14 +297,13 @@ namespace Ux
             _cron.Add(handle);
             return key;
         }
-
-        public long DoCron<A>(string cron, object tag, Action<A> action, A a, bool isLocalTime = false)
+        private long CreateCron<A>(CronBuilder<A> builder)
         {
-            if (action == null) return 0;            
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
+            if (builder.Func == null) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Func, builder.Tag);
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(tag, action, a);
-            if (!handle.Init(exe, key, cron, isLocalTime))
+            exe.Init(builder.Tag, builder.Func, builder.Param);
+            if (!handle.Init(exe, key, builder.CronExpression, builder.IsLocalTime))
             {
                 handle.Status = Status.WaitDel;
                 handle.Release();
@@ -730,38 +314,25 @@ namespace Ux
             return key;
         }
 
-        public long DoCron<A, B>(string cron, object tag, Action<A, B> action, A a, B b, bool isLocalTime = false)
+        public CronBuilder Cron(string cron, object tag, Action action)
         {
-            if (action == null) return 0;            
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
-            var exe = Pool.Get<HandleExe<A, B>>();
-            exe.Init(tag, action, a, b);
-            if (!handle.Init(exe, key, cron, isLocalTime))
+            var builder = Pool.Get<CronBuilder>();
+            if (builder is ICronBuilder initBuilder)
             {
-                handle.Status = Status.WaitDel;
-                handle.Release();
-                return 0;
+                initBuilder.Init(cron, CreateCron);
+                initBuilder.Do(tag, action);
             }
-
-            _cron.Add(handle);
-            return key;
+            return builder;
         }
-
-        public long DoCron<A, B, C>(string cron, object tag, Action<A, B, C> action, A a, B b, C c, bool isLocalTime = false)
+        public CronBuilder<A> Cron<A>(string cron, object tag, Action<A> action, A param)
         {
-            if (action == null) return 0;            
-            var handle = CreateHandle<CronHandle>(out var key, _cron, action, tag);
-            var exe = Pool.Get<HandleExe<A, B, C>>();
-            exe.Init(tag, action, a, b, c);
-            if (!handle.Init(exe, key, cron, isLocalTime))
+            var builder = Pool.Get<CronBuilder<A>>();
+            if (builder is ICronBuilder<A> initBuilder)
             {
-                handle.Status = Status.WaitDel;
-                handle.Release();
-                return 0;
+                initBuilder.Init(cron, CreateCron);
+                initBuilder.Do(tag, action, param);
             }
-
-            _cron.Add(handle);
-            return key;
+            return builder;
         }
 
         public void RemoveCron(object tag, Action action)
@@ -777,21 +348,6 @@ namespace Ux
             var key = GetKey(action, tag, _cron);
             _cron.Remove(key);
         }
-
-        public void RemoveCron<A, B>(object tag, Action<A, B> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _cron);
-            _cron.Remove(key);
-        }
-
-        public void RemoveCron<A, B, C>(object tag, Action<A, B, C> action)
-        {
-            if (action == null) return;
-            var key = GetKey(action, tag, _cron);
-            _cron.Remove(key);
-        }
-
         #endregion
     }
 }

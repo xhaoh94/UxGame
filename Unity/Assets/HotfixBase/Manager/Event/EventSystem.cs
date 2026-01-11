@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Ux
 {
@@ -116,7 +117,7 @@ namespace Ux
             void _RegisterFastMethod(Type type, object target)
             {
                 Ins._fastMethodRefMap ??= new OverdueMap<long, List<FastMethodRef>>(100);
-                var key = IDGenerater.GenerateId(target.GetHashCode(), type.GetHashCode());
+                var key = IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(target), RuntimeHelpers.GetHashCode(type));
                 if (!Ins._fastMethodRefMap.TryGetValue(key, out var refList))
                 {
                     var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
@@ -141,15 +142,15 @@ namespace Ux
                     }
                 }
             }
-            private long _GetKey(int eType, object action, object tag)
+            private long _GetKey(int eType, Delegate action, object tag)
             {
                 if (tag == null)
                 {
-                    return IDGenerater.GenerateId(action.GetHashCode(), eType);
+                    return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), eType);
                 }
                 else
-                {
-                    return IDGenerater.GenerateId(action.GetHashCode(), tag.GetHashCode(), eType);
+                {                     
+                    return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), RuntimeHelpers.GetHashCode(tag), eType);
                 }
             }
 
@@ -175,7 +176,7 @@ namespace Ux
 
                         if (evt.Method != null)
                         {
-                            var actionHashCode = evt.Method.GetHashCode();
+                            var actionHashCode = RuntimeHelpers.GetHashCode(evt.Method);
                             if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
                             {
                                 aKeys.Remove(key);
@@ -187,7 +188,7 @@ namespace Ux
                         var target = evt.Tag;
                         if (target != null)
                         {
-                            int hashCode = target.GetHashCode();
+                            int hashCode = RuntimeHelpers.GetHashCode(target);
                             if (_tagKeys.TryGetValue(hashCode, out var tKeys))
                             {
                                 tKeys.Remove(key);
@@ -231,7 +232,7 @@ namespace Ux
 
                         if (evt.Method != null)
                         {
-                            var actionHashCode = evt.Method.GetHashCode();
+                            var actionHashCode = RuntimeHelpers.GetHashCode(evt.Method);
                             if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
                             {
                                 aKeys = new();
@@ -245,7 +246,7 @@ namespace Ux
                         var target = evt.Tag;
                         if (target != null)
                         {
-                            int hashCode = target.GetHashCode();
+                            int hashCode = RuntimeHelpers.GetHashCode(target);
                             if (!_tagKeys.TryGetValue(hashCode, out var tKeys))
                             {
                                 tKeys = new();
@@ -294,12 +295,6 @@ namespace Ux
                 return _Add<T>(key);
             }
 
-            private T _Add<T>(out long key, int eType, object tag, T t) where T : IEvent
-            {
-                key = _GetKey(eType, t, tag);
-                return _Add<T>(key);
-            }
-
             private EventFastMethodData _Add(out long key, int eType, FastMethodInfo action)
             {
                 key = _GetKey(eType, action);
@@ -316,7 +311,7 @@ namespace Ux
 
             private void _Remove(Delegate action)
             {
-                var hashCode = action.GetHashCode();
+                var hashCode = RuntimeHelpers.GetHashCode(action);
                 if (_waitAdds.Count > 0)
                 {
                     _waitAdds.RemoveAll(x => x.Method == action);

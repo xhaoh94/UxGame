@@ -6,6 +6,7 @@ namespace Ux
 {
     public partial class TimeMgr
     {
+
         #region Handle
 
         public interface IHandle
@@ -386,38 +387,37 @@ namespace Ux
             public float ExeTime { get; private set; }
             public int ExeCnt { get; private set; }
 
-            Action _complete1;
-            Action<object> _complete2;
+            Action _complete;
+            Action<object> _completeWithParam;
             object _completeParam;
 
-            public void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
-                Action _complete)
+            public void Init(IHandleExe exe, long key, float first, float delay, int repeat, bool useFrame, Action complete)
             {
-                Exe = _exe;
-                Key = _key;
-                Delay = _delay;
-                Repeat = _repeat;
-                UseFrame = _useFrame;
-                _complete1 = _complete;
+                Exe = exe;
+                Key = key;
+                Delay = delay;
+                Repeat = repeat;
+                UseFrame = useFrame;
+                this._complete = complete;
                 IsLoop = Repeat <= 0;
                 ExeCnt = 0;
-                var addTime = _first >= 0 ? _first : Delay;
+                var addTime = first >= 0 ? first : Delay;
                 ExeTime = UseFrame ? Ins.TotalFrame + addTime : Ins.TotalTime + addTime;
             }
 
-            public void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
-                Action<object> _complete, object _param)
+            public void Init(IHandleExe exe, long key, float first, float delay, int repeat, bool useFrame,
+                Action<object> complete, object param)
             {
-                Exe = _exe;
-                Key = _key;
-                Delay = _delay;
-                Repeat = _repeat;
-                UseFrame = _useFrame;
-                _complete2 = _complete;
-                _completeParam = _param;
+                Exe = exe;
+                Key = key;
+                Delay = delay;
+                Repeat = repeat;
+                UseFrame = useFrame;
+                _completeWithParam = complete;
+                _completeParam = param;
                 IsLoop = Repeat <= 0;
                 ExeCnt = 0;
-                var addTime = _first >= 0 ? _first : Delay;
+                var addTime = first >= 0 ? first : Delay;
                 ExeTime = UseFrame ? Ins.TotalFrame + addTime : Ins.TotalTime + addTime;
             }
 
@@ -451,15 +451,15 @@ namespace Ux
                 if (IsLoop) return RunStatus.Update;
                 Repeat--;
                 if (Repeat > 0) return RunStatus.Update;
-                _complete1?.Invoke();
-                _complete2?.Invoke(_completeParam);
+                _complete?.Invoke();
+                _completeWithParam?.Invoke(_completeParam);
                 return RunStatus.Done;
             }
 
             protected override void OnRelease()
             {
-                _complete1 = null;
-                _complete2 = null;
+                _complete = null;
+                _completeWithParam = null;
                 _completeParam = null;
                 Delay = 0;
                 Repeat = 0;

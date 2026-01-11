@@ -46,8 +46,8 @@ namespace Ux
         {
             if (_timeoutKey == 0 && Application.isPlaying)
             {
-                //Ã¿¸öÒ»¶ÎÊ±¼äÇåµô¹ýÆÚµÄ»º´æ
-                _timeoutKey = TimeMgr.Ins.DoLoop(_timeout, this, _CheckTimeout);
+                //Ã¿ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÚµÄ»ï¿½ï¿½ï¿½
+                _timeoutKey = TimeMgr.Ins.Timer(_timeout, this, _CheckTimeout).Loop().Build();
             }
             var data = new OverdueData<T>(value);
             data.UpdateTimeout(_timeout);
@@ -59,7 +59,7 @@ namespace Ux
             _caches.Clear();
             _timeouts.Clear();
             if (_timeoutKey > 0)
-            {               
+            {
                 TimeMgr.Ins.RemoveKey(_timeoutKey);
                 _timeoutKey = 0;
             }

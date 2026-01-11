@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Ux
 {
@@ -81,7 +82,7 @@ namespace Ux
                     var tag = handle.Tag;
                     if (tag != null)
                     {
-                        var hashCode = tag.GetHashCode();
+                        var hashCode = RuntimeHelpers.GetHashCode(tag);
                         if (!_tagkeys.TryGetValue(hashCode, out var keys)) continue;
                         keys.Remove(key);
                         if (keys.Count == 0) _tagkeys.Remove(hashCode);
@@ -126,7 +127,7 @@ namespace Ux
                     var tag = handle.Tag;
                     if (tag != null)
                     {
-                        int hashCode = tag.GetHashCode();
+                        int hashCode = RuntimeHelpers.GetHashCode(tag);
                         if (!_tagkeys.TryGetValue(hashCode, out var keys))
                         {
                             keys = new List<long>();
@@ -231,7 +232,7 @@ namespace Ux
                         }
                     }
                 }
-                int hashCode = tag.GetHashCode();
+                int hashCode = RuntimeHelpers.GetHashCode(tag);
                 if (!_tagkeys.TryGetValue(hashCode, out var keys)) return;
                 foreach (var key in keys)
                 {

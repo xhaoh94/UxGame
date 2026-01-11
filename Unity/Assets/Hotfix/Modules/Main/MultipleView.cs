@@ -7,7 +7,7 @@ namespace Ux.UI
     {
         protected override void OnShow()
         {
-            if (TryGetParam(out int id))            
+            if (TryGetParam(out int id))
             {
                 var data = UIMgr.Ins.GetUIData(id);
                 if (data.TabData.Title is string title)
@@ -32,13 +32,13 @@ namespace Ux.UI
         }
         protected override void OnShow()
         {
-            base.OnShow();
-            TimeMgr.Ins.DoTimer(5, 1, this, () =>
+            base.OnShow();            
+            TimeMgr.Ins.Timer(5, this, () =>
             {
                 //var data = UIMgr.Ins.GetUIData(ID);
                 //data.Children.Reverse();
                 //RefreshTab();                                
-            });
+            }).Count(1).Build();
         }
 
         int cnt = 0;
@@ -47,12 +47,12 @@ namespace Ux.UI
             base.OnHide();
             if (cnt++ < 3)
             {
-                TimeMgr.Ins.DoTimer(.4f, 1, "ccc", () =>
+                TimeMgr.Ins.Timer(.4f, this, () =>
                 {
                     UIMgr.Ins.Show<Multiple2TabView>();
                     //UIMgr.Ins.Hide<Multiple2TabView>();
                     UIMgr.Ins.Show<Multiple3TabView>();
-                });
+                }).Count(1).Build();
             }
 
         }

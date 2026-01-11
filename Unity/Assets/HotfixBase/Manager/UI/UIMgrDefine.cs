@@ -213,7 +213,7 @@ namespace Ux
             public void Init(IUI _ui)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Ins.DoOnce(_ui.HideDestroyTime, this, Exe); //一段时间后执行删除                
+                timeKey = TimeMgr.Ins.Timer(_ui.HideDestroyTime, this, Exe).Count(1).Build(); //一段时间后执行删除                
             }
 
             void Release()
