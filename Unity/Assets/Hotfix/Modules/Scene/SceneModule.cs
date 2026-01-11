@@ -49,7 +49,7 @@ namespace Ux
             World.LeaveScene();
         }
 
-        #region ÍøÂçÇëÇó
+        #region ç§»åŠ¨ç›¸å…³
         public void SendMove(List<Vector3> points)
         {
             var req = new Pb.C2SMove();
@@ -71,7 +71,7 @@ namespace Ux
         }
         #endregion
 
-        #region ÍøÂç¹ã²¥
+        #region å¹¿æ’­ç›¸å…³
 
 
         [Net(Pb.BCST.Bcst_UnitIntoView)]

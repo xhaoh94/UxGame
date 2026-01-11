@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Ux
 {
     /// <summary>
-    /// ¶ş²æ¶Ñ
+    /// äºŒå‰å †
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class BinaryHeap<T>
