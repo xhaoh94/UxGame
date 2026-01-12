@@ -39,13 +39,19 @@ namespace Ux
 
     public class ServerTime : IGameTime
     {
-        long offset;
+        long _offset;
+        int _timeRectOffset;
         public void SetOffset(long offset)
         {
-            this.offset = offset;
+            _offset = offset;
+        }
+        public void SetTimeRectOffset(int timeRectOffset)
+        {
+            _timeRectOffset = timeRectOffset;
         }
         public long TimeStamp => Now.ToTimeStamp();
-        public DateTime Now => DateTime.Now.AddMilliseconds(offset);
+        
+        public DateTime Now => DateTime.Now.AddMilliseconds(_offset);
 
         public int Year => Now.Year;
 

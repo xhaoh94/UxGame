@@ -7,9 +7,8 @@ namespace Ux
     {
         private static ushort value;
         public static long GenerateId()
-        {
-            long time = DateTime.UtcNow.Ticks / 1000;
-            return (time << 18) + ++value;
+        {            
+            return ++value;
         }
         public static long GenerateId(int a, int b)
         {

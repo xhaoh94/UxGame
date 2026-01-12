@@ -475,9 +475,18 @@ namespace Ux
 
         public static CronData Create(string cron)
         {
-            if (_caches != null && _caches.TryGetValue(cron, out var data)) return data;
+            if (_caches == null)
+            {
+                _caches = new OverdueMap<string, CronData>(60);
+            }
+
+            if (_caches.TryGetValue(cron, out var data))
+            {
+                return data;
+            }
+
             data = new CronData(cron);
-            (_caches ?? new OverdueMap<string, CronData>(60)).Add(cron, data);
+            _caches.Add(cron, data);
             return data;
         }
         public static void Release()

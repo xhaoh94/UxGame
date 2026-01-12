@@ -3,6 +3,38 @@ using System.Runtime.CompilerServices;
 
 namespace Ux
 {
+    /// <summary>定时器签名，用于重复注册检测</summary>
+    public struct TimerSignature : System.IEquatable<TimerSignature>
+    {
+        public int ActionHash;
+        public int TagHash;
+        public TimeMgr.TimeType TimeType;
+
+        public bool Equals(TimerSignature other)
+        {
+            return ActionHash == other.ActionHash && 
+                   TagHash == other.TagHash && 
+                   TimeType == other.TimeType;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TimerSignature other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ActionHash;
+                hash = hash * 31 + TagHash;
+                hash = hash * 31 + (int)TimeType;
+                return hash;
+            }
+        }
+    }
+
     public partial class TimeMgr
     {
         public enum TimeType
@@ -32,6 +64,8 @@ namespace Ux
         partial class HandleMap
         {
             readonly TimeType _timeType;
+            public TimeType TimeType => _timeType;
+            
             public HandleMap(TimeType timeType)
             {
                 _timeType = timeType;
@@ -41,6 +75,10 @@ namespace Ux
             readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
             readonly Dictionary<int, List<long>> _tagkeys = new Dictionary<int, List<long>>();
 
+            // 签名相关字典：用于重复检测和删除
+            readonly Dictionary<TimerSignature, long> _signToKey = new Dictionary<TimerSignature, long>();
+            readonly Dictionary<long, TimerSignature> _keyToSign = new Dictionary<long, TimerSignature>();
+
             readonly List<IHandle> _waitAdds = new List<IHandle>();
             readonly List<IHandle> _waitDels = new List<IHandle>();
 
@@ -49,11 +87,26 @@ namespace Ux
                 _handles.Clear();
                 _keyHandle.Clear();
                 _tagkeys.Clear();
+                _signToKey.Clear();
+                _keyToSign.Clear();
                 _waitAdds.Clear();
                 _waitDels.Clear();
 #if UNITY_EDITOR
                 _descEditor.Clear();
 #endif
+            }
+
+            /// <summary>注册签名映射</summary>
+            public void RegisterSignature(TimerSignature sign, long key)
+            {
+                _signToKey[sign] = key;
+                _keyToSign[key] = sign;
+            }
+
+            /// <summary>通过签名获取 key</summary>
+            public bool TryGetKeyBySignature(TimerSignature sign, out long key)
+            {
+                return _signToKey.TryGetValue(sign, out key);
             }
 
 
@@ -78,6 +131,13 @@ namespace Ux
 #endif
                     var key = handle.Key;
                     _keyHandle.Remove(key);
+
+                    // 清理签名映射
+                    if (_keyToSign.TryGetValue(key, out var sign))
+                    {
+                        _keyToSign.Remove(key);
+                        _signToKey.Remove(sign);
+                    }
 
                     var tag = handle.Tag;
                     if (tag != null)

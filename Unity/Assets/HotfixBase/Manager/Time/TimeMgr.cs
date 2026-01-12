@@ -67,29 +67,51 @@ namespace Ux
 
         T CreateHandle<T>(out long key, HandleMap dic, Delegate action, object tag) where T : IHandle
         {
-            key = GetKey(action, tag, dic);
-            var handle = dic.Get(key);
-            if (handle != null)
+            if (action == null)
+            {
+                key = 0;
+                return null;
+            }
+
+            // 构造签名用于重复检测
+            var sign = new TimerSignature
+            {
+                ActionHash = RuntimeHelpers.GetHashCode(action),
+                TagHash = tag != null ? RuntimeHelpers.GetHashCode(tag) : 0,
+                TimeType = dic.TimeType
+            };
+
+            // 检查是否重复注册
+            if (dic.TryGetKeyBySignature(sign, out key))
             {
                 Log.Warning($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
                 return null;
             }
 
-            handle = Pool.Get<T>();
+            // 分配全局唯一自增 ID
+            key = IDGenerater.GenerateId();
+
+            var handle = Pool.Get<T>();
+            
+            // 注册签名映射
+            dic.RegisterSignature(sign, key);
+            
             return (T)handle;
         }
 
-        private long GetKey(Delegate action, object tag, HandleMap dic)
+        private long GetSignatureKey(Delegate action, object tag, HandleMap dic)
         {
             if (action == null) return 0;
-            if (tag == null)
+            
+            var sign = new TimerSignature
             {
-                return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), RuntimeHelpers.GetHashCode(dic));
-            }
-            else
-            {
-                return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action),RuntimeHelpers.GetHashCode(dic), RuntimeHelpers.GetHashCode(tag));
-            }
+                ActionHash = RuntimeHelpers.GetHashCode(action),
+                TagHash = tag != null ? RuntimeHelpers.GetHashCode(tag) : 0,
+                TimeType = dic.TimeType
+            };
+            
+            dic.TryGetKeyBySignature(sign, out var key);
+            return key;
         }
 
         public void RemoveKey(long key)
@@ -194,28 +216,28 @@ namespace Ux
         public void RemoveTimer(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _timer);
+            var key = GetSignatureKey(action, tag, _timer);
             _timer.Remove(key);
         }
 
         public void RemoveTimer<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _timer);
+            var key = GetSignatureKey(action, tag, _timer);
             _timer.Remove(key);
         }
 
         public void RemoveFrame(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _frame);
+            var key = GetSignatureKey(action, tag, _frame);
             _frame.Remove(key);
         }
 
         public void RemoveFrame<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _frame);
+            var key = GetSignatureKey(action, tag, _frame);
             _frame.Remove(key);
         }
 
@@ -272,14 +294,14 @@ namespace Ux
         public void RemoveTimeStamp(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _timeStamp);
+            var key = GetSignatureKey(action, tag, _timeStamp);
             _timeStamp.Remove(key);
         }
 
         public void RemoveTimeStamp<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _timeStamp);
+            var key = GetSignatureKey(action, tag, _timeStamp);
             _timeStamp.Remove(key);
         }
 
@@ -346,14 +368,14 @@ namespace Ux
         public void RemoveCron(object tag, Action action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _cron);
+            var key = GetSignatureKey(action, tag, _cron);
             _cron.Remove(key);
         }
 
         public void RemoveCron<A>(object tag, Action<A> action)
         {
             if (action == null) return;
-            var key = GetKey(action, tag, _cron);
+            var key = GetSignatureKey(action, tag, _cron);
             _cron.Remove(key);
         }
         #endregion
