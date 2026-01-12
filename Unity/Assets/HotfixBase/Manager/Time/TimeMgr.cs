@@ -71,8 +71,8 @@ namespace Ux
             var handle = dic.Get(key);
             if (handle != null)
             {
-                Log.Warning($"Time重复注册,新回调:{action.MethodName()}->将覆盖老回调:{handle.MethodName}");
-                return (T)handle;
+                Log.Warning($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
+                return null;
             }
 
             handle = Pool.Get<T>();
@@ -84,11 +84,11 @@ namespace Ux
             if (action == null) return 0;
             if (tag == null)
             {
-                return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), dic.GetHashCode());
+                return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), RuntimeHelpers.GetHashCode(dic));
             }
             else
             {
-                return IDGenerater.GenerateId(action.GetHashCode(), dic.GetHashCode(), tag.GetHashCode());
+                return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action),RuntimeHelpers.GetHashCode(dic), RuntimeHelpers.GetHashCode(tag));
             }
         }
 
@@ -127,22 +127,26 @@ namespace Ux
         private long CreateTimer(TimerBuilder builder)
         {
             if (!CheckCreate(builder.Func, builder.Delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, _timer, builder.Func, builder.Tag);
+            var dic = builder.IsFrame ? _frame : _timer;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, builder.Func, builder.Tag);
+            if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
             exe.Init(builder.Tag, builder.Func);
 
             handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
-            _timer.Add(handle);
+            dic.Add(handle);          
             return key;
         }
         private long CreateTimer<A>(TimerBuilder<A> builder)
         {
             if (!CheckCreate(builder.Func, builder.Delay)) return 0;
-            var handle = CreateHandle<TimeHandle>(out var key, _timer, builder.Func, builder.Tag);
+            var dic = builder.IsFrame ? _frame : _timer;
+            var handle = CreateHandle<TimeHandle>(out var key, dic, builder.Func, builder.Tag);
+            if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
             exe.Init(builder.Tag, builder.Func, builder.Param);
             handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
-            _timer.Add(handle);
+            dic.Add(handle);
             return key;
         }
 
@@ -225,6 +229,7 @@ namespace Ux
             if (builder.Func == null) return 0;
             if ((builder.IsLocalTime ? LocalTime : ServerTime).TimeStamp > builder.TimeStamp) return 0;
             var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Func, builder.Tag);
+            if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
             exe.Init(builder.Tag, builder.Func);
             handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime);
@@ -236,6 +241,7 @@ namespace Ux
             if (builder.Func == null) return 0;
             if ((builder.IsLocalTime ? LocalTime : ServerTime).TimeStamp > builder.TimeStamp) return 0;
             var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Func, builder.Tag);
+            if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
             exe.Init(builder.Tag, builder.Func, builder.Param);
             handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime);
@@ -285,6 +291,7 @@ namespace Ux
         {
             if (builder.Func == null) return 0;
             var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Func, builder.Tag);
+            if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
             exe.Init(builder.Tag, builder.Func);
             if (!handle.Init(exe, key, builder.CronExpression, builder.IsLocalTime))
@@ -301,6 +308,7 @@ namespace Ux
         {
             if (builder.Func == null) return 0;
             var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Func, builder.Tag);
+            if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
             exe.Init(builder.Tag, builder.Func, builder.Param);
             if (!handle.Init(exe, key, builder.CronExpression, builder.IsLocalTime))
