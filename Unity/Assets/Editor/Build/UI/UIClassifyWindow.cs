@@ -11,7 +11,7 @@ namespace Ux.Editor.Build.UI
 {
     public partial class UIClassifyWindow : EditorWindow
     {
-        [MenuItem("UxGame/����/UI/��Դ����", false, 511)]
+        [MenuItem("UxGame/工具/UI/资源分类", false, 511)]
         public static void ShowExample()
         {
             var window = GetWindow<UIClassifyWindow>("UIClassifyWindow", true);
@@ -25,7 +25,7 @@ namespace Ux.Editor.Build.UI
             if (package == null)
             {
                 package = new AssetBundleCollectorPackage();
-                package.PackageDesc = "����";
+                package.PackageDesc = "主包";
                 package.PackageName = "MainPackage";
                 packages.Add(package);
             }
@@ -34,7 +34,7 @@ namespace Ux.Editor.Build.UI
             {
                 group = new AssetBundleCollectorGroup();
                 group.AssetTags = string.Empty;
-                group.GroupDesc = "UI����";
+                group.GroupDesc = "UI资源";
                 group.GroupName = "UI";
                 package.Groups.Add(group);
             }
@@ -100,7 +100,7 @@ namespace Ux.Editor.Build.UI
                 pathObject.name = ResClassifySettings.path;
             pathField.SetValueWithoutNotify(pathObject);
 
-            var helpBox = new HelpBox("����Ԥ������Դ����������Դ�ģ�����������Դ��������ʱ������������", HelpBoxMessageType.Info);
+            var helpBox = new HelpBox("内置预加载资源，加载资源模板，懒加载资源分类，生成时自动生成资源", HelpBoxMessageType.Info);
             helpBox.style.fontSize = 30;
             root.Insert(0, helpBox);
             buildin.style.unityParagraphSpacing = 10;
@@ -149,7 +149,7 @@ namespace Ux.Editor.Build.UI
             ResClassifySettings.proloads = builtins.ToArray();
             ResClassifySettings.lazyloads = lazyloads.ToArray();
             CreateYooAssetUIGroup();
-            if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("��ʾ", "�����ɹ�!", "ok"))
+            if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("提示", "配置成功!", "ok"))
             {
                 _OnBtnLoadClick();
             }
@@ -233,7 +233,7 @@ namespace Ux.Editor.Build.UI
                 VisualElement element2 = new VisualElement();
                 {
                     element2.style.flexGrow = 1f;
-                    var label = new TextField("��Դ��");
+                    var label = new TextField("资源路径");
                     label.name = "Label1";
                     label.style.unityTextAlign = TextAnchor.MiddleLeft;
                     label.style.flexGrow = 1f;
@@ -269,3 +269,7 @@ namespace Ux.Editor.Build.UI
         }
     }
 }
+
+
+
+

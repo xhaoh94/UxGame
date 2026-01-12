@@ -33,7 +33,7 @@ namespace Ux.Editor.Build.Proto
 
 
         /// <summary>
-        /// �洢�����ļ�
+        /// 存储配置文件
         /// </summary>
         public void SaveFile()
         {
@@ -100,7 +100,7 @@ namespace Ux.Editor.Build.Proto
             return sb.ToString();
         }
 
-        #region ��ʼ��   
+        #region 初始化   
         public static ProtoSettingData LoadConfig()
         {
             if (Setting == null)

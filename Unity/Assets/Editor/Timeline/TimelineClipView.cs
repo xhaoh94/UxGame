@@ -27,11 +27,11 @@ namespace Ux.Editor.Timeline
         float FrameScale = .5f;
         float FrameWidth => 10 * FrameScale;
         float ScrClipViewOffsetX => scrClipView.scrollOffset.x;
-        //ÐèÒª¼õ10 ÊÇÒòÎªÈÝÆ÷ÀïÃæÉèÖÃÁË±ßÔµBorder left = 10 
+        //å‡åŽ»10ï¼Œå› ä¸ºçˆ¶å…ƒç´ æœ‰ä¸ªå¤–è¾¹è·Border left = 10
         float ScrClipViewWidth => scrClipView.worldBound.width - 10;
         float ScrClipViewContentWidth => scrClipView.contentContainer.worldBound.width;
 
-        //µ±Ç°ËùÔÚÖ¡
+        //å½“å‰æ‰€åœ¨å¸§
         public int CurFrame { get; private set; } = 0;
 
 
@@ -79,7 +79,7 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
-            //ÏÂ£ºÕý  ÉÏ£º¸º        
+            //ä¸‹æ»šæ”¾å¤§ï¼Œä¸Šæ»šç¼©å°
             FrameScale -= wheelEvent.delta.y / 100;
             if (FrameScale > 5)
             {

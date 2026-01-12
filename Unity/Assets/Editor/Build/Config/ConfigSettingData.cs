@@ -38,7 +38,7 @@ namespace Ux.Editor.Build.Config
 
 
         /// <summary>
-        /// ´æ´¢ÅäÖÃÎÄ¼ş
+        /// å­˜å‚¨é…ç½®æ–‡ä»¶
         /// </summary>
         public void SaveFile()
         {
@@ -67,8 +67,8 @@ namespace Ux.Editor.Build.Config
 
                 var value = field_info.GetValue(this)?.ToString();
 
-                // µ±Ç°ÖµÎª¿Õ »òÕß False, »òÕß None(Enum Ä¬ÈÏÖµ)
-                // Ôò¼ÌĞøÑ­»·
+                // å½“å‰å€¼ä¸ºç©º æˆ– False, æˆ– None(Enum é»˜è®¤å€¼)
+                // è·³è¿‡å¾ªç¯
                 if (string.IsNullOrEmpty(value) || string.Equals(value, "False") || string.Equals(value, "None"))
                 {
                     continue;
@@ -108,7 +108,7 @@ namespace Ux.Editor.Build.Config
             return sb.ToString();
         }
 
-        #region ³õÊ¼»¯   
+        #region åˆå§‹åŒ–   
         public static ConfigSettingData LoadConfig()
         {
             if (Setting == null)

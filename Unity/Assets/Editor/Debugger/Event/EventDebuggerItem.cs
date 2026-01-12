@@ -17,7 +17,7 @@ namespace Ux.Editor.Debugger.Event
         }
 
         /// <summary>
-        /// ³õÊ¼»¯Ò³Ãæ
+        /// åˆå§‹åŒ–é¡µé¢
         /// </summary>
         void CreateView()
         {            

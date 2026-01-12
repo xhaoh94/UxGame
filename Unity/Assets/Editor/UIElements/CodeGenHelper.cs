@@ -35,14 +35,14 @@ namespace Ux.Editor
             var tree = (activeGo as VisualTreeAsset);
             if (tree == null)
             {
-                Log.Error("需要uxml类型");
+                Log.Error("闇�瑕乽xml鏂囦欢");
                 return;
             }
 
             var filePath = AssetDatabase.GetAssetPath(tree).Replace("\\", "/");
             if (!filePath.EndsWith(".uxml"))
             {
-                Log.Error("需要uxml类型");
+                Log.Error("闇�瑕乽xml鏂囦欢");
                 return;
             }
 
@@ -54,7 +54,7 @@ namespace Ux.Editor
             var ns = dir.Replace("Assets", "Ux").Replace("/", ".").Replace("/Uxml", "").Replace(".Uxml", "");
 
             var write = new CodeGenWrite();
-            write.Writeln(@"//自动生成的代码，请勿修改!!!");
+            write.Writeln(@"//鑷姩鐢熸垚鐨勪唬鐮侊紝璇峰嬁淇敼!!!");
             write.Writeln(@"//CodeGen By [Assets/UIElements/CodeGenByUxml]");
             write.Writeln("using System;");
             write.Writeln("using System.Collections.Generic;");

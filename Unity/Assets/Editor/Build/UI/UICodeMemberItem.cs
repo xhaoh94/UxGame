@@ -147,7 +147,7 @@ namespace Ux.Editor.Build.UI
         {
             switch (data.evtType)
             {
-                case "���":
+                case "双击":
                     doubleEvt.style.display = DisplayStyle.Flex;
                     longEvt.style.display = DisplayStyle.None;
                     MemberEvtDouble dContent;
@@ -164,7 +164,7 @@ namespace Ux.Editor.Build.UI
                     dCnt.SetValueWithoutNotify(dContent.dCnt);
                     dGapTime.SetValueWithoutNotify(dContent.dGapTime);
                     break;
-                case "����":
+                case "长按":
                     doubleEvt.style.display = DisplayStyle.None;
                     longEvt.style.display = DisplayStyle.Flex;
                     MemberEvtLong lContent;
@@ -196,7 +196,7 @@ namespace Ux.Editor.Build.UI
         {
             switch (data.evtType)
             {
-                case "���":
+                case "双击":
                     var dContent = new MemberEvtDouble();
                     dContent.dCnt = dCnt.value;
                     dContent.dGapTime = dGapTime.value;
@@ -237,3 +237,4 @@ namespace Ux.Editor.Build.UI
         }
     }
 }
+

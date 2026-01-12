@@ -21,7 +21,7 @@ namespace Ux.Editor.Timeline
             Y = y;
         }
 
-        // 计算向量叉积  
+        // 璁＄畻鍚戦噺鍙夌Н
         public static double CrossProduct(Point O, Point A, Point B)
         {
             return (A.X - O.X) * (B.Y - O.Y) - (A.Y - O.Y) * (B.X - O.X);
@@ -83,7 +83,7 @@ namespace Ux.Editor.Timeline
             else if (e.button == 1)
             {
                 if (!TimelineWindow.IsValid()) return;
-                menu.AppendAction("修正长度", e =>
+                menu.AppendAction("閫傞厤闀垮害", e =>
                 {
                     var clip = (Asset as AnimationClipAsset).clip;
                     var endFrame = clip.length * TimelineMgr.Ins.FrameRate;
@@ -98,7 +98,7 @@ namespace Ux.Editor.Timeline
                         UpdateView();
                     }
                 }, e => DropdownMenuAction.Status.Normal);
-                menu.AppendAction("删除", e =>
+                menu.AppendAction("鍒犻櫎", e =>
                 {
                     TrackItem.RemoveClipItem(this);                    
                 }, e => DropdownMenuAction.Status.Normal);
@@ -154,7 +154,7 @@ namespace Ux.Editor.Timeline
                         var c = new Point(ix, 30);
                         var p = new Point(x, pos.y);
                         bool isInTriangle = IsPointInTriangle(p, a, b, c);
-                        //交叉多边形的下部分
+                        //涓嶅湪涓夎褰㈠尯鍩熷唴
                         if (isInTriangle)
                         {
                             Status = DragStatus.None;
@@ -170,7 +170,7 @@ namespace Ux.Editor.Timeline
                         var c = new Point(ex, 30);
                         var p = new Point(x, pos.y);
                         bool isInTriangle = IsPointInTriangle(p, a, b, c);
-                        //交叉多边形的上部分
+                        //涓嶅湪涓夎褰㈠尯鍩熷
                         if (isInTriangle)
                         {
                             Status = DragStatus.None;

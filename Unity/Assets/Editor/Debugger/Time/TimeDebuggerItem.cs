@@ -13,7 +13,7 @@ namespace Ux.Editor.Debugger.Time
         DebuggerObjectListView<T, V> _list;
         public TimeDebuggerItem()
         {
-            // ¼ÓÔØ²¼¾ÖÎÄ¼ş		
+            // åŠ è½½UXMLæ–‡ä»¶
             _visualAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Editor/Debugger/Time/TimeDebuggerItem.uxml");
             if (_visualAsset == null)
                 return;
@@ -25,7 +25,7 @@ namespace Ux.Editor.Debugger.Time
             CreateView();
         }
         /// <summary>
-        /// ³õÊ¼»¯Ò³Ãæ
+        /// åˆå§‹åŒ–é¡µé¢
         /// </summary>
         void CreateView()
         {

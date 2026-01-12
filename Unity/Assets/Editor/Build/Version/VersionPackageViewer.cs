@@ -52,7 +52,7 @@ namespace Ux.Editor.Build.Version
             if (_manifestServicesClassNames.Count > 0)
             {
                 _popupFieldManifest = new PopupField<string>(_manifestServicesClassNames, 0);
-                _popupFieldManifest.label = "�嵥����";
+                _popupFieldManifest.label = "清单加密";
                 _popupFieldManifest.RegisterValueChangedCallback(evt =>
                 {
                     PackageSetting.ManifestClassName = evt.newValue;
@@ -62,7 +62,7 @@ namespace Ux.Editor.Build.Version
             else
             {
                 _popupFieldManifest = new PopupField<string>();
-                _popupFieldManifest.label = "�嵥����";
+                _popupFieldManifest.label = "清单加密";
                 manifestContainer.Add(_popupFieldManifest);
             }
         }
@@ -129,8 +129,8 @@ namespace Ux.Editor.Build.Version
             compressionType.style.display =
                 PackageSetting.PiplineOption == EBuildPipeline.RawFileBuildPipeline.ToString() ? DisplayStyle.None : DisplayStyle.Flex;
         }
-        #region �����������
-        // �����������
+        #region 辅助方法
+        // 辅助方法
 
         private IEncryptionServices CreateEncryptionServicesInstance()
         {
