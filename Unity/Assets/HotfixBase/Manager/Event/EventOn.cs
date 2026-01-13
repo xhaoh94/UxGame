@@ -72,6 +72,7 @@ namespace Ux
             public EventTask Call(int eType, object tag)
             {
                 var task = AutoResetUniTaskCompletionSource.Create();
+                // 使用自增ID
                 var key = IDGenerater.GenerateId();
                 var evtData = _Add<EventTaskData>(key);
                 if (evtData != default)
@@ -83,6 +84,7 @@ namespace Ux
              public EventTask Call<A>(int eType, object tag)
             {
                 var task = AutoResetUniTaskCompletionSource<A>.Create();
+                // 使用自增ID
                 var key = IDGenerater.GenerateId();
                 var evtData = _Add<EventTaskData<A>>(key);
                 if (evtData != default)

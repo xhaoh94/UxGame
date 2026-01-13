@@ -3,7 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace Ux
 {
-    /// <summary>定时器签名，用于重复注册检测</summary>
+    
+    public partial class TimeMgr
+    {
+        /// <summary>定时器签名，用于重复注册检测</summary>
     public struct TimerSignature : System.IEquatable<TimerSignature>
     {
         public int ActionHash;
@@ -35,8 +38,6 @@ namespace Ux
         }
     }
 
-    public partial class TimeMgr
-    {
         public enum TimeType
         {
             Time,

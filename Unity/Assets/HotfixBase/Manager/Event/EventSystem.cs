@@ -9,6 +9,38 @@ namespace Ux
 {
     public partial class EventMgr
     {
+        /// <summary>事件签名，用于重复注册检测</summary>
+        public struct EventSignature : System.IEquatable<EventSignature>
+        {
+            public int ActionHash;
+            public int TagHash;
+            public int EType;
+
+            public bool Equals(EventSignature other)
+            {
+                return ActionHash == other.ActionHash && 
+                       TagHash == other.TagHash && 
+                       EType == other.EType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is EventSignature other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 31 + ActionHash;
+                    hash = hash * 31 + TagHash;
+                    hash = hash * 31 + EType;
+                    return hash;
+                }
+            }
+        }
+
         public struct FastMethodRef
         {
             Attribute[] _attributes;
@@ -39,6 +71,10 @@ namespace Ux
             int _exeLimit = 200;
             int _exeCnt = 0;
         
+            // 签名相关字典：用于重复检测和删除
+            private readonly Dictionary<EventSignature, long> _signToKey = new();
+            private readonly Dictionary<long, EventSignature> _keyToSign = new();
+            
             private readonly Dictionary<long, IEvent> _keyEvent = new();
             /// <summary>
             /// 事件ID对应的IEvent
@@ -70,6 +106,8 @@ namespace Ux
             }
             public void Clear()
             {
+                _signToKey.Clear();
+                _keyToSign.Clear();
                 _keyEvent.Clear();
                 _eventTypeKeys.Clear();
                 _tagKeys.Clear();
@@ -144,14 +182,29 @@ namespace Ux
             }
             private long _GetKey(int eType, Delegate action, object tag)
             {
-                if (tag == null)
+                // 构造签名用于重复检测
+                EventSignature signature = new EventSignature
                 {
-                    return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), eType);
+                    ActionHash = RuntimeHelpers.GetHashCode(action),
+                    TagHash = tag == null ? 0 : RuntimeHelpers.GetHashCode(tag),
+                    EType = eType
+                };
+                
+                // 检查是否重复注册
+                if (_signToKey.TryGetValue(signature, out var existingKey))
+                {
+                    Log.Warning($"事件{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
+                    return 0;
                 }
-                else
-                {                     
-                    return IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(action), RuntimeHelpers.GetHashCode(tag), eType);
-                }
+                
+                // 分配全局唯一自增 ID
+                long key = IDGenerater.GenerateId();
+                
+                // 注册签名映射
+                _signToKey[signature] = key;
+                _keyToSign[key] = signature;
+                
+                return key;
             }
 
             private long _GetKey(int eType, FastMethodInfo action)
@@ -194,6 +247,13 @@ namespace Ux
                                 tKeys.Remove(key);
                                 if (tKeys.Count == 0) _tagKeys.Remove(hashCode);
                             }
+                        }
+                        
+                        // 清理签名映射
+                        if (_keyToSign.TryGetValue(key, out var sign))
+                        {
+                            _keyToSign.Remove(key);
+                            _signToKey.Remove(sign);
                         }
 #if UNITY_EDITOR
                         if (Ins._defaultSystem == this)
@@ -284,6 +344,7 @@ namespace Ux
                 if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
                 var evtData = _waitAdds.Find(x => x.Key == key);
                 if (evtData != null) return (T)evtData;
+                
                 evtData = Pool.Get<T>();
                 _waitAdds.Add(evtData);
                 return (T)evtData;
