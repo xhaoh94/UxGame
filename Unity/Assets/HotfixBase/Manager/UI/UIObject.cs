@@ -100,11 +100,6 @@ namespace Ux
             return ParamVo.TryGet(out value, type);
         }
 
-
-        /// <summary>
-        /// 是否可以使用特性快速注册事件函数        
-        /// </summary>
-        protected virtual bool IsRegisterFastMethod => true;
         /// <summary>
         /// 显示动效
         /// </summary>
@@ -279,10 +274,6 @@ namespace Ux
                 ShowAnim?.SetToEnd();
             }
             RemoveTag();
-            if (IsRegisterFastMethod)
-            {
-                EventMgr.Ins.RegisterFastMethod(this);
-            }
             OnAddEvent();
             foreach (var component in Components)
             {

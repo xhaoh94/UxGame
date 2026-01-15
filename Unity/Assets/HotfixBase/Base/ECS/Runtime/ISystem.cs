@@ -72,10 +72,6 @@ namespace Ux
         void OnApplicationQuit();
     }
 
-    public interface IEventSystem
-    {
-    }
-
     /// <summary>
     /// 监听添加或移除了某个组件或实体 只对同个父类实体且同层级的生效
     /// </summary>
@@ -375,11 +371,6 @@ namespace Ux
 
             if (!_is_init)
             {
-                if (this is IEventSystem)
-                {
-                    EventMgr.Ins.RegisterFastMethod(this);                    
-                }
-
                 _is_init = true;
             }
         }

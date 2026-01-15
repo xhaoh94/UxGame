@@ -5,7 +5,7 @@ using FairyGUI;
 
 namespace Ux
 {
-    public class Scene : Entity, IAwakeSystem<GameObject>, IEventSystem
+    public class Scene : Entity, IAwakeSystem<GameObject>
     {
         public CameraComponent Camera { get; private set; }
         public AStarComponent AStar { get; private set; }
@@ -18,6 +18,10 @@ namespace Ux
             Link(Go);
             Camera = Add<CameraComponent>();
             AStar = Add<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
+            EventMgr.Ins.On<Pb.BcstUnitMove>(EventType.UNIT_MOVE, this, _OnUnitMove);
+            EventMgr.Ins.On<Pb.BcstUnitUpdatePosition>(EventType.UNIT_UPDATE_POSITION, this, _OnUnitUpdatePosition);
+            EventMgr.Ins.On<Pb.BcstUnitIntoView>(EventType.UNIT_INTO_VIEW, this, _OnUnitIntoView);
+            EventMgr.Ins.On<Pb.BcstUnitOutofView>(EventType.UNIT_OUTOF_VIEW, this, _OnUnitOutofView);
             //AddComponent<FogOfWarComponent>();
         }
 
@@ -28,7 +32,6 @@ namespace Ux
             players.Add(playerData.id, player);
         }
 
-        [Evt(EventType.UNIT_MOVE)]
         void _OnUnitMove(Pb.BcstUnitMove param)
         {
             //Log.Debug("移动Unit" + param.roleId);
@@ -37,8 +40,7 @@ namespace Ux
             {                
                 player.Path.SetPoints(param.Points, param.pointIndex);
             }
-        }
-        [Evt(EventType.UNIT_UPDATE_POSITION)]
+        }        
         void _OnUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
         {
             var player = Get<Unit>(param.roleId);
@@ -48,7 +50,6 @@ namespace Ux
             }
         }
 
-        [Evt(EventType.UNIT_INTO_VIEW)]
         void _OnUnitIntoView(Pb.BcstUnitIntoView param)
         {
             foreach (var role in param.Roles)
@@ -63,7 +64,6 @@ namespace Ux
                 AddPlayer(data);
             }
         }
-        [Evt(EventType.UNIT_OUTOF_VIEW)]
         void _OnUnitOutofView(Pb.BcstUnitOutofView param)
         {
             foreach (var role in param.Roles)
