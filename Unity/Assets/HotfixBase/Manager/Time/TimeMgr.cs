@@ -70,7 +70,7 @@ namespace Ux
             if (action == null)
             {
                 key = 0;
-                return null;
+                return default;
             }
 
             // 构造签名用于重复检测
@@ -85,7 +85,7 @@ namespace Ux
             if (dic.TryGetKeyBySignature(sign, out key))
             {
                 Log.Warning($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
-                return null;
+                return default;
             }
 
             // 分配全局唯一自增 ID

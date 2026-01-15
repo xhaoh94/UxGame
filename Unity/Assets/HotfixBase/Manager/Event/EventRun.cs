@@ -31,7 +31,7 @@ namespace Ux
             return _defaultSystem.Run(eType, a, b, c);
         }
 
-        //��������
+        //立即执行
         public void Immediate()
         {
             _defaultSystem.Immediate();
