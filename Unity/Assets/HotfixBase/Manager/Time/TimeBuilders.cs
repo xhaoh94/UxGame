@@ -38,16 +38,16 @@ namespace Ux
 
         public T Loop()
         {
-            return Count(0);
+            return Repeat(0);
         }
         /// <summary>设置重复次数（小于等于0则循环）</summary>
-        public T Count(int count)
+        public T Repeat(int count)
         {
             Repeat = count;
             return (T)this;
         }
         /// <summary>设置首次触发延时</summary>
-        public T First(float seconds)
+        public T FirstDelay(float seconds)
         {
             FirstDelay = seconds;
             return (T)this;

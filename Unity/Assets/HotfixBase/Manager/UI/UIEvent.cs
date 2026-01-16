@@ -156,7 +156,7 @@ namespace Ux
             {
                 if (Time.unscaledTime - _beginTime < _gapTime)
                 {
-                    _timeKey = TimeMgr.Ins.Timer(_gapTime, this, SimulationClick).Count(1).Build();
+                    _timeKey = TimeMgr.Ins.Timer(_gapTime, this, SimulationClick).Repeat(1).Build();
                     _firstTime = Time.unscaledTime;
                 }
             }

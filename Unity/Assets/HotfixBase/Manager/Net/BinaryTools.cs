@@ -6,7 +6,7 @@ namespace Ux
 {
     public static class BinaryTools
     {
-        //Ä¬ÈÏĞ¡¶Ë
+        //é»˜è®¤å°ç«¯
         public static bool IsLittleEndian { get; set; } = true;
         public static void WriteInt16(Span<byte> destination, short num)
         {

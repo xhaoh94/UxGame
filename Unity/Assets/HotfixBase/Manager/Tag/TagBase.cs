@@ -103,7 +103,7 @@ namespace Ux
                 return;
             }
 
-            _timeKey = TimeMgr.Ins.Timer(0.2f, this, _Check).Count(1).Build();
+            _timeKey = TimeMgr.Ins.Timer(0.2f, this, _Check).Repeat(1).Build();
         }
 
         private bool isUnLock;

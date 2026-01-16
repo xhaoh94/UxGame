@@ -38,7 +38,7 @@ namespace Ux.UI
                 //var data = UIMgr.Ins.GetUIData(ID);
                 //data.Children.Reverse();
                 //RefreshTab();                                
-            }).Count(1).Build();
+            }).Repeat(1).Build();
         }
 
         int cnt = 0;
@@ -52,7 +52,7 @@ namespace Ux.UI
                     UIMgr.Ins.Show<Multiple2TabView>();
                     //UIMgr.Ins.Hide<Multiple2TabView>();
                     UIMgr.Ins.Show<Multiple3TabView>();
-                }).Count(1).Build();
+                }).Repeat(1).Build();
             }
 
         }

@@ -46,7 +46,7 @@ namespace Ux.UI
                 EventMgr.Ins.Run(EventType.Test_EventCall);
                 //testList.List.ScrollToView(7);
                 //EventMgr.Ins.Run(11111111);
-            }).Count(1).Build();
+            }).Repeat(1).Build();
             //EventMgr.Ins.Run(11111111);
         }
         partial void OnBtnMultipleClick(EventContext e)

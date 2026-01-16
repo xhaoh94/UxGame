@@ -1,100 +1,298 @@
-# U3D+HybridCLR+YooAssest+FGUI 缝合怪
+# UxGame 框架
 
-# 只是加了一些平时开发觉得有用的东西
+一个集成了 HybridCLR、YooAsset 和 FairyGUI 的综合 Unity 游戏开发框架，为高效游戏开发提供强大工具。
 
-## HybridCLR + YooAssest 集成
+## 目录
 
-- c#热更新+资源热更新，通过可视化工具+YooAssets打包，可一键直接构建到指定目录，包括资源差异化分析，拷贝指定目录。配合DHFS（本地资源服务器），可以实现编辑器模式热更逻辑运行测试
+- [功能特性](#功能特性)
+- [前置要求](#前置要求)
+- [安装说明](#安装说明)
+- [设置指南](#设置指南)
+- [使用示例](#使用示例)
+  - [事件系统](#事件系统)
+  - [网络模块](#网络模块)
+  - [资源管理](#资源管理)
+  - [时间系统](#时间系统)
+  - [UI系统](#ui系统)
+  - [公式解析器](#公式解析器)
+- [架构设计](#架构设计)
+- [故障排除](#故障排除)
+- [贡献指南](#贡献指南)
+- [许可证](#许可证)
 
-## Event
+## 功能特性
 
-- 独立的事件系统+单例默认事件系统
-- 通过特性注册，减少N多重复代码（通过反射实现，虽然内部实现了对象池，但是还是建议只在初始化模块这种只会实例化一次的地方使用
-- 事件队列+可同步调用接口，默认事件走队列触发，每帧事件有触发上限，解决一帧触发极多事件导致掉帧。部分需同步触发事件，也可调用接口直接触发。
-- 一键取消关联对象所有事件监听，避免事件漏取消状况（注册事件时带标签，默认传注册实例化对象）在需要对象取消监听时，只需要传此对象去取消监听即可，无需所有事件都再重复走一遍取消流程 
+### HybridCLR + YooAsset 集成
+- 使用 HybridCLR 实现 C# 热更新
+- 使用 YooAsset 实现资源热更新
+- 一键构建到指定目录
+- 资源差异分析
+- 本地资源服务器 (DHFS) 支持编辑器热更新测试
 
-- 可视化工具，默认事件系统会存储所有事件展示在可视化工具里，可随时查看事件是否有泄漏
+### 事件系统
+- 独立的事件系统，包含单例默认事件系统
+- 基于特性的注册，减少重复代码
+- 事件队列带每帧触发上限，防止掉帧
+- 支持同步和异步事件调用
+- 按对象标签一键取消所有事件监听
+- 可视化事件监控工具
 
-## Net
+### 网络模块 (Net)
+- 集成 TCP、KCP 和 WebSocket 协议
+- 自定义 RPC 流程，实现简洁的请求-响应代码
+- 可配置数据序列化的大小端
 
-- 内部集成了TCP、KCP、WebSocket
-- 自定义RPC流程，同个方法内即可实现请求->响应。代码嘎嘎好看。（rpc这个需跟服务器约束规则，参考即可）
+### 资源管理 (Res)
+- 封装 YooAssets 加载接口
+- 自动脚本挂载和资源句柄回收
+- 支持基于标签的资源懒加载管理
+- 可视化 UI 包引用计数工具
 
-- 可定义数据序列号大小端，轻松解决跟服务器端不一致问题
+### 时间系统
+- 多种定时器类型，采用优化的排序算法
+  - 间隔定时器（秒）
+  - 帧定时器
+  - 时间戳定时器
+  - Cron 表达式定时器
+- 可视化定时器监控工具
 
-## Res
+### UI 系统
+- FairyGUI 包装器，增强功能
+- 支持异步加载和懒加载
+- UI 栈管理
+- UI 动画和模糊效果
+- 界面嵌套支持
+- 可视化代码生成和事件绑定工具
+- 多种 UI 组件：
+  - UIView（常规界面）
+  - UIWindow（弹窗界面）
+  - UITabView（嵌套界面）
+  - UITip（提示语）
+  - UIMessageBox（确认对话框）
+  - UIModel/RTModel（2D 中显示 3D 模型）
+  - UIList（可自定义循环列表）
 
-- 二次封装的YooAssets加载接口，加载gameObject对象会自动挂载脚本，等对象销毁时，回收handle。
-- 资源懒加载，通过可视化工具可定义资源标签，部分资源可以在游戏内再加载
-- 可视化工具，暂实现了UI包的引用计数
+### 公式解析器 (Eval)
+- 使用 AST 和对象池实现高性能字符串公式解析
+- 支持自定义函数和变量
+- 内置数学函数
 
-## Time
+### 开发中功能
+- Timeline 战斗编辑工具
+- 条件系统（需根据游戏定制）
+- Tag 红点系统
 
- **集成多种定时器，每种定时器注册时都会进行排序插入，当队列不满足触发条件会直接中断后续定时器，减少循环次数**
+## 前置要求
 
-- 计时定时器，可定义初始触发时间+后续间隔时间+触发次数+触发完毕回调
-- 帧数定时器，可定义初始触发帧数+后续间隔帧数+触发次数+触发完毕回调
-- 时间戳定时器，指定时间戳到达触发
-- Cron表达式触发器
-- 可视化工具，你所注册的所有触发器都可以在这里查看
+- Unity 2021.3 LTS 或更新版本
+- .NET Framework 4.7.1 或更新版本
+- HybridCLR
+- YooAsset
+- FairyGUI
+- Visual Studio 2019 或更新版本（用于开发）
 
-## UI
+## 安装说明
 
-**二次封装FairyGUI，使用特性注册或代码动态注册，逻辑与资源的拆分，界面可自定义对应资源包，实现异步加载、懒加载、界面模糊、界面栈、界面动画、自定义界面嵌套（A界面嵌套了B、C界面，打开B、C界面时会自动根据嵌套先打开A界面）。通过可视化工具可自动生成代码绑定、自动绑定点击事件、类型自定义**
+1. 克隆仓库：
+   ```bash
+   git clone https://github.com/xhaoh94/UxGame.git
+   ```
 
-- 常规界面 UIView 
-- 弹窗界面 UIWindow,封装的FairyGUI.Window
-- 嵌套界面 UITabView 
-- 辅助界面 UITip（提示语）、UIMessageBox（弹窗确认）。
-- UIModel、RTModel 傻瓜式在2D显示3D模型
-- 循环列表UIList，同个列表可自定义多个不同Item，通过你自定义规则，给你生成不同的Item
-- 可视化工具，你所有注册的UI界面的状态与缓存都在这可以查看
+2. 在 Unity 中打开项目：
+   - 启动 Unity Hub
+   - 点击 "添加" 并选择克隆的项目文件夹
+   - 使用 Unity 2021.3 LTS 或更新版本打开项目
 
-## Eval 公式解析器
+3. 安装依赖：
+   - HybridCLR 会在项目打开时自动配置
+   - YooAsset 和 FairyGUI 包已包含在项目中
 
-使用抽象树+AST、对象池，高性能解析字符串公式，相同的公式，在预热后基本无消耗。实现了基础加减乘除取余。
+## 设置指南
 
-- 自定义函数，除了内置常规数字函数，可随意自定义函数名，执行你想要的逻辑
-- 自定义变量，字符串公式，变量不可缺少，一个计算战力的公式 hp+atk ,通过传入变量数值，轻松获取战力数值
-  ```c#
-  string eval = "10+max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c)))";
-  EvalMgr.Ins.AddVariable("a", 2);
-  EvalMgr.Ins.AddVariable("b", -1);
-  EvalMgr.Ins.AddVariable("c", 3);
-  EvalMgr.Ins.AddFunction("test", (nums) =>
-  {
-      return nums[0] + nums[1];
-  });
-  EvalMgr.Ins.Release();
-  
-  System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-  sw.Start();
-  var value = EvalMgr.Ins.Parse(eval);
-  sw.Stop();
-  //10+max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c))):50,ms:5
-  Log.Debug(eval + ":{0},ms:{1}", value, sw.ElapsedMilliseconds);
-  ```
-## 其他开发中功能
+### 1. 配置热更新
 
-- Timeline 用于战斗编辑，实现了Animator，但是其他上层业务逻辑还没实现其他的，现在牛马生活，天天到家已经快12点了，没动力了
-- Condition 条件系统，这个只能根据不同的游戏定制
-- Tag 红点系统，其实已经是实现了的，只不过有部分逻辑也得根据游戏来定制
+1. 打开 HybridCLR 窗口：`Tools > HybridCLR > Settings`
+2. 根据需要配置热更新程序集设置
+3. 构建热更新程序集：`Tools > HybridCLR > Build > Build Hot Update DLL`
+
+### 2. 配置资源系统
+
+1. 打开 YooAsset 设置：`YooAsset > Settings`
+2. 配置资源包设置
+3. 构建资源包：`YooAsset > Build > Build AssetBundles`
+
+### 3. 配置 UI 系统
+
+1. 通过 FairyGUI 编辑器导入 UI 包
+2. 使用可视化工具生成代码绑定：`Tools > UI > Code Generator`
+3. 在资源系统中配置 UI 包引用
+
+### 4. 配置网络设置
+
+1. 在网络管理器中设置服务器地址和端口
+2. 配置协议类型（TCP/KCP/WebSocket）
+3. 如有需要，设置数据序列化的大小端
+
+## 使用示例
+
+### 事件系统
+
+```csharp
+// 使用特性注册事件
+[Event(MainEventType.PLAYER_LOGIN)]
+private void OnPlayerLogin(object data)
+{
+    // 处理玩家登录事件
+}
+
+// 手动注册事件
+EventMgr.Ins.On(MainEventType.PLAYER_LOGIN, this, (data) =>
+{
+    // 处理玩家登录事件
+});
+
+// 触发事件
+EventMgr.Ins.Run(MainEventType.PLAYER_LOGIN, playerData);
+
+// 移除对象的所有事件
+EventMgr.Ins.OffTag(this);
+```
+
+### 网络模块
+
+```csharp
+// 连接服务器
+var socket = NetMgr.Ins.Connect(NetType.TCP, "127.0.0.1:8080", OnConnect);
+
+// 发送消息
+var loginReq = new LoginRequest { Username = "user", Password = "pass" };
+NetMgr.Ins.Send(CmdID.Login, loginReq);
+
+// RPC 调用
+var response = await NetMgr.Ins.Call<LoginRequest, LoginResponse>(CmdID.Login, loginReq);
+```
+
+### 资源管理
+
+```csharp
+// 加载资源
+var handle = ResMgr.Ins.LoadAssetAsync<GameObject>("Assets/Resources/Player.prefab");
+var playerPrefab = handle.AssetObject as GameObject;
+
+// 实例化并自动管理资源
+var player = ResMgr.Ins.Instantiate("Assets/Resources/Player.prefab", transform);
+```
+
+### 时间系统
+
+```csharp
+// 间隔定时器（延迟1秒后开始，每2秒触发1次，共触发5次）
+TimeMgr.Ins.Timer(2.0f, this, OnTimerTrigger)
+    .FirstDelay(1.0f)  // 初始延迟时间
+    .Repeat(5)         // 重复次数
+    .OnComplete(OnTimerComplete);  // 完成回调
+
+// 帧定时器（立即开始，每60帧触发1次，共触发10次）
+TimeMgr.Ins.Frame(60, this, OnFrameTimerTrigger)
+    .FirstDelay(0)     // 初始延迟帧数
+    .Repeat(10);       // 重复次数
+
+// Cron 定时器（每天中午12点触发）
+TimeMgr.Ins.Cron("0 0 12 * * ?", this, OnDailyTrigger);
+
+// 定时器回调
+private void OnTimerTrigger()
+{
+    Log.Debug("定时器触发");
+}
+
+private void OnFrameTimerTrigger()
+{
+    Log.Debug("帧定时器触发");
+}
+
+private void OnDailyTrigger()
+{
+    Log.Debug("每天触发一次的定时器");
+}
+
+private void OnTimerComplete()
+{
+    Log.Debug("定时器完成");
+}
+```
+
+### UI 系统
+
+```csharp
+// 显示 UI
+UIMgr.Ins.Show<UIMain>();
+
+// 带参数显示 UI
+var param = new UIParam { A = "value1", B = 123 };
+UIMgr.Ins.Show<UISettings>(param);
+
+// 隐藏 UI
+UIMgr.Ins.Hide<UIMain>();
+
+// 显示消息框
+UIMgr.MessageBox.DoubleBtn(
+    "确认", 
+    "确定要退出吗？", 
+    "是", () => Application.Quit(), 
+    "否", null);
+```
+
+### 公式解析器
+
+```csharp
+// 基本计算
+var result1 = EvalMgr.Ins.Parse("10 + 5 * 2"); // 返回 20
+
+// 自定义变量和函数
+EvalMgr.Ins.AddVariable("hp", 100);
+EvalMgr.Ins.AddVariable("atk", 20);
+EvalMgr.Ins.AddFunction("damage", (args) => args[0] * (1 + args[1] / 100.0));
+
+var result2 = EvalMgr.Ins.Parse("damage(atk, 50)"); // 返回 30
+```
+
+## 架构设计
+
+框架采用模块化架构，各模块职责清晰：
+
+```
+┌─────────────────────────────────────────────────┐
+│                    UxGame                       │
+├───────────┬───────────┬───────────┬────────────┤
+│   Event   │    Net    │    Res    │    Time    │
+├───────────┼───────────┼───────────┼────────────┤
+│    UI     │    Eval   │   Hybrid  │   YooAsset │
+│           │           │   CLR     │            │
+└───────────┴───────────┴───────────┴────────────┘
+```
 
 
+## 许可证
 
-## 辅助工具
+MIT 许可证
 
-![UI](https://github.com/xhaoh94/UxGame/blob/main/IMG/ui.png)
+版权所有 (c) 2023 xhaoh94
 
-![Res](https://github.com/xhaoh94/UxGame/blob/main/IMG/res.png)
+特此免费授予任何获得本软件及相关文档文件（"软件"）副本的人不受限制地处置该软件的权利，包括不受限制地使用、复制、修改、合并、发布、分发、转授许可和/或出售该软件副本，以及再授权被配发了本软件的人如上的权利，须在下列条件下：
 
-![Event](https://github.com/xhaoh94/UxGame/blob/main/IMG/event.png)
+上述版权声明和本许可声明应包含在该软件的所有副本或实质成分中。
 
-![Time](https://github.com/xhaoh94/UxGame/blob/main/IMG/time.png)
+本软件按"原样"提供，不附带任何形式的明示或暗示的保证，包括但不限于对适销性、特定用途的适用性和不侵权的保证。在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责，无论这些追责来自合同、侵权或其它行为中，还是产生于、源于或有关于本软件以及本软件的使用或其它处置。
 
-![tool](https://github.com/xhaoh94/UxGame/blob/main/IMG/tool.png)
+## 致谢
 
-![uiGen](https://github.com/xhaoh94/UxGame/blob/main/IMG/uiGen.png)
+- [Unity](https://unity.com/)
+- [HybridCLR](https://github.com/focus-creative-games/hybridclr)
+- [YooAsset](https://github.com/tuyoogame/YooAsset)
+- [FairyGUI](https://www.fairygui.com/)
 
-![构建](https://github.com/xhaoh94/UxGame/blob/main/IMG/build.png)
+## 联系方式
+
+如有问题或疑问，请在 GitHub 仓库创建 issue。
 
