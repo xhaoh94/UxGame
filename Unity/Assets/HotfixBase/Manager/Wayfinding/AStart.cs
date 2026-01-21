@@ -1,4 +1,4 @@
-using System.Collections;
+锘縰sing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -65,7 +65,7 @@ namespace Ux
         {
             if (_maps == null)
             {
-                Log.Error("未初始化寻路数据");
+                Log.Error("鏈垵濮嬪寲瀵昏矾鏁版嵁");
                 return null;
             }
             var node = Pool.Get<Node>();
@@ -79,7 +79,7 @@ namespace Ux
                 var cur = _opens.Pop();
                 if (cur.IsGoal)
                 {
-                    // 找到目标                    
+                    // 鎵惧埌鐩爣                    
                     goal = cur;
                     break;
                 }
@@ -156,3 +156,4 @@ namespace Ux
 
     }
 }
+

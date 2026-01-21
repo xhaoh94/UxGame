@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace Ux
@@ -158,7 +158,7 @@ namespace Ux
             var id = unitState.OwnerID;
             if (id == 0)
             {
-                Log.Error($"��Ҫʵ��״̬��[{unitState.Name}]����ӵ����ID");
+                Log.Error($"需要实现状态机[{unitState.Name}]所属拥有者ID");
                 return;
             }
             if (!_unitStates.TryGetValue(id, out var unitStates))
@@ -174,3 +174,4 @@ namespace Ux
         }
     }
 }
+

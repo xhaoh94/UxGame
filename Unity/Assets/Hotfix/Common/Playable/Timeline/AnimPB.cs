@@ -1,4 +1,4 @@
-using System.Collections;
+锘縰sing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -27,7 +27,7 @@ public class AnimNode
             return;
         }
 
-        //注意：保持统一的渐变速度
+        //娉ㄦ剰锛氫繚鎸佺粺涓�鐨勬笎鍙橀�熷害
         _fadeSpeed = 1f / fadeDuration;
         _fadeWeight = destWeight;
         _isFading = true;
@@ -124,3 +124,4 @@ public class AnimPB : PlayableBehaviour
     }
 
 }
+
