@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -6,7 +6,7 @@ using UnityEngine.Rendering.Universal;
 
 public class DualTentBlurRenderFeature : ScriptableRendererFeature
 {
-    public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;      // ÉèÖÃPassäÖÈ¾µÄÎ»ÖÃ-³õÊ¼Öµ
+    public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;      // è®¾ç½®Passæ¸²æŸ“çš„ä½ç½®-åˆå§‹å€¼
     public Shader shader;
     public class DualTentBlurPass : ScriptableRenderPass
     {
@@ -140,3 +140,4 @@ public class DualTentBlurRenderFeature : ScriptableRendererFeature
         base.SetupRenderPasses(renderer, renderingData);
     }
 }
+

@@ -1,14 +1,15 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 [Serializable, VolumeComponentMenu("CustomPostprocess/Blur/GaussianBlur2")]
 public class GaussianBlur2 : VolumeComponent
 {
-    //[²ÎÊıÉèÖÃ]
-    public IntParameter times = new ClampedIntParameter(1, 0, 5);               // Ä£ºı´ÎÊı--- ClampedIntParameter±£Ö¤±äÁ¿ÖµÔÚ¸ø¶¨·¶Î§ÄÚ
-    public IntParameter downSample = new ClampedIntParameter(2, 1, 7);                      // Í¼Æ¬Ëõ·Å³Ì¶È
-    //[Shader²ÎÊı]
-    public FloatParameter radius = new ClampedFloatParameter(1.0f, 0.0f, 5.0f); // Ä£ºı°ë¾¶
-    public FloatParameter depth = new ClampedFloatParameter(0.5f, 0.0f, 1.0f);          // Ä£ºı¾°Éî
-    public FloatParameter value = new ClampedFloatParameter(0.2f, 0.0f, 0.5f);      // ×ÜÌåÄ£ºı³Ì¶È
+    //[å‚æ•°è®¾ç½®]
+    public IntParameter times = new ClampedIntParameter(1, 0, 5);               // æ¨¡ç³Šæ¬¡æ•°--- ClampedIntParameterä¿è¯å˜é‡å€¼åœ¨ç»™å®šèŒƒå›´å†…
+    public IntParameter downSample = new ClampedIntParameter(2, 1, 7);                      // å›¾ç‰‡ç¼©æ”¾ç¨‹åº¦
+    //[Shaderå‚æ•°]
+    public FloatParameter radius = new ClampedFloatParameter(1.0f, 0.0f, 5.0f); // æ¨¡ç³ŠåŠå¾„
+    public FloatParameter depth = new ClampedFloatParameter(0.5f, 0.0f, 1.0f);          // æ¨¡ç³Šæ™¯æ·±
+    public FloatParameter value = new ClampedFloatParameter(0.2f, 0.0f, 0.5f);      // æ€»ä½“æ¨¡ç³Šç¨‹åº¦
 }
+
