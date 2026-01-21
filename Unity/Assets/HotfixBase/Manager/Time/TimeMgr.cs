@@ -17,14 +17,13 @@ namespace Ux
         private readonly HandleMap _timeStamp = new HandleMap(TimeType.TimeStamp);
         private readonly HandleMap _cron = new HandleMap(TimeType.Cron);
 
-        readonly float _updateGap = 0.1f;
+        readonly float _updateGap = 1f;
         float _nextUpdateTime;
         protected override void OnCreated()
         {
             LocalTime = new LocalTime();
             ServerTime = new ServerTime();
-            GameMethod.Update += _Update;
-            GameMethod.FixedUpdate += _FixedUpdate;
+            GameMethod.Update += _Update;            
             GameMethod.LowMemory += _OnLowMemory;
         }
         public void Release()
@@ -45,18 +44,13 @@ namespace Ux
             (ServerTime as ServerTime)?.SetOffset(offset);
         }
 
-
-        void _FixedUpdate()
-        {
-            _frame?.Run();
-        }
-
         void _Update()
         {
+            _timer?.Run();
+            _frame?.Run();
             if (TotalTime >= _nextUpdateTime)
             {
                 _nextUpdateTime = TotalTime + _updateGap;
-                _timer?.Run();
                 _timeStamp?.Run();
                 _cron?.Run();
             }

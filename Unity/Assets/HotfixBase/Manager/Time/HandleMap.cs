@@ -115,42 +115,61 @@ namespace Ux
 
             public void Run()
             {
-                while (_waitDels.Count > 0)
+                if (_waitDels.Count > 0)
                 {
-                    var handle = _waitDels[0];
-                    _waitDels.RemoveAt(0);
-#if UNITY_EDITOR
-                    var exeDesc = handle.MethodName;
-                    if (_descEditor.TryGetValue(exeDesc, out var temList))
+                    HashSet<IHandle> delSet = null;
+                    if (_waitDels.Count > 5)
                     {
-                        if (temList.Remove(handle))
+                        delSet = new HashSet<IHandle>(_waitDels);
+                    }
+
+                    for (int i = 0; i < _waitDels.Count; i++)
+                    {
+                        var handle = _waitDels[i];
+#if UNITY_EDITOR
+                        var exeDesc = handle.MethodName;
+                        if (_descEditor.TryGetValue(exeDesc, out var temList))
                         {
-                            _descEditor.Remove(exeDesc);
-                            __Debugger_Event();
+                            if (temList.Remove(handle))
+                            {
+                                _descEditor.Remove(exeDesc);
+                                __Debugger_Event();
+                            }
+                        }
+#endif
+                        var key = handle.Key;
+                        _keyHandle.Remove(key);
+
+                        // 清理签名映射
+                        if (_keyToSign.TryGetValue(key, out var sign))
+                        {
+                            _keyToSign.Remove(key);
+                            _signToKey.Remove(sign);
+                        }
+
+                        var tag = handle.Tag;
+                        if (tag != null)
+                        {
+                            var hashCode = RuntimeHelpers.GetHashCode(tag);
+                            if (_tagkeys.TryGetValue(hashCode, out var keys))
+                            {
+                                keys.Remove(key);
+                                if (keys.Count == 0) _tagkeys.Remove(hashCode);
+                            }
+                        }
+
+                        handle.Release();
+                        if (delSet == null)
+                        {
+                            _handles.Remove(handle);
                         }
                     }
-#endif
-                    var key = handle.Key;
-                    _keyHandle.Remove(key);
 
-                    // 清理签名映射
-                    if (_keyToSign.TryGetValue(key, out var sign))
+                    if (delSet != null)
                     {
-                        _keyToSign.Remove(key);
-                        _signToKey.Remove(sign);
+                        _handles.RemoveAll(delSet.Contains);
                     }
-
-                    var tag = handle.Tag;
-                    if (tag != null)
-                    {
-                        var hashCode = RuntimeHelpers.GetHashCode(tag);
-                        if (!_tagkeys.TryGetValue(hashCode, out var keys)) continue;
-                        keys.Remove(key);
-                        if (keys.Count == 0) _tagkeys.Remove(hashCode);
-                    }
-
-                    handle.Release();
-                    _handles.Remove(handle);
+                    _waitDels.Clear();
                 }
 
                 if (_needSort)
