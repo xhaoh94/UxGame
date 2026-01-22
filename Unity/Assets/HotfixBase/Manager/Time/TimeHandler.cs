@@ -248,13 +248,13 @@ namespace Ux
                 Key = _key;
                 isLocalTime = _isLocalTime;
                 _data = CronData.Create(_cron);
-                var list = _data.GetExeTime((isLocalTime ? Ins.LocalTime : Ins.ServerTime).Now);
-                if (list == null || list.Count == 0)
+                var nextTime = _data.GetNext((isLocalTime ? Ins.LocalTime : Ins.ServerTime).Now);
+                if (nextTime == default)
                 {
                     return false;
                 }
 
-                TimeStamp = list[0].ToTimeStamp();
+                TimeStamp = nextTime.ToTimeStamp();
 #if UNITY_EDITOR
                 TimeStampDesc = TimerHelper.TimeStampToString(TimeStamp);
                 Cron = _cron;
@@ -285,13 +285,13 @@ namespace Ux
                     return RunStatus.None;
                 }
 
-                var list = _data.GetExeTime(gameTime.Now);
-                if (list == null || list.Count == 0)
+                var nextTime = _data.GetNext(gameTime.Now);
+                if (nextTime == default)
                 {
                     return RunStatus.Done;
                 }
 
-                TimeStamp = list[0].ToTimeStamp();
+                TimeStamp = nextTime.ToTimeStamp();
 #if UNITY_EDITOR
                 TimeStampDesc = TimerHelper.TimeStampToString(TimeStamp);
 #endif

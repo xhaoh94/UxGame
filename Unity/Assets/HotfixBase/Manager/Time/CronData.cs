@@ -529,9 +529,40 @@ namespace Ux
 
         public DateTime GetLateTime(DateTime now)
         {
-            var list = GetExeTime(now);
-            if (list == null || list.Count == 0) return default;
-            return list[0];
+            return GetNext(now);
+        }
+
+        public DateTime GetNext(DateTime time)
+        {
+            time = time.AddMilliseconds(1000 - time.Millisecond + 1);
+
+            if (!_isParse && Year.Min != time.Year)
+            {
+                Year.Min = time.Year;
+                Year.Max = time.Year + 99;
+                if (string.IsNullOrEmpty(yearCron))
+                {
+                    Year.Parse();
+                }
+                else
+                {
+                    Year.Parse(yearCron);
+                }
+                _isParse = true;
+            }
+            
+            int add = Second.GetAdd(time.Second);
+            time = AddSecond(time, add);
+            add = Minute.GetAdd(time.Minute);
+            time = AddMinute(time, add);
+            add = Hour.GetAdd(time.Hour);
+            time = AddHour(time, add);
+            time = ParseDay(time);
+            if (time == default) return default;
+            time = ParseWeek(time);
+            if (time == default) return default;
+            
+            return time;
         }
 
         public List<DateTime> GetExeTime(DateTime time, int cnt = 1)

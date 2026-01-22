@@ -368,7 +368,7 @@ namespace Ux
 
             void Remove(IHandle handle)
             {
-                if (_waitDels.Contains(handle)) return;
+                if (handle.Status == Status.WaitDel) return;
                 handle.Status = Status.WaitDel;
                 _waitDels.Add(handle);
             }
