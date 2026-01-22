@@ -67,6 +67,7 @@ namespace Ux
                 return default;
             }
 
+#if UNITY_EDITOR
             // 构造签名用于重复检测
             var sign = new TimerSignature
             {
@@ -81,31 +82,18 @@ namespace Ux
                 Log.Warning($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
                 return default;
             }
+#endif
 
             // 分配全局唯一自增 ID
             key = IDGenerater.GenerateId();
 
             var handle = Pool.Get<T>();
             
+#if UNITY_EDITOR
             // 注册签名映射
             dic.RegisterSignature(sign, key);
-            
+#endif
             return (T)handle;
-        }
-
-        private long GetSignatureKey(Delegate action, object tag, HandleMap dic)
-        {
-            if (action == null) return 0;
-            
-            var sign = new TimerSignature
-            {
-                ActionHash = RuntimeHelpers.GetHashCode(action),
-                TagHash = tag != null ? RuntimeHelpers.GetHashCode(tag) : 0,
-                TimeType = dic.TimeType
-            };
-            
-            dic.TryGetKeyBySignature(sign, out var key);
-            return key;
         }
 
         public void RemoveKey(long key)
@@ -207,34 +195,6 @@ namespace Ux
             return builder;
         }
 
-        public void RemoveTimer(object tag, Action action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _timer);
-            _timer.Remove(key);
-        }
-
-        public void RemoveTimer<A>(object tag, Action<A> action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _timer);
-            _timer.Remove(key);
-        }
-
-        public void RemoveFrame(object tag, Action action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _frame);
-            _frame.Remove(key);
-        }
-
-        public void RemoveFrame<A>(object tag, Action<A> action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _frame);
-            _frame.Remove(key);
-        }
-
 
         #endregion
 
@@ -284,19 +244,6 @@ namespace Ux
                 initBuilder.Do(tag, action, param);
             }
             return builder;
-        }
-        public void RemoveTimeStamp(object tag, Action action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _timeStamp);
-            _timeStamp.Remove(key);
-        }
-
-        public void RemoveTimeStamp<A>(object tag, Action<A> action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _timeStamp);
-            _timeStamp.Remove(key);
         }
 
 
@@ -357,20 +304,6 @@ namespace Ux
                 initBuilder.Do(tag, action, param);
             }
             return builder;
-        }
-
-        public void RemoveCron(object tag, Action action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _cron);
-            _cron.Remove(key);
-        }
-
-        public void RemoveCron<A>(object tag, Action<A> action)
-        {
-            if (action == null) return;
-            var key = GetSignatureKey(action, tag, _cron);
-            _cron.Remove(key);
         }
         #endregion
     }
