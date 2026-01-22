@@ -176,41 +176,30 @@ namespace Ux
                     }
                     _waitDels.Clear();
                 }
-
+                
                 if (_waitAdds.Count > 0)
                 {
-                    for (int i = 0; i < _waitAdds.Count; i++)
+                    // 优化：当新增数量较少时(<=2)，使用二分插入比全量Sort效率更高
+                    if (_waitAdds.Count <= 2)
                     {
-                        var handle = _waitAdds[i];
-#if UNITY_EDITOR
-                        var exeDesc = handle.MethodName;
-                        if (!_descEditor.TryGetValue(exeDesc, out var temList))
+                        for (int i = 0; i < _waitAdds.Count; i++)
                         {
-                            temList = new TimeList(exeDesc);
-                            _descEditor.Add(exeDesc, temList);
-                        }
-
-                        temList.Add(handle);
-                        __Debugger_Event();
-#endif                     
-                        _keyHandle.Add(handle.Key, handle);
-
-                        var tag = handle.Tag;
-                        if (tag != null)
-                        {
-                            int hashCode = RuntimeHelpers.GetHashCode(tag);
-                            if (!_tagkeys.TryGetValue(hashCode, out var keys))
-                            {
-                                keys = new List<long>();
-                                _tagkeys.Add(hashCode, keys);
-                            }
-
-                            keys.Add(handle.Key);
+                            var handle = _waitAdds[i];
+                            AddHandleToMap(handle);
+                            Sort(handle);
                         }
                     }
-                    _handles.AddRange(_waitAdds);
+                    else
+                    {
+                        for (int i = 0; i < _waitAdds.Count; i++)
+                        {
+                            var handle = _waitAdds[i];
+                            AddHandleToMap(handle);
+                        }
+                        _handles.AddRange(_waitAdds);
+                        _needSort = true;
+                    }
                     _waitAdds.Clear();
-                    _needSort = true;
                 }
 
                 if (_needSort)
@@ -228,6 +217,67 @@ namespace Ux
 
 
                 OnRun();
+            }
+
+            void AddHandleToMap(IHandle handle)
+            {
+#if UNITY_EDITOR
+                var exeDesc = handle.MethodName;
+                if (!_descEditor.TryGetValue(exeDesc, out var temList))
+                {
+                    temList = new TimeList(exeDesc);
+                    _descEditor.Add(exeDesc, temList);
+                }
+
+                temList.Add(handle);
+                __Debugger_Event();
+#endif                     
+                _keyHandle.Add(handle.Key, handle);
+
+                var tag = handle.Tag;
+                if (tag != null)
+                {
+                    int hashCode = RuntimeHelpers.GetHashCode(tag);
+                    if (!_tagkeys.TryGetValue(hashCode, out var keys))
+                    {
+                        keys = new List<long>();
+                        _tagkeys.Add(hashCode, keys);
+                    }
+
+                    keys.Add(handle.Key);
+                }
+            }
+
+            private void Sort(IHandle handle)
+            {
+                var startIndex = 0;
+                var endIndex = _handles.Count;
+
+                while (startIndex < endIndex)
+                {
+                    var index = startIndex + ((endIndex - startIndex) >> 1);
+                    // 注意：此处必须使用与List.Sort一致的比较逻辑
+                    // 之前List.Sort((a,b)=>a.Compare(b))是升序
+                    // 此处handle.Compare(_handles[index]) > 0 表示handle > handles[index]，应插在后面
+                    int compareResult = handle.Compare(_handles[index]);
+
+                    if (compareResult == 0)
+                    {
+                        _handles.Insert(index, handle);
+                        return;
+                    }
+                    else if (compareResult > 0)
+                    {
+                        startIndex = index + 1;
+                    }
+                    else
+                    {
+                        endIndex = index;
+                    }
+                }
+
+                // 如果未找到合适位置，插入到 startIndex
+                _handles.Insert(startIndex, handle);
             }
 
             void OnRun()
