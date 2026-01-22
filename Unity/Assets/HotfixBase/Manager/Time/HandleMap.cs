@@ -76,7 +76,7 @@ namespace Ux
 
             readonly List<IHandle> _handles = new List<IHandle>();
             readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
-            readonly Dictionary<int, List<long>> _tagkeys = new Dictionary<int, List<long>>();
+            readonly Dictionary<int, HashSet<long>> _tagkeys = new Dictionary<int, HashSet<long>>();
 
 #if UNITY_EDITOR
             // 签名相关字典：用于重复检测和删除
@@ -240,7 +240,7 @@ namespace Ux
                     int hashCode = RuntimeHelpers.GetHashCode(tag);
                     if (!_tagkeys.TryGetValue(hashCode, out var keys))
                     {
-                        keys = new List<long>();
+                        keys = new HashSet<long>();
                         _tagkeys.Add(hashCode, keys);
                     }
 
