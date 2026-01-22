@@ -179,8 +179,8 @@ namespace Ux
                 
                 if (_waitAdds.Count > 0)
                 {
-                    // 优化：当新增数量较少时(<=2)，使用二分插入比全量Sort效率更高
-                    if (_waitAdds.Count <= 2)
+                    // 优化：当新增数量较少时(<=10)，使用二分插入比全量Sort效率更高
+                    if (_waitAdds.Count <= 10)
                     {
                         for (int i = 0; i < _waitAdds.Count; i++)
                         {
