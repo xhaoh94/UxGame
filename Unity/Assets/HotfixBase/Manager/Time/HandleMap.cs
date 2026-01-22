@@ -177,9 +177,45 @@ namespace Ux
                     _waitDels.Clear();
                 }
 
+                if (_waitAdds.Count > 0)
+                {
+                    for (int i = 0; i < _waitAdds.Count; i++)
+                    {
+                        var handle = _waitAdds[i];
+#if UNITY_EDITOR
+                        var exeDesc = handle.MethodName;
+                        if (!_descEditor.TryGetValue(exeDesc, out var temList))
+                        {
+                            temList = new TimeList(exeDesc);
+                            _descEditor.Add(exeDesc, temList);
+                        }
+
+                        temList.Add(handle);
+                        __Debugger_Event();
+#endif                     
+                        _keyHandle.Add(handle.Key, handle);
+
+                        var tag = handle.Tag;
+                        if (tag != null)
+                        {
+                            int hashCode = RuntimeHelpers.GetHashCode(tag);
+                            if (!_tagkeys.TryGetValue(hashCode, out var keys))
+                            {
+                                keys = new List<long>();
+                                _tagkeys.Add(hashCode, keys);
+                            }
+
+                            keys.Add(handle.Key);
+                        }
+                    }
+                    _handles.AddRange(_waitAdds);
+                    _waitAdds.Clear();
+                    _needSort = true;
+                }
+
                 if (_needSort)
                 {
-                    _handles.Sort((a, b) => b.Compare(a));
+                    _handles.Sort((a, b) => a.Compare(b));
                     _needSort = false;
                 }
 
@@ -190,38 +226,6 @@ namespace Ux
                 }
 #endif
 
-
-                while (_waitAdds.Count > 0)
-                {
-                    var handle = _waitAdds[0];
-                    _waitAdds.RemoveAt(0);
-#if UNITY_EDITOR
-                    var exeDesc = handle.MethodName;
-                    if (!_descEditor.TryGetValue(exeDesc, out var temList))
-                    {
-                        temList = new TimeList(exeDesc);
-                        _descEditor.Add(exeDesc, temList);
-                    }
-
-                    temList.Add(handle);
-                    __Debugger_Event();
-#endif                     
-                    Sort(handle);
-                    _keyHandle.Add(handle.Key, handle);
-
-                    var tag = handle.Tag;
-                    if (tag != null)
-                    {
-                        int hashCode = RuntimeHelpers.GetHashCode(tag);
-                        if (!_tagkeys.TryGetValue(hashCode, out var keys))
-                        {
-                            keys = new List<long>();
-                            _tagkeys.Add(hashCode, keys);
-                        }
-
-                        keys.Add(handle.Key);
-                    }
-                }
 
                 OnRun();
             }
@@ -258,34 +262,7 @@ namespace Ux
                 }
             }
 
-            private void Sort(IHandle handle)
-            {
-                var startIndex = 0;
-                var endIndex = _handles.Count;
 
-                while (startIndex < endIndex)
-                {
-                    var index = startIndex + ((endIndex - startIndex) >> 1);
-                    int compareResult = handle.Compare(_handles[index]);
-
-                    if (compareResult == 0)
-                    {
-                        _handles.Insert(index, handle);
-                        return;
-                    }
-                    else if (compareResult > 0)
-                    {
-                        startIndex = index + 1;
-                    }
-                    else
-                    {
-                        endIndex = index;
-                    }
-                }
-
-                // 如果未找到合适位置，插入到 startIndex
-                _handles.Insert(startIndex, handle);
-            }
 
             public void Add(IHandle handle)
             {
