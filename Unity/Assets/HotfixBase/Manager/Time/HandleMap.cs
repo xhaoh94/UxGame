@@ -76,7 +76,7 @@ namespace Ux
 
             readonly List<IHandle> _handles = new List<IHandle>();
             readonly Dictionary<long, IHandle> _keyHandle = new Dictionary<long, IHandle>();
-            readonly Dictionary<int, HashSet<long>> _tagkeys = new Dictionary<int, HashSet<long>>();
+            readonly Dictionary<object, HashSet<long>> _tagkeys = new Dictionary<object, HashSet<long>>();
 
 #if UNITY_EDITOR
             // 签名相关字典：用于重复检测和删除
@@ -155,11 +155,10 @@ namespace Ux
                         var tag = handle.Tag;
                         if (tag != null)
                         {
-                            var hashCode = RuntimeHelpers.GetHashCode(tag);
-                            if (_tagkeys.TryGetValue(hashCode, out var keys))
+                            if (_tagkeys.TryGetValue(tag, out var keys))
                             {
                                 keys.Remove(key);
-                                if (keys.Count == 0) _tagkeys.Remove(hashCode);
+                                if (keys.Count == 0) _tagkeys.Remove(tag);
                             }
                         }
 
@@ -237,11 +236,10 @@ namespace Ux
                 var tag = handle.Tag;
                 if (tag != null)
                 {
-                    int hashCode = RuntimeHelpers.GetHashCode(tag);
-                    if (!_tagkeys.TryGetValue(hashCode, out var keys))
+                    if (!_tagkeys.TryGetValue(tag, out var keys))
                     {
                         keys = new HashSet<long>();
-                        _tagkeys.Add(hashCode, keys);
+                        _tagkeys.Add(tag, keys);
                     }
 
                     keys.Add(handle.Key);
@@ -344,8 +342,7 @@ namespace Ux
                         }
                     }
                 }
-                int hashCode = RuntimeHelpers.GetHashCode(tag);
-                if (!_tagkeys.TryGetValue(hashCode, out var keys)) return;
+                if (!_tagkeys.TryGetValue(tag, out var keys)) return;
                 foreach (var key in keys)
                 {
                     Remove(key);

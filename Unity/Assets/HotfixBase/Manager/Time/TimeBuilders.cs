@@ -86,7 +86,7 @@ namespace Ux
     public class TimerBuilder : TimerBuildBase<TimerBuilder>, ITimerBuilder
     {
         Func<TimerBuilder, long> _create;
-        public Action Func { get; private set; } = null;
+        public Action Fn { get; private set; } = null;
 
 
         void ITimerBuilder.Init(float delay, bool isFrame, Func<TimerBuilder, long> create)
@@ -98,14 +98,14 @@ namespace Ux
         protected override void OnRelease()
         {
             _create = null;
-            Func = null;
+            Fn = null;
         }
 
         /// <summary>设置执行动作,设置标签（用于批量删除）</summary>        
         void ITimerBuilder.Do(object tag, Action action)
         {
             Tag = tag;
-            Func = action;
+            Fn = action;
         }
         /// <summary>构建并启动定时器</summary>
         public long Build()
@@ -122,7 +122,7 @@ namespace Ux
     public class TimerBuilder<A> : TimerBuildBase<TimerBuilder<A>>, ITimerBuilder<A>
     {
         Func<TimerBuilder<A>, long> _create;
-        public Action<A> Func { get; private set; } = null;
+        public Action<A> Fn { get; private set; } = null;
         public A Param { get; private set; } = default;
 
 
@@ -135,14 +135,14 @@ namespace Ux
         protected override void OnRelease()
         {
             _create = null;
-            Func = null;
+            Fn = null;
         }
 
         /// <summary>设置执行动作,设置标签（用于批量删除）</summary>        
         void ITimerBuilder<A>.Do(object tag, Action<A> action, A param)
         {
             Tag = tag;
-            Func = action;
+            Fn = action;
             Param = param;
         }
         /// <summary>构建并启动定时器</summary>
@@ -166,11 +166,13 @@ namespace Ux
         long TimeStamp { get; }
         bool IsLocalTime { get; }
         object Tag { get; }
+        float TriggerLoopGap { get; }
+        Action TriggerFn { get; }
     }
     public interface ITimeStampBuilder : ITimeStampBuilderBase
     {
         void Init(long timeStamp, Func<TimeStampBuilder, long> create);
-        void Do(object tag, Action action);        
+        void Do(object tag, Action action);
     }
     public interface ITimeStampBuilder<A> : ITimeStampBuilderBase
     {
@@ -183,14 +185,36 @@ namespace Ux
         public long TimeStamp { get; protected set; }
         public object Tag { get; protected set; }
         public bool IsLocalTime { get; private set; }
+        public float TriggerLoopGap { get; private set; }
+        public Action TriggerFn { get; private set; }
+
         /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
         public T UseLocalTime(bool isLocal = true)
         {
             IsLocalTime = isLocal;
             return (T)this;
         }
+
+        public T OnTrigger(float delay, Action action)
+        {
+            if (delay <= 0)
+            {
+                Log.Error("TriggerLoopGap 必须大于 0");
+                return (T)this;
+            }
+            if (action == null)
+            {
+                Log.Error("TriggerFn 不能为空");
+                return (T)this;
+            }
+            TriggerLoopGap = delay;
+            TriggerFn = action;
+            return (T)this;
+        }
         protected void Release()
         {
+            TriggerLoopGap = 0;
+            TriggerFn = null;
             TimeStamp = 0;
             IsLocalTime = false;
             Tag = null;
@@ -203,7 +227,7 @@ namespace Ux
 
     public class TimeStampBuilder : TimeStampBuilderBase<TimeStampBuilder>, ITimeStampBuilder
     {
-        public Action Func { get; private set; } = null;
+        public Action Fn { get; private set; } = null;
         Func<TimeStampBuilder, long> _create;
         void ITimeStampBuilder.Init(long timeStamp, Func<TimeStampBuilder, long> create)
         {
@@ -213,14 +237,14 @@ namespace Ux
         protected override void OnRelease()
         {
             _create = null;
-            Func = null;
+            Fn = null;
         }
 
         /// <summary>设置执行动作</summary>
         void ITimeStampBuilder.Do(object tag, Action action)
         {
             Tag = tag;
-            Func = action;
+            Fn = action;
         }
 
         /// <summary>构建并启动时间戳定时器</summary>
@@ -237,7 +261,7 @@ namespace Ux
 
     public class TimeStampBuilder<A> : TimeStampBuilderBase<TimeStampBuilder<A>>, ITimeStampBuilder<A>
     {
-        public Action<A> Func { get; private set; } = null;
+        public Action<A> Fn { get; private set; } = null;
         public A Param { get; private set; }
         Func<TimeStampBuilder<A>, long> _create;
         void ITimeStampBuilder<A>.Init(long timeStamp, Func<TimeStampBuilder<A>, long> create)
@@ -248,14 +272,14 @@ namespace Ux
         protected override void OnRelease()
         {
             _create = null;
-            Func = null;
+            Fn = null;
         }
 
         /// <summary>设置执行动作</summary>
         void ITimeStampBuilder<A>.Do(object tag, Action<A> action, A param)
         {
             Tag = tag;
-            Func = action;
+            Fn = action;
             Param = param;
         }
 
@@ -313,7 +337,7 @@ namespace Ux
 
     public class CronBuilder : CronBuilderBase<CronBuilder>, ICronBuilder
     {
-        public Action Func { get; private set; } = null;
+        public Action Fn { get; private set; } = null;
         Func<CronBuilder, long> _create;
         void ICronBuilder.Init(string cronExpression, Func<CronBuilder, long> create)
         {
@@ -323,14 +347,14 @@ namespace Ux
         protected override void OnRelease()
         {
             _create = null;
-            Func = null;
+            Fn = null;
         }
 
         /// <summary>设置执行动作</summary>
         void ICronBuilder.Do(object tag, Action action)
         {
             Tag = tag;
-            Func = action;
+            Fn = action;
         }
 
         /// <summary>构建并启动Cron定时器</summary>

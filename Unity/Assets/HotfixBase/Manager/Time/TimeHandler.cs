@@ -305,12 +305,13 @@ namespace Ux
 
         public interface ITimeStampHandle : IHandle
         {
-            void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime);
+            void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime,int triggerKey);
         }
 
         public class TimeStampHandle : HandleBase, ITimeStampHandle
         {
-            private bool isLocalTime;
+            private bool _isLocalTime;
+            private int _triggerKey;
             public long TimeStamp { get; private set; }
 
 
@@ -318,12 +319,13 @@ namespace Ux
             public string TimeStampDesc { get; private set; }
 #endif
 
-            public void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime)
+            public void Init(IHandleExe exe, long key, long timeStamp, bool isLocalTime,int triggerKey)
             {
-                Exe = _exe;
-                Key = _key;
-                TimeStamp = _timeStamp;
-                isLocalTime = _isLocalTime;
+                Exe = exe;
+                Key = key;
+                TimeStamp = timeStamp;
+                _isLocalTime = isLocalTime;
+                _triggerKey = triggerKey;
 #if UNITY_EDITOR
                 TimeStampDesc = TimerHelper.TimeStampToString(TimeStamp);
 #endif
@@ -346,14 +348,18 @@ namespace Ux
                     return RunStatus.None;
                 }
 
-                if ((isLocalTime ? Ins.LocalTime : Ins.ServerTime).TimeStamp < TimeStamp)
+                if ((_isLocalTime ? Ins.LocalTime : Ins.ServerTime).TimeStamp < TimeStamp)
                     return RunStatus.Wait;
                 Exe?.Run();
                 if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
                 {
                     return RunStatus.None;
                 }
-
+                if (_triggerKey > 0)
+                {
+                    _timer.Remove(_triggerKey);
+                    _triggerKey = 0;
+                }
                 return RunStatus.Done;
             }
 
@@ -361,7 +367,12 @@ namespace Ux
             protected override void OnRelease()
             {
                 TimeStamp = long.MaxValue;
-                isLocalTime = false;
+                _isLocalTime = false;
+                 if (_triggerKey > 0)
+                {
+                    _timer.Remove(_triggerKey);                    
+                    _triggerKey = 0;
+                }
             }
         }
 

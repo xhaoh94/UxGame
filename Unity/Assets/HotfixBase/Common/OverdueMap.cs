@@ -59,7 +59,7 @@ namespace Ux
             _caches.Clear();
             _timeouts.Clear();
             if (_timeoutKey > 0)
-            {
+            {                
                 TimeMgr.Ins.RemoveKey(_timeoutKey);
                 _timeoutKey = 0;
             }

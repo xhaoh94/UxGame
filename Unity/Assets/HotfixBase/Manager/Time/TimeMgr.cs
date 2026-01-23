@@ -23,7 +23,7 @@ namespace Ux
         {
             LocalTime = new LocalTime();
             ServerTime = new ServerTime();
-            GameMethod.Update += _Update;            
+            GameMethod.Update += _Update;
             GameMethod.LowMemory += _OnLowMemory;
         }
         public void Release()
@@ -79,7 +79,7 @@ namespace Ux
             // 检查是否重复注册
             if (dic.TryGetKeyBySignature(sign, out key))
             {
-                Log.Warning($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
+                Log.Error($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
                 return default;
             }
 #endif
@@ -87,21 +87,12 @@ namespace Ux
             // 分配全局唯一自增 ID
             key = IDGenerater.GenerateId();
 
-            var handle = Pool.Get<T>();
-            
 #if UNITY_EDITOR
             // 注册签名映射
             dic.RegisterSignature(sign, key);
 #endif
+            var handle = Pool.Get<T>();
             return (T)handle;
-        }
-
-        public void RemoveKey(long key)
-        {
-            _timer.Remove(key);
-            _frame.Remove(key);
-            _timeStamp.Remove(key);
-            _cron.Remove(key);
         }
 
         public void RemoveTag(object tag)
@@ -130,25 +121,25 @@ namespace Ux
         /// <summary>时间定时器内部创建方法</summary>
         private long CreateTimer(TimerBuilder builder)
         {
-            if (!CheckCreate(builder.Func, builder.Delay)) return 0;
+            if (!CheckCreate(builder.Fn, builder.Delay)) return 0;
             var dic = builder.IsFrame ? _frame : _timer;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, builder.Func, builder.Tag);
+            var handle = CreateHandle<TimeHandle>(out var key, dic, builder.Fn, builder.Tag);
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
-            exe.Init(builder.Tag, builder.Func);
+            exe.Init(builder.Tag, builder.Fn);
 
             handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
-            dic.Add(handle);          
+            dic.Add(handle);
             return key;
         }
         private long CreateTimer<A>(TimerBuilder<A> builder)
         {
-            if (!CheckCreate(builder.Func, builder.Delay)) return 0;
+            if (!CheckCreate(builder.Fn, builder.Delay)) return 0;
             var dic = builder.IsFrame ? _frame : _timer;
-            var handle = CreateHandle<TimeHandle>(out var key, dic, builder.Func, builder.Tag);
+            var handle = CreateHandle<TimeHandle>(out var key, dic, builder.Fn, builder.Tag);
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(builder.Tag, builder.Func, builder.Param);
+            exe.Init(builder.Tag, builder.Fn, builder.Param);
             handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
             dic.Add(handle);
             return key;
@@ -195,6 +186,15 @@ namespace Ux
             return builder;
         }
 
+        public void RemoveTimer(long key)
+        {
+            _timer.Remove(key);
+        }
+        public void RemoveFrame(long key)
+        {
+            _frame.Remove(key);
+        }
+
 
         #endregion
 
@@ -202,25 +202,35 @@ namespace Ux
 
         private long CreateTimeStamp(TimeStampBuilder builder)
         {
-            if (builder.Func == null) return 0;
+            if (builder.Fn == null) return 0;
             if ((builder.IsLocalTime ? LocalTime : ServerTime).TimeStamp > builder.TimeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Func, builder.Tag);
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Fn, builder.Tag);
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
-            exe.Init(builder.Tag, builder.Func);
-            handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime);
+            exe.Init(builder.Tag, builder.Fn);
+            var triggerKey = 0;
+            if (builder.TriggerLoopGap > 0 && builder.TriggerFn != null)
+            {
+                triggerKey = Timer(builder.TriggerLoopGap, builder.Tag, builder.TriggerFn).Loop().Build();
+            }
+            handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime, triggerKey);
             _timeStamp.Add(handle);
             return key;
         }
         private long CreateTimeStamp<A>(TimeStampBuilder<A> builder)
         {
-            if (builder.Func == null) return 0;
+            if (builder.Fn == null) return 0;
             if ((builder.IsLocalTime ? LocalTime : ServerTime).TimeStamp > builder.TimeStamp) return 0;
-            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Func, builder.Tag);
+            var handle = CreateHandle<TimeStampHandle>(out var key, _timeStamp, builder.Fn, builder.Tag);
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(builder.Tag, builder.Func, builder.Param);
-            handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime);
+            exe.Init(builder.Tag, builder.Fn, builder.Param);
+            var triggerKey = 0;
+            if (builder.TriggerLoopGap > 0 && builder.TriggerFn != null)
+            {
+                triggerKey = Timer(builder.TriggerLoopGap, builder.Tag, builder.TriggerFn).Loop().Build();
+            }
+            handle.Init(exe, key, builder.TimeStamp, builder.IsLocalTime, triggerKey);
             _timeStamp.Add(handle);
             return key;
         }
@@ -245,6 +255,11 @@ namespace Ux
             }
             return builder;
         }
+        public void RemoveTimeStamp(long key)
+        {
+            _timeStamp.Remove(key);
+        }
+
 
 
         #endregion TimeStamp
@@ -252,11 +267,11 @@ namespace Ux
         #region Cron表达式                
         private long CreateCron(CronBuilder builder)
         {
-            if (builder.Func == null) return 0;
-            var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Func, builder.Tag);
+            if (builder.Fn == null) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Fn, builder.Tag);
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
-            exe.Init(builder.Tag, builder.Func);
+            exe.Init(builder.Tag, builder.Fn);
             if (!handle.Init(exe, key, builder.CronExpression, builder.IsLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -269,11 +284,11 @@ namespace Ux
         }
         private long CreateCron<A>(CronBuilder<A> builder)
         {
-            if (builder.Func == null) return 0;
-            var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Func, builder.Tag);
+            if (builder.Fn == null) return 0;
+            var handle = CreateHandle<CronHandle>(out var key, _cron, builder.Fn, builder.Tag);
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
-            exe.Init(builder.Tag, builder.Func, builder.Param);
+            exe.Init(builder.Tag, builder.Fn, builder.Param);
             if (!handle.Init(exe, key, builder.CronExpression, builder.IsLocalTime))
             {
                 handle.Status = Status.WaitDel;
@@ -304,6 +319,10 @@ namespace Ux
                 initBuilder.Do(tag, action, param);
             }
             return builder;
+        }
+        public void RemoveCron(long key)
+        {
+            _cron.Remove(key);
         }
         #endregion
     }
