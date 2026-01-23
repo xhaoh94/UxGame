@@ -193,7 +193,7 @@ namespace Ux
                 // 检查是否重复注册
                 if (_signToKey.TryGetValue(signature, out var existingKey))
                 {
-                    Log.Warning($"事件{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
+                    Log.Error($"事件{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
                     return 0;
                 }
                 
