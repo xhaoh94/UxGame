@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -88,8 +88,7 @@ namespace Ux
                     }
                 }
 
-                int hashCode = RuntimeHelpers.GetHashCode(tag);
-                if (!_tagKeys.TryGetValue(hashCode, out var keys)) return;
+                if (!_tagKeys.TryGetValue(tag, out var keys)) return;
                 RemoveByKey(keys);
             }
         }

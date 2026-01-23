@@ -83,7 +83,7 @@ namespace Ux
             /// <summary>
             /// 标签对应的IEvent
             /// </summary>
-            private readonly Dictionary<int, HashSet<long>> _tagKeys = new();
+            private readonly Dictionary<object, HashSet<long>> _tagKeys = new();
             /// <summary>
             /// 动作对应的IEvent
             /// </summary>
@@ -185,8 +185,8 @@ namespace Ux
                 // 构造签名用于重复检测
                 EventSignature signature = new EventSignature
                 {
-                    ActionHash = RuntimeHelpers.GetHashCode(action),
-                    TagHash = tag == null ? 0 : RuntimeHelpers.GetHashCode(tag),
+                    Action = action,
+                    Tag = tag,
                     EType = eType
                 };
                 
@@ -241,11 +241,10 @@ namespace Ux
                         var target = evt.Tag;
                         if (target != null)
                         {
-                            int hashCode = RuntimeHelpers.GetHashCode(target);
-                            if (_tagKeys.TryGetValue(hashCode, out var tKeys))
+                            if (_tagKeys.TryGetValue(target, out var tKeys))
                             {
                                 tKeys.Remove(key);
-                                if (tKeys.Count == 0) _tagKeys.Remove(hashCode);
+                                if (tKeys.Count == 0) _tagKeys.Remove(target);
                             }
                         }
                         
@@ -306,11 +305,10 @@ namespace Ux
                         var target = evt.Tag;
                         if (target != null)
                         {
-                            int hashCode = RuntimeHelpers.GetHashCode(target);
-                            if (!_tagKeys.TryGetValue(hashCode, out var tKeys))
+                            if (!_tagKeys.TryGetValue(target, out var tKeys))
                             {
                                 tKeys = new();
-                                _tagKeys.Add(hashCode, tKeys);
+                                _tagKeys.Add(target, tKeys);
                             }
                             tKeys.Add(key);
                         }
