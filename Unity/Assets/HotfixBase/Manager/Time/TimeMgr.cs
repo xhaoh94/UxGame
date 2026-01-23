@@ -67,30 +67,9 @@ namespace Ux
                 return default;
             }
 
-#if UNITY_EDITOR
-            // 构造签名用于重复检测
-            var sign = new TimerSignature
-            {
-                ActionHash = RuntimeHelpers.GetHashCode(action),
-                TagHash = tag != null ? RuntimeHelpers.GetHashCode(tag) : 0,
-                TimeType = dic.TimeType
-            };
-
-            // 检查是否重复注册
-            if (dic.TryGetKeyBySignature(sign, out key))
-            {
-                Log.Error($"定时器{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
-                return default;
-            }
-#endif
-
             // 分配全局唯一自增 ID
             key = IDGenerater.GenerateId();
 
-#if UNITY_EDITOR
-            // 注册签名映射
-            dic.RegisterSignature(sign, key);
-#endif
             var handle = Pool.Get<T>();
             return (T)handle;
         }

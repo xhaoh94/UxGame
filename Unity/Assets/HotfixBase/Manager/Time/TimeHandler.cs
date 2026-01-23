@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 #endif
 using System;
 
@@ -436,7 +436,9 @@ namespace Ux
             {
                 if (compare is TimeHandle handle)
                 {
-                    return ExeTime.CompareTo(handle.ExeTime);
+                    int result = ExeTime.CompareTo(handle.ExeTime);
+                    if (result == 0) return Key.CompareTo(handle.Key);
+                    return result;
                 }
 
                 return 0;
