@@ -12,14 +12,14 @@ namespace Ux
         /// <summary>事件签名，用于重复注册检测</summary>
         public struct EventSignature : System.IEquatable<EventSignature>
         {
-            public int ActionHash;
-            public int TagHash;
+            public Delegate Action;
+            public object Tag;
             public int EType;
 
             public bool Equals(EventSignature other)
             {
-                return ActionHash == other.ActionHash && 
-                       TagHash == other.TagHash && 
+                return Action == other.Action &&
+                       Tag == other.Tag &&
                        EType == other.EType;
             }
 
@@ -33,8 +33,8 @@ namespace Ux
                 unchecked
                 {
                     int hash = 17;
-                    hash = hash * 31 + ActionHash;
-                    hash = hash * 31 + TagHash;
+                    hash = hash * 31 + (Action != null ? RuntimeHelpers.GetHashCode(Action) : 0);
+                    hash = hash * 31 + (Tag != null ? RuntimeHelpers.GetHashCode(Tag) : 0);
                     hash = hash * 31 + EType;
                     return hash;
                 }
@@ -70,11 +70,11 @@ namespace Ux
             //每帧执行数量-防止卡顿，一帧执行
             int _exeLimit = 200;
             int _exeCnt = 0;
-        
+
             // 签名相关字典：用于重复检测和删除
             private readonly Dictionary<EventSignature, long> _signToKey = new();
             private readonly Dictionary<long, EventSignature> _keyToSign = new();
-            
+
             private readonly Dictionary<long, IEvent> _keyEvent = new();
             /// <summary>
             /// 事件ID对应的IEvent
@@ -88,7 +88,10 @@ namespace Ux
             /// 动作对应的IEvent
             /// </summary>
             private readonly Dictionary<int, HashSet<long>> _actionKeys = new();
-
+            private IEventExe _lastExe;
+            /// <summary>
+            /// 待执行事件队列
+            /// </summary>
             private readonly Queue<IEventExe> _waitExes = new();
             private readonly List<IEvent> _waitAdds = new();
             private readonly List<long> _waitDels = new();
@@ -189,21 +192,21 @@ namespace Ux
                     Tag = tag,
                     EType = eType
                 };
-                
+
                 // 检查是否重复注册
                 if (_signToKey.TryGetValue(signature, out var existingKey))
                 {
                     Log.Error($"事件{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
                     return 0;
                 }
-                
+
                 // 分配全局唯一自增 ID
                 long key = IDGenerater.GenerateId();
-                
+
                 // 注册签名映射
                 _signToKey[signature] = key;
                 _keyToSign[key] = signature;
-                
+
                 return key;
             }
 
@@ -247,7 +250,7 @@ namespace Ux
                                 if (tKeys.Count == 0) _tagKeys.Remove(target);
                             }
                         }
-                        
+
                         // 清理签名映射
                         if (_keyToSign.TryGetValue(key, out var sign))
                         {
@@ -320,6 +323,13 @@ namespace Ux
                 while (_waitExes.Count > 0 && _exeCnt < _exeLimit)
                 {
                     var exe = _waitExes.Dequeue();
+                    if (exe.SkipInQueue)
+                    {
+                        // 跳过执行，直接回收
+                        exe.Reset();
+                        Pool.Push(exe);
+                        continue;
+                    }
                     try
                     {
                         exe.Exe(this, ref _exeCnt);
@@ -342,7 +352,7 @@ namespace Ux
                 if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
                 var evtData = _waitAdds.Find(x => x.Key == key);
                 if (evtData != null) return (T)evtData;
-                
+
                 evtData = Pool.Get<T>();
                 _waitAdds.Add(evtData);
                 return (T)evtData;
@@ -411,6 +421,7 @@ namespace Ux
                 var exe = Pool.Get<EventExe>();
                 exe.Init(eType);
                 _waitExes.Enqueue(exe);
+                _lastExe = exe;
                 return this;
             }
 
@@ -419,6 +430,7 @@ namespace Ux
                 var exe = Pool.Get<EventExe<A>>();
                 exe.Init(eType, a);
                 _waitExes.Enqueue(exe);
+                _lastExe = exe;
                 return this;
             }
 
@@ -427,6 +439,7 @@ namespace Ux
                 var exe = Pool.Get<EventExe<A, B>>();
                 exe.Init(eType, a, b);
                 _waitExes.Enqueue(exe);
+                _lastExe = exe;
                 return this;
             }
 
@@ -435,15 +448,30 @@ namespace Ux
                 var exe = Pool.Get<EventExe<A, B, C>>();
                 exe.Init(eType, a, b, c);
                 _waitExes.Enqueue(exe);
+                _lastExe = exe;
                 return this;
             }
             //立即执行
             public void Immediate()
             {
+                if (_lastExe == null)
+                {
+                    Log.Error("立即执行事件失败，没有可立即执行事件");
+                    return;
+                }
+                _exeCnt = 0;
                 var tmp = _exeLimit;
                 _exeLimit = int.MaxValue;
-                _Update();
+                try
+                {
+                    _lastExe.Exe(this, ref _exeCnt);
+                }
+                finally
+                {
+                    _lastExe.SkipInQueue = true;
+                }
                 _exeLimit = tmp;
+                _lastExe = null;
             }
         }
     }

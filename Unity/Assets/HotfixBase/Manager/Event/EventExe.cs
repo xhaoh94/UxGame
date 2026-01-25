@@ -13,17 +13,21 @@ namespace Ux
             {
                 void Exe(EventSystem system, ref int exeCnt);
                 void Reset();
+                bool SkipInQueue {get;set;}
             }
 
             class EventExe : IEventExe
             {
+                public bool SkipInQueue {get;set;} = false;
                 int _eType;
                 public void Init(int eType)
                 {
+                    SkipInQueue = false;
                     _eType = eType;
                 }
                 public void Reset()
                 {
+                    SkipInQueue = false;
                     _eType = 0;
                 }
 
@@ -49,16 +53,19 @@ namespace Ux
 
             class EventExe<A> : IEventExe
             {
+                public bool SkipInQueue {get;set;} = false;
                 int _eType;
                 A _a;
 
                 public void Init(int _eType, A _a)
                 {
+                    SkipInQueue = false;
                     this._eType = _eType;
                     this._a = _a;
                 }
                 public void Reset()
                 {
+                    SkipInQueue = false;
                     _eType = 0;
                     _a = default;
                 }
@@ -85,12 +92,14 @@ namespace Ux
 
             class EventExe<A, B> : IEventExe
             {
+                public bool SkipInQueue {get;set;} = false;
                 int _eType;
                 A _a;
                 B _b;
 
                 public void Init(int _eType, A _a, B _b)
                 {
+                    SkipInQueue = false;
                     this._eType = _eType;
                     this._a = _a;
                     this._b = _b;
@@ -98,6 +107,7 @@ namespace Ux
 
                 public void Reset()
                 {
+                    SkipInQueue = false;
                     _eType = 0;
                     _a = default;
                     _b = default;
@@ -125,6 +135,7 @@ namespace Ux
 
             class EventExe<A, B, C> : IEventExe
             {
+                public bool SkipInQueue {get;set;} = false;
                 int _eType;
                 A _a;
                 B _b;
@@ -132,6 +143,7 @@ namespace Ux
 
                 public void Init(int eType, A a, B b, C c)
                 {
+                    SkipInQueue = false;
                     _eType = eType;
                     _a = a;
                     _b = b;
@@ -140,6 +152,7 @@ namespace Ux
 
                 public void Reset()
                 {
+                    SkipInQueue = false;
                     _eType = 0;
                     _a = default;
                     _b = default;

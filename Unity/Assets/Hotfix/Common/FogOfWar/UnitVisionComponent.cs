@@ -55,7 +55,7 @@ namespace Ux
             GrassId = 0;
         }
 
-        void UpdateUnit()
+        public void UpdateUnit()
         {
             var ins = FogOfWarMgr.Ins;
             if (ins.IsInit)
