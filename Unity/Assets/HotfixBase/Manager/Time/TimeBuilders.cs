@@ -3,70 +3,78 @@ namespace Ux
 {
     #region TimerBuilder
 
-    public interface ITimerBuildBase
+    /// <summary>定时器流式接口 - 仅暴露链式方法</summary>
+    public interface ITimerFluent
     {
-        float Delay { get; }
-        int Count { get; }
-        float First { get; }
-        object Tag { get; }
-        Action Complete { get; }
-        Action<object> CompleteWithParam { get; }
-        object CompleteParam { get; }
-        bool IsFrame { get; }
+        ITimerFluent Loop();
+        /// <summary>设置重复次数（小于等于0则循环）</summary>
+        ITimerFluent Repeat(int count);
+        /// <summary>设置首次触发延时</summary>
+        ITimerFluent FirstDelay(float seconds);
+        /// <summary>设置完成回调</summary>
+        ITimerFluent OnComplete(Action complete);
+        /// <summary>设置带参数的完成回调</summary>
+        ITimerFluent OnComplete(Action<object> complete, object param);
+        /// <summary>构建并启动定时器</summary>
+        long Build();
     }
-    public interface ITimerBuilder : ITimerBuildBase
+
+    internal interface ITimerBuilder
     {
         void Init(float delay, bool isFrame, Func<TimerBuilder, long> create);
         void Do(object tag, Action action);
     }
-    public interface ITimerBuilder<A> : ITimerBuildBase
+    internal interface ITimerBuilder<A>
     {
         void Init(float delay, bool isFrame, Func<TimerBuilder<A>, long> action);
         void Do(object tag, Action<A> action, A param);
     }
 
-    public abstract class TimerBuildBase<T> : ITimerBuildBase where T : TimerBuildBase<T>
+    public abstract class TimerBuildBase<T> : ITimerFluent where T : TimerBuildBase<T>
     {
-        public float Delay { get; protected set; }
-        public int Count { get; private set; } = 1;
-        public float First { get; private set; } = -1;
-        public object Tag { get; protected set; }
-        public Action Complete { get; private set; }
-        public Action<object> CompleteWithParam { get; private set; }
-        public object CompleteParam { get; private set; }
-        public bool IsFrame { get; protected set; }
+        internal float Delay { get; set; }
+        internal int Count { get; private set; } = 1;
+        internal float First { get; private set; } = -1;
+        internal object Tag { get; set; }
+        internal Action Complete { get; private set; }
+        internal Action<object> CompleteWithParam { get; private set; }
+        internal object CompleteParam { get; private set; }
+        internal bool IsFrame { get; set; }
 
-        public T Loop()
+        public ITimerFluent Loop()
         {
             return Repeat(0);
         }
         /// <summary>设置重复次数（小于等于0则循环）</summary>
-        public T Repeat(int count)
+        public ITimerFluent Repeat(int count)
         {
             Count = count;
-            return (T)this;
+            return this;
         }
         /// <summary>设置首次触发延时</summary>
-        public T FirstDelay(float seconds)
+        public ITimerFluent FirstDelay(float seconds)
         {
             First = seconds;
-            return (T)this;
+            return this;
         }
 
         /// <summary>设置完成回调</summary>
-        public T OnComplete(Action complete)
+        public ITimerFluent OnComplete(Action complete)
         {
             Complete = complete;
-            return (T)this;
+            return this;
         }
 
         /// <summary>设置带参数的完成回调</summary>
-        public T OnComplete(Action<object> complete, object param)
+        public ITimerFluent OnComplete(Action<object> complete, object param)
         {
             CompleteWithParam = complete;
             CompleteParam = param;
-            return (T)this;
+            return this;
         }
+
+        /// <summary>构建并启动定时器</summary>
+        public abstract long Build();
 
         protected void Release()
         {
@@ -86,7 +94,7 @@ namespace Ux
     public class TimerBuilder : TimerBuildBase<TimerBuilder>, ITimerBuilder
     {
         Func<TimerBuilder, long> _create;
-        public Action Fn { get; private set; } = null;
+        internal Action Fn { get; private set; } = null;
 
 
         void ITimerBuilder.Init(float delay, bool isFrame, Func<TimerBuilder, long> create)
@@ -108,7 +116,7 @@ namespace Ux
             Fn = action;
         }
         /// <summary>构建并启动定时器</summary>
-        public long Build()
+        public override long Build()
         {
             var key = _create(this);
             Release();
@@ -122,8 +130,8 @@ namespace Ux
     public class TimerBuilder<A> : TimerBuildBase<TimerBuilder<A>>, ITimerBuilder<A>
     {
         Func<TimerBuilder<A>, long> _create;
-        public Action<A> Fn { get; private set; } = null;
-        public A Param { get; private set; } = default;
+        internal Action<A> Fn { get; private set; } = null;
+        internal A Param { get; private set; } = default;
 
 
         void ITimerBuilder<A>.Init(float delay, bool isFrame, Func<TimerBuilder<A>, long> action)
@@ -146,7 +154,7 @@ namespace Ux
             Param = param;
         }
         /// <summary>构建并启动定时器</summary>
-        public long Build()
+        public override long Build()
         {
             var key = _create(this);
             Release();
@@ -161,56 +169,63 @@ namespace Ux
     #endregion
 
     #region TimeStampBuilder
-    public interface ITimeStampBuilderBase
+
+    /// <summary>时间戳定时器流式接口 - 仅暴露链式方法</summary>
+    public interface ITimeStampFluent
     {
-        long TimeStamp { get; }
-        bool IsLocalTime { get; }
-        object Tag { get; }
-        float TriggerLoopGap { get; }
-        Action TriggerFn { get; }
+        /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
+        ITimeStampFluent UseLocalTime(bool isLocal = true);
+        ITimeStampFluent OnTrigger(float delay, Action action);
+        /// <summary>构建并启动时间戳定时器</summary>
+        long Build();
     }
-    public interface ITimeStampBuilder : ITimeStampBuilderBase
+
+    internal interface ITimeStampBuilder
     {
         void Init(long timeStamp, Func<TimeStampBuilder, long> create);
         void Do(object tag, Action action);
     }
-    public interface ITimeStampBuilder<A> : ITimeStampBuilderBase
+    internal interface ITimeStampBuilder<A>
     {
         void Init(long timeStamp, Func<TimeStampBuilder<A>, long> create);
         void Do(object tag, Action<A> action, A param);
     }
 
-    public abstract class TimeStampBuilderBase<T> : ITimeStampBuilderBase where T : TimeStampBuilderBase<T>
+    public abstract class TimeStampBuilderBase<T> : ITimeStampFluent where T : TimeStampBuilderBase<T>
     {
-        public long TimeStamp { get; protected set; }
-        public object Tag { get; protected set; }
-        public bool IsLocalTime { get; private set; }
-        public float TriggerLoopGap { get; private set; }
-        public Action TriggerFn { get; private set; }
+        internal long TimeStamp { get; set; }
+        internal object Tag { get; set; }
+        internal bool IsLocalTime { get; private set; }
+        internal float TriggerLoopGap { get; private set; }
+        internal Action TriggerFn { get; private set; }
 
         /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
-        public T UseLocalTime(bool isLocal = true)
+        public ITimeStampFluent UseLocalTime(bool isLocal = true)
         {
             IsLocalTime = isLocal;
-            return (T)this;
+            return this;
         }
 
-        public T OnTrigger(float delay, Action action)
+        public ITimeStampFluent OnTrigger(float delay, Action action)
         {
             if (delay <= 0)
             {
                 Log.Error("TriggerLoopGap 必须大于 0");
-                return (T)this;
+                return this;
             }
             if (action == null)
             {
                 Log.Error("TriggerFn 不能为空");
-                return (T)this;
+                return this;
             }
             TriggerLoopGap = delay;
             TriggerFn = action;
-            return (T)this;
+            return this;
         }
+
+        /// <summary>构建并启动时间戳定时器</summary>
+        public abstract long Build();
+
         protected void Release()
         {
             TriggerLoopGap = 0;
@@ -227,7 +242,7 @@ namespace Ux
 
     public class TimeStampBuilder : TimeStampBuilderBase<TimeStampBuilder>, ITimeStampBuilder
     {
-        public Action Fn { get; private set; } = null;
+        internal Action Fn { get; private set; } = null;
         Func<TimeStampBuilder, long> _create;
         void ITimeStampBuilder.Init(long timeStamp, Func<TimeStampBuilder, long> create)
         {
@@ -248,7 +263,7 @@ namespace Ux
         }
 
         /// <summary>构建并启动时间戳定时器</summary>
-        public long Build()
+        public override long Build()
         {
             var key = _create(this);
             Release();
@@ -261,8 +276,8 @@ namespace Ux
 
     public class TimeStampBuilder<A> : TimeStampBuilderBase<TimeStampBuilder<A>>, ITimeStampBuilder<A>
     {
-        public Action<A> Fn { get; private set; } = null;
-        public A Param { get; private set; }
+        internal Action<A> Fn { get; private set; } = null;
+        internal A Param { get; private set; }
         Func<TimeStampBuilder<A>, long> _create;
         void ITimeStampBuilder<A>.Init(long timeStamp, Func<TimeStampBuilder<A>, long> create)
         {
@@ -284,7 +299,7 @@ namespace Ux
         }
 
         /// <summary>构建并启动时间戳定时器</summary>
-        public long Build()
+        public override long Build()
         {
             var key = _create(this);
             Release();
@@ -298,33 +313,41 @@ namespace Ux
     #endregion
 
     #region CronBuilder
-    public interface ICronBuilderBase
+
+    /// <summary>Cron定时器流式接口 - 仅暴露链式方法</summary>
+    public interface ICronFluent
     {
-        string CronExpression { get; }
-        bool IsLocalTime { get; }
-        object Tag { get; }
+        /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
+        ICronFluent UseLocalTime(bool isLocal = true);
+        /// <summary>构建并启动Cron定时器</summary>
+        long Build();
     }
-    public interface ICronBuilder : ICronBuilderBase
+
+    internal interface ICronBuilder
     {
         void Init(string cronExpression, Func<CronBuilder, long> create);
         void Do(object tag, Action action);
     }
-    public interface ICronBuilder<A> : ICronBuilderBase
+    internal interface ICronBuilder<A>
     {
         void Init(string cronExpression, Func<CronBuilder<A>, long> create);
         void Do(object tag, Action<A> action, A param);
     }
-    public abstract class CronBuilderBase<T> : ICronBuilderBase where T : CronBuilderBase<T>
+    public abstract class CronBuilderBase<T> : ICronFluent where T : CronBuilderBase<T>
     {
-        public string CronExpression { get; protected set; }
-        public object Tag { get; protected set; }
-        public bool IsLocalTime { get; private set; }
+        internal string CronExpression { get; set; }
+        internal object Tag { get; set; }
+        internal bool IsLocalTime { get; private set; }
         /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
-        public T UseLocalTime(bool isLocal = true)
+        public ICronFluent UseLocalTime(bool isLocal = true)
         {
             IsLocalTime = isLocal;
-            return (T)this;
+            return this;
         }
+
+        /// <summary>构建并启动Cron定时器</summary>
+        public abstract long Build();
+
         protected void Release()
         {
             CronExpression = null;
@@ -337,7 +360,7 @@ namespace Ux
 
     public class CronBuilder : CronBuilderBase<CronBuilder>, ICronBuilder
     {
-        public Action Fn { get; private set; } = null;
+        internal Action Fn { get; private set; } = null;
         Func<CronBuilder, long> _create;
         void ICronBuilder.Init(string cronExpression, Func<CronBuilder, long> create)
         {
@@ -358,7 +381,7 @@ namespace Ux
         }
 
         /// <summary>构建并启动Cron定时器</summary>
-        public long Build()
+        public override long Build()
         {
             var key = _create(this);
             Release();
@@ -371,8 +394,8 @@ namespace Ux
 
     public class CronBuilder<A> : CronBuilderBase<CronBuilder<A>>, ICronBuilder<A>
     {
-        public Action<A> Fn { get; private set; } = null;
-        public A Param { get; private set; }
+        internal Action<A> Fn { get; private set; } = null;
+        internal A Param { get; private set; }
         Func<CronBuilder<A>, long> _create;
         void ICronBuilder<A>.Init(string cronExpression, Func<CronBuilder<A>, long> create)
         {
@@ -394,7 +417,7 @@ namespace Ux
         }
 
         /// <summary>构建并启动Cron定时器</summary>
-        public long Build()
+        public override long Build()
         {
             var key = _create(this);
             Release();

@@ -124,7 +124,7 @@ namespace Ux
             return key;
         }
 
-        public TimerBuilder Timer(float seconds, object tag, Action action)
+        public ITimerFluent Timer(float seconds, object tag, Action action)
         {
             var builder = Pool.Get<TimerBuilder>();
             if (builder is ITimerBuilder initBuilder)
@@ -134,7 +134,7 @@ namespace Ux
             }
             return builder;
         }
-        public TimerBuilder<A> Timer<A>(float seconds, object tag, Action<A> action, A param)
+        public ITimerFluent Timer<A>(float seconds, object tag, Action<A> action, A param)
         {
             var builder = Pool.Get<TimerBuilder<A>>();
             if (builder is ITimerBuilder<A> initBuilder)
@@ -144,7 +144,7 @@ namespace Ux
             }
             return builder;
         }
-        public TimerBuilder Frame(float frame, object tag, Action action)
+        public ITimerFluent Frame(float frame, object tag, Action action)
         {
             var builder = Pool.Get<TimerBuilder>();
             if (builder is ITimerBuilder initBuilder)
@@ -154,7 +154,7 @@ namespace Ux
             }
             return builder;
         }
-        public TimerBuilder<A> Frame<A>(float frame, object tag, Action<A> action, A param)
+        public ITimerFluent Frame<A>(float frame, object tag, Action<A> action, A param)
         {
             var builder = Pool.Get<TimerBuilder<A>>();
             if (builder is ITimerBuilder<A> initBuilder)
@@ -214,7 +214,7 @@ namespace Ux
             return key;
         }
 
-        public TimeStampBuilder TimeStamp(DateTime dt, object tag, Action action)
+        public ITimeStampFluent TimeStamp(DateTime dt, object tag, Action action)
         {
             var builder = Pool.Get<TimeStampBuilder>();
             if (builder is ITimeStampBuilder initBuilder)
@@ -224,7 +224,7 @@ namespace Ux
             }
             return builder;
         }
-        public TimeStampBuilder<A> TimeStamp<A>(DateTime dt, object tag, Action<A> action, A param)
+        public ITimeStampFluent TimeStamp<A>(DateTime dt, object tag, Action<A> action, A param)
         {
             var builder = Pool.Get<TimeStampBuilder<A>>();
             if (builder is ITimeStampBuilder<A> initBuilder)
@@ -279,7 +279,7 @@ namespace Ux
             return key;
         }
 
-        public CronBuilder Cron(string cron, object tag, Action action)
+        public ICronFluent Cron(string cron, object tag, Action action)
         {
             var builder = Pool.Get<CronBuilder>();
             if (builder is ICronBuilder initBuilder)
@@ -289,7 +289,7 @@ namespace Ux
             }
             return builder;
         }
-        public CronBuilder<A> Cron<A>(string cron, object tag, Action<A> action, A param)
+        public ICronFluent Cron<A>(string cron, object tag, Action<A> action, A param)
         {
             var builder = Pool.Get<CronBuilder<A>>();
             if (builder is ICronBuilder<A> initBuilder)
