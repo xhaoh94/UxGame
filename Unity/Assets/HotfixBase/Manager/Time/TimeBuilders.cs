@@ -6,8 +6,8 @@ namespace Ux
     public interface ITimerBuildBase
     {
         float Delay { get; }
-        int Repeat { get; }
-        float FirstDelay { get; }
+        int Count { get; }
+        float First { get; }
         object Tag { get; }
         Action Complete { get; }
         Action<object> CompleteWithParam { get; }
@@ -28,8 +28,8 @@ namespace Ux
     public abstract class TimerBuildBase<T> : ITimerBuildBase where T : TimerBuildBase<T>
     {
         public float Delay { get; protected set; }
-        public int Repeat { get; private set; } = 1;
-        public float FirstDelay { get; private set; } = -1;
+        public int Count { get; private set; } = 1;
+        public float First { get; private set; } = -1;
         public object Tag { get; protected set; }
         public Action Complete { get; private set; }
         public Action<object> CompleteWithParam { get; private set; }
@@ -43,13 +43,13 @@ namespace Ux
         /// <summary>设置重复次数（小于等于0则循环）</summary>
         public T Repeat(int count)
         {
-            Repeat = count;
+            Count = count;
             return (T)this;
         }
         /// <summary>设置首次触发延时</summary>
         public T FirstDelay(float seconds)
         {
-            FirstDelay = seconds;
+            First = seconds;
             return (T)this;
         }
 
@@ -71,8 +71,8 @@ namespace Ux
         protected void Release()
         {
             Delay = 0;
-            Repeat = 1;
-            FirstDelay = -1;
+            Count = 1;
+            First = -1;
             Tag = null;
             Complete = null;
             CompleteWithParam = null;
@@ -371,7 +371,7 @@ namespace Ux
 
     public class CronBuilder<A> : CronBuilderBase<CronBuilder<A>>, ICronBuilder<A>
     {
-        public Action<A> Func { get; private set; } = null;
+        public Action<A> Fn { get; private set; } = null;
         public A Param { get; private set; }
         Func<CronBuilder<A>, long> _create;
         void ICronBuilder<A>.Init(string cronExpression, Func<CronBuilder<A>, long> create)
@@ -382,14 +382,14 @@ namespace Ux
         protected override void OnRelease()
         {
             _create = null;
-            Func = null;
+            Fn = null;
         }
 
         /// <summary>设置执行动作</summary>
         void ICronBuilder<A>.Do(object tag, Action<A> action, A param)
         {
             Tag = tag;
-            Func = action;
+            Fn = action;
             Param = param;
         }
 

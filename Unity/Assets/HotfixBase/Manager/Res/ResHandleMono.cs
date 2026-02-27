@@ -6,8 +6,7 @@ namespace Ux
 {
     public class ResHandleMono : MonoBehaviour
     {
-        AssetHandle _handle;
-        [SerializeField]        
+        AssetHandle _handle;        
         public string Location { get; private set; }
         public void Init(string location, AssetHandle handle)
         {

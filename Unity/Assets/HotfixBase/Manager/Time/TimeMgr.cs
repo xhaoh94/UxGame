@@ -107,7 +107,7 @@ namespace Ux
             var exe = Pool.Get<HandleExe>();
             exe.Init(builder.Tag, builder.Fn);
 
-            handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
+            handle.Init(exe, key, builder.First, builder.Delay, builder.Count, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
             dic.Add(handle);
             return key;
         }
@@ -119,7 +119,7 @@ namespace Ux
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
             exe.Init(builder.Tag, builder.Fn, builder.Param);
-            handle.Init(exe, key, builder.FirstDelay, builder.Delay, builder.Repeat, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
+            handle.Init(exe, key, builder.First, builder.Delay, builder.Count, builder.IsFrame, builder.CompleteWithParam, builder.CompleteParam);
             dic.Add(handle);
             return key;
         }
@@ -187,7 +187,7 @@ namespace Ux
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe>();
             exe.Init(builder.Tag, builder.Fn);
-            var triggerKey = 0;
+            long triggerKey = 0;
             if (builder.TriggerLoopGap > 0 && builder.TriggerFn != null)
             {
                 triggerKey = Timer(builder.TriggerLoopGap, builder.Tag, builder.TriggerFn).Loop().Build();
@@ -204,7 +204,7 @@ namespace Ux
             if (handle == null) return key;
             var exe = Pool.Get<HandleExe<A>>();
             exe.Init(builder.Tag, builder.Fn, builder.Param);
-            var triggerKey = 0;
+            long triggerKey = 0;
             if (builder.TriggerLoopGap > 0 && builder.TriggerFn != null)
             {
                 triggerKey = Timer(builder.TriggerLoopGap, builder.Tag, builder.TriggerFn).Loop().Build();

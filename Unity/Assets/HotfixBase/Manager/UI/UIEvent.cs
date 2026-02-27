@@ -177,7 +177,7 @@ namespace Ux
         {
             if (_timeKey != 0)
             {
-                TimeMgr.Ins.RemoveKey(_timeKey);
+                TimeMgr.Ins.RemoveTimer(_timeKey);
                 _timeKey = 0;
             }
         }
@@ -248,7 +248,7 @@ namespace Ux
         {
             if (_timeKey != 0)
             {
-                TimeMgr.Ins.RemoveKey(_timeKey);
+                TimeMgr.Ins.RemoveTimer(_timeKey);
                 _timeKey = 0;
             }
             _touchId = -1;
@@ -262,7 +262,7 @@ namespace Ux
             _nowCnt = 0;
             _timeKey = TimeMgr.Ins.Timer(_delay, this, _Loop)
             .Loop()
-            .First(_first)
+            .FirstDelay(_first)
             .Build();
         }
 

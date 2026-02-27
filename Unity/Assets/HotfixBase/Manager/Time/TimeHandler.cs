@@ -305,13 +305,13 @@ namespace Ux
 
         public interface ITimeStampHandle : IHandle
         {
-            void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime,int triggerKey);
+            void Init(IHandleExe _exe, long _key, long _timeStamp, bool _isLocalTime,long triggerKey);
         }
 
         public class TimeStampHandle : HandleBase, ITimeStampHandle
         {
             private bool _isLocalTime;
-            private int _triggerKey;
+            private long _triggerKey;
             public long TimeStamp { get; private set; }
 
 
@@ -319,7 +319,7 @@ namespace Ux
             public string TimeStampDesc { get; private set; }
 #endif
 
-            public void Init(IHandleExe exe, long key, long timeStamp, bool isLocalTime,int triggerKey)
+            public void Init(IHandleExe exe, long key, long timeStamp, bool isLocalTime,long triggerKey)
             {
                 Exe = exe;
                 Key = key;
@@ -357,7 +357,7 @@ namespace Ux
                 }
                 if (_triggerKey > 0)
                 {
-                    _timer.Remove(_triggerKey);
+                    Ins._timer.Remove(_triggerKey);
                     _triggerKey = 0;
                 }
                 return RunStatus.Done;
@@ -370,7 +370,7 @@ namespace Ux
                 _isLocalTime = false;
                  if (_triggerKey > 0)
                 {
-                    _timer.Remove(_triggerKey);                    
+                    Ins._timer.Remove(_triggerKey);                    
                     _triggerKey = 0;
                 }
             }

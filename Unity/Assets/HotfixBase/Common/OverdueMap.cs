@@ -60,7 +60,7 @@ namespace Ux
             _timeouts.Clear();
             if (_timeoutKey > 0)
             {                
-                TimeMgr.Ins.RemoveKey(_timeoutKey);
+                TimeMgr.Ins.RemoveTimer(_timeoutKey);
                 _timeoutKey = 0;
             }
         }
