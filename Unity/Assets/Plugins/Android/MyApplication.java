@@ -2,15 +2,14 @@ package com.uxgame.core;
 
 import android.app.Application;
 import android.util.Log;
+import com.sdkbridge.core.BridgeManager;
 
 /**
- * 自定义 Application 入口
+ * 自定义 Application 入口 (中心化路由)
  *
- * 用于在应用启动时执行原生 SDK 的初始化工作。
- * Unity 会通过 AndroidManifest.xml 中的 android:name 属性加载此类。
- *
- * 使用方法：
- *   在 onCreate() 中按需添加各 SDK 的初始化代码。
+ * 职责：仅负责拦截 Android 底层的生命周期事件，并将其转发给 BridgeManager。
+ * 绝对不要在这里编写任何第三方 SDK 的初始化代码。
+ * 所有的第三方 SDK 业务应该在外部的 Plugin 工程中实现。
  */
 public class MyApplication extends Application {
 
@@ -19,11 +18,10 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "Application onCreate 开始");
+        Log.d(TAG, "Application onCreate 开始，向桥接层分发事件");
 
-        // TODO: 在此处初始化第三方 SDK
-        // 示例：
-        // ThirdPartySDK.init(this, "your-app-key");
+        // 将 Application 上下文分发给所有已通过 ContentProvider 注册的底层插件
+        BridgeManager.getInstance().onApplicationCreate(this);
 
         Log.d(TAG, "Application onCreate 完成");
     }
@@ -32,15 +30,11 @@ public class MyApplication extends Application {
     public void onTerminate() {
         super.onTerminate();
         Log.d(TAG, "Application onTerminate");
-
-        // TODO: 在此处执行 SDK 清理工作（如有需要）
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
         Log.w(TAG, "Application onLowMemory");
-
-        // TODO: 在此处处理低内存回调（如有需要）
     }
 }
