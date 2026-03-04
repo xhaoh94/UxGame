@@ -25,6 +25,9 @@ namespace Ux
 
         [SerializeField]
         public EPlayMode PlayMode = EPlayMode.EditorSimulateMode;
+        
+        [SerializeField]        
+        public bool UseDecryption = false;//是否使用加密
 
         [SerializeField]
         bool IngameDebug = true;
@@ -56,6 +59,8 @@ namespace Ux
         {
 #if !UNITY_EDITOR
             if (PlayMode == EPlayMode.EditorSimulateMode) PlayMode = EPlayMode.HostPlayMode;
+            //初始化SDK
+            SDKMgr.ins.Init();
 #endif
 
 #if !UNITY_EDITOR && HOTFIX_CODE

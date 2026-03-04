@@ -7,7 +7,7 @@ namespace Ux
     {
         public T Value { get; set; }
         public bool IsTimeout => TimeMgr.Ins.TotalTime >= _timeout;
-        float _timeout;
+        double _timeout;
         public OverdueData(T value)
         {
             Value = value;

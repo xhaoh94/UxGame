@@ -64,8 +64,8 @@ namespace Ux
 
         //心跳间隔（秒）
         protected readonly int heartTime = 30;
-        protected float LastRecvTime { get; private set; }
-        protected float LastSendTime { get; private set; }
+        protected double LastRecvTime { get; private set; }
+        protected double LastSendTime { get; private set; }
 
         private bool isNeedSend;
         private bool IsSending;

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class BokehBlurRenderFeature : ScriptableRendererFeature
 {
@@ -19,7 +22,9 @@ public class BokehBlurRenderFeature : ScriptableRendererFeature
 
         private BokehBlur _bokehBlur;
         private Material bokehBlurMat;
+        #if !UNITY_2023_3_OR_NEWER
         RenderTargetIdentifier currentTarget;
+#endif
         public BokehBlurPass(RenderPassEvent evt, Shader shader)
         {
             renderPassEvent = evt;            
@@ -29,6 +34,7 @@ public class BokehBlurRenderFeature : ScriptableRendererFeature
             mGoldenRot.Set(c, s, -s, c);
         }
         
+        #if !UNITY_2023_3_OR_NEWER
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (bokehBlurMat == null) return;
@@ -65,6 +71,73 @@ public class BokehBlurRenderFeature : ScriptableRendererFeature
         {
             this.currentTarget = currentTarget;
         }
+#else
+        private class PassData
+        {
+            public TextureHandle src;
+            public TextureHandle dst;
+            public Material material;
+            public Vector4 goldenRot;
+            public Vector4 paramsVec;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            if (bokehBlurMat == null) return;
+            
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+            if (!cameraData.postProcessEnabled) return;
+            
+            var stack = VolumeManager.instance.stack;
+            _bokehBlur = stack.GetComponent<BokehBlur>();
+            if (_bokehBlur == null || !_bokehBlur.IsActive()) return;
+
+            UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            TextureHandle source = resourceData.activeColorTexture;
+
+            RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+            desc.width = (int)(cameraData.camera.scaledPixelWidth / _bokehBlur.RTDownScaling.value);
+            desc.height = (int)(cameraData.camera.scaledPixelHeight / _bokehBlur.RTDownScaling.value);
+            desc.depthBufferBits = 0;
+
+            TextureHandle destination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, "_TempTargetBokehBlur", false);
+
+            Vector4 paramsVec = new Vector4(_bokehBlur.Iteration.value, _bokehBlur.BlurRadius.value, 1f / cameraData.camera.scaledPixelWidth, 1f / cameraData.camera.scaledPixelHeight);
+
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(PROFILER_TAG, out var passData))
+            {
+                passData.src = source;
+                passData.dst = destination;
+                passData.material = bokehBlurMat;
+                passData.goldenRot = mGoldenRot;
+                passData.paramsVec = paramsVec;
+
+                builder.UseTexture(source, AccessFlags.Read);
+                builder.SetRenderAttachment(destination, 0, AccessFlags.Write);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    data.material.SetVector(GoldenRot, data.goldenRot);
+                    data.material.SetVector(Params, data.paramsVec);
+                    Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, 0);
+                });
+            }
+
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(PROFILER_TAG + "_BlitBack", out var passData))
+            {
+                passData.src = destination;
+                passData.dst = source;
+
+                builder.UseTexture(destination, AccessFlags.Read);
+                builder.SetRenderAttachment(source, 0, AccessFlags.Write);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), 0.0f, false);
+                });
+            }
+        }
+#endif
 
         public override void FrameCleanup(CommandBuffer cmd)
         {
@@ -83,10 +156,12 @@ public class BokehBlurRenderFeature : ScriptableRendererFeature
     {
         renderer.EnqueuePass(_bokehBlurPass);
     }
+    #if !UNITY_2023_3_OR_NEWER
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
         _bokehBlurPass.Setup(renderingData.cameraData.renderer.cameraColorTargetHandle);
         base.SetupRenderPasses(renderer, renderingData);
     }
+#endif
 }
 

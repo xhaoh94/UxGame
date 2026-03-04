@@ -8,6 +8,14 @@ namespace Ux
 {
     public partial class YooMgr : Singleton<YooMgr>
     {
+        public enum EncyptionType
+        {
+            None,
+            Offset,
+            XOR,
+            XXTEA
+        }
+
         static readonly Dictionary<YooType, YooPackage> _Packages = new Dictionary<YooType, YooPackage>()
         {
             { YooType.Main,new YooMainPackage() },
@@ -19,7 +27,7 @@ namespace Ux
         {
             GameMethod.LowMemory += UnloadUnusedAssetsAsync;
         }
-        public async UniTask<bool> Initialize(EPlayMode playMode)
+        public async UniTask<bool> Initialize()
         {
             if (YooAssets.Initialized)
             {
@@ -29,13 +37,13 @@ namespace Ux
             // 初始化资源系统
             YooAssets.Initialize();
             // 初始化资源包
-            return await InitializePackage(playMode);            
+            return await InitializePackage();
         }
-        async UniTask<bool> InitializePackage(EPlayMode playMode)
+        async UniTask<bool> InitializePackage()
         {
             foreach (var _value in _Packages.Values)
             {
-                var b = await (_value as IYooPackage).Initialize(playMode);
+                var b = await (_value as IYooPackage).Initialize(GameMain.Ins.PlayMode);
                 if (!b) return false;
             }
             return true;

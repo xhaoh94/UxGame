@@ -12,13 +12,18 @@ namespace Ux.Editor.Build.Version
         private List<Type> _encryptionServicesClassTypes;
         private List<string> _encryptionServicesClassNames;
 
-        private List<Type> _manifestServicesClassTypes;
-        private List<string> _manifestServicesClassNames;
+        private List<Type> _manifestProcessServicesClassTypes;
+        private List<string> _manifestProcessServicesClassNames;
+
+        private List<Type> _manifestRestoreServicesClassTypes;
+        private List<string> _manifestRestoreServicesClassNames;
         BuildPackageSetting PackageSetting;
 
 
         PopupField<string> _popupFieldEncryption;
-        PopupField<string> _popupFieldManifest;
+        PopupField<string> _popupFieldManifestProess;
+        PopupField<string> _popupFieldManifestRestore;
+
         public VersionPackageViewer(VisualElement parent)
         {
             CreateChildren();
@@ -28,12 +33,14 @@ namespace Ux.Editor.Build.Version
             nameStyleType.Init(EFileNameStyle.HashName);
             compressionType.Init(ECompressOption.LZ4);
 
-            _encryptionServicesClassTypes = GetEncryptionServicesClassTypes();
+            _encryptionServicesClassTypes = GetServicesClassTypes<IEncryptionServices>();
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
             if (_encryptionServicesClassNames.Count > 0)
             {
-                _popupFieldEncryption = new PopupField<string>(_encryptionServicesClassNames, 0);
-                _popupFieldEncryption.label = "资源加密";
+                _popupFieldEncryption = new PopupField<string>(_encryptionServicesClassNames, 0)
+                {
+                    label = "资源加密"
+                };
                 _popupFieldEncryption.RegisterValueChangedCallback(evt =>
                 {
                     PackageSetting.EncyptionClassName = evt.newValue;
@@ -42,28 +49,57 @@ namespace Ux.Editor.Build.Version
             }
             else
             {
-                _popupFieldEncryption = new PopupField<string>();
-                _popupFieldEncryption.label = "资源加密";
+                _popupFieldEncryption = new PopupField<string>
+                {
+                    label = "资源加密"
+                };
                 encryptionContainer.Add(_popupFieldEncryption);
             }
 
-            _manifestServicesClassTypes = GetManifestServicesClassTypes();
-            _manifestServicesClassNames = _manifestServicesClassTypes.Select(t => t.FullName).ToList();
-            if (_manifestServicesClassNames.Count > 0)
+            _manifestProcessServicesClassTypes = GetServicesClassTypes<IManifestProcessServices>();
+            _manifestProcessServicesClassNames = _manifestProcessServicesClassTypes.Select(t => t.FullName).ToList();
+            if (_manifestProcessServicesClassNames.Count > 0)
             {
-                _popupFieldManifest = new PopupField<string>(_manifestServicesClassNames, 0);
-                _popupFieldManifest.label = "清单加密";
-                _popupFieldManifest.RegisterValueChangedCallback(evt =>
+                _popupFieldManifestProess = new PopupField<string>(_manifestProcessServicesClassNames, 0)
                 {
-                    PackageSetting.ManifestClassName = evt.newValue;
+                    label = "清单进程加密"
+                };
+                _popupFieldManifestProess.RegisterValueChangedCallback(evt =>
+                {
+                    PackageSetting.ManifestProcessServices = evt.newValue;
                 });
-                manifestContainer.Add(_popupFieldManifest);
+                manifestContainer.Add(_popupFieldManifestProess);
             }
             else
             {
-                _popupFieldManifest = new PopupField<string>();
-                _popupFieldManifest.label = "清单加密";
-                manifestContainer.Add(_popupFieldManifest);
+                _popupFieldManifestProess = new PopupField<string>
+                {
+                    label = "清单进程加密"
+                };
+                manifestContainer.Add(_popupFieldManifestProess);
+            }
+
+            _manifestRestoreServicesClassTypes = GetServicesClassTypes<IManifestRestoreServices>();
+            _manifestRestoreServicesClassNames = _manifestRestoreServicesClassTypes.Select(t => t.FullName).ToList();
+            if (_manifestRestoreServicesClassNames.Count > 0)
+            {
+                _popupFieldManifestRestore = new PopupField<string>(_manifestRestoreServicesClassNames, 0)
+                {
+                    label = "清单恢复解密"
+                };
+                _popupFieldManifestRestore.RegisterValueChangedCallback(evt =>
+                {
+                    PackageSetting.ManifestRestoreServices = evt.newValue;
+                });
+                manifestContainer.Add(_popupFieldManifestRestore);
+            }
+            else
+            {
+                _popupFieldManifestRestore = new PopupField<string>
+                {
+                    label = "清单恢复解密"
+                };
+                manifestContainer.Add(_popupFieldManifestRestore);
             }
         }
         partial void _OnTgCollectSVChanged(ChangeEvent<bool> e)
@@ -78,7 +114,7 @@ namespace Ux.Editor.Build.Version
         partial void _OnCompressionTypeChanged(ChangeEvent<Enum> e)
         {
             PackageSetting.CompressOption = (ECompressOption)e.newValue;
-        }       
+        }
         partial void _OnNameStyleTypeChanged(ChangeEvent<Enum> e)
         {
             PackageSetting.NameStyleOption = (EFileNameStyle)e.newValue;
@@ -87,7 +123,7 @@ namespace Ux.Editor.Build.Version
         {
             PackageSetting.BuildTags = e.newValue;
         }
-     
+
         public void RefreshView(BuildPackageSetting packageSetting)
         {
             PackageSetting = packageSetting;
@@ -104,12 +140,19 @@ namespace Ux.Editor.Build.Version
             }
             _popupFieldEncryption.SetValueWithoutNotify(PackageSetting.EncyptionClassName);
 
-            if (string.IsNullOrEmpty(PackageSetting.ManifestClassName) &&
-                _manifestServicesClassNames.Count > 0)
+            if (string.IsNullOrEmpty(PackageSetting.ManifestProcessServices) &&
+                _manifestProcessServicesClassNames.Count > 0)
             {
-                PackageSetting.ManifestClassName = _manifestServicesClassNames[0];
+                PackageSetting.ManifestProcessServices = _manifestProcessServicesClassNames[0];
             }
-            _popupFieldManifest.SetValueWithoutNotify(PackageSetting.ManifestClassName);
+            _popupFieldManifestProess.SetValueWithoutNotify(PackageSetting.ManifestProcessServices);
+
+            if (string.IsNullOrEmpty(PackageSetting.ManifestRestoreServices) &&
+    _manifestRestoreServicesClassNames.Count > 0)
+            {
+                PackageSetting.ManifestRestoreServices = _manifestRestoreServicesClassNames[0];
+            }
+            _popupFieldManifestRestore.SetValueWithoutNotify(PackageSetting.ManifestRestoreServices);
 
         }
 
@@ -120,7 +163,7 @@ namespace Ux.Editor.Build.Version
             nameStyleType.SetEnabled(b);
             compressionType.SetEnabled(b);
             _popupFieldEncryption.SetEnabled(b);
-            _popupFieldManifest.SetEnabled(b);            
+            _popupFieldManifestProess.SetEnabled(b);
             inputBuiltinTags.SetEnabled(b);
             RefreshElement();
         }
@@ -140,13 +183,9 @@ namespace Ux.Editor.Build.Version
             return (IEncryptionServices)Activator.CreateInstance(classType);
         }
 
-        private static List<Type> GetEncryptionServicesClassTypes()
+        private static List<Type> GetServicesClassTypes<T>()
         {
-            return EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
-        }
-        private static List<Type> GetManifestServicesClassTypes()
-        {
-            return EditorTools.GetAssignableTypes(typeof(IManifestServices));
+            return EditorTools.GetAssignableTypes(typeof(T));
         }
         #endregion
     }

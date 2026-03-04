@@ -6,7 +6,7 @@ namespace Ux
 {
     public partial class TimeMgr : Singleton<TimeMgr>
     {
-        public float TotalTime => Time.unscaledTime;
+        public double TotalTime => Time.unscaledTimeAsDouble;
         public int TotalFrame => Time.frameCount;
 
         public IGameTime ServerTime { get; private set; }
@@ -17,8 +17,6 @@ namespace Ux
         private readonly HandleMap _timeStamp = new HandleMap(TimeType.TimeStamp);
         private readonly HandleMap _cron = new HandleMap(TimeType.Cron);
 
-        readonly float _updateGap = 1f;
-        float _nextUpdateTime;
         protected override void OnCreated()
         {
             LocalTime = new LocalTime();
@@ -48,12 +46,9 @@ namespace Ux
         {
             _timer?.Run();
             _frame?.Run();
-            if (TotalTime >= _nextUpdateTime)
-            {
-                _nextUpdateTime = TotalTime + _updateGap;
-                _timeStamp?.Run();
-                _cron?.Run();
-            }
+            _timeStamp?.Run();
+            _cron?.Run();
+            _frame?.Run();
         }
 
 
@@ -86,7 +81,7 @@ namespace Ux
 
         #region TimeOrFrame
 
-        bool CheckCreate(Delegate action, float delay)
+        bool CheckCreate(Delegate action, double delay)
         {
             if (delay <= 0 || action == null)
             {
@@ -124,7 +119,7 @@ namespace Ux
             return key;
         }
 
-        public ITimerFluent Timer(float seconds, object tag, Action action)
+        public ITimerFluent Timer(double seconds, object tag, Action action)
         {
             var builder = Pool.Get<TimerBuilder>();
             if (builder is ITimerBuilder initBuilder)
@@ -134,7 +129,7 @@ namespace Ux
             }
             return builder;
         }
-        public ITimerFluent Timer<A>(float seconds, object tag, Action<A> action, A param)
+        public ITimerFluent Timer<A>(double seconds, object tag, Action<A> action, A param)
         {
             var builder = Pool.Get<TimerBuilder<A>>();
             if (builder is ITimerBuilder<A> initBuilder)
@@ -144,7 +139,7 @@ namespace Ux
             }
             return builder;
         }
-        public ITimerFluent Frame(float frame, object tag, Action action)
+        public ITimerFluent Frame(double frame, object tag, Action action)
         {
             var builder = Pool.Get<TimerBuilder>();
             if (builder is ITimerBuilder initBuilder)
@@ -154,7 +149,7 @@ namespace Ux
             }
             return builder;
         }
-        public ITimerFluent Frame<A>(float frame, object tag, Action<A> action, A param)
+        public ITimerFluent Frame<A>(double frame, object tag, Action<A> action, A param)
         {
             var builder = Pool.Get<TimerBuilder<A>>();
             if (builder is ITimerBuilder<A> initBuilder)

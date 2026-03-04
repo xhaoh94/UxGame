@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class DualKawaseBlurRenderFeature : ScriptableRendererFeature
 {
@@ -18,7 +21,9 @@ public class DualKawaseBlurRenderFeature : ScriptableRendererFeature
         private const string PROFILER_TAG = "DualKawaseBlur";
         private DualKawaseBlur _dualKawaseBlur;
         private Material dualKawaseBlurMat;
+#if !UNITY_2023_3_OR_NEWER
         RenderTargetIdentifier currentTarget;
+#endif
 
         public DualKawaseBlurPass(RenderPassEvent evt, Shader shader)
         {
@@ -38,6 +43,7 @@ public class DualKawaseBlurRenderFeature : ScriptableRendererFeature
             }
         }
         
+        #if !UNITY_2023_3_OR_NEWER
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (dualKawaseBlurMat == null) return;
@@ -111,6 +117,94 @@ public class DualKawaseBlurRenderFeature : ScriptableRendererFeature
         {
             this.currentTarget = currentTarget;
         }
+#else
+        private class PassData
+        {
+            public TextureHandle src;
+            public Material material;
+            public int passIndex;
+            public float blurRadius;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            if (dualKawaseBlurMat == null) return;
+            
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+            if (!cameraData.postProcessEnabled) return;
+            
+            var stack = VolumeManager.instance.stack;
+            _dualKawaseBlur = stack.GetComponent<DualKawaseBlur>();
+            if (_dualKawaseBlur == null || !_dualKawaseBlur.IsActive()) return;
+
+            UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            TextureHandle source = resourceData.activeColorTexture;
+
+            int tw = (int)(cameraData.camera.pixelWidth / _dualKawaseBlur.RTDownScaling.value);
+            int th = (int)(cameraData.camera.pixelHeight / _dualKawaseBlur.RTDownScaling.value);
+
+            TextureHandle[] mipDowns = new TextureHandle[_dualKawaseBlur.Iteration.value];
+            TextureHandle[] mipUps = new TextureHandle[_dualKawaseBlur.Iteration.value];
+
+            for (int i = 0; i < _dualKawaseBlur.Iteration.value; i++)
+            {
+                RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+                desc.width = tw;
+                desc.height = th;
+                desc.depthBufferBits = 0;
+                desc.msaaSamples = 1;
+
+                mipDowns[i] = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, $"DualKawaseBlur_MipDown_{i}", false);
+                mipUps[i] = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, $"DualKawaseBlur_MipUp_{i}", false);
+
+                tw = Mathf.Max(tw / 2, 1);
+                th = Mathf.Max(th / 2, 1);
+            }
+
+            float blurRadius = _dualKawaseBlur.BlurRadius.value;
+
+            // Downsample
+            TextureHandle lastDown = source;
+            for (int i = 0; i < _dualKawaseBlur.Iteration.value; i++)
+            {
+                TextureHandle mipDown = mipDowns[i];
+                AddBlitPass(renderGraph, lastDown, mipDown, dualKawaseBlurMat, 0, blurRadius);
+                lastDown = mipDown;
+            }
+
+            // Upsample
+            TextureHandle lastUp = mipDowns[_dualKawaseBlur.Iteration.value - 1];
+            for (int i = _dualKawaseBlur.Iteration.value - 2; i >= 0; i--)
+            {
+                TextureHandle mipUp = mipUps[i];
+                AddBlitPass(renderGraph, lastUp, mipUp, dualKawaseBlurMat, 1, blurRadius);
+                lastUp = mipUp;
+            }
+
+            // Render blurred texture in blend pass
+            AddBlitPass(renderGraph, lastUp, source, dualKawaseBlurMat, 1, blurRadius);
+        }
+
+        private void AddBlitPass(RenderGraph renderGraph, TextureHandle src, TextureHandle dst, Material mat, int passIndex, float blurRadius)
+        {
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(PROFILER_TAG, out var passData))
+            {
+                passData.src = src;
+                passData.material = mat;
+                passData.passIndex = passIndex;
+                passData.blurRadius = blurRadius;
+
+                builder.UseTexture(src, AccessFlags.Read);
+                builder.SetRenderAttachment(dst, 0, AccessFlags.Write);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    data.material.SetFloat(BlurOffset, data.blurRadius);
+                    Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.passIndex);
+                });
+            }
+        }
+#endif
 
         public override void FrameCleanup(CommandBuffer cmd)
         {
@@ -135,10 +229,12 @@ public class DualKawaseBlurRenderFeature : ScriptableRendererFeature
     {
         renderer.EnqueuePass(_dualKawaseBlurPass);
     }
+    #if !UNITY_2023_3_OR_NEWER
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
         _dualKawaseBlurPass.Setup(renderingData.cameraData.renderer.cameraColorTargetHandle);
         base.SetupRenderPasses(renderer, renderingData);
     }
+#endif
 }
 

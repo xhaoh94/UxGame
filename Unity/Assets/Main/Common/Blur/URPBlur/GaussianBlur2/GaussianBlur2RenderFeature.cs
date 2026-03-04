@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
+
 
 public class GaussianBlur2RenderFeature : ScriptableRendererFeature
 {
@@ -19,11 +23,13 @@ public class GaussianBlur2RenderFeature : ScriptableRendererFeature
     {
         renderer.EnqueuePass(_blurPass);     // Pass入队
     }
+    #if !UNITY_2023_3_OR_NEWER
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
         base.SetupRenderPasses(renderer, renderingData);
         _blurPass.SetUp(renderingData.cameraData.renderer.cameraColorTargetHandle);       //设置当前渲染目标(RT)-先拿到相机的当前RT
     }
+#endif
 
 
     //【Pass】
@@ -55,7 +61,7 @@ public class GaussianBlur2RenderFeature : ScriptableRendererFeature
             }
         }
 
-        #region 执行Pass-----Execute
+        #if !UNITY_2023_3_OR_NEWER
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)      //固定写法-override void Execute 是父类ScriptableRenderPass的内容   renderingData里面有渲染的结果,所以用ref
         {
             //[判断执行条件:材质是否初始化成功]
@@ -85,7 +91,6 @@ public class GaussianBlur2RenderFeature : ScriptableRendererFeature
             CommandBufferPool.Release(commandBuffer);        // 释放commandBuffer
         }
 
-        #endregion
 
         // 渲染函数
         void Render(CommandBuffer cmd, ref RenderingData renderingData)     // 关于ref,作用是函数内部参数改变，对应外部参数也跟着改变 https://blog.csdn.net/qq_42481369/article/details/115186003
@@ -132,6 +137,87 @@ public class GaussianBlur2RenderFeature : ScriptableRendererFeature
                 cmd.Blit(destination01, _handle);    // destination01传给 source
             }
         }
+#else
+        private class PassData
+        {
+            public TextureHandle src;
+            public TextureHandle dst;
+            public Material material;
+            public int passIndex;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            if (_mat == null) return;
+            if (_volume == null) return;
+
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+            if (!cameraData.postProcessEnabled) return;
+
+            int gaussianBlurTimes = _volume.times.value;
+            if (gaussianBlurTimes <= 0) return;
+
+            UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            TextureHandle source = resourceData.activeColorTexture;
+
+            int downsample = _volume.downSample.value;
+            int rtW = cameraData.camera.scaledPixelWidth / downsample;
+            int rtH = cameraData.camera.scaledPixelHeight / downsample;
+
+            this._mat.SetFloat("_GaussianBlurRadius", _volume.radius.value);
+            this._mat.SetFloat("_BlurDepth", _volume.depth.value);
+            this._mat.SetFloat("_FullBlurValue", _volume.value.value);
+
+            RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+            desc.width = rtW;
+            desc.height = rtH;
+            desc.depthBufferBits = 0;
+
+            TextureHandle destination01 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, "GaussianBlur2_Temp1", false);
+            TextureHandle destination02 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, "GaussianBlur2_Temp2", false);
+
+            // source传给 destination01
+            AddBlitPass(renderGraph, source, destination01, null, -1);
+
+            for (int i = 0; i < gaussianBlurTimes; i++)
+            {
+                // destination01执行Mat的Pass0-横模糊,输出给destination02
+                AddBlitPass(renderGraph, destination01, destination02, _mat, 0);
+                // destination02执行Mat的Pass1-纵模糊,输出给destination01
+                AddBlitPass(renderGraph, destination02, destination01, _mat, 1);
+            }
+
+            // destination01传给 source
+            AddBlitPass(renderGraph, destination01, source, null, -1);
+        }
+
+        private void AddBlitPass(RenderGraph renderGraph, TextureHandle src, TextureHandle dst, Material mat, int passIndex)
+        {
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(k_RenderTag, out var passData))
+            {
+                passData.src = src;
+                passData.dst = dst;
+                passData.material = mat;
+                passData.passIndex = passIndex;
+
+                builder.UseTexture(src, AccessFlags.Read);
+                builder.SetRenderAttachment(dst, 0, AccessFlags.Write);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    context.cmd.SetGlobalTexture(mainTexID, data.src);
+                    if (data.material == null || data.passIndex == -1)
+                    {
+                        Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), 0.0f, false);
+                    }
+                    else
+                    {
+                        Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.passIndex);
+                    }
+                });
+            }
+        }
+#endif
 
     }
 }

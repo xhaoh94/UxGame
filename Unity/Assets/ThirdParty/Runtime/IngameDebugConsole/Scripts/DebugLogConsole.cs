@@ -1,9 +1,4 @@
-﻿#if UNITY_EDITOR || UNITY_STANDALONE
-// Unity's Text component doesn't render <b> tag correctly on mobile devices
-#define USE_BOLD_COMMAND_SIGNATURES
-#endif
-
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +6,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Object = UnityEngine.Object;
-#if UNITY_EDITOR && UNITY_2021_1_OR_NEWER
+#if UNITY_EDITOR
 using SystemInfo = UnityEngine.Device.SystemInfo; // To support Device Simulator on Unity 2021.1+
 #endif
 
@@ -527,9 +522,7 @@ namespace IngameDebugConsole
 			StringBuilder methodSignature = new StringBuilder( 256 );
 			string[] parameterSignatures = new string[parameterTypes.Length];
 
-#if USE_BOLD_COMMAND_SIGNATURES
 			methodSignature.Append( "<b>" );
-#endif
 			methodSignature.Append( command );
 
 			if( parameterTypes.Length > 0 )
@@ -549,9 +542,7 @@ namespace IngameDebugConsole
 				}
 			}
 
-#if USE_BOLD_COMMAND_SIGNATURES
 			methodSignature.Append( "</b>" );
-#endif
 
 			if( !string.IsNullOrEmpty( description ) )
 				methodSignature.Append( ": " ).Append( description );

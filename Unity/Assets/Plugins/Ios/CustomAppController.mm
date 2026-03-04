@@ -1,4 +1,5 @@
 #import "UnityAppController.h"
+#import "BridgeManager.h"
 
 /// 自定义 AppController
 ///
@@ -12,58 +13,44 @@
 
 @implementation CustomAppController
 
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     NSLog(@"[CustomAppController] didFinishLaunchingWithOptions 开始");
-
-    // TODO: 在调用 super 之前初始化需要尽早启动的 SDK
-    // 示例：
-    // [ThirdPartySDK initWithAppKey:@"your-app-key"];
-
+    BOOL pluginResult = [[BridgeManager sharedInstance] dispatchEvent_application:application didFinishLaunchingWithOptions:launchOptions];
     BOOL result = [super application:application didFinishLaunchingWithOptions:launchOptions];
-
-    // TODO: 在调用 super 之后初始化依赖 Unity 引擎的 SDK
-    // 示例：
-    // [AnalyticsSDK startWithConfiguration:config];
-
+    if (pluginResult) { result = YES; }
     NSLog(@"[CustomAppController] didFinishLaunchingWithOptions 完成");
     return result;
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [super applicationDidBecomeActive:application];
-    NSLog(@"[CustomAppController] applicationDidBecomeActive");
-
-    // TODO: 在此处处理应用激活回调（如有需要）
+    [[BridgeManager sharedInstance] dispatchEvent_applicationDidBecomeActive:application];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     [super applicationWillResignActive:application];
-    NSLog(@"[CustomAppController] applicationWillResignActive");
-
-    // TODO: 在此处处理应用即将进入后台回调（如有需要）
+    [[BridgeManager sharedInstance] dispatchEvent_applicationWillResignActive:application];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     [super applicationDidEnterBackground:application];
-    NSLog(@"[CustomAppController] applicationDidEnterBackground");
-
-    // TODO: 在此处处理应用进入后台回调（如有需要）
+    [[BridgeManager sharedInstance] dispatchEvent_applicationDidEnterBackground:application];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     [super applicationWillEnterForeground:application];
-    NSLog(@"[CustomAppController] applicationWillEnterForeground");
-
-    // TODO: 在此处处理应用即将回到前台回调（如有需要）
+    [[BridgeManager sharedInstance] dispatchEvent_applicationWillEnterForeground:application];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     [super applicationWillTerminate:application];
-    NSLog(@"[CustomAppController] applicationWillTerminate");
+    [[BridgeManager sharedInstance] dispatchEvent_applicationWillTerminate:application];
+}
 
-    // TODO: 在此处执行 SDK 清理工作（如有需要）
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
+    BOOL result = [super application:app openURL:url options:options];
+    BOOL pluginResult = [[BridgeManager sharedInstance] dispatchEvent_application:app openURL:url options:options];
+    return result || pluginResult;
 }
 
 - (void)application:(UIApplication *)application

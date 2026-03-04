@@ -382,27 +382,27 @@ namespace Ux
 
         public interface ITimeHandle : IHandle
         {
-            void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
+            void Init(IHandleExe _exe, long _key, double _first, double _delay, int _repeat, bool _useFrame,
                 Action _complete);
 
-            void Init(IHandleExe _exe, long _key, float _first, float _delay, int _repeat, bool _useFrame,
+            void Init(IHandleExe _exe, long _key, double _first, double _delay, int _repeat, bool _useFrame,
                 Action<object> _complete, object _param);
         }
 
         public class TimeHandle : HandleBase, ITimeHandle
         {
-            public float Delay { get; private set; }
+            public double Delay { get; private set; }
             public int Repeat { get; private set; }
             public bool UseFrame { get; private set; }
             public bool IsLoop { get; private set; }
-            public float ExeTime { get; private set; }
+            public double ExeTime { get; private set; }
             public int ExeCnt { get; private set; }
 
             Action _complete;
             Action<object> _completeWithParam;
             object _completeParam;
 
-            public void Init(IHandleExe exe, long key, float first, float delay, int repeat, bool useFrame, Action complete)
+            public void Init(IHandleExe exe, long key, double first, double delay, int repeat, bool useFrame, Action complete)
             {
                 Exe = exe;
                 Key = key;
@@ -416,7 +416,7 @@ namespace Ux
                 ExeTime = UseFrame ? Ins.TotalFrame + addTime : Ins.TotalTime + addTime;
             }
 
-            public void Init(IHandleExe exe, long key, float first, float delay, int repeat, bool useFrame,
+            public void Init(IHandleExe exe, long key, double first, double delay, int repeat, bool useFrame,
                 Action<object> complete, object param)
             {
                 Exe = exe;
@@ -451,7 +451,7 @@ namespace Ux
                     return RunStatus.None;
                 }
 
-                float total = UseFrame ? UnityEngine.Time.frameCount : UnityEngine.Time.unscaledTime;
+                double total = UseFrame ? UnityEngine.Time.frameCount : UnityEngine.Time.unscaledTimeAsDouble;
                 if (total < ExeTime) return RunStatus.Wait;
                 ExeTime += Delay;
                 ExeCnt++;

@@ -9,12 +9,12 @@ namespace Ux
     {
         protected override void OnEnter()
         {
-            Initialize(GameMain.Ins.PlayMode).Forget();            
+            Initialize().Forget();            
         }
 
-        async UniTaskVoid Initialize(EPlayMode playMode)
+        async UniTaskVoid Initialize()
         {
-            var succeed = await YooMgr.Ins.Initialize(playMode);
+            var succeed = await YooMgr.Ins.Initialize();
             if (succeed)
             {                
                 PatchMgr.Enter<PatchUpdateStaticVersion>();                

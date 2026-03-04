@@ -3,6 +3,7 @@ namespace Ux
     public enum MainEventType
     {
         BEGIN = 0,
+        SDK_MESSAGE,
         /// <summary>
         /// 网络注销
         /// </summary>

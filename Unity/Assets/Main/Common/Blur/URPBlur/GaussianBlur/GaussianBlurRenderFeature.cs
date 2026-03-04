@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class GaussianBlurRenderFeature : ScriptableRendererFeature
 {
@@ -15,8 +18,10 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
         internal static readonly int BufferRT2 = Shader.PropertyToID("_BufferRT2");
 
         private const string PROFILER_TAG = "GaussianBlur";
+#if !UNITY_2023_3_OR_NEWER
         RenderTargetIdentifier currentTarget;
-        private GaussianBlur _gaussianBlur;
+#endif
+private GaussianBlur _gaussianBlur;
 
         const int k_MaxPyramidSize = 16;
 
@@ -32,6 +37,7 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
             }
         }
 
+        #if !UNITY_2023_3_OR_NEWER
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (gaussianBlurMat == null) return;
@@ -96,6 +102,86 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
         {
             base.FrameCleanup(cmd);
         }
+#else
+        private class PassData
+        {
+            public TextureHandle src;
+            public TextureHandle dst;
+            public Material material;
+            public int passIndex;
+            public Vector4 blurRadius;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            if (gaussianBlurMat == null) return;
+            
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+            if (!cameraData.postProcessEnabled) return;
+            
+            var stack = VolumeManager.instance.stack;
+            _gaussianBlur = stack.GetComponent<GaussianBlur>();
+            if (_gaussianBlur == null || !_gaussianBlur.IsActive()) return;
+
+            UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            TextureHandle source = resourceData.activeColorTexture;
+
+            RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+            desc.width = (int)(cameraData.camera.pixelWidth / _gaussianBlur.RTDownScaling.value);
+            desc.height = (int)(cameraData.camera.pixelHeight / _gaussianBlur.RTDownScaling.value);
+            desc.depthBufferBits = 0;
+
+            TextureHandle rt1 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, "_BufferRT1", false);
+            TextureHandle rt2 = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, "_BufferRT2", false);
+
+            AddBlitPass(renderGraph, source, rt1, null, -1, Vector4.zero);
+
+            int iterations = _gaussianBlur.Iteration.value;
+
+            for (int i = 0; i < iterations; i++)
+            {
+                Vector4 horizontalBlur = new Vector4(_gaussianBlur.BlurRadius.value / cameraData.camera.pixelWidth, 0, 0, 0);
+                AddBlitPass(renderGraph, rt1, rt2, gaussianBlurMat, 0, horizontalBlur);
+
+                Vector4 verticalBlur = new Vector4(0, _gaussianBlur.BlurRadius.value / cameraData.camera.pixelHeight, 0, 0);
+                AddBlitPass(renderGraph, rt2, rt1, gaussianBlurMat, 0, verticalBlur);
+            }
+
+            AddBlitPass(renderGraph, rt1, source, gaussianBlurMat, 1, Vector4.zero);
+        }
+
+        private void AddBlitPass(RenderGraph renderGraph, TextureHandle src, TextureHandle dst, Material mat, int passIndex, Vector4 blurRadius)
+        {
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(PROFILER_TAG, out var passData))
+            {
+                passData.src = src;
+                passData.dst = dst;
+                passData.material = mat;
+                passData.passIndex = passIndex;
+                passData.blurRadius = blurRadius;
+
+                builder.UseTexture(src, AccessFlags.Read);
+                builder.SetRenderAttachment(dst, 0, AccessFlags.Write);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    if (data.blurRadius != Vector4.zero && data.material != null)
+                    {
+                        data.material.SetVector(BlurRadius, data.blurRadius);
+                    }
+                    
+                    if (data.material == null || data.passIndex == -1)
+                    {
+                        Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), 0.0f, false);
+                    }
+                    else
+                    {
+                        Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.passIndex);
+                    }
+                });
+            }
+        }
+#endif
     }
 
     private GaussianBlurPass _gaussianBlurPass;
@@ -109,10 +195,12 @@ public class GaussianBlurRenderFeature : ScriptableRendererFeature
     {
         renderer.EnqueuePass(_gaussianBlurPass);
     }
-    public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
-    {
-        _gaussianBlurPass.Setup(renderingData.cameraData.renderer.cameraColorTargetHandle);
-        base.SetupRenderPasses(renderer, renderingData);
-    }
+#if !UNITY_2023_3_OR_NEWER
+public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
+{
+_gaussianBlurPass.Setup(renderingData.cameraData.renderer.cameraColorTargetHandle);
+base.SetupRenderPasses(renderer, renderingData);
+}
+#endif
 }
 

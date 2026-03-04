@@ -21,18 +21,18 @@ namespace Ux
     public class YooMainPackage : YooPackage
     {
         public override YooType YooType => YooType.Main;
-        public override string Name => "MainPackage";        
+        public override string Name => "MainPackage";
     }
     public class YooRawFilePackage : YooPackage
     {
         public override YooType YooType => YooType.RawFile;
-        public override string Name => "RawFilePackage";        
+        public override string Name => "RawFilePackage";
     }
 
     public abstract class YooPackage : IYooPackage
     {
         public abstract YooType YooType { get; }
-        public abstract string Name { get; }                
+        public abstract string Name { get; }
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
         void _CreatePackage()
@@ -49,7 +49,8 @@ namespace Ux
         {
             // 创建资源包            
             _CreatePackage();
-            InitializationOperation initializationOperation = null;            
+            InitializationOperation initializationOperation = null;
+
             switch (playMode)
             {
 #if UNITY_EDITOR
@@ -57,10 +58,12 @@ namespace Ux
                 case EPlayMode.EditorSimulateMode:
                     {
                         var simulateBuildResult = EditorSimulateModeHelper.SimulateBuild(Name);
-                        var packageRoot = simulateBuildResult.PackageRootDirectory;                        
+                        var packageRoot = simulateBuildResult.PackageRootDirectory;
                         var editorFileSystemParams = FileSystemParameters.CreateDefaultEditorFileSystemParameters(packageRoot);
-                        var initParameters = new EditorSimulateModeParameters();
-                        initParameters.EditorFileSystemParameters = editorFileSystemParams;
+                        var initParameters = new EditorSimulateModeParameters
+                        {
+                            EditorFileSystemParameters = editorFileSystemParams
+                        };
                         initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
@@ -68,41 +71,66 @@ namespace Ux
                 // 单机模式
                 case EPlayMode.OfflinePlayMode:
                     {
-                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
-                        var initParameters = new OfflinePlayModeParameters();
-                        initParameters.BuildinFileSystemParameters = buildinFileSystemParams;
+                        IDecryptionServices decryptionServices = null;
+                        if (GameMain.Ins.UseDecryption)
+                        {
+                            decryptionServices = new UxDecryption();
+                        }
+                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters(decryptionServices);
+                        var initParameters = new OfflinePlayModeParameters
+                        {
+                            BuildinFileSystemParameters = buildinFileSystemParams
+                        };
                         initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
                 // 联机模式
                 case EPlayMode.HostPlayMode:
                     {
+                        IDecryptionServices decryptionServices = null;
+                        if (GameMain.Ins.UseDecryption)
+                        {
+                            decryptionServices = new UxDecryption();
+                        }
+
                         IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
                             Global.GetFallbackHostServerURL());
-                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
-                        var cacheFileSystemParams = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices);
-                        var initParameters = new HostPlayModeParameters();
-                        initParameters.BuildinFileSystemParameters = buildinFileSystemParams;
-                        initParameters.CacheFileSystemParameters = cacheFileSystemParams;
+                        var cacheFileSystemParams = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices, decryptionServices);
+                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters(decryptionServices);
+                        var initParameters = new HostPlayModeParameters
+                        {
+                            BuildinFileSystemParameters = buildinFileSystemParams,
+                            CacheFileSystemParameters = cacheFileSystemParams
+                        };
+                        var decryptionProcessManifest = new UxProcessManifest();
+                        initParameters.BuildinFileSystemParameters.AddParameter(FileSystemParametersDefine.MANIFEST_SERVICES, decryptionProcessManifest);
                         initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
                 // WebGL运行模式
                 case EPlayMode.WebPlayMode:
                     {
+                        IWebDecryptionServices decryptionServices = null;
+                        if (GameMain.Ins.UseDecryption)
+                        {
+                            decryptionServices = new WebFileMemoryDecryption();
+                        }
                         IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
                             Global.GetFallbackHostServerURL());
-                        var webServerFileSystemParams = FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
-                        var webRemoteFileSystemParams = FileSystemParameters.CreateDefaultWebRemoteFileSystemParameters(remoteServices); //支持跨域下载
-                        var initParameters = new WebPlayModeParameters();
-                        initParameters.WebServerFileSystemParameters = webServerFileSystemParams;
-                        initParameters.WebRemoteFileSystemParameters = webRemoteFileSystemParams;
+                        var webRemoteFileSystemParams = FileSystemParameters.CreateDefaultWebRemoteFileSystemParameters(remoteServices, decryptionServices); //支持跨域下载
+
+                        var webServerFileSystemParams = FileSystemParameters.CreateDefaultWebServerFileSystemParameters(decryptionServices);
+                        var initParameters = new WebPlayModeParameters
+                        {
+                            WebServerFileSystemParameters = webServerFileSystemParams,
+                            WebRemoteFileSystemParameters = webRemoteFileSystemParams
+                        };
                         initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
                 default:
                     throw new ArgumentOutOfRangeException();
-            }                        
+            }
             await initializationOperation;
             if (initializationOperation.Status != EOperationStatus.Succeed)
             {
@@ -136,5 +164,5 @@ namespace Ux
             }
         }
         #endregion      
-    }    
+    }
 }

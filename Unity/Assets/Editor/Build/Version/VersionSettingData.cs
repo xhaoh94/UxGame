@@ -73,7 +73,8 @@ namespace Ux.Editor.Build.Version
         public bool IsCollectShaderVariant = false;
         public string PackageName = string.Empty;
         public string EncyptionClassName = string.Empty;
-        public string ManifestClassName = string.Empty;
+        public string ManifestProcessServices = string.Empty;
+        public string ManifestRestoreServices = string.Empty;
         public ECompressOption CompressOption = ECompressOption.LZ4;
         public string PiplineOption = Enum.GetName(typeof(EBuildPipeline), EBuildPipeline.ScriptableBuildPipeline);
         public EFileNameStyle NameStyleOption = EFileNameStyle.HashName;

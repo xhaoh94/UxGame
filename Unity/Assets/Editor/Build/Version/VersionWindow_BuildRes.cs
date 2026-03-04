@@ -209,6 +209,41 @@ namespace Ux.Editor.Build.Version
             return true;
         }
 
+        void CompareManifest(string path1, string path2, List<PackageBundle> changeList, List<PackageBundle> newList)
+        {
+            changeList.Clear();
+            newList.Clear();
+
+            // 加载补丁清单1
+            byte[] bytesData1 = FileUtility.ReadAllBytes(path1);
+            PackageManifest manifest1 = ManifestTools.DeserializeFromBinary(bytesData1, null); //TODO 自行处理解密
+
+            // 加载补丁清单1
+            byte[] bytesData2 = FileUtility.ReadAllBytes(path2);
+            PackageManifest manifest2 = ManifestTools.DeserializeFromBinary(bytesData2, null); //TODO 自行处理解密
+
+            // 拷贝文件列表
+            foreach (var bundle2 in manifest2.BundleList)
+            {
+                if (manifest1.TryGetPackageBundleByBundleName(bundle2.BundleName, out PackageBundle bundle1))
+                {
+                    if (bundle2.FileHash != bundle1.FileHash)
+                    {
+                        changeList.Add(bundle2);
+                    }
+                }
+                else
+                {
+                    newList.Add(bundle2);
+                }
+            }
+
+            // 按字母重新排序
+            changeList.Sort((x, y) => string.Compare(x.BundleName, y.BundleName));
+            newList.Sort((x, y) => string.Compare(x.BundleName, y.BundleName));
+
+        }
+
         private bool BuildRes(BuildTarget buildTarget, string packageName)
         {
             if (IsForceRebuild)
@@ -258,7 +293,7 @@ namespace Ux.Editor.Build.Version
                     break;
                 case EBuildPipeline.ScriptableBuildPipeline:
                     buildParameters = new ScriptableBuildParameters()
-                    {                        
+                    {
                         CompressOption = packageSetting.CompressOption,
                     };
                     pipeline = new ScriptableBuildPipeline();
@@ -270,7 +305,7 @@ namespace Ux.Editor.Build.Version
                 default:
                     Log.Error("未知的构建模式");
                     return false;
-            }            
+            }
             buildParameters.BuildOutputRoot = temOutputRoot;
             buildParameters.BuildinFileRoot = StreamingAssetsRoot;
             buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
@@ -278,14 +313,15 @@ namespace Ux.Editor.Build.Version
             buildParameters.PackageName = packageName;
             buildParameters.PackageVersion = nowVersion;
             buildParameters.VerifyBuildingResult = true;
-            buildParameters.EnableSharePackRule = true;            
+            buildParameters.EnableSharePackRule = true;
             buildParameters.FileNameStyle = packageSetting.NameStyleOption;
             buildParameters.BuildinFileCopyOption = IsForceRebuild
                 ? EBuildinFileCopyOption.OnlyCopyByTags : EBuildinFileCopyOption.None;
             buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
-            buildParameters.EncryptionServices = CreateEncryptionServicesInstance(packageSetting.EncyptionClassName);
-            buildParameters.ManifestServices = CreateManifestServicesInstance(packageSetting.ManifestClassName);
-            buildParameters.ClearBuildCacheFiles = IsForceRebuild ; //增量构建时需要清理构建缓存，否则可能导致构建失败或构建速度变慢，
+            buildParameters.EncryptionServices = CreateServicesInstance<IEncryptionServices>(packageSetting.EncyptionClassName);
+            buildParameters.ManifestProcessServices = CreateServicesInstance<IManifestProcessServices>(packageSetting.ManifestProcessServices);
+            buildParameters.ManifestRestoreServices = CreateServicesInstance<IManifestRestoreServices>(packageSetting.ManifestRestoreServices);
+            buildParameters.ClearBuildCacheFiles = IsForceRebuild; //增量构建时需要清理构建缓存，否则可能导致构建失败或构建速度变慢，
             buildParameters.UseAssetDependencyDB = SelectItem.IsUseDb; //使用资源依赖关系数据库，提升构建速度，
 
 
@@ -340,8 +376,9 @@ namespace Ux.Editor.Build.Version
                 files = new List<string>();
                 var path1 = $"{buildPath}/{lastVersion}/{lastBinaryFileName}";
                 var path2 = $"{temBuildPath}/{nowVersion}/{nowBinaryFileName}";
-                List<string> changedList = new List<string>();
-                PackageCompare.CompareManifest(path1, path2, changedList, buildParameters.ManifestServices);
+                List<PackageBundle> changedList = new List<PackageBundle>();
+                List<PackageBundle> newList = new List<PackageBundle>();
+                CompareManifest(path1, path2, changedList, newList);
                 var diffPath = $"{buildPath}/Difference/{lastVersion}_{nowVersion}";
                 if (Directory.Exists(diffPath))
                 {
@@ -432,14 +469,14 @@ namespace Ux.Editor.Build.Version
             else
                 return null;
         }
-        private IManifestServices CreateManifestServicesInstance(string manifestClassName)
+        private T CreateServicesInstance<T>(string manifestClassName)
         {
-            var manifestClassTypes = EditorTools.GetAssignableTypes(typeof(IManifestServices));
+            var manifestClassTypes = EditorTools.GetAssignableTypes(typeof(T));
             var classType = manifestClassTypes.Find(x => x.FullName.Equals(manifestClassName));
             if (classType != null)
-                return (IManifestServices)Activator.CreateInstance(classType);
+                return (T)Activator.CreateInstance(classType);
             else
-                return null;
+                return default(T);
         }
 
         #endregion

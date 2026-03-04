@@ -9,8 +9,7 @@ namespace Ux
         ITimerFluent Loop();
         /// <summary>设置重复次数（小于等于0则循环）</summary>
         ITimerFluent Repeat(int count);
-        /// <summary>设置首次触发延时</summary>
-        ITimerFluent FirstDelay(float seconds);
+        ITimerFluent FirstDelay(double seconds);        
         /// <summary>设置完成回调</summary>
         ITimerFluent OnComplete(Action complete);
         /// <summary>设置带参数的完成回调</summary>
@@ -21,20 +20,20 @@ namespace Ux
 
     internal interface ITimerBuilder
     {
-        void Init(float delay, bool isFrame, Func<TimerBuilder, long> create);
+        void Init(double delay, bool isFrame, Func<TimerBuilder, long> create);
         void Do(object tag, Action action);
     }
     internal interface ITimerBuilder<A>
     {
-        void Init(float delay, bool isFrame, Func<TimerBuilder<A>, long> action);
+        void Init(double delay, bool isFrame, Func<TimerBuilder<A>, long> action);
         void Do(object tag, Action<A> action, A param);
     }
 
     public abstract class TimerBuildBase<T> : ITimerFluent where T : TimerBuildBase<T>
     {
-        internal float Delay { get; set; }
+        internal double Delay { get; set; }
         internal int Count { get; private set; } = 1;
-        internal float First { get; private set; } = -1;
+        internal double First { get; private set; } = -1;
         internal object Tag { get; set; }
         internal Action Complete { get; private set; }
         internal Action<object> CompleteWithParam { get; private set; }
@@ -52,7 +51,7 @@ namespace Ux
             return this;
         }
         /// <summary>设置首次触发延时</summary>
-        public ITimerFluent FirstDelay(float seconds)
+        public ITimerFluent FirstDelay(double seconds)
         {
             First = seconds;
             return this;
@@ -97,7 +96,7 @@ namespace Ux
         internal Action Fn { get; private set; } = null;
 
 
-        void ITimerBuilder.Init(float delay, bool isFrame, Func<TimerBuilder, long> create)
+        void ITimerBuilder.Init(double delay, bool isFrame, Func<TimerBuilder, long> create)
         {
             Delay = delay;
             IsFrame = isFrame;
@@ -123,8 +122,6 @@ namespace Ux
             return key;
         }
 
-        /// <summary>隐式转换为long定时器ID</summary>
-        public static implicit operator long(TimerBuilder builder) => builder.Build();
     }
 
     public class TimerBuilder<A> : TimerBuildBase<TimerBuilder<A>>, ITimerBuilder<A>
@@ -134,7 +131,7 @@ namespace Ux
         internal A Param { get; private set; } = default;
 
 
-        void ITimerBuilder<A>.Init(float delay, bool isFrame, Func<TimerBuilder<A>, long> action)
+        void ITimerBuilder<A>.Init(double delay, bool isFrame, Func<TimerBuilder<A>, long> action)
         {
             Delay = delay;
             IsFrame = isFrame;
@@ -161,8 +158,6 @@ namespace Ux
             return key;
         }
 
-        /// <summary>隐式转换为long定时器ID</summary>
-        public static implicit operator long(TimerBuilder<A> builder) => builder.Build();
     }
 
 
@@ -175,7 +170,7 @@ namespace Ux
     {
         /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
         ITimeStampFluent UseLocalTime(bool isLocal = true);
-        ITimeStampFluent OnTrigger(float delay, Action action);
+        ITimeStampFluent OnTrigger(double delay, Action action);
         /// <summary>构建并启动时间戳定时器</summary>
         long Build();
     }
@@ -196,7 +191,7 @@ namespace Ux
         internal long TimeStamp { get; set; }
         internal object Tag { get; set; }
         internal bool IsLocalTime { get; private set; }
-        internal float TriggerLoopGap { get; private set; }
+        internal double TriggerLoopGap { get; private set; }
         internal Action TriggerFn { get; private set; }
 
         /// <summary>设置使用本地时间（默认使用服务器时间）</summary>
@@ -206,7 +201,7 @@ namespace Ux
             return this;
         }
 
-        public ITimeStampFluent OnTrigger(float delay, Action action)
+        public ITimeStampFluent OnTrigger(double delay, Action action)
         {
             if (delay <= 0)
             {
@@ -270,8 +265,6 @@ namespace Ux
             return key;
         }
 
-        /// <summary>隐式转换为long定时器ID</summary>
-        public static implicit operator long(TimeStampBuilder builder) => builder.Build();
     }
 
     public class TimeStampBuilder<A> : TimeStampBuilderBase<TimeStampBuilder<A>>, ITimeStampBuilder<A>
@@ -306,8 +299,6 @@ namespace Ux
             return key;
         }
 
-        /// <summary>隐式转换为long定时器ID</summary>
-        public static implicit operator long(TimeStampBuilder<A> builder) => builder.Build();
     }
 
     #endregion
@@ -388,8 +379,6 @@ namespace Ux
             return key;
         }
 
-        /// <summary>隐式转换为long定时器ID</summary>
-        public static implicit operator long(CronBuilder builder) => builder.Build();
     }
 
     public class CronBuilder<A> : CronBuilderBase<CronBuilder<A>>, ICronBuilder<A>
@@ -424,8 +413,6 @@ namespace Ux
             return key;
         }
 
-        /// <summary>隐式转换为long定时器ID</summary>
-        public static implicit operator long(CronBuilder<A> builder) => builder.Build();
     }
 
     #endregion

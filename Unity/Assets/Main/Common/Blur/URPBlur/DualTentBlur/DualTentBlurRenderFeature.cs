@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 public class DualTentBlurRenderFeature : ScriptableRendererFeature
 {
@@ -11,7 +14,6 @@ public class DualTentBlurRenderFeature : ScriptableRendererFeature
     public class DualTentBlurPass : ScriptableRenderPass
     {
         private const string PROFILER_TAG = "DualTentBlur";
-        RenderTargetIdentifier currentTarget;
         private DualTentBlur _dualTentBlur;
 
         Level[] m_Pyramid;
@@ -19,6 +21,10 @@ public class DualTentBlurRenderFeature : ScriptableRendererFeature
 
         internal static readonly int BlurOffset = Shader.PropertyToID("_BlurOffset");
         private Material dualKawaseBlurMat;
+
+#if !UNITY_2023_3_OR_NEWER
+        RenderTargetIdentifier currentTarget;
+#endif
 
         public DualTentBlurPass(RenderPassEvent evt, Shader shader)
         {
@@ -38,6 +44,7 @@ public class DualTentBlurRenderFeature : ScriptableRendererFeature
             }
         }
 
+#if !UNITY_2023_3_OR_NEWER
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (dualKawaseBlurMat == null) return;
@@ -110,6 +117,95 @@ public class DualTentBlurRenderFeature : ScriptableRendererFeature
         {
             this.currentTarget = currentTarget;
         }
+#else
+        private class PassData
+        {
+            public TextureHandle src;
+            public Material material;
+            public int passIndex;
+            public Vector4 blurOffset;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            if (dualKawaseBlurMat == null) return;
+            
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+            if (!cameraData.postProcessEnabled) return;
+            
+            var stack = VolumeManager.instance.stack;
+            _dualTentBlur = stack.GetComponent<DualTentBlur>();
+            if (_dualTentBlur == null || !_dualTentBlur.IsActive()) return;
+
+            UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            TextureHandle source = resourceData.activeColorTexture;
+
+            int tw = (int)(cameraData.camera.pixelWidth / _dualTentBlur.RTDownScaling.value);
+            int th = (int)(cameraData.camera.pixelHeight / _dualTentBlur.RTDownScaling.value);
+
+            TextureHandle[] mipDowns = new TextureHandle[_dualTentBlur.Iteration.value];
+            TextureHandle[] mipUps = new TextureHandle[_dualTentBlur.Iteration.value];
+
+            for (int i = 0; i < _dualTentBlur.Iteration.value; i++)
+            {
+                RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+                desc.width = tw;
+                desc.height = th;
+                desc.depthBufferBits = 0;
+                desc.msaaSamples = 1;
+
+                mipDowns[i] = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, $"DualTentBlur_MipDown_{i}", false);
+                mipUps[i] = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, $"DualTentBlur_MipUp_{i}", false);
+
+                tw = Mathf.Max(tw / 2, 1);
+                th = Mathf.Max(th / 2, 1);
+            }
+
+            Vector4 blurOffsetValue = new Vector4(_dualTentBlur.BlurRadius.value / (float)cameraData.camera.pixelWidth,
+                _dualTentBlur.BlurRadius.value / (float)cameraData.camera.pixelHeight, 0, 0);
+
+            // Downsample
+            TextureHandle lastDown = source;
+            for (int i = 0; i < _dualTentBlur.Iteration.value; i++)
+            {
+                TextureHandle mipDown = mipDowns[i];
+                AddBlitPass(renderGraph, lastDown, mipDown, dualKawaseBlurMat, 0, blurOffsetValue);
+                lastDown = mipDown;
+            }
+
+            // Upsample
+            TextureHandle lastUp = mipDowns[_dualTentBlur.Iteration.value - 1];
+            for (int i = _dualTentBlur.Iteration.value - 2; i >= 0; i--)
+            {
+                TextureHandle mipUp = mipUps[i];
+                AddBlitPass(renderGraph, lastUp, mipUp, dualKawaseBlurMat, 0, blurOffsetValue);
+                lastUp = mipUp;
+            }
+
+            // Render blurred texture in blend pass
+            AddBlitPass(renderGraph, lastUp, source, dualKawaseBlurMat, 1, blurOffsetValue);
+        }
+
+        private void AddBlitPass(RenderGraph renderGraph, TextureHandle src, TextureHandle dst, Material mat, int passIndex, Vector4 blurOffset)
+        {
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(PROFILER_TAG, out var passData))
+            {
+                passData.src = src;
+                passData.material = mat;
+                passData.passIndex = passIndex;
+                passData.blurOffset = blurOffset;
+
+                builder.UseTexture(src, AccessFlags.Read);
+                builder.SetRenderAttachment(dst, 0, AccessFlags.Write);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    data.material.SetVector(BlurOffset, data.blurOffset);
+                    Blitter.BlitTexture(context.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.passIndex);
+                });
+            }
+        }
+#endif
 
         public override void FrameCleanup(CommandBuffer cmd)
         {
@@ -130,14 +226,16 @@ public class DualTentBlurRenderFeature : ScriptableRendererFeature
         _dualTentBlurPass = new DualTentBlurPass(renderPassEvent, shader);
     }
 
-    public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
-    {
-        renderer.EnqueuePass(_dualTentBlurPass);
+public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
+{
+renderer.EnqueuePass(_dualTentBlurPass);
     }
-    public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
-    {
-        _dualTentBlurPass.Setup(renderingData.cameraData.renderer.cameraColorTargetHandle);
-        base.SetupRenderPasses(renderer, renderingData);
+#if !UNITY_2023_3_OR_NEWER
+public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
+{
+_dualTentBlurPass.Setup(renderingData.cameraData.renderer.cameraColorTargetHandle);
+base.SetupRenderPasses(renderer, renderingData);
     }
+#endif
 }
 

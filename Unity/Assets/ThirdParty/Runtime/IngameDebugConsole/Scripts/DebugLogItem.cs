@@ -13,7 +13,6 @@ namespace IngameDebugConsole
 {
 	public class DebugLogItem : MonoBehaviour, IPointerClickHandler
 	{
-#pragma warning disable 0649
 		// Cached components
 		[SerializeField]
 		private RectTransform transformComponent;
@@ -40,7 +39,6 @@ namespace IngameDebugConsole
 
 		[SerializeField]
 		private Button copyLogButton;
-#pragma warning restore 0649
 
 		// Debug entry to show with this log item
 		private DebugLogEntry logEntry;

@@ -1,64 +1,92 @@
 using System;
 using System.IO;
+using Ux;
 using YooAsset;
+using static Ux.YooMgr;
 
-
-/// <summary>
-/// 文件流加密方式
-/// </summary>
-public class FileStreamEncryption : IEncryptionServices
+public class UxEncryption : IEncryptionServices
 {
+    private const uint MAGIC = 0x58425558; // UXBX
+    private const byte VERSION = 1;
+    private const int HEADER_SIZE = 16;
+    private const long MAX_XXTEA_SIZE = 10 * 1024 * 1024; // 10MB
+
     public EncryptResult Encrypt(EncryptFileInfo fileInfo)
     {
-        // 说明：对TestRes3资源目录进行加密
-        if (fileInfo.BundleName.Contains("_testres3_"))
+        // 先读取文件内容
+        byte[] rawData = File.ReadAllBytes(fileInfo.FileLoadPath);
+        long fileSize = rawData.Length;
+        
+        // 根据文件名和大小判断加密类型
+        EncyptionType encryptionType = DetermineEncryptionType(fileInfo.BundleName, fileSize);
+        
+        byte[] encryptedPayload = rawData;
+
+        switch (encryptionType)
         {
-            var fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
-            for (int i = 0; i < fileData.Length; i++)
+            case EncyptionType.None:
+                break;
+
+            case EncyptionType.Offset:
+                {
+                    encryptedPayload = new byte[rawData.Length + BundleHeader.OFFSET_SIZE];
+                    Buffer.BlockCopy(rawData, 0, encryptedPayload, BundleHeader.OFFSET_SIZE, rawData.Length);
+                    break;
+                }
+
+            case EncyptionType.XOR:
+                encryptedPayload = XORHelper.Encrypt(rawData);
+                break;
+
+            case EncyptionType.XXTEA:
+                encryptedPayload = XXTEAHelper.Encrypt(rawData);
+                break;
+        }
+
+        // 写工业级头
+        byte[] finalData = new byte[HEADER_SIZE + encryptedPayload.Length];
+        using (MemoryStream ms = new MemoryStream(finalData))
+        using (BinaryWriter bw = new BinaryWriter(ms))
+        {
+            bw.Write(MAGIC);
+            bw.Write(VERSION);
+            bw.Write((byte)encryptionType);
+            bw.Write((ushort)0);
+            bw.Write((uint)rawData.Length);
+            bw.Write((uint)0);
+
+            bw.Write(encryptedPayload);
+        }
+
+        return new EncryptResult
+        {
+            Encrypted = encryptionType != EncyptionType.None,
+            EncryptedData = finalData
+        };
+    }
+    
+    private EncyptionType DetermineEncryptionType(string bundleName, long fileSize)
+    {
+        if (bundleName.Contains("_xxtea_"))
+        {
+            if (fileSize > MAX_XXTEA_SIZE)
             {
-                fileData[i] ^= BundleStream.KEY;
+                Log.Warning($"Bundle {bundleName} 大小 {fileSize / 1024 / 1024}MB 超过 10MB，降级使用 XOR 加密");
+                return EncyptionType.XOR;
             }
+            return EncyptionType.XXTEA;
+        }
 
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = true;
-            result.EncryptedData = fileData;
-            return result;
-        }
-        else
+        if (bundleName.Contains("_xor_"))
         {
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = false;
-            return result;
+            return EncyptionType.XOR;
         }
+
+        if (bundleName.Contains("_testres3_"))
+        {
+            return EncyptionType.Offset;
+        }
+
+        return EncyptionType.None;
     }
 }
-
-/// <summary>
-/// 文件偏移加密方式
-/// </summary>
-public class FileOffsetEncryption : IEncryptionServices
-{
-    public EncryptResult Encrypt(EncryptFileInfo fileInfo)
-    {
-        // 说明：对TestRes3资源目录进行加密
-        if (fileInfo.BundleName.Contains("_testres3_"))
-        {
-            int offset = 32;
-            byte[] fileData = File.ReadAllBytes(fileInfo.FileLoadPath);
-            var encryptedData = new byte[fileData.Length + offset];
-            Buffer.BlockCopy(fileData, 0, encryptedData, offset, fileData.Length);
-
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = true;
-            result.EncryptedData = encryptedData;
-            return result;
-        }
-        else
-        {
-            EncryptResult result = new EncryptResult();
-            result.Encrypted = false;
-            return result;
-        }
-    }
-}
-

@@ -20,9 +20,10 @@ namespace Ux
             {
                 maps[i, 5] = 0;
             }
-            var astart = Pool.Get<AStart>();
+            var astart = Pool.Get<AStar>();
             astart.Init(maps);
             var path = astart.Find(new Vector2Int(0, 0), new Vector2Int(0, 9));
+            astart.Release();
             Log.Info(path);
         }
     }

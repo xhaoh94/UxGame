@@ -1,7 +1,7 @@
 ﻿<Solution>
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="ThirdParty.Runtime.csproj" />
   <Project Path="Unity.HotfixBase.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.Main.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="ThirdParty.Editor.csproj" />

@@ -56,5 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Unity.slnx"
+    "dotnet.defaultSolution": "Unity.slnx",
+    "Codegeex.RepoIndex": true
 }
