@@ -460,15 +460,6 @@ namespace Ux.Editor.Build.Version
             return result;
         }
 
-        private IEncryptionServices CreateEncryptionServicesInstance(string encyptionClassName)
-        {
-            var encryptionClassTypes = EditorTools.GetAssignableTypes(typeof(IEncryptionServices));
-            var classType = encryptionClassTypes.Find(x => x.FullName.Equals(encyptionClassName));
-            if (classType != null)
-                return (IEncryptionServices)Activator.CreateInstance(classType);
-            else
-                return null;
-        }
         private T CreateServicesInstance<T>(string manifestClassName)
         {
             var manifestClassTypes = EditorTools.GetAssignableTypes(typeof(T));

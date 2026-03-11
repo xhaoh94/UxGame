@@ -62,7 +62,7 @@ namespace Ux.Editor.Build.Version
             {
                 _popupFieldManifestProess = new PopupField<string>(_manifestProcessServicesClassNames, 0)
                 {
-                    label = "清单进程加密"
+                    label = "资源清单加密"
                 };
                 _popupFieldManifestProess.RegisterValueChangedCallback(evt =>
                 {
@@ -74,7 +74,7 @@ namespace Ux.Editor.Build.Version
             {
                 _popupFieldManifestProess = new PopupField<string>
                 {
-                    label = "清单进程加密"
+                    label = "资源清单加密"
                 };
                 manifestContainer.Add(_popupFieldManifestProess);
             }
@@ -85,7 +85,7 @@ namespace Ux.Editor.Build.Version
             {
                 _popupFieldManifestRestore = new PopupField<string>(_manifestRestoreServicesClassNames, 0)
                 {
-                    label = "清单恢复解密"
+                    label = "资源清单解密"
                 };
                 _popupFieldManifestRestore.RegisterValueChangedCallback(evt =>
                 {
@@ -97,7 +97,7 @@ namespace Ux.Editor.Build.Version
             {
                 _popupFieldManifestRestore = new PopupField<string>
                 {
-                    label = "清单恢复解密"
+                    label = "资源清单解密"
                 };
                 manifestContainer.Add(_popupFieldManifestRestore);
             }
@@ -174,14 +174,6 @@ namespace Ux.Editor.Build.Version
         }
         #region 辅助方法
         // 辅助方法
-
-        private IEncryptionServices CreateEncryptionServicesInstance()
-        {
-            if (_popupFieldEncryption.index < 0)
-                return null;
-            var classType = _encryptionServicesClassTypes[_popupFieldEncryption.index];
-            return (IEncryptionServices)Activator.CreateInstance(classType);
-        }
 
         private static List<Type> GetServicesClassTypes<T>()
         {

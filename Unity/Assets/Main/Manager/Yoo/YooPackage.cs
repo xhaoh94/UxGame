@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using System;
 using System.IO;
 using UnityEngine;
@@ -102,8 +102,8 @@ namespace Ux
                             BuildinFileSystemParameters = buildinFileSystemParams,
                             CacheFileSystemParameters = cacheFileSystemParams
                         };
-                        var decryptionProcessManifest = new UxProcessManifest();
-                        initParameters.BuildinFileSystemParameters.AddParameter(FileSystemParametersDefine.MANIFEST_SERVICES, decryptionProcessManifest);
+                        var manifestServices = new UxManifestCryptoServices();
+                        initParameters.BuildinFileSystemParameters.AddParameter(FileSystemParametersDefine.MANIFEST_SERVICES, manifestServices);
                         initializationOperation = Package.InitializeAsync(initParameters);
                         break;
                     }
