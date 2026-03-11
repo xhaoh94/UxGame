@@ -1,5 +1,7 @@
 using Cysharp.Threading.Tasks;
 using HybridCLR.Editor.Commands;
+using Obfuz.Settings;
+using Obfuz4HybridCLR;
 using UnityEditor;
 using Ux.Editor.HybridCLR;
 using InstallerController = HybridCLR.Editor.Installer.InstallerController;
@@ -15,6 +17,7 @@ namespace Ux.Editor.Build.Version
                 HybridCLRCommand.ClearHOTDll();
                 await UxEditor.Export(tgCompileUI.value, tgCompileConfig.value, tgCompileProto.value, false);
                 var compile = (CompileType)compileType.value;
+                bool useObfuz = ObfuzSettings.Instance.polymorphicDllSettings.enable;
                 if (IsExportExecutable && tgCompileAot.value)
                 {
                     if (target != EditorUserBuildSettings.activeBuildTarget &&
@@ -34,19 +37,36 @@ namespace Ux.Editor.Build.Version
 
                     HybridCLRCommand.ClearAOTDll();
                     Log.Debug("---------------------------------------->执行HybridCLR预编译<---------------------------------------");
+
                     CompileDllCommand.CompileDll(target, compile == CompileType.Development);
                     Il2CppDefGeneratorCommand.GenerateIl2CppDef();
-
+                    if (useObfuz)
+                    {
+                        PrebuildCommandExt.GeneratePolymorphicCodes();
+                    }
                     // 这几个dll在HotUpdateDlls
                     LinkGeneratorCommand.GenerateLinkXml(target);
 
                     // 生成裁剪后的aot dll
                     StripAOTDllCommand.GenerateStripedAOTDlls(target);
 
-                    // 补充泛型约束到AOT dll，并保证已经build过的泛型AOT dll
-                    MethodBridgeGeneratorCommand.GenerateMethodBridgeAndReversePInvokeWrapper(target);
-                    AOTReferenceGeneratorCommand.GenerateAOTGenericReference(target);
-                    //PrebuildCommand.GenerateAll();
+                    if (useObfuz)
+                    {
+                        string obfuscatedHotUpdateDllPath = PrebuildCommandExt.GetObfuscatedHotUpdateAssemblyOutputPath(target);
+                        ObfuscateUtil.ObfuscateHotUpdateAssemblies(target, obfuscatedHotUpdateDllPath);
+                        // 补充泛型约束到AOT dll，并保证已经build过的泛型AOT dll
+                        PrebuildCommandExt.GenerateMethodBridgeAndReversePInvokeWrapper(target, obfuscatedHotUpdateDllPath);
+                        PrebuildCommandExt.GenerateAOTGenericReference(target, obfuscatedHotUpdateDllPath);
+                    }
+                    else
+                    {
+                        // 补充泛型约束到AOT dll，并保证已经build过的泛型AOT dll
+                        MethodBridgeGeneratorCommand.GenerateMethodBridgeAndReversePInvokeWrapper(target);
+                        AOTReferenceGeneratorCommand.GenerateAOTGenericReference(target);
+                    }
+
+                    // PrebuildCommand.GenerateAll();
+
 
                     Log.Debug("---------------------------------------->将AOT元数据Dll复制到资源目录<---------------------------------------");
                     HybridCLRCommand.CopyAOTAssembliesToYooAssetPath(target);
@@ -55,6 +75,11 @@ namespace Ux.Editor.Build.Version
                 {
                     Log.Debug("---------------------------------------->编译热更新DLL<---------------------------------------");
                     CompileDllCommand.CompileDll(target, compile == CompileType.Development);
+                    if (useObfuz)
+                    {
+                        string obfuscatedHotUpdateDllPath = PrebuildCommandExt.GetObfuscatedHotUpdateAssemblyOutputPath(target);
+                        ObfuscateUtil.ObfuscateHotUpdateAssemblies(target, obfuscatedHotUpdateDllPath);
+                    }
                 }
 
                 Log.Debug("---------------------------------------->将热更新Dll复制到资源目录<---------------------------------------");

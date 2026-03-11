@@ -5,7 +5,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "7a0032934b438ad20a4a691f8093ce1865824c42"
+      "hash": "4feac30cb2e105992986c737f7f54992b8300e1a"
     },
     "com.code-philosophy.luban": {
       "version": "https://gitee.com/focus-creative-games/luban_unity.git",
@@ -13,6 +13,20 @@
       "source": "git",
       "dependencies": {},
       "hash": "57e577126c4bac9abef927babb848a457ad5d563"
+    },
+    "com.code-philosophy.obfuz": {
+      "version": "https://gitee.com/focus-creative-games/obfuz.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "7b06f0fed8675c31cbae9760a93e7deec0c0a05c"
+    },
+    "com.code-philosophy.obfuz4hybridclr": {
+      "version": "https://gitee.com/focus-creative-games/obfuz4hybridclr.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "6277e75ce11de86b765d4bd75d4968d1bcaa2eaa"
     },
     "com.greenbamboogames.playablegraphmonitor": {
       "version": "2.6.3",
@@ -110,15 +124,6 @@
       "depth": 1,
       "source": "builtin",
       "dependencies": {}
-    },
-    "com.unity.ide.trae": {
-      "version": "https://github.com/dennyguotf/com.unity.ide.trae.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.test-framework": "1.1.9"
-      },
-      "hash": "0231d4b833feb294da5fc8fa7e04df85bd73773f"
     },
     "com.unity.ide.visualstudio": {
       "version": "2.0.26",

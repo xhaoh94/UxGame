@@ -16,6 +16,8 @@ MonoBehaviour:
     enable: 1
     linkXmlProcessCallbackOrder: 10000
     obfuscationProcessCallbackOrder: 10000
+  compatibilitySettings:
+    targetRuntime: 0
   assemblySettings:
     assembliesToObfuscate:
     - Unity.Main

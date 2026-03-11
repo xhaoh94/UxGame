@@ -1,6 +1,9 @@
 using HybridCLR.Editor;
 using HybridCLR.Editor.AOT;
+using HybridCLR.Editor.Commands;
 using HybridCLR.Editor.Meta;
+using Obfuz.Settings;
+using Obfuz4HybridCLR;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +22,7 @@ namespace Ux.Editor.HybridCLR
 
         [UnityEditor.Callbacks.DidReloadScripts]
         private static void OnScriptsReloaded()
-        {                            
+        {
             var dfs = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Split(';');
             var v = dfs.Contains("HOTFIX_CODE");
             if (v != SettingsUtil.Enable)
@@ -80,13 +83,15 @@ namespace Ux.Editor.HybridCLR
             }
             SettingsUtil.Enable = false;
             symbols.Remove("HOTFIX_CODE");
-            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, string.Join(";", symbols));            
+            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, string.Join(";", symbols));
         }
         [MenuItem("HybridCLR/切换热更模式/关", true, 2001)]
         public static bool ValidateCloseHotfixCode()
         {
             return SettingsUtil.Enable;
         }
+
+
 
         public static void ClearHOTDll()
         {
@@ -172,21 +177,29 @@ namespace Ux.Editor.HybridCLR
                 Directory.CreateDirectory(HotDir);
             }
             string hotfixDllSrcDir = SettingsUtil.GetHotUpdateDllsOutputDirByTarget(target);
+            // 混淆后的热更DLL目录
+            string obfuscatedHotUpdateDllPath = PrebuildCommandExt.GetObfuscatedHotUpdateAssemblyOutputPath(target);
+            // 获取需要混淆的DLL名称列表
+            List<string> obfuscationRelativeAssemblyNames = ObfuzSettings.Instance.assemblySettings.GetObfuscationRelativeAssemblyNames();
             foreach (var dll in SettingsUtil.HotUpdateAssemblyFilesExcludePreserved)
             {
-                var dllName = dll;
-                if (!dllName.EndsWith(".dll"))
+                var dllName = dll.EndsWith(".dll") ? dll : $"{dll}.dll";
+                // 判断当前DLL是否需要使用混淆后的版本
+                string srcDir = obfuscationRelativeAssemblyNames.Contains(dll) ? obfuscatedHotUpdateDllPath : hotfixDllSrcDir;
+                string dllPath = $"{srcDir}/{dllName}";
+
+                if (!File.Exists(dllPath))
                 {
-                    dllName += ".dll";
+                    Debug.LogError($"❌ 热更DLL不存在: {dllPath}，请检查编译或混淆是否成功");
+                    continue;
                 }
-                string dllPath = $"{hotfixDllSrcDir}/{dllName}";
                 string dllBytesPath = $"{HotDir}/{dllName}.bytes";
                 File.Copy(dllPath, dllBytesPath, true);
-                Log.Info($"复制{dllPath}到{HotDir}完成");
+                string obfStatus = obfuscationRelativeAssemblyNames.Contains(dll) ? "[已混淆]" : "[未混淆]";
+                Debug.Log($"{obfStatus} 复制热更DLL: {dllPath} 到 {dllBytesPath} 完成");
             }
             AssetDatabase.Refresh();
         }
-
 
     }
 
