@@ -45,19 +45,7 @@ namespace Ux.Editor
         [MenuItem("UxGame/初始化", false, 10)]
         public static void Init()
         {
-            //Export().Forget();
-            //var test = new BinaryHeap<int>((a, b) => { return b - a; });
-            //while (test.Count < 10)
-            //{
-            //    var num = UnityEngine.Random.Range(0, 100);
-            //    Log.Debug(num);
-            //    test.Push(num);
-            //}
-            //Log.Info(test._list);
-            //test.Sort();
-            //Log.Info(test._list);
-
-            WayfindingMgr.Ins.Test();
+            Export().Forget();            
         }
         [MenuItem("UxGame/切换到/Boot", false, 1000)]
         public static void ChangeBoot()
@@ -69,26 +57,6 @@ namespace Ux.Editor
         {
             ChangeBoot();
             UnityEditor.EditorApplication.isPlaying = true;
-        }
-
-        [MenuItem("UxGame/Test/Eval")]
-        public static void TestEval()
-        {
-            string eval = "10+max(1+1,test(a+b+c,c-b)*-((-b-2)*(a+c)))";
-            EvalMgr.Ins.AddVariable("a", 2);
-            EvalMgr.Ins.AddVariable("b", -1);
-            EvalMgr.Ins.AddVariable("c", 3);
-            EvalMgr.Ins.AddFunction("test", (nums) =>
-            {
-                return nums[0] + nums[1];
-            });
-            EvalMgr.Ins.Release();
-
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            var value = EvalMgr.Ins.Parse(eval);
-            sw.Stop();
-            Log.Debug(eval + ":{0},ms:{1}", value, sw.ElapsedMilliseconds);
-        }
+        }      
     }
 }

@@ -399,7 +399,7 @@ namespace Ux.Editor.Build.Version
             {
                 if (EditorUtility.DisplayDialog("提示", $"检测到未保存的场景文件,是否切到Boot场景继续打包？", "确定", "取消"))
                 {
-                    Build();
+                    UxEditor.ChangeBoot();                    
                 }
                 return;
             }

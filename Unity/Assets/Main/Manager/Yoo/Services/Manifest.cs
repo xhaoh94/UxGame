@@ -14,7 +14,6 @@ public sealed class UxManifestCryptoServices : IManifestProcessServices, IManife
     }
 }
 
-
 public class XorCrypto
 {
     // 密钥：16字节（128位）
@@ -36,27 +35,26 @@ public class XorCrypto
         if (data == null)
             throw new ArgumentNullException(nameof(data));
 
-        // 输出格式：[4字节Magic][1字节Version][3字节保留][加密数据]
         byte[] result = new byte[HEADER_SIZE + data.Length];
         
-        // 写入文件头
-        BitConverter.GetBytes(MAGIC).CopyTo(result, 0);
+        // 显式小端写入（避免 BitConverter 分配）
+        result[0] = (byte)MAGIC;
+        result[1] = (byte)(MAGIC >> 8);
+        result[2] = (byte)(MAGIC >> 16);
+        result[3] = (byte)(MAGIC >> 24);
         result[4] = VERSION;
-        // result[5-7] 保留字节，可用于未来扩展
         
-        // 加密数据部分（位置相关的XOR）
+        // 预计算 header 字节（避免循环中重复读取）
+        Span<byte> headerBytes = stackalloc byte[4] { result[1], result[2], result[3], result[4] };
+        
         for (int i = 0; i < data.Length; i++)
         {
             int resultIndex = HEADER_SIZE + i;
             
-            // 第一层：与密钥循环XOR
-            byte keyByte = KEY[i % KEY.Length];
-            
-            // 第二层：与位置相关（增加破解难度）
+            // 取模改为位运算（& 15 = % 16，& 3 = % 4）
+            byte keyByte = KEY[i & 15];
             byte positionByte = (byte)((i * 0x9E) ^ (i >> 3));
-            
-            // 第三层：与文件头部分字节混合（增加关联性）
-            byte headerByte = result[(i % 4) + 1]; // 使用Version和保留字节
+            byte headerByte = headerBytes[i & 3];
             
             result[resultIndex] = (byte)(data[i] ^ keyByte ^ positionByte ^ headerByte);
         }
@@ -75,12 +73,10 @@ public class XorCrypto
         if (data.Length < HEADER_SIZE)
             throw new ArgumentException("Invalid manifest data: too short", nameof(data));
 
-        // 验证文件头
-        uint magic = BitConverter.ToUInt32(data, 0);
+        // 显式小端读取（避免 BitConverter 分配和端序问题）
+        uint magic = (uint)(data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
         if (magic != MAGIC)
         {
-            // 文件头不匹配，可能是未加密的原始文件，直接返回
-            // 或者抛出异常，根据业务需求决定
             Log.Warning("Manifest magic mismatch, treating as unencrypted");
             return data;
         }
@@ -89,10 +85,11 @@ public class XorCrypto
         if (version != VERSION)
         {
             Log.Warning($"Manifest version mismatch: expected {VERSION}, got {version}");
-            // 版本不匹配时，尝试用当前版本算法解密（向后兼容）
         }
 
-        // 解密数据
+        // 预计算 header 字节
+        Span<byte> headerBytes = stackalloc byte[4] { data[1], data[2], data[3], data[4] };
+
         int payloadLength = data.Length - HEADER_SIZE;
         byte[] result = new byte[payloadLength];
         
@@ -100,10 +97,10 @@ public class XorCrypto
         {
             int dataIndex = HEADER_SIZE + i;
             
-            // 逆向三层XOR
-            byte keyByte = KEY[i % KEY.Length];
+            // 取模改为位运算
+            byte keyByte = KEY[i & 15];
             byte positionByte = (byte)((i * 0x9E) ^ (i >> 3));
-            byte headerByte = data[(i % 4) + 1];
+            byte headerByte = headerBytes[i & 3];
             
             result[i] = (byte)(data[dataIndex] ^ keyByte ^ positionByte ^ headerByte);
         }
