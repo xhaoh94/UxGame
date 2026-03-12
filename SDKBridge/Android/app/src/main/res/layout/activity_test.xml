@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SDKBridge 桥接框架测试"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btn_init"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="初始化桥接框架" />
+
+    <Button
+        android:id="@+id/btn_toast"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="调用 showToast" />
+
+    <Button
+        android:id="@+id/btn_device_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="调用 getDeviceInfo" />
+
+    <Button
+        android:id="@+id/btn_async"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="调用 doAsyncWork" />
+
+    <TextView
+        android:id="@+id/tv_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="结果将显示在这里"
+        android:textSize="14sp"
+        android:fontFamily="monospace"
+        android:background="#f0f0f0"
+        android:padding="12dp" />
+
+</LinearLayout>
