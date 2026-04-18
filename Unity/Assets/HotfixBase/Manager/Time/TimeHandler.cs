@@ -272,15 +272,10 @@ namespace Ux
 
             public override RunStatus Run()
             {
-                if (Status != Status.Normal)
-                {
-                    return RunStatus.None;
-                }
-
                 IGameTime gameTime = isLocalTime ? Ins.LocalTime : Ins.ServerTime;
                 if (gameTime.TimeStamp < TimeStamp) return RunStatus.Wait;
                 Exe?.Run();
-                if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
+                if (Status != Status.Normal) //以防OnRun业务逻辑给Relmove掉了
                 {
                     return RunStatus.None;
                 }
@@ -343,15 +338,10 @@ namespace Ux
 
             public override RunStatus Run()
             {
-                if (Status != Status.Normal)
-                {
-                    return RunStatus.None;
-                }
-
                 if ((_isLocalTime ? Ins.LocalTime : Ins.ServerTime).TimeStamp < TimeStamp)
                     return RunStatus.Wait;
                 Exe?.Run();
-                if (Status != Status.Normal) //以防OnRun业务逻辑给Release掉了
+                if (Status != Status.Normal) //以防OnRun业务逻辑给Relmove掉了
                 {
                     return RunStatus.None;
                 }
@@ -446,11 +436,6 @@ namespace Ux
 
             public override RunStatus Run()
             {
-                if (Status != Status.Normal)
-                {
-                    return RunStatus.None;
-                }
-
                 double total = UseFrame ? UnityEngine.Time.frameCount : UnityEngine.Time.unscaledTimeAsDouble;
                 if (total < ExeTime) return RunStatus.Wait;
                 ExeTime += Delay;

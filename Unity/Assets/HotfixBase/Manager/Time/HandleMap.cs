@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.UI;
 
 namespace Ux
 {
@@ -71,7 +72,7 @@ namespace Ux
                     {
                         var handle = _waitDels[i];
                         RemoveFromDicts(handle);
-                        // Status 已在 Remove 时被置为 WaitDel，在 Heap 弹栈时或重构时才会调用 Release 回收对象池
+                        handle.Release();
                     }
                     _waitDels.Clear();
                     PurgeDeleted(); // 集中清理无效定时器并重建堆
@@ -134,6 +135,11 @@ namespace Ux
 
             void RemoveFromDicts(IHandle handle)
             {
+                // 防止重复移除：若字典中已不存在该句柄，则直接返回，避免重复释放导致的潜在错误
+                if (!_keyHandle.ContainsKey(handle.Key))
+                {
+                    return;
+                }
 #if UNITY_EDITOR
                 var exeDesc = handle.MethodName;
                 if (_descEditor.TryGetValue(exeDesc, out var temList))
@@ -165,13 +171,13 @@ namespace Ux
                 for (int i = 0; i < _handles.Count; i++)
                 {
                     var h = _handles[i];
-                    if (h.Status == Status.WaitDel)
-                    {
-                        h.Release();
-                    }
-                    else
+                    if (h.Status == Status.Normal)
                     {
                         _handles[validCount++] = h;
+                    }
+                    else if(h.Status == Status.WaitDel)
+                    {
+                        h.Release();
                     }
                 }
 
@@ -200,7 +206,7 @@ namespace Ux
                 var root = _handles[0];
                 var last = _handles[_handles.Count - 1];
                 _handles.RemoveAt(_handles.Count - 1);
-                
+
                 if (_handles.Count > 0)
                 {
                     _handles[0] = last;
@@ -231,14 +237,14 @@ namespace Ux
                     int left = 2 * index + 1;
                     int right = left + 1;
                     int smallest = left;
-                    
+
                     if (right < count && _handles[right].Compare(_handles[left]) < 0)
                     {
                         smallest = right;
                     }
-                    
+
                     if (item.Compare(_handles[smallest]) <= 0) break;
-                    
+
                     _handles[index] = _handles[smallest];
                     index = smallest;
                 }
@@ -258,14 +264,12 @@ namespace Ux
                 while (_handles.Count > 0)
                 {
                     var handler = _handles[0];
-
-                    if (handler.Status == Status.WaitDel)
+                    if (handler.Status != Status.Normal)
                     {
                         HeapPop();
-                        handler.Release();
                         continue;
                     }
-                    var status = handler.Run();
+                    var status = handler.Run();                    
 
                     if (status == RunStatus.Wait)
                     {
@@ -273,7 +277,8 @@ namespace Ux
                         break;
                     }
 
-                    HeapPop();
+                    HeapPop();//弹出堆顶
+                    if (status == RunStatus.None) continue;
 
                     if (status == RunStatus.Update)
                     {
@@ -283,13 +288,14 @@ namespace Ux
                         // 状态变为 Update 表示时间修改了需要循环执行，暂存起来下一帧再加入堆
                         _waitUpdates.Add(handler);
                     }
-                    else if (status == RunStatus.Done || status == RunStatus.None)
+                    else if (status == RunStatus.Done)
                     {
 #if UNITY_EDITOR
                         __isEvent = true;
 #endif
+                        handler.Status = Status.WaitDel;
                         RemoveFromDicts(handler);
-                        handler.Release();
+                        handler.Release();                            
                     }
                 }
             }
@@ -313,7 +319,7 @@ namespace Ux
             public void RemoveAll(object tag)
             {
                 if (tag == null) return;
-                
+
                 if (_waitAdds.Count > 0)
                 {
                     for (int i = _waitAdds.Count - 1; i >= 0; i--)
@@ -325,7 +331,7 @@ namespace Ux
                         }
                     }
                 }
-                
+
                 if (!_tagkeys.TryGetValue(tag, out var keys)) return;
                 // 转成数组防遍历报错
                 foreach (var key in new List<long>(keys))
