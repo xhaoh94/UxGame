@@ -67,9 +67,9 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        protected override void ToShow(bool isAnim, int id, IUIParam param, bool checkStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id,  bool checkStack, CancellationTokenSource token)
         {
-            base.ToShow(isAnim, id, param, checkStack, token);
+            base.ToShow(isAnim, id, checkStack, token);
             AddItemClick(__listTab, OnTabClick);
             AddClick(__btnClose, OnBtnCloseClick);
             Refresh(-1);

@@ -76,7 +76,7 @@ namespace Ux.UI
         {
             Log.Debug("单击");
             UIMgr.Tip.Show("单击");
-            testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
+            // testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
         }
         partial void OnBtnDoubleMultipleClick(EventContext e)
         {

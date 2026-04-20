@@ -1,4 +1,4 @@
-﻿using FairyGUI;
+using FairyGUI;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ namespace Ux
         int ID { get; }
         IUIData Data { get; }
         int HideDestroyTime { get; }
-        bool Visable { get; set; }
+        bool Visible { get; set; }
         IFilter Filter { get; set; }
         void InitData(IUIData data, CallBackData initData);
         void Dispose();
@@ -228,8 +228,8 @@ namespace Ux
 
             public void Dispose()
             {
-                MessageBox._waitDels.Remove(ui.ID);
-                Tip._waitDels.Remove(ui.ID);
+                MessageBox.RemoveWaitDelById(ui.ID);
+                Tip.RemoveWaitDelById(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Ins.Dispose(ui);
                 Release();
@@ -238,8 +238,8 @@ namespace Ux
             public void GetUI(out IUI outUI)
             {
                 outUI = ui;
-                MessageBox._waitDels.Remove(ui.ID);
-                Tip._waitDels.Remove(ui.ID);
+                MessageBox.RemoveWaitDelById(ui.ID);
+                Tip.RemoveWaitDelById(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Release();
             }

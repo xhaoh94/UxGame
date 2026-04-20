@@ -32,8 +32,8 @@ namespace Ux
 #endif
             UnityPool.Init();            
             ConfigMgr.Ins.Init();            
-            UIMgr.MessageBox.SetDefalutType<CommonMessageBox>();
-            UIMgr.Tip.SetDefalutType<CommonTip>();
+            UIMgr.MessageBox.SetDefaultType<CommonMessageBox>();
+            UIMgr.Tip.SetDefaultType<CommonTip>();
 
 
             GameMain.Machine.AddNode<StateLogin>();

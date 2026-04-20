@@ -26,6 +26,7 @@ namespace Ux
             OnRemovedFromStage();
             GObject.onRemovedFromStage.Remove(OnRemovedFromStage);
             Index = -1;
+            (this as IUISetParam).SetParam(null);
             ToDispose(false);
             Pool.Push(this);
         }
@@ -33,7 +34,8 @@ namespace Ux
         void IItemRenderer.Set(int index, IUIParam data, bool isAnim)
         {
             Index = index;
-            ToShow(false, 0, data, false, null);
+            (this as IUISetParam).SetParam(data);
+            ToShow(false, 0, false, null);
             if (isAnim && ShowAnim != null)
             {
                 ShowAnim?.SetToStart();

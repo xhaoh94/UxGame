@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
 using System.Collections.Generic;
@@ -145,7 +145,6 @@ namespace Ux
 
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
         {
-
             string resName = string.Format(PathHelper.Res.UI, pkg, "fui");
 #if UNITY_EDITOR
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();

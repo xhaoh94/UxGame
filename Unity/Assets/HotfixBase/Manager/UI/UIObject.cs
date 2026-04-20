@@ -20,7 +20,11 @@ namespace Ux
     {
         void Change(bool b);
     }
-    public class UIObject
+    public interface IUISetParam
+    {
+        void SetParam(IUIParam param);
+    }
+    public class UIObject : IUISetParam
     {
         private UIEvent _event;
         private List<UIObject> _components;
@@ -77,18 +81,14 @@ namespace Ux
         }
 
         IUIParam _paramVo;
-        IUIParam ParamVo
+        void IUISetParam.SetParam(IUIParam param)
         {
-            get => _paramVo;
-            set
+            //只有UIBase的界面，才回收
+            if (this is UIBase)
             {
-                //只有UIBase的界面，才回收
-                if (this is UIBase)
-                {
-                    _paramVo?.Release();
-                }
-                _paramVo = value;
+                _paramVo?.Release();
             }
+            _paramVo = param;
         }
         protected bool TryGetParam<V>(out V value, UIParamType type = UIParamType.A)
         {
@@ -97,7 +97,7 @@ namespace Ux
                 value = default;
                 return false;
             }
-            return ParamVo.TryGet(out value, type);
+            return _paramVo.TryGet(out value, type);
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace Ux
             }
         }
 
-        protected virtual void ToShow(bool isAnim, int id, IUIParam param, bool checkStack, CancellationTokenSource token)
+        protected virtual void ToShow(bool isAnim, int id, bool checkStack, CancellationTokenSource token)
         {
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
@@ -277,11 +277,11 @@ namespace Ux
             OnAddEvent();
             foreach (var component in Components)
             {
-                component.ToShow(isAnim, id, param, checkStack, token);
+                (component as IUISetParam).SetParam(_paramVo);
+                component.ToShow(isAnim, id, checkStack, token);
             }
-            ParamVo = param;
             OnShow();
-            _CheckShow(id, param, checkStack, token).Forget();
+            _CheckShow(id, checkStack, token).Forget();
         }
         void _ChangeAsync(bool b)
         {
@@ -290,7 +290,7 @@ namespace Ux
                 async.Change(b);
             }
         }
-        async UniTaskVoid _CheckShow(int id, IUIParam param, bool checkStack, CancellationTokenSource token)
+        async UniTaskVoid _CheckShow(int id, bool checkStack, CancellationTokenSource token)
         {
             _ChangeAsync(true);
             bool isCanceled = false;
@@ -316,15 +316,15 @@ namespace Ux
                 return;
             }
             OnShowAnimComplete();
-            OnShowCallBack?.Invoke(id, param, checkStack);
+            OnShowCallBack?.Invoke(id, _paramVo, checkStack);
         }
 
-        protected virtual void ToOverwrite(IUIParam param)
+        protected virtual void ToOverwrite()
         {
-            ParamVo = param;
             foreach (var component in Components)
             {
-                component.ToOverwrite(ParamVo);
+                (component as IUISetParam).SetParam(_paramVo);
+                component.ToOverwrite();
             }
             OnOverwrite();
         }
@@ -346,7 +346,7 @@ namespace Ux
 
         protected virtual void ToHide(bool isAnim, bool checkStack, CancellationTokenSource token)
         {
-            ParamVo = null;
+            (this as IUISetParam).SetParam(null);
             ShowAnim?.Stop();
             if (isAnim && HideAnim != null)
             {

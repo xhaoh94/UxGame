@@ -29,8 +29,8 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        protected override void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
-        {
+        protected override void ToShow(bool isAnim, int id,  bool isStack, CancellationTokenSource token)
+        {            
             if (TryGetParam(out UITipFactory.TipData _tipData))
             {
                 tipData = _tipData;
@@ -42,7 +42,7 @@ namespace Ux
                 return;
             }            
             InitParam();
-            base.ToShow(isAnim, id, param, isStack, token);
+            base.ToShow(isAnim, id, isStack, token);
         }
 
         protected virtual void InitParam()

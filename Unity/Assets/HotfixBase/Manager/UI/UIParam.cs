@@ -12,7 +12,7 @@ namespace Ux
     public interface IUIParam
     {
         IUIParam Copy();
-        bool TryGet<T>(out T t, UIParamType type);
+        bool TryGet<T>(out T t, UIParamType type = UIParamType.A);
         void Release();
         public static IUIParam Create<A>(A a)
         {

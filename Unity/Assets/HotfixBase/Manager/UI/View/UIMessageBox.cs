@@ -1,4 +1,4 @@
-﻿using FairyGUI;
+using FairyGUI;
 using System;
 using System.Threading;
 using static Ux.UIMgr;
@@ -31,7 +31,7 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        protected override void ToShow(bool isAnim, int id, IUIParam param, bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id, bool isStack, CancellationTokenSource token)
         {
             if(TryGetParam(out UIMessageBoxFactory.MessageBoxData _messageBoxData))
             {
@@ -45,7 +45,7 @@ namespace Ux
             }
             
             InitParam();
-            base.ToShow(isAnim, id, param, isStack, token);
+            base.ToShow(isAnim, id, isStack, token);
         }
         protected virtual void ResetBtns()
         {
@@ -96,7 +96,7 @@ namespace Ux
                     case UIMessageBoxFactory.ParamType.Btn2Fn:
                         AddClick(__btn2, OnBtn1Click);
                         break;
-                    case UIMessageBoxFactory.ParamType.ChcekBox:
+                    case UIMessageBoxFactory.ParamType.CheckBox:
                         if (__checkbox != null)
                         {
                             __checkbox.text = ((UIMessageBoxFactory.MessageBoxCheckBox)value).Desc;
@@ -141,7 +141,7 @@ namespace Ux
         {
             if (__checkbox != null
                 && __checkbox.selected
-                && messageBoxData.Param.TryGetValue(UIMessageBoxFactory.ParamType.ChcekBox, out var obj)
+                && messageBoxData.Param.TryGetValue(UIMessageBoxFactory.ParamType.CheckBox, out var obj)
                 && obj is UIMessageBoxFactory.MessageBoxCheckBox checkBox)
             {
                 messageBoxData.PushTagCallBack?.Invoke(checkBox.Tag);

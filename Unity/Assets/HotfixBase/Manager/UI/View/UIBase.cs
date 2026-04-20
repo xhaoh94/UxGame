@@ -70,7 +70,7 @@ namespace Ux
             }
 
         }
-        public bool Visable
+        public bool Visible
         {
             get
             {
@@ -128,9 +128,10 @@ namespace Ux
             {
                 case UIState.Show:
                 case UIState.ShowAnim:
-                    if (id == ID && param != null)
+                    if (id == ID)
                     {
-                        ToOverwrite(param);
+                        (this as IUISetParam).SetParam(param);
+                        ToOverwrite();
                     }
                     _Show(id, param, checkStack);
                     task.TrySetResult();
@@ -156,8 +157,9 @@ namespace Ux
                 if (isAnim && ShowAnim != null)
                 {
                     _showToken = new CancellationTokenSource();
-                }
-                ToShow(isAnim, id, param, checkStack, _showToken);
+                }                                
+                (this as IUISetParam).SetParam(param);
+                ToShow(isAnim, id, checkStack, _showToken);
                 task.TrySetResult();
             }
             return task.Task;
