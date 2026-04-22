@@ -228,7 +228,7 @@ namespace Ux
 
             public void Dispose()
             {
-                MessageBox.RemoveWaitDelById(ui.ID);
+                Dialog.RemoveWaitDelById(ui.ID);
                 Tip.RemoveWaitDelById(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Ins.Dispose(ui);
@@ -238,7 +238,7 @@ namespace Ux
             public void GetUI(out IUI outUI)
             {
                 outUI = ui;
-                MessageBox.RemoveWaitDelById(ui.ID);
+                Dialog.RemoveWaitDelById(ui.ID);
                 Tip.RemoveWaitDelById(ui.ID);
                 Ins._waitDels.Remove(ui.ID);
                 Release();

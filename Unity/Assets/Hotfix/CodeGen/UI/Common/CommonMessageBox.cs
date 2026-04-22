@@ -3,7 +3,7 @@ using FairyGUI;
 namespace Ux.UI
 {
 	[Package("Common")]
-	public partial class CommonMessageBox : UIMessageBox
+	public partial class CommonMessageBox : UIDialog
 	{
 		protected override string PkgName => "Common";
 		protected override string ResName => "CommonMessageBox";

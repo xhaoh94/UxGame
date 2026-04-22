@@ -13,7 +13,7 @@ namespace Ux
         //显示超时
         const float _showTimeout = 5f;
         //对话弹窗
-        public static readonly UIMessageBoxFactory MessageBox = new UIMessageBoxFactory();
+        public static readonly UIDialogFactory Dialog = new UIDialogFactory();
         //提示
         public static readonly UITipFactory Tip = new UITipFactory();
 
@@ -93,7 +93,7 @@ namespace Ux
         //清理缓存
         void _LowMemory()
         {
-            MessageBox?.Clear();
+            Dialog?.Clear();
             Tip?.Clear();
             if (_cache.Count > 0)
             {
@@ -642,7 +642,7 @@ namespace Ux
             if (data == null) return;
             if (data.Pkgs == null || data.Pkgs.Length == 0) return;
             RemoveUIPackage(data.Pkgs);
-            if (ui is UIMessageBox)
+            if (ui is UIDialog)
             {
                 RemoveUIData(id);
             }
@@ -717,17 +717,15 @@ namespace Ux
             download = ResMgr.Lazyload.GetDownloaderByTags(tags);
             if (download == null) return false;
             Log.Debug($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
-            MessageBox.DoubleBtn(
-                "下载",
-                $"一共发现了{download.TotalDownloadCount}个资源需要更新下载。",
-                "下载",
-                () =>
-                {
-                    //TODO 显示下载界面
-                    _idDownloader.Add(id, download);
-                    download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
-                },
-                "取消", null);
+            Dialog.Get()
+            .WithTitle("下载")
+            .WithContent($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。")
+            .WithBtn1("下载", () =>
+            {
+                //TODO 显示下载界面
+                _idDownloader.Add(id, download);
+                download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
+            });
             return true;
         }
 

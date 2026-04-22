@@ -32,7 +32,7 @@ namespace Ux
 #endif
             UnityPool.Init();            
             ConfigMgr.Ins.Init();            
-            UIMgr.MessageBox.SetDefaultType<CommonMessageBox>();
+            UIMgr.Dialog.SetDefaultType<CommonMessageBox>();
             UIMgr.Tip.SetDefaultType<CommonTip>();
 
 

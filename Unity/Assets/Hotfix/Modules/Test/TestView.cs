@@ -65,12 +65,25 @@ namespace Ux.UI
         }
         partial void OnBtnTestClick(EventContext e)
         {
-            UIMgr.MessageBox.SingleBtnCheckBox("_test", "本次登录不显示咯", "提示2", $"测试弹窗2", "确定", () =>
+
+            var messageBox3 = UIMgr.Dialog.Get();
+            messageBox3.WithCheckBox("_test", "本次登录不显示咯");
+            messageBox3.WithTitle("提示1");
+            messageBox3.WithContent("测试弹窗2");
+            messageBox3.WithBtn1("确定",() =>
             {
-                Log.Debug("CheckBox");
+                 Log.Debug("CheckBox");
             });
-            //UIMgr.Dialog.SingleBtn("提示1", $"测试弹窗1", "确定", null);
-            //UIMgr.Dialog.DoubleBtn("提示2", $"测试弹窗2", "确定", null, "取消", null);
+            messageBox3.Show();
+
+            var messageBox1 = UIMgr.Dialog.Get();
+            messageBox1.WithTitle("提示1");
+            messageBox1.WithContent("测试弹窗1");            
+            messageBox1.Show();
+            var messageBox2 = UIMgr.Dialog.Get();
+            messageBox2.WithTitle("提示2");
+            messageBox2.WithContent("测试弹窗2");            
+            messageBox2.Show();
         }
         partial void OnBtnSingleClick(EventContext e)
         {
@@ -82,7 +95,7 @@ namespace Ux.UI
         {
             Log.Debug("双击");
             UIMgr.Tip.Show("双击");
-            testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
+            // testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
         }
         partial void OnBtnLongClickLongPress(ref bool isBreak)
         {
