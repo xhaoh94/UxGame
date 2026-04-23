@@ -19,8 +19,7 @@ namespace Ux.UI
     }
     [UI]
     partial class MultipleView
-    {
-        //public override bool IsDestroy => false;        
+    {        
         protected override IUIAnim ShowAnim => new UIAnimTransition(t0);
         protected override IUIAnim HideAnim => new UIAnimTransition(t1);
         public override UIType Type => UIType.Stack;

@@ -14,7 +14,6 @@ namespace Ux.Editor.Debugger.UI
 		public ListView listShowed;
 		public ListView listShowing;
 		public ListView listCacel;
-		public ListView listTemCacel;
 		public ListView listWaitDel;
 		public VisualElement veList;
 		public TextField inputSearch;
@@ -66,14 +65,6 @@ namespace Ux.Editor.Debugger.UI
 			#else
 			listCacel.onSelectionChange += e => _OnListCacelItemClick(e);
 			#endif
-			listTemCacel = root.Q<ListView>("listTemCacel");
-			listTemCacel.makeItem = ()=> { var e = new VisualElement(); _OnMakeListTemCacelItem(e); return e; };
-			listTemCacel.bindItem = (e,i)=> _OnBindListTemCacelItem(e,i);
-			#if UNITY_2022_1_OR_NEWER
-			listTemCacel.selectionChanged += e => _OnListTemCacelItemClick(e);
-			#else
-			listTemCacel.onSelectionChange += e => _OnListTemCacelItemClick(e);
-			#endif
 			listWaitDel = root.Q<ListView>("listWaitDel");
 			listWaitDel.makeItem = ()=> { var e = new VisualElement(); _OnMakeListWaitDelItem(e); return e; };
 			listWaitDel.bindItem = (e,i)=> _OnBindListWaitDelItem(e,i);
@@ -89,7 +80,9 @@ namespace Ux.Editor.Debugger.UI
 			btnClear.clicked += () => _OnBtnClearClick();
 			TopBar = root.Q<Toolbar>("TopBar");
 			TopBar0 = root.Q<ToolbarButton>("TopBar0");
+			TopBar0.clicked += () => _OnTopBar0Click();
 			TopBar1 = root.Q<ToolbarButton>("TopBar1");
+			TopBar1.clicked += () => _OnTopBar1Click();
 			list = root.Q<ListView>("list");
 			list.makeItem = ()=> { var e = new VisualElement(); _OnMakeListItem(e); return e; };
 			list.bindItem = (e,i)=> _OnBindListItem(e,i);
@@ -119,14 +112,13 @@ namespace Ux.Editor.Debugger.UI
 		partial void _OnMakeListCacelItem(VisualElement e);
 		partial void _OnBindListCacelItem(VisualElement e,int index);
 		partial void _OnListCacelItemClick(IEnumerable<object> objs);
-		partial void _OnMakeListTemCacelItem(VisualElement e);
-		partial void _OnBindListTemCacelItem(VisualElement e,int index);
-		partial void _OnListTemCacelItemClick(IEnumerable<object> objs);
 		partial void _OnMakeListWaitDelItem(VisualElement e);
 		partial void _OnBindListWaitDelItem(VisualElement e,int index);
 		partial void _OnListWaitDelItemClick(IEnumerable<object> objs);
 		partial void _OnInputSearchChanged(ChangeEvent<string> e);
 		partial void _OnBtnClearClick();
+		partial void _OnTopBar0Click();
+		partial void _OnTopBar1Click();
 		partial void _OnMakeListItem(VisualElement e);
 		partial void _OnBindListItem(VisualElement e,int index);
 		partial void _OnListItemClick(IEnumerable<object> objs);

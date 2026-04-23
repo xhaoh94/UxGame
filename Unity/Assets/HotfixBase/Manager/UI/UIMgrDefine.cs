@@ -25,44 +25,20 @@ namespace Ux
     
     public enum UIType
     {
-        /// <summary>
-        /// 打开时不会关闭任何界面，但会被Stack界面打开的时候关闭（Stack界面关闭的时候，会自动重新打开）
-        /// </summary>
         Normal,
-        /// <summary>
-        /// 打开时会关闭除Fixed之外的界面，也会被其他Stack界面打开的时候关闭（Stack界面关闭的时候，会自动重新打开） 
-        /// </summary>
         Stack,
-        /// <summary>
-        /// 固定界面,不会关闭其他界面，也不会被其他界面关闭
-        /// </summary>
         Fixed,
     }
 
-    //必须是2的n次方,可组合使用 (PS:Blur|Fixed)
     public enum UIBlur
     {
-        /// <summary>
-        /// 不会模糊其他界面也不会被其他界面模糊
-        /// </summary>
         None = 0x1,
-        /// <summary>
-        /// 不会模糊其他界面但会被其他界面模糊
-        /// </summary>
         Normal = 0x2,
-        /// <summary>
-        /// 模糊非固定界面
-        /// </summary>
         Blur = 0x4,
-        /// <summary>
-        /// 模糊固定界面
-        /// </summary>
         Fixed = 0x8,
-        /// <summary>
-        /// 模糊场景
-        /// </summary>
         Scene = 0x16,
     }
+
     public partial class UIMgr
     {
         public readonly struct CallBackData
@@ -77,6 +53,7 @@ namespace Ux
             public readonly Action<IUI> hideCb;
             public readonly Func<IUI, bool, bool> stackCb;            
         }
+        
         public struct BlurStack
         {
             public readonly UIBlur Blur;
@@ -97,6 +74,7 @@ namespace Ux
             }
 #endif
         }
+        
         public struct UIStack
         {
             public readonly int ParentID;
@@ -114,6 +92,7 @@ namespace Ux
                 Type = type;
             }            
         }
+        
         public readonly struct UIParse
         {
             public UIParse(Type type, int id, IUITabData tabData)
@@ -205,42 +184,47 @@ namespace Ux
             public IUIParam Param { get; }
             public bool IsAnim { get; }
         }
-        private class WaitDel
+
+        public class WaitDel
         {
             IUI ui;
             long timeKey;
             public string Name => ui.Name;
-            public void Init(IUI _ui)
+            public int ID => ui.ID;
+            public Action<int> OnRemoveFromWaitDel;
+            public Action<IUI> OnDisposeFromWaitDel;
+            public void Init(IUI _ui, Action<int> onRemove,Action<IUI> onDispose)
             {
                 ui = _ui;
-                timeKey = TimeMgr.Ins.Timer(_ui.HideDestroyTime, this, Exe).Repeat(1).Build(); //一段时间后执行删除                
+                OnRemoveFromWaitDel = onRemove;
+                OnDisposeFromWaitDel = onDispose;
+                timeKey = TimeMgr.Ins.Timer(_ui.HideDestroyTime, this, Exe).Repeat(1).Build();
             }
 
             void Release()
             {
                 RemoveTime();
                 ui = null;
+                OnRemoveFromWaitDel = null;
+                OnDisposeFromWaitDel = null;
                 Pool.Push(this);
-#if UNITY_EDITOR
-                __Debugger_WaitDel_Event();
-#endif
             }
 
             public void Dispose()
             {
+                OnRemoveFromWaitDel?.Invoke(ui.ID);
                 Dialog.RemoveWaitDelById(ui.ID);
-                Tip.RemoveWaitDelById(ui.ID);
-                Ins._waitDels.Remove(ui.ID);
-                Ins.Dispose(ui);
+                Tip.RemoveWaitDelById(ui.ID);    
+                OnDisposeFromWaitDel?.Invoke(ui);                
                 Release();
             }
 
             public void GetUI(out IUI outUI)
             {
                 outUI = ui;
+                OnRemoveFromWaitDel?.Invoke(ui.ID);
                 Dialog.RemoveWaitDelById(ui.ID);
-                Tip.RemoveWaitDelById(ui.ID);
-                Ins._waitDels.Remove(ui.ID);
+                Tip.RemoveWaitDelById(ui.ID);                
                 Release();
             }
 

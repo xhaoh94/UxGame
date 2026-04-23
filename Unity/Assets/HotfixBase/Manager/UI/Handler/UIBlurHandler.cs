@@ -1,26 +1,26 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Ux.UIMgr;
 
 namespace Ux
 {
-    public partial class UIMgr
+    public class UIBlurHandler
     {
-        Camera _mainCamera;
-        /// <summary>
-        /// 设置场景相机，场景模糊会以此相机为后处理
-        /// </summary>
-        /// <param name="mainCamera">相机</param>
+        private readonly IUIBlurHandlerCallback _callback;
+        private Camera _mainCamera;
+        private readonly List<BlurStack> _blurStacks = new List<BlurStack>();
+
+        public UIBlurHandler(IUIBlurHandlerCallback callback)
+        {
+            _callback = callback;
+        }
+
         public void SetSceneCamera(Camera mainCamera)
         {
             _mainCamera = mainCamera;
         }
 
-        /// <summary>
-        /// 模糊队列
-        /// </summary>
-        List<BlurStack> _blurStacks = new List<BlurStack>();
-        void _ShowCallBack_Blur(IUI ui)
+        public void OnShowed(IUI ui)
         {
             if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
 #if UNITY_EDITOR
@@ -31,7 +31,7 @@ namespace Ux
             _FlagBlur();
         }
 
-        void _HideCallBack_Blur(IUI ui)
+        public void OnHide(IUI ui)
         {
             if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
             var lastIndex = _blurStacks.FindLastIndex(x => x.ID == ui.ID);
@@ -41,6 +41,7 @@ namespace Ux
                 _FlagBlur();
             }
         }
+
         void _FlagBlur()
         {
             bool flagBlur = false, flagFixed = false, flagScene = false;
@@ -52,7 +53,8 @@ namespace Ux
                 flagFixed = blurStack.Value.Blur.HasFlag(UIBlur.Fixed);
             }
 
-            foreach (var kv in _showed)
+            var showed = _callback.GetShowedDict();
+            foreach (var kv in showed)
             {
                 var ui = kv.Value;
                 if (blurStack == null)

@@ -1,21 +1,22 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static Ux.UIMgr;
 
 namespace Ux
 {
-    partial class UIMgr
+    public class UIStackHandler
     {
-        /// <summary>
-        /// 界面栈
-        /// </summary>
-        List<UIStack> _uiStacks = new List<UIStack>();
-        Stack<UIStack> _backStacks = new Stack<UIStack>();
+        private readonly IUIStackHandlerCallback _callback;
+        private readonly List<UIStack> _uiStacks = new List<UIStack>();
+        private readonly Stack<UIStack> _backStacks = new Stack<UIStack>();
 
-        void _ClearStack()
+        public List<UIStack> UIStacks => _uiStacks;
+
+        public UIStackHandler(IUIStackHandlerCallback callback)
+        {
+            _callback = callback;
+        }
+
+        public void Clear()
         {
             foreach (var stack in _uiStacks)
             {
@@ -28,15 +29,11 @@ namespace Ux
             _backStacks.Clear();
         }
 
-
-        //显示完成后，把ui放进栈
-        void _ShowedPushStack(IUI ui, IUIParam param, bool checkStack)
+        public void OnShowed(IUI ui, IUIParam param, bool checkStack)
         {
             var uiType = ui.Type;
             if (!checkStack || uiType == UIType.Fixed)
             {
-                //非checkStack 或 固定面板不需要放入栈中
-                //非checkStack （存在于关闭界面触发栈后，重新显示的界面，此时不需要再把界面放进栈中）
                 return;
             }
 
@@ -57,15 +54,14 @@ namespace Ux
             }
 
             _uiStacks.Add(new UIStack(parentID, ui.ID, param, uiType));
-#if UNITY_EDITOR            
+#if UNITY_EDITOR
             __Debugger_Stack_Event();
 #endif
-
             if (uiType == UIType.Stack)
             {
                 for (var i = _uiStacks.Count - 2; i >= 0; i--)
                 {
-                    var preStack = _uiStacks[i];                    
+                    var preStack = _uiStacks[i];
                     if (preStack.ParentID == ui.ID)
                     {
                         continue;
@@ -78,8 +74,8 @@ namespace Ux
                 }
             }
         }
-        //关闭界面前，检测栈中界面，是否重新打开
-        bool _HideBeforePopStack(IUI ui, bool checkStack = false)
+
+        public bool OnHide(IUI ui, bool checkStack = false)
         {
             if (_uiStacks.Count > 0)
             {
@@ -130,30 +126,34 @@ namespace Ux
             }
             return shouldBreak;
         }
+
         void _ShowByStack(UIStack stack)
         {
-            _ShowAsync<IUI>(stack.ID, stack.Param, false, false).Forget();
+            _callback.ShowByStack(stack.ID, stack.Param);
         }
+
         void _HideByStack(UIStack stack, int index)
         {
             bool needCopyParam = true;
             IUI ui = null;
             var id = stack.ParentID;
-            if (_showing.Contains(id))
+            if (_callback.IsShowing(id))
             {
-                if (!_createdDels.Contains(id)) _createdDels.Add(id);
+                if (!_callback.IsInCreatedDels(id)) _callback.AddToCreatedDels(id);
             }
-            else if (_showed.TryGetValue(id, out ui) && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
+            else
             {
-                ui = null;
-                needCopyParam = false;
+                ui = _callback.GetShowed(id);
+                if (ui != null && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
+                {
+                    ui = null;
+                    needCopyParam = false;
+                }
             }
 
             if (needCopyParam)
             {
-                //Hide之后，参数会被回收。所以提前拷贝参数对象
                 var copyParam = stack.Param?.Copy();
-                //重新赋值参数
                 if (copyParam != null)
                 {
                     stack.Param = copyParam;

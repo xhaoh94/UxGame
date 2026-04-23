@@ -38,18 +38,22 @@ namespace Ux
         }
     }
 
-    public partial class UIMgr
+    public class UIResourceHandler
     {
-        private readonly YooPackage _yoo = YooMgr.Ins.GetPackage(YooType.Main);
+        private readonly YooPackage _yoo;
         private readonly Dictionary<string, UIPkgRef> _pkgToRef = new();
-
         private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles = new();
+        private readonly HashSet<string> _pkgToLoading = new();
 
-        private readonly HashSet<string> _pkgToLoading = new HashSet<string>();
+        public Dictionary<string, UIPkgRef> PkgToRef => _pkgToRef;
+
+        public UIResourceHandler()
+        {
+            _yoo = YooMgr.Ins.GetPackage(YooType.Main);
+        }
 
         public void RemoveUIPackage(string[] pkgs)
         {
-
             if (pkgs.Length == 0) return;
             foreach (var pkg in pkgs)
             {
@@ -81,13 +85,9 @@ namespace Ux
                     Log.Error("卸载没有引用计数的包:" + pkg);
                 }
             }
-
-#if UNITY_EDITOR
-            __Debugger_Pkg_Event();
-#endif
         }
 
-        public async UniTask<bool> LoaUIdPackage(string[] pkgs)
+        public async UniTask<bool> LoadUIPackage(string[] pkgs)
         {
             if (pkgs.Length == 0) return false;
             List<string> tem = null;
@@ -105,17 +105,13 @@ namespace Ux
 
             if (tem is not { Count: > 0 })
             {
-#if UNITY_EDITOR
-                __Debugger_Pkg_Event();
-#endif
                 return true;
             }
 
             foreach (var pkg in tem)
             {
-                if (_pkgToLoading.Contains(pkg)) //已经在加载中了
+                if (_pkgToLoading.Contains(pkg))
                 {
-                    //循环等待，直到包加载完成
                     while (_pkgToLoading.Contains(pkg))
                     {
                         await UniTask.Yield();
@@ -127,7 +123,7 @@ namespace Ux
                     }
                     else
                     {
-                        return false; //加载失败
+                        return false;
                     }
                 }
                 else
@@ -137,26 +133,15 @@ namespace Ux
                 }
             }
 
-#if UNITY_EDITOR
-            __Debugger_Pkg_Event();
-#endif
             return true;
         }
 
         private async UniTask<bool> _ToLoadUIPackage(string pkg)
         {
             string resName = string.Format(PathHelper.Res.UI, pkg, "fui");
-#if UNITY_EDITOR
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-#endif
 
             var handle = _yoo.Package.LoadAssetAsync<TextAsset>(resName);
             await handle.ToUniTask();
-#if UNITY_EDITOR
-            sw.Stop();
-            Log.Debug($"load {resName}:{sw.ElapsedMilliseconds}");
-#endif
             var suc = true;
             if (handle.Status == EOperationStatus.Succeed && handle.AssetObject is TextAsset ta && ta != null)
             {
@@ -189,18 +174,9 @@ namespace Ux
         private async void _LoadTextureFn(string name, string ex, Type type, PackageItem item)
         {
             if (type != typeof(Texture)) return;
-            //string resName = $"{PathHelper.Res.UI}/{item.owner.name}/{name}";
             string resName = string.Format(PathHelper.Res.UIAtlas, name);
-#if UNITY_EDITOR
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-#endif
             var handle = _yoo.Package.LoadAssetAsync<Texture>(resName);
             await handle.ToUniTask();
-#if UNITY_EDITOR
-            sw.Stop();
-            Log.Debug($"load {resName}:{sw.ElapsedMilliseconds}");
-#endif
 
             if (handle.Status != EOperationStatus.Succeed)
             {
@@ -220,6 +196,5 @@ namespace Ux
 
             handles.Add(handle);
         }
-
     }
 }

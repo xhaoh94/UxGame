@@ -17,8 +17,7 @@ namespace Ux.Editor.Debugger.UI
         private DebuggerStringListView _listShowed;
         private DebuggerObjectListView<UIDebuggerStackItem, Ux.UIMgr.UIStack> _listStack;
         private DebuggerStringListView _listShowing;
-        private DebuggerStringListView _listCacel;
-        private DebuggerStringListView _listTemCacel;
+        private DebuggerStringListView _listCacel;        
         private DebuggerStringListView _listWaitDel;
 
         public void CreateGUI()
@@ -27,8 +26,7 @@ namespace Ux.Editor.Debugger.UI
             UIMgr.__Debugger_Showed_CallBack = OnUpdateShowed;
             UIMgr.__Debugger_Stack_CallBack = OnUpdateStack;
             UIMgr.__Debugger_Showing_CallBack = OnUpdateShowing;
-            UIMgr.__Debugger_Cacel_CallBack = OnUpdateCacel;
-            UIMgr.__Debugger_TemCacel_CallBack = OnUpdateTemCacel;
+            UIMgr.__Debugger_Cacel_CallBack = OnUpdateCacel;            
             UIMgr.__Debugger_WaitDel_CallBack = OnUpdateWaitDel;
 
             CreateChildren();
@@ -38,8 +36,7 @@ namespace Ux.Editor.Debugger.UI
             _listShowed = new DebuggerStringListView(listShowed, OnBtnClick);
             _listStack = new DebuggerObjectListView<UIDebuggerStackItem, UIMgr.UIStack>(listStack, OnBtnClick);
             _listShowing = new DebuggerStringListView(listShowing, OnBtnClick);
-            _listCacel = new DebuggerStringListView(listCacel, OnBtnClick);
-            _listTemCacel = new DebuggerStringListView(listTemCacel, OnBtnClick);
+            _listCacel = new DebuggerStringListView(listCacel, OnBtnClick);            
             _listWaitDel = new DebuggerStringListView(listWaitDel, OnBtnClick);
 
             UIMgr.__Debugger_Event();
@@ -72,10 +69,6 @@ namespace Ux.Editor.Debugger.UI
         private void OnUpdateCacel(List<string> list)
         {
             _listCacel.SetData(list);
-        }
-        private void OnUpdateTemCacel(List<string> list)
-        {
-            _listTemCacel.SetData(list);
         }
         private void OnUpdateWaitDel(List<string> list)
         {

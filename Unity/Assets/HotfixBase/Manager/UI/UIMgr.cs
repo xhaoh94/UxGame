@@ -5,56 +5,34 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using static Ux.UIMgr;
 
 namespace Ux
 {
-    public partial class UIMgr : Singleton<UIMgr>
+    public partial class UIMgr : Singleton<UIMgr>, IUIStackHandlerCallback, IUIBlurHandlerCallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess
     {
-        //显示超时
         const float _showTimeout = 5f;
-        //对话弹窗
         public static readonly UIDialogFactory Dialog = new UIDialogFactory();
-        //提示
         public static readonly UITipFactory Tip = new UITipFactory();
 
         private readonly Dictionary<Type, string> _itemUrls = new Dictionary<Type, string>();
-        //窗口类型对应的ID
         private readonly Dictionary<Type, int> _typeId = new Dictionary<Type, int>();
 #if UNITY_EDITOR
         private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
 #endif
 
-        //界面缓存，关闭不销毁的界面会缓存起来
-        private readonly Dictionary<int, IUI> _cache = new Dictionary<int, IUI>();
-
-        //临时界面缓存，关闭销毁的界面，如果父界面没销毁，
-        //会临时缓存起来，等父界面关闭了，再销毁
-        private readonly Dictionary<int, IUI> _temCache = new Dictionary<int, IUI>();
-        private readonly Dictionary<int, List<int>> _parentTemCache = new Dictionary<int, List<int>>();
-
-        //正在显示中的ui列表
         private readonly List<int> _showing = new List<int>();
-
-        //异步中
         private readonly HashSet<int> _asyncs = new HashSet<int>();
-
-        //已经显示的ui列表
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
-
-        //等待销毁的界面
-        private readonly Dictionary<int, WaitDel> _waitDels = new Dictionary<int, WaitDel>();
-
-        //创建完需要关闭的界面（用于打开界面后正在加载的时候，在其他地方又马上关闭了界面）
-        private readonly List<int> _createdDels = new List<int>();
-
-        //界面对应的懒加载标签
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
-
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
-
         private readonly CallBackData _initData;
 
-        //UI层级
+        private readonly UIResourceHandler _resourceHandler;
+        private readonly UIStackHandler _stackHandler;
+        private readonly UIBlurHandler _blurHandler;
+        private readonly UICacheHandler _cacheHandler;
+
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
         {
             { UILayer.Root, GRoot.inst },
@@ -78,11 +56,16 @@ namespace Ux
         {
             GRoot.inst.SetContentScaleFactor(1280, 720, UIContentScaler.ScreenMatchMode.MatchWidthOrHeight);
             UIObjectFactory.SetLoaderExtension(typeof(UxLoader));
-            //StageCamera.main.clearFlags = CameraClearFlags.Nothing;
             if (PatchMgr.Ins.IsDone)
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
+
+            _resourceHandler = new UIResourceHandler();
+            _cacheHandler = new UICacheHandler(this);
+            _stackHandler = new UIStackHandler(this);
+            _blurHandler = new UIBlurHandler(this);            
+
             _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBeforePopStack);
         }
         protected override void OnCreated()
@@ -90,49 +73,11 @@ namespace Ux
             GameMethod.LowMemory += _LowMemory;
         }
 
-        //清理缓存
         void _LowMemory()
         {
             Dialog?.Clear();
             Tip?.Clear();
-            if (_cache.Count > 0)
-            {
-                var ids = _cache.Keys.ToList();
-                for (var i = ids.Count - 1; i >= 0; i--)
-                {
-                    var id = ids[i];
-                    if (!_cache.TryGetValue(id, out IUI ui)) continue;
-                    Dispose(ui);
-                }
-
-                _cache.Clear();
-            }
-
-            if (_temCache.Count > 0)
-            {
-                var ids = _temCache.Keys.ToList();
-                for (var i = ids.Count - 1; i >= 0; i--)
-                {
-                    var id = ids[i];
-                    if (!_temCache.TryGetValue(id, out IUI ui)) continue;
-                    Dispose(ui);
-                }
-
-                _temCache.Clear();
-            }
-
-            if (_waitDels.Count > 0)
-            {
-                var ids = _waitDels.Keys.ToList();
-                for (int i = ids.Count - 1; i >= 0; i--)
-                {
-                    var id = ids[i];
-                    if (!_waitDels.TryGetValue(id, out var wd)) continue;
-                    wd.Dispose();
-                }
-
-                _waitDels.Clear();
-            }
+            _cacheHandler.ClearMemory();
 
 #if UNITY_EDITOR
             __Debugger_Event();
@@ -142,7 +87,6 @@ namespace Ux
         public void Release()
         {
             _LowMemory();
-            //清理掉动态创建的UI数据
             if (_dymUIData.Count > 0)
             {
                 foreach (var id in _dymUIData)
@@ -153,7 +97,6 @@ namespace Ux
                 _dymUIData.Clear();
             }
 
-            //清理掉正在下载的资源
             if (_idDownloader.Count > 0)
             {
                 foreach (var kv in _idDownloader)
@@ -191,7 +134,6 @@ namespace Ux
             return GetUI<T>(ConverterID(typeof(T)));
         }
 
-        //获取UI
         public T GetUI<T>(int id) where T : IUI
         {
             if (!_showed.ContainsKey(id)) return default(T);
@@ -246,8 +188,8 @@ namespace Ux
 
         void _ShowCallBack(IUI ui, IUIParam param, bool isStack)
         {
-            _ShowedPushStack(ui, param, isStack);
-            _ShowCallBack_Blur(ui);
+            _stackHandler.OnShowed(ui, param, isStack);
+            _blurHandler.OnShowed(ui);
         }
 
         private async UniTask<T> _ShowAsync<T>(int id, IUIParam param, bool isAnim, bool checkStack) where T : IUI
@@ -264,19 +206,19 @@ namespace Ux
                 return default;
             }
 
-            if (_createdDels.Contains(id))
+            if (_cacheHandler.CreatedDels.Contains(id))
             {
-                _createdDels.Remove(id);
+                _cacheHandler.CreatedDels.Remove(id);
             }
 
             var uis = Pool.Get<List<IUI>>();
             var succ = await _ShowAsync(childID, uis);
             if (succ)
             {
-                foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _createdDels.Contains(uiid)))
+                foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _cacheHandler.CreatedDels.Contains(uiid)))
                 {
                     succ = false;
-                    _createdDels.Remove(uiid);
+                    _cacheHandler.CreatedDels.Remove(uiid);
                 }
             }
 
@@ -285,7 +227,7 @@ namespace Ux
                 var uiid = ui.ID;
                 if (!succ)
                 {
-                    _CheckDestroy(ui);
+                    _cacheHandler.CheckDestroy(ui);
                     _showing.Remove(uiid);
                     continue;
                 }
@@ -355,8 +297,8 @@ namespace Ux
                 {
                     if (_showed.TryGetValue(id, out ui)) return true;
                     if (!_showing.Contains(id)) return true;
-                    if (_createdDels.Contains(id)) return true;
-                    if (Time.unscaledTime - time > _showTimeout) return true; //超时
+                    if (_cacheHandler.CreatedDels.Contains(id)) return true;
+                    if (Time.unscaledTime - time > _showTimeout) return true;
                     return false;
                 });
 
@@ -370,41 +312,20 @@ namespace Ux
             __Debugger_Showing_Event();
 #endif
 
-            if (_waitDels.TryGetValue(id, out var wd))
+            if (_cacheHandler.WaitDels.TryGetValue(id, out var wd))
             {
                 wd.GetUI(out ui);
             }
+            else if (_cacheHandler.Cache.TryGetValue(id, out ui))
+            {
+                _cacheHandler.Cache.Remove(id);
+#if UNITY_EDITOR
+                __Debugger_Cacel_Event();
+#endif
+            }
             else
             {
-                if (_temCache.TryGetValue(id, out ui))
-                {
-                    _temCache.Remove(id);
-                    var temBottomId = ui.Data.GetParentID();
-                    if (_parentTemCache.TryGetValue(temBottomId, out var temList))
-                    {
-                        if (temList.Remove(id))
-                        {
-                            if (temList.Count == 0)
-                            {
-                                _parentTemCache.Remove(temBottomId);
-                            }
-                        }
-                    }
-#if UNITY_EDITOR
-                    __Debugger_TemCacel_Event();
-#endif
-                }
-                else if (_cache.TryGetValue(id, out ui))
-                {
-                    _cache.Remove(id);
-#if UNITY_EDITOR
-                    __Debugger_Cacel_Event();
-#endif
-                }
-                else
-                {
-                    ui = await CreateUI(data);
-                }
+                ui = await CreateUI(data);
             }
 
             if (ui == null)
@@ -462,8 +383,7 @@ namespace Ux
         }
         void _HideAll(Func<int, bool> func)
         {
-            _ClearStack();
-            // 先收集要隐藏的ID
+            _stackHandler.Clear();
             var toHideFromShowing = _showing.Where(id => !func(id)).ToList();
             var toHideFromShowed = _showed.Keys.Where(id => !func(id)).ToList();
             foreach (var id in toHideFromShowing)
@@ -476,45 +396,29 @@ namespace Ux
             }
         }
 
-        /// <summary>
-        ///关闭界面,会检查栈
-        /// </summary>
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
             Hide(ConverterID(typeof(T)), isAnim);
         }
-        /// <summary>
-        ///关闭界面,会检查栈
-        /// </summary>
         public void Hide(int id, bool isAnim = true)
         {
             _Hide(id, isAnim, true);
         }
 
-        /// <summary>
-        /// 关闭界面，不会检查栈
-        /// </summary>
         public void HideNotStack<T>(bool isAnim = true) where T : UIBase
         {
             HideNotStack(ConverterID(typeof(T)), isAnim);
         }
-        /// <summary>
-        /// 关闭界面，不会检查栈
-        /// </summary>
         public void HideNotStack(int id, bool isAnim = true)
         {
             _Hide(id, isAnim, false);
         }
 
-        /// <summary>
-        ///  关闭界面
-        /// </summary>        
-        /// <param name="checkStack">关闭后是否要检查栈</param>
         void _Hide(int id, bool isAnim, bool checkStack)
         {
             if (_showing.Contains(id))
             {
-                if (!_createdDels.Contains(id)) _createdDels.Add(id);
+                if (!_cacheHandler.CreatedDels.Contains(id)) _cacheHandler.CreatedDels.Add(id);
                 return;
             }
 
@@ -535,10 +439,9 @@ namespace Ux
                 return;
             }
 
-            //如果界面是栈类型，但关闭时，不触发栈，则代表栈已被打乱，此时可清除栈了
-            if (!checkStack && _uiStacks.Count > 0 && ui.Type == UIType.Stack)
+            if (!checkStack && _stackHandler.UIStacks.Count > 0 && ui.Type == UIType.Stack)
             {
-                _ClearStack();
+                _stackHandler.Clear();
             }
             ui.DoHide(isAnim, checkStack);
         }
@@ -547,91 +450,14 @@ namespace Ux
         {
             var id = ui.ID;
             _showed.Remove(id);
-            _CheckDestroy(ui);
+            _cacheHandler.CheckDestroy(ui);
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
 #endif
             EventMgr.Ins.Run(MainEventType.UI_HIDE, id);
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
 
-            _HideCallBack_Blur(ui);
-        }
-        private void _CheckDestroy(IUI ui)
-        {
-            var id = ui.ID;
-            var parentID = ui.Data.GetParentID();
-            if (ui.HideDestroyTime >= 0)
-            {
-                //存在父界面，且父界面还没关闭，则放入临时缓存中
-                if (parentID != id && IsShow(parentID))
-                {
-                    if (_temCache.ContainsKey(id))
-                    {
-                        Log.Error($"界面[{ui.Name}]多次放入临时缓存列表");
-                        return;
-                    }
-
-                    _temCache.Add(id, ui);
-                    if (!_parentTemCache.TryGetValue(parentID, out var temList))
-                    {
-                        temList = new List<int>();
-                        _parentTemCache.Add(parentID, temList);
-                    }
-
-                    temList.Add(id);
-#if UNITY_EDITOR
-                    __Debugger_TemCacel_Event();
-#endif
-                }
-                else
-                {
-                    if (_waitDels.ContainsKey(id))
-                    {
-                        Log.Error($"界面[{ui.Name}]多次放入待删除列表");
-                        return;
-                    }
-                    var wd = Pool.Get<WaitDel>();
-                    wd.Init(ui);
-                    _waitDels.Add(id, wd);
-#if UNITY_EDITOR
-                    __Debugger_WaitDel_Event();
-#endif
-                }
-            }
-            else
-            {
-                //不销毁的界面放进缓存列表
-                if (_cache.ContainsKey(id))
-                {
-                    Log.Error($"界面[{ui.Name}]多次放入缓存列表");
-                    return;
-                }
-
-                _cache.Add(id, ui);
-#if UNITY_EDITOR
-                __Debugger_Cacel_Event();
-#endif
-            }
-
-            //如果此界面是最底层的界面，则将属于此界面的临时缓存界面从列表清除
-            if (id == parentID)
-            {
-                if (_parentTemCache.TryGetValue(id, out var temList) && temList.Count > 0)
-                {
-                    foreach (var cacelId in temList)
-                    {
-                        if (_temCache.TryGetValue(cacelId, out var temUI))
-                        {
-                            _temCache.Remove(cacelId);
-                            _CheckDestroy(temUI);
-                        }
-                    }
-                    temList.Clear();
-#if UNITY_EDITOR
-                    __Debugger_TemCacel_Event();
-#endif
-                }
-            }
+            _blurHandler.OnHide(ui);
         }
 
         private void Dispose(IUI ui)
@@ -648,11 +474,6 @@ namespace Ux
             }
         }
 
-        /// <summary>
-        /// 获取懒加载标签列表
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         List<string> _GetDependenciesLazyload(int id)
         {
             if (id == 0) return null;
@@ -708,7 +529,6 @@ namespace Ux
                     return false;
                 }
 
-                //TODO 显示下载界面
                 return true;
             }
 
@@ -722,7 +542,6 @@ namespace Ux
             .WithContent($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。")
             .WithBtn1("下载", () =>
             {
-                //TODO 显示下载界面
                 _idDownloader.Add(id, download);
                 download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
             });
@@ -742,6 +561,166 @@ namespace Ux
             {
                 Log.Error("下载懒加载资源失败");
             }
+        }
+
+        #region Handler代理方法
+
+        public async UniTask<bool> LoaUIdPackage(string[] pkgs)
+        {
+            return await _resourceHandler.LoadUIPackage(pkgs);
+        }
+
+        public void RemoveUIPackage(string[] pkgs)
+        {
+            _resourceHandler.RemoveUIPackage(pkgs);
+        }
+
+        public void SetSceneCamera(Camera mainCamera)
+        {
+            _blurHandler.SetSceneCamera(mainCamera);
+        }
+
+        #endregion
+
+        #region IUIStackHandlerCallback实现
+
+        void IUIStackHandlerCallback.ShowByStack(int id, IUIParam param)
+        {
+            _ShowAsync<IUI>(id, param, false, false).Forget();
+        }
+
+        bool IUIStackHandlerCallback.IsShowing(int id)
+        {
+            return _showing.Contains(id);
+        }
+
+        IUI IUIStackHandlerCallback.GetShowed(int id)
+        {
+            return _showed.TryGetValue(id, out var ui) ? ui : null;
+        }
+
+        bool IUIStackHandlerCallback.IsInCreatedDels(int id)
+        {
+            return _cacheHandler.CreatedDels.Contains(id);
+        }
+
+        void IUIStackHandlerCallback.AddToCreatedDels(int id)
+        {
+            if (!_cacheHandler.CreatedDels.Contains(id)) _cacheHandler.CreatedDels.Add(id);
+        }
+
+        #endregion
+
+        #region IUIBlurHandlerCallback实现
+
+        Dictionary<int, IUI> IUIBlurHandlerCallback.GetShowedDict()
+        {
+            return _showed;
+        }
+
+        #endregion
+
+        #region IUICacheHandlerCallback实现
+
+        void IUICacheHandlerCallback.DisposeUI(IUI ui)
+        {
+            Dispose(ui);
+        }
+
+        IUIData IUICacheHandlerCallback.GetUIData(int id)
+        {
+            return GetUIData(id);
+        }
+
+        void IUICacheHandlerCallback.RemoveUIPackage(string[] pkgs)
+        {
+            RemoveUIPackage(pkgs);
+        }
+
+        void IUICacheHandlerCallback.RemoveUIData(int id)
+        {
+            RemoveUIData(id);
+        }
+
+        IUI IUICacheHandlerCallback.GetShowed(int id)
+        {
+            return _showed.TryGetValue(id, out var ui) ? ui : null;
+        }
+
+        bool IUICacheHandlerCallback.IsShow(int id)
+        {
+            return _showed.TryGetValue(id, out var ui) && (ui.State == UIState.ShowAnim || ui.State == UIState.Show);
+        }
+
+        #endregion
+
+        #region IUIMgrDebuggerAccess implementation
+
+        Dictionary<string, IUIData> IUIMgrDebuggerAccess.GetAllUIData()
+        {
+            var dict = new Dictionary<string, IUIData>();
+            foreach (var kv in _idUIData)
+            {
+                dict.Add(kv.Value.Name, kv.Value);
+            }
+            return dict;
+        }
+
+        List<string> IUIMgrDebuggerAccess.GetShowedUI()
+        {
+            var list = new List<string>();
+            foreach (var kv in _showed)
+            {
+                list.Add(kv.Value.Name);
+            }
+            return list;
+        }
+
+        List<UIStack> IUIMgrDebuggerAccess.GetUIStacks()
+        {
+            return _stackHandler.UIStacks;
+        }
+
+        List<string> IUIMgrDebuggerAccess.GetShowingUI()
+        {
+            var list = new List<string>();
+            foreach (var id in _showing)
+            {
+                list.Add(GetUIData(id).Name);
+            }
+            return list;
+        }
+
+        List<string> IUIMgrDebuggerAccess.GetCacheUI()
+        {
+            var list = new List<string>();
+            foreach (var kv in _cacheHandler.Cache)
+            {
+                list.Add(kv.Value.Name);
+            }
+            return list;
+        }
+
+        List<string> IUIMgrDebuggerAccess.GetWaitDelUI()
+        {
+            var list = new List<string>();
+            foreach (var kv in _cacheHandler.WaitDels)
+            {
+                list.Add(kv.Value.Name);
+            }
+            return list;
+        }
+
+        Dictionary<string, UIPkgRef> IUIMgrDebuggerAccess.GetPkgRefs()
+        {
+            return _resourceHandler.PkgToRef;
+        }
+
+        #endregion
+
+        bool _HideBeforePopStack(IUI ui, bool checkStack)
+        {
+            return _stackHandler.OnHide(ui, checkStack);
         }
     }
 }

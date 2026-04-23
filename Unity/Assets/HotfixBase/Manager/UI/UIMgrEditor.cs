@@ -11,41 +11,28 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_UI_Event();
+                ((IUIMgrDebuggerAccess)Ins).GetAllUIData();
                 __Debugger_Stack_Event();
                 __Debugger_Showed_Event();
                 __Debugger_Showing_Event();
                 __Debugger_Cacel_Event();
-                __Debugger_TemCacel_Event();
                 __Debugger_WaitDel_Event();
             }
         }
 
-        static Dictionary<string, IUIData> _Debugger_UI_Dict = new Dictionary<string, IUIData>();
         public static void __Debugger_UI_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                _Debugger_UI_Dict.Clear();
-                foreach (var kv in Ins._idUIData)
-                {
-                    _Debugger_UI_Dict.Add(kv.Value.Name, kv.Value);
-                }
-                __Debugger_UI_CallBack?.Invoke(_Debugger_UI_Dict);
+                __Debugger_UI_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetAllUIData());
             }
         }
 
-        static List<string> _Debugger_Showeds = new List<string>();
         public static void __Debugger_Showed_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                _Debugger_Showeds.Clear();
-                foreach (var kv in Ins._showed)
-                {
-                    _Debugger_Showeds.Add(kv.Value.Name);
-                }
-                __Debugger_Showed_CallBack?.Invoke(_Debugger_Showeds);
+                __Debugger_Showed_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetShowedUI());
             }
         }
 
@@ -53,61 +40,31 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Stack_CallBack?.Invoke(Ins._uiStacks);
+                __Debugger_Stack_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetUIStacks());
             }
         }
-        static List<string> _Debugger_Showings = new List<string>();
+
         public static void __Debugger_Showing_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                _Debugger_Showings.Clear();
-                foreach (var id in Ins._showing)
-                {
-                    _Debugger_Showings.Add(Ins.GetUIData(id).Name);
-                }
-                __Debugger_Showing_CallBack?.Invoke(_Debugger_Showings);
+                __Debugger_Showing_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetShowingUI());
             }
         }
 
-        static List<string> _Debugger_Cacels = new List<string>();
         public static void __Debugger_Cacel_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                _Debugger_Cacels.Clear();
-                foreach (var kv in Ins._cache)
-                {
-                    _Debugger_Cacels.Add(kv.Value.Name);
-                }
-                __Debugger_Cacel_CallBack?.Invoke(_Debugger_Cacels);
+                __Debugger_Cacel_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetCacheUI());
             }
         }
 
-        static List<string> _Debugger_TemCacels = new List<string>();
-        public static void __Debugger_TemCacel_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                _Debugger_TemCacels.Clear();
-                foreach (var kv in Ins._temCache)
-                {
-                    _Debugger_TemCacels.Add(kv.Value.Name);
-                }
-                __Debugger_TemCacel_CallBack?.Invoke(_Debugger_TemCacels);
-            }
-        }
-        static List<string> _Debugger_WaitDels = new List<string>();
         public static void __Debugger_WaitDel_Event()
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                _Debugger_WaitDels.Clear();
-                foreach (var kv in Ins._waitDels)
-                {
-                    _Debugger_WaitDels.Add(kv.Value.Name);
-                }
-                __Debugger_WaitDel_CallBack?.Invoke(_Debugger_WaitDels);
+                __Debugger_WaitDel_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetWaitDelUI());
             }
         }
 
@@ -116,7 +73,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Pkg_CallBack?.Invoke(Ins._pkgToRef);
+                __Debugger_Pkg_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetPkgRefs());
             }
         }
         
@@ -125,7 +82,6 @@ namespace Ux
         public static Action<List<UIStack>> __Debugger_Stack_CallBack;
         public static Action<List<string>> __Debugger_Showing_CallBack;
         public static Action<List<string>> __Debugger_Cacel_CallBack;
-        public static Action<List<string>> __Debugger_TemCacel_CallBack;
         public static Action<List<string>> __Debugger_WaitDel_CallBack;
         public static Action<Dictionary<string, UIPkgRef>> __Debugger_Pkg_CallBack;
 
