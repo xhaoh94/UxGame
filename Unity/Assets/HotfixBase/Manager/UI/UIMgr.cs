@@ -1,10 +1,10 @@
-using Cysharp.Threading.Tasks;
-using FairyGUI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using Cysharp.Threading.Tasks;
+using System;
+using FairyGUI;
 using static Ux.UIMgr;
 
 namespace Ux
@@ -26,6 +26,8 @@ namespace Ux
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
+        private readonly List<int> _tempIgnoreSet = new List<int>();
+        private int[] _staticIgnoreArray = new int[32]; // 静态数组，避免GC
         private readonly CallBackData _initData;
 
         private readonly UIResourceHandler _resourceHandler;
@@ -64,7 +66,7 @@ namespace Ux
             _resourceHandler = new UIResourceHandler();
             _cacheHandler = new UICacheHandler(this);
             _stackHandler = new UIStackHandler(this);
-            _blurHandler = new UIBlurHandler(this);            
+            _blurHandler = new UIBlurHandler(this);
 
             _initData = new CallBackData(_ShowCallBack, _HideCallBack, _HideBeforePopStack);
         }
@@ -215,10 +217,14 @@ namespace Ux
             var succ = await _ShowAsync(childID, uis);
             if (succ)
             {
-                foreach (var uiid in uis.Select(ui => ui.ID).Where(uiid => _cacheHandler.CreatedDels.Contains(uiid)))
+                for (int i = 0; i < uis.Count; i++)
                 {
-                    succ = false;
-                    _cacheHandler.CreatedDels.Remove(uiid);
+                    var uiid = uis[i].ID;
+                    if (_cacheHandler.CreatedDels.Contains(uiid))
+                    {
+                        succ = false;
+                        _cacheHandler.CreatedDels.Remove(uiid);
+                    }
                 }
             }
 
@@ -355,45 +361,103 @@ namespace Ux
             ui.InitData(data, _initData);
             return ui;
         }
-
-        public void HideAll(IList<int> ignoreList = null)
-        {
-            bool Func(int id)
-            {
-                return ignoreList is { Count: > 0 } && ignoreList.Contains(id);
-            }
-
-            _HideAll(Func);
-        }
-        public void HideAll(List<string> ignoreList = null)
-        {
-            bool Func(int id)
-            {
-                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => x.ToHash() == id) >= 0;
-            }
-            _HideAll(Func);
-        }
-        public void HideAll(List<Type> ignoreList = null)
-        {
-            bool Func(int id)
-            {
-                return ignoreList is { Count: > 0 } && ignoreList.FindIndex(x => ConverterID(x) == id) >= 0;
-            }
-            _HideAll(Func);
-        }
+        
         void _HideAll(Func<int, bool> func)
         {
             _stackHandler.Clear();
-            var toHideFromShowing = _showing.Where(id => !func(id)).ToList();
-            var toHideFromShowed = _showed.Keys.Where(id => !func(id)).ToList();
-            foreach (var id in toHideFromShowing)
+
+            // 遍历 _showing 列表
+            for (int i = _showing.Count - 1; i >= 0; i--)
             {
-                Hide(id, false);
+                var id = _showing[i];
+                if (!func(id))
+                {
+                    Hide(id, false);
+                }
             }
-            foreach (var id in toHideFromShowed)
+
+            // 遍历 _showed 字典
+            foreach (var kv in _showed)
             {
-                Hide(id, false);
+                var id = kv.Key;
+                if (!func(id))
+                {
+                    Hide(id, false);
+                }
             }
+        }
+
+        
+        void _HideAllWithStaticArray(int count)
+        {
+            _stackHandler.Clear();
+
+            // 遍历 _showing 列表
+            for (int i = _showing.Count - 1; i >= 0; i--)
+            {
+                var id = _showing[i];
+                if (!ContainsInStaticArray(id, count))
+                {
+                    Hide(id, false);
+                }
+            }
+
+            // 遍历 _showed 字典
+            foreach (var kv in _showed)
+            {
+                var id = kv.Key;
+                if (!ContainsInStaticArray(id, count))
+                {
+                    Hide(id, false);
+                }
+            }
+        }
+
+        bool ContainsInStaticArray(int id, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (_staticIgnoreArray[i] == id)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        
+        public void HideAll(IList<int> ignoreList = null)
+        {
+            if (ignoreList == null || ignoreList.Count == 0)
+            {
+                _HideAll(_ => false);
+                return;
+            }
+
+            // 使用静态数组
+            int count = Math.Min(ignoreList.Count, 32);
+            for (int i = 0; i < count; i++)
+            {
+                _staticIgnoreArray[i] = ignoreList[i];
+            }
+            _HideAllWithStaticArray(count);
+        }
+
+        public void HideAll(IList<Type> ignoreList = null)
+        {
+            if (ignoreList == null || ignoreList.Count == 0)
+            {
+                _HideAll(_ => false);
+                return;
+            }
+
+            // 使用静态数组
+            int count = Math.Min(ignoreList.Count, 32);
+            for (int i = 0; i < count; i++)
+            {
+                _staticIgnoreArray[i] = ConverterID(ignoreList[i]);
+            }
+            _HideAllWithStaticArray(count);
         }
 
         public void Hide<T>(bool isAnim = true) where T : UIBase

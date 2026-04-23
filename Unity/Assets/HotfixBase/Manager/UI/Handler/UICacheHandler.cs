@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using static Ux.UIMgr;
 
 namespace Ux
@@ -19,27 +18,19 @@ namespace Ux
 
         public void ClearMemory()
         {
-            if (Cache.Count > 0)
+            // 遍历 Cache 并清理
+            foreach (var kv in Cache)
             {
-                var ids = Cache.Keys.ToList();
-                for (var i = ids.Count - 1; i >= 0; i--)
-                {
-                    var id = ids[i];
-                    if (Cache.TryGetValue(id, out IUI ui)) _callback.DisposeUI(ui);
-                    Cache.Remove(id);
-                }
+                _callback.DisposeUI(kv.Value);
             }
+            Cache.Clear();
 
-            if (WaitDels.Count > 0)
+            // 遍历 WaitDels 并清理
+            foreach (var kv in WaitDels)
             {
-                var ids = WaitDels.Keys.ToList();
-                for (int i = ids.Count - 1; i >= 0; i--)
-                {
-                    var id = ids[i];
-                    if (WaitDels.TryGetValue(id, out var wd)) wd.Dispose();
-                }
-                WaitDels.Clear();
+                kv.Value.Dispose();
             }
+            WaitDels.Clear();
         }
 
         void OnRemoveFromWaitDel(int id)
@@ -56,27 +47,25 @@ namespace Ux
             var id = ui.ID;
             if (ui.HideDestroyTime < 0)
             {
-                if (Cache.ContainsKey(id))
+                if (!Cache.TryAdd(id, ui))
                 {
                     Log.Error($"界面[{ui.Name}]多次放入缓存列表");
                     return;
                 }
-
-                Cache.Add(id, ui);
 #if UNITY_EDITOR
                 __Debugger_Cacel_Event();
 #endif
             }
             else
             {
-                if (WaitDels.ContainsKey(id))
-                {
-                    Log.Error($"界面[{ui.Name}]多次放入待删除列表");
-                    return;
-                }
                 var wd = Pool.Get<WaitDel>();
                 wd.Init(ui, OnRemoveFromWaitDel, OnDisposeFromWaitDel);
-                WaitDels.Add(id, wd);
+                if (!WaitDels.TryAdd(id, wd))
+                {
+                    Log.Error($"界面[{ui.Name}]多次放入待删除列表");
+                    wd.Dispose();
+                    return;
+                }
 #if UNITY_EDITOR
                 __Debugger_WaitDel_Event();
 #endif

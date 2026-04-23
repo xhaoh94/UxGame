@@ -94,15 +94,6 @@ namespace Ux
             ShowCallback, HideCallback, CheckShownCallback);
 
         /// <summary>
-        /// 批量设置常用参数
-        /// </summary>
-        public DialogData WithCommon(string title, string content, string btn1Title, Action btn1Callback) => new DialogData(
-            Id, title, content,
-            Btn1,Btn2, CheckBoxData,
-            CustomData,
-            ShowCallback, HideCallback, CheckShownCallback);
-
-        /// <summary>
         /// 检查复选框是否已勾选
         /// </summary>
         public bool IsCheckBoxChecked => CheckBoxData.HasCheckBox && CheckShownCallback?.Invoke(CheckBoxData.CheckBoxTag) == true;

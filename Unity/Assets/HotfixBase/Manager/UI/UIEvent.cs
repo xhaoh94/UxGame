@@ -45,21 +45,28 @@ namespace Ux
             }
         }
 
-        public void AddMultipleClick(GObject gObject, EventCallback0 fn0, int clickCnt = 2, float gapTime = 0.3f)
+        public void AddMultipleClick(GObject gObject, Delegate fn, int clickCnt = 2, float gapTime = 0.3f)
         {
             _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
             if (_mulClickEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
             var item = Pool.Get<UIMultipleClickEventData>();
-            item.Init(gObject, fn0, clickCnt, gapTime);
+            if (fn is EventCallback0 fn0)
+                item.Init(gObject, fn0, clickCnt, gapTime);
+            else if (fn is EventCallback1 fn1)
+                item.Init(gObject, fn1, clickCnt, gapTime);
+            else
+                return;
             _mulClickEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
         }
-        public void AddMultipleClick(GObject gObject, EventCallback1 fn1, int clickCnt = 2, float gapTime = 0.3f)
+
+        public void AddEvent(EventListener listener, Delegate fn)
         {
-            _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
-            if (_mulClickEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
-            var item = Pool.Get<UIMultipleClickEventData>();
-            item.Init(gObject, fn1, clickCnt, gapTime);
-            _mulClickEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
+            _listeners ??= new List<EventListener>();
+            if (_listeners.Contains(listener)) return;
+            if (fn is EventCallback1 fn1)
+                listener.Add(fn1);
+            else if (fn is EventCallback0 fn0)
+                listener.Add(fn0);
         }
         public void AddLongPress(GObject gObject, Func<bool> fn, float first, float delay, int loop, int holdRangeRadius)
         {
@@ -68,18 +75,6 @@ namespace Ux
             var item = Pool.Get<UILongPressEventData>();
             item.Init(gObject, fn, first, delay, loop, holdRangeRadius);
             _longPressEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
-        }
-        public void AddEvent(EventListener listener, EventCallback1 fn)
-        {
-            _listeners ??= new List<EventListener>();
-            if (_listeners.Contains(listener)) return;
-            listener.Add(fn);
-        }
-        public void AddEvent(EventListener listener, EventCallback0 fn)
-        {
-            _listeners ??= new List<EventListener>();
-            if (_listeners.Contains(listener)) return;
-            listener.Add(fn);
         }
     }
 
