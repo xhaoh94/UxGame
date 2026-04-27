@@ -25,12 +25,24 @@ namespace Ux
             }
             Cache.Clear();
 
-            // 遍历 WaitDels 并清理
-            foreach (var kv in WaitDels)
+            while (WaitDels.Count > 0)
             {
-                kv.Value.Dispose();
+                var firstKey = 0;
+                WaitDel firstValue = null;
+
+                // 获取第一个键值对
+                using (var enumerator = WaitDels.GetEnumerator())
+                {
+                    if (enumerator.MoveNext())
+                    {
+                        firstKey = enumerator.Current.Key;
+                        firstValue = enumerator.Current.Value;
+                    }
+                }
+
+                firstValue?.Dispose();
             }
-            WaitDels.Clear();
+
         }
 
         void OnRemoveFromWaitDel(int id)

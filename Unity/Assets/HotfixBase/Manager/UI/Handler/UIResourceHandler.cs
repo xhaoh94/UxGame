@@ -66,17 +66,7 @@ namespace Ux
                 if (_pkgToRef.TryGetValue(pkg, out var pr))
                 {
                     if (!pr.Remove()) continue;
-                    UIPackage.RemovePackage(pkg);
-                    if (_pkgToHandles.TryGetValue(pkg, out var handles))
-                    {
-                        foreach (var handle in handles.Where(handle => handle.IsValid))
-                        {
-                            handle.Release();
-                        }
-
-                        _pkgToHandles.Remove(pkg);
-                    }
-
+                    CleanupPackageResources(pkg);
                     _pkgToRef.Remove(pkg);
                     pr.Release();
                 }
@@ -87,31 +77,70 @@ namespace Ux
             }
         }
 
+        private void RollbackAllRefCounts(List<UIPkgRef> refsToRollback)
+        {
+            if (refsToRollback == null) return;
+
+            foreach (var pr in refsToRollback)
+            {
+                if (pr.Remove())
+                {
+                    CleanupPackageResources(pr.PkgName);
+                    _pkgToRef.Remove(pr.PkgName);
+                    pr.Release();
+                }
+            }
+        }
+
+        private void CleanupPackageResources(string pkgName)
+        {
+            UIPackage.RemovePackage(pkgName);
+            if (_pkgToHandles.TryGetValue(pkgName, out var handles))
+            {
+                foreach (var handle in handles.Where(handle => handle.IsValid))
+                {
+                    handle.Release();
+                }
+                _pkgToHandles.Remove(pkgName);
+            }
+        }
+
         public async UniTask<bool> LoadUIPackage(string[] pkgs)
         {
             if (pkgs.Length == 0) return false;
-            List<string> tem = null;
+
+            // 用于记录所有需要加载的新包
+            List<string> packagesToLoad = null;
+            // 用于记录所有需要回滚的 UIPkgRef（包括已存在的包和新加载的包）
+            List<UIPkgRef> refsToRollback = null;
+
+            // 第一阶段：准备阶段
             foreach (var pkg in pkgs)
             {
                 if (_pkgToRef.TryGetValue(pkg, out var pr))
                 {
+                    // 已存在的包：增加引用计数并记录以便回滚
+                    refsToRollback ??= new List<UIPkgRef>();
+                    refsToRollback.Add(pr);
                     pr.Add();
                     continue;
                 }
 
-                tem ??= new List<string>();
-                if (!tem.Contains(pkg)) tem.Add(pkg);
+                packagesToLoad ??= new List<string>();
+                if (!packagesToLoad.Contains(pkg)) packagesToLoad.Add(pkg);
             }
 
-            if (tem is not { Count: > 0 })
+            if (packagesToLoad is not { Count: > 0 })
             {
+                // 没有新包需要加载，直接返回成功
                 return true;
             }
 
-            foreach (var pkg in tem)
+            foreach (var pkg in packagesToLoad)
             {
                 if (_pkgToLoading.Contains(pkg))
                 {
+                    // 等待其他线程加载完成
                     while (_pkgToLoading.Contains(pkg))
                     {
                         await UniTask.Yield();
@@ -119,17 +148,38 @@ namespace Ux
 
                     if (_pkgToRef.TryGetValue(pkg, out var pr))
                     {
+                        // 其他线程加载成功，增加引用计数并记录以便回滚
+                        refsToRollback ??= new List<UIPkgRef>();
+                        refsToRollback.Add(pr);
                         pr.Add();
                     }
                     else
                     {
+                        // 其他线程加载失败，回滚所有引用计数
+                        RollbackAllRefCounts(refsToRollback);
                         return false;
                     }
                 }
                 else
                 {
                     _pkgToLoading.Add(pkg);
-                    if (!await _ToLoadUIPackage(pkg)) return false;
+                    bool loadSuccess = await _ToLoadUIPackage(pkg);
+                    _pkgToLoading.Remove(pkg);
+
+                    if (loadSuccess)
+                    {
+                        var pr = Pool.Get<UIPkgRef>();
+                        pr.Init(pkg, 1);
+                        _pkgToRef.Add(pkg, pr);
+                        refsToRollback ??= new List<UIPkgRef>();
+                        refsToRollback.Add(pr);
+                    }
+                    else
+                    {
+                        // 加载失败，回滚所有引用计数
+                        RollbackAllRefCounts(refsToRollback);
+                        return false;
+                    }
                 }
             }
 
@@ -160,14 +210,6 @@ namespace Ux
             }
 
             handles.Add(handle);
-            if (suc)
-            {
-                var pr = Pool.Get<UIPkgRef>();
-                pr.Init(pkg, 1);
-                _pkgToRef.Add(pkg, pr);
-            }
-
-            _pkgToLoading.Remove(pkg);
             return suc;
         }
 
