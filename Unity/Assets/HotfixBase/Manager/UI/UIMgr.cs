@@ -247,8 +247,6 @@ namespace Ux
                 _showed.Add(uiid, ui);
                 _showing.Remove(uiid);
                 _FinishPendingShow(uiid, ui);
-                EventMgr.Ins.Run(MainEventType.UI_SHOW, uiid);
-                EventMgr.Ins.Run(MainEventType.UI_SHOW, ui.GetType());
             }
 
             uis.Clear();

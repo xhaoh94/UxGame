@@ -174,6 +174,8 @@ namespace Ux
             {
                 _cbData.Value.showCb?.Invoke(this, param, checkStack);
             }
+            EventMgr.Ins.Run(MainEventType.UI_SHOW, ID);
+            EventMgr.Ins.Run(MainEventType.UI_SHOW, GetType());
         }
 
         void IUI.DoHide(bool isAnim, bool checkStack)
