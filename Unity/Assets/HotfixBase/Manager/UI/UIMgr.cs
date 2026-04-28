@@ -26,8 +26,7 @@ namespace Ux
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
-        private readonly List<int> _tempIgnoreSet = new List<int>();
-        private int[] _staticIgnoreArray = new int[32]; // 静态数组，避免GC
+        private HashSet<int> _ignoreSet;
         private readonly CallBackData _initData;
 
         private readonly UIResourceHandler _resourceHandler;
@@ -386,41 +385,27 @@ namespace Ux
         }
 
         
-        void _HideAllWithStaticArray(int count)
+        private void _HideAllWithSet()
         {
             _stackHandler.Clear();
 
-            // 遍历 _showing 列表
             for (int i = _showing.Count - 1; i >= 0; i--)
             {
                 var id = _showing[i];
-                if (!ContainsInStaticArray(id, count))
+                if (!_ignoreSet.Contains(id))
                 {
                     Hide(id, false);
                 }
             }
 
-            // 遍历 _showed 字典
             foreach (var kv in _showed)
             {
                 var id = kv.Key;
-                if (!ContainsInStaticArray(id, count))
+                if (!_ignoreSet.Contains(id))
                 {
                     Hide(id, false);
                 }
             }
-        }
-
-        bool ContainsInStaticArray(int id, int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                if (_staticIgnoreArray[i] == id)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         
@@ -432,13 +417,14 @@ namespace Ux
                 return;
             }
 
-            // 使用静态数组
-            int count = Math.Min(ignoreList.Count, 32);
-            for (int i = 0; i < count; i++)
+            _ignoreSet ??= new HashSet<int>();
+            _ignoreSet.Clear();
+            int cnt = ignoreList.Count;
+            for (int i = 0; i < cnt; i++)
             {
-                _staticIgnoreArray[i] = ignoreList[i];
+                _ignoreSet.Add(ignoreList[i]);
             }
-            _HideAllWithStaticArray(count);
+            _HideAllWithSet();
         }
 
         public void HideAll(IList<Type> ignoreList = null)
@@ -449,13 +435,14 @@ namespace Ux
                 return;
             }
 
-            // 使用静态数组
-            int count = Math.Min(ignoreList.Count, 32);
-            for (int i = 0; i < count; i++)
+            _ignoreSet ??= new HashSet<int>();
+            _ignoreSet.Clear();
+            int cnt = ignoreList.Count;
+            for (int i = 0; i < cnt; i++)
             {
-                _staticIgnoreArray[i] = ConverterID(ignoreList[i]);
+                _ignoreSet.Add(ConverterID(ignoreList[i]));
             }
-            _HideAllWithStaticArray(count);
+            _HideAllWithSet();
         }
 
         public void Hide<T>(bool isAnim = true) where T : UIBase
