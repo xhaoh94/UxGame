@@ -21,8 +21,8 @@ namespace Ux
         private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
 #endif
 
-        private readonly List<int> _showing = new List<int>();
-        private readonly HashSet<int> _asyncs = new HashSet<int>();
+        private readonly List<int> _showing = new List<int>();        
+        private readonly Dictionary<int, AutoResetUniTaskCompletionSource<IUI>> _pendingShows = new Dictionary<int, AutoResetUniTaskCompletionSource<IUI>>();
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
@@ -235,11 +235,10 @@ namespace Ux
                 {
                     _cacheHandler.CheckDestroy(ui);
                     _showing.Remove(uiid);
+                    _FinishPendingShow(uiid, null);
                     continue;
-                }
-                _asyncs.Add(uiid);
-                await ui.DoShow(isAnim, id, uiid == id ? param : null, checkStack);
-                _asyncs.Remove(uiid);
+                }                
+                await ui.DoShow(isAnim, id, uiid == id ? param : null, checkStack);                
 
                 if (_showed.ContainsKey(uiid))
                 {
@@ -247,6 +246,7 @@ namespace Ux
                 }
                 _showed.Add(uiid, ui);
                 _showing.Remove(uiid);
+                _FinishPendingShow(uiid, ui);
                 EventMgr.Ins.Run(MainEventType.UI_SHOW, uiid);
                 EventMgr.Ins.Run(MainEventType.UI_SHOW, ui.GetType());
             }
@@ -259,6 +259,15 @@ namespace Ux
             __Debugger_Showed_Event();
 #endif
             return succ ? (T)_showed[id] : default;
+        }
+
+        private void _FinishPendingShow(int id, IUI ui)
+        {
+            if (_pendingShows.TryGetValue(id, out var tcs))
+            {
+                tcs.TrySetResult(ui);
+                _pendingShows.Remove(id);
+            }
         }
 
         private async UniTask<bool> _ShowAsync(int id, ICollection<IUI> uis)
@@ -283,37 +292,26 @@ namespace Ux
 
             if (_showed.TryGetValue(id, out var ui))
             {
-                if (_asyncs.Contains(id))
-                {
-                    float time = Time.unscaledTime;
-                    await UniTask.WaitUntil(() =>
-                    {
-                        return !_asyncs.Contains(id) || Time.unscaledTime - time > _showTimeout;
-                    });
-                }
-
                 uis.Add(ui);
                 return true;
             }
 
             if (_showing.Contains(id))
             {
-                float time = Time.unscaledTime;
-                await UniTask.WaitUntil(() =>
+                if (_pendingShows.TryGetValue(id, out var pendingTcs))
                 {
-                    if (_showed.TryGetValue(id, out ui)) return true;
-                    if (!_showing.Contains(id)) return true;
-                    if (_cacheHandler.CreatedDels.Contains(id)) return true;
-                    if (Time.unscaledTime - time > _showTimeout) return true;
-                    return false;
-                });
+                    ui = await pendingTcs.Task;
+                    if (ui == null) return false;
+                    uis.Add(ui);
+                    return true;
+                }
 
-                if (ui == null) return false;
-                uis.Add(ui);
-                return true;
+                return false;
             }
 
             _showing.Add(id);
+            var tcs = AutoResetUniTaskCompletionSource<IUI>.Create();
+            _pendingShows.Add(id, tcs);
 #if UNITY_EDITOR
             __Debugger_Showing_Event();
 #endif
@@ -337,6 +335,8 @@ namespace Ux
             if (ui == null)
             {
                 _showing.Remove(id);
+                tcs.TrySetResult(null);
+                _pendingShows.Remove(id);
 #if UNITY_EDITOR
                 __Debugger_Showing_Event();
 #endif
