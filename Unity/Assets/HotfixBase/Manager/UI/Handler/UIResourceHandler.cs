@@ -43,7 +43,8 @@ namespace Ux
         private readonly YooPackage _yoo;
         private readonly Dictionary<string, UIPkgRef> _pkgToRef = new();
         private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles = new();
-        private readonly HashSet<string> _pkgToLoading = new();
+        // 使用 AutoResetUniTaskCompletionSource 协调多个协程等待同一个包的加载
+        private readonly Dictionary<string, AutoResetUniTaskCompletionSource<bool>> _pkgLoadingTasks = new();
 
         public Dictionary<string, UIPkgRef> PkgToRef => _pkgToRef;
 
@@ -57,7 +58,8 @@ namespace Ux
             if (pkgs.Length == 0) return;
             foreach (var pkg in pkgs)
             {
-                if (_pkgToLoading.Contains(pkg))
+                // 使用 _pkgLoadingTasks 判断是否正在加载
+                if (_pkgLoadingTasks.ContainsKey(pkg))
                 {
                     Log.Warning("卸载正在加载中的包???");
                     continue;
@@ -96,7 +98,7 @@ namespace Ux
         {
             UIPackage.RemovePackage(pkgName);
             if (_pkgToHandles.TryGetValue(pkgName, out var handles))
-            {                
+            {
                 for (int i = 0; i < handles.Count; i++)
                 {
                     var handle = handles[i];
@@ -118,7 +120,6 @@ namespace Ux
             // 用于记录所有需要回滚的 UIPkgRef（包括已存在的包和新加载的包）
             List<UIPkgRef> refsToRollback = null;
 
-            // 第一阶段：准备阶段
             foreach (var pkg in pkgs)
             {
                 if (_pkgToRef.TryGetValue(pkg, out var pr))
@@ -142,33 +143,31 @@ namespace Ux
 
             foreach (var pkg in packagesToLoad)
             {
-                if (_pkgToLoading.Contains(pkg))
+                // 使用 _pkgLoadingTasks 判断是否正在加载
+                if (_pkgLoadingTasks.TryGetValue(pkg, out var existingTcs))
                 {
-                    // 等待其他线程加载完成
-                    while (_pkgToLoading.Contains(pkg))
+                    // 等待其他协程加载完成
+                    var success = await existingTcs.Task;
+                    if (success && _pkgToRef.TryGetValue(pkg, out var pr))
                     {
-                        await UniTask.Yield();
-                    }
-
-                    if (_pkgToRef.TryGetValue(pkg, out var pr))
-                    {
-                        // 其他线程加载成功，增加引用计数并记录以便回滚
                         refsToRollback ??= new List<UIPkgRef>();
                         refsToRollback.Add(pr);
                         pr.Add();
                     }
                     else
                     {
-                        // 其他线程加载失败，回滚所有引用计数
+                        // 另一个协程加载失败
                         RollbackAllRefCounts(refsToRollback);
                         return false;
                     }
                 }
                 else
                 {
-                    _pkgToLoading.Add(pkg);
+                    // 开始加载，创建 AutoResetUniTaskCompletionSource 用于其他协程等待
+                    var loadTcs = AutoResetUniTaskCompletionSource<bool>.Create();
+                    _pkgLoadingTasks[pkg] = loadTcs;
+
                     bool loadSuccess = await _ToLoadUIPackage(pkg);
-                    _pkgToLoading.Remove(pkg);
 
                     if (loadSuccess)
                     {
@@ -178,7 +177,12 @@ namespace Ux
                         refsToRollback ??= new List<UIPkgRef>();
                         refsToRollback.Add(pr);
                     }
-                    else
+
+                    // 先通知等待的协程，再清理状态
+                    loadTcs.TrySetResult(loadSuccess);
+                    _pkgLoadingTasks.Remove(pkg);
+
+                    if (!loadSuccess)
                     {
                         // 加载失败，回滚所有引用计数
                         RollbackAllRefCounts(refsToRollback);
