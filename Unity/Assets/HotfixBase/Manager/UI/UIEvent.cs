@@ -8,8 +8,8 @@ namespace Ux
     public class UIEvent
     {
         private List<EventListener> _listeners;//组件事件        
-        private Dictionary<int, UILongPressEventData> _longPressEvtList;//长按
-        private Dictionary<int, UIMultipleClickEventData> _mulClickEvtList;//多次点击
+        private Dictionary<GObject, UILongPressEventData> _longPressEvtList;//长按
+        private Dictionary<GObject, UIMultipleClickEventData> _mulClickEvtList;//多次点击
 
         public void Release()
         {
@@ -47,8 +47,8 @@ namespace Ux
 
         public void AddMultipleClick(GObject gObject, Delegate fn, int clickCnt = 2, float gapTime = 0.3f)
         {
-            _mulClickEvtList ??= new Dictionary<int, UIMultipleClickEventData>();
-            if (_mulClickEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
+            _mulClickEvtList ??= new Dictionary<GObject, UIMultipleClickEventData>();
+            if (_mulClickEvtList.ContainsKey(gObject)) return;
             var item = Pool.Get<UIMultipleClickEventData>();
             if (fn is EventCallback0 fn0)
                 item.Init(gObject, fn0, clickCnt, gapTime);
@@ -56,7 +56,7 @@ namespace Ux
                 item.Init(gObject, fn1, clickCnt, gapTime);
             else
                 return;
-            _mulClickEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
+            _mulClickEvtList.Add(gObject, item);
         }
 
         public void AddEvent(EventListener listener, Delegate fn)
@@ -70,11 +70,11 @@ namespace Ux
         }
         public void AddLongPress(GObject gObject, Func<bool> fn, float first, float delay, int loop, int holdRangeRadius)
         {
-            _longPressEvtList ??= new Dictionary<int, UILongPressEventData>();
-            if (_longPressEvtList.ContainsKey(RuntimeHelpers.GetHashCode(gObject))) return;
+            _longPressEvtList ??= new Dictionary<GObject, UILongPressEventData>();
+            if (_longPressEvtList.ContainsKey(gObject)) return;
             var item = Pool.Get<UILongPressEventData>();
             item.Init(gObject, fn, first, delay, loop, holdRangeRadius);
-            _longPressEvtList.Add(RuntimeHelpers.GetHashCode(gObject), item);
+            _longPressEvtList.Add(gObject, item);
         }
     }
 

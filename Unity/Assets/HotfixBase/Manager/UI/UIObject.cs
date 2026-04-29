@@ -82,11 +82,6 @@ namespace Ux
         IUIParam _paramVo;
         void IUISetParam.SetParam(IUIParam param)
         {
-            //只有UIBase的界面，才回收
-            if (this is UIBase)
-            {
-                _paramVo?.Release();
-            }
             _paramVo = param;
         }
         protected bool TryGetParam<V>(out V value, UIParamType type = UIParamType.A)

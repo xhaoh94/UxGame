@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
 using System.Threading;
+using System.Collections.Generic;
 using UnityEngine;
 using static Ux.UIMgr;
 
@@ -22,6 +23,9 @@ namespace Ux
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
 
+        // 使用静态池复用CancellationTokenSource，减少GC
+        private static readonly Stack<CancellationTokenSource> _tokenPool = new Stack<CancellationTokenSource>();
+        
         CancellationTokenSource _showToken;
         CancellationTokenSource _hideToken;
 
@@ -156,7 +160,7 @@ namespace Ux
             {
                 if (isAnim && ShowAnim != null)
                 {
-                    _showToken = new CancellationTokenSource();
+                    _showToken = GetTokenFromPool();
                 }                                
                 (this as IUISetParam).SetParam(param);
                 ToShow(isAnim, id, checkStack, _showToken);
@@ -164,10 +168,11 @@ namespace Ux
             }
             return task.Task;
         }
-        private void _Show(int id, IUIParam param, bool checkStack)
+        void _Show(int id, IUIParam param, bool checkStack)
         {
             if (_showToken != null)
             {
+                ReturnTokenToPool(_showToken);
                 _showToken = null;
             }
             if (id == ID && _cbData != null)
@@ -207,7 +212,7 @@ namespace Ux
             _ReleaseShowToken();
             void _DoHide()
             {
-                _hideToken = isAnim && HideAnim != null ? new CancellationTokenSource() : null;
+                _hideToken = isAnim && HideAnim != null ? GetTokenFromPool() : null;
                 ToHide(isAnim, checkStack, _hideToken);
             }
         }
@@ -216,6 +221,7 @@ namespace Ux
         {
             if (_hideToken != null)
             {
+                ReturnTokenToPool(_hideToken);
                 _hideToken = null;
             }
             RemoveToStage();
@@ -239,7 +245,7 @@ namespace Ux
         {
             if (_showToken != null)
             {
-                _showToken.Cancel();
+                ReturnTokenToPool(_showToken);
                 _showToken = null;
             }
         }
@@ -247,7 +253,7 @@ namespace Ux
         {
             if (_hideToken != null)
             {
-                _hideToken.Cancel();
+                ReturnTokenToPool(_hideToken);
                 _hideToken = null;
             }
         }
@@ -346,18 +352,77 @@ namespace Ux
             }
         }
 
+        // 提取公共方法：获取父对象
+        private GComponent GetParentComponent()
+        {
+            if (GObject == null) return null;
+            return GObject.parent as GComponent ?? UIMgr.Ins.GetLayer(UILayer.Root);
+        }
+
         protected void AddRelation(RelationType relation)
         {
-            if (GObject == null) return;
-            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
+            var parent = GetParentComponent();
+            if (parent == null) return;
             GObject.AddRelation(parent, relation);
         }
 
         protected void RemoveRelation(RelationType relation)
         {
-            if (GObject == null) return;
-            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
+            var parent = GetParentComponent();
+            if (parent == null) return;
             GObject.RemoveRelation(parent, relation);
+        }
+
+        // Token池管理方法
+        private static CancellationTokenSource GetTokenFromPool()
+        {
+            lock (_tokenPool)
+            {
+                if (_tokenPool.Count > 0)
+                {
+                    var token = _tokenPool.Pop();
+                    // 检查Token是否已被取消
+                    if (!token.IsCancellationRequested)
+                    {
+                        return token;
+                    }
+                    // Token已被取消，丢弃并创建新的
+                }
+            }
+            return new CancellationTokenSource();
+        }
+
+        private static void ReturnTokenToPool(CancellationTokenSource token)
+        {
+            if (token == null) return;
+            
+            // 取消Token（如果还未取消）
+            try
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    token.Cancel();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Token已被释放，直接丢弃
+                return;
+            }
+            
+            lock (_tokenPool)
+            {
+                // 限制池大小，避免内存泄漏
+                if (_tokenPool.Count < 10) // 限制最大10个
+                {
+                    _tokenPool.Push(token);
+                }
+                else
+                {
+                    // 池已满，释放Token
+                    token.Dispose();
+                }
+            }
         }
     }
 }

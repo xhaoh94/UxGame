@@ -35,7 +35,7 @@ namespace Ux
         private readonly UICacheHandler _cacheHandler;
 
 
-        private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
+        private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>(4)
         {
             { UILayer.Root, GRoot.inst },
             { UILayer.Bottom, _CreateLayer(UILayer.Bottom, -100) },
@@ -394,27 +394,14 @@ namespace Ux
             }
         }
 
-
         private void _HideAllWithSet()
         {
-            _stackHandler.Clear();
-
-            foreach (var id in _showing)
+            if (_ignoreSet == null || _ignoreSet.Count == 0)
             {
-                if (!_ignoreSet.Contains(id))
-                {
-                    Hide(id, false);
-                }
+                _HideAll(_ => false);
+                return;
             }
-
-            foreach (var kv in _showed)
-            {
-                var id = kv.Key;
-                if (!_ignoreSet.Contains(id))
-                {
-                    Hide(id, false);
-                }
-            }
+            _HideAll(id => _ignoreSet.Contains(id));
         }
 
 

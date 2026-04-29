@@ -11,57 +11,21 @@ namespace Ux
     {
         IUIParam Copy();
         bool TryGet<T>(out T t, UIParamType type = UIParamType.A);
-        void Release();
 
         // 静态创建方法完全不变
         public static IUIParam Create<A>(A a)
         {
-            var p = Pool.Get<UIParam<A>>();
-            p.Init(a, true);
-            return p;
+            return new UIParam<A>(a);
         }
         public static IUIParam Create<A, B>(A a, B b)
         {
-            var p = Pool.Get<UIParam<A, B>>();
-            p.Init(a, b, true);
-            return p;
+            return new UIParam<A, B>(a, b);
+
         }
         public static IUIParam Create<A, B, C>(A a, B b, C c)
         {
-            var p = Pool.Get<UIParam<A, B, C>>();
-            p.Init(a, b, c, true);
-            return p;
+            return new UIParam<A, B, C>(a,b,c);            
         }
-    }
-
-    public class UIParamBase
-    {
-        bool _fromPool;
-        public bool IsRelease { get; private set; }
-
-        protected void Init(bool fromPool)
-        {
-            _fromPool = fromPool;
-            IsRelease = false;
-        }
-
-        public void Release()
-        {
-            if (IsRelease)
-            {
-                Log.Error("UIParam:重复回收了");
-                return;
-            }
-            IsRelease = true;
-            OnRelease();
-            if (_fromPool)
-            {
-                Pool.Push(this);
-                _fromPool = false;
-            }
-        }
-
-        protected virtual void OnRelease() { }
     }
 
     // ==========================
@@ -69,21 +33,17 @@ namespace Ux
     // 不新增类、不装箱、不堆分配
     // ==========================
 
-    public class UIParam<A> : UIParamBase, IUIParam
+    public class UIParam<A> : IUIParam
     {
         A _a;
 
-        public void Init(A a, bool fromPool)
+        public UIParam(A a)
         {
-            Init(fromPool);
             _a = a;
         }
 
-        protected override void OnRelease() => _a = default;
-
         IUIParam IUIParam.Copy()
         {
-            if (IsRelease) return null;
             return IUIParam.Create(_a);
         }
 
@@ -99,24 +59,18 @@ namespace Ux
         }
     }
 
-    public class UIParam<A, B> : UIParamBase, IUIParam
+    public class UIParam<A, B> : IUIParam
     {
         A _a; B _b;
 
-        public void Init(A a, B b, bool fromPool)
+        public UIParam(A a, B b)
         {
-            Init(fromPool);
             _a = a; _b = b;
         }
 
-        protected override void OnRelease()
-        {
-            _a = default; _b = default;
-        }
 
         IUIParam IUIParam.Copy()
         {
-            if (IsRelease) return null;
             return IUIParam.Create(_a, _b);
         }
 
@@ -134,24 +88,17 @@ namespace Ux
         }
     }
 
-    public class UIParam<A, B, C> : UIParamBase, IUIParam
+    public class UIParam<A, B, C> : IUIParam
     {
         A _a; B _b; C _c;
 
-        public void Init(A a, B b, C c, bool fromPool)
+        public UIParam(A a, B b, C c)
         {
-            Init(fromPool);
             _a = a; _b = b; _c = c;
-        }
-
-        protected override void OnRelease()
-        {
-            _a = default; _b = default; _c = default;
         }
 
         IUIParam IUIParam.Copy()
         {
-            if (IsRelease) return null;
             return IUIParam.Create(_a, _b, _c);
         }
 

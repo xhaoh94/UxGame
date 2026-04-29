@@ -248,10 +248,6 @@ namespace Ux
         }
         void _ClearDatas()
         {
-            for (var i = 0; i < _datas.Count; i++)
-            {
-                _datas[i].Release();
-            }
             _datas.Clear();
         }
 
