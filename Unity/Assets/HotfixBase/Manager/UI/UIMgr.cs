@@ -145,13 +145,13 @@ namespace Ux
 
         public T GetUI<T>(int id) where T : IUI
         {
-            if (!_showed.ContainsKey(id)) return default(T);
-            return (T)_showed[id];
+            if (!_showed.TryGetValue(id, out var ui)) return default(T);
+            return (T)ui;
         }
         public IUI GetUI(int id)
         {
-            if (!_showed.ContainsKey(id)) return null;
-            return _showed[id];
+            if (!_showed.TryGetValue(id, out var ui)) return null;
+            return ui;
         }
 
         public bool IsShow<T>() where T : UIBase
@@ -367,46 +367,82 @@ namespace Ux
             return ui;
         }
 
-        void _HideAll(Func<int, bool> func)
+        private readonly List<int> _hideAllIdBuffer = new List<int>();
+
+        void _HideAll(bool hasIgnoreSet)
         {
             _stackHandler.Clear();
 
-            // 遍历 _showing 列表
-            foreach (var id in _showing)
+            int cnt;
+            if (hasIgnoreSet && _ignoreSet != null && _ignoreSet.Count > 0)
             {
-                if (!func(id))
+                _hideAllIdBuffer.Clear();
+                foreach (var id in _showing)
                 {
-                    Hide(id, false);
+                    _hideAllIdBuffer.Add(id);
+                }
+                cnt = _hideAllIdBuffer.Count;
+                for (int i = 0; i < cnt; i++)
+                {
+                    var id = _hideAllIdBuffer[i];
+                    if (!_ignoreSet.Contains(id))
+                    {
+                        Hide(id, false);
+                    }
+                }
+
+                _hideAllIdBuffer.Clear();
+                foreach (var kv in _showed)
+                {
+                    _hideAllIdBuffer.Add(kv.Key);
+                }
+                cnt = _hideAllIdBuffer.Count;
+                for (int i = 0; i < cnt; i++)
+                {
+                    var id = _hideAllIdBuffer[i];
+                    if (!_ignoreSet.Contains(id))
+                    {
+                        Hide(id, false);
+                    }
                 }
             }
-
-            // 遍历 _showed 字典
-            foreach (var kv in _showed)
+            else
             {
-                var id = kv.Key;
-                if (!func(id))
+                _hideAllIdBuffer.Clear();
+                foreach (var id in _showing)
                 {
-                    Hide(id, false);
+                    _hideAllIdBuffer.Add(id);
+                }
+                cnt = _hideAllIdBuffer.Count;
+                for (int i = 0; i < cnt; i++)
+                {
+                    Hide(_hideAllIdBuffer[i], false);
+                }
+
+                _hideAllIdBuffer.Clear();
+                foreach (var kv in _showed)
+                {
+                    _hideAllIdBuffer.Add(kv.Key);
+                }
+                cnt = _hideAllIdBuffer.Count;
+                for (int i = 0; i < cnt; i++)
+                {
+                    Hide(_hideAllIdBuffer[i], false);
                 }
             }
         }
 
-        private void _HideAllWithSet()
+
+        public void HideAll()
         {
-            if (_ignoreSet == null || _ignoreSet.Count == 0)
-            {
-                _HideAll(_ => false);
-                return;
-            }
-            _HideAll(id => _ignoreSet.Contains(id));
+            _HideAll(false);
         }
-
 
         public void HideAll(IList<int> ignoreList = null)
         {
             if (ignoreList == null || ignoreList.Count == 0)
             {
-                _HideAll(_ => false);
+                _HideAll(false);
                 return;
             }
 
@@ -417,14 +453,14 @@ namespace Ux
             {
                 _ignoreSet.Add(ignoreList[i]);
             }
-            _HideAllWithSet();
+            _HideAll(true);
         }
 
         public void HideAll(IList<Type> ignoreList = null)
         {
             if (ignoreList == null || ignoreList.Count == 0)
             {
-                _HideAll(_ => false);
+                _HideAll(false);
                 return;
             }
 
@@ -435,7 +471,7 @@ namespace Ux
             {
                 _ignoreSet.Add(ConverterID(ignoreList[i]));
             }
-            _HideAllWithSet();
+            _HideAll(true);
         }
 
         public void Hide<T>(bool isAnim = true) where T : UIBase
@@ -460,7 +496,7 @@ namespace Ux
         {
             if (_showing.Contains(id))
             {
-                if (!_cacheHandler.CreatedDels.Contains(id)) _cacheHandler.CreatedDels.Add(id);
+                _cacheHandler.CreatedDels.Add(id);
                 return;
             }
 
@@ -646,7 +682,7 @@ namespace Ux
 
         void IUIStackHandlerCallback.AddToCreatedDels(int id)
         {
-            if (!_cacheHandler.CreatedDels.Contains(id)) _cacheHandler.CreatedDels.Add(id);
+            _cacheHandler.CreatedDels.Add(id);
         }
 
         #endregion

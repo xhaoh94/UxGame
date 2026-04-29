@@ -34,11 +34,14 @@ namespace Ux
         public void OnHide(IUI ui)
         {
             if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
-            var lastIndex = _blurStacks.FindLastIndex(x => x.ID == ui.ID);
-            if (lastIndex >= 0)
+            for (int i = _blurStacks.Count - 1; i >= 0; i--)
             {
-                _blurStacks.RemoveAt(lastIndex);
-                _FlagBlur();
+                if (_blurStacks[i].ID == ui.ID)
+                {
+                    _blurStacks.RemoveAt(i);
+                    _FlagBlur();
+                    return;
+                }
             }
         }
 
@@ -49,8 +52,9 @@ namespace Ux
             if (_blurStacks.Count > 0)
             {
                 blurStack = _blurStacks[_blurStacks.Count - 1];
-                flagBlur = blurStack.Value.Blur.HasFlag(UIBlur.Blur);
-                flagFixed = blurStack.Value.Blur.HasFlag(UIBlur.Fixed);
+                var blur = blurStack.Value.Blur;
+                flagBlur = (blur & UIBlur.Blur) != 0;
+                flagFixed = (blur & UIBlur.Fixed) != 0;
             }
 
             var showed = _callback.GetShowedDict();
@@ -67,7 +71,7 @@ namespace Ux
                     ui.Filter = null;
                     continue;
                 }
-                if (ui.Blur.HasFlag(UIBlur.None))
+                if ((ui.Blur & UIBlur.None) != 0)
                 {
                     ui.Filter = null;
                     continue;
@@ -91,7 +95,7 @@ namespace Ux
             {
                 if (blurStack != null)
                 {
-                    flagScene = blurStack.Value.Blur.HasFlag(UIBlur.Scene);
+                    flagScene = (blurStack.Value.Blur & UIBlur.Scene) != 0;
                 }
                 Blur.SetCamera(_mainCamera, flagScene);
             }

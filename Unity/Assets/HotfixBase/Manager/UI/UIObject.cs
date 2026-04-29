@@ -159,10 +159,13 @@ namespace Ux
             }
             RemoveTag();
             OnAddEvent();
-            foreach (var component in Components)
+            if (_components != null)
             {
-                (component as IUISetParam).SetParam(_paramVo);
-                component.ToShow(isAnim, id, checkStack, token);
+                foreach (var component in _components)
+                {
+                    (component as IUISetParam).SetParam(_paramVo);
+                    component.ToShow(isAnim, id, checkStack, token);
+                }
             }
             OnShow();
             _CheckShow(id, checkStack, token).Forget();
@@ -210,10 +213,13 @@ namespace Ux
 
         protected virtual void ToOverwrite()
         {
-            foreach (var component in Components)
+            if (_components != null)
             {
-                (component as IUISetParam).SetParam(_paramVo);
-                component.ToOverwrite();
+                foreach (var component in _components)
+                {
+                    (component as IUISetParam).SetParam(_paramVo);
+                    component.ToOverwrite();
+                }
             }
             OnOverwrite();
         }
@@ -250,9 +256,12 @@ namespace Ux
                 HideAnim?.SetToEnd();
             }
 
-            foreach (var component in Components)
+            if (_components != null)
             {
-                component.ToHide(isAnim, checkStack, token);
+                foreach (var component in _components)
+                {
+                    component.ToHide(isAnim, checkStack, token);
+                }
             }
 
             OnHide();

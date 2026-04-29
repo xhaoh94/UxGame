@@ -72,7 +72,7 @@ namespace Ux
         /// </summary>
         public DialogData WithBtn2(string title,Action callback = null) => new DialogData(
             Id, Title, Content,
-            new DialogBtn(title, callback),Btn2, CheckBoxData,
+            Btn1, new DialogBtn(title, callback), CheckBoxData,
             CustomData,
             ShowCallback, HideCallback, CheckShownCallback);
         /// <summary>

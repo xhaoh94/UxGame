@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Ux
 {
@@ -12,13 +11,34 @@ namespace Ux
 
             public Downloader GetDownloaderByTags(IList<string> tags)
             {
-                var list = tags.Where(tag => !_loadedAssets.Contains(tag)).ToArray();
-                if (list.Length <= 0) return null;
+                if (tags == null || tags.Count == 0) return null;
+
+                int count = 0;
+                for (int i = 0; i < tags.Count; i++)
+                {
+                    if (!_loadedAssets.Contains(tags[i]))
+                    {
+                        count++;
+                    }
+                }
+                if (count == 0) return null;
+
+                string[] list = new string[count];
+                int index = 0;
+                for (int i = 0; i < tags.Count; i++)
+                {
+                    var tag = tags[i];
+                    if (!_loadedAssets.Contains(tag))
+                    {
+                        list[index++] = tag;
+                    }
+                }
+
                 var download = new Downloader(list);
                 if (download.TotalDownloadCount != 0) return download;
-                foreach (var tag in list)
+                for (int i = 0; i < list.Length; i++)
                 {
-                    _loadedAssets.Add(tag);
+                    _loadedAssets.Add(list[i]);
                 }
                 return null;
             }

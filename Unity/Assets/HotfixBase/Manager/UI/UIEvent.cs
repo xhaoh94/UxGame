@@ -67,6 +67,7 @@ namespace Ux
                 listener.Add(fn1);
             else if (fn is EventCallback0 fn0)
                 listener.Add(fn0);
+            _listeners.Add(listener);
         }
         public void AddLongPress(GObject gObject, Func<bool> fn, float first, float delay, int loop, int holdRangeRadius)
         {
