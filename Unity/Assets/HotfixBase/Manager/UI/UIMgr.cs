@@ -21,7 +21,7 @@ namespace Ux
         private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
 #endif
 
-        private readonly List<int> _showing = new List<int>();        
+        private readonly HashSet<int> _showing = new HashSet<int>();
         private readonly Dictionary<int, AutoResetUniTaskCompletionSource<IUI>> _pendingShows = new Dictionary<int, AutoResetUniTaskCompletionSource<IUI>>();
         private readonly Dictionary<int, IUI> _showed = new Dictionary<int, IUI>();
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
@@ -33,6 +33,7 @@ namespace Ux
         private readonly UIStackHandler _stackHandler;
         private readonly UIBlurHandler _blurHandler;
         private readonly UICacheHandler _cacheHandler;
+
 
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>()
         {
@@ -112,9 +113,19 @@ namespace Ux
 
         public void Add(List<UIParse> uis, List<ItemUrlParse> itemUrls)
         {
-            uis.ForEach(ui => { ui.Add(_idUIData); });
-            uis.ForEach(ui => { ui.Parse(_idUIData); });
-            itemUrls.ForEach(item => { item.Add(_itemUrls); });
+            foreach (var ui in uis)
+            {
+                ui.Add(_idUIData);
+            }
+
+            foreach (var ui in uis)
+            {
+                ui.Parse(_idUIData);
+            }
+            foreach (var itemUrl in itemUrls)
+            {
+                itemUrl.Add(_itemUrls);
+            }
 #if UNITY_EDITOR
             __Debugger_UI_Event();
 #endif
@@ -236,8 +247,8 @@ namespace Ux
                     _showing.Remove(uiid);
                     _FinishPendingShow(uiid, null);
                     continue;
-                }                
-                await ui.DoShow(isAnim, id, uiid == id ? param : null, checkStack);                
+                }
+                await ui.DoShow(isAnim, id, uiid == id ? param : null, checkStack);
 
                 if (_showed.ContainsKey(uiid))
                 {
@@ -358,15 +369,14 @@ namespace Ux
             ui.InitData(data, _initData);
             return ui;
         }
-        
+
         void _HideAll(Func<int, bool> func)
         {
             _stackHandler.Clear();
 
             // 遍历 _showing 列表
-            for (int i = _showing.Count - 1; i >= 0; i--)
+            foreach (var id in _showing)
             {
-                var id = _showing[i];
                 if (!func(id))
                 {
                     Hide(id, false);
@@ -384,14 +394,13 @@ namespace Ux
             }
         }
 
-        
+
         private void _HideAllWithSet()
         {
             _stackHandler.Clear();
 
-            for (int i = _showing.Count - 1; i >= 0; i--)
+            foreach (var id in _showing)
             {
-                var id = _showing[i];
                 if (!_ignoreSet.Contains(id))
                 {
                     Hide(id, false);
@@ -408,7 +417,7 @@ namespace Ux
             }
         }
 
-        
+
         public void HideAll(IList<int> ignoreList = null)
         {
             if (ignoreList == null || ignoreList.Count == 0)
@@ -586,13 +595,15 @@ namespace Ux
             download = ResMgr.Lazyload.GetDownloaderByTags(tags);
             if (download == null) return false;
             Log.Debug($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
+
+
             Dialog.Get()
             .WithTitle("下载")
             .WithContent($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。")
             .WithBtn1("下载", () =>
             {
-                _idDownloader.Add(id, download);
-                download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
+                 _idDownloader.Add(id, download);
+                 download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
             });
             return true;
         }

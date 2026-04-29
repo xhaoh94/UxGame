@@ -54,6 +54,7 @@ namespace Ux
         {
             ID = id;
             CType = type;
+            Name = $"{CType.FullName}_{ID}";
             TabData = tabData;
             Children = new List<int>();
 
@@ -66,7 +67,7 @@ namespace Ux
             tabData?.Init(this);
         }
         public virtual int ID { get; }
-        public string Name => $"{CType.FullName}_{ID}";
+        public string Name { get; private set; }
         public virtual Type CType { get; }
         public virtual string[] Pkgs { get; }
         public virtual string[] Lazyloads { get; }

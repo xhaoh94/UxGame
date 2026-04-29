@@ -136,127 +136,16 @@ namespace Ux
         protected virtual void OnInit()
         {
         }
-        void _SetInfo(MemberInfo info, GObject child)
-        {
-            if (info == null) return;
-            object[] attributes = info.GetCustomAttributes(typeof(UIComponentAttribute), true);
-            if (attributes.Length == 0)
-            {
-                if (info is FieldInfo field)
-                {
-                    field.SetValue(this, child);
-                }
-                else if (info is PropertyInfo property)
-                {
-                    property.SetValue(this, child);
-                }
-            }
-            else
-            {
-                var attribute = (UIComponentAttribute)attributes[0];
-                UIObject com = null;
-                if (attribute.Component != null)
-                {
-                    com = (UIObject)Activator.CreateInstance(attribute.Component);
-                }
-                else
-                {
-                    if (info is FieldInfo field)
-                    {
-                        com = (UIObject)Activator.CreateInstance(field.FieldType);
-                    }
-                    else if (info is PropertyInfo property)
-                    {
-                        com = (UIObject)Activator.CreateInstance(property.PropertyType);
-                    }
-                }
-                if (com != null)
-                {
-                    com.Init(child, this);
-                    if (info is FieldInfo field)
-                    {
-                        field.SetValue(this, com);
-                    }
-                    else if (info is PropertyInfo property)
-                    {
-                        property.SetValue(this, com);
-                    }
-                    AddComponent(com);
-                }
-            }
-        }
 
-        void _SetInfo(MemberInfo info, object child)
-        {
-            if (info == null) return;
-
-            if (info is FieldInfo field)
-            {
-                field.SetValue(this, child);
-            }
-            else if (info is PropertyInfo property)
-            {
-                property.SetValue(this, child);
-            }
-        }
-
-        void _ToCreateChildren(Type viewType, GComponent component)
-        {
-            for (int i = 0; i < component.numChildren; i++)
-            {
-                var child = component.GetChildAt(i);
-                const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                MemberInfo info;
-                info = viewType.GetField(child.name, flag);
-                if (info == null)
-                {
-                    info = viewType.GetProperty(child.name, flag);
-                }
-                _SetInfo(info, child);
-            }
-
-            for (int i = 0; i < component.Controllers.Count; i++)
-            {
-                var cont = component.GetControllerAt(i);
-                const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                MemberInfo info;
-                info = viewType.GetField(cont.name, flag);
-                if (info == null)
-                {
-                    info = viewType.GetProperty(cont.name, flag);
-                }
-                _SetInfo(info, cont);
-            }
-
-            for (int i = 0; i < component.Transitions.Count; i++)
-            {
-                var trans = component.GetTransitionAt(i);
-                const BindingFlags flag = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
-                MemberInfo info;
-                info = viewType.GetField(trans.name, flag);
-                if (info == null)
-                {
-                    info = viewType.GetProperty(trans.name, flag);
-                }
-                _SetInfo(info, trans);
-            }
-        }
-        /// <summary>
-        /// 创建子项，默认采用反射，使用代码生成会重写方法，采用API获取
-        /// </summary>
+    
         protected virtual void CreateChildren()
         {
-            var component = GObject is Window ? ObjAs<Window>().contentPane : ObjAs<GComponent>();
-            if (component == null) return;
-            try
-            {
-                _ToCreateChildren(GetType(), component);
-            }
-            catch
-            {
-                Log.Error("ToCreateChildren失败,检查是否存在不规范的命名");
-            }
+
         }
+
+        // 缓存动画完成回调，避免Lambda闭包分配
+        private Action _onShowAnimComplete;
+        private Action _onHideAnimComplete;
 
         protected virtual void ToShow(bool isAnim, int id, bool checkStack, CancellationTokenSource token)
         {
@@ -265,7 +154,8 @@ namespace Ux
             {
                 State = UIState.ShowAnim;
                 ShowAnim?.SetToStart();
-                ShowAnim?.Play(() => { State = UIState.Show; });
+                _onShowAnimComplete ??= OnShowAnimCompleteInternal;
+                ShowAnim?.Play(_onShowAnimComplete);
             }
             else
             {
@@ -281,6 +171,11 @@ namespace Ux
             }
             OnShow();
             _CheckShow(id, checkStack, token).Forget();
+        }
+
+        private void OnShowAnimCompleteInternal()
+        {
+            State = UIState.Show;
         }
         void _ChangeAsync(bool b)
         {
@@ -351,7 +246,8 @@ namespace Ux
             {
                 State = UIState.HideAnim;
                 HideAnim?.SetToStart();
-                HideAnim?.Play(() => { State = UIState.Hide; });
+                _onHideAnimComplete ??= OnHideAnimCompleteInternal;
+                HideAnim?.Play(_onHideAnimComplete);
             }
             else
             {
@@ -367,6 +263,11 @@ namespace Ux
             OnHide();
             RemoveTag();
             _CheckHide(token).Forget();
+        }
+
+        private void OnHideAnimCompleteInternal()
+        {
+            State = UIState.Hide;
         }
 
         async UniTaskVoid _CheckHide(CancellationTokenSource token)

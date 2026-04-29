@@ -52,12 +52,23 @@ namespace Ux
 
             if (_waitDels.Count > 0)
             {
-                var keys = _waitDels.Keys.ToList();
-                foreach (var key in keys)
+                // 先收集匹配的key，避免遍历时修改字典
+                int foundKey = 0;
+                var enumerator = _waitDels.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    if (!_waitDels.TryGetValue(key, out var ui) || ui.GetType() != type) continue;
-                    _waitDels.Remove(key);
-                    return key;
+                    if (enumerator.Current.Value.GetType() == type)
+                    {
+                        foundKey = enumerator.Current.Key;
+                        break;
+                    }
+                }
+                enumerator.Dispose();
+                
+                if (foundKey != 0)
+                {
+                    _waitDels.Remove(foundKey);
+                    return foundKey;
                 }
             }
 

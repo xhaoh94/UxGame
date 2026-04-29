@@ -7,7 +7,7 @@ namespace Ux
     {
         private readonly IUICacheHandlerCallback _callback;
 
-        public List<int> CreatedDels { get; } = new List<int>();
+        public HashSet<int> CreatedDels { get; } = new HashSet<int>();
         public Dictionary<int, WaitDel> WaitDels { get; } = new Dictionary<int, WaitDel>();
         public Dictionary<int, IUI> Cache { get; } = new Dictionary<int, IUI>();
 

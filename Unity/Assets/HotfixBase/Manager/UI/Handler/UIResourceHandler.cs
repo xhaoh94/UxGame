@@ -96,10 +96,14 @@ namespace Ux
         {
             UIPackage.RemovePackage(pkgName);
             if (_pkgToHandles.TryGetValue(pkgName, out var handles))
-            {
-                foreach (var handle in handles.Where(handle => handle.IsValid))
+            {                
+                for (int i = 0; i < handles.Count; i++)
                 {
-                    handle.Release();
+                    var handle = handles[i];
+                    if (handle.IsValid)
+                    {
+                        handle.Release();
+                    }
                 }
                 _pkgToHandles.Remove(pkgName);
             }

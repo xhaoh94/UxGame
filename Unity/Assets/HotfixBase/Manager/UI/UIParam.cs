@@ -1,19 +1,19 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Ux
 {
     public enum UIParamType
     {
-        A,
-        B,
-        C
+        A, B, C
     }
+
     public interface IUIParam
     {
         IUIParam Copy();
         bool TryGet<T>(out T t, UIParamType type = UIParamType.A);
         void Release();
+
+        // 静态创建方法完全不变
         public static IUIParam Create<A>(A a)
         {
             var p = Pool.Get<UIParam<A>>();
@@ -33,15 +33,18 @@ namespace Ux
             return p;
         }
     }
+
     public class UIParamBase
     {
         bool _fromPool;
         public bool IsRelease { get; private set; }
+
         protected void Init(bool fromPool)
         {
             _fromPool = fromPool;
             IsRelease = false;
         }
+
         public void Release()
         {
             if (IsRelease)
@@ -57,150 +60,111 @@ namespace Ux
                 _fromPool = false;
             }
         }
-        protected virtual void OnRelease()
-        {
-        }
+
+        protected virtual void OnRelease() { }
     }
+
+    // ==========================
+    // 以下全部保持你原来的写法！
+    // 不新增类、不装箱、不堆分配
+    // ==========================
+
     public class UIParam<A> : UIParamBase, IUIParam
     {
         A _a;
-        IUIParam IUIParam.Copy()
-        {
-            if (IsRelease)
-            {
-                Log.Error("拷贝UIParam错误：UIParam已被回收");
-                return null;
-            }
-            return IUIParam.Create(_a);
-        }
+
         public void Init(A a, bool fromPool)
         {
             Init(fromPool);
             _a = a;
         }
-        protected override void OnRelease()
+
+        protected override void OnRelease() => _a = default;
+
+        IUIParam IUIParam.Copy()
         {
-            _a = default;
+            if (IsRelease) return null;
+            return IUIParam.Create(_a);
         }
 
-        bool IUIParam.TryGet<T>(out T t,UIParamType type)
+        bool IUIParam.TryGet<T>(out T t, UIParamType type)
         {
-            switch (type)
+            if (type == UIParamType.A && _a is T res)
             {
-                case UIParamType.A:
-                    if (_a is T a)
-                    {
-                        t = a;
-                        return true;
-                    }
-                    break;
-            }            
+                t = res;
+                return true;
+            }
             t = default;
             return false;
         }
     }
+
     public class UIParam<A, B> : UIParamBase, IUIParam
     {
-        A _a;
-        B _b;
-        IUIParam IUIParam.Copy()
-        {
-            if (IsRelease)
-            {
-                Log.Error("拷贝UIParam错误：UIParam已被回收");
-                return null;
-            }
-            return IUIParam.Create(_a,_b);
-        }
+        A _a; B _b;
+
         public void Init(A a, B b, bool fromPool)
         {
             Init(fromPool);
-            _a = a;
-            _b = b;
+            _a = a; _b = b;
         }
+
         protected override void OnRelease()
         {
-            _a = default;
-            _b = default;
+            _a = default; _b = default;
+        }
+
+        IUIParam IUIParam.Copy()
+        {
+            if (IsRelease) return null;
+            return IUIParam.Create(_a, _b);
         }
 
         bool IUIParam.TryGet<T>(out T t, UIParamType type)
         {
             switch (type)
             {
-                case UIParamType.A:
-                    if (_a is T a)
-                    {
-                        t = a;
-                        return true;
-                    }
-                    break;
-                case UIParamType.B:
-                    if (_b is T b)
-                    {
-                        t = b;
-                        return true;
-                    }
-                    break;
+                case UIParamType.A when _a is T resA:
+                    t = resA; return true;
+                case UIParamType.B when _b is T resB:
+                    t = resB; return true;
             }
             t = default;
             return false;
         }
-        
     }
+
     public class UIParam<A, B, C> : UIParamBase, IUIParam
     {
-        A _a;
-        B _b;
-        C _c;
-        IUIParam IUIParam.Copy()
-        {
-            if (IsRelease)
-            {
-                Log.Error("拷贝UIParam错误：UIParam已被回收");
-                return null;
-            }
-            return IUIParam.Create(_a, _b,_c);
-        }
+        A _a; B _b; C _c;
+
         public void Init(A a, B b, C c, bool fromPool)
         {
             Init(fromPool);
-            _a = a;
-            _b = b;
-            _c = c;
-        }
-        protected override void OnRelease()
-        {
-            _a = default;
-            _b = default;
-            _c = default;
+            _a = a; _b = b; _c = c;
         }
 
-        bool IUIParam.TryGet<T>(out T t,UIParamType type)
+        protected override void OnRelease()
+        {
+            _a = default; _b = default; _c = default;
+        }
+
+        IUIParam IUIParam.Copy()
+        {
+            if (IsRelease) return null;
+            return IUIParam.Create(_a, _b, _c);
+        }
+
+        bool IUIParam.TryGet<T>(out T t, UIParamType type)
         {
             switch (type)
             {
-                case UIParamType.A:
-                    if (_a is T a)
-                    {
-                        t = a;
-                        return true;
-                    }
-                    break;
-                case UIParamType.B:
-                    if (_b is T b)
-                    {
-                        t = b;
-                        return true;
-                    }
-                    break;
-                case UIParamType.C:
-                    if (_c is T c)
-                    {
-                        t = c;
-                        return true;
-                    }
-                    break;
+                case UIParamType.A when _a is T resA:
+                    t = resA; return true;
+                case UIParamType.B when _b is T resB:
+                    t = resB; return true;
+                case UIParamType.C when _c is T resC:
+                    t = resC; return true;
             }
             t = default;
             return false;
