@@ -8,6 +8,11 @@ using YooAsset;
 
 namespace Ux
 {
+    public interface IResUIDebuggerAccess
+    {
+        Dictionary<string, UIPkgRef> GetPkgRefs();
+    }
+
     public class UIPkgRef
     {
         public void Init(string pkg, int refCnt)
@@ -38,21 +43,29 @@ namespace Ux
         }
     }
 
-    public class UIResourceHandler
+    public partial class ResMgr : IResUIDebuggerAccess
     {
-        private readonly YooPackage _yoo;
-        private readonly Dictionary<string, UIPkgRef> _pkgToRef = new();
+        private YooPackage _yoo;
+        private YooPackage Yoo
+        {
+            get
+            {
+                if (_yoo == null)
+                {
+                    _yoo = YooMgr.Ins.GetPackage(YooType.Main);
+                }
+                return _yoo;
+            }
+        }
         private readonly Dictionary<string, List<AssetHandle>> _pkgToHandles = new();
-        // 使用 AutoResetUniTaskCompletionSource 协调多个协程等待同一个包的加载
         private readonly Dictionary<string, AutoResetUniTaskCompletionSource<bool>> _pkgLoadingTasks = new();
 
-        public Dictionary<string, UIPkgRef> PkgToRef => _pkgToRef;
+        private readonly Dictionary<string, UIPkgRef> _pkgToRef = new();
 
-        public UIResourceHandler()
+        Dictionary<string, UIPkgRef> IResUIDebuggerAccess.GetPkgRefs()
         {
-            _yoo = YooMgr.Ins.GetPackage(YooType.Main);
+            return _pkgToRef;
         }
-
         public void RemoveUIPackage(string[] pkgs)
         {
             if (pkgs.Length == 0) return;
@@ -198,7 +211,7 @@ namespace Ux
         {
             string resName = string.Format(PathHelper.Res.UI, pkg, "fui");
 
-            var handle = _yoo.Package.LoadAssetAsync<TextAsset>(resName);
+            var handle = Yoo.Package.LoadAssetAsync<TextAsset>(resName);
             await handle.ToUniTask();
             var suc = true;
             if (handle.Status == EOperationStatus.Succeed && handle.AssetObject is TextAsset ta && ta != null)
@@ -225,7 +238,7 @@ namespace Ux
         {
             if (type != typeof(Texture)) return;
             string resName = string.Format(PathHelper.Res.UIAtlas, name);
-            var handle = _yoo.Package.LoadAssetAsync<Texture>(resName);
+            var handle = Yoo.Package.LoadAssetAsync<Texture>(resName);
             await handle.ToUniTask();
 
             if (handle.Status != EOperationStatus.Succeed)

@@ -18,13 +18,6 @@ namespace Ux
 
         public void Clear()
         {
-            foreach (var stack in _uiStacks)
-            {
-                if (stack.ParamIsNew)
-                {
-                    stack.Param?.Release();
-                }
-            }
             _uiStacks.Clear();
             _backStacks.Clear();
         }
@@ -66,7 +59,7 @@ namespace Ux
                     {
                         continue;
                     }
-                    _HideByStack(preStack, i);
+                    _HideByStack(preStack);
                     if (preStack.Type == UIType.Stack)
                     {
                         break;
@@ -96,11 +89,6 @@ namespace Ux
                 for (int i = _uiStacks.Count - 1; i >= 0; i--)
                 {
                     var preStack = _uiStacks[i];
-                    if (preStack.ParamIsNew)
-                    {
-                        preStack.ParamIsNew = false;
-                        _uiStacks[i] = preStack;
-                    }
                     if (preStack.Type == UIType.Stack)
                     {
                         if (ui.ID == preStack.ID)
@@ -132,9 +120,8 @@ namespace Ux
             _callback.ShowByStack(stack.ID, stack.Param);
         }
 
-        void _HideByStack(UIStack stack, int index)
+        void _HideByStack(UIStack stack)
         {
-            bool needCopyParam = true;
             IUI ui = null;
             var id = stack.ParentID;
             if (_callback.IsShowing(id))
@@ -147,20 +134,9 @@ namespace Ux
                 if (ui != null && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
                 {
                     ui = null;
-                    needCopyParam = false;
                 }
             }
 
-            if (needCopyParam)
-            {
-                var copyParam = stack.Param?.Copy();
-                if (copyParam != null)
-                {
-                    stack.Param = copyParam;
-                    stack.ParamIsNew = true;
-                    _uiStacks[index] = stack;
-                }
-            }
             ui?.DoHide(false, false);
         }
     }

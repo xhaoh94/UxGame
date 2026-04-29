@@ -20,11 +20,6 @@ namespace Ux
     public interface IUICacheHandlerCallback
     {
         void DisposeUI(IUI ui);
-        IUIData GetUIData(int id);
-        void RemoveUIPackage(string[] pkgs);
-        void RemoveUIData(int id);
-        IUI GetShowed(int id);
-        bool IsShow(int id);
     }
 
     public interface IUIMgrDebuggerAccess
@@ -34,7 +29,6 @@ namespace Ux
         List<UIStack> GetUIStacks();
         List<string> GetShowingUI();
         List<string> GetCacheUI();
-        List<string> GetWaitDelUI();
-        Dictionary<string, UIPkgRef> GetPkgRefs();
+        List<string> GetWaitDelUI();        
     }
 }

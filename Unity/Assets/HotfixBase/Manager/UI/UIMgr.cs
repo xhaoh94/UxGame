@@ -27,9 +27,7 @@ namespace Ux
         private readonly Dictionary<int, List<string>> _idLazyloads = new Dictionary<int, List<string>>();
         private readonly Dictionary<int, Downloader> _idDownloader = new Dictionary<int, Downloader>();
         private HashSet<int> _ignoreSet;
-        private readonly CallBackData _initData;
-
-        private readonly UIResourceHandler _resourceHandler;
+        private readonly CallBackData _initData;        
         private readonly UIStackHandler _stackHandler;
         private readonly UIBlurHandler _blurHandler;
         private readonly UICacheHandler _cacheHandler;
@@ -62,8 +60,7 @@ namespace Ux
             {
                 StageCamera.main.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
             }
-
-            _resourceHandler = new UIResourceHandler();
+            
             _cacheHandler = new UICacheHandler(this);
             _stackHandler = new UIStackHandler(this);
             _blurHandler = new UIBlurHandler(this);
@@ -512,7 +509,7 @@ namespace Ux
             var data = GetUIData(id);
             if (data == null) return;
             if (data.Pkgs == null || data.Pkgs.Length == 0) return;
-            RemoveUIPackage(data.Pkgs);
+            ResMgr.Ins.RemoveUIPackage(data.Pkgs);
             if (ui is UIDialog)
             {
                 RemoveUIData(id);
@@ -614,13 +611,9 @@ namespace Ux
 
         public async UniTask<bool> LoaUIdPackage(string[] pkgs)
         {
-            return await _resourceHandler.LoadUIPackage(pkgs);
+            return await ResMgr.Ins.LoadUIPackage(pkgs);
         }
 
-        public void RemoveUIPackage(string[] pkgs)
-        {
-            _resourceHandler.RemoveUIPackage(pkgs);
-        }
 
         public void SetSceneCamera(Camera mainCamera)
         {
@@ -672,31 +665,6 @@ namespace Ux
         void IUICacheHandlerCallback.DisposeUI(IUI ui)
         {
             Dispose(ui);
-        }
-
-        IUIData IUICacheHandlerCallback.GetUIData(int id)
-        {
-            return GetUIData(id);
-        }
-
-        void IUICacheHandlerCallback.RemoveUIPackage(string[] pkgs)
-        {
-            RemoveUIPackage(pkgs);
-        }
-
-        void IUICacheHandlerCallback.RemoveUIData(int id)
-        {
-            RemoveUIData(id);
-        }
-
-        IUI IUICacheHandlerCallback.GetShowed(int id)
-        {
-            return _showed.TryGetValue(id, out var ui) ? ui : null;
-        }
-
-        bool IUICacheHandlerCallback.IsShow(int id)
-        {
-            return _showed.TryGetValue(id, out var ui) && (ui.State == UIState.ShowAnim || ui.State == UIState.Show);
         }
 
         #endregion
@@ -756,11 +724,6 @@ namespace Ux
                 list.Add(kv.Value.Name);
             }
             return list;
-        }
-
-        Dictionary<string, UIPkgRef> IUIMgrDebuggerAccess.GetPkgRefs()
-        {
-            return _resourceHandler.PkgToRef;
         }
 
         #endregion

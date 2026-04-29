@@ -79,16 +79,14 @@ namespace Ux
         {
             public readonly int ParentID;
             public int ID;
-            public IUIParam Param;
-            public bool ParamIsNew;
+            public IUIParam Param;            
             public readonly UIType Type;
 
             public UIStack(int parentID, int id, IUIParam param, UIType type)
             {
                 ParentID = parentID;
                 ID = id;
-                Param = param;
-                ParamIsNew = false;
+                Param = param;                
                 Type = type;
             }            
         }

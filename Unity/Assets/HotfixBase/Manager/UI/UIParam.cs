@@ -8,8 +8,7 @@ namespace Ux
     }
 
     public interface IUIParam
-    {
-        IUIParam Copy();
+    {        
         bool TryGet<T>(out T t, UIParamType type = UIParamType.A);
 
         // 静态创建方法完全不变
@@ -42,11 +41,6 @@ namespace Ux
             _a = a;
         }
 
-        IUIParam IUIParam.Copy()
-        {
-            return IUIParam.Create(_a);
-        }
-
         bool IUIParam.TryGet<T>(out T t, UIParamType type)
         {
             if (type == UIParamType.A && _a is T res)
@@ -66,12 +60,6 @@ namespace Ux
         public UIParam(A a, B b)
         {
             _a = a; _b = b;
-        }
-
-
-        IUIParam IUIParam.Copy()
-        {
-            return IUIParam.Create(_a, _b);
         }
 
         bool IUIParam.TryGet<T>(out T t, UIParamType type)
@@ -96,12 +84,6 @@ namespace Ux
         {
             _a = a; _b = b; _c = c;
         }
-
-        IUIParam IUIParam.Copy()
-        {
-            return IUIParam.Create(_a, _b, _c);
-        }
-
         bool IUIParam.TryGet<T>(out T t, UIParamType type)
         {
             switch (type)

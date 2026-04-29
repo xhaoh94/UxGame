@@ -73,7 +73,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Pkg_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetPkgRefs());
+                __Debugger_Pkg_CallBack?.Invoke(((IResUIDebuggerAccess)ResMgr.Ins).GetPkgRefs());
             }
         }
         
