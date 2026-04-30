@@ -39,7 +39,7 @@ namespace Ux
         {
             Init(container, parent);
             parent?.AddComponent(this);
-            OnHideCallBack += _Release;
+            OnHideCallback += _Release;
         }
         protected override void CreateChildren()
         {

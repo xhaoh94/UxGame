@@ -23,9 +23,9 @@ namespace Ux
         protected virtual Transition __transition { get; private set; } = null;
         #endregion
 
-        public override void InitData(IUIData data, CallBackData initData)
+        public override void InitData(IUIData data, CallbackData initData)
         {
-            OnHideCallBack += _Hide;
+            OnHideCallback += _Hide;
             base.InitData(data, initData);
         }
 

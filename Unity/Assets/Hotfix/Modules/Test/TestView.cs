@@ -51,17 +51,17 @@ namespace Ux.UI
         }
         partial void OnBtnMultipleClick(EventContext e)
         {
-            UIMgr.Ins.Show<Multiple2TabView>();
+            UIMgr.Ins.Create().Show<Multiple2TabView>();
             //UIMgr.Ins.Hide<Multiple2TabView>();
-            UIMgr.Ins.Show<Multiple3TabView>();
+            UIMgr.Ins.Create().Show<Multiple3TabView>();
         }
         partial void OnBtnNoneViewClick(EventContext e)
         {
-            UIMgr.Ins.Show<TipView>();
+            UIMgr.Ins.Create().Show<TipView>();            
         }
         partial void OnBtnNoneWindowClick(EventContext e)
         {
-            UIMgr.Ins.Show<BagWindow>();
+            UIMgr.Ins.Create().Show<BagWindow>();        
         }
         partial void OnBtnTestClick(EventContext e)
         {

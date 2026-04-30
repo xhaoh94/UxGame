@@ -100,6 +100,14 @@ namespace Ux
 
             return data == null ? ID : data.ID;
         }
+        
+        /// <summary>
+        /// 获取最上层的子类界面（用于Tab切换场景）
+        /// 遍历逻辑：
+        /// 1. 以第一个子界面为候选
+        /// 2. 后续子界面中，如果有红点标记则替换候选
+        /// 3. 迭代直到没有子界面为止
+        /// </summary>
         public virtual int GetChildID()
         {
             IUIData data = this;

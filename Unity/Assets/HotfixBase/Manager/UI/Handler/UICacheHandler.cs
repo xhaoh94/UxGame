@@ -18,31 +18,26 @@ namespace Ux
 
         public void ClearMemory()
         {
-            // 遍历 Cache 并清理
             foreach (var kv in Cache)
             {
                 _callback.DisposeUI(kv.Value);
             }
             Cache.Clear();
 
-            while (WaitDels.Count > 0)
+            if (WaitDels.Count > 0)
             {
-                var firstKey = 0;
-                WaitDel firstValue = null;
-
-                // 获取第一个键值对
-                using (var enumerator = WaitDels.GetEnumerator())
+                var keys = Pool.Get<List<int>>();
+                keys.AddRange(WaitDels.Keys);
+                for (int i = 0; i < keys.Count; i++)
                 {
-                    if (enumerator.MoveNext())
+                    if (WaitDels.TryGetValue(keys[i], out var wd))
                     {
-                        firstKey = enumerator.Current.Key;
-                        firstValue = enumerator.Current.Value;
+                        wd.Dispose();
                     }
                 }
-
-                firstValue?.Dispose();
+                keys.Clear();
+                Pool.Push(keys);
             }
-
         }
 
         void OnRemoveFromWaitDel(int id)

@@ -29,14 +29,14 @@ namespace Ux
         CancellationTokenSource _showToken;
         CancellationTokenSource _hideToken;
 
-        private CallBackData? _cbData;
-        public virtual void InitData(IUIData data, CallBackData initData)
+        private CallbackData? _cbData;
+        public virtual void InitData(IUIData data, CallbackData initData)
         {
             Data = data;
             _cbData = initData;
             Init(CreateObject());
-            OnHideCallBack += _Hide;
-            OnShowCallBack += _Show;
+            OnHideCallback += _Hide;
+            OnShowCallback += _Show;
         }
 
         public virtual void AddChild(UITabView child) { }
@@ -257,6 +257,19 @@ namespace Ux
                 _hideToken = null;
             }
         }
+        /// <summary>
+        /// 设置位置并添加关联关系
+        /// </summary>
+        private void _SetPositionAndRelations(float x, float y, bool restraint, RelationType rel1, RelationType rel2 = 0)
+        {
+            GObject.SetPosition(x, y, 0);
+            if (restraint)
+            {
+                if (rel1 != 0) AddRelation(rel1);
+                if (rel2 != 0) AddRelation(rel2);
+            }
+        }
+
         protected void SetLayout(UILayout layout, bool restraint = true)
         {
             if (GObject == null) return;
@@ -264,88 +277,36 @@ namespace Ux
             switch (layout)
             {
                 case UILayout.Left_Top:
-                    GObject.SetPosition(0, 0, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Left_Left);
-                        AddRelation(RelationType.Top_Top);
-                    }
-
+                    _SetPositionAndRelations(0, 0, restraint, RelationType.Left_Left, RelationType.Top_Top);
                     break;
                 case UILayout.Left_Middle:
-                    GObject.SetPosition(0, (parent.height - GObject.height) / 2, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Left_Left);
-                        AddRelation(RelationType.Middle_Middle);
-                    }
-
+                    _SetPositionAndRelations(0, (parent.height - GObject.height) / 2, restraint, RelationType.Left_Left, RelationType.Middle_Middle);
                     break;
                 case UILayout.Left_Bottom:
-                    GObject.SetPosition(0, parent.height - GObject.height, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Left_Left);
-                        AddRelation(RelationType.Bottom_Bottom);
-                    }
-
+                    _SetPositionAndRelations(0, parent.height - GObject.height, restraint, RelationType.Left_Left, RelationType.Bottom_Bottom);
                     break;
                 case UILayout.Center_Top:
-                    GObject.SetPosition((parent.width - GObject.width) / 2, 0, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Center_Center);
-                        AddRelation(RelationType.Top_Top);
-                    }
-
+                    _SetPositionAndRelations((parent.width - GObject.width) / 2, 0, restraint, RelationType.Center_Center, RelationType.Top_Top);
                     break;
                 case UILayout.Center_Middle:
                     GObject.Center(restraint);
                     break;
                 case UILayout.Center_Bottom:
-                    GObject.SetPosition((parent.width - GObject.width) / 2, parent.height - GObject.height, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Center_Center);
-                        AddRelation(RelationType.Bottom_Bottom);
-                    }
-
+                    _SetPositionAndRelations((parent.width - GObject.width) / 2, parent.height - GObject.height, restraint, RelationType.Center_Center, RelationType.Bottom_Bottom);
                     break;
                 case UILayout.Right_Top:
-                    GObject.SetPosition(parent.width - GObject.width, 0, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Right_Right);
-                        AddRelation(RelationType.Top_Top);
-                    }
-
+                    _SetPositionAndRelations(parent.width - GObject.width, 0, restraint, RelationType.Right_Right, RelationType.Top_Top);
                     break;
                 case UILayout.Right_Middle:
-                    GObject.SetPosition(parent.width - GObject.width, (parent.height - GObject.height) / 2, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Right_Right);
-                        AddRelation(RelationType.Middle_Middle);
-                    }
-
+                    _SetPositionAndRelations(parent.width - GObject.width, (parent.height - GObject.height) / 2, restraint, RelationType.Right_Right, RelationType.Middle_Middle);
                     break;
                 case UILayout.Right_Bottom:
-                    GObject.SetPosition(parent.width - GObject.width, parent.height - GObject.height, 0);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Right_Right);
-                        AddRelation(RelationType.Bottom_Bottom);
-                    }
-
+                    _SetPositionAndRelations(parent.width - GObject.width, parent.height - GObject.height, restraint, RelationType.Right_Right, RelationType.Bottom_Bottom);
                     break;
                 case UILayout.Size:
                     GObject.SetPosition(0, 0, 0);
                     GObject.SetSize(parent.width, parent.height);
-                    if (restraint)
-                    {
-                        AddRelation(RelationType.Size);
-                    }
-
+                    if (restraint) AddRelation(RelationType.Size);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(layout), layout, null);

@@ -17,7 +17,7 @@ namespace Ux
         int HideDestroyTime { get; }
         bool Visible { get; set; }
         IFilter Filter { get; set; }
-        void InitData(IUIData data, CallBackData initData);
+        void InitData(IUIData data, CallbackData initData);
         void Dispose();
         UniTask DoShow(bool isAnim, int id, IUIParam param, bool isStack);
         void DoHide(bool isAnim, bool checkStack);
@@ -41,9 +41,55 @@ namespace Ux
 
     public partial class UIMgr
     {
-        public readonly struct CallBackData
+        public class UIShowBuilder
         {
-            public CallBackData(Action<IUI, IUIParam, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb)
+            int _id;
+            IUIParam _param;
+            bool _isAnim;
+            public UIShowBuilder SetId(int id)
+            {
+                _id = id;
+                return this;
+            }
+            public UIShowBuilder SetParam(IUIParam param)
+            {
+                _param = param;
+                return this;
+            }
+            public UIShowBuilder SetAnim(bool isAnim)
+            {
+                _isAnim = isAnim;
+                return this;
+            }
+
+            public UITask<T> Show<T>() where T : IUI
+            {
+                if (_id == 0)
+                {
+                    _id = Ins.ConverterID(typeof(T));
+                }
+                var task = Ins._ShowAsync<T>(_id, _param, _isAnim, true);      
+                _Release();         
+                return new UITask<T>(task);
+            }
+            public  UITask<IUI> Show()
+            {
+                var task = Ins._ShowAsync<IUI>(_id, _param, _isAnim, true);
+                _Release();
+                return new UITask<IUI>(task);
+            }
+
+            private void _Release()
+            {
+                _id = 0;
+                _param = null;
+                _isAnim = true;
+                Pool.Push(this);
+            }
+        }
+        public readonly struct CallbackData
+        {
+            public CallbackData(Action<IUI, IUIParam, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb)
             {
                 showCb = _showCb;
                 hideCb = _hideCb;

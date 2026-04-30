@@ -52,7 +52,7 @@ namespace Ux
             var parent = (IUI)Parent;
             var _children = parent.Data.Children;
             if (_children == null || _children.Count == 0) return;
-            OnHideCallBack += _Hide;
+            OnHideCallback += _Hide;
         }
 
         public virtual void Refresh(int selectIndex = 0, bool scrollItToView = true)
@@ -132,7 +132,7 @@ namespace Ux
             var id = __listTab.GetData<int>(index);
             if (id == 0) return;
             if (SelectItem != null && SelectItem.ID == id) return;
-            UIMgr.Ins.Show(id);
+            UIMgr.Ins.Create(id).Show();
         }
     }
 }

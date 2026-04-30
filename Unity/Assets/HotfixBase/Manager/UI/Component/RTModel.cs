@@ -78,7 +78,7 @@ namespace Ux
             _image = new Image();
             __container.SetNativeObject(_image);
 
-            OnHideCallBack += _Release;
+            OnHideCallback += _Release;
         }
 
         protected override void OnDispose()

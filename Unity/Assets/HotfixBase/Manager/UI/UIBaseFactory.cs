@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Ux
 {
@@ -9,6 +8,7 @@ namespace Ux
         protected readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
         protected readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
         protected readonly HashSet<int> _showed = new HashSet<int>();
+        protected readonly Dictionary<Type, int> _typeToIdCache = new Dictionary<Type, int>();
 
         protected void OnShow(TUI ui)
         {
@@ -21,6 +21,7 @@ namespace Ux
             if (ui.HideDestroyTime >= 0)
             {
                 _waitDels.Add(ui.ID, ui);
+                _typeToIdCache[ui.GetType()] = ui.ID;
             }
             else
             {
@@ -35,12 +36,17 @@ namespace Ux
         }
         public void RemoveWaitDelById(int id)
         {
+            if (_waitDels.TryGetValue(id, out var ui))
+            {
+                _typeToIdCache.Remove(ui.GetType());
+            }
             _waitDels.Remove(id);
         }
 
         public void Clear()
         {
             _pool.Clear();
+            _typeToIdCache.Clear();
         }
 
         protected int GetUIID(Type type)
@@ -50,26 +56,11 @@ namespace Ux
                 return ids.Dequeue();
             }
 
-            if (_waitDels.Count > 0)
+            if (_typeToIdCache.TryGetValue(type, out var cachedId) && _waitDels.ContainsKey(cachedId))
             {
-                // 先收集匹配的key，避免遍历时修改字典
-                int foundKey = 0;
-                var enumerator = _waitDels.GetEnumerator();
-                while (enumerator.MoveNext())
-                {
-                    if (enumerator.Current.Value.GetType() == type)
-                    {
-                        foundKey = enumerator.Current.Key;
-                        break;
-                    }
-                }
-                enumerator.Dispose();
-                
-                if (foundKey != 0)
-                {
-                    _waitDels.Remove(foundKey);
-                    return foundKey;
-                }
+                _waitDels.Remove(cachedId);
+                _typeToIdCache.Remove(type);
+                return cachedId;
             }
 
             var data = new UIData((int)IDGenerater.GenerateId(), type);

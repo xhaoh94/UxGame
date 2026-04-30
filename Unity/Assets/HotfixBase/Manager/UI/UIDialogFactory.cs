@@ -109,7 +109,7 @@ namespace Ux
                 return;
             }
 
-            UIMgr.Ins.Show(Id, IUIParam.Create(this));
+            UIMgr.Ins.Create(Id).SetParam(IUIParam.Create(this)).Show();
         }
 
         /// <summary>

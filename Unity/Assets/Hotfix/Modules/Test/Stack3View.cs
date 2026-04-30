@@ -14,15 +14,15 @@ namespace Ux.UI
         }
         partial void OnBtn1Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack1View>();
+            UIMgr.Ins.Create().Show<UI.Stack1View>();
         }
         partial void OnBtn2Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack2View>();
+            UIMgr.Ins.Create().Show<UI.Stack2View>();
         }
         partial void OnBtn4Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack4View>();
+            UIMgr.Ins.Create().Show<UI.Stack4View>();
         }
         partial void OnBtnBackClick(EventContext e)
         {

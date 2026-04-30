@@ -37,8 +37,8 @@ namespace Ux
                 Log.Error("没有指定Tip面板,请检查是否已初始化SetDefaultType");
                 return;
             }
-            CheckPos();
-            UIMgr.Ins.Show(id, IUIParam.Create(new TipData(OnShow, OnHide, content)));
+            CheckPos();            
+            UIMgr.Ins.Create(id).SetParam(IUIParam.Create(new TipData(OnShow, OnHide, content))).Show();
         }
 
         void CheckPos()

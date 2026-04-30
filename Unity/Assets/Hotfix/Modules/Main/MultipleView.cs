@@ -48,9 +48,9 @@ namespace Ux.UI
             {
                 TimeMgr.Ins.Timer(.4f, this, () =>
                 {
-                    UIMgr.Ins.Show<Multiple2TabView>();
-                    //UIMgr.Ins.Hide<Multiple2TabView>();
-                    UIMgr.Ins.Show<Multiple3TabView>();
+                    UIMgr.Ins.Create().Show<Multiple2TabView>();
+                    UIMgr.Ins.Create().Show<Multiple3TabView>();                                        
+                    //UIMgr.Ins.Hide<Multiple2TabView>();                    
                 }).Repeat(1).Build();
             }
 
@@ -67,7 +67,7 @@ namespace Ux.UI
         //protected override IUIAnim HideAnim => new UITransition(t1);        
         partial void OnBtn1Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack1View>();
+            UIMgr.Ins.Create().Show<Stack1View>();            
             //UIMgr.Ins.Hide<MultipleView>();
             //UIMgr.Ins.Show<MultipleView>("222");
         }
@@ -86,7 +86,7 @@ namespace Ux.UI
         }
         partial void OnBtn1Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack2View>();
+            UIMgr.Ins.Create().Show<Stack2View>();
         }
     }
 
@@ -97,7 +97,7 @@ namespace Ux.UI
         public override int HideDestroyTime => -1;
         partial void OnBtn1Click(EventContext e)
         {
-            UIMgr.Ins.Show<UI.Stack3View>();
+            UIMgr.Ins.Create().Show<Stack3View>();
         }
     }
 }

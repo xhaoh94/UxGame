@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using FairyGUI;
 using Cysharp.Threading.Tasks;
@@ -104,8 +103,8 @@ namespace Ux
         /// </summary>
         protected virtual IUIAnim HideAnim { get; set; } = null;
 
-        protected Action<int, IUIParam, bool> OnShowCallBack;
-        protected Action OnHideCallBack;
+        protected Action<int, IUIParam, bool> OnShowCallback;
+        protected Action OnHideCallback;
 
         protected T ParentAs<T>() where T : UIObject
         {
@@ -182,6 +181,11 @@ namespace Ux
                 async.Change(b);
             }
         }
+        
+        /// <summary>
+        /// 等待显示动画完成
+        /// 循环等待直到：1)自身状态变为Show 2)父节点动画完成（避免父节点动画期间子节点状态异常）
+        /// </summary>
         async UniTaskVoid _CheckShow(int id, bool checkStack, CancellationTokenSource token)
         {
             _ChangeAsync(true);
@@ -208,7 +212,7 @@ namespace Ux
                 return;
             }
             OnShowAnimComplete();
-            OnShowCallBack?.Invoke(id, _paramVo, checkStack);
+            OnShowCallback?.Invoke(id, _paramVo, checkStack);
         }
 
         protected virtual void ToOverwrite()
@@ -274,6 +278,10 @@ namespace Ux
             State = UIState.Hide;
         }
 
+        /// <summary>
+        /// 等待隐藏动画完成
+        /// 循环等待直到：1)自身状态变为Hide 2)父节点动画完成（确保父节点先于子节点隐藏）
+        /// </summary>
         async UniTaskVoid _CheckHide(CancellationTokenSource token)
         {
             _ChangeAsync(true);
@@ -300,7 +308,7 @@ namespace Ux
                 return;
             }
             OnHideAnimComplete();
-            OnHideCallBack?.Invoke();
+            OnHideCallback?.Invoke();
         }
 
         /// <summary>
@@ -324,8 +332,8 @@ namespace Ux
         {
             _event.Release();
             _event = null;
-            OnShowCallBack = null;
-            OnHideCallBack = null;
+            OnShowCallback = null;
+            OnHideCallback = null;
             if (_components != null)
             {
                 foreach (var component in _components)

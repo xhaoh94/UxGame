@@ -15,7 +15,7 @@
             TimeMgr.Ins.Release();
             ModuleMgr.Ins.Release();
             ModuleMgr.Ins.Create();
-            await UIMgr.Ins.Show<UI.LoginView>().Task();
+            await UIMgr.Ins.Create().Show<UI.LoginView>().Task();
             PatchMgr.Ins.Done();
         }
     }
