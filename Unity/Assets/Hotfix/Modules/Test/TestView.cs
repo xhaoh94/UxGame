@@ -66,23 +66,23 @@ namespace Ux.UI
         partial void OnBtnTestClick(EventContext e)
         {
 
-            var messageBox3 = UIMgr.Dialog.Get();
-            messageBox3.WithCheckBox("_test", "本次登录不显示咯");
-            messageBox3.WithTitle("提示1");
-            messageBox3.WithContent("测试弹窗2");
-            messageBox3.WithBtn1("确定",() =>
+            var messageBox3 = UIMgr.Dialog.Create();
+            messageBox3.SetCheckBox("_test", "本次登录不显示咯");
+            messageBox3.SetTitle("提示1");
+            messageBox3.SetContent("测试弹窗2");
+            messageBox3.SetBtn1(() =>
             {
                  Log.Debug("CheckBox");
             });
             messageBox3.Show();
 
-            var messageBox1 = UIMgr.Dialog.Get();
-            messageBox1.WithTitle("提示1");
-            messageBox1.WithContent("测试弹窗1");            
+            var messageBox1 = UIMgr.Dialog.Create();            
+            messageBox1.SetTitle("提示1");
+            messageBox1.SetContent("测试弹窗1");            
             messageBox1.Show();
-            var messageBox2 = UIMgr.Dialog.Get();
-            messageBox2.WithTitle("提示2");
-            messageBox2.WithContent("测试弹窗2");            
+            var messageBox2 = UIMgr.Dialog.Create();
+            messageBox2.SetTitle("提示2");
+            messageBox2.SetContent("测试弹窗2");            
             messageBox2.Show();
         }
         partial void OnBtnSingleClick(EventContext e)

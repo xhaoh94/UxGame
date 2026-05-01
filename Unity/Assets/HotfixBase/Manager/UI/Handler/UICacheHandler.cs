@@ -43,6 +43,9 @@ namespace Ux
         void OnRemoveFromWaitDel(int id)
         {
             WaitDels.Remove(id);
+#if UNITY_EDITOR
+            __Debugger_WaitDel_Event();
+#endif
         }
         void OnDisposeFromWaitDel(IUI ui)
         {

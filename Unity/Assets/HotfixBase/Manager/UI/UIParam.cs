@@ -11,7 +11,6 @@ namespace Ux
     {        
         bool TryGet<T>(out T t, UIParamType type = UIParamType.A);
 
-        // 静态创建方法完全不变
         public static IUIParam Create<A>(A a)
         {
             return new UIParam<A>(a);
@@ -27,10 +26,6 @@ namespace Ux
         }
     }
 
-    // ==========================
-    // 以下全部保持你原来的写法！
-    // 不新增类、不装箱、不堆分配
-    // ==========================
 
     public class UIParam<A> : IUIParam
     {

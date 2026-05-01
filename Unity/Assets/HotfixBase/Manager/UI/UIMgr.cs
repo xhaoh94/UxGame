@@ -9,8 +9,7 @@ using static Ux.UIMgr;
 namespace Ux
 {
     public partial class UIMgr : Singleton<UIMgr>, IUIStackHandlerCallback, IUIBlurHandlerCallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess
-    {
-        const float _showTimeout = 5f;
+    {        
         public static readonly UIDialogFactory Dialog = new UIDialogFactory();
         public static readonly UITipFactory Tip = new UITipFactory();
 

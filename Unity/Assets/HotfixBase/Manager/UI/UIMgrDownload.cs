@@ -70,14 +70,16 @@ namespace Ux
             Log.Debug($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
 
 
-            Dialog.Get()
-            .WithTitle("下载")
-            .WithContent($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。")
-            .WithBtn1("下载", () =>
+            var dialog = Dialog.Create();
+            dialog.SetTitle("下载");
+            dialog.SetContent($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
+            dialog.SetBtn1Title("下载");
+            dialog.SetBtn1( () =>
             {
                  _idDownloader.Add(id, download);
                  download.BeginDownload(_DownloadComplete, new DownloadData(id, param, isAnim));
             });
+            dialog.Show();
             return true;
         }
 
