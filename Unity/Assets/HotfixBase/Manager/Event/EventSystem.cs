@@ -43,9 +43,9 @@ namespace Ux
 
         public struct FastMethodRef
         {
-            Attribute[] _attributes;
+            IEnumerable<Attribute> _attributes;
             FastMethodInfo _methodInfo;
-            public FastMethodRef(Attribute[] attributes, FastMethodInfo methodInfo)
+            public FastMethodRef(IEnumerable<Attribute> attributes, FastMethodInfo methodInfo)
             {
                 _attributes = attributes;
                 _methodInfo = methodInfo;
@@ -87,14 +87,14 @@ namespace Ux
             /// <summary>
             /// 动作对应的IEvent
             /// </summary>
-            private readonly Dictionary<int, HashSet<long>> _actionKeys = new();
+            private readonly Dictionary<Delegate, HashSet<long>> _actionKeys = new();
             private IEventExe _lastExe;
             /// <summary>
             /// 待执行事件队列
             /// </summary>
             private readonly Queue<IEventExe> _waitExes = new();
             private readonly List<IEvent> _waitAdds = new();
-            private readonly List<long> _waitDels = new();
+            private readonly HashSet<long> _waitDels = new();
 
             void IEventSystem.Init(int exeLimit)
             {
@@ -137,8 +137,8 @@ namespace Ux
             }
             void _RegisterEventTrigger(Type type, IEventTrigger eventObject)
             {
-                var evtAttrs = eventObject.GetType().GetCustomAttributes(type).ToArray();
-                if (!evtAttrs.Any()) return;
+                var evtAttrs = eventObject.GetType().GetCustomAttributes(type);
+                if (evtAttrs.Count() == 0) return;
                 foreach (var attr in evtAttrs)
                 {
                     var evtAttr = (IEvtAttribute)attr;
@@ -165,8 +165,8 @@ namespace Ux
                                                           BindingFlags.Public | BindingFlags.NonPublic);
                     foreach (var method in methods)
                     {
-                        var evtAttrs = method.GetCustomAttributes(type).ToArray();
-                        if (!evtAttrs.Any()) continue;
+                        var evtAttrs = method.GetCustomAttributes(type);
+                        if (evtAttrs.Count() == 0) continue;
                         if (refList == null)
                         {
                             refList = new List<FastMethodRef>();
@@ -232,11 +232,10 @@ namespace Ux
 
                         if (evt.Method != null)
                         {
-                            var actionHashCode = RuntimeHelpers.GetHashCode(evt.Method);
-                            if (_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                            if (_actionKeys.TryGetValue(evt.Method, out var aKeys))
                             {
                                 aKeys.Remove(key);
-                                if (aKeys.Count == 0) _actionKeys.Remove(actionHashCode);
+                                if (aKeys.Count == 0) _actionKeys.Remove(evt.Method);
                             }
                         }
 
@@ -294,11 +293,10 @@ namespace Ux
 
                         if (evt.Method != null)
                         {
-                            var actionHashCode = RuntimeHelpers.GetHashCode(evt.Method);
-                            if (!_actionKeys.TryGetValue(actionHashCode, out var aKeys))
+                            if (!_actionKeys.TryGetValue(evt.Method, out var aKeys))
                             {
                                 aKeys = new();
-                                _actionKeys.Add(actionHashCode, aKeys);
+                                _actionKeys.Add(evt.Method, aKeys);
                             }
 
                             aKeys.Add(key);
@@ -380,13 +378,12 @@ namespace Ux
 
             private void _Remove(Delegate action)
             {
-                var hashCode = RuntimeHelpers.GetHashCode(action);
                 if (_waitAdds.Count > 0)
                 {
                     _waitAdds.RemoveAll(x => x.Method == action);
                 }
 
-                if (!_actionKeys.TryGetValue(hashCode, out var keys)) return;
+                if (!_actionKeys.TryGetValue(action, out var keys)) return;
                 RemoveByKey(keys);
             }
 
