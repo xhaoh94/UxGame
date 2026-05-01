@@ -4,14 +4,14 @@ using UnityEngine.Pool;
 
 namespace Ux
 {
-    public class DialogBuilder 
+    public class DialogBuilder
     {
         private DialogData _data;
         private Action<UIDialog> _showCallback;
         private Action<UIDialog> _hideCallback;
         internal void Init(int id, Action<UIDialog> showCallback, Action<UIDialog> hideCallback)
         {
-            _data = new DialogData(id, null, null, default, default, default,null);
+            _data = new DialogData(id, null, null, new DialogBtn("确定"), new DialogBtn("取消"), default, null);
             _showCallback = showCallback;
             _hideCallback = hideCallback;
         }
@@ -19,11 +19,13 @@ namespace Ux
         public DialogBuilder SetTitle(string value) { _data = _data.WithTitle(value); return this; }
         public DialogBuilder SetContent(string value) { _data = _data.WithContent(value); return this; }
         public DialogBuilder SetBtn1Title(string title) { _data = _data.WithBtn1Title(title); return this; }
-        public DialogBuilder SetBtn1( Action callback = null) { _data = _data.WithBtn1(callback); return this; }
+        public DialogBuilder SetBtn1(Action callback = null) { _data = _data.WithBtn1(callback); return this; }
+        public DialogBuilder SetBtn1Visibe(bool visible) { _data = _data.WithBtn1Visibe(visible); return this; }
         public DialogBuilder SetBtn2Title(string title) { _data = _data.WithBtn2Title(title); return this; }
         public DialogBuilder SetBtn2(Action callback = null) { _data = _data.WithBtn2(callback); return this; }
+        public DialogBuilder SetBtn2Visibe(bool visible) { _data = _data.WithBtn2Visibe(visible); return this; }
         public DialogBuilder SetCheckBox(string tag, string desc = "本次登录不再提示", Action<string> callback = null) { _data = _data.WithCheckBox(tag, desc, callback); return this; }
-        public DialogBuilder SetCustom(object customData){_data = _data.WithCustom(customData); return this; }
+        public DialogBuilder SetCustom(object customData) { _data = _data.WithCustom(customData); return this; }
         public void Show()
         {
             try
@@ -56,7 +58,7 @@ namespace Ux
         public DialogData(
             int id,
             string title, string content,
-            DialogBtn btn1, DialogBtn btn2, DialogCheckbox checkBoxData,object customData)
+            DialogBtn btn1, DialogBtn btn2, DialogCheckbox checkBoxData, object customData)
         {
             Id = id;
             Title = title;
@@ -67,14 +69,16 @@ namespace Ux
             CustomData = customData;
         }
 
-        public DialogData WithTitle(string value) => new(Id, value, Content, Btn1, Btn2, CheckBoxData,CustomData);
-        public DialogData WithContent(string value) => new(Id, Title, value, Btn1, Btn2, CheckBoxData,CustomData);
-        public DialogData WithBtn1Title(string title) => new(Id, Title, Content, Btn1.SetTitle(title), Btn2, CheckBoxData,CustomData);
-        public DialogData WithBtn1(Action callback = null) => new(Id, Title, Content, Btn1.SetCallback(callback), Btn2, CheckBoxData,CustomData);
-        public DialogData WithBtn2Title(string title) => new(Id, Title, Content, Btn1, Btn2.SetTitle(title), CheckBoxData,CustomData);
-        public DialogData WithBtn2(Action callback = null) => new(Id, Title, Content, Btn1, Btn2.SetCallback(callback), CheckBoxData,CustomData);
-        public DialogData WithCheckBox(string tag, string desc, Action<string> callback) => new(Id, Title, Content, Btn1, Btn2, new DialogCheckbox(tag, desc, callback),CustomData);
-        public DialogData WithCustom(object data) => new(Id, Title, Content, Btn1, Btn2, CheckBoxData,data);
+        public DialogData WithTitle(string value) => new(Id, value, Content, Btn1, Btn2, CheckBoxData, CustomData);
+        public DialogData WithContent(string value) => new(Id, Title, value, Btn1, Btn2, CheckBoxData, CustomData);
+        public DialogData WithBtn1Title(string title) => new(Id, Title, Content, Btn1.WithTitle(title), Btn2, CheckBoxData, CustomData);
+        public DialogData WithBtn1(Action callback = null) => new(Id, Title, Content, Btn1.WithCallback(callback), Btn2, CheckBoxData, CustomData);
+        public DialogData WithBtn1Visibe(bool visible) => new(Id, Title, Content, Btn1.WithVisibe(visible), Btn2, CheckBoxData, CustomData);
+        public DialogData WithBtn2Title(string title) => new(Id, Title, Content, Btn1, Btn2.WithTitle(title), CheckBoxData, CustomData);
+        public DialogData WithBtn2(Action callback = null) => new(Id, Title, Content, Btn1, Btn2.WithCallback(callback), CheckBoxData, CustomData);
+        public DialogData WithBtn2Visibe(bool visible) => new(Id, Title, Content, Btn1, Btn2.WithVisibe(visible), CheckBoxData, CustomData);
+        public DialogData WithCheckBox(string tag, string desc, Action<string> callback) => new(Id, Title, Content, Btn1, Btn2, new DialogCheckbox(tag, desc, callback), CustomData);
+        public DialogData WithCustom(object data) => new(Id, Title, Content, Btn1, Btn2, CheckBoxData, data);
         public bool IsCheckBoxChecked => CheckBoxData.Visible && UIMgr.Dialog.IsTagShown(CheckBoxData.CheckBoxTag) == true;
 
         public void Show(Action<UIDialog> showCallback, Action<UIDialog> hideCallback)
@@ -102,15 +106,19 @@ namespace Ux
     {
         public readonly string BtnTitle;
         public readonly Action BtnCallback;
-        public bool Visible => BtnCallback != null;
-        public DialogBtn(string title, Action callback) { BtnTitle = title; BtnCallback = callback; }
-        internal DialogBtn SetTitle(string title)
+        public readonly bool Visible;
+        public DialogBtn(string title, Action callback = null, bool visible = true) { BtnTitle = title; BtnCallback = callback; Visible = visible; }
+        internal DialogBtn WithTitle(string title)
         {
-            return new DialogBtn(title,BtnCallback);
+            return new DialogBtn(title, BtnCallback, Visible);
         }
-        internal DialogBtn SetCallback(Action callback)
+        internal DialogBtn WithCallback(Action callback)
         {
-            return new DialogBtn(BtnTitle,callback);
+            return new DialogBtn(BtnTitle, callback, Visible);
+        }
+        internal DialogBtn WithVisibe(bool visible)
+        {
+            return new DialogBtn(BtnTitle, BtnCallback, visible);
         }
     }
 

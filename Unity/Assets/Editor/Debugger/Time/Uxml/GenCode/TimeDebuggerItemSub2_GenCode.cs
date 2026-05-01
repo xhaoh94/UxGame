@@ -21,9 +21,17 @@ namespace Ux.Editor.Debugger.Time
 			root = _visualAsset.CloneTree();
 			root.style.flexGrow = 1f;
 			txtKey = root.Q<TextField>("txtKey");
+			txtKey.RegisterValueChangedCallback(e => _OnTxtKeyChanged(e));
 			txtCorn = root.Q<TextField>("txtCorn");
+			txtCorn.RegisterValueChangedCallback(e => _OnTxtCornChanged(e));
 			txtTimeDesc = root.Q<TextField>("txtTimeDesc");
+			txtTimeDesc.RegisterValueChangedCallback(e => _OnTxtTimeDescChanged(e));
 			txtTimeStamp = root.Q<TextField>("txtTimeStamp");
+			txtTimeStamp.RegisterValueChangedCallback(e => _OnTxtTimeStampChanged(e));
 		}
+		partial void _OnTxtKeyChanged(ChangeEvent<string> e);
+		partial void _OnTxtCornChanged(ChangeEvent<string> e);
+		partial void _OnTxtTimeDescChanged(ChangeEvent<string> e);
+		partial void _OnTxtTimeStampChanged(ChangeEvent<string> e);
 	}
 }

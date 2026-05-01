@@ -483,18 +483,6 @@ namespace Ux
             list.AddItemClick(fn);
         }
 
-        protected void AddItemClick(GList list, EventCallback1 fn)
-        {
-            if (list == null) return;
-            AddEvent(list.onClickItem, fn);
-        }
-
-        protected void AddItemClick(GList list, EventCallback0 fn)
-        {
-            if (list == null) return;
-            AddEvent(list.onClickItem, fn);
-        }
-
         #endregion
 
         protected void RemoveTag()

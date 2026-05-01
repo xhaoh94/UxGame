@@ -9,17 +9,17 @@ namespace Ux.Editor.Build.UI
     public partial class UICodeMemberItem : TemplateContainer
     {
         private List<string> _evtList1 = new List<string>
-    {
-        "点击",
-        "双击",
-        "长按",
-        "拖拽"
-    };
+        {
+            "点击",
+            "双击",
+            "长按",
+            "拖拽"
+        };
         private List<string> _evtList2 = new List<string>
-    {
-        "双击",
-        "列表点击",
-    };
+        {
+            "双击",
+            "列表点击",
+        };
         private VisualTreeAsset _visualAsset;
         Action _saveCb;
         PopupField<string> enumEvt;

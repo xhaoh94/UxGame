@@ -27,19 +27,31 @@ namespace Ux.Editor.Debugger.Time
 			root = _visualAsset.CloneTree();
 			root.style.flexGrow = 1f;
 			txtLocalTime = root.Q<TextField>("txtLocalTime");
+			txtLocalTime.RegisterValueChangedCallback(e => _OnTxtLocalTimeChanged(e));
 			txtServerTime = root.Q<TextField>("txtServerTime");
+			txtServerTime.RegisterValueChangedCallback(e => _OnTxtServerTimeChanged(e));
 			txtTime = root.Q<TextField>("txtTime");
+			txtTime.RegisterValueChangedCallback(e => _OnTxtTimeChanged(e));
 			Label = root.Q<Label>("Label");
 			txtFrame = root.Q<TextField>("txtFrame");
+			txtFrame.RegisterValueChangedCallback(e => _OnTxtFrameChanged(e));
 			tbBtnTime = root.Q<ToolbarButton>("tbBtnTime");
-			//tbBtnTime.clicked += () => _OnTbBtnTimeClick();
+			tbBtnTime.clicked += () => _OnTbBtnTimeClick();
 			tbBtnFrame = root.Q<ToolbarButton>("tbBtnFrame");
-			//tbBtnFrame.clicked += () => _OnTbBtnFrameClick();
+			tbBtnFrame.clicked += () => _OnTbBtnFrameClick();
 			tbBtnTimeStamp = root.Q<ToolbarButton>("tbBtnTimeStamp");
-			//tbBtnTimeStamp.clicked += () => _OnTbBtnTimeStampClick();
+			tbBtnTimeStamp.clicked += () => _OnTbBtnTimeStampClick();
 			tbBtnCron = root.Q<ToolbarButton>("tbBtnCron");
-			//tbBtnCron.clicked += () => _OnTbBtnCronClick();
+			tbBtnCron.clicked += () => _OnTbBtnCronClick();
 			scr = root.Q<ScrollView>("scr");
 		}
+		partial void _OnTxtLocalTimeChanged(ChangeEvent<string> e);
+		partial void _OnTxtServerTimeChanged(ChangeEvent<string> e);
+		partial void _OnTxtTimeChanged(ChangeEvent<string> e);
+		partial void _OnTxtFrameChanged(ChangeEvent<string> e);
+		partial void _OnTbBtnTimeClick();
+		partial void _OnTbBtnFrameClick();
+		partial void _OnTbBtnTimeStampClick();
+		partial void _OnTbBtnCronClick();
 	}
 }

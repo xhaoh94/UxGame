@@ -76,8 +76,8 @@ namespace Ux
 
         public void AddItemClick(Action<IItemRenderer> itemClickEvt)
         {
-            _itemClickEvt = itemClickEvt;
-            AddItemClick(List, _OnItemClickEvt);
+            _itemClickEvt = itemClickEvt;            
+            AddEvent(List.onClickItem, _OnItemClickEvt);
         }
         void _OnItemClickEvt(EventContext e)
         {

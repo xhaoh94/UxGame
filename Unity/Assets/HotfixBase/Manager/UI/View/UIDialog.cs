@@ -54,8 +54,8 @@ namespace Ux
                 return;
             }
 
-            InitParam();
             base.ToShow(isAnim, id, isStack, token);
+            InitParam();
         }
 
         protected virtual void InitParam()
@@ -79,7 +79,7 @@ namespace Ux
                 __btn1.visible = dialogData.Btn1.Visible;
                 if (dialogData.Btn1.Visible)
                 {
-                    __btn1.text = string.IsNullOrEmpty(dialogData.Btn1.BtnTitle) ? "确定" : dialogData.Btn1.BtnTitle;
+                    __btn1.text =  dialogData.Btn1.BtnTitle;
                     AddClick(__btn1, OnBtn1Click);
                 }
             }
@@ -87,10 +87,10 @@ namespace Ux
             // 按钮2
             if (__btn2 != null)
             {
-                __btn1.visible = dialogData.Btn2.Visible;
+                __btn2.visible = dialogData.Btn2.Visible;
                 if (dialogData.Btn2.Visible)
                 {
-                    __btn2.text = string.IsNullOrEmpty(dialogData.Btn2.BtnTitle) ? "取消" : dialogData.Btn2.BtnTitle;
+                    __btn2.text = dialogData.Btn2.BtnTitle;
                     AddClick(__btn2, OnBtn2Click);
                 }
             }

@@ -79,7 +79,7 @@ namespace Ux.Editor.Debugger.Time
         {
             if (EditorApplication.isPlaying)
             {
-                _txtTime.SetValueWithoutNotify(TimeMgr.Ins.TotalTime.ToString());
+                _txtTime.SetValueWithoutNotify(TimeMgr.Ins.TotalTime.ToString("#0.###"));
                 _txtFrame.SetValueWithoutNotify(TimeMgr.Ins.TotalFrame.ToString());
 
                 _txtLocalTime.SetValueWithoutNotify(TimeMgr.Ins.LocalTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));

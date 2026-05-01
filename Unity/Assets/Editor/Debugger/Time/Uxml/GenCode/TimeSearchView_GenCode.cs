@@ -35,9 +35,9 @@ namespace Ux.Editor.Debugger.Time
 			btnClear.clicked += () => _OnBtnClearClick();
 			TopBar = root.Q<Toolbar>("TopBar");
 			TopBar0 = root.Q<ToolbarButton>("TopBar0");
-			//TopBar0.clicked += () => _OnTopBar0Click();
+			TopBar0.clicked += () => _OnTopBar0Click();
 			TopBar1 = root.Q<ToolbarButton>("TopBar1");
-			//TopBar1.clicked += () => _OnTopBar1Click();
+			TopBar1.clicked += () => _OnTopBar1Click();
 			list = root.Q<ListView>("list");
 			list.makeItem = ()=> { var e = new VisualElement(); _OnMakeListItem(e); return e; };
 			list.bindItem = (e,i)=> _OnBindListItem(e,i);
@@ -57,6 +57,8 @@ namespace Ux.Editor.Debugger.Time
 		}
 		partial void _OnInputSearchChanged(ChangeEvent<string> e);
 		partial void _OnBtnClearClick();
+		partial void _OnTopBar0Click();
+		partial void _OnTopBar1Click();
 		partial void _OnMakeListItem(VisualElement e);
 		partial void _OnBindListItem(VisualElement e,int index);
 		partial void _OnListItemClick(IEnumerable<object> objs);
