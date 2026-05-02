@@ -8,7 +8,7 @@ namespace Ux
         {
             return (mgr as IEventOn).Call((int)eType, tag);
         }
-        public static EventMgr.EventTask Call<A>(this EventMgr mgr, EventType eType, object tag)
+        public static EventMgr.EventTask<A> Call<A>(this EventMgr mgr, EventType eType, object tag)
         {
             return (mgr as IEventOn).Call<A>((int)eType, tag);
         }

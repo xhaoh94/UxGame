@@ -1,6 +1,8 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 
+using System.Runtime.CompilerServices;
+
 namespace Ux
 {
     public interface IEventTrigger
@@ -18,6 +20,16 @@ namespace Ux
             }
             public long Key { get; }
             public UniTask Task { get; }
+        }
+        public struct EventTask<A>
+        {
+            public EventTask(long key, UniTask<A> task)
+            {
+                Key = key;
+                Task = task;
+            }
+            public long Key { get; }
+            public UniTask<A> Task { get; }
         }
         public interface IEvent
         {
@@ -324,7 +336,10 @@ namespace Ux
             public override void Run1<T>(EventSystem system, T a)
             {
                 system.RemoveByKey(Key);
-                if (a is A pA) _fn.TrySetResult(pA);
+                if (typeof(T) == typeof(A))
+                {
+                    _fn.TrySetResult(Unsafe.As<T, A>(ref a));
+                }
             }
             public override void Run2<T, U>(EventSystem system, T a, U b) => Run0(system);
             public override void Run3<T, U, V>(EventSystem system, T a, U b, V c) => Run0(system);

@@ -8,7 +8,7 @@ namespace Ux
     public interface IEventOn
     {
         EventMgr.EventTask Call(int eType, object tag);
-        EventMgr.EventTask Call<A>(int eType, object tag);
+        EventMgr.EventTask<A> Call<A>(int eType, object tag);
         long On(int eType, object tag, Action action);
         long On<A>(int eType, object tag, Action<A> action);
         long On<A, B>(int eType, object tag, Action<A, B> action);
@@ -81,7 +81,7 @@ namespace Ux
                 }
                 return new EventTask(key, task.Task);
             }
-             public EventTask Call<A>(int eType, object tag)
+             public EventTask<A> Call<A>(int eType, object tag)
             {
                 var task = AutoResetUniTaskCompletionSource<A>.Create();
                 // 使用自增ID
@@ -91,7 +91,7 @@ namespace Ux
                 {
                     evtData.Init(key, eType, tag, task);
                 }
-                return new EventTask(key, task.Task);
+                return new EventTask<A>(key, task.Task);
             }
         }
         long IEventOn.On(int eType, object tag, Action action)
@@ -117,7 +117,7 @@ namespace Ux
         {
             return _defaultSystem.Call(eType, tag);
         }
-        EventTask IEventOn.Call<A>(int eType, object tag)
+        EventTask<A> IEventOn.Call<A>(int eType, object tag)
         {
             return _defaultSystem.Call<A>(eType, tag);
         }

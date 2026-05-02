@@ -52,7 +52,139 @@ namespace Ux
                 }
             }
 
-            class EventExe<A> : IEventExe
+            class EventExe1 : IEventExe
+            {
+                public bool SkipInQueue { get; set; }
+                int _eType;
+                object _a;
+
+                public void Init(int eType, object a)
+                {
+                    SkipInQueue = false;
+                    _eType = eType;
+                    _a = a;
+                }
+
+                public void Reset()
+                {
+                    SkipInQueue = false;
+                    _eType = 0;
+                    _a = null;
+                }
+
+                public void Exe(EventSystem system, ref int exeCnt)
+                {
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (exeCnt >= system._exeLimit) break;
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run1(system, _a);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
+                }
+            }
+
+            class EventExe2 : IEventExe
+            {
+                public bool SkipInQueue { get; set; }
+                int _eType;
+                object _a;
+                object _b;
+
+                public void Init(int eType, object a, object b)
+                {
+                    SkipInQueue = false;
+                    _eType = eType;
+                    _a = a;
+                    _b = b;
+                }
+
+                public void Reset()
+                {
+                    SkipInQueue = false;
+                    _eType = 0;
+                    _a = null;
+                    _b = null;
+                }
+
+                public void Exe(EventSystem system, ref int exeCnt)
+                {
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (exeCnt >= system._exeLimit) break;
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run2(system, _a, _b);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
+                }
+            }
+
+            class EventExe3 : IEventExe
+            {
+                public bool SkipInQueue { get; set; }
+                int _eType;
+                object _a;
+                object _b;
+                object _c;
+
+                public void Init(int eType, object a, object b, object c)
+                {
+                    SkipInQueue = false;
+                    _eType = eType;
+                    _a = a;
+                    _b = b;
+                    _c = c;
+                }
+
+                public void Reset()
+                {
+                    SkipInQueue = false;
+                    _eType = 0;
+                    _a = null;
+                    _b = null;
+                    _c = null;
+                }
+
+                public void Exe(EventSystem system, ref int exeCnt)
+                {
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (exeCnt >= system._exeLimit) break;
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run3(system, _a, _b, _c);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
+                }
+            }
+
+            class TypedEventExe<A> : IEventExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -93,7 +225,7 @@ namespace Ux
                 }
             }
 
-            class EventExe<A, B> : IEventExe
+            class TypedEventExe<A, B> : IEventExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -137,7 +269,7 @@ namespace Ux
                 }
             }
 
-            class EventExe<A, B, C> : IEventExe
+            class TypedEventExe<A, B, C> : IEventExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;

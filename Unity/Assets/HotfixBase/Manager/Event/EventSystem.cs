@@ -275,6 +275,27 @@ namespace Ux
                 return true;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static bool UseRefDispatch<A>()
+            {
+                return RuntimeHelpers.IsReferenceOrContainsReferences<A>();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static bool UseRefDispatch<A, B>()
+            {
+                return RuntimeHelpers.IsReferenceOrContainsReferences<A>() &&
+                       RuntimeHelpers.IsReferenceOrContainsReferences<B>();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static bool UseRefDispatch<A, B, C>()
+            {
+                return RuntimeHelpers.IsReferenceOrContainsReferences<A>() &&
+                       RuntimeHelpers.IsReferenceOrContainsReferences<B>() &&
+                       RuntimeHelpers.IsReferenceOrContainsReferences<C>();
+            }
+
             void _Update()
             {
                 if (_waitDels.Count > 0)
@@ -484,8 +505,20 @@ namespace Ux
 
             public EventSystem Run<A>(int eType, A a)
             {
-                var exe = Pool.Get<EventExe<A>>();
-                exe.Init(eType, a);
+                IEventExe exe;
+                if (UseRefDispatch<A>())
+                {
+                    var refExe = Pool.Get<EventExe1>();
+                    refExe.Init(eType, a);
+                    exe = refExe;
+                }
+                else
+                {
+                    var typedExe = Pool.Get<TypedEventExe<A>>();
+                    typedExe.Init(eType, a);
+                    exe = typedExe;
+                }
+
                 _waitExes.Enqueue(exe);
                 _lastExe = exe;
                 return this;
@@ -493,8 +526,20 @@ namespace Ux
 
             public EventSystem Run<A, B>(int eType, A a, B b)
             {
-                var exe = Pool.Get<EventExe<A, B>>();
-                exe.Init(eType, a, b);
+                IEventExe exe;
+                if (UseRefDispatch<A, B>())
+                {
+                    var refExe = Pool.Get<EventExe2>();
+                    refExe.Init(eType, a, b);
+                    exe = refExe;
+                }
+                else
+                {
+                    var typedExe = Pool.Get<TypedEventExe<A, B>>();
+                    typedExe.Init(eType, a, b);
+                    exe = typedExe;
+                }
+
                 _waitExes.Enqueue(exe);
                 _lastExe = exe;
                 return this;
@@ -502,8 +547,20 @@ namespace Ux
 
             public EventSystem Run<A, B, C>(int eType, A a, B b, C c)
             {
-                var exe = Pool.Get<EventExe<A, B, C>>();
-                exe.Init(eType, a, b, c);
+                IEventExe exe;
+                if (UseRefDispatch<A, B, C>())
+                {
+                    var refExe = Pool.Get<EventExe3>();
+                    refExe.Init(eType, a, b, c);
+                    exe = refExe;
+                }
+                else
+                {
+                    var typedExe = Pool.Get<TypedEventExe<A, B, C>>();
+                    typedExe.Init(eType, a, b, c);
+                    exe = typedExe;
+                }
+
                 _waitExes.Enqueue(exe);
                 _lastExe = exe;
                 return this;
