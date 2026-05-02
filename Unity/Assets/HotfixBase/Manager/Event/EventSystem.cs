@@ -1,7 +1,5 @@
-using dnlib.DotNet.Writer;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -10,7 +8,7 @@ namespace Ux
     public partial class EventMgr
     {
         /// <summary>事件签名，用于重复注册检测</summary>
-        public struct EventSignature : System.IEquatable<EventSignature>
+        public struct EventSignature : IEquatable<EventSignature>
         {
             public Delegate Action;
             public object Tag;
@@ -43,13 +41,15 @@ namespace Ux
 
         public struct FastMethodRef
         {
-            IEnumerable<Attribute> _attributes;
-            FastMethodInfo _methodInfo;
-            public FastMethodRef(IEnumerable<Attribute> attributes, FastMethodInfo methodInfo)
+            readonly Attribute[] _attributes;
+            readonly FastMethodInfo _methodInfo;
+
+            public FastMethodRef(Attribute[] attributes, FastMethodInfo methodInfo)
             {
                 _attributes = attributes;
                 _methodInfo = methodInfo;
             }
+
             public void On(EventMgr.EventSystem system)
             {
                 foreach (var attr in _attributes)
@@ -59,12 +59,15 @@ namespace Ux
                 }
             }
         }
+
         OverdueMap<long, List<FastMethodRef>> _fastMethodRefMap;
+
         public interface IEventSystem
         {
             void Init(int exeLimit);
             void Release();
         }
+
         public partial class EventSystem : IEventSystem
         {
             //每帧执行数量-防止卡顿，一帧执行
@@ -76,7 +79,7 @@ namespace Ux
             private readonly Dictionary<long, EventSignature> _keyToSign = new();
 
             private readonly Dictionary<long, IEvent> _keyEvent = new();
-            /// <summary>
+             /// <summary>
             /// 事件ID对应的IEvent
             /// </summary>
             private readonly Dictionary<int, HashSet<long>> _eventTypeKeys = new();
@@ -89,24 +92,28 @@ namespace Ux
             /// </summary>
             private readonly Dictionary<Delegate, HashSet<long>> _actionKeys = new();
             private IEventExe _lastExe;
-            /// <summary>
+             /// <summary>
             /// 待执行事件队列
             /// </summary>
             private readonly Queue<IEventExe> _waitExes = new();
-            private readonly Dictionary<long, IEvent> _pendingAdds = new();
+            private readonly Dictionary<long, IEvent> _waitAdds = new();
             private readonly HashSet<long> _waitDels = new();
+            private readonly List<long> _dispatchKeys = new();
+            private readonly List<long> _tempKeys = new();
 
             void IEventSystem.Init(int exeLimit)
             {
                 _exeLimit = exeLimit;
                 GameMethod.Update += _Update;
             }
+
             void IEventSystem.Release()
             {
                 GameMethod.Update -= _Update;
                 Clear();
                 Pool.Push(this);
             }
+
             public void Clear()
             {
                 _signToKey.Clear();
@@ -116,8 +123,10 @@ namespace Ux
                 _tagKeys.Clear();
                 _actionKeys.Clear();
                 _waitExes.Clear();
-                _pendingAdds.Clear();
+                _waitAdds.Clear();
                 _waitDels.Clear();
+                _dispatchKeys.Clear();
+                _tempKeys.Clear();
             }
 
             Type _hotfixEvtAttribute;
@@ -135,10 +144,11 @@ namespace Ux
                     _RegisterEventTrigger(_hotfixEvtAttribute, eventObject);
                 }
             }
+
             void _RegisterEventTrigger(Type type, IEventTrigger eventObject)
             {
-                var evtAttrs = eventObject.GetType().GetCustomAttributes(type);
-                if (evtAttrs.Count() == 0) return;
+                var evtAttrs = Attribute.GetCustomAttributes(eventObject.GetType(), type);
+                if (evtAttrs.Length == 0) return;
                 foreach (var attr in evtAttrs)
                 {
                     var evtAttr = (IEvtAttribute)attr;
@@ -162,58 +172,107 @@ namespace Ux
                 if (!Ins._fastMethodRefMap.TryGetValue(key, out var refList))
                 {
                     var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                                          BindingFlags.Public | BindingFlags.NonPublic);
+                                                              BindingFlags.Public | BindingFlags.NonPublic);
                     foreach (var method in methods)
                     {
-                        var evtAttrs = method.GetCustomAttributes(type);
-                        if (evtAttrs.Count() == 0) continue;
+                        var evtAttrs = Attribute.GetCustomAttributes(method, type);
+                        if (evtAttrs.Length == 0) continue;
                         if (refList == null)
                         {
                             refList = new List<FastMethodRef>();
                             Ins._fastMethodRefMap.Add(key, refList);
                         }
+
                         refList.Add(new FastMethodRef(evtAttrs, new FastMethodInfo(target, method)));
                     }
                 }
-                if (refList != null && refList.Count > 0)
+
+                if (refList == null || refList.Count == 0) return;
+                foreach (var refMethod in refList)
                 {
-                    foreach (var refMethod in refList)
-                    {
-                        refMethod.On(this);
-                    }
+                    refMethod.On(this);
                 }
             }
-            private long _GetKey(int eType, Delegate action, object tag)
+
+            private EventSignature _CreateSignature(int eType, Delegate action, object tag)
             {
-                // 构造签名用于重复检测
-                EventSignature signature = new EventSignature
+                return new EventSignature
                 {
                     Action = action,
                     Tag = tag,
                     EType = eType
                 };
+            }
 
-                // 检查是否重复注册
-                if (_signToKey.TryGetValue(signature, out var existingKey))
+            private long _GetOrCreateKey(int eType, Delegate action, object tag)
+            {
+                var signature = _CreateSignature(eType, action, tag);
+                if (_signToKey.TryGetValue(signature, out _))
                 {
-                    Log.Error($"事件{action.MethodName()}重复注册，请检查业务逻辑是否正确。");
+                    Log.Error($"浜嬩欢{action.MethodName()}閲嶅娉ㄥ唽锛岃妫€鏌ヤ笟鍔￠€昏緫鏄惁姝ｇ‘銆?");
                     return 0;
                 }
 
-                // 分配全局唯一自增 ID
                 long key = IDGenerater.GenerateId();
-
-                // 注册签名映射
                 _signToKey[signature] = key;
                 _keyToSign[key] = signature;
-
                 return key;
             }
 
-            private long _GetKey(int eType, FastMethodInfo action)
+            private long _GetOrCreateKey(int eType, FastMethodInfo action)
             {
                 if (!action.IsValid) return 0;
-                return _GetKey(eType, action.Method, action.Target);
+                return _GetOrCreateKey(eType, action.Method, action.Target);
+            }
+
+            private bool TryGetKey(int eType, Delegate action, object tag, out long key)
+            {
+                return _signToKey.TryGetValue(_CreateSignature(eType, action, tag), out key);
+            }
+
+            private bool TryGetKey(int eType, FastMethodInfo action, out long key)
+            {
+                key = 0;
+                return action.IsValid && TryGetKey(eType, action.Method, action.Target, out key);
+            }
+
+            private void RemovePendingAdds(Predicate<IEvent> match)
+            {
+                if (_waitAdds.Count == 0) return;
+
+                _tempKeys.Clear();
+                foreach (var kv in _waitAdds)
+                {
+                    if (match(kv.Value))
+                    {
+                        _tempKeys.Add(kv.Key);
+                    }
+                }
+
+                foreach (var key in _tempKeys)
+                {
+                    _waitAdds.Remove(key);
+                }
+
+                _tempKeys.Clear();
+            }
+
+            private bool TryPrepareDispatchKeys(int eType, out List<long> keys)
+            {
+                keys = null;
+                if (!_eventTypeKeys.TryGetValue(eType, out var typeKeys) || typeKeys.Count == 0)
+                {
+                    return false;
+                }
+
+                _dispatchKeys.Clear();
+                foreach (var key in typeKeys)
+                {
+                    _dispatchKeys.Add(key);
+                }
+
+                keys = _dispatchKeys;
+                return true;
             }
 
             void _Update()
@@ -239,7 +298,6 @@ namespace Ux
                             }
                         }
 
-
                         var target = evt.Tag;
                         if (target != null)
                         {
@@ -250,7 +308,6 @@ namespace Ux
                             }
                         }
 
-                        // 清理签名映射
                         if (_keyToSign.TryGetValue(key, out var sign))
                         {
                             _keyToSign.Remove(key);
@@ -266,25 +323,26 @@ namespace Ux
                         evt.Release();
                         _keyEvent.Remove(key);
                     }
+
                     _waitDels.Clear();
                 }
 
-                if (_pendingAdds.Count > 0)
+                if (_waitAdds.Count > 0)
                 {
-                    foreach (var evt in _pendingAdds.Values)
+                    foreach (var evt in _waitAdds.Values)
                     {
                         _keyEvent.Add(evt.Key, evt);
                         var eType = evt.EType;
                         if (!_eventTypeKeys.TryGetValue(eType, out var typeKeys))
                         {
-                            typeKeys = new();
+                            typeKeys = new HashSet<long>();
                             _eventTypeKeys.Add(eType, typeKeys);
                         }
+
                         var key = evt.Key;
                         typeKeys.Add(key);
 
 #if UNITY_EDITOR
-
                         if (Ins._defaultSystem == this)
                         {
                             Ins._EditorAdd(evt);
@@ -295,26 +353,27 @@ namespace Ux
                         {
                             if (!_actionKeys.TryGetValue(evt.Method, out var aKeys))
                             {
-                                aKeys = new();
+                                aKeys = new HashSet<long>();
                                 _actionKeys.Add(evt.Method, aKeys);
                             }
 
                             aKeys.Add(key);
                         }
 
-
                         var target = evt.Tag;
                         if (target != null)
                         {
                             if (!_tagKeys.TryGetValue(target, out var tKeys))
                             {
-                                tKeys = new();
+                                tKeys = new HashSet<long>();
                                 _tagKeys.Add(target, tKeys);
                             }
+
                             tKeys.Add(key);
                         }
                     }
-                    _pendingAdds.Clear();
+
+                    _waitAdds.Clear();
                 }
 
                 _exeCnt = 0;
@@ -323,11 +382,11 @@ namespace Ux
                     var exe = _waitExes.Dequeue();
                     if (exe.SkipInQueue)
                     {
-                        // 跳过执行，直接回收
                         exe.Reset();
                         Pool.Push(exe);
                         continue;
                     }
+
                     try
                     {
                         exe.Exe(this, ref _exeCnt);
@@ -339,6 +398,7 @@ namespace Ux
                     }
                 }
             }
+
             private T _Add<T>(long key) where T : IEvent
             {
                 if (key == 0) return default;
@@ -348,49 +408,36 @@ namespace Ux
                 }
 
                 if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
-                if (_pendingAdds.TryGetValue(key, out var evtData)) return (T)evtData;
+                if (_waitAdds.TryGetValue(key, out var evtData)) return (T)evtData;
 
                 evtData = Pool.Get<T>();
-                _pendingAdds[key] = evtData;
+                _waitAdds[key] = evtData;
                 return (T)evtData;
             }
+
             private T _Add<T>(out long key, int eType, object tag, Delegate action) where T : IEvent
             {
-                key = _GetKey(eType, action, tag);
+                key = _GetOrCreateKey(eType, action, tag);
                 return _Add<T>(key);
             }
 
             private EventFastMethodData _Add(out long key, int eType, FastMethodInfo action)
             {
-                key = _GetKey(eType, action);
+                key = _GetOrCreateKey(eType, action);
                 return _Add<EventFastMethodData>(key);
             }
 
-
-
             private void _Remove(int eType, object tag, Delegate action)
             {
-                var key = _GetKey(eType, action, tag);
-                RemoveByKey(key);
+                if (TryGetKey(eType, action, tag, out var key))
+                {
+                    RemoveByKey(key);
+                }
             }
 
             private void _Remove(Delegate action)
             {
-                if (_pendingAdds.Count > 0)
-                {
-                    var toRemove = new List<long>();
-                    foreach (var kv in _pendingAdds)
-                    {
-                        if (kv.Value.Method == action)
-                        {
-                            toRemove.Add(kv.Key);
-                        }
-                    }
-                    foreach (var key in toRemove)
-                    {
-                        _pendingAdds.Remove(key);
-                    }
-                }
+                RemovePendingAdds(evt => evt.Method == action);
 
                 if (!_actionKeys.TryGetValue(action, out var keys)) return;
                 RemoveByKey(keys);
@@ -402,6 +449,7 @@ namespace Ux
                 {
                     RemoveByKey(key);
                 }
+
                 return this;
             }
 
@@ -411,14 +459,17 @@ namespace Ux
                 {
                     if (!_keyEvent.ContainsKey(key))
                     {
-                        if (_pendingAdds.TryGetValue(key, out var evt))
+                        if (_waitAdds.TryGetValue(key, out _))
                         {
-                            _pendingAdds.Remove(key);
+                            _waitAdds.Remove(key);
                         }
+
                         return this;
                     }
+
                     _waitDels.Add(key);
                 }
+
                 return this;
             }
 
@@ -465,6 +516,7 @@ namespace Ux
                     Log.Error("立即执行事件失败，没有可立即执行事件");
                     return;
                 }
+
                 _exeCnt = 0;
                 var tmp = _exeLimit;
                 _exeLimit = int.MaxValue;
@@ -476,6 +528,7 @@ namespace Ux
                 {
                     _lastExe.SkipInQueue = true;
                 }
+
                 _exeLimit = tmp;
                 _lastExe = null;
             }

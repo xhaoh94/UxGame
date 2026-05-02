@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace Ux
 {
@@ -13,18 +11,20 @@ namespace Ux
             {
                 void Exe(EventSystem system, ref int exeCnt);
                 void Reset();
-bool SkipInQueue {get;set;}
+                bool SkipInQueue { get; set; }
             }
 
             class EventExe : IEventExe
             {
-                public bool SkipInQueue {get;set;} = false;
+                public bool SkipInQueue { get; set; }
                 int _eType;
+
                 public void Init(int eType)
                 {
                     SkipInQueue = false;
                     _eType = eType;
                 }
+
                 public void Reset()
                 {
                     SkipInQueue = false;
@@ -33,9 +33,10 @@ bool SkipInQueue {get;set;}
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
                     foreach (var key in keys)
                     {
+                        if (exeCnt >= system._exeLimit) break;
                         if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
                         if (system._waitDels.Contains(key)) continue;
                         try
@@ -53,16 +54,17 @@ bool SkipInQueue {get;set;}
 
             class EventExe<A> : IEventExe
             {
-                public bool SkipInQueue {get;set;} = false;
+                public bool SkipInQueue { get; set; }
                 int _eType;
                 A _a;
 
-                public void Init(int _eType, A _a)
+                public void Init(int eType, A a)
                 {
                     SkipInQueue = false;
-                    this._eType = _eType;
-                    this._a = _a;
+                    _eType = eType;
+                    _a = a;
                 }
+
                 public void Reset()
                 {
                     SkipInQueue = false;
@@ -72,9 +74,10 @@ bool SkipInQueue {get;set;}
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
                     foreach (var key in keys)
                     {
+                        if (exeCnt >= system._exeLimit) break;
                         if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
                         if (system._waitDels.Contains(key)) continue;
                         try
@@ -92,17 +95,17 @@ bool SkipInQueue {get;set;}
 
             class EventExe<A, B> : IEventExe
             {
-                public bool SkipInQueue {get;set;} = false;
+                public bool SkipInQueue { get; set; }
                 int _eType;
                 A _a;
                 B _b;
 
-                public void Init(int _eType, A _a, B _b)
+                public void Init(int eType, A a, B b)
                 {
                     SkipInQueue = false;
-                    this._eType = _eType;
-                    this._a = _a;
-                    this._b = _b;
+                    _eType = eType;
+                    _a = a;
+                    _b = b;
                 }
 
                 public void Reset()
@@ -115,9 +118,10 @@ bool SkipInQueue {get;set;}
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
                     foreach (var key in keys)
                     {
+                        if (exeCnt >= system._exeLimit) break;
                         if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
                         if (system._waitDels.Contains(key)) continue;
                         try
@@ -135,7 +139,7 @@ bool SkipInQueue {get;set;}
 
             class EventExe<A, B, C> : IEventExe
             {
-                public bool SkipInQueue {get;set;} = false;
+                public bool SkipInQueue { get; set; }
                 int _eType;
                 A _a;
                 B _b;
@@ -161,9 +165,10 @@ bool SkipInQueue {get;set;}
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    if (!system.TryPrepareDispatchKeys(_eType, out List<long> keys)) return;
                     foreach (var key in keys)
                     {
+                        if (exeCnt >= system._exeLimit) break;
                         if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
                         if (system._waitDels.Contains(key)) continue;
                         try
@@ -178,7 +183,6 @@ bool SkipInQueue {get;set;}
                     }
                 }
             }
-
         }
     }
 }

@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ux
 {
@@ -14,7 +10,8 @@ namespace Ux
         void Off<A, B>(int eType, object tag, Action<A, B> action);
         void Off<A, B, C>(int eType, object tag, Action<A, B, C> action);
     }
-    partial class EventMgr: IEventOff
+
+    partial class EventMgr : IEventOff
     {
         public EventSystem RemoveByKey(IEnumerable<long> keys)
         {
@@ -30,14 +27,17 @@ namespace Ux
         {
             public void Off(int eType, FastMethodInfo action)
             {
-                var key = _GetKey(eType, action);
-                RemoveByKey(key);
+                if (TryGetKey(eType, action, out var key))
+                {
+                    RemoveByKey(key);
+                }
             }
 
             public void Off(int eType, object tag, Action action)
             {
                 _Remove(eType, tag, action);
             }
+
             public void Off(Action action)
             {
                 _Remove(action);
@@ -76,21 +76,7 @@ namespace Ux
             public void OffTag(object tag)
             {
                 if (tag == null) return;
-                if (_pendingAdds.Count > 0)
-                {
-                    var toRemove = new List<long>();
-                    foreach (var kv in _pendingAdds)
-                    {
-                        if (kv.Value.Tag == tag)
-                        {
-                            toRemove.Add(kv.Key);
-                        }
-                    }
-                    foreach (var key in toRemove)
-                    {
-                        _pendingAdds.Remove(key);
-                    }
-                }
+                RemovePendingAdds(evt => evt.Tag == tag);
 
                 if (!_tagKeys.TryGetValue(tag, out var keys)) return;
                 RemoveByKey(keys);
@@ -132,7 +118,6 @@ namespace Ux
             _defaultSystem.Off(eType, tag, action);
         }
 
-
         public void Off<A, B, C>(Action<A, B, C> action)
         {
             _defaultSystem.Off(action);
@@ -143,5 +128,4 @@ namespace Ux
             _defaultSystem.OffTag(tag);
         }
     }
-    
 }
