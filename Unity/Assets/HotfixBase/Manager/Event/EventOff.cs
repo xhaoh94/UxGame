@@ -76,15 +76,19 @@ namespace Ux
             public void OffTag(object tag)
             {
                 if (tag == null) return;
-                if (_waitAdds.Count > 0)
+                if (_pendingAdds.Count > 0)
                 {
-                    for (int i = _waitAdds.Count - 1; i >= 0; i--)
+                    var toRemove = new List<long>();
+                    foreach (var kv in _pendingAdds)
                     {
-                        var wa = _waitAdds[i];
-                        if (wa.Tag == tag)
+                        if (kv.Value.Tag == tag)
                         {
-                            _waitAdds.RemoveAt(i);
+                            toRemove.Add(kv.Key);
                         }
+                    }
+                    foreach (var key in toRemove)
+                    {
+                        _pendingAdds.Remove(key);
                     }
                 }
 

@@ -13,31 +13,7 @@ namespace Ux
             {
                 void Exe(EventSystem system, ref int exeCnt);
                 void Reset();
-                bool SkipInQueue {get;set;}
-            }
-            
-            static class EventExeHelper
-            {
-                public delegate void EventRunner(IEvent evt, EventSystem system);
-                
-                public static void ExecuteEvents(EventSystem system, int eType, EventRunner runner, ref int exeCnt)
-                {
-                    if (!system._eventTypeKeys.TryGetValue(eType, out var keys)) return;
-                    foreach (var key in keys)
-                    {
-                        if (!system._keyEvent.TryGetValue(key, out var aEvent)) continue;
-                        if (system._waitDels.Contains(key)) continue;
-                        try
-                        {
-                            runner(aEvent, system);
-                            exeCnt++;
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(e);
-                        }
-                    }
-                }
+bool SkipInQueue {get;set;}
             }
 
             class EventExe : IEventExe
@@ -57,7 +33,21 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    EventExeHelper.ExecuteEvents(system, _eType, (evt, sys) => evt.Run(sys), ref exeCnt);
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run0(system);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
                 }
             }
 
@@ -82,7 +72,21 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    EventExeHelper.ExecuteEvents(system, _eType, (evt, sys) => evt.Run(sys, _a), ref exeCnt);
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run1(system, _a);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
                 }
             }
 
@@ -111,7 +115,21 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    EventExeHelper.ExecuteEvents(system, _eType, (evt, sys) => evt.Run(sys, _a, _b), ref exeCnt);
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run2(system, _a, _b);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
                 }
             }
 
@@ -143,7 +161,21 @@ namespace Ux
 
                 public void Exe(EventSystem system, ref int exeCnt)
                 {
-                    EventExeHelper.ExecuteEvents(system, _eType, (evt, sys) => evt.Run(sys, _a, _b, _c), ref exeCnt);
+                    if (!system._eventTypeKeys.TryGetValue(_eType, out var keys)) return;
+                    foreach (var key in keys)
+                    {
+                        if (!system._keyEvent.TryGetValue(key, out var evt)) continue;
+                        if (system._waitDels.Contains(key)) continue;
+                        try
+                        {
+                            evt.Run3(system, _a, _b, _c);
+                            exeCnt++;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e);
+                        }
+                    }
                 }
             }
 

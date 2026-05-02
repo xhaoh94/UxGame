@@ -22,6 +22,10 @@ namespace Ux
         public interface IEvent
         {
             void Run(EventSystem system, params object[] args);
+            void Run0(EventSystem system);
+            void Run1<T>(EventSystem system, T a);
+            void Run2<T, U>(EventSystem system, T a, U b);
+            void Run3<T, U, V>(EventSystem system, T a, U b, V c);
             void Release();
 
             long Key { get; }
@@ -45,6 +49,10 @@ namespace Ux
 
 
             public abstract void Run(EventSystem system,params object[] args);
+            public abstract void Run0(EventSystem system);
+            public abstract void Run1<T>(EventSystem system, T a);
+            public abstract void Run2<T, U>(EventSystem system, T a, U b);
+            public abstract void Run3<T, U, V>(EventSystem system, T a, U b, V c);
 
             public void Release()
             {
@@ -83,6 +91,26 @@ namespace Ux
             {
                 if (_method.IsValid) _method.Invoke();
             }
+
+            public override void Run0(EventSystem system)
+            {
+                if (_method.IsValid) _method.Invoke();
+            }
+
+            public override void Run1<T>(EventSystem system, T a)
+            {
+                if (_method.IsValid) _method.Invoke();
+            }
+
+            public override void Run2<T, U>(EventSystem system, T a, U b)
+            {
+                if (_method.IsValid) _method.Invoke();
+            }
+
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c)
+            {
+                if (_method.IsValid) _method.Invoke();
+            }
         }
 
         public sealed class EventData : EventBaseData
@@ -108,6 +136,25 @@ namespace Ux
                 _fn?.Invoke();
             }
 
+            public override void Run0(EventSystem system)
+            {
+                _fn?.Invoke();
+            }
+
+            public override void Run1<T>(EventSystem system, T a)
+            {
+                _fn?.Invoke();
+            }
+
+            public override void Run2<T, U>(EventSystem system, T a, U b)
+            {
+                _fn?.Invoke();
+            }
+
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c)
+            {
+                _fn?.Invoke();
+            }
         }
 
         public sealed class EventData<A> : EventBaseData
@@ -129,6 +176,16 @@ namespace Ux
                 if (args.Length > 0 && args[0] is A pA) _fn?.Invoke(pA);
             }
 
+            public override void Run0(EventSystem system) { }
+
+            public override void Run1<T>(EventSystem system, T a)
+            {
+                if (a is A pA) _fn?.Invoke(pA);
+            }
+
+            public override void Run2<T, U>(EventSystem system, T a, U b) { }
+
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c) { }
 
             protected override void OnRelease()
             {
@@ -155,6 +212,16 @@ namespace Ux
                 if (args.Length > 1 && args[0] is A pA && args[1] is B pB) _fn?.Invoke(pA, pB);
             }
 
+            public override void Run0(EventSystem system) { }
+
+            public override void Run1<T>(EventSystem system, T a) { }
+
+            public override void Run2<T, U>(EventSystem system, T a, U b)
+            {
+                if (a is A pA && b is B pB) _fn?.Invoke(pA, pB);
+            }
+
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c) { }
 
             protected override void OnRelease()
             {
@@ -163,7 +230,6 @@ namespace Ux
         }
 
         public sealed class EventData<A, B, C> : EventBaseData
-
         {
             public override Delegate Method => _fn;
             Action<A, B, C> _fn;
@@ -176,10 +242,17 @@ namespace Ux
                 _fn = fn;
             }
 
-
             public override void Run(EventSystem system,params object[] args)
             {
                 if (args.Length > 2 && args[0] is A pA && args[1] is B pB && args[2] is C pC) _fn?.Invoke(pA, pB, pC);
+            }
+
+            public override void Run0(EventSystem system) { }
+            public override void Run1<T>(EventSystem system, T a) { }
+            public override void Run2<T, U>(EventSystem system, T a, U b) { }
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c)
+            {
+                if (a is A pA && b is B pB && c is C pC) _fn?.Invoke(pA, pB, pC);
             }
 
             protected override void OnRelease()
@@ -210,6 +283,15 @@ namespace Ux
                 system.RemoveByKey(Key);
                 _fn.TrySetResult();
             }
+
+            public override void Run0(EventSystem system)
+            {
+                system.RemoveByKey(Key);
+                _fn.TrySetResult();
+            }
+            public override void Run1<T>(EventSystem system, T a) => Run0(system);
+            public override void Run2<T, U>(EventSystem system, T a, U b) => Run0(system);
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c) => Run0(system);
         }
         public sealed class EventTaskData<A> : EventBaseData
         {
@@ -234,6 +316,18 @@ namespace Ux
                 system.RemoveByKey(Key);
                 if (args.Length > 0 && args[0] is A pA) _fn.TrySetResult(pA);
             }
+
+            public override void Run0(EventSystem system)
+            {
+                system.RemoveByKey(Key);
+            }
+            public override void Run1<T>(EventSystem system, T a)
+            {
+                system.RemoveByKey(Key);
+                if (a is A pA) _fn.TrySetResult(pA);
+            }
+            public override void Run2<T, U>(EventSystem system, T a, U b) => Run0(system);
+            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c) => Run0(system);
         }
         
     }

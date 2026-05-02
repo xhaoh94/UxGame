@@ -93,7 +93,7 @@ namespace Ux
             /// 待执行事件队列
             /// </summary>
             private readonly Queue<IEventExe> _waitExes = new();
-            private readonly List<IEvent> _waitAdds = new();
+            private readonly Dictionary<long, IEvent> _pendingAdds = new();
             private readonly HashSet<long> _waitDels = new();
 
             void IEventSystem.Init(int exeLimit)
@@ -116,7 +116,7 @@ namespace Ux
                 _tagKeys.Clear();
                 _actionKeys.Clear();
                 _waitExes.Clear();
-                _waitAdds.Clear();
+                _pendingAdds.Clear();
                 _waitDels.Clear();
             }
 
@@ -269,9 +269,9 @@ namespace Ux
                     _waitDels.Clear();
                 }
 
-                if (_waitAdds.Count > 0)
+                if (_pendingAdds.Count > 0)
                 {
-                    foreach (var evt in _waitAdds)
+                    foreach (var evt in _pendingAdds.Values)
                     {
                         _keyEvent.Add(evt.Key, evt);
                         var eType = evt.EType;
@@ -314,7 +314,7 @@ namespace Ux
                             tKeys.Add(key);
                         }
                     }
-                    _waitAdds.Clear();
+                    _pendingAdds.Clear();
                 }
 
                 _exeCnt = 0;
@@ -348,14 +348,12 @@ namespace Ux
                 }
 
                 if (_keyEvent.TryGetValue(key, out var temEvt)) return (T)temEvt;
-                var evtData = _waitAdds.Find(x => x.Key == key);
-                if (evtData != null) return (T)evtData;
+                if (_pendingAdds.TryGetValue(key, out var evtData)) return (T)evtData;
 
                 evtData = Pool.Get<T>();
-                _waitAdds.Add(evtData);
+                _pendingAdds[key] = evtData;
                 return (T)evtData;
             }
-
             private T _Add<T>(out long key, int eType, object tag, Delegate action) where T : IEvent
             {
                 key = _GetKey(eType, action, tag);
@@ -378,9 +376,20 @@ namespace Ux
 
             private void _Remove(Delegate action)
             {
-                if (_waitAdds.Count > 0)
+                if (_pendingAdds.Count > 0)
                 {
-                    _waitAdds.RemoveAll(x => x.Method == action);
+                    var toRemove = new List<long>();
+                    foreach (var kv in _pendingAdds)
+                    {
+                        if (kv.Value.Method == action)
+                        {
+                            toRemove.Add(kv.Key);
+                        }
+                    }
+                    foreach (var key in toRemove)
+                    {
+                        _pendingAdds.Remove(key);
+                    }
                 }
 
                 if (!_actionKeys.TryGetValue(action, out var keys)) return;
@@ -402,9 +411,9 @@ namespace Ux
                 {
                     if (!_keyEvent.ContainsKey(key))
                     {
-                        if (_waitAdds.Count > 0)
+                        if (_pendingAdds.TryGetValue(key, out var evt))
                         {
-                            _waitAdds.RemoveAll(x => x.Key == key);
+                            _pendingAdds.Remove(key);
                         }
                         return this;
                     }
@@ -448,7 +457,7 @@ namespace Ux
                 _lastExe = exe;
                 return this;
             }
-            //立即执行
+
             public void Immediate()
             {
                 if (_lastExe == null)
@@ -472,5 +481,4 @@ namespace Ux
             }
         }
     }
-
 }
