@@ -16,7 +16,7 @@ namespace Ux
 
             public bool Equals(EventSignature other)
             {
-                return ReferenceEquals(Action, other.Action) &&
+                return Action == other.Action &&
                        ReferenceEquals(Tag, other.Tag) &&
                        EType == other.EType;
             }
@@ -31,7 +31,7 @@ namespace Ux
                 unchecked
                 {
                     int hash = 17;
-                    hash = hash * 31 + (Action != null ? RuntimeHelpers.GetHashCode(Action) : 0);
+                    hash = hash * 31 + (Action != null ? Action.GetHashCode() : 0);
                     hash = hash * 31 + (Tag != null ? RuntimeHelpers.GetHashCode(Tag) : 0);
                     hash = hash * 31 + EType;
                     return hash;
@@ -60,7 +60,35 @@ namespace Ux
             }
         }
 
-        OverdueMap<long, List<FastMethodRef>> _fastMethodRefMap;
+        readonly struct FastMethodCacheKey : IEquatable<FastMethodCacheKey>
+        {
+            public readonly object Target;
+            public readonly Type AttributeType;
+
+            public FastMethodCacheKey(object target, Type attributeType)
+            {
+                Target = target;
+                AttributeType = attributeType;
+            }
+
+            public bool Equals(FastMethodCacheKey other) =>
+                ReferenceEquals(Target, other.Target) && ReferenceEquals(AttributeType, other.AttributeType);
+
+            public override bool Equals(object obj) => obj is FastMethodCacheKey other && Equals(other);
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hash = 17;
+                    hash = hash * 31 + (Target != null ? RuntimeHelpers.GetHashCode(Target) : 0);
+                    hash = hash * 31 + (AttributeType != null ? RuntimeHelpers.GetHashCode(AttributeType) : 0);
+                    return hash;
+                }
+            }
+        }
+
+        OverdueMap<FastMethodCacheKey, List<FastMethodRef>> _fastMethodRefMap;
 
         public interface IEventSystem
         {
@@ -71,7 +99,7 @@ namespace Ux
         public partial class EventSystem : IEventSystem
         {
             //每帧执行数量-防止卡顿，一帧执行
-            int _exeLimit = 200;
+            int _exeLimit = 500;
             int _exeCnt = 0;
 
             // 签名相关字典：用于重复检测和删除
@@ -86,16 +114,16 @@ namespace Ux
             /// <summary>
             /// 标签对应的IEvent
             /// </summary>
-            private readonly Dictionary<object, HashSet<long>> _tagKeys = new();
+            private readonly Dictionary<object, HashSet<long>> _tagKeys = new(ReferenceEqualityComparer<object>.Instance);
             /// <summary>
             /// 动作对应的IEvent
             /// </summary>
             private readonly Dictionary<Delegate, HashSet<long>> _actionKeys = new();
-            private IEventExe _lastExe;
+            private IExe _lastExe;
              /// <summary>
             /// 待执行事件队列
             /// </summary>
-            private readonly Queue<IEventExe> _waitExes = new();
+            private readonly Queue<IExe> _waitExes = new();
             private readonly Dictionary<long, IEvent> _waitAdds = new();
             private readonly HashSet<long> _waitDels = new();
             private readonly List<long> _dispatchKeys = new();
@@ -167,8 +195,8 @@ namespace Ux
 
             void _RegisterFastMethod(Type type, object target)
             {
-                Ins._fastMethodRefMap ??= new OverdueMap<long, List<FastMethodRef>>(100);
-                var key = IDGenerater.GenerateId(RuntimeHelpers.GetHashCode(target), RuntimeHelpers.GetHashCode(type));
+                Ins._fastMethodRefMap ??= new OverdueMap<FastMethodCacheKey, List<FastMethodRef>>(100);
+                var key = new FastMethodCacheKey(target, type);
                 if (!Ins._fastMethodRefMap.TryGetValue(key, out var refList))
                 {
                     var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
@@ -236,7 +264,7 @@ namespace Ux
                 return action.IsValid && TryGetKey(eType, action.Method, action.Target, out key);
             }
 
-            private void RemovePendingAdds(Predicate<IEvent> match)
+            private void RemoveWaitAdds(Predicate<IEvent> match)
             {
                 if (_waitAdds.Count == 0) return;
 
@@ -265,6 +293,10 @@ namespace Ux
                     return false;
                 }
 
+                if (_dispatchKeys.Capacity < typeKeys.Count)
+                {
+                    _dispatchKeys.Capacity = typeKeys.Count;
+                }
                 _dispatchKeys.Clear();
                 foreach (var key in typeKeys)
                 {
@@ -458,7 +490,7 @@ namespace Ux
 
             private void _Remove(Delegate action)
             {
-                RemovePendingAdds(evt => evt.Method == action);
+                RemoveWaitAdds(evt => evt.Method == action);
 
                 if (!_actionKeys.TryGetValue(action, out var keys)) return;
                 RemoveByKey(keys);
@@ -505,16 +537,16 @@ namespace Ux
 
             public EventSystem Run<A>(int eType, A a)
             {
-                IEventExe exe;
+                IExe exe;
                 if (UseRefDispatch<A>())
                 {
-                    var refExe = Pool.Get<EventExe1>();
+                    var refExe = Pool.Get<ReferencesExe1>();
                     refExe.Init(eType, a);
                     exe = refExe;
                 }
                 else
                 {
-                    var typedExe = Pool.Get<TypedEventExe<A>>();
+                    var typedExe = Pool.Get<GenericsExe<A>>();
                     typedExe.Init(eType, a);
                     exe = typedExe;
                 }
@@ -526,16 +558,16 @@ namespace Ux
 
             public EventSystem Run<A, B>(int eType, A a, B b)
             {
-                IEventExe exe;
+                IExe exe;
                 if (UseRefDispatch<A, B>())
                 {
-                    var refExe = Pool.Get<EventExe2>();
+                    var refExe = Pool.Get<ReferencesExe2>();
                     refExe.Init(eType, a, b);
                     exe = refExe;
                 }
                 else
                 {
-                    var typedExe = Pool.Get<TypedEventExe<A, B>>();
+                    var typedExe = Pool.Get<GenericsExe<A, B>>();
                     typedExe.Init(eType, a, b);
                     exe = typedExe;
                 }
@@ -547,16 +579,16 @@ namespace Ux
 
             public EventSystem Run<A, B, C>(int eType, A a, B b, C c)
             {
-                IEventExe exe;
+                IExe exe;
                 if (UseRefDispatch<A, B, C>())
                 {
-                    var refExe = Pool.Get<EventExe3>();
+                    var refExe = Pool.Get<ReferencesExe3>();
                     refExe.Init(eType, a, b, c);
                     exe = refExe;
                 }
                 else
                 {
-                    var typedExe = Pool.Get<TypedEventExe<A, B, C>>();
+                    var typedExe = Pool.Get<GenericsExe<A, B, C>>();
                     typedExe.Init(eType, a, b, c);
                     exe = typedExe;
                 }

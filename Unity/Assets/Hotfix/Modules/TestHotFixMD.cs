@@ -21,8 +21,8 @@ namespace Ux
         }
         async UniTaskVoid Test_EventCallAsync()
         {
-            Log.Info("Test_EventCall1111");
-            await EventMgr.Ins.Call(EventType.Test_EventCall, this).Task;
+            Log.Info("Test_EventCall1111");            
+            await EventMgr.Ins.Call(EventType.Test_EventCall, this).Task;            
             Log.Info("Test_EventCall2222");
         }
         protected override void OnRelease()

@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -14,10 +15,13 @@ namespace Ux
         long On<A, B>(int eType, object tag, Action<A, B> action);
         long On<A, B, C>(int eType, object tag, Action<A, B, C> action);
     }
+
     partial class EventMgr : IEventOn
     {
         partial class EventSystem
         {
+            
+
             public long On(int eType, FastMethodInfo action)
             {
                 var evtData = _Add(out var key, eType, action);
@@ -81,7 +85,8 @@ namespace Ux
                 }
                 return new EventTask(key, task.Task);
             }
-             public EventTask<A> Call<A>(int eType, object tag)
+
+            public EventTask<A> Call<A>(int eType, object tag)
             {
                 var task = AutoResetUniTaskCompletionSource<A>.Create();
                 // 使用自增ID
@@ -94,6 +99,7 @@ namespace Ux
                 return new EventTask<A>(key, task.Task);
             }
         }
+
         long IEventOn.On(int eType, object tag, Action action)
         {
             return _defaultSystem.On(eType, tag, action);
@@ -113,10 +119,12 @@ namespace Ux
         {
             return _defaultSystem.On(eType, tag, action);
         }
+
         EventTask IEventOn.Call(int eType, object tag)
         {
             return _defaultSystem.Call(eType, tag);
         }
+
         EventTask<A> IEventOn.Call<A>(int eType, object tag)
         {
             return _defaultSystem.Call<A>(eType, tag);

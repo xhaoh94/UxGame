@@ -33,7 +33,6 @@ namespace Ux
         }
         public interface IEvent
         {
-            void Run(EventSystem system, params object[] args);
             void Run0(EventSystem system);
             void Run1<T>(EventSystem system, T a);
             void Run2<T, U>(EventSystem system, T a, U b);
@@ -60,11 +59,10 @@ namespace Ux
 #endif
 
 
-            public abstract void Run(EventSystem system,params object[] args);
             public abstract void Run0(EventSystem system);
-            public abstract void Run1<T>(EventSystem system, T a);
-            public abstract void Run2<T, U>(EventSystem system, T a, U b);
-            public abstract void Run3<T, U, V>(EventSystem system, T a, U b, V c);
+            public abstract void Run1<P1>(EventSystem system, P1 a);
+            public abstract void Run2<P1, P2>(EventSystem system, P1 a, P2 b);
+            public abstract void Run3<P1, P2, P3>(EventSystem system, P1 a, P2 b, P3 c);
 
             public void Release()
             {
@@ -99,11 +97,6 @@ namespace Ux
                 _method = default;
             }
 
-            public override void Run(EventSystem system,params object[] args)
-            {
-                if (_method.IsValid) _method.Invoke();
-            }
-
             public override void Run0(EventSystem system)
             {
                 if (_method.IsValid) _method.Invoke();
@@ -111,17 +104,17 @@ namespace Ux
 
             public override void Run1<T>(EventSystem system, T a)
             {
-                if (_method.IsValid) _method.Invoke();
+                if (_method.IsValid) _method.Invoke(a);
             }
 
             public override void Run2<T, U>(EventSystem system, T a, U b)
             {
-                if (_method.IsValid) _method.Invoke();
+                if (_method.IsValid) _method.Invoke(a, b);
             }
 
             public override void Run3<T, U, V>(EventSystem system, T a, U b, V c)
             {
-                if (_method.IsValid) _method.Invoke();
+                if (_method.IsValid) _method.Invoke(a, b, c);
             }
         }
 
@@ -141,11 +134,6 @@ namespace Ux
             protected override void OnRelease()
             {
                 _fn = null;
-            }
-
-            public override void Run(EventSystem system,params object[] args)
-            {
-                _fn?.Invoke();
             }
 
             public override void Run0(EventSystem system)
@@ -183,11 +171,6 @@ namespace Ux
             }
 
 
-            public override void Run(EventSystem system,params object[] args)
-            {
-                if (args.Length > 0 && args[0] is A pA) _fn?.Invoke(pA);
-            }
-
             public override void Run0(EventSystem system) { }
 
             public override void Run1<T>(EventSystem system, T a)
@@ -219,11 +202,6 @@ namespace Ux
             }
 
 
-            public override void Run(EventSystem system,params object[] args)
-            {
-                if (args.Length > 1 && args[0] is A pA && args[1] is B pB) _fn?.Invoke(pA, pB);
-            }
-
             public override void Run0(EventSystem system) { }
 
             public override void Run1<T>(EventSystem system, T a) { }
@@ -252,11 +230,6 @@ namespace Ux
                 Key = key;
                 EType = eType;
                 _fn = fn;
-            }
-
-            public override void Run(EventSystem system,params object[] args)
-            {
-                if (args.Length > 2 && args[0] is A pA && args[1] is B pB && args[2] is C pC) _fn?.Invoke(pA, pB, pC);
             }
 
             public override void Run0(EventSystem system) { }
@@ -290,12 +263,6 @@ namespace Ux
                 _fn = null;
             }
 
-            public override void Run(EventSystem system,params object[] args)
-            {
-                system.RemoveByKey(Key);
-                _fn.TrySetResult();
-            }
-
             public override void Run0(EventSystem system)
             {
                 system.RemoveByKey(Key);
@@ -321,12 +288,6 @@ namespace Ux
             protected override void OnRelease()
             {
                 _fn = null;
-            }
-
-            public override void Run(EventSystem system,params object[] args)
-            {
-                system.RemoveByKey(Key);
-                if (args.Length > 0 && args[0] is A pA) _fn.TrySetResult(pA);
             }
 
             public override void Run0(EventSystem system)

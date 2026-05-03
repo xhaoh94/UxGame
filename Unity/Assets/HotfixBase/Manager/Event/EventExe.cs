@@ -7,14 +7,14 @@ namespace Ux
     {
         public partial class EventSystem
         {
-            interface IEventExe
+            interface IExe
             {
                 void Exe(EventSystem system, ref int exeCnt);
                 void Reset();
                 bool SkipInQueue { get; set; }
             }
 
-            class EventExe : IEventExe
+            class EventExe : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -52,7 +52,7 @@ namespace Ux
                 }
             }
 
-            class EventExe1 : IEventExe
+            class ReferencesExe1 : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -93,7 +93,7 @@ namespace Ux
                 }
             }
 
-            class EventExe2 : IEventExe
+            class ReferencesExe2 : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -137,7 +137,7 @@ namespace Ux
                 }
             }
 
-            class EventExe3 : IEventExe
+            class ReferencesExe3 : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -184,7 +184,7 @@ namespace Ux
                 }
             }
 
-            class TypedEventExe<A> : IEventExe
+            class GenericsExe<A> : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -225,7 +225,7 @@ namespace Ux
                 }
             }
 
-            class TypedEventExe<A, B> : IEventExe
+            class GenericsExe<A, B> : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;
@@ -269,7 +269,7 @@ namespace Ux
                 }
             }
 
-            class TypedEventExe<A, B, C> : IEventExe
+            class GenericsExe<A, B, C> : IExe
             {
                 public bool SkipInQueue { get; set; }
                 int _eType;

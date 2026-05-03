@@ -1,0 +1,11 @@
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.csproj.AssemblyReference.cache
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.GeneratedMSBuildEditorConfig.editorconfig
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.AssemblyInfoInputs.cache
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.AssemblyInfo.cs
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.csproj.CoreCompileInputs.cache
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.sourcelink.json
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\bin\Debug\netstandard2.0\Ux.EventAnalyzers.deps.json
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\bin\Debug\netstandard2.0\Ux.EventAnalyzers.dll
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\bin\Debug\netstandard2.0\Ux.EventAnalyzers.pdb
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.dll
+E:\Projects\Unity\UxGame\Unity\Tools\Analyzers\Ux.EventAnalyzers\obj\Debug\netstandard2.0\Ux.EventAnalyzers.pdb

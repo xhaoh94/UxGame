@@ -76,10 +76,14 @@ namespace Ux
             public void OffTag(object tag)
             {
                 if (tag == null) return;
-                RemovePendingAdds(evt => evt.Tag == tag);
+                RemoveWaitAdds(evt => evt.Tag == tag);
 
                 if (!_tagKeys.TryGetValue(tag, out var keys)) return;
                 RemoveByKey(keys);
+            }
+            public void Off(long key)
+            {
+                RemoveByKey(key);
             }
         }
 
@@ -92,6 +96,7 @@ namespace Ux
         {
             _defaultSystem.Off(action);
         }
+
 
         void IEventOff.Off<A>(int eType, object tag, Action<A> action)
         {
@@ -126,6 +131,10 @@ namespace Ux
         public void OffTag(object tag)
         {
             _defaultSystem.OffTag(tag);
+        }
+        public void Off(long key)
+        {
+            _defaultSystem.Off(key);
         }
     }
 }
