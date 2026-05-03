@@ -1,22 +1,25 @@
-﻿using System;
+using System;
+using System.Threading;
 using UnityEngine;
 
 namespace Ux
 {
     public static class IDGenerater
     {
-        private static ushort value;
+        private static long value;
+
         public static long GenerateId()
-        {            
-            return ++value;
+        {
+            return Interlocked.Increment(ref value);
         }
+
         public static long GenerateId(int a, int b)
         {
             long low = Math.Min(a, b) & 0xFFFFFFFFL;
             long high = Math.Max(a, b) & 0xFFFFFFFFL;
             return (high << 32) | low;
         }
-        
+
         //通过哈希扩散，有概率冲突，但很低
         public static long GenerateId(int a, int b, int c)
         {

@@ -16,8 +16,8 @@ namespace Ux
 
             public bool Equals(EventSignature other)
             {
-                return Action == other.Action &&
-                       Tag == other.Tag &&
+                return ReferenceEquals(Action, other.Action) &&
+                       ReferenceEquals(Tag, other.Tag) &&
                        EType == other.EType;
             }
 
