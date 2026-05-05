@@ -1,16 +1,47 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using System;
+using UnityEngine;
 
 namespace Ux
 {
     public partial class UIMgr
     {
-        /// <summary>
-        /// 创建UI构建器
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        private sealed class ShowSession
+        {
+            public int RequestedId { get; private set; }
+            public int TargetId { get; private set; }
+            public IUIParam Param { get; private set; }
+            public bool IsAnim { get; private set; }
+            public bool CheckStack { get; private set; }
+            public readonly List<int> Chain = new List<int>();
+            internal readonly List<UIRecord> Activated = new List<UIRecord>();
+            public int RootId => Chain.Count > 0 ? Chain[0] : TargetId;
+
+            public void Reset(int requestedId, int targetId, IUIParam param, bool isAnim, bool checkStack)
+            {
+                RequestedId = requestedId;
+                TargetId = targetId;
+                Param = param;
+                IsAnim = isAnim;
+                CheckStack = checkStack;
+                Chain.Clear();
+                Activated.Clear();
+            }
+
+            public void Release()
+            {
+                RequestedId = 0;
+                TargetId = 0;
+                Param = null;
+                IsAnim = true;
+                CheckStack = true;
+                Chain.Clear();
+                Activated.Clear();
+                Pool.Push(this);
+            }
+        }
+
         public UIShowBuilder Create(int id = 0)
         {
             var builder = Pool.Get<UIShowBuilder>();
@@ -26,137 +57,283 @@ namespace Ux
                 return default;
             }
 
-            var childID = data.GetChildID();
-            if (_CheckDownload(childID, param, isAnim))
+            var targetId = data.GetChildID();
+            if (_CheckDownload(targetId, param, isAnim))
             {
                 return default;
             }
 
-            if (_cacheHandler.CreatedDels.Contains(id))
+            var targetRecord = GetRecord(targetId);
+            if (ShouldSkipShowRequest(targetRecord))
             {
-                _cacheHandler.CreatedDels.Remove(id);
+                return targetRecord?.UI is T cachedUI ? cachedUI : default;
             }
 
-            var uis = Pool.Get<List<IUI>>();
-            var succ = await _ShowAsync(childID, uis);
-            if (succ)
+            var session = Pool.Get<ShowSession>();
+            session.Reset(id, targetId, param, isAnim, checkStack);
+            try
             {
-                for (int i = 0; i < uis.Count; i++)
+                BuildShowChain(targetId, session.Chain);
+                var success = await RunShowSession(session);
+                if (!success)
                 {
-                    var uiid = uis[i].ID;
-                    if (_cacheHandler.CreatedDels.Contains(uiid))
-                    {
-                        succ = false;
-                        _cacheHandler.CreatedDels.Remove(uiid);
-                    }
+                    return default;
                 }
+
+                var record = GetRecord(id);
+                return record?.UI is T ui ? ui : default;
             }
-
-            foreach (var ui in uis)
+            finally
             {
-                var uiid = ui.ID;
-                if (!succ)
-                {
-                    // 只有当界面不是已显示状态时才销毁
-                    // 避免父界面已显示但子界面创建失败时错误销毁父界面
-                    if (!_showed.ContainsKey(uiid))
-                    {
-                        _cacheHandler.CheckDestroy(ui);
-                    }
-                    _FinishPendingShow(uiid, null);
-                    continue;
-                }
-                await ui.DoShow(isAnim, id, uiid == id ? param : null, checkStack);
-
-                if (_showed.ContainsKey(uiid))
-                {
-                    continue;
-                }
-                _showed.Add(uiid, ui);
-                _FinishPendingShow(uiid, ui);
-            }
-
-            uis.Clear();
-            Pool.Push(uis);
-
-#if UNITY_EDITOR
-            __Debugger_Showing_Event();
-            __Debugger_Showed_Event();
-#endif
-            return succ ? (T)_showed[id] : default;
-        }
-
-        private void _FinishPendingShow(int id, IUI ui)
-        {
-            if (_pendingShows.TryGetValue(id, out var tcs))
-            {
-                tcs.TrySetResult(ui);
-                _pendingShows.Remove(id);
+                session.Release();
             }
         }
 
-        private async UniTask<bool> _ShowAsync(int id, ICollection<IUI> uis)
+        private void BuildShowChain(int targetId, List<int> chain)
         {
-            var data = GetUIData(id);
+            chain.Clear();
+            var data = GetUIData(targetId);
             if (data == null)
+            {
+                return;
+            }
+
+            var parents = data.GetParentIDs();
+            if (parents != null)
+            {
+                for (int i = parents.Count - 1; i >= 0; i--)
+                {
+                    chain.Add(parents[i]);
+                }
+            }
+            chain.Add(targetId);
+        }
+
+        // Show is split into clear phases so request invalidation is only handled at a few choke points.
+        private async UniTask<bool> RunShowSession(ShowSession session)
+        {
+            // 1. Ensure every node in the parent-child chain has a usable instance.
+            if (!await PrepareShowChain(session))
             {
                 return false;
             }
 
-            if (data.TabData != null && data.TabData.PID != 0)
+            // 2. Start every node without serially waiting on parent animations.
+            if (!await StartShowChain(session))
             {
-                if (!await _ShowAsync(data.TabData.PID, uis))
+                return false;
+            }
+
+            // 3. The request is considered complete when the requested target becomes visible.
+            if (!await WaitForTargetVisible(session))
+            {
+                return false;
+            }
+
+            // 4. Drop stale completions after the target wins the race.
+            if (!ValidateShowChain(session))
+            {
+                return false;
+            }
+
+            ReconcileRootChildren(session);
+            return true;
+        }
+
+        // Build or reuse all records needed by the target chain before any show callback mutates visible state.
+        private async UniTask<bool> PrepareShowChain(ShowSession session)
+        {
+            for (int i = 0; i < session.Chain.Count; i++)
+            {
+                var nodeId = session.Chain[i];
+                var record = GetOrCreateRecord(nodeId);
+                var version = NextRequestVersion(record);
+                RegisterRecordToRoot(record, session.RootId);
+                record.CurrentChildId = session.TargetId;
+                record.LastShowParam = nodeId == session.RequestedId ? session.Param : null;
+                record.LastShowRequestFrame = Time.frameCount;
+
+                if (!await PrepareRecordForShow(record, version))
                 {
+                    await AbortShowSession(session, i);
+                    return false;
+                }
+
+                session.Activated.Add(record);
+            }
+
+            return true;
+        }
+
+        // Parent and child shows are started back-to-back; only the requested target is awaited to visible.
+        private async UniTask<bool> StartShowChain(ShowSession session)
+        {
+            for (int i = 0; i < session.Activated.Count; i++)
+            {
+                var record = session.Activated[i];
+                if (!IsRequestCurrent(record, record.RequestVersion))
+                {
+                    await AbortShowSession(session, i);
+                    return false;
+                }
+
+                record.Phase = UIPhase.Showing;
+                record.LastShowStartFrame = Time.frameCount;
+                _showing[record.Id] = record.RequestVersion;
+                record.PendingVisible = new UniTaskCompletionSource<bool>();
+                await record.UI.DoShow(session.IsAnim, session.RequestedId,
+                    record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
+            }
+
+            return true;
+        }
+
+        private async UniTask<bool> WaitForTargetVisible(ShowSession session)
+        {
+            var targetRecord = session.Activated[session.Activated.Count - 1];
+            if (targetRecord.IsVisibleCommitted)
+            {
+                return IsRequestCurrent(targetRecord, targetRecord.RequestVersion);
+            }
+
+            if (targetRecord.PendingVisible != null)
+            {
+                await targetRecord.PendingVisible.Task;
+            }
+            return IsRequestCurrent(targetRecord, targetRecord.RequestVersion);
+        }
+
+        // Once the target wins, every record in the chain must still belong to the same request version.
+        private bool ValidateShowChain(ShowSession session)
+        {
+            for (int i = 0; i < session.Activated.Count; i++)
+            {
+                var record = session.Activated[i];
+                _showing.Remove(record.Id);
+                if (!IsRequestCurrent(record, record.RequestVersion))
+                {
+                    AbortShowSession(session, i + 1).Forget();
                     return false;
                 }
             }
 
-            if (_showed.TryGetValue(id, out var ui))
+            return true;
+        }
+
+        private async UniTask<bool> PrepareRecordForShow(UIRecord record, int version)
+        {
+            if (record.UI != null && record.IsVisibleCommitted)
             {
-                uis.Add(ui);
                 return true;
             }
 
-            if (_pendingShows.TryGetValue(id, out var pendingTcs))
+            if (record.PendingHide != null)
             {
-                ui = await pendingTcs.Task;
-                if (ui == null) return false;
-                uis.Add(ui);
-                return true;
-            }
-            var tcs = AutoResetUniTaskCompletionSource<IUI>.Create();
-            _pendingShows.Add(id, tcs);
-#if UNITY_EDITOR
-            __Debugger_Showing_Event();
-#endif
-
-            if (_cacheHandler.WaitDels.TryGetValue(id, out var wd))
-            {
-                wd.GetUI(out ui);
-            }
-            else if (_cacheHandler.Cache.TryGetValue(id, out ui))
-            {
-                _cacheHandler.Cache.Remove(id);
-#if UNITY_EDITOR
-                __Debugger_Cacel_Event();
-#endif
-            }
-            else
-            {
-                ui = await CreateUI(data);
+                // A later show can legally reuse the same record after the previous hide settles.
+                await record.PendingHide.Task;
+                record.PendingHide = null;
             }
 
-            if (ui == null)
+            if (_cacheHandler.TryTakeCached(record.Id, out var cached))
             {
-                _FinishPendingShow(id, null);
-#if UNITY_EDITOR
-                __Debugger_Showing_Event();
-#endif
+                record.UI = cached;
+                record.Phase = UIPhase.Hidden;
+                record.WaitDel = null;
+                record.CacheState = CacheState.None;
+                return IsRequestCurrent(record, version);
+            }
+
+            record.Phase = UIPhase.Creating;
+            var created = await CreateUI(GetUIData(record.Id));
+            if (!IsRequestCurrent(record, version))
+            {
+                if (created != null)
+                {
+                    _cacheHandler.TrackHidden(created, record.Id);
+                }
                 return false;
             }
 
-            uis.Add(ui);
+            if (created == null)
+            {
+                record.Phase = UIPhase.Idle;
+                return false;
+            }
+
+            record.UI = created;
+            record.Phase = UIPhase.Hidden;
             return true;
+        }
+
+        private async UniTask AbortShowSession(ShowSession session, int activatedCount)
+        {
+            for (int i = activatedCount - 1; i >= 0; i--)
+            {
+                var record = session.Activated[i];
+                if (record == null || record.UI == null)
+                {
+                    continue;
+                }
+
+                if (record.IsVisibleCommitted)
+                {
+                    continue;
+                }
+
+                record.Phase = UIPhase.Hidden;
+                _cacheHandler.TrackHidden(record);
+                record.PendingVisible?.TrySetResult(false);
+                record.PendingVisible = null;
+            }
+
+            await UniTask.CompletedTask;
+        }
+
+        private void ReconcileRootChildren(ShowSession session)
+        {
+            for (int i = 0; i < session.Activated.Count; i++)
+            {
+                var record = session.Activated[i];
+                record.ParentRootId = session.RootId;
+                record.CurrentChildId = session.TargetId;
+            }
+
+            foreach (var kv in _records)
+            {
+                var record = kv.Value;
+                if (record.Id == session.RootId || record.Id == session.TargetId)
+                {
+                    continue;
+                }
+
+                if (record.ParentRootId != session.RootId)
+                {
+                    continue;
+                }
+
+                if (!record.IsVisibleCommitted || record.UI == null)
+                {
+                    continue;
+                }
+
+                // Only one child under the same root should remain visible after a tab switch.
+                NextRequestVersion(record);
+                record.PendingHide = new UniTaskCompletionSource<bool>();
+                record.Phase = UIPhase.Hiding;
+                record.UI.DoHide(false, false);
+            }
+        }
+
+        // Tabs inherit stack type from their root container instead of deciding it independently.
+        private UIType ResolveStackType(IUI ui, int rootId)
+        {
+            if (ui is not UITabView)
+            {
+                return ui.Type;
+            }
+
+            var rootRecord = GetRecord(rootId);
+            return rootRecord?.UI?.Type ?? ui.Type;
         }
 
         private async UniTask<IUI> CreateUI(IUIData data)
@@ -165,19 +342,40 @@ namespace Ux
             {
                 if (!await ResMgr.Ins.LoadUIPackage(data.Pkgs))
                 {
-                    Log.Error($"[{data.Name}]包加载错误");
+                    Log.Error($"[{data.Name}]鍖呭姞杞介敊璇?");
                     return null;
                 }
             }
+
             var ui = (IUI)Activator.CreateInstance(data.CType);
             ui.InitData(data, _initData);
             return ui;
         }
 
-        void _ShowCallback(IUI ui, IUIParam param, bool isStack)
+        void _OnUIShown(IUI ui, IUIParam param, bool checkStack)
         {
-            _stackHandler.OnShowed(ui, param, isStack);
+            var record = GetRecord(ui.ID);
+            if (record == null)
+            {
+                return;
+            }
+
+            AttachVisibleRecord(record);
+            record.LastVisibleFrame = Time.frameCount;
+            var rootId = record.ParentRootId == 0 ? record.Id : record.ParentRootId;
+            if (checkStack)
+            {
+                _stackHandler.CommitVisible(rootId, record.CurrentChildId == 0 ? record.Id : record.CurrentChildId,
+                    param, ResolveStackType(ui, rootId));
+            }
             _blurHandler.OnShowed(ui);
+            record.PendingVisible?.TrySetResult(true);
+            record.PendingVisible = null;
+
+            if (_showing.TryGetValue(ui.ID, out var version) && version == record.RequestVersion)
+            {
+                _showing.Remove(ui.ID);
+            }
         }
     }
 }

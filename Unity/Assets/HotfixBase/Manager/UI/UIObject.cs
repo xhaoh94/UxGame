@@ -127,15 +127,9 @@ namespace Ux
         }
 
 
-        protected virtual void OnInit()
-        {
-        }
+        protected virtual void OnInit() { }
 
-    
-        protected virtual void CreateChildren()
-        {
-
-        }
+        protected virtual void CreateChildren() { }
 
         // 缓存动画完成回调，避免Lambda闭包分配
         private Action _onShowAnimComplete;
@@ -174,7 +168,7 @@ namespace Ux
         {
             State = UIState.Show;
         }
-        void _ChangeAsync(bool b)
+        private void _ChangeAsync(bool b)
         {
             if (this is IUIAsync async)
             {
@@ -227,21 +221,10 @@ namespace Ux
             }
             OnOverwrite();
         }
-        protected virtual void OnOverwrite()
-        {
-        }
-        protected virtual void OnShow()
-        {
-        }
-
-        protected virtual void OnShowAnimComplete()
-        {
-        }
-
-        protected virtual void OnAddEvent()
-        {
-
-        }
+        protected virtual void OnOverwrite() { }
+        protected virtual void OnShow() { }
+        protected virtual void OnShowAnimComplete() { }
+        protected virtual void OnAddEvent() { }
 
         protected virtual void ToHide(bool isAnim, bool checkStack, CancellationTokenSource token)
         {
@@ -307,7 +290,6 @@ namespace Ux
             {
                 return;
             }
-            OnHideAnimComplete();
             OnHideCallback?.Invoke();
         }
 
@@ -316,17 +298,7 @@ namespace Ux
         /// 不要在这里注册定时器或是监听事件。
         /// 在这里注册的定时器或是事件，都会流程给清空的
         /// </summary>
-        protected virtual void OnHide()
-        {
-        }
-        /// <summary>
-        /// 注意！！！
-        /// 不要在这里注册定时器或是监听事件。
-        /// 在这里注册的定时器或是事件，都会流程给清空的
-        /// </summary>
-        protected virtual void OnHideAnimComplete()
-        {
-        }
+        protected virtual void OnHide() { }
 
         protected void ToDispose(bool isDisposeGObject = true)
         {
@@ -350,9 +322,7 @@ namespace Ux
             Parent = null;
         }
 
-        protected virtual void OnDispose()
-        {
-        }
+        protected virtual void OnDispose() { }
 
 
         #region 事件

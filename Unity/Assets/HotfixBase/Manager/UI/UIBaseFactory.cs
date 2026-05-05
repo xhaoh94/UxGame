@@ -8,7 +8,8 @@ namespace Ux
         protected readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
         protected readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
         protected readonly HashSet<int> _showed = new HashSet<int>();
-        protected readonly Dictionary<Type, int> _typeToIdCache = new Dictionary<Type, int>();
+        // A type may have multiple waiting instances, so a FIFO queue is more correct than a single cached id.
+        protected readonly Dictionary<Type, Queue<int>> _typeToIdCache = new Dictionary<Type, Queue<int>>();
 
         protected void OnShow(TUI ui)
         {
@@ -21,7 +22,13 @@ namespace Ux
             if (ui.HideDestroyTime >= 0)
             {
                 _waitDels.Add(ui.ID, ui);
-                _typeToIdCache[ui.GetType()] = ui.ID;
+                var type = ui.GetType();
+                if (!_typeToIdCache.TryGetValue(type, out var ids))
+                {
+                    ids = new Queue<int>();
+                    _typeToIdCache.Add(type, ids);
+                }
+                ids.Enqueue(ui.ID);
             }
             else
             {
@@ -38,7 +45,28 @@ namespace Ux
         {
             if (_waitDels.TryGetValue(id, out var ui))
             {
-                _typeToIdCache.Remove(ui.GetType());
+                var type = ui.GetType();
+                if (_typeToIdCache.TryGetValue(type, out var ids))
+                {
+                    var keep = new Queue<int>();
+                    while (ids.Count > 0)
+                    {
+                        var cachedId = ids.Dequeue();
+                        if (cachedId != id)
+                        {
+                            keep.Enqueue(cachedId);
+                        }
+                    }
+
+                    if (keep.Count == 0)
+                    {
+                        _typeToIdCache.Remove(type);
+                    }
+                    else
+                    {
+                        _typeToIdCache[type] = keep;
+                    }
+                }
             }
             _waitDels.Remove(id);
         }
@@ -56,11 +84,23 @@ namespace Ux
                 return ids.Dequeue();
             }
 
-            if (_typeToIdCache.TryGetValue(type, out var cachedId) && _waitDels.ContainsKey(cachedId))
+            if (_typeToIdCache.TryGetValue(type, out var cachedIds))
             {
-                _waitDels.Remove(cachedId);
+                while (cachedIds.Count > 0)
+                {
+                    var cachedId = cachedIds.Dequeue();
+                    if (_waitDels.ContainsKey(cachedId))
+                    {
+                        _waitDels.Remove(cachedId);
+                        if (cachedIds.Count == 0)
+                        {
+                            _typeToIdCache.Remove(type);
+                        }
+                        return cachedId;
+                    }
+                }
+
                 _typeToIdCache.Remove(type);
-                return cachedId;
             }
 
             var data = new UIData((int)IDGenerater.GenerateId(), type);

@@ -33,10 +33,12 @@ namespace Ux
                     roleMask = 1,
                 }
             };
-            GameMain.Machine.Enter<StateGameIn>();
-            TimeMgr.Ins.Timer(10, this, Test1).Repeat(1).Build();
-            TimeMgr.Ins.Timer(9, this, Test2).Repeat(1).Build();
-            TimeMgr.Ins.Timer(80, this, Test3).Repeat(1).Build();
+            // GameMain.Machine.Enter<StateGameIn>();
+            // TimeMgr.Ins.Timer(10, this, Test1).Repeat(1).Build();
+            // TimeMgr.Ins.Timer(9, this, Test2).Repeat(1).Build();
+            // TimeMgr.Ins.Timer(80, this, Test3).Repeat(1).Build();
+
+     
         }
         void Test1()
         {

@@ -58,15 +58,15 @@ namespace Ux
             }
 
             var showed = _callback.GetShowedDict();
-            foreach (var kv in showed)
+            var topBlurId = blurStack?.ID ?? 0;
+            foreach (var ui in showed.Values)
             {
-                var ui = kv.Value;
                 if (blurStack == null)
                 {
                     ui.Filter = null;
                     continue;
                 }
-                if (kv.Key == blurStack.Value.ID)
+                if (ui.ID == topBlurId)
                 {
                     ui.Filter = null;
                     continue;

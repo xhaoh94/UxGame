@@ -1,115 +1,167 @@
-﻿using FairyGUI;
-using System;
+﻿using Cysharp.Threading.Tasks;
+using FairyGUI;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Ux.UI
 {
-    [UI]
     public partial class TestView
     {
-        protected override UILayer Layer => UILayer.View;
-        public override UIType Type => UIType.Stack;
-        public override UIBlur Blur => UIBlur.Blur;
+        bool _runningUiChecklist;
 
-        protected override void OnInit()
-        {
-            base.OnInit();
-            testList.SetItemRenderer<TestItem>();
-            testList.SetItemProvider((int index) =>
-            {
-                var id = testList.GetData<int>(index);
-                if (id % 2 == 0) return typeof(Test22Item);
-                return typeof(TestItem);
-            });
-        }
-        protected override void OnShow()
-        {
-            base.OnShow();
-            var loader = new UxLoader();
-            loader.autoSize = true;
-            loader.url = "130G_TieKuang";
-            GObject.asCom.AddChild(loader);
-
-            // testUIModel.CloneMaterial = true;
-            // testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
-
-            // testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_ZS")).Play(string.Format(PathHelper.Res.Prefab, "Hero_ZS@Stand"));
-
-            testList.SetDatas(new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 });
-            TimeMgr.Ins.Timer(5, this, () =>
-            {
-                testList.SetDatas(new List<int> { 5, 4, 3, 2, 1, 0 });
-                EventMgr.Ins.Run(EventType.Test_EventCall);
-                //testList.List.ScrollToView(7);
-                //EventMgr.Ins.Run(11111111);
-            }).Repeat(1).Build();
-            //EventMgr.Ins.Run(11111111);
-        }
-        partial void OnBtnMultipleClick(EventContext e)
-        {
-            UIMgr.Ins.Create().Show<Multiple2TabView>();
-            //UIMgr.Ins.Hide<Multiple2TabView>();
-            UIMgr.Ins.Create().Show<Multiple3TabView>();
-        }
-        partial void OnBtnNoneViewClick(EventContext e)
-        {
-            UIMgr.Ins.Create().Show<TipView>();            
-        }
-        partial void OnBtnNoneWindowClick(EventContext e)
-        {
-            UIMgr.Ins.Create().Show<BagWindow>();        
-        }
         partial void OnBtnTestClick(EventContext e)
         {
+            if (_runningUiChecklist)
+            {
+                Log.Warning("UI 验收正在执行中，请稍后");
+                return;
+            }
 
-            // var messageBox3 = UIMgr.Dialog.Create();
-            // messageBox3.SetCheckBox("_test", "本次登录不显示咯");
-            // messageBox3.SetTitle("提示1");
-            // messageBox3.SetContent("测试弹窗2");
-            // messageBox3.SetBtn1(() =>
-            // {
-            //      Log.Debug("CheckBox");
-            // });
-            // messageBox3.Show();
+            RunUiChecklist().Forget();
+        }
 
-            // var messageBox1 = UIMgr.Dialog.Create();            
-            // messageBox1.SetTitle("提示1");
-            // messageBox1.SetContent("测试弹窗1");            
-            // messageBox1.Show();
+        async UniTaskVoid RunUiChecklist()
+        {
+            _runningUiChecklist = true;
+            Log.Info("========== UI 手工验收开始 ==========");
 
-            var messageBox2 = UIMgr.Dialog.Create();
-            messageBox2.SetTitle("提示2");
-            messageBox2.SetContent("测试弹窗2");            
-            messageBox2.Show();
+            try
+            {
+                await Case_ShowHide_Single();
+                await Case_Tab_B_Hide_B_Show_C();
+                await Case_Tab_FastShowHide_Twice();
+                await Case_Login_To_Main();
+                await Case_Stack_Open_Close();
+                await Case_CacheAndReuse();
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error($"UI 验收中断: {ex}");
+            }
+            finally
+            {
+                Log.Info("========== UI 手工验收结束 ==========");
+                _runningUiChecklist = false;
+            }
         }
-        partial void OnBtnSingleClick(EventContext e)
+
+        async UniTask Case_ShowHide_Single()
         {
-            Log.Debug("单击");
-            UIMgr.Tip.Show("单击");
-            // testRtModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
+            Log.Info("[Case] 单界面显示/关闭开始");
+            await UIMgr.Ins.Create().Show<BagWindow>().Task();
+            await UniTask.DelayFrame(2);
+            UIMgr.Ins.Hide<BagWindow>();
+            await UniTask.DelayFrame(10);
+            DumpUiState("[Case] 单界面显示/关闭结束");
         }
-        partial void OnBtnDoubleMultipleClick(EventContext e)
+
+        async UniTask Case_Tab_B_Hide_B_Show_C()
         {
-            Log.Debug("双击");
-            UIMgr.Tip.Show("双击");
-            // testUIModel.Load(string.Format(PathHelper.Res.Prefab, "Hero_CK")).Play(string.Format(PathHelper.Res.Prefab, "Hero_CK@Idle01"));
+            Log.Info("[Case] Show(B) -> Hide(B) -> Show(C) 开始");
+            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            await UniTask.DelayFrame(1);
+            UIMgr.Ins.Hide<Multiple2TabView>();
+            await UniTask.DelayFrame(1);
+            UIMgr.Ins.Create().Show<Multiple3TabView>();
+            await UniTask.DelayFrame(20);
+            DumpUiState("[Case] Show(B) -> Hide(B) -> Show(C) 结束");
+            UIMgr.Ins.Hide<Multiple3TabView>();
+            await UniTask.DelayFrame(10);
         }
-        partial void OnBtnLongClickLongPress(ref bool isBreak)
+
+        async UniTask Case_Tab_FastShowHide_Twice()
         {
-            Log.Debug("长按");
-            UIMgr.Tip.Show("长按");
+            Log.Info("[Case] 快速 Show/Hide Multiple2TabView 两次 开始");
+
+            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            UIMgr.Ins.Hide<Multiple2TabView>();
+            await UniTask.DelayFrame(15);
+            DumpUiState("[Case] 第一次快速开关结束");
+
+            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            UIMgr.Ins.Hide<Multiple2TabView>();
+            await UniTask.DelayFrame(15);
+            DumpUiState("[Case] 第二次快速开关结束");
         }
-        partial void OnBtnBackClick(EventContext e)
+
+        async UniTask Case_Login_To_Main()
         {
-            HideSelf();
+            Log.Info("[Case] Login -> Main 开始");
+            await UIMgr.Ins.Create().Show<LoginView>().Task();
+            await UniTask.DelayFrame(2);
+            await UIMgr.Ins.Create().Show<MainView>().Task();
+            UIMgr.Ins.Hide<LoginView>();
+            await UniTask.DelayFrame(20);
+            DumpUiState("[Case] Login -> Main 结束");
+
+            UIMgr.Ins.Hide<MainView>();
+            await UniTask.DelayFrame(10);
         }
-        partial void OnTestListItemClick(IItemRenderer e)
+
+        async UniTask Case_Stack_Open_Close()
         {
-            Log.Debug(e.Index);
+            Log.Info("[Case] Stack 链路开始");
+            await UIMgr.Ins.Create().Show<Stack1View>().Task();
+            await UniTask.DelayFrame(2);
+
+            UIMgr.Ins.Create().Show<Stack2View>();
+            await UniTask.DelayFrame(10);
+
+            UIMgr.Ins.Create().Show<Stack3View>();
+            await UniTask.DelayFrame(10);
+
+            UIMgr.Ins.Hide<Stack3View>();
+            await UniTask.DelayFrame(10);
+
+            UIMgr.Ins.Hide<Stack2View>();
+            await UniTask.DelayFrame(10);
+
+            UIMgr.Ins.Hide<Stack1View>();
+            await UniTask.DelayFrame(10);
+
+            DumpUiState("[Case] Stack 链路结束");
+        }
+
+        async UniTask Case_CacheAndReuse()
+        {
+            Log.Info("[Case] 缓存复用开始");
+            await UIMgr.Ins.Create().Show<TipView>().Task();
+            await UniTask.DelayFrame(2);
+            UIMgr.Ins.Hide<TipView>();
+            await UniTask.DelayFrame(10);
+
+            await UIMgr.Ins.Create().Show<TipView>().Task();
+            await UniTask.DelayFrame(10);
+
+            DumpUiState("[Case] 缓存复用结束");
+            UIMgr.Ins.Hide<TipView>();
+            await UniTask.DelayFrame(10);
+        }
+
+        void DumpUiState(string title)
+        {
+            var dbg = (IUIMgrDebuggerAccess)UIMgr.Ins;
+
+            Log.Info(title);
+            Log.Info($"ShowedUI: {string.Join(", ", dbg.GetShowedUI())}");
+            Log.Info($"ShowingUI: {string.Join(", ", dbg.GetShowingUI())}");
+            Log.Info($"CacheUI: {string.Join(", ", dbg.GetCacheUI())}");
+            Log.Info($"WaitDelUI: {string.Join(", ", dbg.GetWaitDelUI())}");
+
+            var stacks = dbg.GetUIStacks();
+            if (stacks == null || stacks.Count == 0)
+            {
+                Log.Info("UIStacks: <empty>");
+                return;
+            }
+
+            var parts = new List<string>(stacks.Count);
+            for (int i = 0; i < stacks.Count; i++)
+            {
+                var s = stacks[i];
+                parts.Add($"[{i}] Parent={s.ParentID}, ID={s.ID}, Type={s.Type}");
+            }
+            Log.Info($"UIStacks: {string.Join(" | ", parts)}");
         }
     }
 }

@@ -46,16 +46,19 @@ namespace Ux
             int _id;
             IUIParam _param;
             bool _isAnim;
+
             public UIShowBuilder SetId(int id)
             {
                 _id = id;
                 return this;
             }
+
             public UIShowBuilder SetParam(IUIParam param)
             {
                 _param = param;
                 return this;
             }
+
             public UIShowBuilder SetAnim(bool isAnim)
             {
                 _isAnim = isAnim;
@@ -68,11 +71,12 @@ namespace Ux
                 {
                     _id = Ins.ConverterID(typeof(T));
                 }
-                var task = Ins._ShowAsync<T>(_id, _param, _isAnim, true);      
-                _Release();         
+                var task = Ins._ShowAsync<T>(_id, _param, _isAnim, true);
+                _Release();
                 return new UITask<T>(task);
             }
-            public  UITask<IUI> Show()
+
+            public UITask<IUI> Show()
             {
                 var task = Ins._ShowAsync<IUI>(_id, _param, _isAnim, true);
                 _Release();
@@ -87,19 +91,18 @@ namespace Ux
                 Pool.Push(this);
             }
         }
+
         public readonly struct CallbackData
         {
-            public CallbackData(Action<IUI, IUIParam, bool> _showCb, Action<IUI> _hideCb, Func<IUI, bool, bool> _stackCb)
+            public CallbackData(Action<IUI, IUIParam, bool> showCb, Action<IUI> hideCb)
             {
-                showCb = _showCb;
-                hideCb = _hideCb;
-                stackCb = _stackCb;                
+                this.showCb = showCb;
+                this.hideCb = hideCb;
             }
             public readonly Action<IUI, IUIParam, bool> showCb;
             public readonly Action<IUI> hideCb;
-            public readonly Func<IUI, bool, bool> stackCb;            
         }
-        
+
         public struct BlurStack
         {
             public readonly UIBlur Blur;

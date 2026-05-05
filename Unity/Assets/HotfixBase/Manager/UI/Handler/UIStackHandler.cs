@@ -1,143 +1,85 @@
 using System.Collections.Generic;
-using static Ux.UIMgr;
 
 namespace Ux
 {
-    public class UIStackHandler
+    internal class UIStackHandler
     {
-        private readonly IUIStackHandlerCallback _callback;
-        private readonly List<UIStack> _uiStacks = new List<UIStack>();
-        private readonly Stack<UIStack> _backStacks = new Stack<UIStack>();
+        private readonly List<UIMgr.StackEntry> _entries;
 
-        public List<UIStack> UIStacks => _uiStacks;
-
-        public UIStackHandler(IUIStackHandlerCallback callback)
+        internal UIStackHandler(List<UIMgr.StackEntry> entries)
         {
-            _callback = callback;
+            _entries = entries;
         }
 
-        public void Clear()
+        internal void Clear()
         {
-            _uiStacks.Clear();
-            _backStacks.Clear();
+            _entries.Clear();
         }
 
-        public void OnShowed(IUI ui, IUIParam param, bool checkStack)
+        internal void CommitVisible(int rootId, int activeId, IUIParam param, UIType type)
         {
-            var uiType = ui.Type;
-            if (!checkStack || uiType == UIType.Fixed)
+            if (type == UIType.Fixed)
             {
                 return;
             }
 
-            var parentID = ui.Data.GetParentID();
-            if (_uiStacks.Count > 0)
+            if (_entries.Count > 0)
             {
-                var lastStack = _uiStacks[_uiStacks.Count - 1];
-                if (lastStack.ParentID == parentID)
+                var lastIndex = _entries.Count - 1;
+                var last = _entries[lastIndex];
+                if (last.RootId == rootId)
                 {
-                    lastStack.ID = ui.ID;
-                    lastStack.Param = param;
-                    _uiStacks[_uiStacks.Count - 1] = lastStack;
+                    _entries[lastIndex] = new UIMgr.StackEntry(rootId, activeId, param, type);
 #if UNITY_EDITOR
-                    __Debugger_Stack_Event();
+                    UIMgr.__Debugger_Stack_Event();
 #endif
                     return;
                 }
             }
 
-            _uiStacks.Add(new UIStack(parentID, ui.ID, param, uiType));
+            _entries.Add(new UIMgr.StackEntry(rootId, activeId, param, type));
 #if UNITY_EDITOR
-            __Debugger_Stack_Event();
+            UIMgr.__Debugger_Stack_Event();
 #endif
-            if (uiType == UIType.Stack)
-            {
-                for (var i = _uiStacks.Count - 2; i >= 0; i--)
-                {
-                    var preStack = _uiStacks[i];
-                    if (preStack.ParentID == ui.ID)
-                    {
-                        continue;
-                    }
-                    _HideByStack(preStack);
-                    if (preStack.Type == UIType.Stack)
-                    {
-                        break;
-                    }
-                }
-            }
         }
 
-        public bool OnHide(IUI ui, bool checkStack = false)
+        internal void RemoveRoot(int rootId)
         {
-            if (_uiStacks.Count > 0)
+            for (int i = _entries.Count - 1; i >= 0; i--)
             {
-                var lastIndex = _uiStacks.Count - 1;
-                var last = _uiStacks[lastIndex];
-                if (last.ID == ui.ID || last.ParentID == ui.ID)
+                if (_entries[i].RootId == rootId)
                 {
-                    _uiStacks.RemoveAt(lastIndex);
+                    _entries.RemoveAt(i);
+                }
+            }
 #if UNITY_EDITOR
-                    __Debugger_Stack_Event();
+            UIMgr.__Debugger_Stack_Event();
 #endif
-                }
-            }
-            bool shouldBreak = false;
-            if (checkStack && ui.Type == UIType.Stack)
-            {
-                _backStacks.Clear();
-                for (int i = _uiStacks.Count - 1; i >= 0; i--)
-                {
-                    var preStack = _uiStacks[i];
-                    if (preStack.Type == UIType.Stack)
-                    {
-                        if (ui.ID == preStack.ID)
-                        {
-                            shouldBreak = true;
-                        }
-                        else
-                        {
-                            _backStacks.Push(preStack);
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        _backStacks.Push(preStack);
-                    }
-                }
-                while (_backStacks.Count > 0)
-                {
-                    var preStack = _backStacks.Pop();
-                    _ShowByStack(preStack);
-                }
-            }
-            return shouldBreak;
         }
 
-        void _ShowByStack(UIStack stack)
+        internal bool ContainsActive(int id)
         {
-            _callback.ShowByStack(stack.ID, stack.Param);
-        }
-
-        void _HideByStack(UIStack stack)
-        {
-            IUI ui = null;
-            var id = stack.ParentID;
-            if (_callback.IsShowing(id))
+            for (int i = _entries.Count - 1; i >= 0; i--)
             {
-                if (!_callback.IsInCreatedDels(id)) _callback.AddToCreatedDels(id);
-            }
-            else
-            {
-                ui = _callback.GetShowed(id);
-                if (ui != null && (ui.State == UIState.HideAnim || ui.State == UIState.Hide))
+                if (_entries[i].ActiveId == id)
                 {
-                    ui = null;
+                    return true;
                 }
             }
+            return false;
+        }
 
-            ui?.DoHide(false, false);
+        internal UIMgr.StackEntry? PeekPrevious(int rootId)
+        {
+            for (int i = _entries.Count - 1; i >= 0; i--)
+            {
+                if (_entries[i].RootId == rootId)
+                {
+                    continue;
+                }
+                return _entries[i];
+            }
+            return null;
         }
     }
 }

@@ -3,6 +3,9 @@ using Ux;
 using System;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEditor.UI;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace Ux.UI
 {
@@ -19,14 +22,18 @@ namespace Ux.UI
 
         partial void OnBtnLoginClick(EventContext e)
         {
-            LoginModule.Ins.Connect(OnConnect);
+            // LoginModule.Ins.Connect(OnConnect);
+            OnConnectAsync().Forget();
         }
 
-        void OnConnect()
+        async UniTaskVoid OnConnectAsync()
         {
-            int mask =(int) Mathf.Pow(2, camp.selectedIndex);
-            LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask).Forget();
+            // int mask =(int) Mathf.Pow(2, camp.selectedIndex);
+            // LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask).Forget();
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
+
+            await UIMgr.Ins.Create().Show<UI.MainView>().Task();
+            UIMgr.Ins.Hide<UI.LoginView>();
         }
 
     }

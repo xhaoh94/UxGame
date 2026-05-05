@@ -9,7 +9,7 @@
         protected override async void OnEnter()
         {
             Entity.Init();
-            await SceneModule.Ins.EnterScene("Map001");
+            // await SceneModule.Ins.EnterScene("Map001");
             await UIMgr.Ins.Create().Show<UI.MainView>().Task();
             UIMgr.Ins.Hide<UI.LoginView>();
 

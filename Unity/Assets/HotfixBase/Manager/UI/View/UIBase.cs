@@ -17,15 +17,13 @@ namespace Ux
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         /// <summary>
-        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默认60秒
+        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默�?0�?
         /// </summary>
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
 
         // 使用静态池复用CancellationTokenSource，减少GC
-        private static readonly Stack<CancellationTokenSource> _tokenPool = new Stack<CancellationTokenSource>();
-        
         CancellationTokenSource _showToken;
         CancellationTokenSource _hideToken;
 
@@ -62,24 +60,16 @@ namespace Ux
         }
         public IFilter Filter
         {
-            get
-            {
-                if (GObject == null) return null;
-                return GObject.filter;
-            }
+            get => GObject?.filter;
             set
             {
                 if (GObject == null) return;
                 GObject.filter = value;
             }
-
         }
         public bool Visible
         {
-            get
-            {
-                return GObject.visible;
-            }
+            get => GObject.visible;
             set
             {
                 if (GObject.visible != value)
@@ -96,6 +86,7 @@ namespace Ux
         {
             Hide(true);
         }
+
         public virtual void Hide(bool isAnim = true)
         {
             UIMgr.Ins.Hide(ID, isAnim);
@@ -105,11 +96,14 @@ namespace Ux
         {
             ObjAs<GComponent>()?.MakeFullScreen();
         }
+
         protected virtual void AddToStage() { }
+
         protected virtual void RemoveToStage()
         {
             GObject?.RemoveFromParent();
         }
+
         protected virtual void OnLayout() { }
 
         bool _async;
@@ -160,14 +154,15 @@ namespace Ux
             {
                 if (isAnim && ShowAnim != null)
                 {
-                    _showToken = GetTokenFromPool();
-                }                                
+                    _showToken = CreateToken();
+                }
                 (this as IUISetParam).SetParam(param);
                 ToShow(isAnim, id, checkStack, _showToken);
                 task.TrySetResult();
             }
             return task.Task;
         }
+
         void _Show(int id, IUIParam param, bool checkStack)
         {
             if (_showToken != null)
@@ -175,25 +170,19 @@ namespace Ux
                 ReturnTokenToPool(_showToken);
                 _showToken = null;
             }
-            if (id == ID && _cbData != null)
+
+            if (_cbData != null)
             {
                 _cbData.Value.showCb?.Invoke(this, param, checkStack);
             }
+
             EventMgr.Ins.Run(MainEventType.UI_SHOW, ID);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, GetType());
         }
 
         void IUI.DoHide(bool isAnim, bool checkStack)
         {
-            //子界面不需要检测栈，由最顶层父界面控制
-            if (_cbData != null && !(this is UITabView))
-            {
-                if (_cbData.Value.stackCb.Invoke(this, checkStack))
-                {
-                    return;
-                }
-            }
-
+            //子界面不需要检测栈，由最顶层父界面控�?
             switch (State)
             {
                 case UIState.Hide:
@@ -212,7 +201,7 @@ namespace Ux
             _ReleaseShowToken();
             void _DoHide()
             {
-                _hideToken = isAnim && HideAnim != null ? GetTokenFromPool() : null;
+                _hideToken = isAnim && HideAnim != null ? CreateToken() : null;
                 ToHide(isAnim, checkStack, _hideToken);
             }
         }
@@ -228,10 +217,12 @@ namespace Ux
             Filter = null;
             _cbData?.hideCb?.Invoke(this);
         }
+
         void IUI.Dispose()
         {
             ToDispose(true);
         }
+
         protected override void OnDispose()
         {
             _ReleaseShowToken();
@@ -241,6 +232,7 @@ namespace Ux
             _async = false;
             _asyncComplete = null;
         }
+
         void _ReleaseShowToken()
         {
             if (_showToken != null)
@@ -249,6 +241,7 @@ namespace Ux
                 _showToken = null;
             }
         }
+
         void _ReleaseHideToken()
         {
             if (_hideToken != null)
@@ -258,7 +251,7 @@ namespace Ux
             }
         }
         /// <summary>
-        /// 设置位置并添加关联关系
+        /// 设置位置并添加关联关�?
         /// </summary>
         private void _SetPositionAndRelations(float x, float y, bool restraint, RelationType rel1, RelationType rel2 = 0)
         {
@@ -334,30 +327,16 @@ namespace Ux
             GObject.RemoveRelation(parent, relation);
         }
 
-        // Token池管理方法
-        private static CancellationTokenSource GetTokenFromPool()
+        // Token池管理方�?
+        private static CancellationTokenSource CreateToken()
         {
-            lock (_tokenPool)
-            {
-                if (_tokenPool.Count > 0)
-                {
-                    var token = _tokenPool.Pop();
-                    // 检查Token是否已被取消
-                    if (!token.IsCancellationRequested)
-                    {
-                        return token;
-                    }
-                    // Token已被取消，丢弃并创建新的
-                }
-            }
             return new CancellationTokenSource();
         }
 
         private static void ReturnTokenToPool(CancellationTokenSource token)
         {
             if (token == null) return;
-            
-            // 取消Token（如果还未取消）
+
             try
             {
                 if (!token.IsCancellationRequested)
@@ -367,23 +346,11 @@ namespace Ux
             }
             catch (ObjectDisposedException)
             {
-                // Token已被释放，直接丢弃
                 return;
             }
-            
-            lock (_tokenPool)
-            {
-                // 限制池大小，避免内存泄漏
-                if (_tokenPool.Count < 10) // 限制最大10个
-                {
-                    _tokenPool.Push(token);
-                }
-                else
-                {
-                    // 池已满，释放Token
-                    token.Dispose();
-                }
-            }
+
+            token.Dispose();
         }
     }
 }
+
