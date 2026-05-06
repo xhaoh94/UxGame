@@ -1,11 +1,9 @@
-﻿using System.Threading;
-
+﻿
 namespace Ux
 {
     public abstract class UITabView : UIBase
     {
-        // Tab children can be shown before the parent has been committed into _showed,
-        // so parent lookup must use the prepared record instead of the visible dictionary.
+        // Tab子界面可能在父界面还未提交到_showed时就显示，所以查找父界面必须使用准备好的记录而不是可见字典
         public override UIObject Parent => UIMgr.Ins.GetPreparedUI<UIBase>(Data.TabData.PID);
         /// <summary>
         /// 不可重写，以父类类型为准
@@ -30,7 +28,7 @@ namespace Ux
                 Log.Error("父类界面未打开就打开了子界面");
                 return;
             }
-            // Parent instance is guaranteed by the show session before the tab starts its own stage work.
+            // 在Tab开始自己的阶段工作之前，显示会话保证父实例已存在
             parent.AddChild(this);
         }
 

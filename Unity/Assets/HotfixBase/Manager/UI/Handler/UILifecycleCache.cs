@@ -28,6 +28,9 @@ namespace Ux
             {
                 waitDel.GetUI(out ui);
                 _waitDels.Remove(id);
+#if UNITY_EDITOR
+                UIMgr.__Debugger_WaitDel_Event();
+#endif
                 return true;
             }
 
@@ -35,7 +38,7 @@ namespace Ux
             return false;
         }
 
-        // Cache only deals with instance lifetime after hide; request cancellation is handled by UIMgr versions.
+        // 缓存只处理隐藏后的实例生命周期；请求取消由UIMgr版本处理。
         internal void TrackHidden(UIMgr.UIRecord record)
         {
             if (record?.UI == null)
