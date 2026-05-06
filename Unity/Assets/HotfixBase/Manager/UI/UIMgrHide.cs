@@ -7,16 +7,44 @@ namespace Ux
 {
     public partial class UIMgr
     {
+        /// <summary>
+        /// 隐藏所有UI时的ID缓冲列表
+        /// </summary>
         private readonly List<int> _hideAllIdBuffer = new List<int>();
 
+        /// <summary>
+        /// 隐藏会话类，用于封装一次隐藏请求的所有相关数据
+        /// </summary>
         private sealed class HideSession
         {
+            /// <summary>
+            /// 请求隐藏的UI ID
+            /// </summary>
             public int RequestedId { get; private set; }
+            
+            /// <summary>
+            /// 根界面ID
+            /// </summary>
             public int RootId { get; private set; }
+            
+            /// <summary>
+            /// 是否播放动画
+            /// </summary>
             public bool IsAnim { get; private set; }
+            
+            /// <summary>
+            /// 是否检查栈
+            /// </summary>
             public bool CheckStack { get; private set; }
+            
+            /// <summary>
+            /// 隐藏目标列表
+            /// </summary>
             internal readonly List<UIRecord> Targets = new List<UIRecord>();
 
+            /// <summary>
+            /// 重置会话数据
+            /// </summary>
             public void Reset(int requestedId, int rootId, bool isAnim, bool checkStack)
             {
                 RequestedId = requestedId;
@@ -26,6 +54,9 @@ namespace Ux
                 Targets.Clear();
             }
 
+            /// <summary>
+            /// 释放会话资源
+            /// </summary>
             public void Release()
             {
                 RequestedId = 0;
@@ -37,11 +68,17 @@ namespace Ux
             }
         }
 
+        /// <summary>
+        /// 隐藏所有UI（内部方法）
+        /// </summary>
+        /// <param name="ignoreSet">需要忽略的UI ID集合</param>
         void _HideAll(HashSet<int> ignoreSet)
         {
+            // 清空UI栈
             _stackHandler.Clear();
             _hideAllIdBuffer.Clear();
 
+            // 收集需要隐藏的UI ID
             foreach (var kv in _records)
             {
                 var record = kv.Value;
@@ -51,6 +88,7 @@ namespace Ux
                 }
             }
 
+            // 隐藏收集到的UI
             for (int i = 0; i < _hideAllIdBuffer.Count; i++)
             {
                 var id = _hideAllIdBuffer[i];
@@ -64,11 +102,18 @@ namespace Ux
             _hideAllIdBuffer.Clear();
         }
 
+        /// <summary>
+        /// 隐藏所有UI
+        /// </summary>
         public void HideAll()
         {
             _HideAll(null);
         }
 
+        /// <summary>
+        /// 隐藏所有UI，排除指定ID的UI
+        /// </summary>
+        /// <param name="ignoreList">需要排除的UI ID列表</param>
         public void HideAll(IList<int> ignoreList = null)
         {
             if (ignoreList == null || ignoreList.Count == 0)
@@ -86,6 +131,10 @@ namespace Ux
             _HideAll(_ignoreSet);
         }
 
+        /// <summary>
+        /// 隐藏所有UI，排除指定类型的UI
+        /// </summary>
+        /// <param name="ignoreList">需要排除的UI类型列表</param>
         public void HideAll(IList<Type> ignoreList = null)
         {
             if (ignoreList == null || ignoreList.Count == 0)
@@ -103,26 +152,49 @@ namespace Ux
             _HideAll(_ignoreSet);
         }
 
+        /// <summary>
+        /// 隐藏指定类型的UI
+        /// </summary>
+        /// <typeparam name="T">UI类型</typeparam>
+        /// <param name="isAnim">是否播放动画</param>
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
             Hide(ConverterID(typeof(T)), isAnim);
         }
 
+        /// <summary>
+        /// 隐藏指定ID的UI
+        /// </summary>
+        /// <param name="id">UI ID</param>
+        /// <param name="isAnim">是否播放动画</param>
         public void Hide(int id, bool isAnim = true)
         {
             _Hide(id, isAnim, true).Forget();
         }
 
+        /// <summary>
+        /// 隐藏指定类型的UI（不检查栈）
+        /// </summary>
+        /// <typeparam name="T">UI类型</typeparam>
+        /// <param name="isAnim">是否播放动画</param>
         public void HideNotStack<T>(bool isAnim = true) where T : UIBase
         {
             HideNotStack(ConverterID(typeof(T)), isAnim);
         }
 
+        /// <summary>
+        /// 隐藏指定ID的UI（不检查栈）
+        /// </summary>
+        /// <param name="id">UI ID</param>
+        /// <param name="isAnim">是否播放动画</param>
         public void HideNotStack(int id, bool isAnim = true)
         {
             _Hide(id, isAnim, false).Forget();
         }
 
+        /// <summary>
+        /// 内部隐藏方法
+        /// </summary>
         private async UniTaskVoid _Hide(int id, bool isAnim, bool checkStack)
         {
             var data = GetUIData(id);
@@ -137,6 +209,7 @@ namespace Ux
             {
                 return;
             }
+            // 如果不是根界面且当前激活的子界面不是目标界面，则不隐藏
             if (rootId != id && rootRecord != null && rootRecord.CurrentChildId != id)
             {
                 return;
@@ -145,18 +218,20 @@ namespace Ux
             session.Reset(id, rootId, isAnim, checkStack);
             try
             {
-                // 1. Snapshot the current root chain before any hide callback mutates visibility.
+                // 1. 在任何隐藏回调改变可见性之前，收集当前根链路的所有目标
                 CollectHideTargets(rootId, session.Targets);
 
-                // 2. Fire every hide first so parent/child animations can overlap.
+                // 2. 先触发所有隐藏，使父子动画可以重叠播放
                 BeginHideChain(session);
 
-                // 3. Then wait for every pending hide to settle before touching stack fallback.
+                // 3. 等待所有待处理的隐藏完成后，再处理栈回退
                 await WaitHideChain(session);
 
+                // 从栈中移除根界面
                 _stackHandler.RemoveRoot(rootId);
                 if (checkStack)
                 {
+                    // 尝试显示上一个界面
                     var previous = _stackHandler.PeekPrevious(rootId);
                     if (previous.HasValue)
                     {
@@ -170,8 +245,12 @@ namespace Ux
             }
         }
 
+        /// <summary>
+        /// 开始隐藏链式调用
+        /// </summary>
         private void BeginHideChain(HideSession session)
         {
+            // 从后往前遍历，确保子界面先隐藏
             for (int i = session.Targets.Count - 1; i >= 0; i--)
             {
                 var record = session.Targets[i];
@@ -179,6 +258,9 @@ namespace Ux
             }
         }
 
+        /// <summary>
+        /// 等待隐藏链完成
+        /// </summary>
         private async UniTask WaitHideChain(HideSession session)
         {
             for (int i = session.Targets.Count - 1; i >= 0; i--)
@@ -191,7 +273,10 @@ namespace Ux
             }
         }
 
-        // Fast show->hide races are collapsed into an immediate close without playing a hide animation.
+        /// <summary>
+        /// 开始隐藏单个UI记录
+        /// 快速显示->隐藏的竞态会被折叠为立即关闭，不播放隐藏动画
+        /// </summary>
         private void BeginHideRecord(UIRecord record, bool isAnim)
         {
             var version = NextRequestVersion(record);
@@ -203,17 +288,16 @@ namespace Ux
             record.PendingHide = new UniTaskCompletionSource<bool>();
             record.Phase = UIPhase.Hiding;
 
+            // 如果是刚显示就立即隐藏的情况，中断显示动画但不播放隐藏动画
             if (wasFreshlyShown || wasFreshlyVisible)
             {
-                // Show immediately followed by Hide should interrupt the show animation,
-                // but must not play a hide animation on top of it.
                 record.UI?.DoHide(false, false);
                 return;
             }
 
+            // 如果请求在真正的显示提交之前就失去了竞态，立即关闭
             if (!wasVisible && !wasShowing)
             {
-                // The request lost the race before a real show commit happened; close it immediately.
                 record.Phase = UIPhase.Hidden;
                 if (record.UI != null)
                 {
@@ -224,6 +308,7 @@ namespace Ux
                 return;
             }
 
+            // 正常隐藏流程
             if (record.UI != null && (wasVisible || wasShowing))
             {
                 record.UI.DoHide(isAnim, false);
@@ -235,6 +320,9 @@ namespace Ux
             }
         }
 
+        /// <summary>
+        /// 收集需要隐藏的目标列表
+        /// </summary>
         private void CollectHideTargets(int rootId, List<UIRecord> targets)
         {
             targets.Clear();
@@ -243,6 +331,7 @@ namespace Ux
                 return;
             }
 
+            // 收集根链路下所有需要隐藏的UI记录
             foreach (var recordId in rootSet)
             {
                 if (!_records.TryGetValue(recordId, out var record))
@@ -250,6 +339,7 @@ namespace Ux
                     continue;
                 }
 
+                // 只收集有UI实例或正在显示的记录
                 if (record.UI == null && !record.IsShowingLike && !_showing.ContainsKey(record.Id))
                 {
                     continue;
@@ -258,6 +348,7 @@ namespace Ux
                 targets.Add(record);
             }
 
+            // 排序：根界面优先隐藏
             targets.Sort((a, b) =>
             {
                 if (a.Id == rootId && b.Id != rootId) return -1;
@@ -266,14 +357,19 @@ namespace Ux
             });
         }
 
+        /// <summary>
+        /// UI隐藏完成回调
+        /// 隐藏完成是提交可见性和生命周期缓存的唯一位置
+        /// </summary>
         private void _OnUIHidden(IUI ui)
         {
             var record = GetRecord(ui.ID);
             if (record != null)
             {
-                // Hide completion is the single place where visibility and lifecycle cache are committed.
+                // 从可见记录中分离
                 DetachVisibleRecord(record);
                 record.Phase = UIPhase.Hidden;
+                // 跟踪隐藏的UI到缓存处理器
                 _cacheHandler.TrackHidden(record);
                 record.PendingHide?.TrySetResult(true);
                 record.PendingHide = null;
@@ -282,11 +378,15 @@ namespace Ux
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
 #endif
+            // 发送UI隐藏事件
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.ID);
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
             _blurHandler.OnHide(ui);
         }
 
+        /// <summary>
+        /// 释放UI资源
+        /// </summary>
         private void Dispose(IUI ui)
         {
             var id = ui.ID;
@@ -295,6 +395,7 @@ namespace Ux
             _cacheHandler.RemoveRecord(record);
             RemoveRecord(id);
 
+            // 如果UI有资源包，释放资源包
             var data = GetUIData(id);
             if (data == null || data.Pkgs == null || data.Pkgs.Length == 0)
             {
@@ -302,6 +403,7 @@ namespace Ux
             }
 
             ResMgr.Ins.RemoveUIPackage(data.Pkgs);
+            // 对话框类型需要移除UIData
             if (ui is UIDialog)
             {
                 RemoveUIData(id);
