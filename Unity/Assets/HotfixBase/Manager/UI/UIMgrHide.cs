@@ -82,7 +82,7 @@ namespace Ux
             foreach (var kv in _records)
             {
                 var record = kv.Value;
-                if (record.IsVisibleCommitted || record.IsShowingLike || _showing.ContainsKey(kv.Key))
+                if (record.IsVisibleCommitted || record.IsShowingLike)
                 {
                     _hideAllIdBuffer.Add(kv.Key);
                 }
@@ -147,7 +147,7 @@ namespace Ux
             _ignoreSet.Clear();
             for (int i = 0; i < ignoreList.Count; i++)
             {
-                _ignoreSet.Add(ConverterID(ignoreList[i]));
+                _ignoreSet.Add(GetTypeId(ignoreList[i]));
             }
             _HideAll(_ignoreSet);
         }
@@ -159,7 +159,7 @@ namespace Ux
         /// <param name="isAnim">是否播放动画</param>
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
-            Hide(ConverterID(typeof(T)), isAnim);
+            Hide(GetTypeId(typeof(T)), isAnim);
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Ux
         /// <param name="isAnim">是否播放动画</param>
         public void HideNotStack<T>(bool isAnim = true) where T : UIBase
         {
-            HideNotStack(ConverterID(typeof(T)), isAnim);
+            HideNotStack(GetTypeId(typeof(T)), isAnim);
         }
 
         /// <summary>
@@ -213,6 +213,11 @@ namespace Ux
             if (rootId != id && rootRecord != null && rootRecord.CurrentChildId != id)
             {
                 return;
+            }
+
+            if (rootRecord != null && rootRecord.CurrentChildId == id)
+            {
+                rootRecord.CurrentChildId = rootId;
             }
             var session = Pool.Get<HideSession>();
             session.Reset(id, rootId, isAnim, checkStack);
@@ -282,10 +287,10 @@ namespace Ux
             var version = NextRequestVersion(record);
             record.LastHideRequestFrame = Time.frameCount;
             var wasVisible = record.IsVisibleCommitted;
-            var wasShowing = record.IsShowingLike || _showing.ContainsKey(record.Id);
+            var wasShowing = record.IsShowingLike;
             var wasFreshlyShown = IsFreshlyShown(record);
             var wasFreshlyVisible = IsFreshlyVisible(record);
-            record.PendingHide = new UniTaskCompletionSource<bool>();
+            ResetPendingHide(record);
             record.Phase = UIPhase.Hiding;
 
             // 如果是刚显示就立即隐藏的情况，中断显示动画但不播放隐藏动画
@@ -303,8 +308,7 @@ namespace Ux
                 {
                     _cacheHandler.TrackHidden(record);
                 }
-                record.PendingHide.TrySetResult(true);
-                record.PendingHide = null;
+                CompletePendingHide(record, true);
                 return;
             }
 
@@ -315,8 +319,7 @@ namespace Ux
             }
             else if (!IsRequestCurrent(record, version))
             {
-                record.PendingHide?.TrySetResult(false);
-                record.PendingHide = null;
+                CompletePendingHide(record, false);
             }
         }
 
@@ -340,7 +343,7 @@ namespace Ux
                 }
 
                 // 只收集有UI实例或正在显示的记录
-                if (record.UI == null && !record.IsShowingLike && !_showing.ContainsKey(record.Id))
+                if (record.UI == null && !record.IsShowingLike)
                 {
                     continue;
                 }
@@ -348,11 +351,14 @@ namespace Ux
                 targets.Add(record);
             }
 
-            // 排序：根界面优先隐藏
+            // 排序：层级深的子界面优先隐藏，同层级再按根界面和 Id 稳定排序
             targets.Sort((a, b) =>
             {
-                if (a.Id == rootId && b.Id != rootId) return -1;
-                if (a.Id != rootId && b.Id == rootId) return 1;
+                var depthA = GetUIData(a.Id)?.GetParentDepth() ?? 0;
+                var depthB = GetUIData(b.Id)?.GetParentDepth() ?? 0;
+                if (depthA != depthB) return depthB.CompareTo(depthA);
+                if (a.Id == rootId && b.Id != rootId) return 1;
+                if (a.Id != rootId && b.Id == rootId) return -1;
                 return a.Id.CompareTo(b.Id);
             });
         }
@@ -371,8 +377,7 @@ namespace Ux
                 record.Phase = UIPhase.Hidden;
                 // 跟踪隐藏的UI到缓存处理器
                 _cacheHandler.TrackHidden(record);
-                record.PendingHide?.TrySetResult(true);
-                record.PendingHide = null;
+                CompletePendingHide(record, true);
             }
 
 #if UNITY_EDITOR

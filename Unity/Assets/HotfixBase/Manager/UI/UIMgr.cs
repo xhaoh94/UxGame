@@ -198,7 +198,6 @@ namespace Ux
         private readonly Dictionary<int, HashSet<int>> _rootRecordIds = new();
 
         private readonly Dictionary<int, IUI> _showed = new(); // 当前显示的UI字典
-        private readonly Dictionary<int, int> _showing = new();// 正在显示的UI字典（包含显示中的状态）
         private readonly Dictionary<int, List<string>> _idLazyloads = new (); // UI懒加载资源字典
         private readonly Dictionary<int, Downloader> _idDownloader = new ();    // UI下载器字典
         private readonly List<StackEntry> _stackEntries = new ();   // UI栈条目列表
@@ -214,6 +213,12 @@ namespace Ux
         /// 用于调试和错误信息显示
         /// </summary>
         private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
+        private readonly Dictionary<string, IUIData> _debugAllUIData = new Dictionary<string, IUIData>();
+        private readonly List<string> _debugShowedUI = new List<string>();
+        private readonly List<UIStack> _debugUIStacks = new List<UIStack>();
+        private readonly List<string> _debugShowingUI = new List<string>();
+        private readonly List<string> _debugCacheUI = new List<string>();
+        private readonly List<string> _debugWaitDelUI = new List<string>();
 #endif
 
         private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>(4)
@@ -265,7 +270,7 @@ namespace Ux
         }
 
         public void Release()
-        {
+        {            
             _LowMemory();
             if (_dymUIData.Count > 0)
             {
@@ -385,7 +390,46 @@ namespace Ux
                 _rootRecordIds.Add(rootId, newSet);
             }
             newSet.Add(record.Id);
+#if UNITY_EDITOR
+            ValidateRecordRootBinding(record);
+#endif
         }
+
+#if UNITY_EDITOR
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        internal void ValidateRecordRootBinding(UIRecord record)
+        {
+            if (record == null)
+            {
+                return;
+            }
+
+            if (!_rootRecordIds.TryGetValue(record.ParentRootId, out var rootSet) || !rootSet.Contains(record.Id))
+            {
+                Log.Error("UIRecord 根链路索引不一致。Id[{0}] RootId[{1}]", record.Id, record.ParentRootId);
+            }
+        }
+
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        internal void ValidateCurrentChild(int rootId, int activeId)
+        {
+            if (rootId == 0 || activeId == 0)
+            {
+                return;
+            }
+
+            if (!_records.TryGetValue(rootId, out var rootRecord))
+            {
+                return;
+            }
+
+            if (rootRecord.CurrentChildId != activeId)
+            {
+                Log.Error("UI根节点当前子界面不一致。RootId[{0}] CurrentChild[{1}] ActiveId[{2}]",
+                    rootId, rootRecord.CurrentChildId, activeId);
+            }
+        }
+#endif
 
         /// <summary>
         /// 检查UI是否刚刚变为可见状态（最近1帧内）
@@ -443,6 +487,47 @@ namespace Ux
             // 如果当前记录已经进入隐藏流程或已经处于隐藏状态，
             // 再次收到同帧隐藏请求没有意义，直接跳过以避免重复回收和状态覆盖。
             return record.LastHideRequestFrame == Time.frameCount && (record.IsHidingLike || record.Phase == UIPhase.Hidden);
+        }
+
+        internal bool IsShowPhase(UIRecord record)
+        {
+            return record != null && (record.Phase == UIPhase.Showing || record.Phase == UIPhase.Visible);
+        }
+
+        internal UniTaskCompletionSource<bool> ResetPendingShow(UIRecord record)
+        {
+            record.PendingShow?.TrySetResult(false);
+            record.PendingShow = new UniTaskCompletionSource<bool>();
+            return record.PendingShow;
+        }
+
+        internal UniTaskCompletionSource<bool> ResetPendingHide(UIRecord record)
+        {
+            record.PendingHide?.TrySetResult(false);
+            record.PendingHide = new UniTaskCompletionSource<bool>();
+            return record.PendingHide;
+        }
+
+        internal void CompletePendingShow(UIRecord record, bool result)
+        {
+            if (record?.PendingShow == null)
+            {
+                return;
+            }
+
+            record.PendingShow.TrySetResult(result);
+            record.PendingShow = null;
+        }
+
+        internal void CompletePendingHide(UIRecord record, bool result)
+        {
+            if (record?.PendingHide == null)
+            {
+                return;
+            }
+
+            record.PendingHide.TrySetResult(result);
+            record.PendingHide = null;
         }
 
         /// <summary>
@@ -545,7 +630,7 @@ namespace Ux
         /// <returns>UI实例，如果未显示则返回default</returns>
         public T GetUI<T>() where T : IUI
         {
-            return GetUI<T>(ConverterID(typeof(T)));
+            return GetUI<T>(GetTypeId(typeof(T)));
         }
 
         /// <summary>
@@ -588,7 +673,7 @@ namespace Ux
         /// <returns>如果正在显示返回true，否则返回false</returns>
         public bool IsShow<T>() where T : UIBase
         {
-            return IsShow(ConverterID(typeof(T)));
+            return IsShow(GetTypeId(typeof(T)));
         }
 
         /// <summary>
@@ -598,7 +683,7 @@ namespace Ux
         /// <returns>如果正在显示返回true，否则返回false</returns>
         public bool IsShow(int id)
         {
-            return _showed.TryGetValue(id, out var ui) && (ui.State == UIState.ShowAnim || ui.State == UIState.Show);
+            return IsShowPhase(GetRecord(id));
         }
 
         /// <summary>
@@ -625,7 +710,7 @@ namespace Ux
         /// </summary>
         /// <param name="type">UI类型</param>
         /// <returns>对应的ID</returns>
-        int ConverterID(Type type)
+        int GetTypeId(Type type)
         {
             if (_typeId.TryGetValue(type, out var id))
             {
@@ -635,7 +720,14 @@ namespace Ux
             id = type.FullName.ToHash();
             _typeId.Add(type, id);
 #if UNITY_EDITOR
-            _idTypeName.Add(id, type.FullName);
+            if (_idTypeName.TryGetValue(id, out var existName) && existName != type.FullName)
+            {
+                Log.Error("UI类型ID哈希冲突。TypeA[{0}] TypeB[{1}] Id[{2}]", existName, type.FullName, id);
+            }
+            else
+            {
+                _idTypeName[id] = type.FullName;
+            }
 #endif
             return id;
         }
@@ -669,73 +761,69 @@ namespace Ux
         /// <summary>
         /// 获取所有UIData（用于调试访问）
         /// </summary>
-        Dictionary<string, IUIData> IUIMgrDebuggerAccess.GetAllUIData()
+        void IUIMgrDebuggerAccess.FillAllUIData(Dictionary<string, IUIData> output)
         {
-            var dict = new Dictionary<string, IUIData>();
+            output.Clear();
             foreach (var kv in _idUIData)
             {
-                dict.Add(kv.Value.Name, kv.Value);
+                output[kv.Value.Name] = kv.Value;
             }
-            return dict;
         }
 
         /// <summary>
         /// 获取当前显示的UI名称列表（用于调试访问）
         /// </summary>
-        List<string> IUIMgrDebuggerAccess.GetShowedUI()
+        void IUIMgrDebuggerAccess.FillShowedUI(List<string> output)
         {
-            var list = new List<string>();
+            output.Clear();
             foreach (var kv in _showed)
             {
-                list.Add(kv.Value.Name);
+                output.Add(kv.Value.Name);
             }
-            return list;
         }
 
         /// <summary>
         /// 获取UI栈列表（用于调试访问）
         /// </summary>
-        List<UIStack> IUIMgrDebuggerAccess.GetUIStacks()
+        void IUIMgrDebuggerAccess.FillUIStacks(List<UIStack> output)
         {
-            var list = new List<UIStack>(_stackEntries.Count);
+            output.Clear();
             for (int i = 0; i < _stackEntries.Count; i++)
             {
                 var entry = _stackEntries[i];
-                list.Add(new UIStack(entry.RootId, entry.ActiveId, entry.Param, entry.Type));
+                output.Add(new UIStack(entry.RootId, entry.ActiveId, entry.Param, entry.Type));
             }
-            return list;
         }
 
         /// <summary>
         /// 获取正在显示的UI名称列表（用于调试访问）
         /// </summary>
-        List<string> IUIMgrDebuggerAccess.GetShowingUI()
+        void IUIMgrDebuggerAccess.FillShowingUI(List<string> output)
         {
-            var list = new List<string>();
+            output.Clear();
             foreach (var kv in _records)
             {
                 if (kv.Value.IsShowingLike)
                 {
-                    list.Add(GetUIData(kv.Key)?.Name ?? kv.Key.ToString());
+                    output.Add(GetUIData(kv.Key)?.Name ?? kv.Key.ToString());
                 }
             }
-            return list;
         }
 
         /// <summary>
         /// 获取缓存的UI名称列表（用于调试访问）
         /// </summary>
-        List<string> IUIMgrDebuggerAccess.GetCacheUI()
+        void IUIMgrDebuggerAccess.FillCacheUI(List<string> output)
         {
-            return _cacheHandler.GetCacheDebugNames();
+            _cacheHandler.FillCacheDebugNames(output);
         }
 
         /// <summary>
         /// 获取等待销毁的UI名称列表（用于调试访问）
         /// </summary>
-        List<string> IUIMgrDebuggerAccess.GetWaitDelUI()
+        void IUIMgrDebuggerAccess.FillWaitDelUI(List<string> output)
         {
-            return _cacheHandler.GetWaitDestroyDebugNames();
+            _cacheHandler.FillWaitDestroyDebugNames(output);
         }
     }
 }

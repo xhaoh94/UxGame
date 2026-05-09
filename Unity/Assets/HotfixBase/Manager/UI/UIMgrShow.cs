@@ -244,8 +244,7 @@ namespace Ux
 
                 record.Phase = UIPhase.Showing;
                 record.LastShowStartFrame = Time.frameCount;
-                _showing[record.Id] = record.RequestVersion;
-                record.PendingShow = new UniTaskCompletionSource<bool>();
+                ResetPendingShow(record);
                 await record.UI.DoShow(session.IsAnim, session.RequestedId,
                     record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
             }
@@ -279,7 +278,6 @@ namespace Ux
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                _showing.Remove(record.Id);
                 if (!IsRequestCurrent(record, record.RequestVersion))
                 {
                     AbortShowSession(session, i + 1).Forget();
@@ -362,8 +360,7 @@ namespace Ux
 
                 record.Phase = UIPhase.Hidden;
                 _cacheHandler.TrackHidden(record);
-                record.PendingShow?.TrySetResult(false);
-                record.PendingShow = null;
+                CompletePendingShow(record, false);
             }
 
             await UniTask.CompletedTask;
@@ -379,6 +376,9 @@ namespace Ux
                 var record = session.Activated[i];
                 record.ParentRootId = session.RootId;
                 record.CurrentChildId = session.TargetId;
+#if UNITY_EDITOR
+                ValidateRecordRootBinding(record);
+#endif
             }
 
             // 隐藏同一根下的其他子界面
@@ -405,7 +405,7 @@ namespace Ux
 
                 // Tab切换后，同一根下只有一个子界面应该保持可见
                 NextRequestVersion(record);
-                record.PendingHide = new UniTaskCompletionSource<bool>();
+                ResetPendingHide(record);
                 record.Phase = UIPhase.Hiding;
                 record.UI.DoHide(false, false);
             }
@@ -467,18 +467,14 @@ namespace Ux
             {
                 _stackHandler.CommitVisible(rootId, record.CurrentChildId == 0 ? record.Id : record.CurrentChildId,
                     param, ResolveStackType(ui, rootId));
+#if UNITY_EDITOR
+                ValidateCurrentChild(rootId, record.CurrentChildId == 0 ? record.Id : record.CurrentChildId);
+#endif
             }
             
             // 通知模糊效果处理器
             _blurHandler.OnShowed(ui);
-            record.PendingShow?.TrySetResult(true);
-            record.PendingShow = null;
-
-            // 从正在显示字典中移除
-            if (_showing.TryGetValue(ui.ID, out var version) && version == record.RequestVersion)
-            {
-                _showing.Remove(ui.ID);
-            }
+            CompletePendingShow(record, true);
         }
     }
 }

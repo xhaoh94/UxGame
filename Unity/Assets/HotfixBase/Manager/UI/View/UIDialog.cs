@@ -1,6 +1,5 @@
 using FairyGUI;
 using System;
-using System.Threading;
 using static Ux.UIMgr;
 
 namespace Ux
@@ -32,7 +31,7 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        protected override void ToShow(bool isAnim, int id, bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)
         {
             if (TryGetParam(out DialogData _dialogData))
             {
@@ -54,7 +53,7 @@ namespace Ux
                 return;
             }
 
-            base.ToShow(isAnim, id, isStack, token);
+            base.ToShow(isAnim, id, isStack, showVersion);
             InitParam();
         }
 

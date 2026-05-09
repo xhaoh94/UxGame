@@ -136,24 +136,22 @@ namespace Ux
             Pool.Push(keys);
         }
 
-        internal List<string> GetCacheDebugNames()
+        internal void FillCacheDebugNames(List<string> output)
         {
-            var list = new List<string>();
+            output.Clear();
             foreach (var kv in _cache)
             {
-                list.Add(kv.Value.Name);
+                output.Add(kv.Value.Name);
             }
-            return list;
         }
 
-        internal List<string> GetWaitDestroyDebugNames()
+        internal void FillWaitDestroyDebugNames(List<string> output)
         {
-            var list = new List<string>();
+            output.Clear();
             foreach (var kv in _waitDels)
             {
-                list.Add(kv.Value.Name);
+                output.Add(kv.Value.Name);
             }
-            return list;
         }
 
         void OnRemoveWaitDel(int id)
@@ -173,6 +171,7 @@ namespace Ux
                 record.Phase = UIMgr.UIPhase.Disposed;
                 record.WaitDel = null;
                 record.CacheState = UIMgr.CacheState.None;
+                record.CurrentChildId = record.ParentRootId;
                 UIMgr.Ins.RemoveRecord(ui.ID);
             }
             _callback.DisposeUI(ui);

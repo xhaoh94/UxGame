@@ -9,6 +9,7 @@ namespace Ux
         private readonly IUIBlurHandlerCallback _callback;
         private Camera _mainCamera;
         private readonly List<BlurStack> _blurStacks = new List<BlurStack>();
+        private readonly FairyGUI.BlurFilter _sharedBlurFilter = new FairyGUI.BlurFilter();
 
         public UIBlurHandler(IUIBlurHandlerCallback callback)
         {
@@ -86,9 +87,12 @@ namespace Ux
                     ui.Filter = null;
                     continue;
                 }
-                var filter = ui.Filter;
-                if (filter != null && filter is FairyGUI.BlurFilter) continue;
-                ui.Filter = new FairyGUI.BlurFilter();
+                if (ReferenceEquals(ui.Filter, _sharedBlurFilter) || ui.Filter is FairyGUI.BlurFilter)
+                {
+                    ui.Filter = _sharedBlurFilter;
+                    continue;
+                }
+                ui.Filter = _sharedBlurFilter;
             }
 
             if (_mainCamera != null)

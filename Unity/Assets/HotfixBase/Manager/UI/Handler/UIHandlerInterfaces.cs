@@ -14,11 +14,11 @@ namespace Ux
 
     public interface IUIMgrDebuggerAccess
     {
-        Dictionary<string, IUIData> GetAllUIData();
-        List<string> GetShowedUI();
-        List<UIMgr.UIStack> GetUIStacks();
-        List<string> GetShowingUI();
-        List<string> GetCacheUI();
-        List<string> GetWaitDelUI();
+        void FillAllUIData(Dictionary<string, IUIData> output);
+        void FillShowedUI(List<string> output);
+        void FillUIStacks(List<UIMgr.UIStack> output);
+        void FillShowingUI(List<string> output);
+        void FillCacheUI(List<string> output);
+        void FillWaitDelUI(List<string> output);
     }
 }

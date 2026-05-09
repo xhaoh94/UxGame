@@ -1,7 +1,6 @@
 using Cysharp.Threading.Tasks;
 using FairyGUI;
 using System;
-using System.Threading;
 using System.Collections.Generic;
 using UnityEngine;
 using static Ux.UIMgr;
@@ -17,15 +16,14 @@ namespace Ux
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         /// <summary>
-        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默�?0�?
+        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默�?0�?
         /// </summary>
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
 
-        // 使用静态池复用CancellationTokenSource，减少GC
-        CancellationTokenSource _showToken;
-        CancellationTokenSource _hideToken;
+        int _showVersion;
+        int _hideVersion;
 
         private CallbackData? _cbData;
         public virtual void InitData(IUIData data, CallbackData initData)
@@ -148,16 +146,11 @@ namespace Ux
             {
                 _DoShow();
             }
-            _ReleaseHideToken();
-
             void _DoShow()
             {
-                if (isAnim && ShowAnim != null)
-                {
-                    _showToken = CreateToken();
-                }
                 (this as IUISetParam).SetParam(param);
-                ToShow(isAnim, id, checkStack, _showToken);
+                _showVersion++;
+                ToShow(isAnim, id, checkStack, _showVersion);
                 task.TrySetResult();
             }
             return task.Task;
@@ -165,12 +158,6 @@ namespace Ux
 
         void _Show(int id, IUIParam param, bool checkStack)
         {
-            if (_showToken != null)
-            {
-                ReturnTokenToPool(_showToken);
-                _showToken = null;
-            }
-
             if (_cbData != null)
             {
                 _cbData.Value.showCb?.Invoke(this, param, checkStack);
@@ -182,7 +169,7 @@ namespace Ux
 
         void IUI.DoHide(bool isAnim, bool checkStack)
         {
-            //子界面不需要检测栈，由最顶层父界面控�?
+            //子界面不需要检测栈，由最顶层父界面控�?
             switch (State)
             {
                 case UIState.Hide:
@@ -198,21 +185,15 @@ namespace Ux
             {
                 _DoHide();
             }
-            _ReleaseShowToken();
             void _DoHide()
             {
-                _hideToken = isAnim && HideAnim != null ? CreateToken() : null;
-                ToHide(isAnim, checkStack, _hideToken);
+                _hideVersion++;
+                ToHide(isAnim, checkStack, _hideVersion);
             }
         }
 
         private void _Hide()
         {
-            if (_hideToken != null)
-            {
-                ReturnTokenToPool(_hideToken);
-                _hideToken = null;
-            }
             RemoveToStage();
             Filter = null;
             _cbData?.hideCb?.Invoke(this);
@@ -225,33 +206,25 @@ namespace Ux
 
         protected override void OnDispose()
         {
-            _ReleaseShowToken();
-            _ReleaseHideToken();
             Data = null;
             _cbData = null;
             _async = false;
             _asyncComplete = null;
+            _showVersion = 0;
+            _hideVersion = 0;
         }
 
-        void _ReleaseShowToken()
+        protected override int GetShowVersion()
         {
-            if (_showToken != null)
-            {
-                ReturnTokenToPool(_showToken);
-                _showToken = null;
-            }
+            return _showVersion;
         }
 
-        void _ReleaseHideToken()
+        protected override int GetHideVersion()
         {
-            if (_hideToken != null)
-            {
-                ReturnTokenToPool(_hideToken);
-                _hideToken = null;
-            }
+            return _hideVersion;
         }
         /// <summary>
-        /// 设置位置并添加关联关�?
+        /// 设置位置并添加关联关�?
         /// </summary>
         private void _SetPositionAndRelations(float x, float y, bool restraint, RelationType rel1, RelationType rel2 = 0)
         {
@@ -327,30 +300,6 @@ namespace Ux
             GObject.RemoveRelation(parent, relation);
         }
 
-        // Token池管理方�?
-        private static CancellationTokenSource CreateToken()
-        {
-            return new CancellationTokenSource();
-        }
-
-        private static void ReturnTokenToPool(CancellationTokenSource token)
-        {
-            if (token == null) return;
-
-            try
-            {
-                if (!token.IsCancellationRequested)
-                {
-                    token.Cancel();
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-                return;
-            }
-
-            token.Dispose();
-        }
     }
 }
 

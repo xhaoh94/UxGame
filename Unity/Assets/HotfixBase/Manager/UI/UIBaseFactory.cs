@@ -11,13 +11,6 @@ namespace Ux
     public abstract class UIBaseFactory<TUI> where TUI : IUI
     {
         /// <summary>
-        /// 等待销毁的UI字典，存储需要延迟销毁的UI实例
-        /// key: UI的ID
-        /// value: UI实例
-        /// </summary>
-        protected readonly Dictionary<int, IUI> _waitDels = new Dictionary<int, IUI>();
-        
-        /// <summary>
         /// UI对象池，按类型分类存储可复用的UI ID
         /// key: UI类型
         /// value: 可复用的UI ID队列
@@ -30,12 +23,6 @@ namespace Ux
         /// </summary>
         protected readonly HashSet<int> _showed = new HashSet<int>();
         
-        /// <summary>
-        /// 类型到等待销毁的UI ID队列的映射
-        /// 注意：一个类型可能有多个等待销毁的UI实例，所以使用FIFO队列比单个缓存ID更正确
-        /// </summary>
-        protected readonly Dictionary<Type, Queue<int>> _typeToIdCache = new Dictionary<Type, Queue<int>>();
-
         /// <summary>
         /// 当UI显示时调用
         /// </summary>
@@ -52,29 +39,14 @@ namespace Ux
         protected void OnHide(TUI ui)
         {
             _showed.Remove(ui.ID);
-            if (ui.HideDestroyTime >= 0)
+            if (ui.HideDestroyTime >= 0) return;
+            var type = ui.GetType();
+            if (!_pool.TryGetValue(type, out var ids))
             {
-                // 如果设置了延迟销毁时间，将UI加入等待销毁列表
-                _waitDels.Add(ui.ID, ui);
-                var type = ui.GetType();
-                if (!_typeToIdCache.TryGetValue(type, out var ids))
-                {
-                    ids = new Queue<int>();
-                    _typeToIdCache.Add(type, ids);
-                }
-                ids.Enqueue(ui.ID);
+                ids = new Queue<int>();
+                _pool.Add(type, ids);
             }
-            else
-            {
-                // 如果不延迟销毁，将UI ID加入对象池以供复用
-                var type = ui.GetType();
-                if (!_pool.TryGetValue(type, out var ids))
-                {
-                    ids = new Queue<int>();
-                    _pool.Add(type, ids);
-                }
-                ids.Enqueue(ui.ID);
-            }
+            ids.Enqueue(ui.ID);
         }
         
         /// <summary>
@@ -83,32 +55,6 @@ namespace Ux
         /// <param name="id">要移除的UI ID</param>
         public void RemoveWaitDelById(int id)
         {
-            if (_waitDels.TryGetValue(id, out var ui))
-            {
-                var type = ui.GetType();
-                if (_typeToIdCache.TryGetValue(type, out var ids))
-                {
-                    var keep = new Queue<int>();
-                    while (ids.Count > 0)
-                    {
-                        var cachedId = ids.Dequeue();
-                        if (cachedId != id)
-                        {
-                            keep.Enqueue(cachedId);
-                        }
-                    }
-
-                    if (keep.Count == 0)
-                    {
-                        _typeToIdCache.Remove(type);
-                    }
-                    else
-                    {
-                        _typeToIdCache[type] = keep;
-                    }
-                }
-            }
-            _waitDels.Remove(id);
         }
 
         /// <summary>
@@ -117,7 +63,6 @@ namespace Ux
         public void Clear()
         {
             _pool.Clear();
-            _typeToIdCache.Clear();
         }
 
         /// <summary>
@@ -131,26 +76,6 @@ namespace Ux
             if (_pool.TryGetValue(type, out var ids) && ids.Count > 0)
             {
                 return ids.Dequeue();
-            }
-
-            // 然后从等待销毁的缓存中查找可用的ID
-            if (_typeToIdCache.TryGetValue(type, out var cachedIds))
-            {
-                while (cachedIds.Count > 0)
-                {
-                    var cachedId = cachedIds.Dequeue();
-                    if (_waitDels.ContainsKey(cachedId))
-                    {
-                        _waitDels.Remove(cachedId);
-                        if (cachedIds.Count == 0)
-                        {
-                            _typeToIdCache.Remove(type);
-                        }
-                        return cachedId;
-                    }
-                }
-
-                _typeToIdCache.Remove(type);
             }
 
             // 如果都没有可复用的ID，则创建新的UIData

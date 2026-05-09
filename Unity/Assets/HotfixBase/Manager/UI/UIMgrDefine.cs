@@ -110,32 +110,33 @@ namespace Ux
     /// <summary>
     /// UI模糊效果类型枚举
     /// </summary>
+    [Flags]
     public enum UIBlur
     {
         /// <summary>
         /// 无模糊效果
         /// </summary>
-        None = 0x1,
+        None = 0x0,
         
         /// <summary>
         /// 普通模糊
         /// </summary>
-        Normal = 0x2,
+        Normal = 0x1,
         
         /// <summary>
         /// 强模糊
         /// </summary>
-        Blur = 0x4,
+        Blur = 0x2,
         
         /// <summary>
         /// 固定模糊（用于固定UI）
         /// </summary>
-        Fixed = 0x8,
+        Fixed = 0x4,
         
         /// <summary>
         /// 场景模糊
         /// </summary>
-        Scene = 0x16,
+        Scene = 0x8,
     }
 
     public partial class UIMgr
@@ -185,7 +186,7 @@ namespace Ux
             {
                 if (_id == 0)
                 {
-                    _id = Ins.ConverterID(typeof(T));
+                    _id = Ins.GetTypeId(typeof(T));
                 }
                 var task = Ins._ShowAsync<T>(_id, _param, _isAnim, true);
                 _Release();

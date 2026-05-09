@@ -14,7 +14,7 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                ((IUIMgrDebuggerAccess)Ins).GetAllUIData();
+                ((IUIMgrDebuggerAccess)Ins).FillAllUIData(Ins._debugAllUIData);
                 __Debugger_Stack_Event();
                 __Debugger_Showed_Event();
                 __Debugger_Showing_Event();
@@ -31,7 +31,9 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_UI_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetAllUIData());
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillAllUIData(Ins._debugAllUIData);
+                __Debugger_UI_CallBack?.Invoke(Ins._debugAllUIData);
             }
         }
 
@@ -43,7 +45,9 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Showed_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetShowedUI());
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillShowedUI(Ins._debugShowedUI);
+                __Debugger_Showed_CallBack?.Invoke(Ins._debugShowedUI);
             }
         }
 
@@ -55,7 +59,9 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Stack_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetUIStacks());
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillUIStacks(Ins._debugUIStacks);
+                __Debugger_Stack_CallBack?.Invoke(Ins._debugUIStacks);
             }
         }
 
@@ -67,7 +73,9 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Showing_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetShowingUI());
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillShowingUI(Ins._debugShowingUI);
+                __Debugger_Showing_CallBack?.Invoke(Ins._debugShowingUI);
             }
         }
 
@@ -79,7 +87,9 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_Cacel_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetCacheUI());
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillCacheUI(Ins._debugCacheUI);
+                __Debugger_Cacel_CallBack?.Invoke(Ins._debugCacheUI);
             }
         }
 
@@ -91,7 +101,9 @@ namespace Ux
         {
             if (UnityEditor.EditorApplication.isPlaying)
             {
-                __Debugger_WaitDel_CallBack?.Invoke(((IUIMgrDebuggerAccess)Ins).GetWaitDelUI());
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillWaitDelUI(Ins._debugWaitDelUI);
+                __Debugger_WaitDel_CallBack?.Invoke(Ins._debugWaitDelUI);
             }
         }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using FairyGUI;
 using Cysharp.Threading.Tasks;
-using System.Threading;
 
 namespace Ux
 {
@@ -26,43 +25,12 @@ namespace Ux
     {
         private UIEvent _event;
         private List<UIObject> _components;
-        private List<UIObject> _animComponents;
         public List<UIObject> Components => _components ??= new List<UIObject>();
         private UIState _state = UIState.Hide;
-        private bool _stateDirty = true;
-        private UIState _cachedState = UIState.Hide;
         public virtual UIState State
         {
-            get
-            {
-                if (!_stateDirty) return _cachedState;
-                if (_animComponents != null)
-                {
-                    foreach (var component in _animComponents)
-                    {
-                        var state = component.State;
-                        if (state is UIState.ShowAnim or UIState.HideAnim)
-                        {
-                            _cachedState = state;
-                            _stateDirty = false;
-                            return state;
-                        }
-                    }
-                }
-                _cachedState = _state;
-                _stateDirty = false;
-                return _cachedState;
-            }
-            private set
-            {
-                _state = value;
-                MarkStateDirty();
-            }
-        }
-        private void MarkStateDirty()
-        {
-            _stateDirty = true;
-            Parent?.MarkStateDirty();
+            get => _state;
+            private set => _state = value;
         }
 
         public virtual UIObject Parent { get; private set; }
@@ -71,11 +39,6 @@ namespace Ux
         public void AddComponent(UIObject component)
         {
             Components.Add(component);
-            if (component.ShowAnim != null || component.HideAnim != null)
-            {
-                _animComponents ??= new List<UIObject>();
-                _animComponents.Add(component);
-            }
         }
 
         IUIParam _paramVo;
@@ -135,7 +98,7 @@ namespace Ux
         private Action _onShowAnimComplete;
         private Action _onHideAnimComplete;
 
-        protected virtual void ToShow(bool isAnim, int id, bool checkStack, CancellationTokenSource token)
+        protected virtual void ToShow(bool isAnim, int id, bool checkStack, int showVersion)
         {
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
@@ -157,11 +120,11 @@ namespace Ux
                 foreach (var component in _components)
                 {
                     (component as IUISetParam).SetParam(_paramVo);
-                    component.ToShow(isAnim, id, checkStack, token);
+                    component.ToShow(isAnim, id, checkStack, showVersion);
                 }
             }
             OnShow();
-            _CheckShow(id, checkStack, token).Forget();
+            _CheckShow(id, checkStack, showVersion).Forget();
         }
 
         private void OnShowAnimCompleteInternal()
@@ -180,31 +143,21 @@ namespace Ux
         /// 等待显示动画完成
         /// 循环等待直到：1)自身状态变为Show 2)父节点动画完成（避免父节点动画期间子节点状态异常）
         /// </summary>
-        async UniTaskVoid _CheckShow(int id, bool checkStack, CancellationTokenSource token)
+        async UniTaskVoid _CheckShow(int id, bool checkStack, int showVersion)
         {
             _ChangeAsync(true);
-            bool isCanceled = false;
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
             {
-                if (token != null && !isCanceled)
+                await UniTask.Yield();
+                if (showVersion != GetShowVersion())
                 {
-                    isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
-                    if (isCanceled)
-                    {
-                        ShowAnim?.SetToEnd();
-                        State = UIState.Show;
-                    }
-                }
-                else
-                {
-                    await UniTask.Yield();
+                    ShowAnim?.SetToEnd();
+                    State = UIState.Show;
+                    _ChangeAsync(false);
+                    return;
                 }
             }
             _ChangeAsync(false);
-            if (isCanceled)
-            {
-                return;
-            }
             OnShowAnimComplete();
             OnShowCallback?.Invoke(id, _paramVo, checkStack);
         }
@@ -226,7 +179,7 @@ namespace Ux
         protected virtual void OnShowAnimComplete() { }
         protected virtual void OnAddEvent() { }
 
-        protected virtual void ToHide(bool isAnim, bool checkStack, CancellationTokenSource token)
+        protected virtual void ToHide(bool isAnim, bool checkStack, int hideVersion)
         {
             (this as IUISetParam).SetParam(null);
             ShowAnim?.Stop();
@@ -247,13 +200,13 @@ namespace Ux
             {
                 foreach (var component in _components)
                 {
-                    component.ToHide(isAnim, checkStack, token);
+                    component.ToHide(isAnim, checkStack, hideVersion);
                 }
             }
 
             OnHide();
             RemoveTag();
-            _CheckHide(token).Forget();
+            _CheckHide(hideVersion).Forget();
         }
 
         private void OnHideAnimCompleteInternal()
@@ -265,32 +218,32 @@ namespace Ux
         /// 等待隐藏动画完成
         /// 循环等待直到：1)自身状态变为Hide 2)父节点动画完成（确保父节点先于子节点隐藏）
         /// </summary>
-        async UniTaskVoid _CheckHide(CancellationTokenSource token)
+        async UniTaskVoid _CheckHide(int hideVersion)
         {
             _ChangeAsync(true);
-            bool isCanceled = false;
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
             {
-                if (token != null && !isCanceled)
+                await UniTask.Yield();
+                if (hideVersion != GetHideVersion())
                 {
-                    isCanceled = await UniTask.Yield(token.Token).SuppressCancellationThrow();
-                    if (isCanceled)
-                    {
-                        HideAnim?.SetToEnd();
-                        State = UIState.Hide;
-                    }
-                }
-                else
-                {
-                    await UniTask.Yield();
+                    HideAnim?.SetToEnd();
+                    State = UIState.Hide;
+                    _ChangeAsync(false);
+                    return;
                 }
             }
             _ChangeAsync(false);
-            if (isCanceled)
-            {
-                return;
-            }
             OnHideCallback?.Invoke();
+        }
+
+        protected virtual int GetShowVersion()
+        {
+            return 0;
+        }
+
+        protected virtual int GetHideVersion()
+        {
+            return 0;
         }
 
         /// <summary>

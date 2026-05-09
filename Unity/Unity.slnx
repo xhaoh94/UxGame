@@ -24,9 +24,9 @@
   <Project Path="Unity.Burst.csproj" />
   <Project Path="Unity.Animation.Rigging.csproj" />
   <Project Path="Cinemachine.csproj" />
+  <Project Path="Unity.HotfixBase.csproj" />
   <Project Path="GBG.PlayableGraphMonitor.Editor.csproj" />
   <Project Path="Unity.Animation.Rigging.Editor.csproj" />
-  <Project Path="Unity.HotfixBase.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
   <Project Path="Obfuz4HybridCLR.Editor.csproj" />
   <Project Path="Unity.Main.csproj" />

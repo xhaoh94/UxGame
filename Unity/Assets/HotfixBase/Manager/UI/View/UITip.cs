@@ -1,6 +1,5 @@
 ﻿using FairyGUI;
 using System.Collections;
-using System.Threading;
 using UnityEngine;
 using static Ux.UIMgr;
 
@@ -29,7 +28,7 @@ namespace Ux
             base.InitData(data, initData);
         }
 
-        protected override void ToShow(bool isAnim, int id,  bool isStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id,  bool isStack, int showVersion)
         {            
             if (TryGetParam(out UITipFactory.TipData _tipData))
             {
@@ -42,7 +41,7 @@ namespace Ux
                 return;
             }            
             InitParam();
-            base.ToShow(isAnim, id, isStack, token);
+            base.ToShow(isAnim, id, isStack, showVersion);
         }
 
         protected virtual void InitParam()

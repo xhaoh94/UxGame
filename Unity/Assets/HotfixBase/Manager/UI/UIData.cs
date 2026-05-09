@@ -57,6 +57,12 @@ namespace Ux
         /// </summary>
         /// <returns>如果没有父面板则返回自身ID</returns>
         int GetParentID();
+
+        /// <summary>
+        /// 获取父链深度。
+        /// 根界面深度为0，直接子界面为1，依次递增。
+        /// </summary>
+        int GetParentDepth();
         
         /// <summary>
         /// 获取最后的子类面板ID（用于Tab切换场景）
@@ -202,6 +208,24 @@ namespace Ux
 
             return data == null ? ID : data.ID;
         }
+
+        public virtual int GetParentDepth()
+        {
+            var depth = 0;
+            IUIData data = this;
+            while (data != null)
+            {
+                if (data.TabData == null || data.TabData.PID == 0)
+                {
+                    break;
+                }
+
+                depth++;
+                data = UIMgr.Ins.GetUIData(data.TabData.PID);
+            }
+
+            return depth;
+        }
         
         public virtual int GetChildID()
         {
@@ -209,23 +233,13 @@ namespace Ux
             while (true)
             {
                 if (data.Children == null || data.Children.Count == 0) break;
-                bool first = true;
-                foreach (var child in data.Children)
+                var nextData = UIMgr.Ins.GetUIData(data.Children[0]);
+                if (nextData == null)
                 {
-                    var temData = UIMgr.Ins.GetUIData(child);
-                    if (temData == null) continue;
-                    if (first)
-                    {
-                        first = false;
-                        data = temData;
-                        continue;
-                    }
-
-                    if (temData.TabData == null) continue;
-                    if (!temData.TabData.IsRed()) continue;
-                    data = temData;
                     break;
                 }
+
+                data = nextData;
             }
 
             return data.ID;

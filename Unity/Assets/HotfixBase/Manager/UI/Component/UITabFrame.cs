@@ -1,7 +1,6 @@
 ﻿using FairyGUI;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Ux
 {
@@ -67,18 +66,18 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
-        protected override void ToShow(bool isAnim, int id,  bool checkStack, CancellationTokenSource token)
+        protected override void ToShow(bool isAnim, int id,  bool checkStack, int showVersion)
         {
-            base.ToShow(isAnim, id, checkStack, token);
+            base.ToShow(isAnim, id, checkStack, showVersion);
             AddItemClick(__listTab, OnTabClick);
             AddClick(__btnClose, OnBtnCloseClick);
             Refresh(-1);
         }
 
-        protected override void ToHide(bool isAnim, bool checkStack, CancellationTokenSource token)
+        protected override void ToHide(bool isAnim, bool checkStack, int hideVersion)
         {
             SelectItem?.DoHide(isAnim, checkStack);            
-            base.ToHide(isAnim, checkStack, token);
+            base.ToHide(isAnim, checkStack, hideVersion);
         }
 
         void _Hide()

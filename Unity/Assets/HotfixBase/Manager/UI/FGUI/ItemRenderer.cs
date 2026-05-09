@@ -1,6 +1,5 @@
 ﻿using FairyGUI;
 using System;
-using System.Threading;
 
 namespace Ux
 {
@@ -35,7 +34,7 @@ namespace Ux
         {
             Index = index;
             (this as IUISetParam).SetParam(data);
-            ToShow(false, 0, false, null);
+            ToShow(false, 0, false, 0);
             if (isAnim && ShowAnim != null)
             {
                 ShowAnim?.SetToStart();
@@ -45,7 +44,7 @@ namespace Ux
 
         void OnRemovedFromStage()
         {
-            ToHide(false, false, null);
+            ToHide(false, false, 0);
         }
 
 

@@ -24,6 +24,7 @@ namespace Ux
                 }
 
                 lazyloads = new List<string>();
+                var uniqueTags = Pool.Get<HashSet<string>>();
                 // 递归遍历父UI链，收集所有懒加载标签
                 while (data != null)
                 {
@@ -31,7 +32,7 @@ namespace Ux
                     {
                         foreach (var lazyload in data.Lazyloads)
                         {
-                            if (!lazyloads.Contains(lazyload))
+                            if (uniqueTags.Add(lazyload))
                             {
                                 lazyloads.Add(lazyload);
                             }
@@ -51,6 +52,9 @@ namespace Ux
 
                     data = GetUIData(data.TabData.PID);
                 }
+
+                uniqueTags.Clear();
+                Pool.Push(uniqueTags);
 
                 _idLazyloads.Add(id, lazyloads);
             }

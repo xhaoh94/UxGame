@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Ux.UI
 {
+    [UI]
     public partial class TestView
     {
         bool _runningUiChecklist;
