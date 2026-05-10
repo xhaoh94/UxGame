@@ -133,7 +133,7 @@ namespace Ux
                     return default;
                 }
 
-                var record = GetRecord(id);
+                var record = GetRecord(targetId);
                 return record?.UI is T ui ? ui : default;
             }
             finally

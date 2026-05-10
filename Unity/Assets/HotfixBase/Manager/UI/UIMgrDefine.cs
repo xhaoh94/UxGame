@@ -148,7 +148,7 @@ namespace Ux
         {
             int _id;              // UI ID
             IUIParam _param;      // 显示参数
-            bool _isAnim;         // 是否播放动画
+            bool _isAnim = true;  // 是否播放动画
 
             /// <summary>
             /// 设置UI ID

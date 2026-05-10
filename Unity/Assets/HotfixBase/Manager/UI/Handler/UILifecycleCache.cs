@@ -63,6 +63,10 @@ namespace Ux
                 return;
             }
 
+            // 先清掉同 id 的旧缓存/旧延迟销毁，避免旧实例在新实例入缓存后继续存活并反向销毁。
+            RemoveCachedEntry(id, ui);
+            RemoveWaitDelEntry(id, ui);
+
             if (ui.HideDestroyTime < 0)
             {
                 _cache[id] = ui;
@@ -83,6 +87,41 @@ namespace Ux
             {
                 record.WaitDel = wd;
                 record.CacheState = UIMgr.CacheState.WaitDestroy;
+            }
+#if UNITY_EDITOR
+            UIMgr.__Debugger_WaitDel_Event();
+#endif
+        }
+
+        private void RemoveCachedEntry(int id, IUI keep)
+        {
+            if (!_cache.TryGetValue(id, out var cached))
+            {
+                return;
+            }
+
+            _cache.Remove(id);
+            if (!ReferenceEquals(cached, keep))
+            {
+                _callback.DisposeUI(cached);
+            }
+#if UNITY_EDITOR
+            UIMgr.__Debugger_Cacel_Event();
+#endif
+        }
+
+        private void RemoveWaitDelEntry(int id, IUI keep)
+        {
+            if (!_waitDels.TryGetValue(id, out var waitDel))
+            {
+                return;
+            }
+
+            _waitDels.Remove(id);
+            waitDel.GetUI(out var oldUI);
+            if (!ReferenceEquals(oldUI, keep))
+            {
+                _callback.DisposeUI(oldUI);
             }
 #if UNITY_EDITOR
             UIMgr.__Debugger_WaitDel_Event();

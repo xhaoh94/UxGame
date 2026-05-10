@@ -36,6 +36,11 @@ namespace Ux
             /// 是否检查栈
             /// </summary>
             public bool CheckStack { get; private set; }
+
+            /// <summary>
+            /// 是否通过回退链路收集到了目标
+            /// </summary>
+            public bool UsedFallback { get; private set; }
             
             /// <summary>
             /// 隐藏目标列表
@@ -51,7 +56,13 @@ namespace Ux
                 RootId = rootId;
                 IsAnim = isAnim;
                 CheckStack = checkStack;
+                UsedFallback = false;
                 Targets.Clear();
+            }
+
+            public void MarkFallbackUsed()
+            {
+                UsedFallback = true;
             }
 
             /// <summary>
@@ -63,6 +74,7 @@ namespace Ux
                 RootId = 0;
                 IsAnim = true;
                 CheckStack = true;
+                UsedFallback = false;
                 Targets.Clear();
                 Pool.Push(this);
             }
@@ -78,11 +90,35 @@ namespace Ux
             _stackHandler.Clear();
             _hideAllIdBuffer.Clear();
 
-            // 收集需要隐藏的UI ID
+            // 先收集有 record 的可见/显示中 UI。
             foreach (var kv in _records)
             {
                 var record = kv.Value;
                 if (record.IsVisibleCommitted || record.IsShowingLike)
+                {
+                    _hideAllIdBuffer.Add(kv.Key);
+                }
+            }
+
+            // 再补收只有 showed 但没有 record 的异常残留 UI，避免 HideAll 漏关。
+            foreach (var kv in _showed)
+            {
+                if (_records.ContainsKey(kv.Key))
+                {
+                    continue;
+                }
+
+                var exists = false;
+                for (int i = 0; i < _hideAllIdBuffer.Count; i++)
+                {
+                    if (_hideAllIdBuffer[i] == kv.Key)
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists)
                 {
                     _hideAllIdBuffer.Add(kv.Key);
                 }
@@ -96,7 +132,14 @@ namespace Ux
                 {
                     continue;
                 }
-                Hide(id, false);
+
+                if (GetUIData(id) != null)
+                {
+                    Hide(id, false);
+                    continue;
+                }
+
+                ForceHideShowedOnly(id);
             }
 
             _hideAllIdBuffer.Clear();
@@ -209,22 +252,29 @@ namespace Ux
             {
                 return;
             }
-            // 如果不是根界面且当前激活的子界面不是目标界面，则不隐藏
-            if (rootId != id && rootRecord != null && rootRecord.CurrentChildId != id)
-            {
-                return;
-            }
 
-            if (rootRecord != null && rootRecord.CurrentChildId == id)
-            {
-                rootRecord.CurrentChildId = rootId;
-            }
             var session = Pool.Get<HideSession>();
             session.Reset(id, rootId, isAnim, checkStack);
             try
             {
                 // 1. 在任何隐藏回调改变可见性之前，收集当前根链路的所有目标
-                CollectHideTargets(rootId, session.Targets);
+                CollectHideTargets(rootId, session.Targets, id, session);
+                if (session.Targets.Count == 0)
+                {
+                    return;
+                }
+
+                rootRecord = GetRecord(rootId);
+                // 如果不是根界面且当前激活的子界面不是目标界面，则不隐藏
+                if (!session.UsedFallback && rootId != id && rootRecord != null && rootRecord.CurrentChildId != id)
+                {
+                    return;
+                }
+
+                if (rootRecord != null && rootRecord.CurrentChildId == id)
+                {
+                    rootRecord.CurrentChildId = rootId;
+                }
 
                 // 2. 先触发所有隐藏，使父子动画可以重叠播放
                 BeginHideChain(session);
@@ -326,29 +376,55 @@ namespace Ux
         /// <summary>
         /// 收集需要隐藏的目标列表
         /// </summary>
-        private void CollectHideTargets(int rootId, List<UIRecord> targets)
+        private void CollectHideTargets(int rootId, List<UIRecord> targets, int requestedId, HideSession session)
         {
             targets.Clear();
-            if (!_rootRecordIds.TryGetValue(rootId, out var rootSet))
+            if (_rootRecordIds.TryGetValue(rootId, out var rootSet))
             {
-                return;
+                // 收集根链路下所有需要隐藏的UI记录
+                foreach (var recordId in rootSet)
+                {
+                    if (!_records.TryGetValue(recordId, out var record))
+                    {
+                        continue;
+                    }
+
+                    // 只收集有UI实例或正在显示的记录
+                    if (record.UI == null && !record.IsShowingLike)
+                    {
+                        continue;
+                    }
+
+                    targets.Add(record);
+                }
             }
 
-            // 收集根链路下所有需要隐藏的UI记录
-            foreach (var recordId in rootSet)
+            // 根链路索引在某些竞态下可能尚未建立或已临时失配，回退到扫描记录表补齐整条根链。
+            if (targets.Count == 0)
             {
-                if (!_records.TryGetValue(recordId, out var record))
+                session.MarkFallbackUsed();
+                foreach (var kv in _records)
                 {
-                    continue;
-                }
+                    var record = kv.Value;
+                    if (record == null)
+                    {
+                        continue;
+                    }
 
-                // 只收集有UI实例或正在显示的记录
-                if (record.UI == null && !record.IsShowingLike)
-                {
-                    continue;
-                }
+                    var data = GetUIData(record.Id);
+                    var staticRootId = data?.GetParentID() ?? record.Id;
+                    if (record.Id != rootId && staticRootId != rootId && record.Id != requestedId)
+                    {
+                        continue;
+                    }
 
-                targets.Add(record);
+                    if (record.UI == null && !record.IsShowingLike && !record.IsVisibleCommitted)
+                    {
+                        continue;
+                    }
+
+                    targets.Add(record);
+                }
             }
 
             // 排序：层级深的子界面优先隐藏，同层级再按根界面和 Id 稳定排序
@@ -361,6 +437,23 @@ namespace Ux
                 if (a.Id != rootId && b.Id == rootId) return -1;
                 return a.Id.CompareTo(b.Id);
             });
+        }
+
+        private void ForceHideShowedOnly(int id)
+        {
+            if (!_showed.TryGetValue(id, out var ui) || ui == null)
+            {
+                return;
+            }
+
+            _showed.Remove(id);
+            ui.DoHide(false, false);
+#if UNITY_EDITOR
+            __Debugger_Showed_Event();
+#endif
+            EventMgr.Ins.Run(MainEventType.UI_HIDE, id);
+            EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
+            _blurHandler.OnHide(ui);
         }
 
         /// <summary>
