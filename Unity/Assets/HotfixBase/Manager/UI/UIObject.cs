@@ -27,6 +27,8 @@ namespace Ux
         private List<UIObject> _components;
         public List<UIObject> Components => _components ??= new List<UIObject>();
         private UIState _state = UIState.Hide;
+        protected int _showVersion;
+        protected int _hideVersion;
         public virtual UIState State
         {
             get => _state;
@@ -93,10 +95,7 @@ namespace Ux
         protected virtual void OnInit() { }
 
         protected virtual void CreateChildren() { }
-
-        // 缓存动画完成回调，避免Lambda闭包分配
-        private Action _onShowAnimComplete;
-        private Action _onHideAnimComplete;
+        
 
         protected virtual void ToShow(bool isAnim, int id, bool checkStack, int showVersion)
         {
@@ -104,9 +103,8 @@ namespace Ux
             if (isAnim && ShowAnim != null)
             {
                 State = UIState.ShowAnim;
-                ShowAnim?.SetToStart();
-                _onShowAnimComplete ??= OnShowAnimCompleteInternal;
-                ShowAnim?.Play(_onShowAnimComplete);
+                ShowAnim?.SetToStart();                
+                ShowAnim?.Play(OnShowAnimCompleteInternal);
             }
             else
             {
@@ -120,6 +118,7 @@ namespace Ux
                 foreach (var component in _components)
                 {
                     (component as IUISetParam).SetParam(_paramVo);
+                    component._showVersion = showVersion;
                     component.ToShow(isAnim, id, checkStack, showVersion);
                 }
             }
@@ -158,6 +157,12 @@ namespace Ux
                 }
             }
             _ChangeAsync(false);
+            // 如果延迟的DoHide在_ChangeAsync中被执行，State已不再是Show，
+            // 此时不应触发显示完成回调，否则会导致已隐藏的UI被错误地提交为可见。
+            if (State != UIState.Show)
+            {
+                return;
+            }
             OnShowAnimComplete();
             OnShowCallback?.Invoke(id, _paramVo, checkStack);
         }
@@ -186,9 +191,8 @@ namespace Ux
             if (isAnim && HideAnim != null)
             {
                 State = UIState.HideAnim;
-                HideAnim?.SetToStart();
-                _onHideAnimComplete ??= OnHideAnimCompleteInternal;
-                HideAnim?.Play(_onHideAnimComplete);
+                HideAnim?.SetToStart();                
+                HideAnim?.Play(OnHideAnimCompleteInternal);
             }
             else
             {
@@ -200,6 +204,7 @@ namespace Ux
             {
                 foreach (var component in _components)
                 {
+                    component._hideVersion = hideVersion;
                     component.ToHide(isAnim, checkStack, hideVersion);
                 }
             }
@@ -233,17 +238,23 @@ namespace Ux
                 }
             }
             _ChangeAsync(false);
+            // 如果延迟的DoShow在_ChangeAsync中被执行，State已不再是Hide，
+            // 此时不应触发隐藏完成回调。
+            if (State != UIState.Hide)
+            {
+                return;
+            }
             OnHideCallback?.Invoke();
         }
 
-        protected virtual int GetShowVersion()
+        protected int GetShowVersion()
         {
-            return 0;
+            return _showVersion;
         }
 
-        protected virtual int GetHideVersion()
+        protected int GetHideVersion()
         {
-            return 0;
+            return _hideVersion;
         }
 
         /// <summary>

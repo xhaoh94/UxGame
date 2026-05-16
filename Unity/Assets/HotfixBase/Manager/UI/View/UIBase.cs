@@ -22,9 +22,6 @@ namespace Ux
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
 
-        int _showVersion;
-        int _hideVersion;
-
         private CallbackData? _cbData;
         public virtual void InitData(IUIData data, CallbackData initData)
         {
@@ -210,19 +207,8 @@ namespace Ux
             _cbData = null;
             _async = false;
             _asyncComplete = null;
-            _showVersion = 0;
-            _hideVersion = 0;
         }
 
-        protected override int GetShowVersion()
-        {
-            return _showVersion;
-        }
-
-        protected override int GetHideVersion()
-        {
-            return _hideVersion;
-        }
         /// <summary>
         /// 设置位置并添加关联关�?
         /// </summary>

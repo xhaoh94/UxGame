@@ -320,7 +320,8 @@ namespace Ux
         {
             for (int i = session.Targets.Count - 1; i >= 0; i--)
             {
-                var pendingHide = session.Targets[i].PendingHide;
+                var record = session.Targets[i];
+                var pendingHide = record.PendingHide;
                 if (pendingHide != null)
                 {
                     await pendingHide.Task;
@@ -346,7 +347,11 @@ namespace Ux
             // 如果是刚显示就立即隐藏的情况，中断显示动画但不播放隐藏动画
             if (wasFreshlyShown || wasFreshlyVisible)
             {
+                CompletePendingShow(record, false);
                 record.UI?.DoHide(false, false);
+                // DoHide可能因为State已经是Hide而短路（父节点的递归ToHide已经处理过），
+                // 此时_OnUIHidden不会再触发，需要主动完成PendingHide。
+                CompletePendingHide(record, true);
                 return;
             }
 
@@ -365,11 +370,29 @@ namespace Ux
             // 正常隐藏流程
             if (record.UI != null && (wasVisible || wasShowing))
             {
+                // 如果正在显示中（尚未提交可见），Show流程的回调将被_async机制拦截，
+                // 需要主动完成PendingShow以避免WaitForTargetVisible永久挂起。
+                if (wasShowing && !wasVisible)
+                {
+                    CompletePendingShow(record, false);
+                }
                 record.UI.DoHide(isAnim, false);
+                // DoHide可能因为State已经是Hide而短路（父节点的递归ToHide已经处理过），
+                // 或者无动画同步完成。此时_OnUIHidden要么已触发（PendingHide已完成），
+                // 要么不会触发（短路）。两种情况下都需要确保PendingHide被完成。
+                // 如果有HideAnim正在播放，_OnUIHidden会在动画完成后调用CompletePendingHide，
+                // 此时不应提前完成。
+                if (record.UI.State == UIState.Hide)
+                {
+                    CompletePendingHide(record, true);
+                }
             }
-            else if (!IsRequestCurrent(record, version))
+            else
             {
-                CompletePendingHide(record, false);
+                // UI实例尚未就绪（如仍在Creating阶段），无法执行DoHide。
+                record.Phase = UIPhase.Hidden;
+                CompletePendingShow(record, false);
+                CompletePendingHide(record, true);
             }
         }
 

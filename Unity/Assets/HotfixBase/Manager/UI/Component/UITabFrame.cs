@@ -51,7 +51,6 @@ namespace Ux
             var parent = (IUI)Parent;
             var _children = parent.Data.Children;
             if (_children == null || _children.Count == 0) return;
-            OnHideCallback += _Hide;
         }
 
         public virtual void Refresh(int selectIndex = 0, bool scrollItToView = true)
@@ -66,24 +65,19 @@ namespace Ux
             OnTabClick(selectIndex);
         }
 
+        protected override void ToHide(bool isAnim, bool checkStack, int hideVersion)
+        {
+            SelectItem = null;
+            _children = null;
+            base.ToHide(isAnim, checkStack, hideVersion);
+        }
+
         protected override void ToShow(bool isAnim, int id,  bool checkStack, int showVersion)
         {
             base.ToShow(isAnim, id, checkStack, showVersion);
             AddItemClick(__listTab, OnTabClick);
             AddClick(__btnClose, OnBtnCloseClick);
             Refresh(-1);
-        }
-
-        protected override void ToHide(bool isAnim, bool checkStack, int hideVersion)
-        {
-            SelectItem?.DoHide(isAnim, checkStack);            
-            base.ToHide(isAnim, checkStack, hideVersion);
-        }
-
-        void _Hide()
-        {
-            SelectItem = null;
-            _children = null;
         }
 
 
@@ -99,8 +93,7 @@ namespace Ux
                 Log.Error("找不到对应的CHILD");
                 return;
             }
-            __tabContent.AddChild(tab.GObject);
-            SelectItem?.DoHide(false,false);
+            __tabContent.AddChild(tab.GObject);            
             if (index != __listTab.List.selectedIndex) __listTab.List.selectedIndex = index;
             SelectItem = tab;
         }
