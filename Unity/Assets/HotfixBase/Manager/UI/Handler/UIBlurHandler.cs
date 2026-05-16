@@ -24,6 +24,13 @@ namespace Ux
         public void OnShowed(IUI ui)
         {
             if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
+            for (int i = _blurStacks.Count - 1; i >= 0; i--)
+            {
+                if (_blurStacks[i].ID == ui.ID)
+                {
+                    _blurStacks.RemoveAt(i);
+                }
+            }
 #if UNITY_EDITOR
             _blurStacks.Add(new BlurStack(ui.Name, ui.ID, ui.Blur));
 #else

@@ -15,6 +15,7 @@ namespace Ux.UI
         public override UIBlur Blur => UIBlur.Blur;
         protected override void OnShow()
         {
+            Log.Info("xxxxxxxxxx333");
             base.OnShow();
             //TimeMgr.Ins.DoOnce(2, () =>
             //{

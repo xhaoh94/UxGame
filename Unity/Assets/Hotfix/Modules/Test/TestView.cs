@@ -20,7 +20,18 @@ namespace Ux.UI
 
             RunUiChecklist().Forget();
         }
+        partial void OnBtnMultipleClick(EventContext e)
+        {
+            RunUiTest().Forget();
+        }
 
+        async UniTaskVoid RunUiTest()
+        {
+            Log.Info("xxxxxxxxxx111");
+            UIMgr.Ins.Create().Show<BagWindow>();
+            await UIMgr.Ins.Create().Show<BagWindow>().Task();
+            Log.Info("xxxxxxxxxx222");
+        }
         async UniTaskVoid RunUiChecklist()
         {
             _runningUiChecklist = true;
@@ -28,12 +39,12 @@ namespace Ux.UI
 
             try
             {
-                await Case_ShowHide_Single();
+            //     await Case_ShowHide_Single();
                 await Case_Tab_B_Hide_B_Show_C();
-                await Case_Tab_FastShowHide_Twice();
-                await Case_Login_To_Main();
-                await Case_Stack_Open_Close();
-                await Case_CacheAndReuse();
+                // await Case_Tab_FastShowHide_Twice();
+                // await Case_Login_To_Main();
+                // await Case_Stack_Open_Close();
+                // await Case_CacheAndReuse();
             }
             catch (System.Exception ex)
             {
@@ -66,7 +77,7 @@ namespace Ux.UI
             UIMgr.Ins.Create().Show<Multiple3TabView>();
             await UniTask.DelayFrame(20);
             DumpUiState("[Case] Show(B) -> Hide(B) -> Show(C) 结束");
-            UIMgr.Ins.Hide<Multiple3TabView>();
+            // UIMgr.Ins.Hide<Multiple3TabView>();
             await UniTask.DelayFrame(10);
         }
 

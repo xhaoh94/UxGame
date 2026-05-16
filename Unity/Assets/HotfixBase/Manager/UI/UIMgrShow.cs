@@ -46,6 +46,11 @@ namespace Ux
             /// 已激活的UI记录列表
             /// </summary>
             internal readonly List<UIRecord> Activated = new ();
+
+            /// <summary>
+            /// 已激活记录对应的请求版本
+            /// </summary>
+            internal readonly List<int> ActivatedVersions = new ();
             
             /// <summary>
             /// 获取根界面ID
@@ -64,6 +69,7 @@ namespace Ux
                 CheckStack = checkStack;
                 Chain.Clear();
                 Activated.Clear();
+                ActivatedVersions.Clear();
             }
 
             /// <summary>
@@ -78,6 +84,7 @@ namespace Ux
                 CheckStack = true;
                 Chain.Clear();
                 Activated.Clear();
+                ActivatedVersions.Clear();
                 Pool.Push(this);
             }
         }
@@ -115,10 +122,19 @@ namespace Ux
             }
 
             var targetRecord = GetRecord(targetId);
-            // 如果同帧已有显示请求，返回已缓存的UI
+            // 如果同帧已有显示请求，等待正在进行的显示完成后再返回
             if (ShouldSkipShowRequest(targetRecord))
             {
-                return targetRecord?.UI is T cachedUI ? cachedUI : default;
+                if (targetRecord != null && !targetRecord.IsVisibleCommitted && targetRecord.PendingShow != null)
+                {
+                    var showResult = await targetRecord.PendingShow.Task;
+                    if (!showResult)
+                    {
+                        return default;
+                    }
+                }
+
+                return targetRecord is { IsVisibleCommitted: true, UI: T cachedUI } ? cachedUI : default;
             }
 
             var session = Pool.Get<ShowSession>();
@@ -215,14 +231,17 @@ namespace Ux
                 record.CurrentChildId = session.TargetId;
                 record.LastShowParam = nodeId == session.RequestedId ? session.Param : null;
                 record.LastShowRequestFrame = Time.frameCount;
+                ResetPendingShow(record);
 
                 if (!await PrepareRecordForShow(record, version))
                 {
+                    CompletePendingShow(record, false);
                     await AbortShowSession(session, i);
                     return false;
                 }
 
                 session.Activated.Add(record);
+                session.ActivatedVersions.Add(version);
             }
 
             return true;
@@ -236,15 +255,16 @@ namespace Ux
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                if (!IsRequestCurrent(record, record.RequestVersion))
+                var version = session.ActivatedVersions[i];
+                if (!IsRequestCurrent(record, version))
                 {
+                    CompletePendingShow(record, false);
                     await AbortShowSession(session, i);
                     return false;
                 }
 
                 record.Phase = UIPhase.Showing;
                 record.LastShowStartFrame = Time.frameCount;
-                ResetPendingShow(record);
                 await record.UI.DoShow(session.IsAnim, session.RequestedId,
                     record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
             }
@@ -258,16 +278,17 @@ namespace Ux
         private async UniTask<bool> WaitForTargetVisible(ShowSession session)
         {
             var targetRecord = session.Activated[session.Activated.Count - 1];
+            var targetVersion = session.ActivatedVersions[session.ActivatedVersions.Count - 1];
             if (targetRecord.IsVisibleCommitted)
             {
-                return IsRequestCurrent(targetRecord, targetRecord.RequestVersion);
+                return IsRequestCurrent(targetRecord, targetVersion);
             }
 
             if (targetRecord.PendingShow != null)
             {
                 await targetRecord.PendingShow.Task;
             }
-            return IsRequestCurrent(targetRecord, targetRecord.RequestVersion);
+            return IsRequestCurrent(targetRecord, targetVersion);
         }
 
         /// <summary>
@@ -278,7 +299,8 @@ namespace Ux
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                if (!IsRequestCurrent(record, record.RequestVersion))
+                var version = session.ActivatedVersions[i];
+                if (!IsRequestCurrent(record, version))
                 {
                     AbortShowSession(session, i + 1).Forget();
                     return false;

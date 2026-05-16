@@ -1,0 +1,137 @@
+# Code Context
+
+## Files Retrieved
+1. `Unity/Assets/HotfixBase/Manager/UI/UIMgr.cs` (lines 240-430, 460-520) - UI 管理器核心状态、记录表、根链路索引、显示完成提交点。
+2. `Unity/Assets/HotfixBase/Manager/UI/UIMgrShow.cs` (lines 1-240, 360-472) - ShowSession、显示链构建、父子链并发显示、Tab 子界面协调。
+3. `Unity/Assets/HotfixBase/Manager/UI/UIMgrHide.cs` (lines 1-240, 240-420) - HideSession、HideAll、根链路隐藏、栈回退。
+4. `Unity/Assets/HotfixBase/Manager/UI/UIMgrDefine.cs` (lines 1-260, 430-520) - IUI、UIType、UIBlur、UIShowBuilder、WaitDel。
+5. `Unity/Assets/HotfixBase/Manager/UI/UIBase.cs` (lines 1-220) - 所有 UI 基类，DoShow/DoHide、AddToStage/RemoveToStage、异步门控。
+6. `Unity/Assets/HotfixBase/Manager/UI/UIObject.cs` (lines 1-220) - UIObject 生命周期状态机、动画完成等待、组件级联显示隐藏。
+7. `Unity/Assets/HotfixBase/Manager/UI/UIData.cs` (lines 1-260) - IUIData / UITabData，父子链和默认子节点推导逻辑。
+8. `Unity/Assets/HotfixBase/Manager/UI/UIMgrDownload.cs` (lines 1-120) - 懒加载资源下载和下载完成后二次 Show。
+9. `Unity/Assets/HotfixBase/Manager/UI/Handler/UIStackHandler.cs` (lines 1-74) - 栈记录更新、删除根、回退上一界面。
+10. `Unity/Assets/HotfixBase/Manager/UI/Handler/UILifecycleCache.cs` (lines 1-180) - 隐藏后缓存 / 延迟销毁 / 低内存清理。
+11. `Unity/Assets/HotfixBase/Manager/UI/Handler/UIBlurHandler.cs` (lines 1-92) - 全局模糊栈与共享 BlurFilter 应用。
+12. `Unity/Assets/HotfixBase/Manager/UI/View/UIBase.cs` (lines 1-220) - UI 抽象视图父类实现。
+13. `Unity/Assets/HotfixBase/Manager/UI/View/UIView.cs` (lines 1-18) - 普通视图挂层。
+14. `Unity/Assets/HotfixBase/Manager/UI/View/UIWindow.cs` (lines 1-52) - Window 型 UI 封装。
+15. `Unity/Assets/HotfixBase/Manager/UI/View/UIDialog.cs` (lines 1-126) - 固定弹窗实现。
+16. `Unity/Assets/HotfixBase/Manager/UI/UIDialogFactory.cs` (lines 1-260) - DialogBuilder 和 DialogData。
+17. `Unity/Assets/HotfixBase/Manager/UI/UITipFactory.cs` (lines 1-86) - Tip 工厂和位置上移逻辑。
+18. `Unity/Assets/HotfixBase/Manager/UI/UILayer.cs` (lines 1-34) - UI 层枚举。
+19. `Unity/Assets/HotfixBase/Manager/UI/UILayout.cs` (lines 1-52) - UI 布局枚举。
+
+## Key Code
+
+### 目录下文件清单
+- 根目录
+  - `UIAnim.cs`
+  - `UIBaseFactory.cs`
+  - `UIData.cs`
+  - `UIDialogFactory.cs`
+  - `UIEvent.cs`
+  - `UILayer.cs`
+  - `UILayout.cs`
+  - `UIMgr.cs`
+  - `UIMgrDefine.cs`
+  - `UIMgrDownload.cs`
+  - `UIMgrEditor.cs`
+  - `UIMgrHide.cs`
+  - `UIMgrShow.cs`
+  - `UIObject.cs`
+  - `UIParam.cs`
+  - `UITipFactory.cs`
+- `Common/`
+  - `UxLoader.cs`
+- `Component/`
+  - `RTModel.cs`
+  - `UIModel.cs`
+  - `UITabFrame.cs`
+- `FGUI/`
+  - `ItemRenderer.cs`
+  - `UIButton.cs`
+  - `UIList.cs`
+  - `UIProgressBar.cs`
+- `Handler/`
+  - `UIBlurHandler.cs`
+  - `UIHandlerDebuggerExtensions.cs`
+  - `UIHandlerInterfaces.cs`
+  - `UILifecycleCache.cs`
+  - `UIStackHandler.cs`
+- `View/`
+  - `UIBase.cs`
+  - `UIDialog.cs`
+  - `UITabView.cs`
+  - `UITip.cs`
+  - `UIView.cs`
+  - `UIWindow.cs`
+
+### 核心类职责
+- `UIMgr` (`UIMgr.cs`, `UIMgrShow.cs`, `UIMgrHide.cs`, `UIMgrDownload.cs`)
+  - UI 总入口。维护 `_records`、`_showed`、`_rootRecordIds`、`_stackEntries`。
+  - Show：按 `IUIData.GetParentIDs()` 构建根到目标链，逐个准备实例，再串行 `DoShow`，最后只等待目标可见。
+  - Hide：按根链路收集所有 record，自底向上 `DoHide`，结束后做栈回退。
+  - 还负责懒加载下载、低内存回收、模糊、缓存、调试态校验。
+- `UIRecord` (`UIMgr.cs:46-116`)
+  - 单个 UI 的运行态：`Phase`、`RequestVersion`、`ParentRootId`、`CurrentChildId`、`PendingShow/Hide`、缓存状态。
+- `UIBase` (`View/UIBase.cs`)
+  - 具体界面基类。创建 FairyGUI 对象，挂接 show/hide 回调，封装 `Hide()`、布局、异步显示隐藏入口。
+- `UIObject` (`UIObject.cs`)
+  - 组件树基类。持有 `GObject`、`Parent`、`Components`、`State`；负责动画、事件、参数透传、子组件级联。
+- `UIData` / `UITabData` (`UIData.cs`)
+  - 静态元数据。定义包、懒加载标签、tab 父子关系；`GetChildID()` 默认沿 `Children[0]` 一路走到最深节点。
+- `UIStackHandler` (`Handler/UIStackHandler.cs`)
+  - 管理“最后一次可见的根界面链路”栈，用于隐藏后回退上一个 root。
+- `UILifecycleCache` (`Handler/UILifecycleCache.cs`)
+  - Hide 后进入永久缓存或延迟销毁，低内存时统一清理。
+- `UIBlurHandler` (`Handler/UIBlurHandler.cs`)
+  - 维护 blur 栈，按栈顶 blur 类型给所有当前显示 UI 套共享滤镜，并同步场景相机模糊。
+- `UIView` / `UIWindow`
+  - `UIView` 加到 `UIMgr` 的层节点；`UIWindow` 用 FairyGUI `Window` 包装内容。
+- `UIDialog` + `UIDialogFactory`
+  - 固定层弹窗 + Builder；带复选框“以后不再提示”逻辑。
+- `UITipFactory`
+  - Tip/Toast 工厂；新 tip 出现时把旧 tip 直接上移 30 像素。
+
+### 风险点候选
+1. **默认子节点选择规则可能隐藏错误页面**  
+   `UIData.GetChildID()` 总是沿 `Children[0]` 向下 (`UIData.cs:196-216`)。若根 UI 有多个 tab/子页，`Show(rootId)` 会默认落到第一个叶子，而不是根本身或显式当前 tab。易造成“打开 A 实际显示 A-第一个子页”。
+2. **Tab 切换时旧子页被直接 `DoHide(false,false)`，未等待隐藏提交**  
+   `ReconcileRootChildren()` 只把同根其他可见子页设为 `Hiding` 并立即 `record.UI.DoHide(false,false)` (`UIMgrShow.cs:383-404`)；不等待 `PendingHide`，也不走完整 hide session。若后续立刻再 show/hide，同根 record/栈/blur 可能短暂失配。
+3. **显示链是串行 await `DoShow`，但注释称“同时启动”**  
+   `StartShowChain()` 中对每个 record `await record.UI.DoShow(...)` (`UIMgrShow.cs:234-252`)；而 `UIBase.IUI.DoShow` 在 `_async` 场景下只等“开始 show”，不等动画/资源完全 ready (`View/UIBase.cs:95-137`)。父子节点真实可见顺序依赖内部 `_async`/动画状态，容易出现注释与运行不一致，排障难。
+4. **HideAll 会边遍历 record 边发起异步 Hide，状态窗口复杂**  
+   `_HideAll()` 先收集 id 再逐个 `Hide(id,false)` (`UIMgrHide.cs:72-118`)。每个 Hide 是 `.Forget()` 异步；根链之间可能并发改 `_stackEntries`、`_showed`、`_rootRecordIds`。功能上能跑，但属于易出偶发时序问题区。
+5. **下载流程可能吞掉原始 Show 调用语义**  
+   `_CheckDownload()` 命中后直接弹下载框并返回；下载完成后重新 `Create(id).SetParam(param).SetAnim(isAnim).Show()` (`UIMgrDownload.cs:56-110`)。原调用者拿到的是 `default`，也丢失泛型返回、调用栈上下文、可能的取消语义。若业务依赖 await Show 结果，会静默失效。
+6. **`UIDialog.InitData` 先手动订阅一次 `OnHideCallback += _Hide`，base 里又订阅 `_Show/_Hide` 体系**  
+   `UIDialog.cs:24-28` 额外挂一个私有 `_Hide`。当前是设计需要，但隐藏回调链变多，若子类继续覆写/追加容易重复副作用；尤其复选框回调在 hide 时触发，若未来重复订阅会重复执行。
+7. **模糊逻辑里 `(ui.Blur & UIBlur.None) != 0` 恒为 false，语义可疑**  
+   `UIBlurHandler._FlagBlur()` 中这段判断无实际作用 (`Handler/UIBlurHandler.cs:59-63`)。看起来像本想排除某类 blur 标志，实际 `None=0` 与任何值按位与都为 0。说明该分支可能是历史残留，模糊规则易被误解。
+8. **Tip 位置累计上移，缺少回流/重排**  
+   `UITipFactory.CheckPos()` 对所有已显示 tip 每次新弹都 `y - 30` (`UITipFactory.cs:69-84`)。若旧 tip 中途销毁/隐藏，没有统一布局重算，长时间可能位置漂移、不整齐。
+9. **`WaitDel` 定时销毁与重新取回 cached UI 存在竞态敏感点**  
+   `WaitDel.GetUI()` / `Dispose()` 都会操作全局工厂 waitDel 表 (`UIMgrDefine.cs:436-510`)；`UILifecycleCache.TryTakeCached()` 直接取出 waitDel 中的 ui (`Handler/UILifecycleCache.cs:14-31`)。若同帧既回收又超时，虽然有 `timeKey` 防重入，但还是属于生命周期复杂区，值得重点测。
+
+## Architecture
+- 静态 UI 元数据在 `UIData`，描述包、懒加载、tab 父子关系。
+- `UIMgr.Create(...).Show()` 进入 `_ShowAsync`：
+  1. `GetUIData(id)` 拿元数据。
+  2. `GetChildID()` 解析真正目标。
+  3. 需要时走 `_CheckDownload()`。
+  4. `BuildShowChain()` 构建根到目标链。
+  5. `PrepareShowChain()` 为链上每个节点建/取 `UIRecord` 和实例。
+  6. `StartShowChain()` 调各节点 `DoShow()`。
+  7. 目标变 Visible 后 `_OnUIShown()` 提交到 `_showed`、`_stackHandler`、`_blurHandler`。
+  8. `ReconcileRootChildren()` 关闭同根其他子页。
+- Hide 走 `_Hide()`：
+  1. 由 `GetParentID()` 找根。
+  2. 用 `_rootRecordIds` 收集整条根链 record。
+  3. 子到父 `BeginHideRecord()`。
+  4. 等待 `PendingHide`。
+  5. 从 `UIStackHandler` 移除 root，并回退到上一个 root。
+- `UILifecycleCache` 接在 hide 完成后，负责保活或延迟销毁。
+- `UIBlurHandler` 和 `UIStackHandler` 都是 `UIMgr` 的提交后副处理器。
+
+## Start Here
+先看 `Unity/Assets/HotfixBase/Manager/UI/UIMgrShow.cs`。这里决定 Show 链、Tab 子页切换、状态版本竞争，是隐藏问题最集中的入口。
