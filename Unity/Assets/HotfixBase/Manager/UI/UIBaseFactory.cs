@@ -78,8 +78,9 @@ namespace Ux
                 return ids.Dequeue();
             }
 
-            // 如果都没有可复用的ID，则创建新的UIData
-            var data = new UIData((int)IDGenerater.GenerateId(), type);
+            // 使用UIMgr的递增ID分配器，保证类型到ID的映射唯一
+            var id = UIMgr.Ins.GetTypeId(type);
+            var data = new UIData(id, type);
             UIMgr.Ins.AddUIData(data);
             return data.ID;
         }

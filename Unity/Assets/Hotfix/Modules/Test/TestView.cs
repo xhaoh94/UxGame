@@ -16,8 +16,7 @@ namespace Ux.UI
             {
                 Log.Warning("UI 验收正在执行中，请稍后");
                 return;
-            }
-
+            }    
             RunUiChecklist().Forget();
         }
         partial void OnBtnMultipleClick(EventContext e)

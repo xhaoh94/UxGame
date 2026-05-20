@@ -466,7 +466,7 @@ namespace Ux
             /// <param name="tabData">Tab数据</param>
             public UIParse(Type type, int id, IUITabData tabData)
             {
-                id = id == 0 ? type.FullName.ToHash() : id;
+                id = id == 0 ? UIMgr.Ins.GetTypeId(type) : id;
                 Data = new UIData(id, type, tabData);
             }
 

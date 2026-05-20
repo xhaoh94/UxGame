@@ -25,6 +25,7 @@ namespace Ux
         // UI系统核心数据存储
         private readonly Dictionary<Type, string> _itemUrls = new(); // 类型到Item URL的映射
         private readonly Dictionary<Type, int> _typeId = new(); // 类型到ID的映射
+        private static int _nextTypeId = 100000; // 递增ID分配器，保证绝对不碰撞
         private readonly Dictionary<int, UIRecord> _records = new();// ID到UI记录的映射
 
         /// <summary>
@@ -545,30 +546,17 @@ namespace Ux
             return _stackEntries;
         }
 
-        /// <summary>
-        /// 将类型转换为ID
-        /// 使用类型的完整名称生成哈希值作为ID
-        /// </summary>
-        /// <param name="type">UI类型</param>
-        /// <returns>对应的ID</returns>
-        int GetTypeId(Type type)
+        internal int GetTypeId(Type type)
         {
             if (_typeId.TryGetValue(type, out var id))
             {
                 return id;
             }
 
-            id = type.FullName.ToHash();
+            id = _nextTypeId++;
             _typeId.Add(type, id);
 #if UNITY_EDITOR
-            if (_idTypeName.TryGetValue(id, out var existName) && existName != type.FullName)
-            {
-                Log.Error("UI类型ID哈希冲突。TypeA[{0}] TypeB[{1}] Id[{2}]", existName, type.FullName, id);
-            }
-            else
-            {
-                _idTypeName[id] = type.FullName;
-            }
+            _idTypeName[id] = type.FullName;
 #endif
             return id;
         }
