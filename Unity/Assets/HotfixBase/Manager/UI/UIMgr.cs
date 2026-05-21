@@ -61,10 +61,11 @@ namespace Ux
         private readonly List<string> _debugWaitDelUI = new List<string>();
 #endif
 
-        private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>(4)
+        private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>(6)
         {
             { UILayer.Root, GRoot.inst },
             { UILayer.Bottom, _CreateLayer(UILayer.Bottom, -100) },
+            { UILayer.BlurBackdrop, _CreateLayer(UILayer.BlurBackdrop, 0) },
             { UILayer.Tip, _CreateLayer(UILayer.Tip, 200) },
             { UILayer.Top, _CreateLayer(UILayer.Top, 300) }
         };
@@ -104,6 +105,7 @@ namespace Ux
             Dialog?.Clear();
             Tip?.Clear();
             _cacheHandler.ClearMemory();
+            _blurHandler.ClearSnapshots();
 
 #if UNITY_EDITOR
             __Debugger_Event();
@@ -563,14 +565,6 @@ namespace Ux
             return id;
         }
 
-        /// <summary>
-        /// 设置场景相机，用于模糊效果处理
-        /// </summary>
-        /// <param name="mainCamera">主相机</param>
-        public void SetSceneCamera(Camera mainCamera)
-        {
-            _blurHandler.SetSceneCamera(mainCamera);
-        }
 
         /// <summary>
         /// 获取当前显示的UI字典（用于模糊效果处理回调）

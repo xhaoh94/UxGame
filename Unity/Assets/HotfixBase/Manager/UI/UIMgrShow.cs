@@ -194,19 +194,26 @@ namespace Ux
                 return false;
             }
 
-            // 2. 同时启动每个节点的显示，不需要等待父动画完成
+            // 2. 如果目标UI需要模糊截图背景，在显示前截图
+            var targetRecord = GetRecord(session.TargetId);
+            if (targetRecord?.UI != null)
+            {
+                await _blurHandler.PrepareBeforeShowAsync(targetRecord.UI);
+            }
+
+            // 3. 同时启动每个节点的显示，不需要等待父动画完成
             if (!await StartShowChain(session))
             {
                 return false;
             }
 
-            // 3. 当请求的目标变为可见时，认为请求完成
+            // 4. 当请求的目标变为可见时，认为请求完成
             if (!await WaitForTargetVisible(session))
             {
                 return false;
             }
 
-            // 4. 在目标赢得竞态后，丢弃过期的完成状态
+            // 5. 在目标赢得竞态后，丢弃过期的完成状态
             if (!ValidateShowChain(session))
             {
                 return false;

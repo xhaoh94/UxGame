@@ -143,6 +143,7 @@ namespace Ux
             }
 
             _hideAllIdBuffer.Clear();
+            _blurHandler.ClearSnapshots();
         }
 
         /// <summary>

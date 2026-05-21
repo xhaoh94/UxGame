@@ -1,14 +1,20 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using FairyGUI;
 using UnityEngine;
 using static Ux.UIMgr;
 
 namespace Ux
 {
-    public class UIBlurHandler
+    internal class UIBlurHandler
     {
         private readonly IUIBlurHandlerCallback _callback;
-        private Camera _mainCamera;
         private readonly List<BlurStack> _blurStacks = new List<BlurStack>();
+
+        private readonly Stack<BlurSnapshot> _snapshots = new Stack<BlurSnapshot>();
+        private GComponent _backdropRoot;
+        private GLoader _backdropLoader;
+        private NTexture _backdropNTexture;
         private readonly FairyGUI.BlurFilter _sharedBlurFilter = new FairyGUI.BlurFilter();
 
         public UIBlurHandler(IUIBlurHandlerCallback callback)
@@ -16,14 +22,27 @@ namespace Ux
             _callback = callback;
         }
 
-        public void SetSceneCamera(Camera mainCamera)
+        public async UniTask PrepareBeforeShowAsync(IUI ui)
         {
-            _mainCamera = mainCamera;
+            if (!NeedSnapshotBlur(ui))
+            {
+                return;
+            }
+
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);            
+
+            var texture = ScreenCapture.CaptureScreenshotAsTexture();
+            texture.hideFlags = HideFlags.HideAndDontSave;
+
+            var snapshot = new BlurSnapshot(ui.ID, texture);
+
+            _snapshots.Push(snapshot);
+            ShowBackdrop(texture);
         }
 
         public void OnShowed(IUI ui)
         {
-            if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
+            if (ui.Blur == UIBlur.None) return;
             for (int i = _blurStacks.Count - 1; i >= 0; i--)
             {
                 if (_blurStacks[i].ID == ui.ID)
@@ -36,80 +55,125 @@ namespace Ux
 #else
             _blurStacks.Add(new BlurStack(ui.ID, ui.Blur));
 #endif
-            _FlagBlur();
         }
 
         public void OnHide(IUI ui)
         {
-            if (ui.Blur == UIBlur.None || ui.Blur == UIBlur.Normal) return;
+            if (_snapshots.Count > 0)
+            {
+                if (_snapshots.Peek().OwnerId == ui.ID)
+                {
+                    var snapshot = _snapshots.Pop();
+                    ReleaseTexture(snapshot.Texture);
+
+                    if (_snapshots.Count > 0)
+                    {
+                        ShowBackdrop(_snapshots.Peek().Texture);
+                    }
+                    else
+                    {
+                        HideBackdrop();
+                    }
+                    return;
+                }
+            }
+
+            if (ui.Blur == UIBlur.None) return;
             for (int i = _blurStacks.Count - 1; i >= 0; i--)
             {
                 if (_blurStacks[i].ID == ui.ID)
                 {
                     _blurStacks.RemoveAt(i);
-                    _FlagBlur();
                     return;
                 }
             }
         }
 
-        void _FlagBlur()
+        public void ClearSnapshots()
         {
-            bool flagBlur = false, flagFixed = false, flagScene = false;
-            BlurStack? blurStack = null;
-            if (_blurStacks.Count > 0)
+            while (_snapshots.Count > 0)
             {
-                blurStack = _blurStacks[_blurStacks.Count - 1];
-                var blur = blurStack.Value.Blur;
-                flagBlur = (blur & UIBlur.Blur) != 0;
-                flagFixed = (blur & UIBlur.Fixed) != 0;
+                var snapshot = _snapshots.Pop();
+                ReleaseTexture(snapshot.Texture);
+            }
+            HideBackdrop();
+        }
+
+        private bool NeedSnapshotBlur(IUI ui)
+        {
+            return ui != null && (ui.Blur & UIBlur.Blur) != 0;
+        }
+
+        private void EnsureBackdrop()
+        {
+            if (_backdropRoot != null) return;
+
+            _backdropRoot = new GComponent();
+            _backdropRoot.name = _backdropRoot.gameObjectName = "BlurBackdrop";
+            _backdropRoot.sortingOrder = 10;
+            _backdropRoot.MakeFullScreen();
+            _backdropRoot.AddRelation(GRoot.inst, RelationType.Size);
+            UIMgr.Ins.GetLayer(UILayer.BlurBackdrop).AddChild(_backdropRoot);
+
+            _backdropLoader = new GLoader();            
+            _backdropLoader.SetSize(GRoot.inst.width, GRoot.inst.height);
+            _backdropLoader.fill = FillType.ScaleFree;
+            _backdropRoot.AddChild(_backdropLoader);
+        }
+
+        private void ShowBackdrop(Texture texture)
+        {
+            EnsureBackdrop();
+
+            if (_backdropNTexture != null)
+            {
+                _backdropNTexture.Dispose();
             }
 
-            var showed = _callback.GetShowedDict();
-            var topBlurId = blurStack?.ID ?? 0;
-            foreach (var ui in showed.Values)
+            _backdropNTexture = new NTexture(texture);
+            _backdropLoader.texture = _backdropNTexture;
+            _backdropRoot.visible = true;
+            _backdropRoot.filter = _sharedBlurFilter;
+        }
+
+        private void HideBackdrop()
+        {
+            if (_backdropRoot != null)
             {
-                if (blurStack == null)
-                {
-                    ui.Filter = null;
-                    continue;
-                }
-                if (ui.ID == topBlurId)
-                {
-                    ui.Filter = null;
-                    continue;
-                }
-                if ((ui.Blur & UIBlur.None) != 0)
-                {
-                    ui.Filter = null;
-                    continue;
-                }
-                if (ui.Type == UIType.Fixed && !flagFixed)
-                {
-                    ui.Filter = null;
-                    continue;
-                }
-                if (ui.Type != UIType.Fixed && !flagBlur)
-                {
-                    ui.Filter = null;
-                    continue;
-                }
-                if (ReferenceEquals(ui.Filter, _sharedBlurFilter) || ui.Filter is FairyGUI.BlurFilter)
-                {
-                    ui.Filter = _sharedBlurFilter;
-                    continue;
-                }
-                ui.Filter = _sharedBlurFilter;
+                _backdropRoot.visible = false;
+                _backdropRoot.filter = null;
             }
 
-            if (_mainCamera != null)
+            if (_backdropNTexture != null)
             {
-                if (blurStack != null)
+                var unityTex = _backdropNTexture.nativeTexture;
+                _backdropNTexture.Dispose();
+                _backdropNTexture = null;
+                if (unityTex != null)
                 {
-                    flagScene = (blurStack.Value.Blur & UIBlur.Scene) != 0;
+                    Object.Destroy(unityTex);
                 }
-                Blur.SetCamera(_mainCamera, flagScene);
             }
+        }
+
+        private void ReleaseTexture(Texture texture)
+        {
+            if (texture != null)
+            {
+                Object.Destroy(texture);
+            }
+        }
+    }
+
+    internal readonly struct BlurSnapshot
+    {
+        public readonly int OwnerId;
+        public readonly Texture Texture;
+
+        public BlurSnapshot(int ownerId, Texture texture)
+        {
+            OwnerId = ownerId;
+            Texture = texture;
         }
     }
 }
