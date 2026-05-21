@@ -14,6 +14,7 @@ namespace Ux
         protected override UILayer Layer => UILayer.Tip;
         public override UIType Type => UIType.Fixed;
         public override UIBlur Blur => UIBlur.None;
+        public override UIFocusMode FocusMode => UIFocusMode.None;
 
         protected UITipFactory.TipData tipData;
 

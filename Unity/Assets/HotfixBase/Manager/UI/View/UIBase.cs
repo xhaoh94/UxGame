@@ -21,6 +21,21 @@ namespace Ux
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.Normal;
+        public virtual UIFocusMode FocusMode => UIFocusMode.Auto;
+        public virtual bool CanFocus => FocusMode != UIFocusMode.None && Visible;
+
+        void IUI.NotifyFocusEnter()
+        {
+            OnFocusEnter();
+        }
+
+        void IUI.NotifyFocusExit()
+        {
+            OnFocusExit();
+        }
+
+        protected virtual void OnFocusEnter() { }
+        protected virtual void OnFocusExit() { }
 
         private CallbackData? _cbData;
         public virtual void InitData(IUIData data, CallbackData initData)

@@ -496,6 +496,8 @@ namespace Ux
             
             // 通知模糊效果处理器
             _blurHandler.OnShowed(ui);
+            // 通知聚焦处理器
+            _focusHandler.OnShowed(ui);
             CompletePendingShow(record, true);
         }
     }

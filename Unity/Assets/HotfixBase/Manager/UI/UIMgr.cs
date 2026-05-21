@@ -10,7 +10,7 @@ namespace Ux
     /// <summary>
     /// UI管理器类，负责管理整个UI系统的生命周期、显示、隐藏、栈管理等核心功能    
     /// </summary>
-    public partial class UIMgr : Singleton<UIMgr>, IUIBlurHandlerCallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess
+    public partial class UIMgr : Singleton<UIMgr>, IUIBlurHandlerCallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess, IUIFocusHandlerCallback
     {    
         /// <summary>
         /// 对话框工厂实例，用于创建和管理对话框
@@ -44,6 +44,7 @@ namespace Ux
         private readonly UICacheHandler _cacheHandler;      // UI缓存处理器
         private readonly UIBlurHandler _blurHandler;          // UI模糊效果处理器
         private readonly UIStackHandler _stackHandler;        // UI栈处理器
+        private readonly UIFocusHandler _focusHandler;        // UI聚焦处理器
         private HashSet<int> _ignoreSet;                      // 忽略集合，用于HideAll时排除特定UI
 
 #if UNITY_EDITOR
@@ -89,6 +90,7 @@ namespace Ux
             _cacheHandler = new UICacheHandler(this);
             _blurHandler = new UIBlurHandler(this);
             _stackHandler = new UIStackHandler(_stackEntries);
+            _focusHandler = new UIFocusHandler(this);
             _initData = new CallbackData(_OnUIShown, _OnUIHidden);
         }
 
@@ -653,6 +655,86 @@ namespace Ux
         void IUIMgrDebuggerAccess.FillWaitDelUI(List<string> output)
         {
             _cacheHandler.FillWaitDestroyDebugNames(output);
+        }
+
+        /// <summary>
+        /// 手动聚焦指定类型的UI
+        /// </summary>
+        public bool Focus<T>() where T : UIBase
+        {
+            return _focusHandler.Focus(GetTypeId(typeof(T)));
+        }
+
+        /// <summary>
+        /// 手动聚焦指定ID的UI
+        /// </summary>
+        public bool Focus(int id)
+        {
+            return _focusHandler.Focus(id);
+        }
+
+        /// <summary>
+        /// 获取当前聚焦的UI
+        /// </summary>
+        public IUI GetFocusedUI()
+        {
+            return _focusHandler.GetFocusedUI();
+        }
+
+        /// <summary>
+        /// 获取当前聚焦的UI（泛型）
+        /// </summary>
+        public T GetFocusedUI<T>() where T : class, IUI
+        {
+            return _focusHandler.GetFocusedUI<T>();
+        }
+
+        /// <summary>
+        /// 检查指定ID的UI是否处于聚焦状态
+        /// </summary>
+        public bool IsFocused(int id)
+        {
+            return _focusHandler.IsFocused(id);
+        }
+
+        /// <summary>
+        /// 检查指定类型的UI是否处于聚焦状态
+        /// </summary>
+        public bool IsFocused<T>() where T : UIBase
+        {
+            return _focusHandler.IsFocused<T>();
+        }
+
+        /// <summary>
+        /// 清空当前聚焦状态
+        /// </summary>
+        public void ClearFocus()
+        {
+            _focusHandler.Clear();
+        }
+
+        /// <summary>
+        /// 获取当前显示的UI字典（用于聚焦处理器回调）
+        /// </summary>
+        Dictionary<int, IUI> IUIFocusHandlerCallback.GetShowedDict()
+        {
+            return _showed;
+        }
+
+        /// <summary>
+        /// 获取指定ID的已显示UI（用于聚焦处理器回调）
+        /// </summary>
+        IUI IUIFocusHandlerCallback.GetShownUI(int id)
+        {
+            return _showed.TryGetValue(id, out var ui) ? ui : null;
+        }
+
+        /// <summary>
+        /// 检查指定ID的UI是否可见（用于聚焦处理器回调）
+        /// </summary>
+        bool IUIFocusHandlerCallback.IsVisible(int id)
+        {
+            return IsShowPhase(GetRecord(id));
         }
     }
 }

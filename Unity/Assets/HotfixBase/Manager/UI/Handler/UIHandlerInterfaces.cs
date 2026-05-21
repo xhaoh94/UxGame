@@ -21,4 +21,11 @@ namespace Ux
         void FillCacheUI(List<string> output);
         void FillWaitDelUI(List<string> output);
     }
+
+    public interface IUIFocusHandlerCallback
+    {
+        Dictionary<int, IUI> GetShowedDict();
+        IUI GetShownUI(int id);
+        bool IsVisible(int id);
+    }
 }

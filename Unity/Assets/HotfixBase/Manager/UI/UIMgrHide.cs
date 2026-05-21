@@ -477,6 +477,7 @@ namespace Ux
             EventMgr.Ins.Run(MainEventType.UI_HIDE, id);
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
             _blurHandler.OnHide(ui);
+            _focusHandler.OnHidden(ui);
         }
 
         /// <summary>
@@ -503,6 +504,7 @@ namespace Ux
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.ID);
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
             _blurHandler.OnHide(ui);
+            _focusHandler.OnHidden(ui);
         }
 
         /// <summary>
@@ -512,6 +514,7 @@ namespace Ux
         {
             var id = ui.ID;
             var record = GetRecord(id);
+            _focusHandler.OnDisposed(ui);
             ui.Dispose();
             _cacheHandler.RemoveRecord(record);
             RemoveRecord(id);

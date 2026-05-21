@@ -84,6 +84,26 @@ namespace Ux
         /// <param name="isAnim">是否播放动画</param>
         /// <param name="checkStack">是否检查栈</param>
         void DoHide(bool isAnim, bool checkStack);
+        
+        /// <summary>
+        /// 聚焦模式
+        /// </summary>
+        UIFocusMode FocusMode { get; }
+        
+        /// <summary>
+        /// 是否可以聚焦
+        /// </summary>
+        bool CanFocus { get; }
+        
+        /// <summary>
+        /// 进入聚焦回调
+        /// </summary>
+        void NotifyFocusEnter();
+        
+        /// <summary>
+        /// 离开聚焦回调
+        /// </summary>
+        void NotifyFocusExit();
     }
     
     /// <summary>
@@ -105,6 +125,27 @@ namespace Ux
         /// 固定UI，始终显示在最顶层，不受栈管理影响
         /// </summary>
         Fixed,
+    }
+
+    /// <summary>
+    /// UI聚焦模式枚举
+    /// </summary>
+    public enum UIFocusMode
+    {
+        /// <summary>
+        /// 不参与聚焦
+        /// </summary>
+        None,
+        
+        /// <summary>
+        /// 显示后自动聚焦，也允许手动聚焦
+        /// </summary>
+        Auto,
+        
+        /// <summary>
+        /// 显示后不自动聚焦，只允许通过API手动聚焦
+        /// </summary>
+        Manual,
     }
 
     /// <summary>
