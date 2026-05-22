@@ -155,29 +155,14 @@ namespace Ux
     public enum UIBlur
     {
         /// <summary>
-        /// 无模糊效果
+        /// 无模糊效果（默认）
         /// </summary>
         None = 0x0,
         
         /// <summary>
-        /// 普通模糊
+        /// 强模糊（触发截图背景模糊）
         /// </summary>
-        Normal = 0x1,
-        
-        /// <summary>
-        /// 强模糊
-        /// </summary>
-        Blur = 0x2,
-        
-        /// <summary>
-        /// 固定模糊（用于固定UI）
-        /// </summary>
-        Fixed = 0x4,
-        
-        /// <summary>
-        /// 场景模糊
-        /// </summary>
-        Scene = 0x8,
+        Blur = 0x1,
     }
 
     public partial class UIMgr

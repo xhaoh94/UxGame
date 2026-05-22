@@ -20,7 +20,7 @@ namespace Ux
         /// </summary>
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
-        public virtual UIBlur Blur => UIBlur.Normal;
+        public virtual UIBlur Blur => UIBlur.None;
         public virtual UIFocusMode FocusMode => UIFocusMode.Auto;
         public virtual bool CanFocus => FocusMode != UIFocusMode.None && Visible;
 

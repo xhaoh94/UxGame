@@ -12,7 +12,7 @@ namespace Ux
 
         public override int HideDestroyTime => -1;
         public override UIType Type => UIType.Fixed;
-        public override UIBlur Blur => UIBlur.None | UIBlur.Blur | UIBlur.Fixed;
+        public override UIBlur Blur => UIBlur.Blur;
         protected DialogData dialogData;
         private DialogCallbackData _callbackData;
 
