@@ -209,7 +209,81 @@ namespace Ux
         }
 
         /// <summary>
-        /// UI记录类，跟踪每个UI实例的详细状态信息
+        /// UI事务类型。
+        /// </summary>
+        internal enum UITransitionKind
+        {
+            None,
+            Show,
+            Hide,
+        }
+
+        internal sealed class UITransition
+        {
+            public UITransitionKind Kind { get; private set; } = UITransitionKind.None;
+            public int Version { get; private set; }
+            public UniTaskCompletionSource<bool> PendingShow { get; private set; }
+            public UniTaskCompletionSource<bool> PendingHide { get; private set; }
+
+            public int BeginShow(UIRecord record)
+            {
+                CancelShow();
+                CancelHide();
+                Version = ++record.RequestVersion;
+                Kind = UITransitionKind.Show;
+                PendingShow = new UniTaskCompletionSource<bool>();
+                return Version;
+            }
+
+            public int BeginHide(UIRecord record)
+            {
+                CancelShow();
+                CancelHide();
+                Version = ++record.RequestVersion;
+                Kind = UITransitionKind.Hide;
+                PendingHide = new UniTaskCompletionSource<bool>();
+                return Version;
+            }
+
+            public void CompleteShow(bool result)
+            {
+                var pending = PendingShow;
+                PendingShow = null;
+                pending?.TrySetResult(result);
+                if (Kind == UITransitionKind.Show)
+                {
+                    Kind = UITransitionKind.None;
+                }
+            }
+
+            public void CompleteHide(bool result)
+            {
+                var pending = PendingHide;
+                PendingHide = null;
+                pending?.TrySetResult(result);
+                if (Kind == UITransitionKind.Hide)
+                {
+                    Kind = UITransitionKind.None;
+                }
+            }
+
+            private void CancelShow()
+            {
+                var pending = PendingShow;
+                PendingShow = null;
+                pending?.TrySetResult(false);
+            }
+
+            private void CancelHide()
+            {
+                var pending = PendingHide;
+                PendingHide = null;
+                pending?.TrySetResult(false);
+            }
+        }
+
+        /// <summary>
+        /// UI记录类，跟踪每个UI实例的详细状态信息。
         /// </summary>
         internal sealed class UIRecord
         {
@@ -223,6 +297,7 @@ namespace Ux
             /// 避免旧请求在晚于新请求完成时，把界面状态错误地回滚到过期结果。
             /// </summary>
             public int RequestVersion;
+            public readonly UITransition Transition = new UITransition();
 
             /// <summary>
             /// 当前界面所在父子链路对应的根界面 Id。
@@ -236,18 +311,15 @@ namespace Ux
             /// 用于描述同一条 UI 根链路里当前焦点落在哪个子页面上，
             /// 方便父子界面切换时快速确定当前生效的节点。
             /// </summary>
-            public int CurrentChildId;
+            internal int CurrentChildId;
 
             /// <summary>
             /// 当前根界面下实际挂载到内容容器中的子界面Id。
             /// 与CurrentChildId分离：CurrentChildId表示最新请求目标，MountedChildId表示真实挂载目标。
             /// </summary>
-            public int MountedChildId;
+            internal int MountedChildId;
 
             public IUIParam LastShowParam;          // 最近一次显示时传递的参数
-            public int LastShowRequestFrame;        // 最近一次显示请求的帧号
-            public int LastHideRequestFrame;        // 最近一次隐藏请求的帧号
-
             /// <summary>
             /// 最近一次开始执行显示流程时的帧号。
             /// 主要用于识别"刚发起显示，马上又请求隐藏"的场景，
@@ -263,14 +335,14 @@ namespace Ux
             /// 后续新的显示请求如果发现同一个界面还没完全隐藏结束，
             /// 可以统一等待这个完成源，避免重复发起隐藏或与未完成的隐藏流程互相打架。
             /// </summary>
-            public UniTaskCompletionSource<bool> PendingHide;
+            public UniTaskCompletionSource<bool> PendingHide => Transition.PendingHide;
 
             /// <summary>
             /// 正在执行显示提交流程时共享的等待句柄。
             /// 当多个调用方几乎同时请求显示同一个界面时，
             /// 可以共同等待这一次可见状态提交完成，避免产生多份重复的异步等待对象。
             /// </summary>
-            public UniTaskCompletionSource<bool> PendingShow;
+            public UniTaskCompletionSource<bool> PendingShow => Transition.PendingShow;
 
             public WaitDel WaitDel;                 // 等待销毁的延迟处理对象
 

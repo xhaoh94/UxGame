@@ -154,10 +154,9 @@ namespace Ux
             {
                 Id = id,
                 ParentRootId = data?.GetParentID() ?? id,
-                CurrentChildId = id,
             };
             _records.Add(id, record);
-            RegisterRecordToRoot(record, record.ParentRootId);
+            BindRecordToRootRequest(record, record.ParentRootId, id);
             return record;
         }
 
@@ -173,14 +172,19 @@ namespace Ux
         }
 
         /// <summary>
-        /// 递增请求版本号并返回新版本
+        /// 开始显示事务并返回本次请求版本。
         /// </summary>
-        /// <param name="record">UI记录</param>
-        /// <returns>新的请求版本号</returns>
-        internal int NextRequestVersion(UIRecord record)
+        internal int BeginShowTransition(UIRecord record)
         {
-            record.RequestVersion++;
-            return record.RequestVersion;
+            return record.Transition.BeginShow(record);
+        }
+
+        /// <summary>
+        /// 开始隐藏事务并返回本次请求版本。
+        /// </summary>
+        internal int BeginHideTransition(UIRecord record)
+        {
+            return record.Transition.BeginHide(record);
         }
 
         /// <summary>
@@ -192,7 +196,110 @@ namespace Ux
         /// <returns>如果版本匹配返回true，否则返回false</returns>
         internal bool IsRequestCurrent(UIRecord record, int version)
         {
-            return record != null && record.RequestVersion == version;
+            return record != null && record.RequestVersion == version && record.Transition.Version == version;
+        }
+
+        //获取当前请求的子页签
+        internal int GetRequestedRootChildId(int rootId)
+        {
+            return GetRequestedRootChildId(GetRecord(rootId));
+        }
+        //获取当前请求的子页签
+        internal int GetRequestedRootChildId(UIRecord record)
+        {
+            return record?.CurrentChildId ?? 0;
+        }
+
+        internal int GetActiveRootChildId(UIRecord record)
+        {
+            if (record == null)
+            {
+                return 0;
+            }
+
+            return record.CurrentChildId == 0 ? record.Id : record.CurrentChildId;
+        }
+
+        internal int GetMountedRootChildId(int rootId)
+        {
+            var rootRecord = GetRecord(rootId);
+            return rootRecord?.MountedChildId ?? 0;
+        }
+
+        internal bool IsRootChildRequested(int rootId, int childId)
+        {
+            return GetRequestedRootChildId(rootId) == childId;
+        }
+
+        internal void SetRootChildRequest(int rootId, int childId)
+        {
+            var rootRecord = GetRecord(rootId);
+            if (rootRecord == null)
+            {
+                return;
+            }
+
+            rootRecord.CurrentChildId = childId == 0 ? rootId : childId;
+        }
+
+        internal void BindRecordToRootRequest(UIRecord record, int rootId, int childId)
+        {
+            if (record == null)
+            {
+                return;
+            }
+
+            RegisterRecordToRoot(record, rootId);
+            record.CurrentChildId = childId == 0 ? rootId : childId;
+        }
+
+        internal void ResetRootChildRequestIfCurrent(int rootId, int childId)
+        {
+            var rootRecord = GetRecord(rootId);
+            if (rootRecord == null || rootRecord.CurrentChildId != childId)
+            {
+                return;
+            }
+
+            rootRecord.CurrentChildId = rootId;
+        }
+
+        internal void MarkRootChildMounted(int rootId, int childId)
+        {
+            if (rootId == 0 || childId == 0 || rootId == childId)
+            {
+                return;
+            }
+
+            var rootRecord = GetRecord(rootId);
+            if (rootRecord != null)
+            {
+                rootRecord.MountedChildId = childId;
+            }
+        }
+
+        internal void ClearMountedRootChild(UIRecord record)
+        {
+            if (record == null)
+            {
+                return;
+            }
+
+            ClearMountedRootChild(record.ParentRootId, record.Id);
+        }
+
+        internal void ClearMountedRootChild(int rootId, int childId)
+        {
+            if (rootId == 0 || childId == 0 || rootId == childId)
+            {
+                return;
+            }
+
+            var rootRecord = GetRecord(rootId);
+            if (rootRecord != null && rootRecord.MountedChildId == childId)
+            {
+                rootRecord.MountedChildId = 0;
+            }
         }
 
         /// <summary>fa
@@ -266,10 +373,11 @@ namespace Ux
                 return;
             }
 
-            if (rootRecord.CurrentChildId != activeId)
+            var currentChildId = GetRequestedRootChildId(rootRecord);
+            if (currentChildId != activeId)
             {
                 Log.Error("UI根节点当前子界面不一致。RootId[{0}] CurrentChild[{1}] ActiveId[{2}]",
-                    rootId, rootRecord.CurrentChildId, activeId);
+                    rootId, currentChildId, activeId);
             }
         }
 #endif
@@ -294,61 +402,9 @@ namespace Ux
             return record != null && record.LastShowStartFrame > 0 && Time.frameCount - record.LastShowStartFrame <= 1;
         }
 
-        /// <summary>
-        /// 检查是否应该跳过显示请求
-        /// 用于避免同一帧内的重复显示请求
-        /// </summary>
-        /// <param name="record">UI记录</param>
-        /// <returns>如果需要跳过返回true，否则返回false</returns>
-        internal bool ShouldSkipShowRequest(UIRecord record)
-        {
-            if (record == null)
-            {
-                return false;
-            }
-
-            // 同一帧内的重复显示请求直接忽略。
-            // 只要当前记录已经处于"正在显示"或"已经可见"状态，
-            // 就不再重复进入显示流程，避免重复创建动画、重复刷新层级或产生状态竞争。
-            return record.LastShowRequestFrame == Time.frameCount && (record.IsVisibleCommitted || record.IsShowingLike);
-        }
-
-        /// <summary>
-        /// 检查是否应该跳过隐藏请求
-        /// 用于避免同一帧内的重复隐藏请求
-        /// </summary>
-        /// <param name="record">UI记录</param>
-        /// <returns>如果需要跳过返回true，否则返回false</returns>
-        internal bool ShouldSkipHideRequest(UIRecord record)
-        {
-            if (record == null)
-            {
-                return false;
-            }
-
-            // 同一帧内的重复隐藏请求直接忽略。
-            // 如果当前记录已经进入隐藏流程或已经处于隐藏状态，
-            // 再次收到同帧隐藏请求没有意义，直接跳过以避免重复回收和状态覆盖。
-            return record.LastHideRequestFrame == Time.frameCount && (record.IsHidingLike || record.Phase == UIPhase.Hidden);
-        }
-
         internal bool IsShowPhase(UIRecord record)
         {
             return record != null && (record.Phase == UIPhase.Showing || record.Phase == UIPhase.Visible);
-        }
-
-        internal UniTaskCompletionSource<bool> ResetPendingShow(UIRecord record)
-        {
-            record.PendingShow?.TrySetResult(false);
-            record.PendingShow = new UniTaskCompletionSource<bool>();
-            return record.PendingShow;
-        }
-
-        internal UniTaskCompletionSource<bool> ResetPendingHide(UIRecord record)
-        {
-            record.PendingHide?.TrySetResult(false);
-            record.PendingHide = new UniTaskCompletionSource<bool>();
-            return record.PendingHide;
         }
 
         internal void CompletePendingShow(UIRecord record, bool result)
@@ -358,8 +414,7 @@ namespace Ux
                 return;
             }
 
-            record.PendingShow.TrySetResult(result);
-            record.PendingShow = null;
+            record.Transition.CompleteShow(result);
         }
 
         internal void CompletePendingHide(UIRecord record, bool result)
@@ -369,8 +424,7 @@ namespace Ux
                 return;
             }
 
-            record.PendingHide.TrySetResult(result);
-            record.PendingHide = null;
+            record.Transition.CompleteHide(result);
         }
 
         /// <summary>
@@ -414,11 +468,8 @@ namespace Ux
         {
             if (_records.TryGetValue(id, out var record))
             {
-                var rootRecord = GetRecord(record.ParentRootId);
-                if (rootRecord != null && rootRecord.MountedChildId == id)
-                {
-                    rootRecord.MountedChildId = 0;
-                }
+                ClearMountedRootChild(record);
+                ResetRootChildRequestIfCurrent(record.ParentRootId, id);
 
                 if (_rootRecordIds.TryGetValue(record.ParentRootId, out var rootSet))
                 {

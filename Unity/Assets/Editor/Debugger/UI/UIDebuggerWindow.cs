@@ -15,8 +15,7 @@ namespace Ux.Editor.Debugger.UI
 
         private DebuggerObjectSearchListView<UIDebuggerItem, IUIData> _listUI;
         private DebuggerStringListView _listShowed;
-        private DebuggerObjectListView<UIDebuggerStackItem, Ux.UIMgr.UIStack> _listStack;
-        private DebuggerStringListView _listShowing;
+        private DebuggerObjectListView<UIDebuggerStackItem, Ux.UIMgr.UIStack> _listStack;        
         private DebuggerStringListView _listCacel;        
         private DebuggerStringListView _listWaitDel;
 
@@ -24,8 +23,7 @@ namespace Ux.Editor.Debugger.UI
         {
             UIMgr.__Debugger_UI_CallBack = OnUpdateUI;
             UIMgr.__Debugger_Showed_CallBack = OnUpdateShowed;
-            UIMgr.__Debugger_Stack_CallBack = OnUpdateStack;
-            UIMgr.__Debugger_Showing_CallBack = OnUpdateShowing;
+            UIMgr.__Debugger_Stack_CallBack = OnUpdateStack;            
             UIMgr.__Debugger_Cacel_CallBack = OnUpdateCacel;            
             UIMgr.__Debugger_WaitDel_CallBack = OnUpdateWaitDel;
 
@@ -34,8 +32,7 @@ namespace Ux.Editor.Debugger.UI
 
             _listUI = new DebuggerObjectSearchListView<UIDebuggerItem, IUIData>(veList, 5);
             _listShowed = new DebuggerStringListView(listShowed, OnBtnClick);
-            _listStack = new DebuggerObjectListView<UIDebuggerStackItem, UIMgr.UIStack>(listStack, OnBtnClick);
-            _listShowing = new DebuggerStringListView(listShowing, OnBtnClick);
+            _listStack = new DebuggerObjectListView<UIDebuggerStackItem, UIMgr.UIStack>(listStack, OnBtnClick);            
             _listCacel = new DebuggerStringListView(listCacel, OnBtnClick);            
             _listWaitDel = new DebuggerStringListView(listWaitDel, OnBtnClick);
 
@@ -61,10 +58,6 @@ namespace Ux.Editor.Debugger.UI
         private void OnUpdateStack(List<Ux.UIMgr.UIStack> list)
         {
             _listStack.SetData(list);
-        }
-        private void OnUpdateShowing(List<string> list)
-        {
-            _listShowing.SetData(list);
         }
         private void OnUpdateCacel(List<string> list)
         {

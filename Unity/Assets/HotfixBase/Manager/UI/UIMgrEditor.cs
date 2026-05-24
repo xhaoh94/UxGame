@@ -16,8 +16,7 @@ namespace Ux
             {
                 ((IUIMgrDebuggerAccess)Ins).FillAllUIData(Ins._debugAllUIData);
                 __Debugger_Stack_Event();
-                __Debugger_Showed_Event();
-                __Debugger_Showing_Event();
+                __Debugger_Showed_Event();                
                 __Debugger_Cacel_Event();
                 __Debugger_WaitDel_Event();
             }
@@ -65,19 +64,6 @@ namespace Ux
             }
         }
 
-        /// <summary>
-        /// 调试器正在显示UI事件（仅编辑器模式）
-        /// 通知调试面板正在显示过程中的UI列表
-        /// </summary>
-        public static void __Debugger_Showing_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                var access = (IUIMgrDebuggerAccess)Ins;
-                access.FillShowingUI(Ins._debugShowingUI);
-                __Debugger_Showing_CallBack?.Invoke(Ins._debugShowingUI);
-            }
-        }
 
         /// <summary>
         /// 调试器缓存UI事件（仅编辑器模式）

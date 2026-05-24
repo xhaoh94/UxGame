@@ -116,17 +116,63 @@ namespace Ux
 
         protected virtual void OnLayout() { }
 
-        bool _async;
-        Action _asyncComplete;
-        void IUIAsync.Change(bool b)
+        private enum QueuedTransitionKind
         {
-            _async = b;
-            if (!b)
+            None,
+            Show,
+            Hide,
+        }
+
+        bool _async;
+        int _asyncVersion;
+        int _transitionVersionSeed;
+        Action _queuedTransition;
+        AutoResetUniTaskCompletionSource _queuedShowTask;
+
+        void IUIAsync.Change(bool b, int version)
+        {
+            if (b)
             {
-                var temFn = _asyncComplete;
-                _asyncComplete = null;
-                temFn?.Invoke();
+                _async = true;
+                _asyncVersion = version;
+                return;
             }
+
+            if (_asyncVersion != version)
+            {
+                return;
+            }
+
+            _async = false;
+            _asyncVersion = 0;
+            RunQueuedTransition();
+        }
+
+        private int NextTransitionVersion()
+        {
+            return ++_transitionVersionSeed;
+        }
+
+        private void QueueTransition(QueuedTransitionKind kind, Action transition, AutoResetUniTaskCompletionSource showTask = null)
+        {
+            _queuedShowTask?.TrySetResult();
+            _queuedTransition = transition;
+            _queuedShowTask = showTask;
+        }
+
+        private void ClearQueuedTransition()
+        {
+            _queuedShowTask?.TrySetResult();
+            _queuedTransition = null;
+            _queuedShowTask = null;
+        }
+
+        private void RunQueuedTransition()
+        {
+            var transition = _queuedTransition;
+            _queuedTransition = null;
+            _queuedShowTask = null;
+            transition?.Invoke();
         }
 
         UniTask IUI.DoShow(bool isAnim, int id, IUIParam param, bool checkStack)
@@ -152,20 +198,20 @@ namespace Ux
 
             if (_async && State != UIState.HideAnim)
             {
-                _asyncComplete = _DoShow;
+                QueueTransition(QueuedTransitionKind.Show, _DoShow, task);
             }
             else
             {
                 if (State == UIState.HideAnim)
                 {
-                    _asyncComplete = null;
+                    ClearQueuedTransition();
                 }
                 _DoShow();
             }
             void _DoShow()
             {
                 (this as IUISetParam).SetParam(param);
-                _showVersion++;
+                _showVersion = NextTransitionVersion();
                 ToShow(isAnim, id, checkStack, _showVersion);
                 task.TrySetResult();
             }
@@ -195,19 +241,19 @@ namespace Ux
 
             if (_async && State != UIState.ShowAnim)
             {
-                _asyncComplete = _DoHide;
+                QueueTransition(QueuedTransitionKind.Hide, _DoHide);
             }
             else
             {
                 if (State == UIState.ShowAnim)
                 {
-                    _asyncComplete = null;
+                    ClearQueuedTransition();
                 }
                 _DoHide();
             }
             void _DoHide()
             {
-                _hideVersion++;
+                _hideVersion = NextTransitionVersion();
                 ToHide(isAnim, checkStack, _hideVersion);
             }
         }
@@ -229,7 +275,9 @@ namespace Ux
             Data = null;
             _cbData = null;
             _async = false;
-            _asyncComplete = null;
+            _asyncVersion = 0;
+            _transitionVersionSeed = 0;
+            ClearQueuedTransition();
         }
 
         /// <summary>

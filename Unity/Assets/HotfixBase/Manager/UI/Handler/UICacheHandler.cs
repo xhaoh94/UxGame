@@ -220,7 +220,6 @@ namespace Ux
                 record.Phase = UIMgr.UIPhase.Disposed;
                 record.WaitDel = null;
                 record.CacheState = UIMgr.CacheState.None;
-                record.CurrentChildId = record.ParentRootId;
                 UIMgr.Ins.RemoveRecord(ui.ID);
             }
             _callback.DisposeUI(ui);

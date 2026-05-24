@@ -130,22 +130,6 @@ namespace Ux
                 return default;
             }
 
-            var targetRecord = GetRecord(targetId);
-            // 如果同帧已有显示请求，等待正在进行的显示完成后再返回
-            if (ShouldSkipShowRequest(targetRecord))
-            {
-                if (targetRecord != null && !targetRecord.IsVisibleCommitted && targetRecord.PendingShow != null)
-                {
-                    var showResult = await targetRecord.PendingShow.Task;
-                    if (!showResult)
-                    {
-                        return default;
-                    }
-                }
-
-                return targetRecord is { IsVisibleCommitted: true, UI: T cachedUI } ? cachedUI : default;
-            }
-
             var session = Pool.Get<ShowSession>();
             session.Reset(id, targetId, param, isAnim, checkStack);
             try
@@ -197,8 +181,7 @@ namespace Ux
         /// </summary>
         private async UniTask<bool> RunShowSession(ShowSession session)
         {
-            var rootRecord = GetRecord(session.RootId);
-            session.CapturePreviousMountedChild(rootRecord?.MountedChildId ?? 0);
+            session.CapturePreviousMountedChild(GetMountedRootChildId(session.RootId));
 
             // 1. 确保父子链中的每个节点都有可用的实例
             if (!await PrepareShowChain(session))
@@ -223,9 +206,10 @@ namespace Ux
                 return false;
             }
 
-            // 3. 同时启动每个节点的显示，不需要等待父动画完成
+            // 这里如果是页签界面。则先隐藏上一个页签
             HidePreviousRootChildBeforeShow(session);
 
+            // 3. 同时启动每个节点的显示，不需要等待父动画完成
             if (!await StartShowChain(session))
             {
                 return false;
@@ -244,8 +228,61 @@ namespace Ux
                 return false;
             }
 
-            // 协调根界面的子界面
+            // 记录当前为哪个子页签
             CommitRootChildBinding(session);
+            return true;
+        }
+
+        private void RestorePreviousRootChild(ShowSession session)
+        {
+            if (!CanRestorePreviousRootChild(session))
+            {
+                return;
+            }
+
+            var previousId = session.PreviousMountedChildId;
+            if (previousId != 0)
+            {
+                var previousRecord = GetRecord(previousId);
+                if (previousRecord != null && (previousRecord.IsVisibleCommitted || previousRecord.IsShowingLike))
+                {
+                    RegisterRecordToRoot(previousRecord, session.RootId);
+                    SetRootChildRequest(session.RootId, previousId);
+                    return;
+                }
+            }
+
+            SetRootChildRequest(session.RootId, session.RootId);
+        }
+
+        private bool CanRestorePreviousRootChild(ShowSession session)
+        {
+            if (session == null)
+            {
+                return false;
+            }
+
+            var rootRecord = GetRecord(session.RootId);
+            if (rootRecord == null)
+            {
+                return false;
+            }
+
+            if (GetRequestedRootChildId(rootRecord) != session.TargetId)
+            {
+                return false;
+            }
+
+            var count = Math.Min(session.Activated.Count, session.ActivatedVersions.Count);
+            for (int i = 0; i < count; i++)
+            {
+                var record = session.Activated[i];
+                if (record?.Id == session.RootId)
+                {
+                    return IsRequestCurrent(record, session.ActivatedVersions[i]);
+                }
+            }
+
             return true;
         }
 
@@ -309,8 +346,7 @@ namespace Ux
                 }
             }
 
-            var rootRecord = GetRecord(session.RootId);
-            return rootRecord != null && rootRecord.CurrentChildId == session.TargetId;
+            return IsRootChildRequested(session.RootId, session.TargetId);
         }
 
         /// <summary>
@@ -322,16 +358,13 @@ namespace Ux
             {
                 var nodeId = session.Chain[i];
                 var record = GetOrCreateRecord(nodeId);
-                var version = NextRequestVersion(record);
-                RegisterRecordToRoot(record, session.RootId);
-                record.CurrentChildId = session.TargetId;
+                var version = BeginShowTransition(record);
+                BindRecordToRootRequest(record, session.RootId, session.TargetId);
                 record.LastShowParam = nodeId == session.RequestedId ? session.Param : null;
-                record.LastShowRequestFrame = Time.frameCount;
-                ResetPendingShow(record);
-
                 if (!await PrepareRecordForShow(record, version))
                 {
                     CompletePendingShow(record, false);
+                    RestorePreviousRootChild(session);
                     await AbortShowSession(session, i);
                     return false;
                 }
@@ -353,6 +386,7 @@ namespace Ux
                 var record = session.Activated[i];
                 if (!IsShowSessionCurrent(session))
                 {
+                    RestorePreviousRootChild(session);
                     await AbortShowSession(session, session.Activated.Count);
                     return false;
                 }
@@ -361,33 +395,20 @@ namespace Ux
                 record.LastShowStartFrame = Time.frameCount;
                 if (record.Id == session.TargetId)
                 {
-                    MarkRootChildMounted(session);
+                    MarkRootChildMounted(session.RootId, session.TargetId);
                 }
 
                 await record.UI.DoShow(session.IsAnim, session.RequestedId,
                     record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
                 if (!IsShowSessionCurrent(session))
                 {
+                    RestorePreviousRootChild(session);
                     await AbortShowSession(session, session.Activated.Count);
                     return false;
                 }
             }
 
             return true;
-        }
-
-        private void MarkRootChildMounted(ShowSession session)
-        {
-            if (session.RootId == session.TargetId)
-            {
-                return;
-            }
-
-            var rootRecord = GetRecord(session.RootId);
-            if (rootRecord != null)
-            {
-                rootRecord.MountedChildId = session.TargetId;
-            }
         }
 
         /// <summary>
@@ -405,7 +426,13 @@ namespace Ux
             {
                 await targetRecord.PendingShow.Task;
             }
-            return IsShowSessionCurrent(session);
+            if (!IsShowSessionCurrent(session))
+            {
+                RestorePreviousRootChild(session);
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -418,6 +445,7 @@ namespace Ux
                 return true;
             }
 
+            RestorePreviousRootChild(session);
             AbortShowSession(session, session.Activated.Count).Forget();
             return false;
         }
@@ -438,7 +466,6 @@ namespace Ux
             {
                 // 后续的显示可以在之前的隐藏完成后合法地重用同一记录
                 await record.PendingHide.Task;
-                record.PendingHide = null;
             }
 
             if (!IsRequestCurrent(record, version))
@@ -531,15 +558,14 @@ namespace Ux
         }
 
         /// <summary>
-        /// 协调根界面的子界面，确保Tab切换后只有一个子界面保持可见
+        /// 记录当前为哪个子页签
         /// </summary>
         private void CommitRootChildBinding(ShowSession session)
         {
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                RegisterRecordToRoot(record, session.RootId);
-                record.CurrentChildId = session.TargetId;
+                BindRecordToRootRequest(record, session.RootId, session.TargetId);
             }
 
 #if UNITY_EDITOR
@@ -638,7 +664,7 @@ namespace Ux
             }
 
             var rootId = record.ParentRootId == 0 ? record.Id : record.ParentRootId;
-            var activeId = record.CurrentChildId == 0 ? record.Id : record.CurrentChildId;
+            var activeId = GetActiveRootChildId(record);
             if (IsObsoleteShowCompletion(rootId, activeId))
             {
                 RejectObsoleteShowCompletion(record);
@@ -673,12 +699,12 @@ namespace Ux
                 return false;
             }
 
-            if (!_records.TryGetValue(rootId, out var rootRecord))
+            if (!_records.ContainsKey(rootId))
             {
                 return false;
             }
 
-            return rootRecord.CurrentChildId != activeId;
+            return !IsRootChildRequested(rootId, activeId);
         }
 
         private void RejectObsoleteShowCompletion(UIRecord record)

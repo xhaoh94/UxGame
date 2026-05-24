@@ -7,9 +7,6 @@
             <ui:Foldout text="已显示" value="true" style="flex-grow: 0;">
                 <ui:ListView focusable="true" name="listShowed" virtualization-method="DynamicHeight"/>
             </ui:Foldout>
-            <ui:Foldout text="正在显示中" value="true">
-                <ui:ListView focusable="true" name="listShowing" virtualization-method="DynamicHeight"/>
-            </ui:Foldout>
             <ui:Foldout text="缓存" value="true">
                 <ui:ListView focusable="true" name="listCacel" virtualization-method="DynamicHeight"/>
             </ui:Foldout>

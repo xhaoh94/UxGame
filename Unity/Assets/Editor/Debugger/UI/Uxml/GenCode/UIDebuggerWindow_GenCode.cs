@@ -12,7 +12,6 @@ namespace Ux.Editor.Debugger.UI
 		protected VisualElement root;
 		public ListView listStack;
 		public ListView listShowed;
-		public ListView listShowing;
 		public ListView listCacel;
 		public ListView listWaitDel;
 		public VisualElement veList;
@@ -48,14 +47,6 @@ namespace Ux.Editor.Debugger.UI
 			listShowed.selectionChanged += e => _OnListShowedItemClick(e);
 			#else
 			listShowed.onSelectionChange += e => _OnListShowedItemClick(e);
-			#endif
-			listShowing = root.Q<ListView>("listShowing");
-			listShowing.makeItem = ()=> { var e = new VisualElement(); _OnMakeListShowingItem(e); return e; };
-			listShowing.bindItem = (e,i)=> _OnBindListShowingItem(e,i);
-			#if UNITY_2022_1_OR_NEWER
-			listShowing.selectionChanged += e => _OnListShowingItemClick(e);
-			#else
-			listShowing.onSelectionChange += e => _OnListShowingItemClick(e);
 			#endif
 			listCacel = root.Q<ListView>("listCacel");
 			listCacel.makeItem = ()=> { var e = new VisualElement(); _OnMakeListCacelItem(e); return e; };
@@ -106,9 +97,6 @@ namespace Ux.Editor.Debugger.UI
 		partial void _OnMakeListShowedItem(VisualElement e);
 		partial void _OnBindListShowedItem(VisualElement e,int index);
 		partial void _OnListShowedItemClick(IEnumerable<object> objs);
-		partial void _OnMakeListShowingItem(VisualElement e);
-		partial void _OnBindListShowingItem(VisualElement e,int index);
-		partial void _OnListShowingItemClick(IEnumerable<object> objs);
 		partial void _OnMakeListCacelItem(VisualElement e);
 		partial void _OnBindListCacelItem(VisualElement e,int index);
 		partial void _OnListCacelItemClick(IEnumerable<object> objs);

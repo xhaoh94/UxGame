@@ -15,7 +15,7 @@ namespace Ux
     }
     public interface IUIAsync
     {
-        void Change(bool b);
+        void Change(bool b, int version);
     }
     public interface IUISetParam
     {
@@ -29,6 +29,7 @@ namespace Ux
         private UIState _state = UIState.Hide;
         protected int _showVersion;
         protected int _hideVersion;
+        protected int _transitionVersion;
         public virtual UIState State
         {
             get => _state;
@@ -99,12 +100,14 @@ namespace Ux
 
         protected virtual void ToShow(bool isAnim, int id, bool checkStack, int showVersion)
         {
+            _transitionVersion = showVersion;
+            _showVersion = showVersion;
             HideAnim?.Stop();
             if (isAnim && ShowAnim != null)
             {
                 State = UIState.ShowAnim;
                 ShowAnim?.SetToStart();                
-                ShowAnim?.Play(OnShowAnimCompleteInternal);
+                ShowAnim?.Play(() => OnShowAnimCompleteInternal(showVersion));
             }
             else
             {
@@ -119,6 +122,7 @@ namespace Ux
                 {
                     (component as IUISetParam).SetParam(_paramVo);
                     component._showVersion = showVersion;
+                    component._transitionVersion = showVersion;
                     component.ToShow(isAnim, id, checkStack, showVersion);
                 }
             }
@@ -126,15 +130,20 @@ namespace Ux
             _CheckShow(id, checkStack, showVersion).Forget();
         }
 
-        private void OnShowAnimCompleteInternal()
+        private void OnShowAnimCompleteInternal(int showVersion)
         {
+            if (!IsTransitionCurrent(showVersion))
+            {
+                return;
+            }
+
             State = UIState.Show;
         }
-        private void _ChangeAsync(bool b)
+        private void _ChangeAsync(bool b, int version)
         {
             if (this is IUIAsync async)
             {
-                async.Change(b);
+                async.Change(b, version);
             }
         }
         
@@ -145,7 +154,7 @@ namespace Ux
         async UniTaskVoid _CheckShow(int id, bool checkStack, int showVersion)
         {
             var hideVersion = GetHideVersion();
-            _ChangeAsync(true);
+            _ChangeAsync(true, showVersion);
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
             {
                 await UniTask.Yield();
@@ -159,14 +168,14 @@ namespace Ux
                 {
                     ShowAnim?.SetToEnd();
                     State = UIState.Show;
-                    _ChangeAsync(false);
+                    _ChangeAsync(false, showVersion);
                     return;
                 }
             }
-            _ChangeAsync(false);
+            _ChangeAsync(false, showVersion);
             // 如果延迟的DoHide在_ChangeAsync中被执行，State已不再是Show，
             // 此时不应触发显示完成回调，否则会导致已隐藏的UI被错误地提交为可见。
-            if (State != UIState.Show)
+            if (!IsTransitionCurrent(showVersion) || State != UIState.Show)
             {
                 return;
             }
@@ -193,13 +202,15 @@ namespace Ux
 
         protected virtual void ToHide(bool isAnim, bool checkStack, int hideVersion)
         {
+            _transitionVersion = hideVersion;
+            _hideVersion = hideVersion;
             (this as IUISetParam).SetParam(null);
             ShowAnim?.Stop();
             if (isAnim && HideAnim != null)
             {
                 State = UIState.HideAnim;
                 HideAnim?.SetToStart();                
-                HideAnim?.Play(OnHideAnimCompleteInternal);
+                HideAnim?.Play(() => OnHideAnimCompleteInternal(hideVersion));
             }
             else
             {
@@ -212,6 +223,7 @@ namespace Ux
                 foreach (var component in _components)
                 {
                     component._hideVersion = hideVersion;
+                    component._transitionVersion = hideVersion;
                     component.ToHide(isAnim, checkStack, hideVersion);
                 }
             }
@@ -221,8 +233,13 @@ namespace Ux
             _CheckHide(hideVersion).Forget();
         }
 
-        private void OnHideAnimCompleteInternal()
+        private void OnHideAnimCompleteInternal(int hideVersion)
         {
+            if (!IsTransitionCurrent(hideVersion))
+            {
+                return;
+            }
+
             State = UIState.Hide;
         }
 
@@ -233,7 +250,7 @@ namespace Ux
         async UniTaskVoid _CheckHide(int hideVersion)
         {
             var showVersion = GetShowVersion();
-            _ChangeAsync(true);
+            _ChangeAsync(true, hideVersion);
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
             {
                 await UniTask.Yield();
@@ -247,14 +264,14 @@ namespace Ux
                 {
                     HideAnim?.SetToEnd();
                     State = UIState.Hide;
-                    _ChangeAsync(false);
+                    _ChangeAsync(false, hideVersion);
                     return;
                 }
             }
-            _ChangeAsync(false);
+            _ChangeAsync(false, hideVersion);
             // 如果延迟的DoShow在_ChangeAsync中被执行，State已不再是Hide，
             // 此时不应触发隐藏完成回调。
-            if (State != UIState.Hide)
+            if (!IsTransitionCurrent(hideVersion) || State != UIState.Hide)
             {
                 return;
             }
@@ -269,6 +286,11 @@ namespace Ux
         protected int GetHideVersion()
         {
             return _hideVersion;
+        }
+
+        protected bool IsTransitionCurrent(int version)
+        {
+            return _transitionVersion == version;
         }
 
         /// <summary>
