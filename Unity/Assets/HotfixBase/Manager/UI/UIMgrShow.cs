@@ -194,6 +194,11 @@ namespace Ux
                 return false;
             }
 
+            if (!await EnsureShowSessionCurrent(session))
+            {
+                return false;
+            }
+
             // 2. 如果目标UI需要模糊截图背景，在显示前截图
             var targetRecord = GetRecord(session.TargetId);
             if (targetRecord?.UI != null)
@@ -201,7 +206,14 @@ namespace Ux
                 await _blurHandler.PrepareBeforeShowAsync(targetRecord.UI);
             }
 
+            if (!await EnsureShowSessionCurrent(session))
+            {
+                return false;
+            }
+
             // 3. 同时启动每个节点的显示，不需要等待父动画完成
+            HideRootSiblingsBeforeShow(session);
+
             if (!await StartShowChain(session))
             {
                 return false;
@@ -210,6 +222,7 @@ namespace Ux
             // 4. 当请求的目标变为可见时，认为请求完成
             if (!await WaitForTargetVisible(session))
             {
+                await AbortShowSession(session, session.Activated.Count);
                 return false;
             }
 
@@ -222,6 +235,72 @@ namespace Ux
             // 协调根界面的子界面
             ReconcileRootChildren(session);
             return true;
+        }
+
+        private void HideRootSiblingsBeforeShow(ShowSession session)
+        {
+            if (!IsShowSessionCurrent(session))
+            {
+                return;
+            }
+
+            foreach (var kv in _records)
+            {
+                var record = kv.Value;
+                if (record.Id == session.RootId || record.Id == session.TargetId)
+                {
+                    continue;
+                }
+
+                if (record.ParentRootId != session.RootId || record.UI == null)
+                {
+                    continue;
+                }
+
+                if (!record.IsVisibleCommitted && !record.IsShowingLike)
+                {
+                    continue;
+                }
+
+                BeginHideRecord(record, false);
+            }
+        }
+
+        private async UniTask<bool> EnsureShowSessionCurrent(ShowSession session)
+        {
+            if (IsShowSessionCurrent(session))
+            {
+                return true;
+            }
+
+            await AbortShowSession(session, session.Activated.Count);
+            return false;
+        }
+
+        private bool IsShowSessionCurrent(ShowSession session)
+        {
+            if (session == null)
+            {
+                return false;
+            }
+
+            if (session.Activated.Count != session.ActivatedVersions.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < session.Activated.Count; i++)
+            {
+                var record = session.Activated[i];
+                var version = session.ActivatedVersions[i];
+                if (!IsRequestCurrent(record, version))
+                {
+                    return false;
+                }
+            }
+
+            var rootRecord = GetRecord(session.RootId);
+            return rootRecord != null && rootRecord.CurrentChildId == session.TargetId;
         }
 
         /// <summary>
@@ -262,11 +341,9 @@ namespace Ux
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                var version = session.ActivatedVersions[i];
-                if (!IsRequestCurrent(record, version))
+                if (!IsShowSessionCurrent(session))
                 {
-                    CompletePendingShow(record, false);
-                    await AbortShowSession(session, i);
+                    await AbortShowSession(session, session.Activated.Count);
                     return false;
                 }
 
@@ -274,6 +351,11 @@ namespace Ux
                 record.LastShowStartFrame = Time.frameCount;
                 await record.UI.DoShow(session.IsAnim, session.RequestedId,
                     record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
+                if (!IsShowSessionCurrent(session))
+                {
+                    await AbortShowSession(session, session.Activated.Count);
+                    return false;
+                }
             }
 
             return true;
@@ -285,17 +367,16 @@ namespace Ux
         private async UniTask<bool> WaitForTargetVisible(ShowSession session)
         {
             var targetRecord = session.Activated[session.Activated.Count - 1];
-            var targetVersion = session.ActivatedVersions[session.ActivatedVersions.Count - 1];
             if (targetRecord.IsVisibleCommitted)
             {
-                return IsRequestCurrent(targetRecord, targetVersion);
+                return IsShowSessionCurrent(session);
             }
 
             if (targetRecord.PendingShow != null)
             {
                 await targetRecord.PendingShow.Task;
             }
-            return IsRequestCurrent(targetRecord, targetVersion);
+            return IsShowSessionCurrent(session);
         }
 
         /// <summary>
@@ -303,18 +384,13 @@ namespace Ux
         /// </summary>
         private bool ValidateShowChain(ShowSession session)
         {
-            for (int i = 0; i < session.Activated.Count; i++)
+            if (IsShowSessionCurrent(session))
             {
-                var record = session.Activated[i];
-                var version = session.ActivatedVersions[i];
-                if (!IsRequestCurrent(record, version))
-                {
-                    AbortShowSession(session, i + 1).Forget();
-                    return false;
-                }
+                return true;
             }
 
-            return true;
+            AbortShowSession(session, session.Activated.Count).Forget();
+            return false;
         }
 
         /// <summary>
@@ -323,7 +399,7 @@ namespace Ux
         private async UniTask<bool> PrepareRecordForShow(UIRecord record, int version)
         {
             // 如果UI已存在且可见，直接返回
-            if (record.UI != null && record.IsVisibleCommitted)
+            if (record.UI != null && (record.IsVisibleCommitted || record.IsShowingLike))
             {
                 return true;
             }
@@ -336,6 +412,11 @@ namespace Ux
                 record.PendingHide = null;
             }
 
+            if (!IsRequestCurrent(record, version))
+            {
+                return false;
+            }
+
             // 尝试从缓存中获取
             if (_cacheHandler.TryTakeCached(record.Id, out var cached))
             {
@@ -343,6 +424,11 @@ namespace Ux
                 record.Phase = UIPhase.Hidden;
                 record.WaitDel = null;
                 record.CacheState = CacheState.None;
+                return IsRequestCurrent(record, version);
+            }
+
+            if (record.UI != null)
+            {
                 return IsRequestCurrent(record, version);
             }
 
@@ -374,16 +460,36 @@ namespace Ux
         /// </summary>
         private async UniTask AbortShowSession(ShowSession session, int activatedCount)
         {
-            for (int i = activatedCount - 1; i >= 0; i--)
+            var count = Math.Min(activatedCount, Math.Min(session.Activated.Count, session.ActivatedVersions.Count));
+            for (int i = count - 1; i >= 0; i--)
             {
                 var record = session.Activated[i];
-                if (record == null || record.UI == null)
+                var version = session.ActivatedVersions[i];
+                if (record == null)
+                {
+                    continue;
+                }
+
+                if (!IsRequestCurrent(record, version))
                 {
                     continue;
                 }
 
                 if (record.IsVisibleCommitted)
                 {
+                    continue;
+                }
+
+                if (record.IsShowingLike)
+                {
+                    BeginHideRecord(record, false);
+                    continue;
+                }
+
+                if (record.UI == null)
+                {
+                    record.Phase = UIPhase.Hidden;
+                    CompletePendingShow(record, false);
                     continue;
                 }
 
@@ -486,18 +592,31 @@ namespace Ux
                 return;
             }
 
+            if (!ReferenceEquals(record.UI, ui))
+            {
+                ui.DoHide(false, false);
+                return;
+            }
+
+            var rootId = record.ParentRootId == 0 ? record.Id : record.ParentRootId;
+            var activeId = record.CurrentChildId == 0 ? record.Id : record.CurrentChildId;
+            if (IsObsoleteShowCompletion(rootId, activeId))
+            {
+                RejectObsoleteShowCompletion(record);
+                return;
+            }
+
             // 附加到可见记录
             AttachVisibleRecord(record);
             record.LastVisibleFrame = Time.frameCount;
-            var rootId = record.ParentRootId == 0 ? record.Id : record.ParentRootId;
             
             // 如果需要检查栈，将界面加入栈管理
             if (checkStack)
             {
-                _stackHandler.CommitVisible(rootId, record.CurrentChildId == 0 ? record.Id : record.CurrentChildId,
+                _stackHandler.CommitVisible(rootId, activeId,
                     param, ResolveStackType(ui, rootId));
 #if UNITY_EDITOR
-                ValidateCurrentChild(rootId, record.CurrentChildId == 0 ? record.Id : record.CurrentChildId);
+                ValidateCurrentChild(rootId, activeId);
 #endif
             }
             
@@ -506,6 +625,31 @@ namespace Ux
             // 通知聚焦处理器
             _focusHandler.OnShowed(ui);
             CompletePendingShow(record, true);
+        }
+
+        private bool IsObsoleteShowCompletion(int rootId, int activeId)
+        {
+            if (rootId == 0 || activeId == 0)
+            {
+                return false;
+            }
+
+            if (!_records.TryGetValue(rootId, out var rootRecord))
+            {
+                return false;
+            }
+
+            return rootRecord.CurrentChildId != activeId;
+        }
+
+        private void RejectObsoleteShowCompletion(UIRecord record)
+        {
+            if (record == null)
+            {
+                return;
+            }
+
+            BeginHideRecord(record, false);
         }
     }
 }

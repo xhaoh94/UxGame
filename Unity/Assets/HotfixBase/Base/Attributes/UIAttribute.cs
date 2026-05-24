@@ -21,12 +21,12 @@ namespace Ux
         public UIAttribute(int id, Type pId)
         {
             this.id = id;
-            tabData = new UITabData(pId.FullName.ToHash());
+            tabData = new UITabData(UIMgr.Ins.GetTypeId(pId));
         }
 
         public UIAttribute(Type pId)
         {
-            tabData = new UITabData(pId.FullName.ToHash());
+            tabData = new UITabData(UIMgr.Ins.GetTypeId(pId));
         }
 
         public UIAttribute(IUITabData tabData)

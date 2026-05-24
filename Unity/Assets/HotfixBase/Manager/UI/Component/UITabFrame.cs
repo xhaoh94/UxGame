@@ -8,7 +8,7 @@ namespace Ux
     {
         public int SelectIndex => GetIndex(SelectItem != null ? SelectItem.ID : 0);
         List<int> _children;
-        public IUI SelectItem { get; private set; }
+        public IUI SelectItem { get; private set; }        
 
         public UITabFrame(GObject container, UIObject parent)
         {
@@ -83,10 +83,26 @@ namespace Ux
 
         public void AddChild(UITabView tab)
         {
-            if (__tabContent == null) return;
-            if (__listTab == null) return;
-            if (tab.GObject == null) return;
-            if (tab == SelectItem) return;
+            if (__tabContent == null)
+            {
+                return;
+            }
+
+            if (__listTab == null)
+            {
+                return;
+            }
+
+            if (tab.GObject == null)
+            {
+                return;
+            }
+
+            if (SelectItem == tab)
+            {
+                return;
+            }
+
             int index = GetIndex(tab.ID);
             if (index < 0)
             {
@@ -97,6 +113,7 @@ namespace Ux
             if (index != __listTab.List.selectedIndex) __listTab.List.selectedIndex = index;
             SelectItem = tab;
         }
+
 
         private int GetIndex(int id)
         {
@@ -123,7 +140,10 @@ namespace Ux
         {
             var id = __listTab.GetData<int>(index);
             if (id == 0) return;
-            if (SelectItem != null && SelectItem.ID == id) return;
+            if (SelectItem.ID == id)
+            {
+                return;
+            }
             UIMgr.Ins.Create(id).Show();
         }
     }

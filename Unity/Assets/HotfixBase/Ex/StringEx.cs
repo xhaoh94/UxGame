@@ -7,7 +7,7 @@ namespace Ux
         public static int ToHash(this string str)
         {            
             return Animator.StringToHash(str);
-        }
+        }        
         
     }
 }

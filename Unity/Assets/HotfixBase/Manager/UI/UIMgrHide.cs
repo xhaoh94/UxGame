@@ -490,6 +490,12 @@ namespace Ux
             var record = GetRecord(ui.ID);
             if (record != null)
             {
+                if (!ReferenceEquals(record.UI, ui))
+                {
+                    ui.Dispose();
+                    return;
+                }
+
                 // 从可见记录中分离
                 DetachVisibleRecord(record);
                 record.Phase = UIPhase.Hidden;
