@@ -150,12 +150,16 @@ namespace Ux
                     break;
             }
 
-            if (_async)
+            if (_async && State != UIState.HideAnim)
             {
                 _asyncComplete = _DoShow;
             }
             else
             {
+                if (State == UIState.HideAnim)
+                {
+                    _asyncComplete = null;
+                }
                 _DoShow();
             }
             void _DoShow()
@@ -189,12 +193,16 @@ namespace Ux
                     return;
             }
 
-            if (_async)
+            if (_async && State != UIState.ShowAnim)
             {
                 _asyncComplete = _DoHide;
             }
             else
             {
+                if (State == UIState.ShowAnim)
+                {
+                    _asyncComplete = null;
+                }
                 _DoHide();
             }
             void _DoHide()

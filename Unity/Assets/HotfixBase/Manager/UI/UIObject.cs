@@ -144,10 +144,17 @@ namespace Ux
         /// </summary>
         async UniTaskVoid _CheckShow(int id, bool checkStack, int showVersion)
         {
+            var hideVersion = GetHideVersion();
             _ChangeAsync(true);
             while (State != UIState.Show || Parent is { State: UIState.ShowAnim })
             {
                 await UniTask.Yield();
+                if (hideVersion != GetHideVersion() || State is UIState.Hide or UIState.HideAnim)
+                {
+                    ShowAnim?.Stop();
+                    return;
+                }
+
                 if (showVersion != GetShowVersion())
                 {
                     ShowAnim?.SetToEnd();
@@ -225,10 +232,17 @@ namespace Ux
         /// </summary>
         async UniTaskVoid _CheckHide(int hideVersion)
         {
+            var showVersion = GetShowVersion();
             _ChangeAsync(true);
             while (State != UIState.Hide || Parent is { State: UIState.HideAnim })
             {
                 await UniTask.Yield();
+                if (showVersion != GetShowVersion() || State is UIState.Show or UIState.ShowAnim)
+                {
+                    HideAnim?.Stop();
+                    return;
+                }
+
                 if (hideVersion != GetHideVersion())
                 {
                     HideAnim?.SetToEnd();
