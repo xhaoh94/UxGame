@@ -336,6 +336,7 @@ namespace Ux
         /// </summary>
         private void BeginHideRecord(UIRecord record, bool isAnim)
         {
+            ClearMountedRootChild(record);
             var version = NextRequestVersion(record);
             record.LastHideRequestFrame = Time.frameCount;
             var wasVisible = record.IsVisibleCommitted;
@@ -394,6 +395,20 @@ namespace Ux
                 record.Phase = UIPhase.Hidden;
                 CompletePendingShow(record, false);
                 CompletePendingHide(record, true);
+            }
+        }
+
+        private void ClearMountedRootChild(UIRecord record)
+        {
+            if (record == null || record.ParentRootId == 0 || record.ParentRootId == record.Id)
+            {
+                return;
+            }
+
+            var rootRecord = GetRecord(record.ParentRootId);
+            if (rootRecord != null && rootRecord.MountedChildId == record.Id)
+            {
+                rootRecord.MountedChildId = 0;
             }
         }
 

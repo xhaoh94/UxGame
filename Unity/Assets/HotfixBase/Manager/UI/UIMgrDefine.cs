@@ -238,6 +238,12 @@ namespace Ux
             /// </summary>
             public int CurrentChildId;
 
+            /// <summary>
+            /// 当前根界面下实际挂载到内容容器中的子界面Id。
+            /// 与CurrentChildId分离：CurrentChildId表示最新请求目标，MountedChildId表示真实挂载目标。
+            /// </summary>
+            public int MountedChildId;
+
             public IUIParam LastShowParam;          // 最近一次显示时传递的参数
             public int LastShowRequestFrame;        // 最近一次显示请求的帧号
             public int LastHideRequestFrame;        // 最近一次隐藏请求的帧号

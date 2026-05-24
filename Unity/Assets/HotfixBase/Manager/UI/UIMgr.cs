@@ -412,14 +412,24 @@ namespace Ux
         /// <param name="id">要移除的UI ID</param>
         internal void RemoveRecord(int id)
         {
-            if (_records.TryGetValue(id, out var record) && _rootRecordIds.TryGetValue(record.ParentRootId, out var rootSet))
+            if (_records.TryGetValue(id, out var record))
             {
-                rootSet.Remove(id);
-                if (rootSet.Count == 0)
+                var rootRecord = GetRecord(record.ParentRootId);
+                if (rootRecord != null && rootRecord.MountedChildId == id)
                 {
-                    _rootRecordIds.Remove(record.ParentRootId);
+                    rootRecord.MountedChildId = 0;
+                }
+
+                if (_rootRecordIds.TryGetValue(record.ParentRootId, out var rootSet))
+                {
+                    rootSet.Remove(id);
+                    if (rootSet.Count == 0)
+                    {
+                        _rootRecordIds.Remove(record.ParentRootId);
+                    }
                 }
             }
+
             _records.Remove(id);
             _showed.Remove(id);
         }

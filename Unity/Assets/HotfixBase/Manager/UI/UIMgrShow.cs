@@ -51,6 +51,8 @@ namespace Ux
             /// 已激活记录对应的请求版本
             /// </summary>
             internal readonly List<int> ActivatedVersions = new ();
+
+            internal int PreviousMountedChildId { get; private set; }
             
             /// <summary>
             /// 获取根界面ID
@@ -67,9 +69,15 @@ namespace Ux
                 Param = param;
                 IsAnim = isAnim;
                 CheckStack = checkStack;
+                PreviousMountedChildId = 0;
                 Chain.Clear();
                 Activated.Clear();
                 ActivatedVersions.Clear();
+            }
+
+            public void CapturePreviousMountedChild(int id)
+            {
+                PreviousMountedChildId = id;
             }
 
             /// <summary>
@@ -82,6 +90,7 @@ namespace Ux
                 Param = null;
                 IsAnim = true;
                 CheckStack = true;
+                PreviousMountedChildId = 0;
                 Chain.Clear();
                 Activated.Clear();
                 ActivatedVersions.Clear();
@@ -188,6 +197,9 @@ namespace Ux
         /// </summary>
         private async UniTask<bool> RunShowSession(ShowSession session)
         {
+            var rootRecord = GetRecord(session.RootId);
+            session.CapturePreviousMountedChild(rootRecord?.MountedChildId ?? 0);
+
             // 1. 确保父子链中的每个节点都有可用的实例
             if (!await PrepareShowChain(session))
             {
@@ -212,7 +224,7 @@ namespace Ux
             }
 
             // 3. 同时启动每个节点的显示，不需要等待父动画完成
-            HideRootSiblingsBeforeShow(session);
+            HidePreviousRootChildBeforeShow(session);
 
             if (!await StartShowChain(session))
             {
@@ -233,37 +245,35 @@ namespace Ux
             }
 
             // 协调根界面的子界面
-            ReconcileRootChildren(session);
+            CommitRootChildBinding(session);
             return true;
         }
 
-        private void HideRootSiblingsBeforeShow(ShowSession session)
+        private void HidePreviousRootChildBeforeShow(ShowSession session)
         {
             if (!IsShowSessionCurrent(session))
             {
                 return;
             }
 
-            foreach (var kv in _records)
+            var previousId = session.PreviousMountedChildId;
+            if (previousId == 0 || previousId == session.RootId || previousId == session.TargetId)
             {
-                var record = kv.Value;
-                if (record.Id == session.RootId || record.Id == session.TargetId)
-                {
-                    continue;
-                }
-
-                if (record.ParentRootId != session.RootId || record.UI == null)
-                {
-                    continue;
-                }
-
-                if (!record.IsVisibleCommitted && !record.IsShowingLike)
-                {
-                    continue;
-                }
-
-                BeginHideRecord(record, false);
+                return;
             }
+
+            var previous = GetRecord(previousId);
+            if (previous == null || previous.ParentRootId != session.RootId || previous.UI == null)
+            {
+                return;
+            }
+
+            if (!previous.IsVisibleCommitted && !previous.IsShowingLike)
+            {
+                return;
+            }
+
+            BeginHideRecord(previous, false);
         }
 
         private async UniTask<bool> EnsureShowSessionCurrent(ShowSession session)
@@ -349,6 +359,11 @@ namespace Ux
 
                 record.Phase = UIPhase.Showing;
                 record.LastShowStartFrame = Time.frameCount;
+                if (record.Id == session.TargetId)
+                {
+                    MarkRootChildMounted(session);
+                }
+
                 await record.UI.DoShow(session.IsAnim, session.RequestedId,
                     record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
                 if (!IsShowSessionCurrent(session))
@@ -359,6 +374,20 @@ namespace Ux
             }
 
             return true;
+        }
+
+        private void MarkRootChildMounted(ShowSession session)
+        {
+            if (session.RootId == session.TargetId)
+            {
+                return;
+            }
+
+            var rootRecord = GetRecord(session.RootId);
+            if (rootRecord != null)
+            {
+                rootRecord.MountedChildId = session.TargetId;
+            }
         }
 
         /// <summary>
@@ -504,47 +533,57 @@ namespace Ux
         /// <summary>
         /// 协调根界面的子界面，确保Tab切换后只有一个子界面保持可见
         /// </summary>
-        private void ReconcileRootChildren(ShowSession session)
+        private void CommitRootChildBinding(ShowSession session)
         {
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                record.ParentRootId = session.RootId;
+                RegisterRecordToRoot(record, session.RootId);
                 record.CurrentChildId = session.TargetId;
-#if UNITY_EDITOR
-                ValidateRecordRootBinding(record);
-#endif
             }
 
-            // 隐藏同一根下的其他子界面
+#if UNITY_EDITOR
+            ValidateSingleRootMountedChild(session.RootId, session.TargetId);
+#endif
+        }
+
+#if UNITY_EDITOR
+        private void ValidateSingleRootMountedChild(int rootId, int expectedChildId)
+        {
+            var count = 0;
+            var firstId = 0;
             foreach (var kv in _records)
             {
                 var record = kv.Value;
-                // 跳过根界面和目标界面
-                if (record.Id == session.RootId || record.Id == session.TargetId)
+                if (record == null || record.Id == rootId || record.ParentRootId != rootId)
                 {
                     continue;
                 }
 
-                // 跳过不同根的界面
-                if (record.ParentRootId != session.RootId)
+                if (record.UI == null)
                 {
                     continue;
                 }
 
-                // 跳过不可见或没有UI实例的界面
-                if (!record.IsVisibleCommitted || record.UI == null)
+                if (!record.IsVisibleCommitted && record.Phase != UIPhase.Showing)
                 {
                     continue;
                 }
 
-                // Tab切换后，同一根下只有一个子界面应该保持可见
-                NextRequestVersion(record);
-                ResetPendingHide(record);
-                record.Phase = UIPhase.Hiding;
-                record.UI.DoHide(false, false);
+                count++;
+                if (firstId == 0)
+                {
+                    firstId = record.Id;
+                }
+            }
+
+            if (count > 1)
+            {
+                Log.Error("同一UI根节点下存在多个活动页签 RootId[{0}] Expected[{1}] First[{2}] Count[{3}]",
+                    rootId, expectedChildId, firstId, count);
             }
         }
+#endif
 
         /// <summary>
         /// Tab页从其根容器继承栈类型，而不是独立决定
