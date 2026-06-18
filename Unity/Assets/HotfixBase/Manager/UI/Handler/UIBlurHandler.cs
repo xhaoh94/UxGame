@@ -11,7 +11,8 @@ namespace Ux
         private readonly IUIBlurHandlerCallback _callback;
         private readonly List<BlurStack> _blurStacks = new List<BlurStack>();
 
-        private readonly Stack<BlurSnapshot> _snapshots = new Stack<BlurSnapshot>();
+        // 使用 List 代替 Stack，支持按 OwnerId 中间移除，避免非栈顶 UI 隐藏时截图泄漏
+        private readonly List<BlurSnapshot> _snapshots = new List<BlurSnapshot>();
         private GComponent _backdropRoot;
         private GLoader _backdropLoader;
         private NTexture _backdropNTexture;
@@ -36,7 +37,7 @@ namespace Ux
 
             var snapshot = new BlurSnapshot(ui.ID, texture);
 
-            _snapshots.Push(snapshot);
+            _snapshots.Add(snapshot);
             ShowBackdrop(texture);
         }
 
@@ -61,18 +62,33 @@ namespace Ux
         {
             if (_snapshots.Count > 0)
             {
-                if (_snapshots.Peek().OwnerId == ui.ID)
+                var removedIndex = -1;
+                for (int i = _snapshots.Count - 1; i >= 0; i--)
                 {
-                    var snapshot = _snapshots.Pop();
+                    if (_snapshots[i].OwnerId == ui.ID)
+                    {
+                        removedIndex = i;
+                        break;
+                    }
+                }
+
+                if (removedIndex >= 0)
+                {
+                    var snapshot = _snapshots[removedIndex];
+                    _snapshots.RemoveAt(removedIndex);
                     ReleaseTexture(snapshot.Texture);
 
-                    if (_snapshots.Count > 0)
+                    // 只有当栈顶被移除时才更新 backdrop
+                    if (removedIndex == _snapshots.Count)
                     {
-                        ShowBackdrop(_snapshots.Peek().Texture);
-                    }
-                    else
-                    {
-                        HideBackdrop();
+                        if (_snapshots.Count > 0)
+                        {
+                            ShowBackdrop(_snapshots[_snapshots.Count - 1].Texture);
+                        }
+                        else
+                        {
+                            HideBackdrop();
+                        }
                     }
                     return;
                 }
@@ -93,7 +109,8 @@ namespace Ux
         {
             while (_snapshots.Count > 0)
             {
-                var snapshot = _snapshots.Pop();
+                var snapshot = _snapshots[_snapshots.Count - 1];
+                _snapshots.RemoveAt(_snapshots.Count - 1);
                 ReleaseTexture(snapshot.Texture);
             }
             HideBackdrop();
