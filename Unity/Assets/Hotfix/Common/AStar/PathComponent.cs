@@ -33,35 +33,23 @@ namespace Ux
             //    Points.Add(new Vector3(point.X, point.Y, point.Z));
             //}
             //IsRun = true;
-            //StateMgr.Ins.Update(Unit.ID, StateConditionBase.Type.Custom);
+
+            if (points == null || points.Count == 0)
+            {
+                MoveVector2 = Vector2.zero;
+                IsRun = false;
+                return;
+            }
 
             MoveVector2 = new Vector2(points[0].X, points[0].Z);
-            if (MoveVector2 == Vector2.zero)
-            {
-                if (IsRun)
-                {
-                    IsRun = false;
-                    StateMgr.Ins.RemoveTempBoolVar(Unit.ID, "_move");
-                    StateMgr.Ins.Update(Unit.ID);                    
-                }
-            }
-            else
-            {
-                if (!IsRun)
-                {
-                    IsRun = true;
-                    StateMgr.Ins.AddTempBoolVar(Unit.ID, "_move");
-                    StateMgr.Ins.Update(Unit.ID, StateConditionBase.ConditionType.TempBoolVar);
-                }
-            }
+            IsRun = MoveVector2.sqrMagnitude > 0.0001f;
         }
-        public void Stop(bool isUpdate)
+        public void Stop()
         {
             IsRun = false;
+            MoveVector2 = Vector2.zero;
             PathIndex = 0;
             Points.Clear();
-            if (isUpdate)
-                StateMgr.Ins.Update(Unit.ID);
         }
     }
 }

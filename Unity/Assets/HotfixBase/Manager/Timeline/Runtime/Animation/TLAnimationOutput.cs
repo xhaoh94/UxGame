@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -14,81 +14,91 @@ namespace Ux
         public PlayableGraph PlayableGraph => Root.Component.PlayableGraph;
 
         private readonly List<TLAnimationTrack> _tracks = new(5);
-        int _port;
-        void IAwakeSystem<Animator, int>.OnAwake(Animator animator, int port)
+        private int _slotIndex;
+
+        void IAwakeSystem<Animator, int>.OnAwake(Animator animator, int slotIndex)
         {
-            _port = port;
+            _slotIndex = slotIndex;
             Animator = animator;
-            string name = animator.gameObject.name;
-            Mixer = AnimationLayerMixerPlayable.Create(PlayableGraph);
-            PlayableOutput = AnimationPlayableOutput.Create(PlayableGraph, name, animator);
-            PlayableOutput.SetSourcePlayable(Mixer, port);
+            Mixer = AnimationLayerMixerPlayable.Create(PlayableGraph, 0);
+            PlayableOutput = AnimationPlayableOutput.Create(PlayableGraph, animator.gameObject.name, animator);
+            // AnimationLayerMixerPlayable 只有一个输出端口，不能使用 Output 在列表中的索引。
+            PlayableOutput.SetSourcePlayable(Mixer, 0);
         }
+
         protected override void OnDestroy()
         {
-            base.OnDestroy();
-            Animator = null;
+            Root?.RemoveOutput(_slotIndex);
             _tracks.Clear();
-            Root.RemoveOutput(_port);
-            _port = 0;
-            if (Mixer.IsValid())
-            {
-                PlayableGraph.DestroySubgraph(Mixer);                
-            }
+
             if (PlayableOutput.IsOutputValid())
             {
                 PlayableGraph.DestroyOutput(PlayableOutput);
             }
+            if (Mixer.IsValid())
+            {
+                PlayableGraph.DestroySubgraph(Mixer);
+            }
+
+            Animator = null;
+            _slotIndex = 0;
         }
 
         public void Connect(TLAnimationTrack track)
         {
-            if (track == null)
-                return;
-            if (!IsContains(track))
+            if (track == null || IsContains(track))
             {
-                int index = _tracks.FindIndex(x => x == null);
-                if (index == -1)
-                {
-                    int inputCount = Mixer.GetInputCount();
-                    Mixer.SetInputCount(inputCount + 1);
-
-                    track.Connect(inputCount);
-                    _tracks.Add(track);
-                }
-                else
-                {
-                    track.Connect(index);
-                    _tracks[index] = track;
-                }
+                return;
             }
+
+            var index = _tracks.FindIndex(x => x == null);
+            if (index < 0)
+            {
+                index = _tracks.Count;
+                _tracks.Add(track);
+                Mixer.SetInputCount(_tracks.Count);
+            }
+            else
+            {
+                _tracks[index] = track;
+            }
+
+            track.Connect(index);
         }
+
         public void Disconnect(TLAnimationTrack track)
         {
             if (track == null)
-                return;
-            for (int i = 0; i < _tracks.Count; i++)
             {
-                var mixer = _tracks[i];
-                if (mixer == track)
-                {
-                    mixer.Disconnect();
-                    _tracks[i] = null;
-                    break;
-                }
+                return;
             }
-            int index = _tracks.FindIndex(x => x != null);
-            if (index == -1)
+
+            for (var i = 0; i < _tracks.Count; i++)
+            {
+                if (_tracks[i] != track)
+                {
+                    continue;
+                }
+
+                track.Disconnect();
+                _tracks[i] = null;
+                break;
+            }
+
+            if (_tracks.FindIndex(x => x != null) < 0)
             {
                 Parent = null;
             }
         }
+
         public bool IsContains(TLAnimationTrack timeline)
         {
-            foreach (var _timeline in _tracks)
+            foreach (var track in _tracks)
             {
-                if (_timeline == timeline)
+                if (track == timeline)
+                {
                     return true;
+                }
             }
             return false;
         }

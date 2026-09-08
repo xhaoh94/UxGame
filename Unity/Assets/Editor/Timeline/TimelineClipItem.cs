@@ -34,21 +34,51 @@ namespace Ux.Editor.Timeline
         public TimelineClipAsset Asset { get; private set; }
         public TimelineTrackItem TrackItem { get; private set; }
         public DropdownMenu menu { get; }
+        bool menuInitialized;
         public TimelineClipItem(TimelineClipAsset asset, TimelineTrackItem track)
         {
             Asset = asset;
             TrackItem = track;
-            color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>().Color;
+            color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>()?.Color
+                ?? new Color(0.4f, 0.75f, 0.75f);
 
-            CreateChildren();
-            Add(root);
+            BuildVisualTree();
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
             RegisterCallback<DragPerformEvent>(_OnDragPerform);
-            style.position = new StyleEnum<Position>(Position.Absolute);
-            style.height = 30;
             TimelineWindow.Bind(Asset, UpdateView);
+        }
+
+        void BuildVisualTree()
+        {
+            style.position = Position.Absolute;
+            style.height = 34;
+            style.minHeight = 34;
+
+            root = new VisualElement();
+            root.style.flexGrow = 1;
+            root.style.paddingLeft = 2;
+            root.style.paddingRight = 2;
+            root.style.paddingTop = 3;
+            root.style.paddingBottom = 3;
+            Add(root);
+
+            content = new VisualElement();
+            content.style.flexGrow = 1;
+            content.style.backgroundColor = new Color(0.22f, 0.28f, 0.29f);
+            content.style.borderTopLeftRadius = 3;
+            content.style.borderTopRightRadius = 3;
+            content.style.borderBottomLeftRadius = 3;
+            content.style.borderBottomRightRadius = 3;
+            root.Add(content);
+
+            lbType = new Label();
+            lbType.style.flexGrow = 1;
+            lbType.style.unityTextAlign = TextAnchor.MiddleCenter;
+            lbType.style.color = new Color(0.92f, 0.92f, 0.92f);
+            lbType.style.overflow = Overflow.Hidden;
+            content.Add(lbType);
         }
         public void Release()
         {
@@ -64,14 +94,22 @@ namespace Ux.Editor.Timeline
             if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
             {
                 string retPath = DragAndDrop.paths[0];
+                if (Asset is not AnimationClipAsset animationAsset)
+                {
+                    return;
+                }
                 var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
                 if (clip == null)
                 {
                     return;
                 }
-                (Asset as AnimationClipAsset).clip = clip;
+                animationAsset.clip = clip;
+                animationAsset.clipName = clip.name;
+                animationAsset.EndFrame = animationAsset.StartFrame +
+                    Mathf.Max(1, Mathf.RoundToInt(clip.length * TimelineWindow.FrameRate));
                 TimelineWindow.SaveAssets();
                 TimelineWindow.RefreshEntity();
+                UpdateView();
             }
         }
         void OnPointerDown(PointerDownEvent e)
@@ -83,28 +121,42 @@ namespace Ux.Editor.Timeline
             else if (e.button == 1)
             {
                 if (!TimelineWindow.IsValid()) return;
-                menu.AppendAction("适配长度", e =>
+                if (!menuInitialized)
                 {
-                    var clip = (Asset as AnimationClipAsset).clip;
-                    var endFrame = clip.length * TimelineMgr.Ins.FrameRate;
-                    var oldEndFrame = Asset.EndFrame;
-                    Asset.EndFrame = Asset.StartFrame + Mathf.RoundToInt(endFrame);
-                    if (!TrackItem.IsValid())
+                    if (Asset is AnimationClipAsset)
                     {
-                        Asset.EndFrame = oldEndFrame;
+                        menu.AppendAction("适配长度", _ => FitAnimationDuration(),
+                            _ => (Asset as AnimationClipAsset)?.clip != null
+                                ? DropdownMenuAction.Status.Normal
+                                : DropdownMenuAction.Status.Disabled);
                     }
-                    else
-                    {
-                        UpdateView();
-                    }
-                }, e => DropdownMenuAction.Status.Normal);
-                menu.AppendAction("删除", e =>
-                {
-                    TrackItem.RemoveClipItem(this);                    
-                }, e => DropdownMenuAction.Status.Normal);
+                    menu.AppendAction("删除", _ => TrackItem.RemoveClipItem(this),
+                        _ => DropdownMenuAction.Status.Normal);
+                    menuInitialized = true;
+                }
                 this.ShowMenu();
             }
         }
+        void FitAnimationDuration()
+        {
+            if (Asset is not AnimationClipAsset animationAsset || animationAsset.clip == null)
+            {
+                return;
+            }
+
+            var oldEndFrame = Asset.EndFrame;
+            Asset.EndFrame = Asset.StartFrame +
+                Mathf.Max(1, Mathf.RoundToInt(animationAsset.clip.length * TimelineWindow.FrameRate));
+            if (!TrackItem.IsValid())
+            {
+                Asset.EndFrame = oldEndFrame;
+            }
+            UpdateView();
+            TimelineWindow.SaveAssets();
+            TimelineWindow.RefreshEntity?.Invoke();
+            TimelineWindow.wnd?.clipView?.RefreshLayout();
+        }
+
         bool ChcekValid()
         {
             return TrackItem.IsValid();         
@@ -255,11 +307,14 @@ namespace Ux.Editor.Timeline
                 TimelineWindow.GetPositionByFrame(Asset.EndFrame);
 
             style.left = sx;
-            style.width = ex - sx;
+            style.width = Mathf.Max(2, ex - sx);
         }
         public void UpdateView()
         {
-            lbType.text = Asset.clipName;
+            lbType.text = string.IsNullOrEmpty(Asset.clipName) ? Asset.GetType().Name : Asset.clipName;
+            // Detailed timing is shown in the inspector after selection. A native tooltip
+            // here floats over neighbouring tracks and looks like an extra clip.
+            tooltip = null;
             var lineWidth = 1;
             if (TrackItem.IsValid())
             {

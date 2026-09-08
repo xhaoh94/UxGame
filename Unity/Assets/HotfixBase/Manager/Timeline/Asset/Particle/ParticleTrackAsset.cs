@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Ux
 {
+    [Serializable]
     [TLTrack("特效", 111, 212, 201)]
     [TLTrackClipType(typeof(ParticleClipAsset))]
     public class ParticleAssetTrack : TimelineTrackAsset

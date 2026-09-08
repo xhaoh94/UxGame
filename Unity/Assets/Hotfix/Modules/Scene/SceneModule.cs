@@ -30,6 +30,7 @@ namespace Ux
             data.self = true;
             data.name = "name_" + data.data.roleId;
             data.res = string.Format(PathHelper.Res.Prefab, "Hero_ZS");
+            data.combatProfileName = "HeroZSCombatProfile";
             map.AddPlayer(data);
 
             //foreach (var other in resp.Others)

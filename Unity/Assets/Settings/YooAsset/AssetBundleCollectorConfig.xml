@@ -25,7 +25,7 @@
     <Group GroupActiveRule="EnableGroup" GroupName="Other" GroupDesc="其他" AssetTags="">
       <Collector CollectPath="Assets/Scenes/Hotfix.unity" CollectGUID="8637324786e1dda489f776e4e1cf2fed" CollectType="MainAssetCollector" AddressRule="AddressByFolderAndFileName" PackRule="PackDirectory" FilterRule="CollectAll" UserData="" AssetTags="builtin" />
       <Collector CollectPath="Assets/Data/Res/Timeline" CollectGUID="de523ac24d0eef34d83b36ad0bf292a6" CollectType="MainAssetCollector" AddressRule="AddressCollectRule" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
-      <Collector CollectPath="Assets/Data/Res/State" CollectGUID="6f674d35e7cacd841b1c1d4feac8c10a" CollectType="MainAssetCollector" AddressRule="AddressCollectRule" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
+      <Collector CollectPath="Assets/Data/Res/Combat" CollectGUID="6f674d35e7cacd841b1c1d4feac8c10a" CollectType="MainAssetCollector" AddressRule="AddressCollectRule" PackRule="PackTopDirectory" FilterRule="CollectAll" UserData="" AssetTags="" />
     </Group>
   </Package>
 </root>

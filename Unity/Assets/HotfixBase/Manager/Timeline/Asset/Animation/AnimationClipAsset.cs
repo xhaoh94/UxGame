@@ -1,34 +1,53 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace Ux
 {
+    [Serializable]
     public class AnimationClipAsset : TimelineClipAsset
     {
-        [Serializable]
         public enum PostExtrapolate
         {
             None,
             Hold,
             Loop
         }
-        //动画片段
+
         public AnimationClip clip;
-
-        //镜头外 -前处理
         public PostExtrapolate pre;
-
-        //镜头外 -后处理
         public PostExtrapolate post;
         public override Type ClipType => typeof(TLAnimationClip);
 
         [HideInInspector]
-        public int PreFrame;
+        public int PreFrame = -1;
         [HideInInspector]
-        public int PostFrame;
+        public int PostFrame = -1;
 
-        public float PreTime => PreFrame / TimelineMgr.Ins.FrameRate;
-        public float PostTime => PostFrame / TimelineMgr.Ins.FrameRate;
+        public override void RescaleFrames(float scale)
+        {
+            base.RescaleFrames(scale);
+            if (PreFrame > 0)
+            {
+                PreFrame = ScaleFrame(PreFrame, scale);
+            }
+            if (PostFrame > 0)
+            {
+                PostFrame = ScaleFrame(PostFrame, scale);
+            }
+            ValidateData();
+        }
 
+        public override void ValidateData()
+        {
+            base.ValidateData();
+            if (PreFrame >= 0)
+            {
+                PreFrame = Mathf.Min(PreFrame, StartFrame);
+            }
+            if (PostFrame >= 0 && PostFrame != int.MaxValue)
+            {
+                PostFrame = Mathf.Max(PostFrame, EndFrame);
+            }
+        }
     }
 }

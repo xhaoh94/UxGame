@@ -13,46 +13,41 @@ namespace Ux.Editor.Timeline.Animation
             Add(root);
             _asset = asset;
             ofAnimator.objectType = typeof(Animator);
+            ofAnimator.allowSceneObjects = true;
             ofAvatarMask.objectType = typeof(AvatarMask);
             OnFreshView();
         }
         partial void _OnOfAvatarMaskChanged(ChangeEvent<Object> e)
         {
             _asset.avatarMask = e.newValue as AvatarMask;
-            TimelineWindow.Run(_asset);
+            CommitChange(_asset);
         }
         partial void _OnTgAdditiveChanged(ChangeEvent<bool> e)
         {
             _asset.isAdditive = e.newValue;
-            TimelineWindow.Run(_asset);
+            CommitChange(_asset);
         }
         partial void _OnTxtNameChanged(ChangeEvent<string> e)
         {
             _asset.trackName = e.newValue;
-            TimelineWindow.Run(_asset);
-            if (!string.IsNullOrEmpty(_asset.trackName) && ofAnimator.value != null)
+            CommitChange(_asset);
+            if (ofAnimator.value != null)
             {
-                TimelineWindow.RefreshBinds(_asset.trackName, ofAnimator.value);
+                TimelineWindow.RefreshBinds(_asset, ofAnimator.value);
             }
         }
         partial void _OnOfAnimatorChanged(ChangeEvent<Object> e)
-        {            
-            if (!string.IsNullOrEmpty(_asset.trackName) && ofAnimator.value != null)
-            {
-                TimelineWindow.RefreshBinds(_asset.trackName, ofAnimator.value);
-            }
-            TimelineWindow.RefreshEntity();
+        {
+            TimelineWindow.RefreshBinds(_asset, e.newValue);
+            TimelineWindow.RefreshEntity?.Invoke();
         }
 
         protected override void OnFreshView()
         {
             txtName.SetValueWithoutNotify(_asset.trackName);
             ofAvatarMask.SetValueWithoutNotify(_asset.avatarMask);
-            var animator = TimelineWindow.Timeline.GetBindObj<Animator>(_asset.trackName);
-            if (animator != null)
-            {
-                ofAnimator.SetValueWithoutNotify(animator);
-            }
+            var animator = TimelineWindow.Timeline?.GetBinding<Animator>(_asset);
+            ofAnimator.SetValueWithoutNotify(animator);
             tgAdditive.SetValueWithoutNotify(_asset.isAdditive);
             tgAdditive.style.display = _asset.avatarMask == null ? DisplayStyle.None : DisplayStyle.Flex;
         }

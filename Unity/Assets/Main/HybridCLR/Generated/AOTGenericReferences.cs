@@ -38,7 +38,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<LoadAssetAsync>d__9<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.ResMgr.<_LoadAssetAsync>d__10<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.SceneModule.<EnterScene>d__5>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.StateMgr.<GetTimeLineAssetAsync>d__1,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<CreateUI>d__41,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<LoaUIdPackage>d__72,byte>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask.<>c<Ux.UIMgr.<ShowAsync>d__39<object>,object>
@@ -60,7 +59,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<LoadAssetAsync>d__9<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.ResMgr.<_LoadAssetAsync>d__10<object>,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.SceneModule.<EnterScene>d__5>
-	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.StateMgr.<GetTimeLineAssetAsync>d__1,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<CreateUI>d__41,object>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<LoaUIdPackage>d__72,byte>
 	// Cysharp.Threading.Tasks.CompilerServices.AsyncUniTask<Ux.UIMgr.<ShowAsync>d__39<object>,object>
@@ -769,7 +767,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__7>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__7&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__8<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__8<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.ResMgr.<LoadAssetAsync>d__9<object>>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.ResMgr.<LoadAssetAsync>d__9<object>&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter<object>,Ux.StateMgr.<GetTimeLineAssetAsync>d__1>(Cysharp.Threading.Tasks.UniTask.Awaiter<object>&,Ux.StateMgr.<GetTimeLineAssetAsync>d__1&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,Ux.ByteArray.<PushByWebSocketAsync>d__25>(System.Runtime.CompilerServices.TaskAwaiter<object>&,Ux.ByteArray.<PushByWebSocketAsync>d__25&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<Ux.ByteArray.<PopToWebSocketAsync>d__42>(Ux.ByteArray.<PopToWebSocketAsync>d__42&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder.Start<Ux.SceneModule.<EnterScene>d__5>(Ux.SceneModule.<EnterScene>d__5&)
@@ -790,7 +787,6 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__8<object>>(Ux.ResMgr.<LoadAssetAsync>d__8<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<LoadAssetAsync>d__9<object>>(Ux.ResMgr.<LoadAssetAsync>d__9<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.ResMgr.<_LoadAssetAsync>d__10<object>>(Ux.ResMgr.<_LoadAssetAsync>d__10<object>&)
-		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.StateMgr.<GetTimeLineAssetAsync>d__1>(Ux.StateMgr.<GetTimeLineAssetAsync>d__1&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.UIMgr.<CreateUI>d__41>(Ux.UIMgr.<CreateUI>d__41&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskMethodBuilder<object>.Start<Ux.UIMgr.<ShowAsync>d__39<object>>(Ux.UIMgr.<ShowAsync>d__39<object>&)
 		// System.Void Cysharp.Threading.Tasks.CompilerServices.AsyncUniTaskVoidMethodBuilder.AwaitUnsafeOnCompleted<Cysharp.Threading.Tasks.UniTask.Awaiter,Ux.WSocket.<_SendSync>d__11>(Cysharp.Threading.Tasks.UniTask.Awaiter&,Ux.WSocket.<_SendSync>d__11&)

@@ -20,61 +20,67 @@ namespace Ux.Editor.Timeline
         public static TimelineComponent Timeline { get; set; }
         public static TimelineAsset Asset { get; set; }
         public static System.Action SaveAssets { get; set; }
-        public static System.Action<string, UnityEngine.Object> RefreshBinds { get; set; }
+        public static System.Action<TimelineTrackAsset, UnityEngine.Object> RefreshBinds { get; set; }
         public static System.Action RefreshEntity { get; set; }
         public static System.Action RefreshView { get; set; }
         public static System.Action RefreshClip { get; set; }
         public static bool IsPlaying { get; set; }
+        public static int FrameRate => Asset?.FrameRate ?? TimelineAsset.DefaultFrameRate;
         public static bool IsValid()
         {
             return Asset != null && Timeline != null && !IsPlaying;
         }
+        public static float FrameToTime(int frame)
+        {
+            return frame / (float)FrameRate;
+        }
+        public static int GetDurationFrame(TimelineAsset asset)
+        {
+            return asset?.DurationFrames ?? 0;
+        }
+        public static int GetDurationFrame(TimelineTrackAsset asset)
+        {
+            return asset?.GetEndFrame() ?? 0;
+        }
         public static float GetDuration(TimelineAsset asset)
         {
-            float _duration = 0;
-            foreach (var track in asset.tracks)
-            {
-                var trackDuration = GetDuration(track);
-                if (_duration < trackDuration)
-                {
-                    _duration = trackDuration;
-                }
-            }
-            return _duration;
+            return asset == null ? 0 : asset.FrameToTime(asset.DurationFrames);
         }
         public static float GetDuration(TimelineTrackAsset asset)
         {
-            float _duration = 0;
-            foreach (var clip in asset.clips)
-            {
-                if (_duration < clip.EndTime)
-                {
-                    _duration = clip.EndTime;
-                }
-            }
-            return _duration;
+            return GetDurationFrame(asset) / (float)FrameRate;
         }
 
         public static TimelineClipAsset CreateClipAsset(Type clipType, int start, string retPath)
         {
-            var clipAsset = Activator.CreateInstance(clipType);
-            if (clipAsset is AnimationClipAsset aca)
+            if (clipType == null || !typeof(TimelineClipAsset).IsAssignableFrom(clipType))
             {
-                aca.StartFrame = start;
-                aca.EndFrame = start + 100;
-                if (!string.IsNullOrEmpty(retPath))
-                {
-                    var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
-                    if (clip != null)
-                    {
-                        aca.clip = clip;
-                        aca.EndFrame = start + Mathf.RoundToInt(aca.clip.length * TimelineMgr.Ins.FrameRate);
-                        aca.clipName = aca.clip.name;
-                    }   
-                }
-                return aca;
+                return null;
             }
-            return null;
+
+            var clipAsset = Activator.CreateInstance(clipType) as TimelineClipAsset;
+            if (clipAsset == null)
+            {
+                return null;
+            }
+
+            clipAsset.StartFrame = Mathf.Max(0, start);
+            clipAsset.EndFrame = clipAsset.StartFrame + FrameRate;
+            clipAsset.clipName = clipType.Name;
+
+            if (clipAsset is AnimationClipAsset animationClipAsset && !string.IsNullOrEmpty(retPath))
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
+                if (clip != null)
+                {
+                    animationClipAsset.clip = clip;
+                    animationClipAsset.EndFrame = start + Mathf.Max(1, Mathf.RoundToInt(clip.length * FrameRate));
+                    animationClipAsset.clipName = clip.name;
+                }
+            }
+
+            clipAsset.ValidateData();
+            return clipAsset;
         }
 
 

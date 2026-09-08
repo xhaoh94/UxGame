@@ -15,13 +15,13 @@ MonoBehaviour:
   frameRate: 60
   tracks:
   - rid: 2064898422907863041
-  - rid: 6422346859002986562
   references:
     version: 2
     RefIds:
     - rid: 2064898422907863041
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
+        id: a7b4893dc75840789ccf39bbc29a68e0
         trackName: Animation
         clips:
         - rid: 2064898422907863042
@@ -30,6 +30,7 @@ MonoBehaviour:
     - rid: 2064898422907863042
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
+        id: e8de9732914249aa938619452656208a
         clipName: Run
         StartFrame: 0
         EndFrame: 48
@@ -40,8 +41,3 @@ MonoBehaviour:
         post: 2
         PreFrame: 0
         PostFrame: 2147483647
-    - rid: 6422346859002986562
-      type: {class: ParticleAssetTrack, ns: Ux, asm: Unity.HotfixBase}
-      data:
-        trackName: ParticleAsset
-        clips: []

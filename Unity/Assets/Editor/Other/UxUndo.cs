@@ -15,7 +15,7 @@ namespace Ux.Editor
             Action = action;
         }
     }
-    public class UxUndo
+    public class UxUndo : IDisposable
     {
         public UxUndo()
         {
@@ -26,9 +26,21 @@ namespace Ux.Editor
         Stack<UndoData> redoDatas = new Stack<UndoData>();
 
         public void RegUndo(string key ,UnityEngine.Object obj, Action action)
-        {            
-            Undo.RecordObject(obj, key);            
+        {
+            if (obj == null)
+            {
+                return;
+            }
+            Undo.RecordObject(obj, key);
             undoDatas.Push(new UndoData(key, action));
+            redoDatas.Clear();
+        }
+
+        public void Dispose()
+        {
+            Undo.undoRedoEvent -= UndoRedoEventCallBack;
+            undoDatas.Clear();
+            redoDatas.Clear();
         }
         void UndoRedoEventCallBack(in UndoRedoInfo undo)
         {

@@ -1,79 +1,193 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Ux
 {
+    public enum TimelineEvaluationMode
+    {
+        Initialize,
+        Playback,
+        Seek
+    }
+
+    public readonly struct TimelineEvaluationContext
+    {
+        public readonly int PreviousFrame;
+        public readonly int CurrentFrame;
+        public readonly int FrameRate;
+        public readonly TimelineEvaluationMode Mode;
+
+        public TimelineEvaluationContext(int previousFrame, int currentFrame, int frameRate, TimelineEvaluationMode mode)
+        {
+            PreviousFrame = previousFrame;
+            CurrentFrame = currentFrame;
+            FrameRate = Mathf.Max(1, frameRate);
+            Mode = mode;
+        }
+
+        public int DeltaFrames => CurrentFrame - PreviousFrame;
+        public float DeltaTime => DeltaFrames / (float)FrameRate;
+        public float CurrentTime => CurrentFrame / (float)FrameRate;
+        public bool IsForward => CurrentFrame >= PreviousFrame;
+        public bool IsSeek => Mode == TimelineEvaluationMode.Seek;
+
+        // 正向求值时，判断某帧是否在本次区间中被跨越。
+        public bool CrossedForward(int frame)
+        {
+            return IsForward && PreviousFrame < frame && CurrentFrame >= frame;
+        }
+
+        /// <summary>
+        /// Gameplay/Event Track 应使用此方法。Seek/初始化不会触发事件；播放区间严格使用
+        /// (PreviousFrame, CurrentFrame]，首次播放由 Timeline 以 -1 → 0 保证只触发第 0 帧。
+        /// </summary>
+        public bool ShouldTriggerFrame(int frame)
+        {
+            return Mode == TimelineEvaluationMode.Playback &&
+                   IsForward &&
+                   CurrentFrame != PreviousFrame &&
+                   CrossedForward(frame);
+        }
+
+        public bool CrossedBackward(int frame)
+        {
+            return !IsForward && CurrentFrame <= frame && PreviousFrame > frame;
+        }
+    }
+
     public class Timeline : Entity, IAwakeSystem<TimelineAsset, bool>
     {
-        public float Time { get; private set; }
+        public int CurrentFrame { get; private set; }
+        public int FrameRate => Asset.FrameRate;
         public TimelineAsset Asset { get; private set; }
         public TimelineComponent Component => ParentAs<TimelineComponent>();
-        List<TimelineTrack> _tacks = new();
         public bool IsDone { get; private set; }
         public bool IsAdditive { get; private set; }
+        public bool IsWeightFadeComplete
+        {
+            get
+            {
+                foreach (var track in _tracks)
+                {
+                    if (!track.IsWeightFadeComplete)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        private readonly List<TimelineTrack> _tracks = new();
+        private bool _hasPlaybackEvaluation;
+
         void IAwakeSystem<TimelineAsset, bool>.OnAwake(TimelineAsset asset, bool isAdditive)
         {
             Asset = asset;
             IsAdditive = isAdditive;
-            foreach (var trackAsset in asset.tracks)
+            CurrentFrame = 0;
+            _hasPlaybackEvaluation = false;
+
+            if (asset?.tracks != null)
             {
-                var track = Add(trackAsset.TrackType, trackAsset) as TimelineTrack;
-                _tacks.Add(track);
+                foreach (var trackAsset in asset.tracks)
+                {
+                    if (trackAsset?.TrackType == null)
+                    {
+                        continue;
+                    }
+
+                    if (Add(trackAsset.TrackType, trackAsset) is TimelineTrack track)
+                    {
+                        _tracks.Add(track);
+                    }
+                }
             }
-            Time = 0;
+
             OnBinding();
+            EvaluateInternal(new TimelineEvaluationContext(-1, 0, FrameRate, TimelineEvaluationMode.Initialize));
         }
 
         protected override void OnDestroy()
         {
-            _tacks.Clear();
+            _tracks.Clear();
             Asset = null;
-            Time = 0;
+            CurrentFrame = 0;
             IsDone = false;
             IsAdditive = false;
+            _hasPlaybackEvaluation = false;
         }
 
         public void OnBinding()
         {
-            foreach (var tack in _tacks)
+            foreach (var track in _tracks)
             {
-                tack.OnBinding();
+                track.OnBinding();
             }
         }
 
-        public void Evaluate(float deltaTime)
+        public void EvaluateFrames(int deltaFrames)
         {
-            Time += deltaTime;
-            IsDone = true;
-            foreach (var tack in _tacks)
+            var previousFrame = CurrentFrame;
+            if (!_hasPlaybackEvaluation && deltaFrames > 0)
             {
-                tack.Evaluate(deltaTime);
-                if (IsDone && !tack.IsDone)
-                {
-                    IsDone = false;
-                }
+                // 第一次逻辑帧只求值资源第 0 帧，避免同一 Tick 同时触发第 0、1 帧事件。
+                previousFrame = -1;
+                CurrentFrame = Mathf.Max(0, CurrentFrame + deltaFrames - 1);
             }
+            else
+            {
+                // 主 Timeline 到达资源末尾后仍允许时间继续前进，以支持 Hold/Loop 后外推。
+                CurrentFrame = Mathf.Max(0, CurrentFrame + deltaFrames);
+            }
+            _hasPlaybackEvaluation = true;
+            EvaluateInternal(new TimelineEvaluationContext(previousFrame, CurrentFrame, FrameRate, TimelineEvaluationMode.Playback));
         }
 
-        public void Set(int frame)
+        public void Set(int frame, bool replayFrameZero = true)
         {
-            var oldTime = Time;
-            Time = TimelineMgr.Ins.FrameConvertTime(frame);
-            IsDone = true;
-            foreach (var tack in _tacks)
+            var previousFrame = CurrentFrame;
+            CurrentFrame = Mathf.Max(0, frame);
+            // 通用回滚到第 0 帧后会重放第 0 帧；表现协调器已采样当前帧时可显式关闭重放。
+            _hasPlaybackEvaluation = CurrentFrame != 0 || !replayFrameZero;
+            EvaluateInternal(new TimelineEvaluationContext(previousFrame, CurrentFrame, FrameRate, TimelineEvaluationMode.Seek));
+        }
+
+        /// <summary>
+        /// 动作进入逻辑帧执行当前帧而不推进游标。主要用于新动作第 0 帧，确保不会在一个逻辑帧内同时执行第 0、1 帧事件。
+        /// </summary>
+        public void EvaluateCurrentFramePlayback()
+        {
+            EvaluateInternal(new TimelineEvaluationContext(
+                CurrentFrame - 1,
+                CurrentFrame,
+                FrameRate,
+                TimelineEvaluationMode.Playback));
+            _hasPlaybackEvaluation = true;
+        }
+
+        private void EvaluateInternal(in TimelineEvaluationContext context)
+        {
+            foreach (var track in _tracks)
             {
-                tack.Evaluate(Time - oldTime);
-                if (IsDone && !tack.IsDone)
-                {
-                    IsDone = false;
-                }
+                track.Evaluate(context);
+            }
+            IsDone = CurrentFrame >= (Asset?.DurationFrames ?? 0);
+        }
+
+        public void StopImmediate()
+        {
+            foreach (var track in _tracks)
+            {
+                track.StopImmediate();
             }
         }
 
         public void StartWeightFade(float destWeight, float fadeDuration)
         {
-            foreach (var tack in _tacks)
+            foreach (var track in _tracks)
             {
-                tack.StartWeightFade(destWeight,fadeDuration);
+                track.StartWeightFade(destWeight, fadeDuration);
             }
         }
     }

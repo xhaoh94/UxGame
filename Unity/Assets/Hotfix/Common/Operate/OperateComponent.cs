@@ -1,105 +1,79 @@
-﻿using Cysharp.Threading.Tasks;
-using FairyGUI;
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Ux
 {
-    [Serializable]
-    public struct TriggerData
+    /// <summary>只负责把设备输入转换成世界方向和逻辑帧命令。</summary>
+    public sealed class OperateComponent : Entity, IAwakeSystem, InputActions.IPlayerActions
     {
-        public Key Key;
-        public string State;
-    }
-    public class OperateComponent : Entity, IAwakeSystem, InputActions.IPlayerActions
-    {
-        Unit Unit => Parent as Unit;
         private InputActions _input;
-        TriggerData? triggerData;
+        private Unit Unit => ParentAs<Unit>();
+
         public void OnAwake()
         {
             _input = new InputActions();
             _input.Player.SetCallbacks(this);
             _input.Enable();
-        }       
+        }
 
         protected override void OnDestroy()
         {
             _input?.Disable();
             _input?.Dispose();
+            _input = null;
+            base.OnDestroy();
         }
-        public void AddTrigger(TriggerData triggerData)
-        {
-            this.triggerData = triggerData;
-        }
-        public void RemoveTrigger()
-        {
-            this.triggerData = null;
-        }      
+
         public void OnMove(InputAction.CallbackContext context)
         {
-            if (context.performed)
-            {
-                var moveVector2 = context.ReadValue<Vector2>();
-                Log.Info("move{0}", moveVector2);
-                SceneModule.Ins.SendMove(moveVector2);
-            }
-            else
+            if (!context.performed)
             {
                 SceneModule.Ins.SendMove(Vector2.zero);
+                return;
             }
-        }       
+
+            var moveInput = context.ReadValue<Vector2>();
+            var camera = Unit.Map?.Camera?.MapCamera;
+            if (camera == null)
+            {
+                SceneModule.Ins.SendMove(moveInput);
+                return;
+            }
+
+            var forward = camera.transform.forward;
+            forward.y = 0;
+            forward.Normalize();
+            var right = camera.transform.right;
+            right.y = 0;
+            right.Normalize();
+            var worldDirection = right * moveInput.x + forward * moveInput.y;
+            SceneModule.Ins.SendMove(new Vector2(worldDirection.x, worldDirection.z));
+        }
 
         public void OnFire(InputAction.CallbackContext context)
         {
-            //if (Stage.isTouchOnUI)
-            //{
-            //    return;
-            //}
-            //if (context.performed)
-            //{
-            //    var pos = Mouse.current.position.ReadValue();
-            //    var mapCamera = Unit.Map.Camera.MapCamera;
-            //    var ray = mapCamera.ScreenPointToRay(pos);
-            //    if (Physics.Raycast(ray, out var hitInfo))
-            //    {
-            //        if (hitInfo.transform.gameObject.CompareTag("Ground") ||
-            //            hitInfo.transform.gameObject.CompareTag("FogOfWar"))
-            //        {
-            //            //Log.Debug("点击地板");
-            //            //Unit.Seeker.StartPath(hitInfo.point);
-            //        }
-            //    }
-            //}
         }
 
         public void OnKey(InputAction.CallbackContext context)
         {
-            StateMgr.Ins.Update(Unit.ID, StateConditionBase.ConditionType.Action_Keyboard);
-            //if (context.performed)
-            //{
-            //    if (this.triggerData != null)
-            //    {
-            //        if (context.control == Keyboard.current[triggerData.Value.Key])
-            //        {
-            //            Unit.State.Machine.Enter(triggerData.Value.State);
-            //            this.triggerData = null;
-            //            return;
-            //        }
-            //    }
+            if (!context.performed || Unit.Combat == null)
+            {
+                return;
+            }
 
-            //    if (context.control == Keyboard.current.qKey)
-            //    {
-            //        Unit.State.Machine.Enter<StateAttack>();
-            //    }
-            //    else if (context.control == Keyboard.current.eKey)
-            //    {
-            //        var asset = await StateMgr.Ins.GetSkillAssetAsync("Skill02");
-            //        Unit.Director.SetPlayableAsset(asset);
-            //        Unit.Director.Play();
-            //    }
-            //}
+            var control = context.control;
+            if (control == Keyboard.current.qKey)
+            {
+                Unit.Combat.EnqueueCommand(CombatCommandType.Attack);
+            }
+            else if (control == Keyboard.current.eKey)
+            {
+                Unit.Combat.EnqueueCommand(CombatCommandType.Skill01);
+            }
+            else if (control == Keyboard.current.spaceKey)
+            {
+                Unit.Combat.EnqueueCommand(CombatCommandType.Dodge);
+            }
         }
     }
 }

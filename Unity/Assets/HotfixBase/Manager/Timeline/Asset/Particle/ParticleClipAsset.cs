@@ -1,13 +1,10 @@
 using System;
-using UnityEngine;
 
 namespace Ux
 {
+    [Serializable]
     public class ParticleClipAsset : TimelineClipAsset
     {
         public override Type ClipType => typeof(TLParticleClip);
-       
-        public ParticleSystem particleSystem;
-
     }
 }

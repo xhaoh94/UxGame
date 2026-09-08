@@ -1,6 +1,6 @@
-﻿namespace Ux
+namespace Ux
 {
-    public abstract class TimelineClip : Entity, IAwakeSystem<TimelineClipAsset>
+    public abstract class TimelineClip : Entity, IAwakeSystem<TimelineClipAsset, int>
     {
         public enum TLClipStatus
         {
@@ -10,55 +10,86 @@
             Post,
             Stop
         }
-        public float Time => ParentAs<TimelineTrack>().Time;
-        public TLClipStatus Status { get; private set; }
-        public bool IsDone => _asset.EndTime <= Time;
 
-        TimelineClipAsset _asset;
-        void IAwakeSystem<TimelineClipAsset>.OnAwake(TimelineClipAsset asset)
+        public TimelineTrack Track => ParentAs<TimelineTrack>();
+        public int CurrentFrame => Track.CurrentFrame;
+        public int FrameRate => Track.Timeline.FrameRate;
+        public int InputIndex { get; private set; }
+        public TLClipStatus Status { get; private set; }
+        public bool IsDone => CurrentFrame >= (Asset?.EndFrame ?? 0);
+        protected TimelineClipAsset Asset { get; private set; }
+
+        void IAwakeSystem<TimelineClipAsset, int>.OnAwake(TimelineClipAsset asset, int inputIndex)
         {
-            _asset = asset;
+            Asset = asset;
+            InputIndex = inputIndex;
             Status = TLClipStatus.Start;
             OnStart(asset);
         }
+
         protected override void OnDestroy()
         {
-            _asset = null;
-            Status = TLClipStatus.Stop;
+            if (Status == TLClipStatus.Ing)
+            {
+                OnDisable();
+            }
             OnStop();
+            Asset = null;
+            InputIndex = 0;
+            Status = TLClipStatus.Stop;
         }
 
-        public void Evaluate(float deltaTime)
+        public void StopImmediate()
         {
-            var _curTime = Time;
-            if (Status != TLClipStatus.Ing && _curTime >= _asset.StartTime && _curTime < _asset.EndTime)
+            if (Status == TLClipStatus.Ing)
             {
-                Status = TLClipStatus.Ing;
-                OnEnable();
+                OnDisable();
             }
-            else if (Status != TLClipStatus.Pre && _curTime < _asset.StartTime)
+            Status = TLClipStatus.Stop;
+        }
+
+        public void Evaluate(in TimelineEvaluationContext context)
+        {
+            var nextStatus = GetStatus(context.CurrentFrame);
+            if (nextStatus != Status)
             {
                 if (Status == TLClipStatus.Ing)
                 {
                     OnDisable();
                 }
-                Status = TLClipStatus.Pre;
-            }
-            else if (Status != TLClipStatus.Post && _curTime >= _asset.EndTime)
-            {
+
+                Status = nextStatus;
                 if (Status == TLClipStatus.Ing)
                 {
-                    OnDisable();
+                    OnEnable();
                 }
-                Status = TLClipStatus.Post;
             }
 
-            OnEvaluate(deltaTime);
+            OnEvaluate(context);
         }
+
+        private TLClipStatus GetStatus(int frame)
+        {
+            if (frame < Asset.StartFrame)
+            {
+                return TLClipStatus.Pre;
+            }
+            if (frame >= Asset.EndFrame)
+            {
+                return TLClipStatus.Post;
+            }
+            return TLClipStatus.Ing;
+        }
+
+        protected float FrameToTime(int frame)
+        {
+            return frame / (float)FrameRate;
+        }
+
         protected abstract void OnStart(TimelineClipAsset asset);
         protected abstract void OnEnable();
         protected abstract void OnDisable();
         protected abstract void OnStop();
-        protected abstract void OnEvaluate(float deltaTime);
+        protected abstract void OnEvaluate(in TimelineEvaluationContext context);
     }
 }

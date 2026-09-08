@@ -14,7 +14,7 @@ namespace Ux.Editor.Timeline
             get
             {
                 var attr = Asset.GetType().GetAttribute<TLTrackClipTypeAttribute>();
-                return attr.ClipType;
+                return attr?.ClipType;
             }
         }
 
@@ -26,29 +26,32 @@ namespace Ux.Editor.Timeline
         Queue<VisualElement> pool = new Queue<VisualElement>();
         int lastFrame;
         TimelineClipItem selectItem;
+        bool menuInitialized;
 
         public DropdownMenu menu { get; }
         public TimelineTrackItem(TimelineTrackAsset asset)
         {
-            CreateChildren();
-            Add(root);
-            style.height = 30;
             Asset = asset;
-            inputName.SetValueWithoutNotify(asset.trackName);
+            menu = new DropdownMenu();
+            BuildVisualTree();
 
             var attr = asset.GetType().GetAttribute<TLTrackAttribute>();
-            lbType.text = attr.Lb;
-            content.style.borderTopColor = attr.Color;
-            content.style.borderLeftColor = attr.Color;
-            content.style.borderBottomColor = attr.Color;
+            inputName.SetValueWithoutNotify(asset.trackName);
+            lbType.text = attr?.Lb ?? asset.GetType().Name;
+            var trackColor = attr?.Color ?? new Color(0.4f, 0.7f, 0.7f);
+            content.style.borderLeftColor = trackColor;
 
             RegisterCallback<PointerDownEvent>(OnPointerDown);
-            menu = new DropdownMenu();
 
             clipContent = new VisualElement();
-            clipContent.style.height = 30;
+            clipContent.style.height = 34;
+            clipContent.style.minHeight = 34;
+            clipContent.style.flexShrink = 0;
             clipContent.style.left = 0;
             clipContent.style.right = 0;
+            clipContent.style.backgroundColor = new Color(0.17f, 0.17f, 0.17f, 0.85f);
+            clipContent.style.borderBottomWidth = 1;
+            clipContent.style.borderBottomColor = new Color(0, 0, 0, 0.45f);
             clipParent = new VisualElement();
             clipParent.style.position = new StyleEnum<Position>(Position.Absolute);
             clipParent.style.top = 0;
@@ -65,7 +68,7 @@ namespace Ux.Editor.Timeline
             draw.style.right = 0;
             draw.generateVisualContent += OnDrawContent;
             clipContent.Add(draw);
-            TimelineWindow.ClipContent.Add(clipContent);
+            TimelineWindow.ClipContent?.Add(clipContent);
             TimelineWindow.RefreshClip += OnWheelChanged;
             TimelineWindow.Bind(Asset, UpdateAsset);
             ElementDrag.Add(clipContent, TimelineWindow.ClipContent, OnStart, OnDrag, OnEnd);
@@ -73,9 +76,79 @@ namespace Ux.Editor.Timeline
             clipContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
             RefreshView();
         }
+
+        void BuildVisualTree()
+        {
+            style.height = 34;
+            style.minHeight = 34;
+            style.flexShrink = 0;
+
+            root = new VisualElement();
+            root.style.flexGrow = 1;
+            Add(root);
+
+            content = new VisualElement();
+            content.style.flexGrow = 1;
+            content.style.flexDirection = FlexDirection.Row;
+            content.style.alignItems = Align.Center;
+            content.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f);
+            content.style.borderLeftWidth = 4;
+            content.style.borderBottomWidth = 1;
+            content.style.borderBottomColor = new Color(0, 0, 0, 0.5f);
+            root.Add(content);
+
+            lbType = new Label();
+            lbType.style.width = 58;
+            lbType.style.minWidth = 58;
+            lbType.style.unityTextAlign = TextAnchor.MiddleCenter;
+            lbType.style.color = new Color(0.82f, 0.82f, 0.82f);
+            content.Add(lbType);
+
+            inputName = new TextField();
+            inputName.style.flexGrow = 1;
+            inputName.style.marginLeft = 0;
+            inputName.style.marginRight = 2;
+            inputName.RegisterValueChangedCallback(_OnInputNameChanged);
+            content.Add(inputName);
+
+            var menuButton = new Button(ShowContextMenu) { text = "⋮" };
+            menuButton.style.width = 24;
+            menuButton.style.minWidth = 24;
+            menuButton.tooltip = "轨道菜单";
+            content.Add(menuButton);
+        }
+
+        void ShowContextMenu()
+        {
+            if (!TimelineWindow.IsValid())
+            {
+                return;
+            }
+            EnsureMenu();
+            this.ShowMenu();
+        }
+
+        void EnsureMenu()
+        {
+            if (menuInitialized)
+            {
+                return;
+            }
+            menu.AppendAction("添加 Clip", _ => CreateClipAsset(null),
+                _ => DropdownMenuAction.Status.Normal);
+            menu.AppendAction("删除轨道", _ => RemoveTrack(),
+                _ => DropdownMenuAction.Status.Normal);
+            menuInitialized = true;
+        }
+
         public void Release()
         {
-            TimelineWindow.ClipContent.Remove(clipContent);
+            foreach (var item in Items)
+            {
+                item.Release();
+            }
+            Items.Clear();
+            TimelineWindow.ClipContent?.Remove(clipContent);
             TimelineWindow.RefreshClip -= OnWheelChanged;
             TimelineWindow.UnBind(Asset, UpdateAsset);
         }
@@ -102,18 +175,33 @@ namespace Ux.Editor.Timeline
             else if (e.button == 1)
             {
                 if (!TimelineWindow.IsValid()) return;
-                menu.AppendAction("Add Clip", e =>
-                {
-                    CreateClipAsset(null);
-                }, e => DropdownMenuAction.Status.Normal);
+                EnsureMenu();
                 this.ShowMenu();
+                e.StopPropagation();
             }
         }
+        void RemoveTrack()
+        {
+            if (TimelineWindow.Asset == null || !TimelineWindow.Asset.tracks.Contains(Asset))
+            {
+                return;
+            }
+            TimelineWindow.Undo.RegUndo("timeline_remove_track", TimelineWindow.Asset,
+                () => TimelineWindow.RefreshView?.Invoke());
+            TimelineWindow.Asset.tracks.Remove(Asset);
+            TimelineWindow.SaveAssets();
+            TimelineWindow.RefreshView?.Invoke();
+            TimelineWindow.RefreshEntity?.Invoke();
+        }
+
         void CreateClipAsset(string retPath)
         {
-            var clipAsset = TimelineWindow.CreateClipAsset(ClipType,
-                   Mathf.CeilToInt(TimelineWindow.GetDuration(Asset) * TimelineMgr.Ins.FrameRate), retPath);
-            AddClipItem(clipAsset);
+            var clipAsset = TimelineWindow.CreateClipAsset(
+                ClipType, TimelineWindow.GetDurationFrame(Asset), retPath);
+            if (clipAsset != null)
+            {
+                AddClipItem(clipAsset);
+            }
         }
         void UpdateAsset()
         {
@@ -123,6 +211,7 @@ namespace Ux.Editor.Timeline
         {
             Asset.trackName = e.newValue;
             TimelineWindow.Run(Asset);
+            TimelineWindow.SaveAssets?.Invoke();
         }
 
         void RefreshView()
@@ -131,7 +220,7 @@ namespace Ux.Editor.Timeline
             {
                 foreach (var item in Items)
                 {
-                    //Items.Remove(item);
+                    item.Release();
                     clipParent.Remove(item);
                 }
                 Items.Clear();
@@ -182,6 +271,7 @@ namespace Ux.Editor.Timeline
             Asset.clips.Remove(item.Asset);
             TimelineWindow.SaveAssets();
             Items.Remove(item);
+            item.Release();
             clipParent.Remove(item);
             TimelineWindow.RefreshEntity();
             if (Items.Count > 0)
@@ -231,6 +321,10 @@ namespace Ux.Editor.Timeline
             {
                 item.ToUp();
             }
+            TimelineWindow.SaveAssets();
+            TimelineWindow.RefreshEntity?.Invoke();
+            TimelineWindow.wnd?.clipView?.RefreshLayout();
+            selectItem = null;
         }
 
         void OnDrawContent(MeshGenerationContext mgc)
@@ -311,7 +405,7 @@ namespace Ux.Editor.Timeline
                     ve.style.display = DisplayStyle.Flex;
                     var ix = TimelineWindow.GetPositionByFrame(asset.InFrame);
                     ve.style.width = ix - sx;
-                    ve.style.height = 30;
+                    ve.style.height = 34;
                     ve.style.left = sx;
                     ve.style.marginBottom = 2;
                     ve.style.marginTop = 2;
@@ -331,11 +425,19 @@ namespace Ux.Editor.Timeline
                     if (t == -1000) return false;
                     if (t != 0)
                     {
-                        if (kvs.TryGetValue(clip1.Asset, out var temt) && temt == t)
+                        var sideMask = t > 0 ? 1 : 2;
+                        if (kvs.TryGetValue(clip1.Asset, out var mask))
                         {
-                            return false;
+                            if ((mask & sideMask) != 0)
+                            {
+                                return false;
+                            }
+                            kvs[clip1.Asset] = mask | sideMask;
                         }
-                        kvs.Add(clip1.Asset, t);
+                        else
+                        {
+                            kvs.Add(clip1.Asset, sideMask);
+                        }
                     }
                 }
             }

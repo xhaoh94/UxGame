@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
@@ -7,148 +7,136 @@ namespace Ux
     public class TLAnimationClip : TimelineClip
     {
         private AnimationClipPlayable _source;
-        private int _inputPort;
-        TLAnimationTrack Track => ParentAs<TLAnimationTrack>();
-        public PlayableGraph PlayableGraph => Track.Component.PlayableGraph;
-        AnimationClipAsset animAsset;
+        private new TLAnimationTrack Track => ParentAs<TLAnimationTrack>();
+        private PlayableGraph PlayableGraph => Track.Component.PlayableGraph;
+        private AnimationClipAsset _animAsset;
+
         protected override void OnStart(TimelineClipAsset asset)
         {
-            animAsset = asset as AnimationClipAsset;
-            if (animAsset.clip != null)
+            _animAsset = asset as AnimationClipAsset;
+            if (_animAsset?.clip == null || !PlayableGraph.IsValid())
             {
-                _source = AnimationClipPlayable.Create(PlayableGraph, animAsset.clip);
-                _source.SetDuration(animAsset.clip.length);
-                _inputPort = Track.Asset.clips.IndexOf(animAsset);
-                PlayableGraph.Connect(_source, 0, Track.Mixer, _inputPort);
-                _source.Pause();
+                return;
             }
+
+            _source = AnimationClipPlayable.Create(PlayableGraph, _animAsset.clip);
+            _source.SetDuration(_animAsset.clip.length);
+            _source.SetSpeed(0);
+            PlayableGraph.Connect(_source, 0, Track.Mixer, InputIndex);
+            Track.Mixer.SetInputWeight(InputIndex, 0);
         }
 
         protected override void OnStop()
         {
-            animAsset = null;
             if (PlayableGraph.IsValid() && _source.IsValid())
             {
-                PlayableGraph.Disconnect(Track.Mixer, _inputPort);
+                Track.Mixer.SetInputWeight(InputIndex, 0);
+                PlayableGraph.Disconnect(Track.Mixer, InputIndex);
                 PlayableGraph.DestroySubgraph(_source);
             }
-            _inputPort = 0;
+            _animAsset = null;
         }
+
         protected override void OnEnable()
         {
-
         }
+
         protected override void OnDisable()
         {
-
         }
-        protected override void OnEvaluate(float deltaTime)
+
+        protected override void OnEvaluate(in TimelineEvaluationContext context)
         {
-            if (animAsset.clip == null) return;
-            float curTime = Time;
-            float setTime = 0;
-            float setWeight = 0;
+            if (_animAsset?.clip == null || !_source.IsValid())
+            {
+                return;
+            }
+
+            var currentFrame = context.CurrentFrame;
+            var sampleFrame = 0;
+            var weight = 0f;
+            var durationFrames = Mathf.Max(1, _animAsset.DurationFrames);
+
             switch (Status)
             {
                 case TLClipStatus.Ing:
-                    {
-                        var _startTime = animAsset.StartTime;
-                        var _endTime = animAsset.EndTime;
-                        var _inTime = animAsset.InTime;
-                        var _outTime = animAsset.OutTime;
-                        setTime = curTime - _startTime;
-                        if ((_inTime == 0 || curTime >= _inTime) && (_outTime == 0 || curTime <= _outTime))
-                        {
-                            setWeight = 1;
-                        }
-                        else if (curTime < _inTime)
-                        {
-                            setWeight = setTime / (_inTime - _startTime);
-                        }
-                        else if (curTime > _outTime)
-                        {
-                            setWeight = 1 - ((curTime - _outTime) / (_endTime - _outTime));
-                        }
-                    }
+                    sampleFrame = currentFrame - _animAsset.StartFrame;
+                    weight = GetActiveWeight(currentFrame);
                     break;
                 case TLClipStatus.Pre:
+                    if (_animAsset.PreFrame < 0 || currentFrame < _animAsset.PreFrame)
                     {
-                        if (animAsset.PreFrame == -1)
-                        {
+                        break;
+                    }
+                    switch (_animAsset.pre)
+                    {
+                        case AnimationClipAsset.PostExtrapolate.Hold:
+                            weight = 1;
+                            sampleFrame = 0;
                             break;
-                        }
-                        if (curTime <= animAsset.PreTime)
-                        {
+                        case AnimationClipAsset.PostExtrapolate.Loop:
+                            weight = 1;
+                            sampleFrame = PositiveModulo(currentFrame - _animAsset.StartFrame, durationFrames);
                             break;
-                        }
-                        switch (animAsset.pre)
-                        {
-                            case AnimationClipAsset.PostExtrapolate.Hold:
-                                setWeight = 1;
-                                break;
-                            case AnimationClipAsset.PostExtrapolate.Loop:
-                                var _startTime = animAsset.StartTime;
-                                var _endTime = animAsset.EndTime;
-                                setWeight = 1;
-                                var time = curTime - animAsset.PreTime;
-                                var len = _endTime - _startTime;
-                                var off = _startTime - (time - Mathf.FloorToInt(curTime / len) * len);
-                                setTime = len - off;
-                                break;
-                        }
                     }
                     break;
                 case TLClipStatus.Post:
+                    if (_animAsset.PostFrame < 0 || currentFrame >= _animAsset.PostFrame)
                     {
-                        if (animAsset.PostFrame == -1)
-                        {
+                        break;
+                    }
+                    switch (_animAsset.post)
+                    {
+                        case AnimationClipAsset.PostExtrapolate.Hold:
+                            weight = 1;
+                            sampleFrame = durationFrames;
                             break;
-                        }
-                        if (curTime >= animAsset.PostTime)
-                        {
+                        case AnimationClipAsset.PostExtrapolate.Loop:
+                            weight = 1;
+                            sampleFrame = PositiveModulo(currentFrame - _animAsset.StartFrame, durationFrames);
                             break;
-                        }
-                        var _startTime = animAsset.StartTime;
-                        var _endTime = animAsset.EndTime;
-                        switch (animAsset.post)
-                        {
-                            case AnimationClipAsset.PostExtrapolate.Hold:
-                                setTime = _endTime - _startTime;
-                                setWeight = 1;
-                                break;
-                            case AnimationClipAsset.PostExtrapolate.Loop:
-                                setWeight = 1;
-                                var len = _endTime - _startTime;
-                                var off = curTime - _endTime;
-                                off -= Mathf.FloorToInt(off / len) * len;
-                                setTime = off;
-                                break;
-                        }
                     }
                     break;
             }
 
-            SetWeight(setWeight);
-            SetTime(setTime);
+            SetWeight(weight);
+            SetTime(FrameToTime(sampleFrame));
         }
-        /// <summary>
-        /// 权重值
-        /// </summary>
-        void SetWeight(float value)
+
+        private float GetActiveWeight(int currentFrame)
+        {
+            var weight = 1f;
+            if (_animAsset.InFrame > _animAsset.StartFrame && currentFrame < _animAsset.InFrame)
+            {
+                weight = Mathf.InverseLerp(_animAsset.StartFrame, _animAsset.InFrame, currentFrame);
+            }
+            if (_animAsset.OutFrame > _animAsset.StartFrame && currentFrame > _animAsset.OutFrame)
+            {
+                weight = Mathf.Min(weight, 1f - Mathf.InverseLerp(_animAsset.OutFrame, _animAsset.EndFrame, currentFrame));
+            }
+            return Mathf.Clamp01(weight);
+        }
+
+        private static int PositiveModulo(int value, int modulo)
+        {
+            var result = value % modulo;
+            return result < 0 ? result + modulo : result;
+        }
+
+        private void SetWeight(float value)
         {
             if (_source.IsValid())
             {
-                Track.Mixer.SetInputWeight(_inputPort, value);
+                Track.Mixer.SetInputWeight(InputIndex, Mathf.Clamp01(value));
             }
         }
 
-        void SetTime(float value)
+        private void SetTime(float value)
         {
             if (_source.IsValid())
             {
-                _source.SetTime(value);
+                _source.SetTime(Mathf.Max(0, value));
             }
         }
-
     }
 }

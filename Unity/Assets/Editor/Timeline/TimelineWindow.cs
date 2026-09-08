@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Timeline
@@ -20,8 +20,12 @@ namespace Ux.Editor.Timeline
     {
         protected override void OnDestroy()
         {
+            var viewer = Viewer;
             base.OnDestroy();
-            UnityEngine.Object.DestroyImmediate(Viewer.gameObject);
+            if (viewer != null)
+            {
+                UnityEngine.Object.DestroyImmediate(viewer.gameObject);
+            }
         }
     }
     public partial class TimelineWindow : EditorWindow
@@ -32,21 +36,85 @@ namespace Ux.Editor.Timeline
             Once,
         }
         public static TimelineWindow wnd;
+        private TimelineAsset _requestedTimeline;
+        private GameObject _requestedPreviewObject;
+        private bool _requestedAutoPlay;
+        private bool _autoPlayPending;
+        private bool _hasOpenRequest;
+
         [MenuItem("UxGame/工具/时间轴", false, 521)]
         public static void ShowExample()
         {
             wnd = GetWindow<TimelineWindow>();
             wnd.titleContent = new GUIContent("时间轴");
         }
+
+        /// <summary>
+        /// 从其它编辑器打开指定 Timeline，并尽可能复用传入的预览对象。
+        /// 资源和对象通过待处理请求传递，兼容 EditorWindow 首次创建时 CreateGUI 尚未执行的时序。
+        /// </summary>
+        public static TimelineWindow Open(
+            TimelineAsset timeline,
+            GameObject previewObject = null,
+            bool autoPlay = false)
+        {
+            if (timeline == null)
+            {
+                return null;
+            }
+
+            wnd = GetWindow<TimelineWindow>();
+            wnd.titleContent = new GUIContent("时间轴");
+            wnd.CancelAutoPlay();
+            if (IsPlaying)
+            {
+                wnd._OnBtnPauseClick();
+            }
+            wnd._requestedTimeline = timeline;
+            wnd._requestedPreviewObject = previewObject;
+            wnd._requestedAutoPlay = autoPlay;
+            wnd._hasOpenRequest = true;
+            wnd.Show();
+
+            if (wnd.ofTimeline != null)
+            {
+                wnd.ApplyOpenRequest();
+            }
+
+            wnd.Focus();
+            wnd.Repaint();
+            return wnd;
+        }
+
         static string Path = "Assets/Data/Res/Timeline";
         bool isCreateing = false;
         double _lastTime;
         float _playTime;
         TLEntity _entity;
-        List<int> _frameSelects = new List<int>() { 30, 60 };
+        List<int> _frameSelects = new List<int>() { 24, 30, 60, 120 };
         Dictionary<string, Dictionary<string, BindData>> _binds = new();
+        PopupField<int> _framePopupField;
+        PopupField<PlayMode> _playModePopup;
+        IntegerField _currentFrameField;
+        Label _durationLabel;
         public void CreateGUI()
         {
+            // UXML 或脚本热重载后 EditorWindow 可能保留旧视觉树，必须先清理再重建。
+            EditorApplication.delayCall -= TryAutoPlay;
+            _autoPlayPending = false;
+            rootVisualElement.Clear();
+            EditorApplication.update -= OnPlay;
+            Undo?.Dispose();
+            _entity?.Destroy();
+            _entity = null;
+            Timeline = null;
+            Asset = null;
+            InspectorContent = null;
+            ClipContent = null;
+            GetPositionByFrame = null;
+            GetFrameByMousePosition = null;
+            RefreshView = null;
+            RefreshClip = null;
             Undo = new UxUndo();
             isCreateing = true;
             IsPlaying = false;
@@ -56,31 +124,41 @@ namespace Ux.Editor.Timeline
             MarkerMove = _MarkerMove;
             ResetActionMap();
 
-            CreateChildren();
-            root.style.flexGrow = 1f;
+            wnd = this;
+            BuildEditorUI();
             rootVisualElement.Add(root);
             clipView.Init();
+            clipView.FrameChanged += OnEditorFrameChanged;
+            trackView.VerticalScrollChanged += clipView.SetVerticalScroll;
+            clipView.VerticalScrollChanged += trackView.SetVerticalScroll;
 
             ofEntity.objectType = typeof(GameObject);
             ofTimeline.objectType = typeof(TimelineAsset);
 
-            var framePopupField = new PopupField<int>(_frameSelects, 0);
-            framePopupField.label = "帧率";
-            framePopupField.RegisterValueChangedCallback(evt =>
+            _framePopupField = new PopupField<int>(_frameSelects, 2);
+            _framePopupField.label = "帧率";
+            _framePopupField.RegisterValueChangedCallback(evt =>
             {
+                if (Asset == null)
+                {
+                    return;
+                }
                 if (Asset.SetFrameRate(evt.newValue))
                 {
-                    TimelineMgr.Ins.FrameRate = evt.newValue;
                     SaveAssets();
-                    RefreshClip();
+                    RefreshView?.Invoke();
+                    RefreshClip?.Invoke();
+                    RefreshEntity?.Invoke();
+                    UpdateDurationLabel();
                 }
             });
-            framePopupField.value = (int)TimelineMgr.Ins.FrameRate;
-            framePopupField.labelElement.style.minWidth = 30;
-            frameContent.Add(framePopupField);
-
-            playMode.Init(PlayMode.Once);
-            playMode.labelElement.style.minWidth = 30;
+            _framePopupField.SetValueWithoutNotify(TimelineAsset.DefaultFrameRate);
+            CenterToolbarField(_framePopupField, _framePopupField.labelElement, 26);
+            _framePopupField.labelElement.style.minWidth = 32;
+            _framePopupField.style.width = 112;
+            _framePopupField.style.minWidth = 112;
+            _framePopupField.style.flexShrink = 0;
+            frameContent.Add(_framePopupField);
 
             createView.style.display = DisplayStyle.None;
 
@@ -88,11 +166,291 @@ namespace Ux.Editor.Timeline
 
             _OnOfEntityChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
             _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
-            //clipView.SetNowFrame(1, TimelineMgr.Ins.FrameRate);
+            ApplyOpenRequest();
             _OnBindObjs();
             RefreshEntity();
             RefreshView();
-            isCreateing = false;            
+            clipView.ResetView();
+            isCreateing = false;
+            UpdateDurationLabel();
+        }
+
+        void ApplyOpenRequest()
+        {
+            if (!_hasOpenRequest)
+            {
+                return;
+            }
+
+            var requestedPreviewObject = _requestedPreviewObject;
+            var requestedTimeline = _requestedTimeline;
+            var requestedAutoPlay = _requestedAutoPlay;
+            CancelAutoPlay();
+            _requestedPreviewObject = null;
+            _requestedTimeline = null;
+            _requestedAutoPlay = false;
+            _hasOpenRequest = false;
+
+            if (requestedPreviewObject != null && ofEntity != null)
+            {
+                ofEntity.value = requestedPreviewObject;
+            }
+            if (requestedTimeline != null && ofTimeline != null)
+            {
+                ofTimeline.value = requestedTimeline;
+            }
+            if (requestedAutoPlay)
+            {
+                ScheduleAutoPlay();
+            }
+        }
+
+        private void ScheduleAutoPlay()
+        {
+            CancelAutoPlay();
+            _autoPlayPending = true;
+            EditorApplication.delayCall += TryAutoPlay;
+        }
+
+        private void CancelAutoPlay()
+        {
+            _autoPlayPending = false;
+            EditorApplication.delayCall -= TryAutoPlay;
+        }
+
+        private void TryAutoPlay()
+        {
+            if (!_autoPlayPending)
+            {
+                return;
+            }
+
+            _autoPlayPending = false;
+            if (this == null || !IsValid())
+            {
+                return;
+            }
+
+            _OnBtnPlayClick();
+        }
+
+        void BuildEditorUI()
+        {
+            root = new VisualElement { name = "TimelineRoot" };
+            root.style.flexGrow = 1;
+            root.style.flexDirection = FlexDirection.Column;
+            root.style.backgroundColor = new Color(0.105f, 0.105f, 0.105f);
+            root.focusable = true;
+            root.RegisterCallback<KeyDownEvent>(OnShortcutKeyDown);
+
+            var sourcePanel = new VisualElement();
+            sourcePanel.style.flexShrink = 0;
+            sourcePanel.style.paddingLeft = 8;
+            sourcePanel.style.paddingRight = 8;
+            sourcePanel.style.paddingTop = 6;
+            sourcePanel.style.paddingBottom = 4;
+            sourcePanel.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f);
+            root.Add(sourcePanel);
+
+            var entityRow = CreateToolbarRow();
+            ofEntity = new ObjectField("预览对象") { allowSceneObjects = false };
+            ofEntity.style.flexGrow = 1;
+            ofEntity.RegisterValueChangedCallback(_OnOfEntityChanged);
+            entityRow.Add(ofEntity);
+            sourcePanel.Add(entityRow);
+
+            var assetRow = CreateToolbarRow();
+            ofTimeline = new ObjectField("Timeline") { allowSceneObjects = false };
+            ofTimeline.style.flexGrow = 1;
+            ofTimeline.RegisterValueChangedCallback(_OnOfTimelineChanged);
+            assetRow.Add(ofTimeline);
+            btnCreate = new Button(_OnBtnCreateClick) { text = "新建资源" };
+            btnCreate.style.width = 80;
+            assetRow.Add(btnCreate);
+            sourcePanel.Add(assetRow);
+
+            createView = new VisualElement();
+            createView.style.flexDirection = FlexDirection.Row;
+            createView.style.flexShrink = 0;
+            createView.style.paddingLeft = 8;
+            createView.style.paddingRight = 8;
+            createView.style.paddingTop = 4;
+            createView.style.paddingBottom = 4;
+            createView.style.backgroundColor = new Color(0.20f, 0.20f, 0.20f);
+            inputPath = new TextField("保存目录") { isReadOnly = true };
+            inputPath.style.flexGrow = 1;
+            btnPath = new Button(SelectCreatePath) { text = "选择" };
+            inputName = new TextField("资源名");
+            inputName.style.width = 220;
+            btnOk = new Button(_OnBtnOkClick) { text = "创建" };
+            createView.Add(inputPath);
+            createView.Add(btnPath);
+            createView.Add(inputName);
+            createView.Add(btnOk);
+            root.Add(createView);
+
+            var playback = new Toolbar();
+            playback.style.height = 34;
+            playback.style.minHeight = 34;
+            playback.style.flexShrink = 0;
+            playback.style.alignItems = Align.Center;
+            btnLastFrame = CreatePlaybackButton("上一帧", _OnBtnLastFrameClick, 68);
+            btnNextFrame = CreatePlaybackButton("下一帧", _OnBtnNextFrameClick, 68);
+            btnPlay = CreatePlaybackButton("播放", _OnBtnPlayClick, 56);
+            btnPause = CreatePlaybackButton("暂停", _OnBtnPauseClick, 56);
+            btnPause.SetEnabled(false);
+            playback.Add(btnLastFrame);
+            playback.Add(btnNextFrame);
+            playback.Add(btnPlay);
+            playback.Add(btnPause);
+
+            _currentFrameField = new IntegerField("当前帧");
+            _currentFrameField.style.width = 145;
+            _currentFrameField.style.minWidth = 145;
+            _currentFrameField.style.flexShrink = 0;
+            CenterToolbarField(_currentFrameField, _currentFrameField.labelElement, 26);
+            _currentFrameField.labelElement.style.minWidth = 48;
+            _currentFrameField.RegisterValueChangedCallback(evt =>
+            {
+                if (!IsPlaying && IsValid())
+                {
+                    clipView.SetNowFrame(Mathf.Max(0, evt.newValue));
+                }
+            });
+            playback.Add(_currentFrameField);
+
+            _playModePopup = new PopupField<PlayMode>(
+                new List<PlayMode> { PlayMode.Once, PlayMode.Loop }, 0);
+            _playModePopup.label = "模式";
+            _playModePopup.formatSelectedValueCallback = GetPlayModeText;
+            _playModePopup.formatListItemCallback = GetPlayModeText;
+            _playModePopup.style.width = 125;
+            _playModePopup.style.minWidth = 125;
+            _playModePopup.style.flexShrink = 0;
+            CenterToolbarField(_playModePopup, _playModePopup.labelElement, 26);
+            playback.Add(_playModePopup);
+            frameContent = new VisualElement();
+            frameContent.style.flexDirection = FlexDirection.Row;
+            frameContent.style.flexShrink = 0;
+            playback.Add(frameContent);
+            _durationLabel = new Label();
+            _durationLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
+            _durationLabel.style.marginLeft = 8;
+            playback.Add(_durationLabel);
+            var spacer = new VisualElement();
+            spacer.style.flexGrow = 1;
+            playback.Add(spacer);
+            var saveButton = new Button(_SaveAssets) { text = "保存" };
+            saveButton.tooltip = "保存 Timeline 资源 (Ctrl+S)";
+            playback.Add(saveButton);
+            root.Add(playback);
+
+            var mainSplit = new TwoPaneSplitView(
+                0, 280, TwoPaneSplitViewOrientation.Horizontal);
+            mainSplit.style.flexGrow = 1;
+            mainSplit.style.minHeight = 180;
+            trackView = new TimelineTrackView();
+            clipView = new TimelineClipView();
+            mainSplit.Add(trackView);
+            mainSplit.Add(clipView);
+            root.Add(mainSplit);
+
+            VisualElement = root;
+        }
+
+        static void CenterToolbarField(VisualElement field, Label label, float height)
+        {
+            field.style.height = height;
+            field.style.minHeight = height;
+            field.style.maxHeight = height;
+            field.style.alignSelf = Align.Center;
+            field.style.marginTop = 0;
+            field.style.marginBottom = 0;
+            if (label != null)
+            {
+                label.style.height = height;
+                label.style.minHeight = height;
+                label.style.alignSelf = Align.Center;
+                label.style.unityTextAlign = TextAnchor.MiddleLeft;
+                label.style.marginTop = 0;
+                label.style.marginBottom = 0;
+            }
+
+            var input = field.Q<VisualElement>(className: "unity-base-field__input");
+            if (input != null)
+            {
+                input.style.height = height;
+                input.style.minHeight = height;
+                input.style.alignItems = Align.Center;
+                input.style.marginTop = 0;
+                input.style.marginBottom = 0;
+            }
+        }
+
+        static Button CreatePlaybackButton(string text, Action callback, float width)
+        {
+            var button = new Button(callback) { text = text, tooltip = text };
+            button.style.width = width;
+            button.style.minWidth = width;
+            return button;
+        }
+
+        static string GetPlayModeText(PlayMode mode)
+        {
+            return mode == PlayMode.Loop ? "循环" : "单次";
+        }
+
+        void OnShortcutKeyDown(KeyDownEvent evt)
+        {
+            if (evt.ctrlKey && evt.keyCode == KeyCode.S)
+            {
+                _SaveAssets();
+                evt.StopPropagation();
+                return;
+            }
+            if (evt.keyCode == KeyCode.Space)
+            {
+                if (IsPlaying) _OnBtnPauseClick();
+                else _OnBtnPlayClick();
+                evt.StopPropagation();
+                return;
+            }
+            if (!IsPlaying && evt.keyCode == KeyCode.LeftArrow)
+            {
+                _OnBtnLastFrameClick();
+                evt.StopPropagation();
+            }
+            else if (!IsPlaying && evt.keyCode == KeyCode.RightArrow)
+            {
+                _OnBtnNextFrameClick();
+                evt.StopPropagation();
+            }
+        }
+
+        static VisualElement CreateToolbarRow()
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.height = 30;
+            row.style.flexShrink = 0;
+            return row;
+        }
+
+        void OnEditorFrameChanged(int frame)
+        {
+            _currentFrameField?.SetValueWithoutNotify(frame);
+        }
+
+        void UpdateDurationLabel()
+        {
+            if (_durationLabel == null)
+            {
+                return;
+            }
+            var duration = Asset?.DurationFrames ?? 0;
+            _durationLabel.text = Asset == null
+                ? "未选择 Timeline"
+                : $"长度 {duration} 帧 / {Asset.FrameToTime(duration):0.###} 秒";
         }
 
         bool keyCtrl = false;
@@ -144,14 +502,19 @@ namespace Ux.Editor.Timeline
         {
             if (IsPlaying)
             {
+                if (Asset == null || Timeline?.Current == null)
+                {
+                    _OnBtnPauseClick();
+                    return;
+                }
                 var deltaTime = (float)(EditorApplication.timeSinceStartup - _lastTime);
                 _lastTime = EditorApplication.timeSinceStartup;
                 _playTime += deltaTime;
-                var frame = TimelineMgr.Ins.TimeConverFrame(_playTime);
+                var frame = Asset.TimeToFrame(_playTime);
                 clipView.SetNowFrame(frame);
                 if (Timeline.Current.IsDone)
                 {
-                    switch (playMode.value)
+                    switch (_playModePopup?.value ?? PlayMode.Once)
                     {
                         case PlayMode.Once:
                             _OnBtnPauseClick();
@@ -167,11 +530,13 @@ namespace Ux.Editor.Timeline
         {
             _playTime = 0;
             _lastTime = EditorApplication.timeSinceStartup;
-            clipView.SetNowFrame(0);
+            clipView.SetNowFrame(0, true);
         }
 
         private void OnDestroy()
         {
+            EditorApplication.delayCall -= TryAutoPlay;
+            _autoPlayPending = false;
             if (IsPlaying)
             {
                 IsPlaying = false;
@@ -181,6 +546,25 @@ namespace Ux.Editor.Timeline
             {
                 _entity.Destroy();
                 _entity = null;
+            }
+            Undo?.Dispose();
+            Undo = null;
+            Timeline = null;
+            Asset = null;
+            InspectorContent = null;
+            ClipContent = null;
+            GetPositionByFrame = null;
+            GetFrameByMousePosition = null;
+            MarkerMove = null;
+            SaveAssets = null;
+            RefreshBinds = null;
+            RefreshEntity = null;
+            RefreshView = null;
+            RefreshClip = null;
+            ResetActionMap();
+            if (wnd == this)
+            {
+                wnd = null;
             }
         }
         partial void _OnBtnLastFrameClick()
@@ -200,15 +584,22 @@ namespace Ux.Editor.Timeline
         partial void _OnBtnPlayClick()
         {
             if (!IsValid()) return;
+            _OnBindObjs();
+            RefreshEntity?.Invoke();
             _ResetPlay();
+            UnityEditor.EditorApplication.update -= OnPlay;
             UnityEditor.EditorApplication.update += OnPlay;
             IsPlaying = true;
+            btnPlay?.SetEnabled(false);
+            btnPause?.SetEnabled(true);
         }
         partial void _OnBtnPauseClick()
         {
             if (!IsPlaying) return;
             UnityEditor.EditorApplication.update -= OnPlay;
             IsPlaying = false;
+            btnPlay?.SetEnabled(true);
+            btnPause?.SetEnabled(false);
         }
 
         partial void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e)
@@ -223,6 +614,8 @@ namespace Ux.Editor.Timeline
                     return;
                 }
                 var model = Instantiate(obj);
+                model.name = $"{obj.name} (Timeline Preview)";
+                model.hideFlags = HideFlags.HideAndDontSave;
 
                 _entity?.Destroy();
                 _entity = Entity.Create<TLEntity>();
@@ -243,66 +636,121 @@ namespace Ux.Editor.Timeline
         partial void _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object> e)
         {
             ofTimeline.SetValueWithoutNotify(e.newValue);
-            if (e.newValue is TimelineAsset asset)
+            Asset = e.newValue as TimelineAsset;
+            InspectorContent?.FreshInspector(null, null);
+            if (Asset == null)
             {
-                if (asset == null) { return; }
-                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out long _))
+                RefreshView?.Invoke();
+                InspectorContent?.FreshInspector(null, null);
+                UpdateDurationLabel();
+                return;
+            }
+
+            Asset.ValidateData();
+            Timeline?.ClearBindings();
+            if (!_frameSelects.Contains(Asset.FrameRate))
+            {
+                _frameSelects.Add(Asset.FrameRate);
+                _frameSelects.Sort();
+                if (_framePopupField != null)
                 {
-                    SettingTools.SavePlayerPrefs("timeline_asset", guid);
-                }
-                Asset = asset;
-                if (Asset.SetFrameRate(TimelineMgr.Ins.FrameRate))
-                {
-                    SaveAssets();
-                }
-                if (!isCreateing)
-                {
-                    _OnBindObjs();
-                    RefreshEntity();
-                    RefreshView();
+                    _framePopupField.choices = _frameSelects;
                 }
             }
+            _framePopupField?.SetValueWithoutNotify(Asset.FrameRate);
+
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(Asset, out var guid, out long _))
+            {
+                SettingTools.SavePlayerPrefs("timeline_asset", guid);
+            }
+            if (!isCreateing)
+            {
+                _OnBindObjs();
+                RefreshEntity?.Invoke();
+                RefreshView?.Invoke();
+                clipView?.ResetView();
+            }
+            UpdateDurationLabel();
         }
 
         void _OnBindObjs()
         {
             if (Asset == null) return;
             if (Timeline == null) return;
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ofEntity.value, out var guid, out long _))
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(ofEntity.value, out var entityGuid, out long _) &&
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(Asset, out var assetGuid, out long _))
             {
-                if (!_binds.TryGetValue(guid, out var dict))
+                var bindingKey = $"{entityGuid}:{assetGuid}";
+                if (!_binds.TryGetValue(bindingKey, out var dict))
                 {
-                    var str = PlayerPrefs.GetString(guid, string.Empty);
+                    var str = PlayerPrefs.GetString(bindingKey, string.Empty);
                     if (!string.IsNullOrEmpty(str))
                     {
                         try
                         {
                             dict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, BindData>>(str);
-                            _binds[guid] = dict;
+                            _binds[bindingKey] = dict;
                         }
                         catch
                         {
-                            PlayerPrefs.DeleteKey(guid);
+                            PlayerPrefs.DeleteKey(bindingKey);
                         }
                     }
                 }
                 if (dict != null)
                 {
-                    foreach (var (k, v) in dict)
+                    foreach (var (trackId, bindData) in dict)
                     {
-                        foreach (var track in Asset.tracks)
+                        var track = Asset.FindTrack(trackId);
+                        if (track == null)
                         {
-                            if (track.trackName == k)
-                            {
-                                var components = _entity.Viewer.transform.GetComponentsInChildren(v.type, true);
-                                Timeline.SetBindObj(k, components[v.index]);
-                                break;
-                            }
+                            continue;
+                        }
+
+                        if (bindData.type == null)
+                        {
+                            continue;
+                        }
+
+                        var components = _entity.Viewer.transform.GetComponentsInChildren(bindData.type, true);
+                        if (bindData.index >= 0 && bindData.index < components.Length)
+                        {
+                            Timeline.SetBinding(track, components[bindData.index]);
                         }
                     }
                 }
             }
+
+            AutoBindMissingTracks();
         }
+
+        void AutoBindMissingTracks()
+        {
+            if (Asset?.tracks == null || Timeline == null || _entity?.Viewer == null)
+            {
+                return;
+            }
+
+            foreach (var track in Asset.tracks)
+            {
+                UnityEngine.Object target = null;
+                switch (track)
+                {
+                    case AnimationTrackAsset animationTrack when Timeline.GetBinding<Animator>(animationTrack) == null:
+                        target = _entity.Viewer.GetComponentInChildren<Animator>(true);
+                        break;
+                    case ParticleAssetTrack particleTrack when Timeline.GetBinding<ParticleSystem>(particleTrack) == null:
+                        target = _entity.Viewer.GetComponentInChildren<ParticleSystem>(true);
+                        break;
+                }
+
+                if (target != null)
+                {
+                    _RefreshBinds(track, target);
+                }
+            }
+        }
+
         partial void _OnBtnCreateClick()
         {
             if (createView.style.display == DisplayStyle.None)
@@ -316,18 +764,24 @@ namespace Ux.Editor.Timeline
         }
         partial void _OnInputPathChanged(ChangeEvent<string> e)
         {
-            var temPath = EditorUtility.OpenFolderPanel("请选择保存路径", Path, "");
+            SelectCreatePath();
+        }
+
+        void SelectCreatePath()
+        {
+            var temPath = EditorUtility.OpenFolderPanel("请选择保存路径", inputPath?.value ?? Path, "");
             if (temPath.Length == 0)
             {
                 return;
             }
 
-            if (!Directory.Exists(temPath))
+            var projectPath = FileUtil.GetProjectRelativePath(temPath);
+            if (string.IsNullOrEmpty(projectPath) || !projectPath.StartsWith("Assets", StringComparison.Ordinal))
             {
-                EditorUtility.DisplayDialog("错误", "路径不存在!", "ok");
+                EditorUtility.DisplayDialog("错误", "Timeline 资源必须保存在当前项目的 Assets 目录内。", "ok");
                 return;
             }
-            inputPath.SetValueWithoutNotify(temPath);
+            inputPath.SetValueWithoutNotify(projectPath);
         }
         partial void _OnBtnOkClick()
         {
@@ -337,7 +791,7 @@ namespace Ux.Editor.Timeline
                 return;
             }
             var assetName = $"{inputPath.text}/{inputName.text}.asset";
-            if (File.Exists(assetName))
+            if (AssetDatabase.LoadAssetAtPath<TimelineAsset>(assetName) != null)
             {
                 Log.Error("重复创建同名TimelineAsset");
                 return;
@@ -345,47 +799,77 @@ namespace Ux.Editor.Timeline
 
             createView.style.display = DisplayStyle.None;
             var asset = ScriptableObject.CreateInstance<TimelineAsset>();
+            asset.SetFrameRate(_framePopupField?.value ?? TimelineAsset.DefaultFrameRate);
+            asset.ValidateData();
             AssetDatabase.CreateAsset(asset, assetName);
-            ofTimeline.SetValueWithoutNotify(asset);
+            ofTimeline.value = asset;
         }
 
         void _SaveAssets()
         {
             if (Asset == null) return;
+            Asset.ValidateData();
             EditorUtility.SetDirty(Asset);
             AssetDatabase.SaveAssets();
+            clipView?.RefreshLayout();
+            UpdateDurationLabel();
         }
 
-        void _RefreshBinds(string key, UnityEngine.Object obj)
+        void _RefreshBinds(TimelineTrackAsset track, UnityEngine.Object obj)
         {
-            if (ofEntity.value is GameObject gameObject)
+            if (track == null)
             {
-                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(gameObject, out var guid, out long _))
+                return;
+            }
+
+            Timeline?.SetBinding(track, obj);
+            if (Asset == null || _entity?.Viewer == null || ofEntity.value is not GameObject gameObject)
+            {
+                return;
+            }
+            if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(gameObject, out var entityGuid, out long _) ||
+                !AssetDatabase.TryGetGUIDAndLocalFileIdentifier(Asset, out var assetGuid, out long _))
+            {
+                return;
+            }
+
+            var bindingKey = $"{entityGuid}:{assetGuid}";
+            if (!_binds.TryGetValue(bindingKey, out var dict) || dict == null)
+            {
+                dict = new Dictionary<string, BindData>();
+                _binds[bindingKey] = dict;
+            }
+
+            if (obj == null)
+            {
+                dict.Remove(track.Id);
+            }
+            else
+            {
+                var type = obj.GetType();
+                var components = _entity.Viewer.transform.GetComponentsInChildren(type, true);
+                for (var index = 0; index < components.Length; index++)
                 {
-                    var t = obj.GetType();
-                    var components = _entity.Viewer.transform.GetComponentsInChildren(t, true);
-                    for (int index = 0; index < components.Length; index++)
+                    if (components[index] != obj)
                     {
-                        if (components[index] == obj)
-                        {
-                            if (!_binds.TryGetValue(guid, out var dict))
-                            {
-                                dict = new Dictionary<string, BindData>();
-                            }
-                            dict[key] = new BindData(index, t);
-                            var str = Newtonsoft.Json.JsonConvert.SerializeObject(dict);
-                            SettingTools.SavePlayerPrefs(guid, str);
-                            break;
-                        }
+                        continue;
                     }
+                    dict[track.Id] = new BindData(index, type);
+                    break;
                 }
             }
+
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(dict);
+            SettingTools.SavePlayerPrefs(bindingKey, json);
         }
         void _RefreshEntity()
         {
-            if (Asset == null) return;
-            if (Timeline == null) return;
+            if (Asset == null || Timeline == null)
+            {
+                return;
+            }
             Timeline.Play(Asset);
+            Timeline.Set(clipView?.CurFrame ?? 0);
         }
         void _MarkerMove(int frame)
         {

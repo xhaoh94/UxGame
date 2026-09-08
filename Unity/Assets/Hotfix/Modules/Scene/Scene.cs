@@ -11,7 +11,9 @@ namespace Ux
         public AStarComponent AStar { get; private set; }
         public GameObject Go { get; private set; }
         [EEViewer("玩家")]
-        Dictionary<uint, Unit> players = new Dictionary<uint, Unit>();
+        readonly SortedDictionary<uint, Unit> players = new();
+        public long SimulationFrame => SimulationClock.Ins.CurrentFrame;
+
         public void OnAwake(GameObject a)
         {
             Go = a;
@@ -22,6 +24,11 @@ namespace Ux
             EventMgr.Ins.On<Pb.BcstUnitUpdatePosition>(EventType.UNIT_UPDATE_POSITION, this, _OnUnitUpdatePosition);
             EventMgr.Ins.On<Pb.BcstUnitIntoView>(EventType.UNIT_INTO_VIEW, this, _OnUnitIntoView);
             EventMgr.Ins.On<Pb.BcstUnitOutofView>(EventType.UNIT_OUTOF_VIEW, this, _OnUnitOutofView);
+            var simulationClock = SimulationClock.Ins;
+            if (!simulationClock.IsRunning)
+            {
+                simulationClock.StartLocalRealtime(TimelineAsset.DefaultFrameRate);
+            }
             //AddComponent<FogOfWarComponent>();
         }
 
@@ -75,6 +82,10 @@ namespace Ux
 
         protected override void OnDestroy()
         {
+            // 逻辑帧由 CombatMgr 分发给战斗世界，单位在 CombatComponent 内自行注册/注销。
+            // 这里按场景粒度收口：切场景即结束所有战斗，避免主世界残留旧帧号导致新一轮推进被忽略。
+            CombatMgr.Ins.DestroyAllWorlds();
+            SimulationClock.Ins.Stop();
             UnityPool.Push(Go);
             players.Clear();
             Camera = null;

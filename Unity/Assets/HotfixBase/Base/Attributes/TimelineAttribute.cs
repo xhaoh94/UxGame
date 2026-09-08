@@ -10,7 +10,7 @@ namespace Ux
         public Color Color { get; private set; }
         public TLTrackAttribute(string lb, float r, float g, float b) { 
             this.Lb = lb;
-            this.Color = new Color(r/255f, g/255f, b / 255f, 255);
+            this.Color = new Color(r / 255f, g / 255f, b / 255f, 1f);
         }
     }
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]

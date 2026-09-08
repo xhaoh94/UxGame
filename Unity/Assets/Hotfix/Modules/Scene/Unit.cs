@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Pathfinding;
 using UnityEngine;
-using UnityEngine.Playables;
-using static UnityEditor.FilePathAttribute;
 
 namespace Ux
 {
@@ -16,6 +14,7 @@ namespace Ux
         public int mask => data.roleMask;
         public string name;
         public string res;
+        public string combatProfileName;
     }
 
     public class Unit : Entity, IAwakeSystem<PlayerData>
@@ -23,9 +22,14 @@ namespace Ux
         const string _ecs_root_pool = "_$ecs_root_pool$_";        
         public GameObject Model { get; private set; }        
         public TimelineComponent Timeline => Get<TimelineComponent>();
-        public StateComponent State => Get<StateComponent>();
+        public CombatComponent Combat => Get<CombatComponent>();
         public SeekerComponent Seeker => Get<SeekerComponent>();
-        public PathComponent Path => Get<PathComponent>();        
+        public PathComponent Path => Get<PathComponent>();
+        /// <summary>透传战斗组件已推进到的逻辑帧，避免维护一份会过期的副本。</summary>
+        public long SimulationFrame => Combat?.SimulationFrame ?? 0;
+        public string CombatProfileName => string.IsNullOrEmpty(_playerData?.combatProfileName)
+            ? "HeroZSCombatProfile"
+            : _playerData.combatProfileName;
 
         #region Get-Set
         private Vector3 _postion;
@@ -94,9 +98,9 @@ namespace Ux
             }
             Link(root);
 
-            Add<StateComponent>();
             Add<TimelineComponent>();
             Add<PathComponent>();
+            Add<CombatComponent>();
             if (playerData.self)
             {
                 Add<OperateComponent>();
@@ -123,7 +127,7 @@ namespace Ux
             Add<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());
             //Add<PlayableDirectorComponent, PlayableDirector>(Model.GetOrAddComponent<PlayableDirector>());
             //Director.SetBinding("Anim Track", Viewer.GetComponentInChildren<Animator>());
-            StateMgr.Ins.Update(ID);
+            Combat?.RefreshTimelineBinding();
         }
 
         protected override void OnDestroy()

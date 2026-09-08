@@ -4,42 +4,54 @@ namespace Ux
 {
     public class TLParticleClip : TimelineClip
     {
-        ParticleClipAsset clipAsset;
+        private ParticleClipAsset _clipAsset;
+        private new TLParticleTrack Track => ParentAs<TLParticleTrack>();
+        private ParticleSystem Particle => Track.BoundParticle;
+
         protected override void OnStart(TimelineClipAsset asset)
         {
-            clipAsset = asset as ParticleClipAsset;
+            _clipAsset = asset as ParticleClipAsset;
         }
 
         protected override void OnStop()
         {
-            clipAsset = null;
+            StopParticle();
+            _clipAsset = null;
         }
 
-        protected override void OnEvaluate(float deltaTime)
-        {                                       
-            switch (Status)
+        protected override void OnEvaluate(in TimelineEvaluationContext context)
+        {
+            var particle = Particle;
+            if (Status != TLClipStatus.Ing || particle == null)
             {
-                case TLClipStatus.Ing:
-                    {
-                        SetTime(Time - clipAsset.StartTime);
-                    }
-                    break;                
-            }                        
+                return;
+            }
+
+            var localTime = FrameToTime(context.CurrentFrame - _clipAsset.StartFrame);
+            particle.Simulate(Mathf.Max(0, localTime), true, true, false);
         }
 
         protected override void OnEnable()
         {
-
+            var particle = Particle;
+            if (particle != null)
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
 
         protected override void OnDisable()
         {
-
+            StopParticle();
         }
 
-        void SetTime(float value)
+        private void StopParticle()
         {
-            clipAsset.particleSystem.time = value;
+            var particle = Particle;
+            if (particle != null)
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
     }
 }

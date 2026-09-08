@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
@@ -10,39 +10,43 @@ namespace Ux
         public AnimationMixerPlayable Mixer { get; private set; }
         public TLAnimationRoot Root { get; private set; }
         public TLAnimationOutput Output { get; private set; }
+        public override bool IsWeightFadeComplete =>
+            !HasValidOutput || (!_isFading && Mathf.Approximately(Weight, _fadeWeight));
 
-        private float _fadeSpeed = 0f;
-        private float _fadeWeight = 0f;
-        private bool _isFading = false;
-        /// <summary>
-        /// 输入端口
-        /// </summary>
-        public int InputPort { private set; get; }
-        /// <summary>
-        /// 权重值
-        /// </summary>
+        private float _fadeSpeed;
+        private float _fadeWeight;
+        private bool _isFading;
+
+        public int InputPort { get; private set; }
         public float Weight
         {
-            set
+            get => HasValidOutput ? Output.Mixer.GetInputWeight(InputPort) : 0;
+            private set
             {
-                Output?.Mixer.SetInputWeight(InputPort, value);
-            }
-            get
-            {
-                if (Output == null) return 0;
-                return Output.Mixer.GetInputWeight(InputPort);
+                if (HasValidOutput)
+                {
+                    Output.Mixer.SetInputWeight(InputPort, Mathf.Clamp01(value));
+                }
             }
         }
+
+        private bool HasValidOutput =>
+            Output != null &&
+            Output.Mixer.IsValid() &&
+            Output.IsContains(this) &&
+            InputPort >= 0 &&
+            InputPort < Output.Mixer.GetInputCount();
 
         protected override void OnStart(TimelineTrackAsset asset)
         {
             Asset = asset as AnimationTrackAsset;
             Root = Component.GetOrAdd<TLAnimationRoot>();
-            Mixer = AnimationMixerPlayable.Create(PlayableGraph, Asset.clips.Count);
+            Mixer = AnimationMixerPlayable.Create(PlayableGraph, Asset?.clips?.Count ?? 0);
+            _fadeWeight = 0;
         }
+
         protected override void OnDestroy()
         {
-            base.OnDestroy();
             if (PlayableGraph.IsValid())
             {
                 Output?.Disconnect(this);
@@ -51,85 +55,101 @@ namespace Ux
                     PlayableGraph.DestroySubgraph(Mixer);
                 }
             }
+
+            Output = null;
+            Root = null;
             Asset = null;
+            base.OnDestroy();
         }
 
         public override void OnBinding()
         {
-            var animator = Component.GetBindObj<Animator>(Asset.trackName);
-            Output = Root.GetOutput(animator);
-            if (Output != null)
+            var animator = Component.GetBinding<Animator>(Asset);
+            var nextOutput = Root == null ? null : Root.GetOutput(animator);
+            if (nextOutput == Output)
             {
-                Output.Connect(this);
-            }
-        }
-        public override void StartWeightFade(float destWeight, float fadeDuration)
-        {
-            if (fadeDuration <= 0 || !Application.isPlaying)
-            {
-                Weight = destWeight;
-                _isFading = false;
+                if (Output != null && !Output.IsContains(this))
+                {
+                    Output.Connect(this);
+                }
                 return;
             }
 
-            //注意：保持统一的渐变速度
-            _fadeSpeed = 1f / fadeDuration;
-            _fadeWeight = destWeight;
-            _isFading = true;
-        }
-        protected override void OnEvaluate(float deltaTime)
-        {
-            if (_isFading && Output != null)
+            Output?.Disconnect(this);
+            Output = nextOutput;
+            if (Output != null)
             {
-                Weight = Mathf.MoveTowards(Weight, _fadeWeight, _fadeSpeed * deltaTime);
-                if (Mathf.Approximately(Weight, _fadeWeight))
+                Output.Connect(this);
+                if (!_isFading)
                 {
-                    _isFading = false;
+                    Weight = _fadeWeight;
                 }
             }
         }
 
-        /// <summary>
-        /// 连接到父节点
-        /// </summary>
-        /// <param name="parent">父节点对象</param>
-        /// <param name="inputPort">父节点上的输入端口</param>
+        public override void StartWeightFade(float destWeight, float fadeDuration)
+        {
+            _fadeWeight = Mathf.Clamp01(destWeight);
+            if (fadeDuration <= 0 || !Application.isPlaying || !HasValidOutput)
+            {
+                Weight = _fadeWeight;
+                _isFading = false;
+                return;
+            }
+
+            _fadeSpeed = 1f / fadeDuration;
+            _isFading = true;
+        }
+
+        protected override void OnEvaluate(in TimelineEvaluationContext context)
+        {
+            if (!_isFading)
+            {
+                return;
+            }
+            if (!HasValidOutput)
+            {
+                _isFading = false;
+                return;
+            }
+
+            Weight = Mathf.MoveTowards(Weight, _fadeWeight, _fadeSpeed * Mathf.Abs(context.DeltaTime));
+            if (Mathf.Approximately(Weight, _fadeWeight))
+            {
+                _isFading = false;
+            }
+        }
+
         public void Connect(int parentInputPort)
         {
-            if (Output == null) return;
+            if (Output == null || !Mixer.IsValid())
+            {
+                return;
+            }
+
             InputPort = parentInputPort;
-
-            // 重置节点
-            _fadeSpeed = 0;
-            _fadeWeight = 0;
-            _isFading = false;
-            Weight = 0;
-
-            // 连接
             PlayableGraph.Connect(Mixer, 0, Output.Mixer, parentInputPort);
+            Weight = _isFading ? 0 : _fadeWeight;
+
             if (Asset.avatarMask != null)
             {
                 Output.Mixer.SetLayerMaskFromAvatarMask((uint)parentInputPort, Asset.avatarMask);
             }
-            if (Asset.isAdditive)
-            {
-                Output.Mixer.SetLayerAdditive((uint)parentInputPort, true);
-            }
+            Output.Mixer.SetLayerAdditive((uint)parentInputPort, Asset.isAdditive);
         }
-        /// <summary>
-        /// 同父节点断开连接
-        /// </summary>
+
         public void Disconnect()
         {
-            _isFading = false;
-            _fadeSpeed = 0;
-            _fadeWeight = 0;
-            // 断开
-            if (Output != null && PlayableGraph.IsValid() && Output.Mixer.IsValid())
+            if (Output != null && PlayableGraph.IsValid() && Output.Mixer.IsValid() &&
+                InputPort < Output.Mixer.GetInputCount())
             {
                 PlayableGraph.Disconnect(Output.Mixer, InputPort);
             }
             InputPort = 0;
+            if (Mathf.Approximately(_fadeWeight, 0f))
+            {
+                _isFading = false;
+            }
         }
     }
 }

@@ -40,11 +40,11 @@ namespace Ux.Editor
             this.content = content;
             ve.RegisterCallback<PointerDownEvent>((e) =>
             {
-                if (button == -1 || e.button == button)
+                if (!isDrag && (button == -1 || e.button == button))
                 {
                     isDrag = true;
                     start?.Invoke();
-                    moveDelta = Event.current.mousePosition;
+                    moveDelta = (Vector2)e.position;
                     content.RegisterCallback<PointerMoveEvent>(OnMove);                    
                     content.RegisterCallback<PointerUpEvent>(OnUp);
                     content.RegisterCallback<MouseLeaveEvent>(OnOut);                    
@@ -57,10 +57,11 @@ namespace Ux.Editor
         {
             if (isDrag)
             {
-                if (!Event.current.mousePosition.Equals(moveDelta))
+                var pointerPosition = (Vector2)e.position;
+                if (!pointerPosition.Equals(moveDelta))
                 {
-                    move?.Invoke(Event.current.mousePosition - moveDelta);
-                    moveDelta = Event.current.mousePosition;
+                    move?.Invoke(pointerPosition - moveDelta);
+                    moveDelta = pointerPosition;
                 }
             }
         }
@@ -71,8 +72,9 @@ namespace Ux.Editor
                 isDrag = false;
                 end?.Invoke();
                 moveDelta = Vector3.zero;
-                ve.UnregisterCallback<PointerMoveEvent>(OnMove);
-                ve.UnregisterCallback<PointerUpEvent>(OnUp);
+                content.UnregisterCallback<PointerMoveEvent>(OnMove);
+                content.UnregisterCallback<PointerUpEvent>(OnUp);
+                content.UnregisterCallback<MouseLeaveEvent>(OnOut);
             }
         }
         void OnOut(MouseLeaveEvent e)

@@ -29,19 +29,19 @@ namespace Ux.Editor.Timeline.Animation
             txtName.SetValueWithoutNotify(_asset.clipName);
             ofClip.SetValueWithoutNotify(_asset.clip);
 
-            lbStartTime.text = $" 秒 {_asset.StartTime}";
+            lbStartTime.text = $" 秒 {TimelineWindow.FrameToTime(_asset.StartFrame)}";
             txtStartFrame.SetValueWithoutNotify(_asset.StartFrame);
 
-            lbEndTime.text = $" 秒 {_asset.EndTime}";
+            lbEndTime.text = $" 秒 {TimelineWindow.FrameToTime(_asset.EndFrame)}";
             txtEndFrame.SetValueWithoutNotify(_asset.EndFrame);
 
-            lbInTime.text = $"秒  {_asset.InTime}";
+            lbInTime.text = $"秒  {TimelineWindow.FrameToTime(_asset.InFrame)}";
             lbInFrame.text = $"帧  {_asset.InFrame}";
 
-            lbOutTime.text = $"秒  {_asset.OutTime}";
+            lbOutTime.text = $"秒  {TimelineWindow.FrameToTime(_asset.OutFrame)}";
             lbOutFrame.text = $"帧  {_asset.OutFrame}";
 
-            lbDurationTime.text = $"秒  {_asset.EndTime - _asset.StartTime}";
+            lbDurationTime.text = $"秒  {TimelineWindow.FrameToTime(_asset.EndFrame - _asset.StartFrame)}";
             lbDurationFrame.text = $"帧  {_asset.EndFrame - _asset.StartFrame}";
 
             pre.Init(_asset.pre);
@@ -52,7 +52,7 @@ namespace Ux.Editor.Timeline.Animation
             btnDuration.style.display = DisplayStyle.None;
             if (_asset.clip != null)
             {
-                var tFrame = _asset.clip.length * TimelineMgr.Ins.FrameRate;
+                var tFrame = _asset.clip.length * TimelineWindow.FrameRate;
                 if (Mathf.RoundToInt(tFrame) != _asset.EndFrame - _asset.StartFrame)
                 {
                     btnDuration.style.display = DisplayStyle.Flex;
@@ -82,18 +82,13 @@ namespace Ux.Editor.Timeline.Animation
             {
                 _asset.StartFrame = startFrame;
                 _asset.EndFrame = endFrame;
-                TimelineWindow.Run(_asset);
+                CommitChange(_asset);
             }
         }
 
-
         partial void _OnTxtStartFrameChanged(ChangeEvent<int> e)
         {
-            var frame = e.newValue;
-            if (frame < 0)
-            {
-                frame = 0;
-            }
+            var frame = Mathf.Max(0, e.newValue);
             var oldFrame = _asset.StartFrame;
             _asset.StartFrame = frame;
             if (tgMove.value)
@@ -101,15 +96,16 @@ namespace Ux.Editor.Timeline.Animation
                 var off = _asset.StartFrame - oldFrame;
                 _asset.EndFrame += off;
             }
-            TimelineWindow.Run(_asset);
+            _asset.EndFrame = Mathf.Max(_asset.StartFrame + 1, _asset.EndFrame);
+            CommitChange(_asset);
         }
+
         partial void _OnTxtEndFrameChanged(ChangeEvent<int> e)
         {
             var frame = e.newValue;
             if (tgMove.value)
             {
-                var oldFrame = _asset.EndFrame;
-                var off = _asset.EndFrame - oldFrame;
+                var off = frame - _asset.EndFrame;
                 if (_asset.StartFrame + off < 0)
                 {
                     off = -_asset.StartFrame;
@@ -117,18 +113,17 @@ namespace Ux.Editor.Timeline.Animation
                 _asset.StartFrame += off;
                 _asset.EndFrame += off;
             }
-            else if (frame < _asset.StartFrame + 1)
+            else
             {
-                frame = _asset.StartFrame + 1;
-                _asset.EndFrame = frame;
+                _asset.EndFrame = Mathf.Max(_asset.StartFrame + 1, frame);
             }
-            TimelineWindow.Run(_asset);
+            CommitChange(_asset);
         }
 
         partial void _OnTxtNameChanged(ChangeEvent<string> e)
         {
             _asset.clipName = e.newValue;
-            TimelineWindow.Run(_asset);
+            CommitChange(_asset);
         }
 
         partial void _OnOfClipChanged(ChangeEvent<Object> e)
@@ -137,30 +132,38 @@ namespace Ux.Editor.Timeline.Animation
             {
                 _asset.clip = clip;
                 _asset.clipName = clip.name;
-                TimelineWindow.Run(_asset);
+                _asset.EndFrame = _asset.StartFrame +
+                    Mathf.Max(1, Mathf.RoundToInt(clip.length * TimelineWindow.FrameRate));
+                CommitChange(_asset);
             }
         }
 
         partial void _OnBtnDurationClick()
         {
-            var tFrame = _asset.clip.length * TimelineMgr.Ins.FrameRate;
+            if (_asset.clip == null)
+            {
+                return;
+            }
+            var tFrame = _asset.clip.length * TimelineWindow.FrameRate;
             var oldEndFrame = _asset.EndFrame;
-            _asset.EndFrame = _asset.StartFrame + Mathf.RoundToInt(tFrame);
-            TimelineWindow.Run(_asset);
+            _asset.EndFrame = _asset.StartFrame + Mathf.Max(1, Mathf.RoundToInt(tFrame));
             if (!ChcekValid())
             {
                 _asset.EndFrame = oldEndFrame;
             }
+            CommitChange(_asset);
         }
+
         partial void _OnPreChanged(ChangeEvent<System.Enum> e)
         {
             _asset.pre = (PostExtrapolate)e.newValue;
-            TimelineWindow.Run(_asset);
+            CommitChange(_asset);
         }
+
         partial void _OnPostChanged(ChangeEvent<System.Enum> e)
         {
             _asset.post = (PostExtrapolate)e.newValue;
-            TimelineWindow.Run(_asset);
+            CommitChange(_asset);
         }
     }
 }

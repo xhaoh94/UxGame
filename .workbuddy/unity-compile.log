@@ -1,0 +1,22 @@
+.workbuddy is not a valid directory name. Please make sure there are no unallowed characters in the name.
+.workbuddy is not a valid directory name. Please make sure there are no unallowed characters in the name.
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.4/staging' branch; Version is '6000.4.3f1 (39d1a88d4dd1) revision 3789224'; Using compiler version '194234433'; Build Type 'Release'
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-ylk" at "2026-09-03T07:07:51.8120818Z"
+OS: 'Windows 11  (10.0.26200) CoreCountrySpecific' Language: 'zh' Physical Memory: 32497 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-09-03T07:07:51Z
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.4.3f1\Editor\Unity.exe
+-batchmode
+-quit
+-projectPath
+C:/Project/UxGame/Unity
+-logFile
+C:/Project/UxGame/.workbuddy/unity-compile.log
+Successfully changed project path to: C:/Project/UxGame/Unity
+C:/Project/UxGame/Unity
+Exiting without the bug reporter. Application will terminate with return code 1

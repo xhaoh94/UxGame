@@ -150,7 +150,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/State
+      - CollectPath: Assets/Data/Res/Combat
         CollectorGUID: 6f674d35e7cacd841b1c1d4feac8c10a
         CollectorType: 0
         AddressRuleName: AddressCollectRule
