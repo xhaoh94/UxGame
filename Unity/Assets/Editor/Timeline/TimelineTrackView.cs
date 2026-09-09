@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using YooAsset.Editor;
 
 namespace Ux.Editor.Timeline
 {
@@ -17,10 +16,11 @@ namespace Ux.Editor.Timeline
         public new class UxmlTraits : VisualElement.UxmlTraits { }
 #endif
         const float HeaderHeight = 32f;
-        readonly Dictionary<TimelineTrackAsset, TimelineTrackItem> trackItemDic = new();
+        readonly Dictionary<ITimelineEditorTrack, TimelineTrackItem> trackItemDic = new();
         ScrollView _trackScroll;
         Label _emptyLabel;
         bool _syncingVerticalScroll;
+        bool _trackMenuBuilt;
 
         public event Action<float> VerticalScrollChanged;
 
@@ -71,46 +71,43 @@ namespace Ux.Editor.Timeline
 
         void BuildTrackMenu()
         {
-            var trackAssets = EditorTools.GetAssignableTypes(typeof(TimelineTrackAsset));
-            foreach (var trackType in trackAssets)
+            if (_trackMenuBuilt)
             {
-                var trackAttribute = trackType.GetAttribute<TLTrackAttribute>();
-                if (trackType.IsAbstract || trackAttribute == null ||
-                    trackType.GetAttribute<TLTrackClipTypeAttribute>() == null)
-                {
-                    continue;
-                }
+                return;
+            }
 
+            var trackTypes = TimelineWindow.Document?.GetTrackTypes();
+            if (trackTypes == null || trackTypes.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var trackType in trackTypes)
+            {
+                var displayName = TimelineWindow.Document.GetTrackDisplayName(trackType);
                 btnAddTrack.menu.AppendAction(
-                    $"添加/{trackAttribute.Lb}",
+                    $"添加/{displayName}",
                     _ => AddTrack(trackType),
-                    _ => TimelineWindow.Asset != null && !TimelineWindow.IsPlaying
+                    _ => TimelineWindow.Document?.CanEdit == true
                         ? DropdownMenuAction.Status.Normal
                         : DropdownMenuAction.Status.Disabled);
             }
+            _trackMenuBuilt = true;
         }
 
         void AddTrack(Type trackType)
         {
-            if (TimelineWindow.Asset == null || TimelineWindow.IsPlaying)
+            if (TimelineWindow.Document?.CanEdit != true)
             {
                 return;
             }
 
-            if (Activator.CreateInstance(trackType) is not TimelineTrackAsset track)
+            var track = TimelineWindow.Document.AddTrack(trackType);
+            if (track == null)
             {
                 return;
             }
-            var attribute = trackType.GetAttribute<TLTrackAttribute>();
-            track.trackName = attribute?.Lb ?? trackType.Name;
-            track.ValidateData();
 
-            TimelineWindow.Undo.RegUndo("timeline_add_track", TimelineWindow.Asset, RefreshView);
-            TimelineWindow.Asset.tracks.Add(track);
-            TimelineWindow.Asset.ValidateData();
-            TimelineWindow.SaveAssets?.Invoke();
-            RefreshView();
-            TimelineWindow.RefreshEntity?.Invoke();
             TimelineWindow.InspectorContent?.FreshInspector(track, null);
         }
 
@@ -137,6 +134,7 @@ namespace Ux.Editor.Timeline
 
         public void RefreshView()
         {
+            BuildTrackMenu();
             foreach (var item in trackItemDic.Values)
             {
                 item.Release();
@@ -145,24 +143,20 @@ namespace Ux.Editor.Timeline
             trackContent.Clear();
             trackItemDic.Clear();
 
-            if (TimelineWindow.Asset?.tracks != null)
+            var document = TimelineWindow.Document;
+            if (document != null)
             {
-                foreach (var track in TimelineWindow.Asset.tracks)
+                foreach (var track in document.Tracks)
                 {
-                    if (track == null)
-                    {
-                        continue;
-                    }
                     var item = new TimelineTrackItem(track);
                     trackContent.Add(item);
                     trackItemDic.Add(track, item);
                 }
             }
 
-            var hasTracks = trackItemDic.Count > 0;
-            if (!hasTracks)
+            if (trackItemDic.Count == 0)
             {
-                _emptyLabel.text = TimelineWindow.Asset == null
+                _emptyLabel.text = document?.HasSource != true
                     ? "请选择 Timeline 资源"
                     : "暂无轨道，点击上方“添加轨道”";
                 trackContent.Add(_emptyLabel);

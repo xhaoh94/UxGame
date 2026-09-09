@@ -16,12 +16,23 @@ MonoBehaviour:
   group: HeroZS
   moveSpeedPerSecond: 5
   turnDegreesPerSecond: 720
-  idleTimeline: {fileID: 11400000, guid: a3cb8b1a275c4d44fa3e07eda2d48400, type: 2}
-  moveTimeline: {fileID: 11400000, guid: a519ec3fd5c101a4bb00cd20ebad28e7, type: 2}
-  airborneTimeline: {fileID: 0}
-  stunnedTimeline: {fileID: 0}
-  knockbackTimeline: {fileID: 0}
-  frozenTimeline: {fileID: 0}
-  deadTimeline: {fileID: 0}
+  statePresentations:
+  - stableId: state.0.1.default
+    layer: 0
+    stateId: 1
+    variantId: default
+    displayName: Idle
+    priority: 0
+    timeline: {fileID: 11400000, guid: a3cb8b1a275c4d44fa3e07eda2d48400, type: 2}
+  - stableId: state.0.2.default
+    layer: 0
+    stateId: 2
+    variantId: default
+    displayName: Move
+    priority: 0
+    timeline: {fileID: 11400000, guid: a519ec3fd5c101a4bb00cd20ebad28e7, type: 2}
   actions:
   - {fileID: 11400000, guid: bcf1d7b44ac84f749e130a537270b60a, type: 2}
+  actionPresentations:
+  - action: {fileID: 11400000, guid: bcf1d7b44ac84f749e130a537270b60a, type: 2}
+    timeline: {fileID: 11400000, guid: 8c3a15de724e45b4a93ed9a8ee7dfc42, type: 2}

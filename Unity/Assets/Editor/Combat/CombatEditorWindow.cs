@@ -299,7 +299,7 @@ namespace Ux.Editor.Combat
             }
 
             var label = $"{action.ActionId}  {GetActionName(action)}";
-            if (action.Timeline == null)
+            if (GetActionTimeline(action) == null)
             {
                 label += " *";
             }
@@ -315,6 +315,12 @@ namespace Ux.Editor.Combat
                 _actionSerialized = null;
             }
             GUI.backgroundColor = oldColor;
+
+            var timeline = GetActionTimeline(action);
+            EditorGUILayout.LabelField(
+                $"逻辑：{action.name}",
+                timeline == null ? "表现：未关联" : $"表现：{timeline.name}",
+                EditorStyles.miniLabel);
         }
 
         private void DrawProfilePage()
@@ -586,25 +592,37 @@ namespace Ux.Editor.Combat
             }
 
             var action = _selectedAction;
+            var timeline = GetActionTimeline(action);
             GUILayout.Label($"技能：{GetActionName(action)}", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "技能是一次性主动动作。运行时代码触发 Action，Timeline 只负责动画和其他时间轴表现。",
+                "技能逻辑保存在 CombatActionAsset；Timeline 通过 Profile 的独立表现映射关联，只负责客户端表现。",
                 MessageType.Info);
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("打开 Timeline", GUILayout.Width(110)) && action.Timeline != null)
+                if (GUILayout.Button("打开双源时间轴", GUILayout.Width(120)))
                 {
-                    OpenTimeline(action.Timeline);
+                    OpenActionTimeline(action, timeline);
                 }
-                if (GUILayout.Button("预览", GUILayout.Width(70)) && action.Timeline != null)
+                using (new EditorGUI.DisabledScope(timeline == null))
                 {
-                    OpenTimeline(action.Timeline, true);
+                    if (GUILayout.Button("预览", GUILayout.Width(70)))
+                    {
+                        OpenActionTimeline(action, timeline, true);
+                    }
                 }
-                if (GUILayout.Button("定位资源", GUILayout.Width(80)))
+                if (GUILayout.Button("定位逻辑资产", GUILayout.Width(100)))
                 {
                     Selection.activeObject = action;
                     EditorGUIUtility.PingObject(action);
+                }
+                using (new EditorGUI.DisabledScope(timeline == null))
+                {
+                    if (GUILayout.Button("定位表现资产", GUILayout.Width(100)))
+                    {
+                        Selection.activeObject = timeline;
+                        EditorGUIUtility.PingObject(timeline);
+                    }
                 }
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("从角色移除", GUILayout.Width(100)))
@@ -618,31 +636,31 @@ namespace Ux.Editor.Combat
             serialized.Update();
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
+                GUILayout.Label("逻辑数据（CombatActionAsset）", EditorStyles.boldLabel);
+                EditorGUILayout.ObjectField("逻辑资产", action, typeof(CombatActionAsset), false);
                 DrawProperty(serialized, "stableId", "StableId");
                 DrawProperty(serialized, "actionId", "技能 ID");
                 DrawProperty(serialized, "displayName", "显示名称");
-                DrawProperty(serialized, "triggerCommand", "触发命令");
-                DrawProperty(serialized, "priority", "优先级");
-                DrawProperty(serialized, "durationFrames", "持续帧数");
+                DrawProperty(serialized, "durationFrames", "逻辑持续帧数");
                 DrawProperty(serialized, "movementPolicy", "移动策略");
-                DrawProperty(serialized, "timeline", "技能 Timeline");
+                DrawCancelWindows(serialized, action);
+                DrawHitWindows(serialized);
+            }
+            if (serialized.ApplyModifiedProperties())
+            {
+                action.ValidateData();
+                EditorUtility.SetDirty(action);
+                _issues.Clear();
             }
 
-            var timeline = action.Timeline;
+            timeline = DrawActionPresentation(action);
             if (timeline == null)
             {
                 EditorGUILayout.HelpBox("尚未关联技能 Timeline。", MessageType.Warning);
                 if (GUILayout.Button("创建技能 Timeline", GUILayout.Width(150)))
                 {
-                    var property = serialized.FindProperty("timeline");
-                    var created = CombatEditorUtility.CreateTimelineAsset(
-                        _profile,
-                        GetActionTimelineSuffix(action.TriggerCommand, action.ActionId),
-                        true);
-                    if (created != null && property != null)
-                    {
-                        property.objectReferenceValue = created;
-                    }
+                    CreateActionTimeline(action);
+                    timeline = GetActionTimeline(action);
                 }
             }
             else
@@ -658,14 +676,8 @@ namespace Ux.Editor.Combat
                     if (nextClip != clip)
                     {
                         Undo.RecordObject(timeline, "设置技能动画");
-                        int duration;
-                        if (CombatEditorUtility.SetPrimaryAnimationClip(timeline, nextClip, out duration))
+                        if (CombatEditorUtility.SetPrimaryAnimationClip(timeline, nextClip, out _))
                         {
-                            var durationProperty = serialized.FindProperty("durationFrames");
-                            if (durationProperty != null && nextClip != null)
-                            {
-                                durationProperty.intValue = duration;
-                            }
                             EditorUtility.SetDirty(timeline);
                             AssetDatabase.SaveAssets();
                         }
@@ -677,14 +689,54 @@ namespace Ux.Editor.Combat
                     EditorStyles.miniLabel);
             }
 
-            DrawCancelWindows(serialized, action);
-            if (serialized.ApplyModifiedProperties())
-            {
-                action.ValidateData();
-                EditorUtility.SetDirty(action);
-                _issues.Clear();
-            }
             DrawValidationPanel();
+        }
+
+        private TimelineAsset DrawActionPresentation(CombatActionAsset action)
+        {
+            var current = GetActionTimeline(action);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                GUILayout.Label("客户端表现映射（CharacterCombatProfile）", EditorStyles.boldLabel);
+                EditorGUILayout.ObjectField(
+                    "所属 Profile",
+                    _profile,
+                    typeof(CharacterCombatProfile),
+                    false);
+                var next = (TimelineAsset)EditorGUILayout.ObjectField(
+                    "表现 Timeline",
+                    current,
+                    typeof(TimelineAsset),
+                    false);
+                if (next != current)
+                {
+                    if (CombatEditorUtility.TrySetActionTimeline(
+                            _profile,
+                            action,
+                            next,
+                            out var error))
+                    {
+                        AssetDatabase.SaveAssets();
+                        _profileSerialized = null;
+                        _issues.Clear();
+                        current = next;
+                    }
+                    else
+                    {
+                        Debug.LogError(error, _profile);
+                        ShowNotification(new GUIContent(error));
+                    }
+                }
+
+                if (current != null && current.DurationFrames != action.DurationFrames)
+                {
+                    EditorGUILayout.HelpBox(
+                        $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
+                        "两者独立保存，请确认差异符合设计。",
+                        MessageType.Warning);
+                }
+            }
+            return current;
         }
 
         private void DrawCancelWindows(SerializedObject serialized, CombatActionAsset action)
@@ -705,11 +757,10 @@ namespace Ux.Editor.Combat
                     var index = windows.arraySize;
                     windows.InsertArrayElementAtIndex(index);
                     var element = windows.GetArrayElementAtIndex(index);
+                    SetRelativeString(element, "stableId", Guid.NewGuid().ToString("N"));
                     SetRelativeInt(element, "StartFrame", 0);
                     SetRelativeInt(element, "EndFrame", 1);
-                    SetRelativeEnum(element, "AcceptedCommand", (int)CombatCommandType.Attack);
                     SetRelativeInt(element, "TargetActionId", action.ActionId);
-                    SetRelativeInt(element, "Priority", 0);
                     SetRelativeBool(element, "RequiresHitConfirm", false);
                 }
             }
@@ -720,12 +771,56 @@ namespace Ux.Editor.Combat
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
                 {
                     EditorGUILayout.LabelField($"窗口 {i + 1}", GUILayout.Width(48));
-                    DrawRelativeProperty(element, "StartFrame", "开始");
-                    DrawRelativeProperty(element, "EndFrame", "结束");
-                    DrawRelativeProperty(element, "AcceptedCommand", "命令");
+                    DrawRelativeProperty(element, "StartFrame", "开始（含）");
+                    DrawRelativeProperty(element, "EndFrame", "结束（不含）");
                     DrawRelativeProperty(element, "TargetActionId", "目标 ID");
-                    DrawRelativeProperty(element, "Priority", "优先级");
                     DrawRelativeProperty(element, "RequiresHitConfirm", "需命中");
+                    if (GUILayout.Button("删除", GUILayout.Width(48)))
+                    {
+                        windows.DeleteArrayElementAtIndex(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void DrawHitWindows(SerializedObject serialized)
+        {
+            var windows = serialized.FindProperty("hitWindows");
+            if (windows == null)
+            {
+                return;
+            }
+
+            EditorGUILayout.Space(8);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("命中激活窗口", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("+ 添加", GUILayout.Width(70)))
+                {
+                    var index = windows.arraySize;
+                    windows.InsertArrayElementAtIndex(index);
+                    var element = windows.GetArrayElementAtIndex(index);
+                    SetRelativeString(element, "stableId", Guid.NewGuid().ToString("N"));
+                    SetRelativeInt(element, "StartFrame", 0);
+                    SetRelativeInt(element, "EndFrame", 1);
+                }
+            }
+
+            EditorGUILayout.HelpBox(
+                "当前仅声明命中时序，不包含形状、目标查询或伤害。区间采用 [开始帧, 结束帧) 语义。",
+                MessageType.Info);
+            for (var i = 0; i < windows.arraySize; i++)
+            {
+                var element = windows.GetArrayElementAtIndex(i);
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                {
+                    EditorGUILayout.LabelField($"窗口 {i + 1}", GUILayout.Width(48));
+                    DrawRelativeProperty(element, "StartFrame", "开始（含）");
+                    DrawRelativeProperty(element, "EndFrame", "结束（不含）");
+                    DrawRelativeProperty(element, "shape", "形状");
+                    DrawRelativeProperty(element, "radiusMillimeters", "半径 mm");
                     if (GUILayout.Button("删除", GUILayout.Width(48)))
                     {
                         windows.DeleteArrayElementAtIndex(i);
@@ -810,82 +905,38 @@ namespace Ux.Editor.Combat
 
             if (basicAttack)
             {
-                var existingAttack = FindActionByCommand(CombatCommandType.Attack);
+                var existingAttack = _profile.FindAction(DefaultActionId);
                 if (existingAttack != null)
                 {
                     _selectedAction = existingAttack;
                     _page = Page.Skills;
-                    ShowNotification(new GUIContent("当前 Profile 已有普通攻击"));
+                    ShowNotification(new GUIContent("当前 Profile 已有 Action 1001"));
                     return;
                 }
             }
 
-            var command = basicAttack ? CombatCommandType.Attack : GetNextCommand();
-            var actionId = basicAttack ? GetAvailableActionId(DefaultActionId) : GetNextActionId();
-            var displayName = basicAttack ? "普通攻击" : GetCommandName(command);
-            var action = ScriptableObject.CreateInstance<CombatActionAsset>();
-            var actionSerialized = new SerializedObject(action);
-            SetProperty(actionSerialized, "stableId", BuildActionStableId(actionId));
-            SetProperty(actionSerialized, "actionId", actionId);
-            SetProperty(actionSerialized, "displayName", displayName);
-            SetProperty(actionSerialized, "triggerCommand", (int)command, true);
-            SetProperty(actionSerialized, "priority", 0);
-            SetProperty(actionSerialized, "durationFrames", DefaultActionDuration);
-            SetProperty(actionSerialized, "movementPolicy", (int)ActionMovementPolicy.Block, true);
-            actionSerialized.ApplyModifiedPropertiesWithoutUndo();
-            action.ValidateData();
-
-            var timeline = CombatEditorUtility.CreateTimelineAsset(
-                _profile,
-                GetActionTimelineSuffix(command, actionId),
-                true);
-            if (timeline == null)
+            var actionId = basicAttack ? DefaultActionId : GetNextActionId();
+            var displayName = basicAttack ? "普通攻击" : $"技能 {actionId}";
+            var sampleClip = basicAttack ? FindHeroZsAttackClip() : null;
+            if (!CombatEditorUtility.TryCreateActionAssets(
+                    _profile,
+                    actionId,
+                    BuildActionStableId(actionId),
+                    displayName,
+                    DefaultActionDuration,
+                    ActionMovementPolicy.Block,
+                    GetActionTimelineSuffix(actionId),
+                    sampleClip,
+                    out var action,
+                    out _,
+                    out var error))
             {
-                UnityEngine.Object.DestroyImmediate(action);
-                EditorUtility.DisplayDialog("无法创建技能", "Timeline 创建失败。", "确定");
+                EditorUtility.DisplayDialog("无法创建技能", error, "确定");
                 return;
             }
-            if (basicAttack)
-            {
-                var sampleClip = FindHeroZsAttackClip();
-                int sampleDuration;
-                if (sampleClip != null &&
-                    CombatEditorUtility.SetPrimaryAnimationClip(timeline, sampleClip, out sampleDuration))
-                {
-                    SetProperty(actionSerialized, "durationFrames", sampleDuration);
-                    EditorUtility.SetDirty(timeline);
-                }
-            }
-            actionSerialized.FindProperty("timeline").objectReferenceValue = timeline;
-            actionSerialized.ApplyModifiedPropertiesWithoutUndo();
-            action.ValidateData();
 
-            var directory = CombatEditorUtility.GetProfileDirectory(_profile);
-            CombatEditorUtility.EnsureFolder(directory);
-            var assetPath = CombatEditorUtility.NormalizeAssetPath(
-                $"{directory}/{CombatEditorUtility.GetActionAssetName(_profile, actionId)}.asset");
-            assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
-            AssetDatabase.CreateAsset(action, assetPath);
-
-            var profileSerialized = GetProfileSerialized();
-            profileSerialized.Update();
-            var actions = profileSerialized.FindProperty("actions");
-            if (actions == null)
-            {
-                AssetDatabase.DeleteAsset(assetPath);
-                DeleteAsset(timeline);
-                return;
-            }
-            actions.InsertArrayElementAtIndex(actions.arraySize);
-            actions.GetArrayElementAtIndex(actions.arraySize - 1).objectReferenceValue = action;
-            profileSerialized.ApplyModifiedProperties();
-            _profile.ValidateData();
-            EditorUtility.SetDirty(_profile);
-            EditorUtility.SetDirty(action);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.ImportAsset(assetPath);
-
-            _selectedAction = AssetDatabase.LoadAssetAtPath<CombatActionAsset>(assetPath) ?? action;
+            _profileSerialized = null;
+            _selectedAction = action;
             _page = Page.Skills;
             _actionSerialized = null;
             Selection.activeObject = _selectedAction;
@@ -898,32 +949,38 @@ namespace Ux.Editor.Combat
             {
                 return;
             }
-            foreach (var definition in CombatEditorUtility.StateTimelines)
-            {
-                if (FindPresentation(definition.Layer, definition.StateId, CombatStatePresentation.DefaultVariantId) != null)
-                {
-                    continue;
-                }
 
-                var serialized = GetProfileSerialized();
-                serialized.Update();
-                var list = serialized.FindProperty("statePresentations");
-                var index = list.arraySize;
-                list.InsertArrayElementAtIndex(index);
-                var element = list.GetArrayElementAtIndex(index);
-                SetRelativeString(element, "stableId", CombatStatePresentation.BuildStableId(
-                    definition.Layer, definition.StateId, CombatStatePresentation.DefaultVariantId));
-                SetRelativeEnum(element, "layer", (int)definition.Layer);
-                SetRelativeInt(element, "stateId", definition.StateId);
-                SetRelativeString(element, "variantId", CombatStatePresentation.DefaultVariantId);
-                SetRelativeString(element, "displayName", definition.DisplayName);
-                SetRelativeInt(element, "priority", 0);
-                serialized.ApplyModifiedProperties();
-                _profile.ValidateData();
-                EditorUtility.SetDirty(_profile);
-                _page = Page.States;
-                Repaint();
-                return;
+            // 候选集合来自枚举反射（CombatStateId.GetMappableStateIds），新增枚举状态会自动纳入，无需手改。
+            foreach (var layer in PresentationLayers)
+            {
+                var stateIds = CombatStateId.GetMappableStateIds(layer);
+                foreach (var stateId in stateIds)
+                {
+                    if (FindPresentation(layer, stateId, CombatStatePresentation.DefaultVariantId) != null)
+                    {
+                        continue;
+                    }
+
+                    var serialized = GetProfileSerialized();
+                    serialized.Update();
+                    var list = serialized.FindProperty("statePresentations");
+                    var index = list.arraySize;
+                    list.InsertArrayElementAtIndex(index);
+                    var element = list.GetArrayElementAtIndex(index);
+                    SetRelativeString(element, "stableId", CombatStatePresentation.BuildStableId(
+                        layer, stateId, CombatStatePresentation.DefaultVariantId));
+                    SetRelativeEnum(element, "layer", (int)layer);
+                    SetRelativeInt(element, "stateId", stateId);
+                    SetRelativeString(element, "variantId", CombatStatePresentation.DefaultVariantId);
+                    SetRelativeString(element, "displayName", CombatStateId.GetDisplayName(layer, stateId));
+                    SetRelativeInt(element, "priority", 0);
+                    serialized.ApplyModifiedProperties();
+                    _profile.ValidateData();
+                    EditorUtility.SetDirty(_profile);
+                    _page = Page.States;
+                    Repaint();
+                    return;
+                }
             }
             ShowNotification(new GUIContent("默认状态映射已经全部存在"));
         }
@@ -949,7 +1006,7 @@ namespace Ux.Editor.Combat
                 var layer = (StateLayer)element.FindPropertyRelative("layer").enumValueIndex;
                 var stateId = element.FindPropertyRelative("stateId").intValue;
                 var variant = element.FindPropertyRelative("variantId").stringValue;
-                if (layer == StateLayer.Action || !CombatStateId.IsDefined(layer, stateId))
+                if (!CombatStateId.IsStatePresentationMappable(layer, stateId))
                 {
                     continue;
                 }
@@ -973,6 +1030,45 @@ namespace Ux.Editor.Combat
             ShowNotification(new GUIContent(created == 0 ? "没有需要创建的状态 Timeline" : $"已创建 {created} 条状态 Timeline"));
         }
 
+        private TimelineAsset CreateActionTimeline(CombatActionAsset action)
+        {
+            if (_profile == null || action == null)
+            {
+                return null;
+            }
+
+            var existing = GetActionTimeline(action);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            var timeline = CombatEditorUtility.CreateTimelineAsset(
+                _profile,
+                GetActionTimelineSuffix(action.ActionId),
+                true);
+            if (timeline == null)
+            {
+                return null;
+            }
+
+            if (!CombatEditorUtility.TrySetActionTimeline(
+                    _profile,
+                    action,
+                    timeline,
+                    out var error))
+            {
+                Debug.LogError(error, _profile);
+                DeleteAsset(timeline);
+                return null;
+            }
+
+            _profileSerialized = null;
+            AssetDatabase.SaveAssets();
+            _issues.Clear();
+            return timeline;
+        }
+
         private void CreateMissingActionTimelines()
         {
             if (_profile?.Actions == null)
@@ -982,24 +1078,14 @@ namespace Ux.Editor.Combat
             var created = 0;
             foreach (var action in _profile.Actions)
             {
-                if (action == null || action.Timeline != null)
+                if (action == null || GetActionTimeline(action) != null)
                 {
                     continue;
                 }
-                var timeline = CombatEditorUtility.CreateTimelineAsset(
-                    _profile,
-                    GetActionTimelineSuffix(action.TriggerCommand, action.ActionId),
-                    true);
-                if (timeline == null)
+                if (CreateActionTimeline(action) != null)
                 {
-                    continue;
+                    created++;
                 }
-                var serialized = new SerializedObject(action);
-                serialized.FindProperty("timeline").objectReferenceValue = timeline;
-                serialized.ApplyModifiedProperties();
-                action.ValidateData();
-                EditorUtility.SetDirty(action);
-                created++;
             }
             AssetDatabase.SaveAssets();
             ShowNotification(new GUIContent(created == 0 ? "没有需要创建的技能 Timeline" : $"已创建 {created} 条技能 Timeline"));
@@ -1022,13 +1108,13 @@ namespace Ux.Editor.Combat
                     }
                 }
             }
-            if (_profile.Actions != null)
+            if (_profile.ActionPresentations != null)
             {
-                foreach (var action in _profile.Actions)
+                foreach (var presentation in _profile.ActionPresentations)
                 {
-                    if (action?.Timeline != null)
+                    if (presentation?.Timeline != null)
                     {
-                        timelines.Add(action.Timeline);
+                        timelines.Add(presentation.Timeline);
                     }
                 }
             }
@@ -1082,10 +1168,16 @@ namespace Ux.Editor.Combat
                     }
                     action.ValidateData();
                     EditorUtility.SetDirty(action);
-                    if (action.Timeline != null)
+                }
+            }
+            if (_profile.ActionPresentations != null)
+            {
+                foreach (var presentation in _profile.ActionPresentations)
+                {
+                    if (presentation?.Timeline != null)
                     {
-                        action.Timeline.ValidateData();
-                        EditorUtility.SetDirty(action.Timeline);
+                        presentation.Timeline.ValidateData();
+                        EditorUtility.SetDirty(presentation.Timeline);
                     }
                 }
             }
@@ -1144,6 +1236,18 @@ namespace Ux.Editor.Combat
             var serialized = GetProfileSerialized();
             serialized.Update();
             var actions = serialized.FindProperty("actions");
+            var presentations = serialized.FindProperty("actionPresentations");
+            if (presentations != null)
+            {
+                for (var i = presentations.arraySize - 1; i >= 0; i--)
+                {
+                    var presentation = presentations.GetArrayElementAtIndex(i);
+                    if (presentation.FindPropertyRelative("action")?.objectReferenceValue == _selectedAction)
+                    {
+                        presentations.DeleteArrayElementAtIndex(i);
+                    }
+                }
+            }
             for (var i = actions.arraySize - 1; i >= 0; i--)
             {
                 if (actions.GetArrayElementAtIndex(i).objectReferenceValue == _selectedAction)
@@ -1164,6 +1268,17 @@ namespace Ux.Editor.Combat
             if (timeline != null)
             {
                 TimelineWindow.Open(timeline, _previewObject, autoPlay);
+            }
+        }
+
+        private void OpenActionTimeline(
+            CombatActionAsset action,
+            TimelineAsset timeline,
+            bool autoPlay = false)
+        {
+            if (action != null)
+            {
+                TimelineWindow.Open(action, timeline, _profile, _previewObject, autoPlay);
             }
         }
 
@@ -1226,20 +1341,9 @@ namespace Ux.Editor.Combat
             return null;
         }
 
-        private CombatActionAsset FindActionByCommand(CombatCommandType command)
+        private TimelineAsset GetActionTimeline(CombatActionAsset action)
         {
-            if (_profile?.Actions == null)
-            {
-                return null;
-            }
-            foreach (var action in _profile.Actions)
-            {
-                if (action != null && action.TriggerCommand == command)
-                {
-                    return action;
-                }
-            }
-            return null;
+            return _profile?.GetActionTimeline(action);
         }
 
         private CombatActionAsset FindFirstAction()
@@ -1300,27 +1404,6 @@ namespace Ux.Editor.Combat
             return candidate;
         }
 
-        private CombatCommandType GetNextCommand()
-        {
-            var commands = new[]
-            {
-                CombatCommandType.Attack,
-                CombatCommandType.Skill01,
-                CombatCommandType.Skill02,
-                CombatCommandType.Skill03,
-                CombatCommandType.Dodge,
-                CombatCommandType.Jump,
-            };
-            foreach (var command in commands)
-            {
-                if (FindActionByCommand(command) == null)
-                {
-                    return command;
-                }
-            }
-            return CombatCommandType.Skill03;
-        }
-
         private string BuildActionStableId(int actionId)
         {
             var prefix = string.IsNullOrWhiteSpace(_profile?.Group) ? _profile?.name : _profile.Group;
@@ -1352,46 +1435,11 @@ namespace Ux.Editor.Combat
             return string.IsNullOrEmpty(action.DisplayName) ? action.name : action.DisplayName;
         }
 
-        private static string GetCommandName(CombatCommandType command)
+        private static string GetActionTimelineSuffix(int actionId)
         {
-            switch (command)
-            {
-                case CombatCommandType.Attack:
-                    return "普通攻击";
-                case CombatCommandType.Skill01:
-                    return "技能1";
-                case CombatCommandType.Skill02:
-                    return "技能2";
-                case CombatCommandType.Skill03:
-                    return "技能3";
-                case CombatCommandType.Dodge:
-                    return "闪避";
-                case CombatCommandType.Jump:
-                    return "跳跃";
-                default:
-                    return command.ToString();
-            }
-        }
-
-        private static string GetActionTimelineSuffix(CombatCommandType command, int actionId)
-        {
-            switch (command)
-            {
-                case CombatCommandType.Attack:
-                    return "Attack01";
-                case CombatCommandType.Skill01:
-                    return "Skill01";
-                case CombatCommandType.Skill02:
-                    return "Skill02";
-                case CombatCommandType.Skill03:
-                    return "Skill03";
-                case CombatCommandType.Dodge:
-                    return "Dodge01";
-                case CombatCommandType.Jump:
-                    return "Jump01";
-                default:
-                    return $"Action{Mathf.Max(1, actionId):000}";
-            }
+            return actionId == DefaultActionId
+                ? "Attack01"
+                : $"Action{Mathf.Max(1, actionId):000}";
         }
 
         private int CountIssues(CombatValidationSeverity severity)

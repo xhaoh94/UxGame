@@ -31,12 +31,8 @@ MonoBehaviour:
     displayName: Move
     priority: 24
     timeline: {fileID: 11400000, guid: a519ec3fd5c101a4bb00cd20ebad28e7, type: 2}
-  idleTimeline: {fileID: 0}
-  moveTimeline: {fileID: 0}
-  airborneTimeline: {fileID: 0}
-  stunnedTimeline: {fileID: 0}
-  knockbackTimeline: {fileID: 0}
-  frozenTimeline: {fileID: 0}
-  deadTimeline: {fileID: 0}
   actions:
   - {fileID: 11400000, guid: 449d6f28cc01d3c49967e396e8a8407d, type: 2}
+  actionPresentations:
+  - action: {fileID: 11400000, guid: 449d6f28cc01d3c49967e396e8a8407d, type: 2}
+    timeline: {fileID: 11400000, guid: cfe789a91cd928d43a81faee4ee3f5a3, type: 2}

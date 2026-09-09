@@ -15,9 +15,6 @@ MonoBehaviour:
   stableId: Character.action.1001
   actionId: 1001
   displayName: "\u666E\u901A\u653B\u51FB"
-  triggerCommand: 1
-  priority: 0
   durationFrames: 70
   movementPolicy: 1
-  timeline: {fileID: 11400000, guid: 856fed35fe745304eb164423aa0c264e, type: 2}
   cancelWindows: []

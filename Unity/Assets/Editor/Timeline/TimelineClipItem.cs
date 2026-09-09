@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+
 namespace Ux.Editor.Timeline
 {
     public enum DragStatus
@@ -11,6 +12,7 @@ namespace Ux.Editor.Timeline
         Right,
         Move,
     }
+
     struct Point
     {
         public double X, Y;
@@ -21,33 +23,36 @@ namespace Ux.Editor.Timeline
             Y = y;
         }
 
-        // 计算向量叉积
-        public static double CrossProduct(Point O, Point A, Point B)
+        public static double CrossProduct(Point origin, Point first, Point second)
         {
-            return (A.X - O.X) * (B.Y - O.Y) - (A.Y - O.Y) * (B.X - O.X);
+            return (first.X - origin.X) * (second.Y - origin.Y) -
+                   (first.Y - origin.Y) * (second.X - origin.X);
         }
     }
+
     public partial class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
         public DragStatus Status { get; private set; }
-        Color color;
-        public TimelineClipAsset Asset { get; private set; }
-        public TimelineTrackItem TrackItem { get; private set; }
+        readonly Color color;
+        public ITimelineEditorClip Clip { get; }
+        public TimelineTrackItem TrackItem { get; }
         public DropdownMenu menu { get; }
         bool menuInitialized;
-        public TimelineClipItem(TimelineClipAsset asset, TimelineTrackItem track)
+        int startFrame;
+        int endFrame;
+
+        public TimelineClipItem(ITimelineEditorClip clip, TimelineTrackItem track)
         {
-            Asset = asset;
+            Clip = clip;
             TrackItem = track;
-            color = TrackItem.Asset.GetType().GetAttribute<TLTrackAttribute>()?.Color
-                ?? new Color(0.4f, 0.75f, 0.75f);
+            color = track.Track.Color;
 
             BuildVisualTree();
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
-            RegisterCallback<DragUpdatedEvent>(_OnDragUpd);
-            RegisterCallback<DragPerformEvent>(_OnDragPerform);
-            TimelineWindow.Bind(Asset, UpdateView);
+            RegisterCallback<DragUpdatedEvent>(OnDragUpdated);
+            RegisterCallback<DragPerformEvent>(OnDragPerform);
+            clip.Bind(UpdateView);
         }
 
         void BuildVisualTree()
@@ -80,163 +85,138 @@ namespace Ux.Editor.Timeline
             lbType.style.overflow = Overflow.Hidden;
             content.Add(lbType);
         }
+
         public void Release()
         {
-            TimelineWindow.UnBind(Asset, UpdateView);
+            Clip.Unbind(UpdateView);
         }
 
-        void _OnDragUpd(DragUpdatedEvent e)
+        void OnDragUpdated(DragUpdatedEvent evt)
         {
             DragAndDrop.visualMode = DragAndDropVisualMode.Move;
         }
-        void _OnDragPerform(DragPerformEvent e)
+
+        void OnDragPerform(DragPerformEvent evt)
         {
-            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-            {
-                string retPath = DragAndDrop.paths[0];
-                if (Asset is not AnimationClipAsset animationAsset)
-                {
-                    return;
-                }
-                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(retPath);
-                if (clip == null)
-                {
-                    return;
-                }
-                animationAsset.clip = clip;
-                animationAsset.clipName = clip.name;
-                animationAsset.EndFrame = animationAsset.StartFrame +
-                    Mathf.Max(1, Mathf.RoundToInt(clip.length * TimelineWindow.FrameRate));
-                TimelineWindow.SaveAssets();
-                TimelineWindow.RefreshEntity();
-                UpdateView();
-            }
-        }
-        void OnPointerDown(PointerDownEvent e)
-        {            
-            if (e.button == 0)
-            {
-                FreshInspector();
-            }
-            else if (e.button == 1)
-            {
-                if (!TimelineWindow.IsValid()) return;
-                if (!menuInitialized)
-                {
-                    if (Asset is AnimationClipAsset)
-                    {
-                        menu.AppendAction("适配长度", _ => FitAnimationDuration(),
-                            _ => (Asset as AnimationClipAsset)?.clip != null
-                                ? DropdownMenuAction.Status.Normal
-                                : DropdownMenuAction.Status.Disabled);
-                    }
-                    menu.AppendAction("删除", _ => TrackItem.RemoveClipItem(this),
-                        _ => DropdownMenuAction.Status.Normal);
-                    menuInitialized = true;
-                }
-                this.ShowMenu();
-            }
-        }
-        void FitAnimationDuration()
-        {
-            if (Asset is not AnimationClipAsset animationAsset || animationAsset.clip == null)
+            if (DragAndDrop.paths == null || DragAndDrop.paths.Length == 0 ||
+                !Clip.TryAssignAnimation(DragAndDrop.paths[0]))
             {
                 return;
             }
-
-            var oldEndFrame = Asset.EndFrame;
-            Asset.EndFrame = Asset.StartFrame +
-                Mathf.Max(1, Mathf.RoundToInt(animationAsset.clip.length * TimelineWindow.FrameRate));
-            if (!TrackItem.IsValid())
-            {
-                Asset.EndFrame = oldEndFrame;
-            }
             UpdateView();
-            TimelineWindow.SaveAssets();
-            TimelineWindow.RefreshEntity?.Invoke();
-            TimelineWindow.wnd?.clipView?.RefreshLayout();
         }
 
-        bool ChcekValid()
+        void OnPointerDown(PointerDownEvent evt)
         {
-            return TrackItem.IsValid();         
+            if (evt.button == 0)
+            {
+                FreshInspector();
+            }
+            else if (evt.button == 1)
+            {
+                if (!TimelineWindow.IsValid())
+                {
+                    return;
+                }
+                EnsureMenu();
+                this.ShowMenu();
+            }
+        }
+
+        void EnsureMenu()
+        {
+            if (menuInitialized)
+            {
+                return;
+            }
+            menu.AppendAction("适配长度", _ => FitAnimationDuration(),
+                _ => Clip.CanFitAnimationDuration
+                    ? DropdownMenuAction.Status.Normal
+                    : DropdownMenuAction.Status.Disabled);
+            menu.AppendAction("删除", _ => TrackItem.RemoveClipItem(this),
+                _ => DropdownMenuAction.Status.Normal);
+            menuInitialized = true;
+        }
+
+        void FitAnimationDuration()
+        {
+            if (!Clip.FitAnimationDuration())
+            {
+                return;
+            }
+            UpdateView();
+            TimelineWindow.wnd?.clipView?.RefreshLayout();
         }
 
         public void FreshInspector()
         {
-            TimelineWindow.InspectorContent.FreshInspector(Asset, ChcekValid);
+            TimelineWindow.InspectorContent?.FreshInspector(Clip, TrackItem.IsValid);
         }
 
-        bool IsPointInTriangle(Point p, Point a, Point b, Point c)
+        static bool IsPointInTriangle(Point point, Point first, Point second, Point third)
         {
-            bool b1, b2, b3;
-
-            b1 = Point.CrossProduct(p, a, b) < 0.0f;
-            b2 = Point.CrossProduct(p, b, c) < 0.0f;
-            b3 = Point.CrossProduct(p, c, a) < 0.0f;
-
-            return ((b1 == b2) && (b2 == b3));
+            var side1 = Point.CrossProduct(point, first, second) < 0.0f;
+            var side2 = Point.CrossProduct(point, second, third) < 0.0f;
+            var side3 = Point.CrossProduct(point, third, first) < 0.0f;
+            return side1 == side2 && side2 == side3;
         }
-        bool isDrag => Status != DragStatus.None;
-        int startFrame;
-        int endFrame;
+
+        bool IsDragging => Status != DragStatus.None;
+
         public void ToDown(int frame)
         {
-            if (frame >= Asset.StartFrame && frame <= Asset.EndFrame)
+            if (frame < Clip.StartFrame || frame > Clip.EndFrame)
             {
-                var x = TimelineWindow.GetPositionByFrame(frame);
-                var sx = TimelineWindow.GetPositionByFrame(Asset.StartFrame);
-                var ex = TimelineWindow.GetPositionByFrame(Asset.EndFrame);
-                if (x - sx < 20)
-                {
-                    Status = DragStatus.Left;
-                }
-                else if (ex - x < 20)
-                {
-                    Status = DragStatus.Right;
-                }
-                else
-                {
-                    if (Asset.InFrame > 0)
-                    {
-                        var pos = this.WorldToLocal(Event.current.mousePosition);
-                        var ix = TimelineWindow.GetPositionByFrame(Asset.InFrame);
-                        var a = new Point(sx, 0);
-                        var b = new Point(sx, 30);
-                        var c = new Point(ix, 30);
-                        var p = new Point(x, pos.y);
-                        bool isInTriangle = IsPointInTriangle(p, a, b, c);
-                        //不在三角形区域内
-                        if (isInTriangle)
-                        {
-                            Status = DragStatus.None;
-                            return;
-                        }
-                    }
-                    if (Asset.OutFrame > 0)
-                    {
-                        var pos = this.WorldToLocal(Event.current.mousePosition);
-                        var ox = TimelineWindow.GetPositionByFrame(Asset.OutFrame);
-                        var a = new Point(ox, 0);
-                        var b = new Point(ex, 0);
-                        var c = new Point(ex, 30);
-                        var p = new Point(x, pos.y);
-                        bool isInTriangle = IsPointInTriangle(p, a, b, c);
-                        //不在三角形区域外
-                        if (isInTriangle)
-                        {
-                            Status = DragStatus.None;
-                            return;
-                        }
-                    }
-                    Status = DragStatus.Move;
-                }
-
-                startFrame = Asset.StartFrame;
-                endFrame = Asset.EndFrame;
+                Status = DragStatus.None;
                 return;
             }
-            Status = DragStatus.None;
+
+            var x = TimelineWindow.GetPositionByFrame(frame);
+            var startX = TimelineWindow.GetPositionByFrame(Clip.StartFrame);
+            var endX = TimelineWindow.GetPositionByFrame(Clip.EndFrame);
+            if (x - startX < 20)
+            {
+                Status = DragStatus.Left;
+            }
+            else if (endX - x < 20)
+            {
+                Status = DragStatus.Right;
+            }
+            else
+            {
+                if (Clip.InFrame > 0)
+                {
+                    var position = this.WorldToLocal(Event.current.mousePosition);
+                    var inX = TimelineWindow.GetPositionByFrame(Clip.InFrame);
+                    if (IsPointInTriangle(
+                        new Point(x, position.y),
+                        new Point(startX, 0),
+                        new Point(startX, 30),
+                        new Point(inX, 30)))
+                    {
+                        Status = DragStatus.None;
+                        return;
+                    }
+                }
+                if (Clip.OutFrame > 0)
+                {
+                    var position = this.WorldToLocal(Event.current.mousePosition);
+                    var outX = TimelineWindow.GetPositionByFrame(Clip.OutFrame);
+                    if (IsPointInTriangle(
+                        new Point(x, position.y),
+                        new Point(outX, 0),
+                        new Point(endX, 0),
+                        new Point(endX, 30)))
+                    {
+                        Status = DragStatus.None;
+                        return;
+                    }
+                }
+                Status = DragStatus.Move;
+            }
+
+            startFrame = Clip.StartFrame;
+            endFrame = Clip.EndFrame;
         }
 
         public void ToDrag(int now, int last)
@@ -245,37 +225,7 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
-            switch (Status)
-            {
-                case DragStatus.Left:
-                    if (now < 0)
-                    {
-                        now = 0;
-                    }
-                    if (now >= Asset.EndFrame)
-                    {
-                        now = Asset.EndFrame - 1;
-                    }
-                    Asset.StartFrame = now;
-                    break;
-                case DragStatus.Right:
-                    if (now < Asset.StartFrame + 1)
-                    {
-                        now = Asset.StartFrame + 1;
-                    }
-                    Asset.EndFrame = now;
-                    break;
-                case DragStatus.Move:
-                    var offFrame = now - last;
-                    if (Asset.StartFrame + offFrame < 0)
-                    {
-                        offFrame = 0 - Asset.StartFrame;
-                    }
-                    Asset.StartFrame += offFrame;
-                    Asset.EndFrame += offFrame;
-                    break;
-            }
-            TimelineWindow.Run(Asset);
+            Clip.Drag(Status, now, last);
             UpdateView();
         }
 
@@ -289,53 +239,41 @@ namespace Ux.Editor.Timeline
 
             if (!TrackItem.IsValid())
             {
-                Asset.StartFrame = startFrame;
-                Asset.EndFrame = endFrame;
-                TimelineWindow.Run(Asset);
+                Clip.SetFrames(startFrame, endFrame, false);
             }
             UpdateView();
         }
 
         public void RefreshWidth()
         {
-            var sx = Asset.InFrame > 0 ?
-               TimelineWindow.GetPositionByFrame(Asset.InFrame) :
-               TimelineWindow.GetPositionByFrame(Asset.StartFrame);
-
-            var ex = Asset.OutFrame > 0 ?
-                TimelineWindow.GetPositionByFrame(Asset.OutFrame) :
-                TimelineWindow.GetPositionByFrame(Asset.EndFrame);
-
-            style.left = sx;
-            style.width = Mathf.Max(2, ex - sx);
+            var startX = TimelineWindow.GetPositionByFrame(
+                Clip.InFrame > 0 ? Clip.InFrame : Clip.StartFrame);
+            var endX = TimelineWindow.GetPositionByFrame(
+                Clip.OutFrame > 0 ? Clip.OutFrame : Clip.EndFrame);
+            style.left = startX;
+            style.width = Mathf.Max(2, endX - startX);
         }
+
         public void UpdateView()
         {
-            lbType.text = string.IsNullOrEmpty(Asset.clipName) ? Asset.GetType().Name : Asset.clipName;
-            // Detailed timing is shown in the inspector after selection. A native tooltip
-            // here floats over neighbouring tracks and looks like an extra clip.
+            lbType.text = string.IsNullOrEmpty(Clip.Name) ? Clip.TypeName : Clip.Name;
             tooltip = null;
-            var lineWidth = 1;
+            const int lineWidth = 1;
+            content.style.borderLeftWidth = lineWidth;
+            content.style.borderRightWidth = lineWidth;
+            content.style.borderTopWidth = lineWidth;
+            content.style.borderBottomWidth = lineWidth;
+
             if (TrackItem.IsValid())
             {
-                content.style.borderLeftWidth = lineWidth;
-                content.style.borderRightWidth = lineWidth;
-                content.style.borderTopWidth = lineWidth;
-                content.style.borderBottomWidth = lineWidth;
-
-                content.style.borderLeftColor = isDrag ? Color.white : color;
-                content.style.borderRightColor = isDrag ? Color.white : color;
-                content.style.borderTopColor = isDrag ? Color.white : color;
-                content.style.borderBottomColor = isDrag ? Color.white : color;
+                content.style.borderLeftColor = IsDragging ? Color.white : color;
+                content.style.borderRightColor = IsDragging ? Color.white : color;
+                content.style.borderTopColor = IsDragging ? Color.white : color;
+                content.style.borderBottomColor = IsDragging ? Color.white : color;
             }
             else
             {
                 BringToFront();
-                content.style.borderLeftWidth = lineWidth;
-                content.style.borderRightWidth = lineWidth;
-                content.style.borderTopWidth = lineWidth;
-                content.style.borderBottomWidth = lineWidth;
-
                 content.style.borderLeftColor = new StyleColor(Color.red);
                 content.style.borderRightColor = new StyleColor(Color.red);
                 content.style.borderTopColor = new StyleColor(Color.red);

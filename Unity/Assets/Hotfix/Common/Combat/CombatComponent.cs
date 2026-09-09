@@ -102,9 +102,12 @@ namespace Ux
             }
         }
 
-        public long EnqueueCommand(
-            CombatCommandType type,
-            int parameter = 0,
+        /// <summary>
+        /// 按 ActionId 请求技能。输入、网络和录像命令都只携带权威 ActionId，
+        /// 不再通过命令类型或优先级推断技能。
+        /// </summary>
+        public long RequestAction(
+            int actionId,
             uint targetId = 0,
             Vector3 aimDirection = default)
         {
@@ -113,29 +116,10 @@ namespace Ux
             _commands.Enqueue(new CombatCommand(
                 requestId,
                 frame,
-                type,
-                parameter,
+                actionId,
                 targetId,
                 aimDirection));
             return requestId;
-        }
-
-        /// <summary>
-        /// 按 ActionId 请求技能。技能资源仍由 CharacterCombatProfile.Actions 管理，
-        /// 调用方不直接操作 Timeline；CombatActionRunner 会在目标逻辑帧选择该动作。
-        /// </summary>
-        public long RequestAction(
-            int actionId,
-            uint targetId = 0,
-            Vector3 aimDirection = default)
-        {
-            var action = Profile?.FindAction(actionId);
-            var commandType = action == null ? CombatCommandType.Attack : action.TriggerCommand;
-            return EnqueueCommand(
-                commandType,
-                actionId,
-                targetId,
-                aimDirection);
         }
 
         public void EnqueueCommand(in CombatCommand command)
@@ -412,12 +396,16 @@ namespace Ux
                     presentation);
             }
 
-            if (Actions.HasAction && Actions.CurrentAsset.Timeline != null)
+            if (Actions.HasAction)
             {
-                return TimelineSelection.ForAction(
-                    Actions.Current.InstanceId,
-                    Actions.Current.ActionFrame,
-                    Actions.CurrentAsset.Timeline);
+                var actionTimeline = Profile.GetActionTimeline(Actions.Current.ActionId);
+                if (actionTimeline != null)
+                {
+                    return TimelineSelection.ForAction(
+                        Actions.Current.InstanceId,
+                        Actions.Current.ActionFrame,
+                        actionTimeline);
+                }
             }
 
             var locomotionId = States.GetCurrentStateId(StateLayer.Locomotion);

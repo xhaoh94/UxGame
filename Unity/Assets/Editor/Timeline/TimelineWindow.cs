@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ux.Editor.Combat;
 namespace Ux.Editor.Timeline
 {
     struct BindData
@@ -37,6 +38,8 @@ namespace Ux.Editor.Timeline
         }
         public static TimelineWindow wnd;
         private TimelineAsset _requestedTimeline;
+        private CombatActionAsset _requestedCombatAction;
+        private CharacterCombatProfile _requestedCombatProfile;
         private GameObject _requestedPreviewObject;
         private bool _requestedAutoPlay;
         private bool _autoPlayPending;
@@ -58,8 +61,40 @@ namespace Ux.Editor.Timeline
             GameObject previewObject = null,
             bool autoPlay = false)
         {
-            if (timeline == null)
+            return OpenInternal(timeline, null, null, previewObject, autoPlay);
+        }
+
+        /// <summary>
+        /// 同时打开技能的客户端表现 Timeline 与确定性逻辑轨道。两类数据共用帧标尺，
+        /// 但分别以 TimelineAsset 和 CombatActionAsset 作为 Undo/Save owner。
+        /// </summary>
+        public static TimelineWindow Open(
+            CombatActionAsset action,
+            TimelineAsset timeline,
+            CharacterCombatProfile profile = null,
+            GameObject previewObject = null,
+            bool autoPlay = false)
+        {
+            return OpenInternal(timeline, action, profile, previewObject, autoPlay);
+        }
+
+        static TimelineWindow OpenInternal(
+            TimelineAsset timeline,
+            CombatActionAsset action,
+            CharacterCombatProfile profile,
+            GameObject previewObject,
+            bool autoPlay)
+        {
+            if (timeline == null && action == null)
             {
+                return null;
+            }
+            if (action != null && timeline != null && profile != null &&
+                timeline.FrameRate != profile.FrameRate)
+            {
+                Debug.LogError(
+                    $"无法打开技能双源时间轴：表现帧率 {timeline.FrameRate} 与 Profile 逻辑帧率 {profile.FrameRate} 不一致。",
+                    timeline);
                 return null;
             }
 
@@ -71,8 +106,10 @@ namespace Ux.Editor.Timeline
                 wnd._OnBtnPauseClick();
             }
             wnd._requestedTimeline = timeline;
+            wnd._requestedCombatAction = action;
+            wnd._requestedCombatProfile = profile;
             wnd._requestedPreviewObject = previewObject;
-            wnd._requestedAutoPlay = autoPlay;
+            wnd._requestedAutoPlay = autoPlay && timeline != null;
             wnd._hasOpenRequest = true;
             wnd.Show();
 
@@ -97,6 +134,9 @@ namespace Ux.Editor.Timeline
         PopupField<PlayMode> _playModePopup;
         IntegerField _currentFrameField;
         Label _durationLabel;
+        ObjectField _combatActionField;
+        CombatActionAsset _combatAction;
+        CharacterCombatProfile _combatProfile;
         public void CreateGUI()
         {
             // UXML 或脚本热重载后 EditorWindow 可能保留旧视觉树，必须先清理再重建。
@@ -109,6 +149,11 @@ namespace Ux.Editor.Timeline
             _entity = null;
             Timeline = null;
             Asset = null;
+            _combatAction = null;
+            _combatProfile = null;
+            Document = new TimelineEditorDocument(() => IsPlaying);
+            Document.SourceStructureChanged += OnDocumentStructureChanged;
+            Document.SourceChanged += OnDocumentChanged;
             InspectorContent = null;
             ClipContent = null;
             GetPositionByFrame = null;
@@ -122,7 +167,6 @@ namespace Ux.Editor.Timeline
             RefreshEntity = _RefreshEntity;
             RefreshBinds = _RefreshBinds;
             MarkerMove = _MarkerMove;
-            ResetActionMap();
 
             wnd = this;
             BuildEditorUI();
@@ -139,13 +183,8 @@ namespace Ux.Editor.Timeline
             _framePopupField.label = "帧率";
             _framePopupField.RegisterValueChangedCallback(evt =>
             {
-                if (Asset == null)
+                if (Document?.SetFrameRate(evt.newValue) == true)
                 {
-                    return;
-                }
-                if (Asset.SetFrameRate(evt.newValue))
-                {
-                    SaveAssets();
                     RefreshView?.Invoke();
                     RefreshClip?.Invoke();
                     RefreshEntity?.Invoke();
@@ -183,11 +222,17 @@ namespace Ux.Editor.Timeline
             }
 
             var requestedPreviewObject = _requestedPreviewObject;
+            var previousPreviewObject = ofEntity?.value;
+            var previousTimeline = Asset;
             var requestedTimeline = _requestedTimeline;
+            var requestedCombatAction = _requestedCombatAction;
+            var requestedCombatProfile = _requestedCombatProfile;
             var requestedAutoPlay = _requestedAutoPlay;
             CancelAutoPlay();
             _requestedPreviewObject = null;
             _requestedTimeline = null;
+            _requestedCombatAction = null;
+            _requestedCombatProfile = null;
             _requestedAutoPlay = false;
             _hasOpenRequest = false;
 
@@ -195,10 +240,32 @@ namespace Ux.Editor.Timeline
             {
                 ofEntity.value = requestedPreviewObject;
             }
-            if (requestedTimeline != null && ofTimeline != null)
+
+            InspectorContent?.Clear();
+            _combatProfile = requestedCombatProfile;
+            Asset = requestedTimeline;
+            _combatAction = requestedCombatAction;
+            ofTimeline?.SetValueWithoutNotify(requestedTimeline);
+            _combatActionField?.SetValueWithoutNotify(requestedCombatAction);
+            ConfigureDocumentSources();
+            var presentationChanged = !ReferenceEquals(previousTimeline, Asset) ||
+                requestedPreviewObject != null &&
+                !ReferenceEquals(previousPreviewObject, requestedPreviewObject);
+            if (presentationChanged)
             {
-                ofTimeline.value = requestedTimeline;
+                ApplyPresentationAssetSelection();
             }
+            RefreshView?.Invoke();
+            if (!ReferenceEquals(previousTimeline, Asset))
+            {
+                clipView?.ResetView();
+            }
+            else
+            {
+                clipView?.RefreshLayout();
+            }
+            UpdateDurationLabel();
+
             if (requestedAutoPlay)
             {
                 ScheduleAutoPlay();
@@ -268,6 +335,17 @@ namespace Ux.Editor.Timeline
             btnCreate.style.width = 80;
             assetRow.Add(btnCreate);
             sourcePanel.Add(assetRow);
+
+            var logicRow = CreateToolbarRow();
+            _combatActionField = new ObjectField("逻辑技能")
+            {
+                objectType = typeof(CombatActionAsset),
+                allowSceneObjects = false,
+            };
+            _combatActionField.style.flexGrow = 1;
+            _combatActionField.RegisterValueChangedCallback(OnCombatActionChanged);
+            logicRow.Add(_combatActionField);
+            sourcePanel.Add(logicRow);
 
             createView = new VisualElement();
             createView.style.flexDirection = FlexDirection.Row;
@@ -341,7 +419,7 @@ namespace Ux.Editor.Timeline
             spacer.style.flexGrow = 1;
             playback.Add(spacer);
             var saveButton = new Button(_SaveAssets) { text = "保存" };
-            saveButton.tooltip = "保存 Timeline 资源 (Ctrl+S)";
+            saveButton.tooltip = "分别保存当前表现与逻辑资源 (Ctrl+S)";
             playback.Add(saveButton);
             root.Add(playback);
 
@@ -447,10 +525,10 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
-            var duration = Asset?.DurationFrames ?? 0;
-            _durationLabel.text = Asset == null
-                ? "未选择 Timeline"
-                : $"长度 {duration} 帧 / {Asset.FrameToTime(duration):0.###} 秒";
+            var duration = Document?.DurationFrames ?? 0;
+            _durationLabel.text = Document?.HasSource != true
+                ? "未选择时间轴数据"
+                : $"会话长度 {duration} 帧 / {duration / (float)Document.FrameRate:0.###} 秒";
         }
 
         bool keyCtrl = false;
@@ -551,6 +629,9 @@ namespace Ux.Editor.Timeline
             Undo = null;
             Timeline = null;
             Asset = null;
+            _combatAction = null;
+            _combatProfile = null;
+            Document = null;
             InspectorContent = null;
             ClipContent = null;
             GetPositionByFrame = null;
@@ -561,7 +642,6 @@ namespace Ux.Editor.Timeline
             RefreshEntity = null;
             RefreshView = null;
             RefreshClip = null;
-            ResetActionMap();
             if (wnd == this)
             {
                 wnd = null;
@@ -583,7 +663,7 @@ namespace Ux.Editor.Timeline
 
         partial void _OnBtnPlayClick()
         {
-            if (!IsValid()) return;
+            if (!IsValid() || Asset == null || Timeline == null) return;
             _OnBindObjs();
             RefreshEntity?.Invoke();
             _ResetPlay();
@@ -592,14 +672,16 @@ namespace Ux.Editor.Timeline
             IsPlaying = true;
             btnPlay?.SetEnabled(false);
             btnPause?.SetEnabled(true);
+            _framePopupField?.SetEnabled(false);
         }
         partial void _OnBtnPauseClick()
         {
             if (!IsPlaying) return;
             UnityEditor.EditorApplication.update -= OnPlay;
             IsPlaying = false;
-            btnPlay?.SetEnabled(true);
+            btnPlay?.SetEnabled(Asset != null && Timeline != null);
             btnPause?.SetEnabled(false);
+            _framePopupField?.SetEnabled(Asset != null && _combatProfile == null);
         }
 
         partial void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e)
@@ -635,19 +717,86 @@ namespace Ux.Editor.Timeline
         }
         partial void _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object> e)
         {
+            var requestedAsset = e.newValue as TimelineAsset;
+            if (_combatProfile != null && requestedAsset != null &&
+                requestedAsset.FrameRate != _combatProfile.FrameRate)
+            {
+                ofTimeline.SetValueWithoutNotify(Asset);
+                Debug.LogError(
+                    $"无法切换表现 Timeline：帧率 {requestedAsset.FrameRate} 与 Profile 逻辑帧率 {_combatProfile.FrameRate} 不一致。",
+                    requestedAsset);
+                return;
+            }
             ofTimeline.SetValueWithoutNotify(e.newValue);
-            Asset = e.newValue as TimelineAsset;
+            Asset = requestedAsset;
+            ConfigureDocumentSources();
+            ApplyPresentationAssetSelection();
             InspectorContent?.FreshInspector(null, null);
-            if (Asset == null)
+            if (!isCreateing)
             {
                 RefreshView?.Invoke();
-                InspectorContent?.FreshInspector(null, null);
-                UpdateDurationLabel();
+                clipView?.ResetView();
+            }
+            UpdateDurationLabel();
+        }
+
+        void OnCombatActionChanged(ChangeEvent<UnityEngine.Object> e)
+        {
+            _combatActionField.SetValueWithoutNotify(e.newValue);
+            _combatAction = e.newValue as CombatActionAsset;
+            if (_combatProfile != null &&
+                (_combatAction == null || _combatProfile.FindAction(_combatAction.ActionId) != _combatAction))
+            {
+                _combatProfile = null;
+            }
+            ConfigureDocumentSources();
+            InspectorContent?.FreshInspector(null, null);
+            RefreshView?.Invoke();
+            clipView?.RefreshLayout();
+            UpdateDurationLabel();
+        }
+
+        void ConfigureDocumentSources()
+        {
+            Undo?.CompleteUndo();
+            var sources = new List<ITimelineEditorSource>();
+            if (Asset != null)
+            {
+                sources.Add(new TimelineAssetEditorSource(
+                    Asset,
+                    (key, owner, _) => Undo?.RegUndo(key, owner, () => OnTimelineUndoRedo(owner)),
+                    canEdit: () => !IsPlaying,
+                    completeUndo: () => Undo?.CompleteUndo()));
+            }
+            if (_combatAction != null)
+            {
+                sources.Add(new CombatLogicTimelineSource(
+                    _combatAction,
+                    _combatProfile,
+                    Asset?.FrameRate ?? _combatProfile?.FrameRate ?? TimelineEditorDocument.DefaultFrameRate,
+                    (key, owner, _) => Undo?.RegUndo(key, owner, () => OnTimelineUndoRedo(owner)),
+                    canEdit: () => !IsPlaying,
+                    completeUndo: () => Undo?.CompleteUndo(),
+                    frameRateProvider: () => Asset?.FrameRate ??
+                        _combatProfile?.FrameRate ?? TimelineEditorDocument.DefaultFrameRate));
+            }
+            Document?.SetSources(sources.ToArray());
+            _framePopupField?.SetEnabled(
+                Asset != null && _combatProfile == null && !IsPlaying);
+            btnPlay?.SetEnabled(Asset != null && Timeline != null && !IsPlaying);
+        }
+
+        void ApplyPresentationAssetSelection()
+        {
+            Timeline?.ClearBindings();
+            if (Asset == null)
+            {
+                _framePopupField?.SetValueWithoutNotify(
+                    _combatProfile?.FrameRate ?? TimelineEditorDocument.DefaultFrameRate);
                 return;
             }
 
             Asset.ValidateData();
-            Timeline?.ClearBindings();
             if (!_frameSelects.Contains(Asset.FrameRate))
             {
                 _frameSelects.Add(Asset.FrameRate);
@@ -667,10 +816,7 @@ namespace Ux.Editor.Timeline
             {
                 _OnBindObjs();
                 RefreshEntity?.Invoke();
-                RefreshView?.Invoke();
-                clipView?.ResetView();
             }
-            UpdateDurationLabel();
         }
 
         void _OnBindObjs()
@@ -805,12 +951,55 @@ namespace Ux.Editor.Timeline
             ofTimeline.value = asset;
         }
 
+        void OnTimelineUndoRedo(UnityEngine.Object owner)
+        {
+            if (Document?.RefreshAfterUndo(owner) == true)
+            {
+                return;
+            }
+
+            // 非当前选中的 Timeline 也可能位于全局 Undo 栈中；只保存 owner，
+            // 不保留已经脱离 Document 的旧 source/adapters。
+            switch (owner)
+            {
+                case TimelineAsset timelineAsset:
+                    timelineAsset.ValidateData();
+                    EditorUtility.SetDirty(timelineAsset);
+                    AssetDatabase.SaveAssets();
+                    break;
+                case CombatActionAsset combatAction:
+                    combatAction.ValidateData();
+                    EditorUtility.SetDirty(combatAction);
+                    AssetDatabase.SaveAssets();
+                    break;
+            }
+        }
+
+        void OnDocumentStructureChanged(ITimelineEditorSource source)
+        {
+            InspectorContent?.FreshInspector(null, null);
+            RefreshView?.Invoke();
+            if (source?.Role == TimelineEditorSourceRole.Presentation)
+            {
+                Timeline?.ClearBindings();
+                _OnBindObjs();
+            }
+        }
+
+        void OnDocumentChanged(ITimelineEditorSource source)
+        {
+            if (!isCreateing && source?.Role == TimelineEditorSourceRole.Presentation)
+            {
+                RefreshEntity?.Invoke();
+            }
+            clipView?.RefreshLayout();
+            UpdateDurationLabel();
+        }
+
         void _SaveAssets()
         {
-            if (Asset == null) return;
-            Asset.ValidateData();
-            EditorUtility.SetDirty(Asset);
-            AssetDatabase.SaveAssets();
+            if (Document?.HasSource != true) return;
+            Document.SaveAll();
             clipView?.RefreshLayout();
             UpdateDurationLabel();
         }
@@ -873,7 +1062,7 @@ namespace Ux.Editor.Timeline
         }
         void _MarkerMove(int frame)
         {
-            if (Timeline == null) return;
+            if (Asset == null || Timeline == null) return;
             Timeline.Set(frame);
         }
     }

@@ -21,6 +21,28 @@ namespace Ux.Editor.Combat.Tests
             return profile;
         }
 
+        public static CombatActionPresentation AddActionPresentation(
+            CharacterCombatProfile profile,
+            CombatActionAsset action,
+            TimelineAsset timeline)
+        {
+            var serialized = new SerializedObject(profile);
+            var list = serialized.FindProperty("actionPresentations");
+            if (list == null)
+            {
+                throw new System.InvalidOperationException(
+                    "CharacterCombatProfile 缺少 actionPresentations 字段。");
+            }
+            var index = list.arraySize;
+            list.InsertArrayElementAtIndex(index);
+            var element = list.GetArrayElementAtIndex(index);
+            element.FindPropertyRelative("action").objectReferenceValue = action;
+            element.FindPropertyRelative("timeline").objectReferenceValue = timeline;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            profile.ValidateData();
+            return profile.ActionPresentations[index];
+        }
+
         public static CombatStatePresentation AddStatePresentation(
             CharacterCombatProfile profile,
             StateLayer layer,
@@ -58,18 +80,14 @@ namespace Ux.Editor.Combat.Tests
         public static CombatActionAsset CreateAction(
             int actionId,
             string stableId,
-            CombatCommandType command,
-            int durationFrames,
-            int priority)
+            int durationFrames)
         {
             var action = ScriptableObject.CreateInstance<CombatActionAsset>();
             var serialized = new SerializedObject(action);
             serialized.FindProperty("actionId").intValue = actionId;
             serialized.FindProperty("stableId").stringValue = stableId;
             serialized.FindProperty("displayName").stringValue = stableId;
-            serialized.FindProperty("triggerCommand").enumValueIndex = (int)command;
             serialized.FindProperty("durationFrames").intValue = durationFrames;
-            serialized.FindProperty("priority").intValue = priority;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             action.ValidateData();
             return action;

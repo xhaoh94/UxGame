@@ -16,7 +16,7 @@
 | 逐帧编排 | `HotfixBase/Manager/Timeline/Runtime/Base/Timeline.cs` | 帧驱动而非时间驱动；`ShouldTriggerFrame` 保证跳帧不漏事件 |
 | 帧事件语义 | `Timeline.cs:44` `ShouldTriggerFrame` | Seek/初始化不触发事件，播放区间严格 `(prev, cur]`——命中帧判定就靠它 |
 | 宏观状态机 | `Manager/Combat/Runtime/UnitStateMachine.cs` | 4 层（Locomotion/Action/Control/Life），代码驱动规则，非资源求值 |
-| 动作生命周期 | `Manager/Combat/Runtime/CombatActionRunner.cs` | 命令消费、取消窗口（连招）、优先级、预测/确认/拒绝 |
+| 动作生命周期 | `Manager/Combat/Runtime/CombatActionRunner.cs` | 显式 ActionId 命令消费、取消窗口（连招）、预测/确认/拒绝 |
 | 预测与回滚 | `CombatActionRunner.cs:175` `Confirm` / `:202` `Reject`；`CombatController.cs:109` `CaptureSnapshot` | 客户端预测 + 服务器纠偏的骨架已完备 |
 | 输入命令 | `Manager/Combat/Asset/CombatCommand.cs` | 逐帧命令队列，本地 / 网络 / 录像共用 |
 | 表现桥接 | `Hotfix/Common/Combat/CombatComponent.cs:243` `ResolveTimelineOwner` | Life > Control > Action > Locomotion 优先级选 Timeline |
@@ -81,8 +81,8 @@
 
 - `CombatActionRunner.cs:76` 的 `HashSet<string>` 用了 `StringComparer.Ordinal`，
   避开 .NET 随机哈希种子，且只用于初始化去重校验，不在每帧逻辑里
-- `CombatActionRunner.cs:392-396 CompareAction` 是**全序排序**（priority 相同再比 `ActionId`），
-  `CompareWindow` 同理 —— 不会出现"同优先级时顺序不确定"
+- `CombatCommand.Compare` 对 SimulationFrame、RequestId、ActionId、TargetId 和 AimDirection 原始位序
+  建立**完整稳定次序**，`CombatFrameCommands` 还会复制并排序输入列表，不依赖调用方容器顺序
 
 原作者显然考虑过帧同步。但**还差临门一脚**：
 
@@ -346,32 +346,288 @@ HitEvent → 取攻方属性快照 → 取守方属性快照
 
 ### 7.1 Profile
 
-Profile 只保存角色级参数、动态状态表现列表和动态技能资源列表。技能通过
-`CharacterCombatProfile.Actions` 组织，不能为 Attack、Skill01 等动作增加固定字段。
+Profile 保存角色级参数、动态状态表现列表、动态技能逻辑资源列表，以及独立的技能表现映射。
+技能逻辑通过 `CharacterCombatProfile.Actions` 组织，表现通过 `ActionPresentations` 将逻辑 Action 引用
+关联到客户端 `TimelineAsset`；不能为 Attack、Skill01 等动作增加固定字段。
 
 ### 7.2 状态表现映射
 
-状态表现只允许配置代码定义的宏观状态：
+状态候选由 `CombatStateId.GetMappableStateIds` 反射对应层的枚举生成。新增枚举值会自动进入
+编辑器下拉和“添加默认映射”流程，不再维护手写状态白名单。只保留三项结构性排除：
 
-- `Locomotion`: `Idle`、`Move`、`Airborne`
-- `Control`: `Stunned`、`Knockback`、`Frozen`
-- `Life`: `Dead`
+- `StateLayer.Action` 整层由技能系统管理，不作为宏观状态表现映射；
+- `ControlState.Normal` 不应抢占 Locomotion 表现；
+- `LifeState.Alive` 不应以最高层优先级长期覆盖其它表现。
 
-同一逻辑状态可以有多个 `variantId`。状态页只负责选择 `StateLayer`、状态 ID、变体、优先级
-和 Timeline；状态切换仍由 `CombatComponent`/业务状态规则负责。`StateLayer.Action` 不应出现在
-这个列表中。
+同一逻辑状态可以有多个 `variantId`。状态页只负责状态到 Timeline 的表现映射，状态切换仍由
+`CombatComponent` 和业务状态规则负责。
 
-### 7.3 技能
+### 7.3 技能（批次 A、B 已完成）
 
-技能页独立显示 `CombatActionAsset` 列表，可编辑 ActionId、命令、优先级、持续帧数、移动策略、
-取消窗口和 Timeline 入口。Timeline 具体轨道继续通过 `TimelineWindow.Open(...)` 编辑。
+`CombatActionAsset` 现在只保存 ActionId、逻辑持续帧、移动策略和取消窗口，不再序列化
+`TimelineAsset`。客户端表现由 `CharacterCombatProfile.ActionPresentations` 独立关联；
+`CombatActionRunner` 不读取表现资源，`CombatComponent` 仅在表现阶段按 ActionId 向 Profile 查询 Timeline。
+逻辑持续帧必须显式大于 0，不再回退或同步为 Timeline 长度。
 
-基础普攻示例使用 `actionId = 1001`、`CombatCommandType.Attack` 和 30 帧 Timeline。业务代码可调用：
+技能启动与取消命令只携带显式 `ActionId`。动作资产已删除 `TriggerCommand` 和启动 `Priority`，
+取消窗口已删除 `AcceptedCommand` 与取消 `Priority`，只通过 `TargetActionId` 匹配；后续不得向逻辑资产
+加入动画、Prefab、粒子、音效等客户端资源引用。
+
+基础普攻示例当前仍可通过：
 
 ```csharp
 combat.RequestAction(1001);
-// 或继续使用兼容的：combat.EnqueueCommand(CombatCommandType.Attack);
 ```
 
-`RequestAction` 只提交逻辑命令，不直接播放 Timeline；目标逻辑帧由 `CombatActionRunner` 根据
-ActionId 选择技能资源。这样既保留旧的按命令优先级选择行为，也支持明确请求某个动作。
+触发代码只提交逻辑命令，不直接播放 Timeline；不存在按命令类型或 Profile 顺序自动选技能的兼容路径。
+
+---
+
+## 八、目标技能创作架构：统一界面、双数据源
+
+### 8.1 决策背景
+
+目标是让策划在同一帧标尺上编辑技能逻辑时序和客户端表现，但分别保存数据：
+
+```text
+统一技能编辑器
+├─ 逻辑数据  → CombatActionAsset（未来导出服务端配置）
+└─ 表现数据  → TimelineAsset（客户端 Animation/VFX/SFX/Camera）
+```
+
+当前阶段可以不实现导出器，但必须从数据模型上禁止逻辑数据依赖客户端 Unity 资源。以后增加导出
+应是序列化转换，而不是重新拆分技能资产。
+
+### 8.2 数据归属
+
+| 数据 | 权威归属 | 编辑方式 |
+|---|---|---|
+| ActionId | `CombatActionAsset` | 技能基础信息 |
+| 逻辑持续帧 | `CombatActionAsset` | 全局逻辑配置或逻辑时间轴 |
+| 取消窗口 | `CombatActionAsset` | 在统一时间轴显示为区间 Clip |
+| 命中激活窗口 | `CombatActionAsset` | 在统一时间轴显示为区间 Clip |
+| 移动锁定、逻辑位移、子弹生成 | 后续逻辑数据 | 在统一时间轴显示为逻辑轨道 |
+| 动画、粒子、音效、镜头 | `TimelineAsset` | 表现轨道 |
+| 输入/按键到 ActionId 的映射 | 业务代码 | 不在技能资源配置 |
+| 伤害公式和规则解释 | 业务代码/服务端逻辑 | Timeline 不直接执行 |
+
+`CombatActionAsset` 目标上是逻辑创作资产，不再持有 `TimelineAsset`。角色 Profile 增加独立的技能表现
+映射，引用 `CombatActionAsset` 和对应 `TimelineAsset`；ActionId 只保存在逻辑资产中，避免重复填写。
+
+```text
+CharacterCombatProfile
+├─ Actions: CombatActionAsset[]                // 逻辑技能集合
+└─ ActionPresentations                         // 客户端表现映射
+   └─ Action reference + TimelineAsset
+```
+
+### 8.3 字段收口
+
+现有技能字段按以下方式处理：
+
+- 删除 `TriggerCommand`：代码直接调用 `RequestAction(actionId)`；
+- 删除启动 `Priority`：显式 ActionId 不需要按命令分组自动选择；
+- 删除取消窗口的 `AcceptedCommand`：窗口直接匹配 `TargetActionId`；
+- 不保留含义模糊的取消 `Priority`；取消请求只按 `TargetActionId` 匹配，重叠窗口不参与目标选择；
+- 保留逻辑 `DurationFrames`，禁止回退到客户端 Timeline 长度；
+- 保留或细化 `MovementPolicy`，它属于权威逻辑而不是表现；
+- 保留取消窗口数据，但将编辑体验迁移为时间轴 Clip。
+
+所有逻辑区间统一采用 `[StartFrame, EndFrame)` 半开区间，避免当前取消窗口闭区间与 Timeline Clip
+半开区间之间产生一帧误差。
+
+### 8.4 TimelineWindow 可扩展性审计
+
+现有窗口不能直接安全接入第二数据源，主要耦合包括：
+
+1. `TimelineWindow.Asset`、`TimelineWindow.Timeline`、保存和刷新入口都是静态单例；
+2. `TimelineTrackView` 直接增删 `TimelineWindow.Asset.tracks`；
+3. `TimelineTrackItem`/`TimelineClipItem` 只接受 `TimelineTrackAsset`/`TimelineClipAsset`；
+4. Undo 固定记录单个 `TimelineAsset`，无法正确记录逻辑资产；
+5. Inspector 使用具体类型 switch，缺少可注册的编辑器适配器；
+6. 通用 Track Item 内含动画混入和重叠限制，不适用于允许重叠的逻辑窗口；
+7. `IsValid` 把“可编辑文档”和“存在表现预览对象”混为一体。
+
+可复用的是时间尺、缩放、滚动、播放头和 Clip 几何交互，不能通过给现有代码散布
+`if (logicTrack)` 分支来实现双数据源。
+
+### 8.5 编辑器目标抽象
+
+引入 Editor-only 的文档/数据源适配层：
+
+```text
+TimelineEditorSession
+└─ TimelineEditorDocument
+   ├─ PresentationTimelineSource → TimelineAsset
+   └─ CombatLogicTimelineSource  → CombatActionAsset
+```
+
+统一 Track/Clip View 面向编辑器适配接口，不要求逻辑领域对象继承表现用的
+`TimelineTrackAsset`/`TimelineClipAsset`。每个数据源必须提供：
+
+- 自己的 Undo Owner；
+- Track/Clip 枚举与增删改命令；
+- 帧率和持续帧；
+- 区间重叠策略；
+- Inspector 创建方式；
+- Validate、SetDirty 和 Save 路由；
+- 稳定的 SourceId + ItemId，不能只依赖托管对象引用。
+
+播放预览只驱动 `PresentationTimelineSource`。逻辑轨道可在当前帧高亮和显示预览信息，但不得接入
+PlayableGraph 作为服务端权威执行路径。
+
+### 8.6 分阶段实施
+
+1. **数据拆分（已完成）**：将 `CombatActionAsset` 收口为逻辑资产，新增 Profile 的 Action 到 Timeline 表现映射；
+2. **命令收口（已完成）**：统一显式 ActionId 请求，移除 TriggerCommand 分组与 AcceptedCommand；
+3. **运行时解耦（已完成）**：`CombatActionRunner` 只读取逻辑资产，`CombatComponent` 按 ActionId 解析表现 Timeline；
+4. **双资产 Combat 编辑器（已完成）**：统一展示逻辑资产与 Profile 表现映射，但分别保存；
+5. **编辑器抽象（已完成）**：把现有 Timeline View 从静态 `TimelineWindow.Asset` 改为文档/数据源接口；
+6. **双源时间轴（取消窗口与最小命中窗口阶段已完成）**：接入 Combat 逻辑区间轨道，与表现轨道共用帧标尺并分别保存；
+7. **后续导出**：把逻辑资产转换为服务端配置，客户端 Timeline 不参与导出。
+
+不得先把逻辑 Track 临时存入 `TimelineAsset` 再计划以后拆分；这会让运行时、资源引用和编辑器操作
+再次形成混合依赖，增加而不是减少未来导出成本。
+
+### 8.7 可独立验收的实施批次
+
+每一批必须保持可编译、可回归，不做一次性大爆炸重写。
+
+#### 批次 A：先切断数据依赖（已完成）
+
+- 新增 Action 到 Timeline 的 Profile 表现映射；
+- `CombatActionRunner` 完全停止读取 Timeline；
+- `CombatComponent` 通过 Profile 按 ActionId 获取表现 Timeline；
+- 迁移当前已有技能资源，随后从 `CombatActionAsset` 删除 Timeline 字段；
+- `DurationFrames` 改为严格逻辑值，缺失或非法时直接校验失败，不再从 Timeline 推导。
+
+验收标准：逻辑技能资产序列化内容中不存在动画、Prefab、粒子或 Timeline 引用。
+
+当前验收结果：现有三个 `CombatActionAsset` 已完成迁移；默认 HeroZS 的 Idle/Move 状态表现也已从旧固定字段
+迁移到动态列表。手动 Roslyn 编译中 `Unity.HotfixBase` 与业务程序集通过，编辑器程序集未出现 Combat 新错误；
+Unity EditMode Test Runner 的 Combat/Timeline 回归集已通过。
+
+#### 批次 B：收口显式 ActionId 命令（已完成）
+
+- 输入层明确把按键/操作映射到 ActionId；
+- Runner 不再建立 `_startActions` 命令分组；
+- 移除启动 Priority、取消 AcceptedCommand 和取消 Priority；
+- 取消窗口改为 `[StartFrame, EndFrame)`；
+- 同帧命令比较器加入完整稳定次序，禁止比较结果相同但对象内容不同。
+
+验收标准：不存在“同一命令自动选择优先级最高技能”的运行时路径；未知 ActionId 不启动其它技能。
+
+当前验收结果：`CombatCommand` 已收口为单一 `ActionId`，输入层将 Q/E/Space 显式映射到
+1001/1002/1003；`CombatActionRunner` 直接按 ActionId 启动或取消动作，不再维护命令分组和优先级选择。
+动作资产与取消窗口已删除 `TriggerCommand`、启动 `Priority`、`AcceptedCommand` 和取消 `Priority`，
+取消窗口统一采用 `[StartFrame, EndFrame)`，并在 Profile、Runner 与编辑器校验中拒绝越界区间；
+当前仓库三个技能资产的取消窗口均为空，因此本批次不存在旧闭区间数据需要执行 `EndFrame + 1` 迁移。
+迁移边界明确为：批次 B 不直接兼容仓库外、旧分支或已构建 AssetBundle 中的旧闭区间数据；此类资源
+合入前必须把旧 `EndFrame` 安全加一（`int.MaxValue` 必须报错而非溢出），旧 AssetBundle 必须重建。
+同理，批次 A 之前仍使用固定状态 Timeline 字段的仓外 Profile 必须先迁移到动态表现列表。
+`CombatFrameCommands` 会复制并按 SimulationFrame、RequestId、ActionId、TargetId、AimDirection 原始位序排序，
+避免调用方传入顺序影响结果；未知 ActionId 回归测试确认不会回退启动其它技能。手动 Roslyn 编译中
+`Unity.HotfixBase`、业务程序集和 Combat/Timeline 编辑器过滤程序集均通过；Unity EditMode Test Runner 的
+Combat/Timeline 回归集已通过。
+
+#### 批次 C：先让现有 Combat 编辑器适配双资产（已完成）
+
+- 技能列表同时显示逻辑资产和表现映射，但分别通过各自 `SerializedObject` 保存；
+- “打开 Timeline”和预览只操作表现 Timeline；
+- 校验逻辑时长与表现 Timeline 时长，默认只警告，不互相自动覆盖；
+- 资源创建流程一次创建逻辑资产、表现 Timeline 和 Profile 映射。
+
+验收标准：即使尚未有逻辑时间轴轨道，用户也能在统一技能条目中安全维护两类资产。
+
+当前验收结果：技能导航与详情页会同时显示 `CombatActionAsset` 逻辑资产和 Profile 中的表现 Timeline；
+逻辑字段与取消窗口只通过逻辑资产的 `SerializedObject` 保存，表现 Timeline 则通过 Profile 的独立
+`SerializedObject` 映射保存。编辑器按技能资产引用定位映射，避免编辑过程中临时重复的 ActionId 导致
+表现串线；打开、预览及动画 Clip 快捷编辑只操作表现 Timeline。创建技能时会在同一 Undo 事务中一次生成
+逻辑资产、Timeline 和 Profile 映射，失败时回滚新资产与 Profile 修改；缺失映射也可单独补建。逻辑时长
+与表现时长不一致只产生警告，不会自动覆盖任一侧。新增编辑器测试覆盖持久化创建与 Undo/Redo、映射身份
+解析、两类资产隔离保存、外部技能拒绝关联及持续帧差异警告。
+`Unity.HotfixBase` 与 Combat/Timeline 编辑器过滤程序集已通过手动 Roslyn 编译；Unity EditMode Test Runner
+的 Combat/Timeline 回归集已通过。
+
+#### 批次 D：重构 Timeline 编辑器为单源适配器（已完成）
+
+- 先只实现 `TimelineAsset` 数据源适配器，保持现有窗口功能不变；
+- View/Item 不再直接访问静态 `TimelineWindow.Asset.tracks`；
+- Undo、保存、Inspector 和重叠规则由数据源/轨道适配器提供；
+- 增加编辑器回归测试后再进入双源阶段。
+
+验收标准：动画 Timeline 编辑体验和运行时资源格式不变，且 View 层已不知道具体 Asset 类型。
+
+当前验收结果：新增 `TimelineEditorDocument`、`ITimelineEditorSource`、`ITimelineEditorTrack`、
+`ITimelineEditorClip` 以及当前唯一实现 `TimelineAssetEditorSource`。轨道、Clip、标尺和通用 Inspector View
+只消费文档与适配器接口，不再引用 `TimelineWindow.Asset`、`TimelineTrackAsset` 或 `TimelineClipAsset`；
+具体动画/粒子 Inspector 与资源类型分派收口在 TimelineAsset 数据源侧。轨道和 Clip 的增删、重命名、
+拖拽、帧区间、动画替换、时长适配、重叠与混入混出计算均通过适配器执行，并统一以完整
+`TimelineAsset` 为 Undo owner 和保存 owner。`UxUndo` 已改为按 Unity Undo group 精确匹配回调，并由 source
+在修改提交后显式完成 Undo group，既不会在调用方写入对象前提前折叠并丢弃记录，也不会让无差异编辑与后续
+无关对象共享 group。Undo 回调按 owner 路由到当前 Document source，资源切换后不会刷新已脱离文档的旧
+adapter；每次 Undo/Redo 都重建当前 managed-reference adapter，清理旧 Inspector selection，
+并按稳定 Track ID 恢复预览绑定。播放期间的数据源写入口统一拒绝修改。
+新增编辑器测试覆盖轨道/Clip 增删、半开区间接触与重叠规则、所有已覆盖变更的 Undo owner/保存路由、
+编辑锁、无关 Undo group 隔离，以及核心 View 的具体资产类型静态隔离。`Unity.HotfixBase` 与
+Combat/Timeline 编辑器过滤程序集均通过手动 Roslyn 编译；Unity EditMode Test Runner 实际执行 61 项
+Combat/Timeline 测试并全部通过。
+
+#### 批次 E：接入 Combat 逻辑轨道（取消窗口阶段已完成）
+
+- 增加 `CombatLogicTimelineSource`；
+- 第一条逻辑轨只实现取消窗口，验证区间拖拽、Undo、保存和半开区间；
+- 稳定后再增加命中、移动、位移、子弹等轨道；
+- 表现预览仍只运行客户端 Timeline，逻辑轨由确定性 Runner 在逻辑帧解释。
+
+验收标准：同一帧标尺可显示两类轨道，任一编辑操作只标脏并保存正确的 Owner。
+
+当前验收结果：`TimelineEditorDocument` 已升级为有序多数据源文档，表现轨位于逻辑轨上方，帧率继续由
+表现 `TimelineAsset` 或所属 Profile 提供，而文档宽度采用各 source 持续帧的最大值。新增
+`CombatLogicTimelineSource`、固定取消窗口轨道及 Clip adapter；取消窗口按稳定 ID 定位，支持创建、删除、
+Inspector 修改、区间拖拽与 `[StartFrame, EndFrame)` 边界钳制，并允许多个取消窗口重叠。逻辑技能时长
+非法时不会回退到表现时长或编辑器默认值，也不会创建伪合法区间。旧取消窗口缺失或重复的稳定 ID 会在首次
+接入时完成一次性持久化迁移。
+
+Timeline 通用 View/Item 仍只依赖 `ITimelineEditorSource`、`ITimelineEditorTrack` 和
+`ITimelineEditorClip`；Inspector 按 selection 所属 source 分派，并拒绝资源切换后已脱离 Document 的旧
+adapter。表现与逻辑 source 分别以完整 `TimelineAsset` 和 `CombatActionAsset` 作为 Undo/保存 owner；
+逻辑轨编辑和纯逻辑资源切换不会触发表现 Timeline 的重播或 seek。新增测试覆盖多 source 合并与事件路由、
+独立保存、稳定 ID 持久化、半开区间钳制、重叠策略、拖拽 Undo/Redo、双 owner 交错 Undo/Redo、非法逻辑
+时长以及 detached Inspector 隔离。Unity EditMode Test Runner 实际执行 72 项 Combat/Timeline 测试并全部
+通过。移动、位移、子弹等逻辑轨仍按后续批次逐条接入。
+
+#### 批次 F：接入最小命中逻辑轨（已完成）
+
+- `CombatActionAsset` 新增纯逻辑 `ActionHitWindow` 列表，区间统一采用 `[StartFrame, EndFrame)`；
+- 取消窗口与命中窗口共享单个 Action 内的逻辑 ItemId 唯一域，旧资源只迁移身份，不在打开编辑器时静默修正业务区间；
+- `CombatLogicTimelineSource` 增加第二条固定命中窗口轨，复用通用帧标尺、拖拽、Inspector、Undo 与独立保存；
+- `CombatActionRunner` 无状态枚举当前动作帧激活的命中窗口，按资产序列化顺序返回值快照；
+- 本批次不接入形状、目标查询、Unity Physics、伤害公式或表现资源。
+
+验收标准：命中时序完全属于逻辑资产；Runner 在相同动作快照与帧上得到相同窗口序列；编辑逻辑轨只记录并
+保存 `CombatActionAsset`，表现 Timeline 不参与解释或导出。
+
+当前验收结果：新增 `ActionHitWindow`、`CombatActiveHitWindow` 与
+`CombatActionRunner.AppendActiveHitWindows()`。查询结果复制窗口 ID 和帧边界，不暴露可变资产对象；重复查询
+无副作用，重叠窗口按序列化顺序稳定追加，snapshot restore 后无需额外命中状态即可重建相同结果。Profile、
+Runner 与编辑器校验均拒绝空窗口、重复逻辑 ItemId、非法区间及超出动作逻辑时长的终点。命中窗口轨支持创建、
+删除、Inspector 修改、半开区间钳制、重叠与拖拽 Undo/Redo，并继续与表现轨分别保存。Unity EditMode Test Runner
+实际执行 83 项 Combat/Timeline 测试并全部通过。
+
+#### 批次 G：逻辑命中查询与同窗口去重（已完成）
+
+本批次将命中窗口从“时间声明”推进到“可验证的逻辑命中候选”，但仍不执行伤害结算：
+
+- `ActionHitWindow` 当前只支持整数毫米逻辑圆形；
+- `CombatHitResolver` 只接收上层提供的固定坐标目标快照，不调用 Unity Physics、Collider 或 Transform；
+- 目标快照必须拥有唯一正数 `TargetId`，Resolver 按 `TargetId` 排序后计算；
+- 同一动作实例、同一窗口、同一目标只产生一次候选命中；去重集合属于动作快照和世界状态哈希的一部分；
+- 命中结果只表达攻击者、目标、动作实例、窗口和逻辑帧，不计算伤害、不修改目标生命值。
+
+当前验收结果：已完成逻辑圆形查询、确定性目标排序、非法/重复目标 ID 拒绝、同窗口跨帧去重、
+预测动作确认时的去重键迁移，以及去重集合与本地动作序列的快照恢复。世界帧、动作实例、命中确认、
+本地序列和稳定排序后的命中集合均进入状态哈希；世界恢复会在修改前拒绝不一致的 active 实体集合。
+编辑器可修改命中窗口形状参数并分别保存逻辑资产，关联 Profile 时会阻止表现 Timeline 帧率失配。
+Unity EditMode Test Runner 实际执行 94 项 Combat/Timeline 测试并全部通过，reviewer 最终复审无阻断或中风险。
+阵营过滤、命中形状扩展、命中事件消费和伤害结算仍留待独立批次，Resolver 不得直接依赖 Unity 场景对象。

@@ -37,7 +37,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var profile = CombatTestProfiles.CreateProfile(
                 CombatTestProfiles.CreateAction(
-                    1001, "attack", CombatCommandType.Attack, 30, 10));
+                    1001, "attack", 30));
             try
             {
                 var first = BuildWorld(profile, 2);
@@ -60,11 +60,103 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
+        public void WorldFrameAndGroundedStateParticipateInStateHash()
+        {
+            var profile = CombatTestProfiles.CreateProfile();
+            try
+            {
+                var world = new BattleWorld("state-hash", 30);
+                var entity = new StubEntity(1L, profile);
+                world.Register(entity);
+                var initial = world.ComputeStateHash();
+
+                entity.Controller.SetGrounded(false);
+                var airborne = world.ComputeStateHash();
+                Assert.AreNotEqual(initial, airborne);
+
+                world.Tick(1);
+                Assert.AreNotEqual(airborne, world.ComputeStateHash());
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
+        public void HitDeduplicationParticipatesInWorldStateHash()
+        {
+            var action = CombatTestProfiles.CreateAction(1001, "attack", 10);
+            var serialized = new SerializedObject(action);
+            var windows = serialized.FindProperty("hitWindows");
+            windows.arraySize = 1;
+            var window = windows.GetArrayElementAtIndex(0);
+            window.FindPropertyRelative("StartFrame").intValue = 0;
+            window.FindPropertyRelative("EndFrame").intValue = 3;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            action.ValidateData();
+            var profile = CombatTestProfiles.CreateProfile(action);
+            try
+            {
+                var world = new BattleWorld("hit-hash", 30);
+                var entity = new StubEntity(1L, profile);
+                world.Register(entity);
+                Assert.IsTrue(entity.Controller.Actions.StartAction(action.ActionId, 1, 0, false));
+                var before = world.ComputeStateHash();
+                var requestId = entity.Controller.Actions.Current.RequestId;
+                var authoritativeId = entity.Controller.Actions.Current.InstanceId + 1000;
+                Assert.IsTrue(entity.Controller.Actions.Confirm(requestId, authoritativeId, 0));
+                var afterConfirm = world.ComputeStateHash();
+                Assert.AreNotEqual(before, afterConfirm,
+                    "动作实例身份属于逻辑状态，必须参与世界哈希。");
+                Assert.IsTrue(entity.Controller.Actions.MarkHitConfirmed(authoritativeId));
+                var afterHitConfirm = world.ComputeStateHash();
+                Assert.AreNotEqual(afterConfirm, afterHitConfirm,
+                    "命中确认状态属于逻辑状态，必须参与世界哈希。");
+
+                Assert.IsTrue(entity.Controller.Actions.TryAcceptHit(
+                    entity.Controller.Actions.Current.InstanceId,
+                    action.HitWindows[0].StableId,
+                    2));
+                Assert.AreNotEqual(before, world.ComputeStateHash(),
+                    "已命中去重集合属于逻辑状态，必须参与世界哈希。");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+                UnityEngine.Object.DestroyImmediate(action);
+            }
+        }
+
+        [Test]
+        public void SnapshotRestoreRejectsChangedEntitySetBeforeMutation()
+        {
+            var profile = CombatTestProfiles.CreateProfile();
+            try
+            {
+                var world = new BattleWorld("snapshot-set", 30);
+                world.Register(new StubEntity(1L, profile));
+                var snapshot = world.CaptureSnapshot();
+
+                world.Register(new StubEntity(2L, profile));
+                Assert.Throws<InvalidOperationException>(() => world.RestoreSnapshot(snapshot));
+
+                world.Unregister(2L);
+                world.Unregister(1L);
+                Assert.Throws<InvalidOperationException>(() => world.RestoreSnapshot(snapshot));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+            }
+        }
+
+        [Test]
         public void SnapshotRestoresEveryEntity()
         {
             var profile = CombatTestProfiles.CreateProfile(
                 CombatTestProfiles.CreateAction(
-                    1001, "attack", CombatCommandType.Attack, 30, 10));
+                    1001, "attack", 30));
             try
             {
                 var world = BuildWorld(profile, 2);
@@ -321,7 +413,7 @@ namespace Ux.Editor.Combat.Tests
                 {
                     return new CombatFrameCommands(new[]
                     {
-                        new CombatCommand(1, frame, CombatCommandType.Attack),
+                        new CombatCommand(1, frame, 1001),
                     });
                 }
                 return CombatFrameCommands.Empty;

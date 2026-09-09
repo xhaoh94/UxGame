@@ -17,12 +17,8 @@ MonoBehaviour:
   moveSpeedPerSecond: 5
   turnDegreesPerSecond: 720
   statePresentations: []
-  idleTimeline: {fileID: 0}
-  moveTimeline: {fileID: 0}
-  airborneTimeline: {fileID: 0}
-  stunnedTimeline: {fileID: 0}
-  knockbackTimeline: {fileID: 0}
-  frozenTimeline: {fileID: 0}
-  deadTimeline: {fileID: 0}
   actions:
   - {fileID: 11400000, guid: 5498b8206176f7842b5631b5b8194fda, type: 2}
+  actionPresentations:
+  - action: {fileID: 11400000, guid: 5498b8206176f7842b5631b5b8194fda, type: 2}
+    timeline: {fileID: 11400000, guid: 856fed35fe745304eb164423aa0c264e, type: 2}

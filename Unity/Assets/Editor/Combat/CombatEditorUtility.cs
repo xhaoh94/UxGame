@@ -39,60 +39,6 @@ namespace Ux.Editor.Combat
         internal const string CombatRoot = "Assets/Data/Res/Combat";
         internal const string TimelineRoot = "Assets/Data/Res/Timeline";
 
-        internal sealed class StateTimelineDefinition
-        {
-            public StateTimelineDefinition(
-                string propertyName,
-                string displayName,
-                string layerName,
-                string shortName,
-                StateLayer layer,
-                int stateId)
-            {
-                PropertyName = propertyName;
-                DisplayName = displayName;
-                LayerName = layerName;
-                ShortName = shortName;
-                Layer = layer;
-                StateId = stateId;
-            }
-
-            public string PropertyName { get; }
-            public string DisplayName { get; }
-            public string LayerName { get; }
-            public string ShortName { get; }
-            public StateLayer Layer { get; }
-            public int StateId { get; }
-        }
-
-        private static readonly StateTimelineDefinition[] StateDefinitions =
-        {
-            new StateTimelineDefinition(
-                "idleTimeline", "Idle", "Locomotion", "Idle",
-                StateLayer.Locomotion, (int)LocomotionState.Idle),
-            new StateTimelineDefinition(
-                "moveTimeline", "Move", "Locomotion", "Move",
-                StateLayer.Locomotion, (int)LocomotionState.Move),
-            new StateTimelineDefinition(
-                "airborneTimeline", "Airborne", "Locomotion", "Airborne",
-                StateLayer.Locomotion, (int)LocomotionState.Airborne),
-            new StateTimelineDefinition(
-                "stunnedTimeline", "Stunned", "Control", "Stunned",
-                StateLayer.Control, (int)ControlState.Stunned),
-            new StateTimelineDefinition(
-                "knockbackTimeline", "Knockback", "Control", "Knockback",
-                StateLayer.Control, (int)ControlState.Knockback),
-            new StateTimelineDefinition(
-                "frozenTimeline", "Frozen", "Control", "Frozen",
-                StateLayer.Control, (int)ControlState.Frozen),
-            new StateTimelineDefinition(
-                "deadTimeline", "Dead", "Life", "Dead",
-                StateLayer.Life, (int)LifeState.Dead),
-        };
-
-        // 这些定义只描述代码支持的宏观状态和旧资源迁移名称，不再代表 Profile 中的固定字段或固定槽位。
-        internal static IReadOnlyList<StateTimelineDefinition> StateTimelines => StateDefinitions;
-
         internal static string GetStateLayerDisplayName(StateLayer layer)
         {
             return layer switch
@@ -107,33 +53,8 @@ namespace Ux.Editor.Combat
 
         internal static int[] GetDefinedStateIds(StateLayer layer)
         {
-            switch (layer)
-            {
-                case StateLayer.Locomotion:
-                    return new[]
-                    {
-                        (int)LocomotionState.Idle,
-                        (int)LocomotionState.Move,
-                        (int)LocomotionState.Airborne,
-                    };
-                case StateLayer.Control:
-                    return new[]
-                    {
-                        (int)ControlState.Stunned,
-                        (int)ControlState.Knockback,
-                        (int)ControlState.Frozen,
-                    };
-                case StateLayer.Life:
-                    return new[] { (int)LifeState.Dead };
-                case StateLayer.Action:
-                    return new[]
-                    {
-                        (int)ActionState.Free,
-                        (int)ActionState.Executing,
-                    };
-                default:
-                    return Array.Empty<int>();
-            }
+            // 统一从枚举反射生成（CombatStateId.GetMappableStateIds），避免手写列表与枚举漂移。
+            return CombatStateId.GetMappableStateIds(layer);
         }
 
         internal static string GetStatePresentationTimelineSuffix(
@@ -272,7 +193,8 @@ namespace Ux.Editor.Combat
         internal static TimelineAsset CreateTimelineAsset(
             CharacterCombatProfile profile,
             string suffix,
-            bool addDefaultAnimationTrack = true)
+            bool addDefaultAnimationTrack = true,
+            AnimationClip primaryAnimation = null)
         {
             var directory = GetTimelineDirectory(profile);
             EnsureFolder(directory);
@@ -290,11 +212,253 @@ namespace Ux.Editor.Combat
                 });
             }
             timeline.ValidateData();
+            if (primaryAnimation != null)
+            {
+                SetPrimaryAnimationClip(timeline, primaryAnimation, out _);
+            }
             AssetDatabase.CreateAsset(timeline, assetPath);
             EditorUtility.SetDirty(timeline);
             AssetDatabase.SaveAssets();
             AssetDatabase.ImportAsset(assetPath);
-            return AssetDatabase.LoadAssetAtPath<TimelineAsset>(assetPath) ?? timeline;
+            var persisted = AssetDatabase.LoadAssetAtPath<TimelineAsset>(assetPath);
+            if (persisted == null)
+            {
+                AssetDatabase.DeleteAsset(assetPath);
+                if (!EditorUtility.IsPersistent(timeline))
+                {
+                    UnityEngine.Object.DestroyImmediate(timeline);
+                }
+                return null;
+            }
+
+            Undo.RegisterCreatedObjectUndo(persisted, "创建 Timeline 资产");
+            return persisted;
+        }
+
+        /// <summary>
+        /// 以单个 Undo 事务创建逻辑技能、表现 Timeline 和 Profile 映射。
+        /// 任一步骤失败都会撤销 Profile 修改并删除本次新建的资产。
+        /// </summary>
+        internal static bool TryCreateActionAssets(
+            CharacterCombatProfile profile,
+            int actionId,
+            string stableId,
+            string displayName,
+            int durationFrames,
+            ActionMovementPolicy movementPolicy,
+            string timelineSuffix,
+            AnimationClip primaryAnimation,
+            out CombatActionAsset action,
+            out TimelineAsset timeline,
+            out string error)
+        {
+            action = null;
+            timeline = null;
+            error = string.Empty;
+            if (profile == null)
+            {
+                error = "没有选择 CharacterCombatProfile。";
+                return false;
+            }
+            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(profile)))
+            {
+                error = "请先保存 CharacterCombatProfile。";
+                return false;
+            }
+            if (actionId <= 0 || profile.FindAction(actionId) != null)
+            {
+                error = $"Profile 中已存在或无法使用 ActionId：{actionId}。";
+                return false;
+            }
+
+            var profileSerialized = new SerializedObject(profile);
+            profileSerialized.Update();
+            var actions = profileSerialized.FindProperty("actions");
+            var presentations = profileSerialized.FindProperty("actionPresentations");
+            if (actions == null || presentations == null)
+            {
+                error = "CharacterCombatProfile 缺少 actions 或 actionPresentations 字段。";
+                return false;
+            }
+
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName($"创建技能 Action {actionId}");
+            string actionPath = null;
+            string timelinePath = null;
+            try
+            {
+                action = ScriptableObject.CreateInstance<CombatActionAsset>();
+                var actionSerialized = new SerializedObject(action);
+                actionSerialized.FindProperty("stableId").stringValue = stableId ?? string.Empty;
+                actionSerialized.FindProperty("actionId").intValue = actionId;
+                actionSerialized.FindProperty("displayName").stringValue = displayName ?? string.Empty;
+                actionSerialized.FindProperty("durationFrames").intValue = durationFrames;
+                actionSerialized.FindProperty("movementPolicy").enumValueIndex = (int)movementPolicy;
+                actionSerialized.ApplyModifiedPropertiesWithoutUndo();
+                action.ValidateData();
+
+                var directory = GetProfileDirectory(profile);
+                EnsureFolder(directory);
+                actionPath = AssetDatabase.GenerateUniqueAssetPath(NormalizeAssetPath(
+                    $"{directory}/{GetActionAssetName(profile, actionId)}.asset"));
+                AssetDatabase.CreateAsset(action, actionPath);
+                Undo.RegisterCreatedObjectUndo(action, "创建技能逻辑资产");
+
+                timeline = CreateTimelineAsset(
+                    profile,
+                    timelineSuffix,
+                    true,
+                    primaryAnimation);
+                if (timeline == null)
+                {
+                    throw new InvalidOperationException("表现 Timeline 创建失败。");
+                }
+                timelinePath = AssetDatabase.GetAssetPath(timeline);
+
+                actions.InsertArrayElementAtIndex(actions.arraySize);
+                actions.GetArrayElementAtIndex(actions.arraySize - 1).objectReferenceValue = action;
+                var presentationIndex = presentations.arraySize;
+                presentations.InsertArrayElementAtIndex(presentationIndex);
+                var presentation = presentations.GetArrayElementAtIndex(presentationIndex);
+                presentation.FindPropertyRelative("action").objectReferenceValue = action;
+                presentation.FindPropertyRelative("timeline").objectReferenceValue = timeline;
+                if (!profileSerialized.ApplyModifiedProperties())
+                {
+                    throw new InvalidOperationException("Profile 技能列表和表现映射保存失败。");
+                }
+
+                profile.ValidateData();
+                EditorUtility.SetDirty(profile);
+                EditorUtility.SetDirty(action);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.ImportAsset(actionPath);
+                if (!string.IsNullOrEmpty(timelinePath))
+                {
+                    AssetDatabase.ImportAsset(timelinePath);
+                }
+
+                action = AssetDatabase.LoadAssetAtPath<CombatActionAsset>(actionPath);
+                timeline = AssetDatabase.LoadAssetAtPath<TimelineAsset>(timelinePath);
+                if (action == null || timeline == null)
+                {
+                    throw new InvalidOperationException("新建技能资产重新导入失败。");
+                }
+
+                Undo.CollapseUndoOperations(undoGroup);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Undo.RevertAllDownToGroup(undoGroup);
+                if (!string.IsNullOrEmpty(actionPath))
+                {
+                    AssetDatabase.DeleteAsset(actionPath);
+                }
+                if (!string.IsNullOrEmpty(timelinePath))
+                {
+                    AssetDatabase.DeleteAsset(timelinePath);
+                }
+                if (action != null && !EditorUtility.IsPersistent(action))
+                {
+                    UnityEngine.Object.DestroyImmediate(action);
+                }
+                if (timeline != null && !EditorUtility.IsPersistent(timeline))
+                {
+                    UnityEngine.Object.DestroyImmediate(timeline);
+                }
+                AssetDatabase.SaveAssets();
+                action = null;
+                timeline = null;
+                error = exception.Message;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 仅修改 Profile 持有的客户端表现映射，不写入 CombatActionAsset。
+        /// 编辑器中的逻辑资产与表现映射必须分别通过各自 SerializedObject 保存。
+        /// </summary>
+        internal static bool TrySetActionTimeline(
+            CharacterCombatProfile profile,
+            CombatActionAsset action,
+            TimelineAsset timeline,
+            out string error)
+        {
+            error = string.Empty;
+            if (profile == null || action == null)
+            {
+                error = "Profile 或逻辑技能为空。";
+                return false;
+            }
+
+            var belongsToProfile = false;
+            if (profile.Actions != null)
+            {
+                foreach (var candidate in profile.Actions)
+                {
+                    if (candidate == action)
+                    {
+                        belongsToProfile = true;
+                        break;
+                    }
+                }
+            }
+            if (!belongsToProfile)
+            {
+                error = $"技能 {action.name} 不属于 Profile {profile.name}。";
+                return false;
+            }
+
+            var serialized = new SerializedObject(profile);
+            serialized.Update();
+            var presentations = serialized.FindProperty("actionPresentations");
+            if (presentations == null)
+            {
+                error = "CharacterCombatProfile 缺少 actionPresentations 字段。";
+                return false;
+            }
+
+            SerializedProperty selected = null;
+            for (var i = 0; i < presentations.arraySize; i++)
+            {
+                var candidate = presentations.GetArrayElementAtIndex(i);
+                if (candidate.FindPropertyRelative("action")?.objectReferenceValue != action)
+                {
+                    continue;
+                }
+                if (selected != null)
+                {
+                    error = $"技能 Action {action.ActionId} 存在重复表现映射，请先修复 Profile。";
+                    return false;
+                }
+                selected = candidate;
+            }
+
+            Undo.RecordObject(profile, "设置技能表现 Timeline");
+            if (selected == null)
+            {
+                var index = presentations.arraySize;
+                presentations.InsertArrayElementAtIndex(index);
+                selected = presentations.GetArrayElementAtIndex(index);
+                selected.FindPropertyRelative("action").objectReferenceValue = action;
+            }
+
+            var timelineProperty = selected.FindPropertyRelative("timeline");
+            if (timelineProperty == null)
+            {
+                error = "技能表现映射缺少 timeline 字段。";
+                return false;
+            }
+            timelineProperty.objectReferenceValue = timeline;
+            if (!serialized.ApplyModifiedProperties())
+            {
+                return true;
+            }
+
+            profile.ValidateData();
+            EditorUtility.SetDirty(profile);
+            return true;
         }
 
         /// <summary>
@@ -466,18 +630,16 @@ namespace Ux.Editor.Combat
                     var timeline = presentation.Timeline;
                     var context = timeline != null ? (UnityEngine.Object)timeline : profile;
 
-                    if (presentation.Layer == StateLayer.Action)
+                    if (!CombatStateId.IsStatePresentationMappable(
+                            presentation.Layer,
+                            presentation.StateId))
                     {
+                        var reason = presentation.Layer == StateLayer.Action
+                            ? "使用了 Action 层；技能表现必须放在动态技能列表中。"
+                            : "不是允许配置表现映射的逻辑状态。";
                         issues.Add(new CombatValidationIssue(
                             CombatValidationSeverity.Error,
-                            $"{label} 使用了 Action 层；技能表现必须放在动态技能列表中。",
-                            context));
-                    }
-                    if (!CombatStateId.IsDefined(presentation.Layer, presentation.StateId))
-                    {
-                        issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Error,
-                            $"{label} 的逻辑状态未定义。",
+                            $"{label} {reason}",
                             context));
                     }
 
@@ -538,6 +700,7 @@ namespace Ux.Editor.Combat
 
             var actionIds = new HashSet<int>();
             var stableIds = new HashSet<string>(StringComparer.Ordinal);
+            var actionAssets = new HashSet<CombatActionAsset>();
             foreach (var action in actions)
             {
                 if (action == null)
@@ -549,6 +712,7 @@ namespace Ux.Editor.Combat
                     continue;
                 }
 
+                actionAssets.Add(action);
                 if (action.ActionId <= 0)
                 {
                     issues.Add(new CombatValidationIssue(
@@ -578,6 +742,76 @@ namespace Ux.Editor.Combat
                         $"技能 StableId 重复：{action.StableId}。",
                         action));
                 }
+
+                if (action.DurationFrames <= 0)
+                {
+                    issues.Add(new CombatValidationIssue(
+                        CombatValidationSeverity.Error,
+                        $"技能 {action.name} 的逻辑持续帧必须大于 0。",
+                        action));
+                }
+            }
+
+            var mappedActions = new HashSet<CombatActionAsset>();
+            var actionPresentations = profile.ActionPresentations;
+            if (actionPresentations != null)
+            {
+                foreach (var presentation in actionPresentations)
+                {
+                    var action = presentation?.Action;
+                    if (action == null)
+                    {
+                        issues.Add(new CombatValidationIssue(
+                            CombatValidationSeverity.Error,
+                            "技能表现映射缺少逻辑技能。",
+                            profile));
+                        continue;
+                    }
+                    if (!actionAssets.Contains(action))
+                    {
+                        issues.Add(new CombatValidationIssue(
+                            CombatValidationSeverity.Error,
+                            $"技能表现映射引用了不属于当前 Profile 的技能：{action.name}。",
+                            profile));
+                        continue;
+                    }
+                    if (!mappedActions.Add(action))
+                    {
+                        issues.Add(new CombatValidationIssue(
+                            CombatValidationSeverity.Error,
+                            $"技能表现映射重复：Action {action.ActionId}。",
+                            profile));
+                        continue;
+                    }
+
+                    var timeline = presentation.Timeline;
+                    if (timeline == null)
+                    {
+                        issues.Add(new CombatValidationIssue(
+                            CombatValidationSeverity.Warning,
+                            $"技能 {action.name} 未配置表现 Timeline，播放技能时不会有表现。",
+                            action));
+                        continue;
+                    }
+
+                    var label = $"技能 {action.name}";
+                    ValidateTimelineRate(issues, profile, timeline, label);
+                    ValidateTimelineStructure(issues, timeline, label);
+                    if (timeline.DurationFrames <= 0)
+                    {
+                        issues.Add(new CombatValidationIssue(
+                            CombatValidationSeverity.Warning,
+                            $"{label} 的 Timeline 尚未添加表现 Clip。",
+                            timeline));
+                    }
+                    else if (timeline.DurationFrames != action.DurationFrames)
+                    {
+                        issues.Add(new CombatValidationIssue(
+                            CombatValidationSeverity.Warning,
+                            $"{label} 的逻辑时长与表现时长不一致：逻辑={action.DurationFrames}，Timeline={timeline.DurationFrames}。",
+                            timeline));
+                    }
+                }
             }
 
             // 先收集完整的技能 ID，再检查取消窗口，避免目标技能排在当前技能后面时误报。
@@ -588,74 +822,141 @@ namespace Ux.Editor.Combat
                     continue;
                 }
 
-                if (action.Timeline == null)
+                if (!mappedActions.Contains(action))
                 {
                     issues.Add(new CombatValidationIssue(
                         CombatValidationSeverity.Warning,
-                        $"技能 {action.name} 未配置 Timeline，播放技能时不会有表现。",
+                        $"技能 {action.name} 尚未建立表现映射，播放技能时不会有表现。",
                         action));
                 }
-                else
-                {
-                    ValidateTimelineRate(issues, profile, action.Timeline,
-                        $"技能 {action.name}");
-                    ValidateTimelineStructure(issues, action.Timeline,
-                        $"技能 {action.name}");
-                    if (action.Timeline.DurationFrames <= 0)
-                    {
-                        issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Warning,
-                            $"技能 {action.name} 的 Timeline 尚未添加表现 Clip。",
-                            action.Timeline));
-                    }
-                }
 
-                var windows = action.CancelWindows;
-                if (windows == null)
+                var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
+                var cancelWindows = action.CancelWindows;
+                if (cancelWindows == null)
                 {
                     issues.Add(new CombatValidationIssue(
                         CombatValidationSeverity.Error,
                         $"技能 {action.name} 的取消窗口列表为空引用。",
                         action));
-                    continue;
+                }
+                else
+                {
+                    foreach (var window in cancelWindows)
+                    {
+                        if (window == null)
+                        {
+                            issues.Add(new CombatValidationIssue(
+                                CombatValidationSeverity.Error,
+                                $"技能 {action.name} 包含空的取消窗口。",
+                                action));
+                            continue;
+                        }
+
+                        ValidateLogicItemId(issues, action, logicItemIds, window.StableId, "取消窗口");
+                        if (window.TargetActionId <= 0 || !actionIds.Contains(window.TargetActionId))
+                        {
+                            issues.Add(new CombatValidationIssue(
+                                CombatValidationSeverity.Error,
+                                $"技能 {action.name} 的取消窗口目标不存在：{window.TargetActionId}。",
+                                action));
+                        }
+                        ValidateLogicWindowRange(
+                            issues,
+                            action,
+                            window.StartFrame,
+                            window.EndFrame,
+                            "取消窗口");
+                    }
                 }
 
-                foreach (var window in windows)
+                var hitWindows = action.HitWindows;
+                if (hitWindows == null)
                 {
-                    if (window == null)
+                    issues.Add(new CombatValidationIssue(
+                        CombatValidationSeverity.Error,
+                        $"技能 {action.name} 的命中窗口列表为空引用。",
+                        action));
+                }
+                else
+                {
+                    foreach (var window in hitWindows)
                     {
-                        issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Error,
-                            $"技能 {action.name} 包含空的取消窗口。",
-                            action));
-                        continue;
-                    }
+                        if (window == null)
+                        {
+                            issues.Add(new CombatValidationIssue(
+                                CombatValidationSeverity.Error,
+                                $"技能 {action.name} 包含空的命中窗口。",
+                                action));
+                            continue;
+                        }
 
-                    if (window.TargetActionId <= 0 || !actionIds.Contains(window.TargetActionId))
-                    {
-                        issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Error,
-                            $"技能 {action.name} 的取消窗口目标不存在：{window.TargetActionId}。",
-                            action));
-                    }
-                    if (window.StartFrame < 0 || window.EndFrame < window.StartFrame)
-                    {
-                        issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Error,
-                            $"技能 {action.name} 存在无效取消窗口区间：[{window.StartFrame}, {window.EndFrame}]。",
-                            action));
-                    }
-                    if (action.DurationFrames > 0 && window.StartFrame >= action.DurationFrames)
-                    {
-                        issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Warning,
-                            $"技能 {action.name} 的取消窗口起点超出技能时长：{window.StartFrame}/{action.DurationFrames}。",
-                            action));
+                        ValidateLogicItemId(issues, action, logicItemIds, window.StableId, "命中窗口");
+                        ValidateLogicWindowRange(
+                            issues,
+                            action,
+                            window.StartFrame,
+                            window.EndFrame,
+                            "命中窗口");
+                        if (!Enum.IsDefined(typeof(ActionHitShape), window.Shape) ||
+                            window.RadiusMillimeters <= 0 ||
+                            window.RadiusMillimeters > 10000000)
+                        {
+                            issues.Add(new CombatValidationIssue(
+                                CombatValidationSeverity.Error,
+                                $"技能 {action.name} 的命中窗口形状参数无效：shape={window.Shape}, radius={window.RadiusMillimeters}。",
+                                action));
+                        }
                     }
                 }
             }
 
             return issues;
+        }
+
+        private static void ValidateLogicItemId(
+            List<CombatValidationIssue> issues,
+            CombatActionAsset action,
+            HashSet<string> ids,
+            string stableId,
+            string label)
+        {
+            if (string.IsNullOrEmpty(stableId))
+            {
+                issues.Add(new CombatValidationIssue(
+                    CombatValidationSeverity.Error,
+                    $"技能 {action.name} 的{label}缺少 StableId。",
+                    action));
+            }
+            else if (!ids.Add(stableId))
+            {
+                issues.Add(new CombatValidationIssue(
+                    CombatValidationSeverity.Error,
+                    $"技能 {action.name} 的逻辑子项 StableId 重复：{stableId}。",
+                    action));
+            }
+        }
+
+        private static void ValidateLogicWindowRange(
+            List<CombatValidationIssue> issues,
+            CombatActionAsset action,
+            int startFrame,
+            int endFrame,
+            string label)
+        {
+            if (startFrame < 0 || endFrame <= startFrame)
+            {
+                issues.Add(new CombatValidationIssue(
+                    CombatValidationSeverity.Error,
+                    $"技能 {action.name} 存在无效{label}区间：[{startFrame}, {endFrame})。",
+                    action));
+            }
+            else if (action.DurationFrames > 0 && endFrame > action.DurationFrames)
+            {
+                issues.Add(new CombatValidationIssue(
+                    CombatValidationSeverity.Error,
+                    $"技能 {action.name} 的{label}终点超出逻辑时长：{endFrame}/{action.DurationFrames}。",
+                    action));
+            }
         }
 
         private static void ValidateTimelineRate(

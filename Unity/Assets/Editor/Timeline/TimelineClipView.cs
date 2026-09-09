@@ -49,7 +49,7 @@ namespace Ux.Editor.Timeline
             style.minWidth = 320;
             BuildUI();
 
-            TimelineWindow.InspectorContent = new TimelineInspectorView(veInspector);
+            TimelineWindow.InspectorContent = new TimelineInspectorView(veInspector, TimelineWindow.Document);
             TimelineWindow.ClipContent = veClipContent;
             TimelineWindow.GetPositionByFrame = GetPositionByFrame;
             TimelineWindow.GetFrameByMousePosition = GetFrameByMousePosition;
@@ -212,14 +212,14 @@ namespace Ux.Editor.Timeline
                 return;
             }
 
-            var frameRate = TimelineWindow.FrameRate;
-            var duration = TimelineWindow.Asset?.DurationFrames ?? 0;
+            var frameRate = TimelineWindow.Document?.FrameRate ?? TimelineEditorDocument.DefaultFrameRate;
+            var duration = TimelineWindow.Document?.DurationFrames ?? 0;
             var minimumFrames = Mathf.Max(frameRate * 2, duration + frameRate);
             _contentWidth = Mathf.Max(
                 ViewportWidth,
                 TimeOriginPadding * 2 + minimumFrames * _pixelsPerFrame);
 
-            var trackCount = TimelineWindow.Asset?.tracks?.Count ?? 0;
+            var trackCount = TimelineWindow.Document?.TrackCount ?? 0;
             var rowsHeight = Mathf.Max(TrackHeight, trackCount * TrackHeight);
             _contentHeight = Mathf.Max(ViewportHeight, rowsHeight);
 
@@ -269,7 +269,7 @@ namespace Ux.Editor.Timeline
 
         void OnWheel(WheelEvent evt)
         {
-            if (!evt.ctrlKey || TimelineWindow.Asset == null)
+            if (!evt.ctrlKey || TimelineWindow.Document?.HasSource != true)
             {
                 return;
             }
@@ -520,7 +520,7 @@ namespace Ux.Editor.Timeline
 
             painter.strokeColor = new Color(0, 0, 0, 0.35f);
             painter.BeginPath();
-            var trackCount = TimelineWindow.Asset?.tracks?.Count ?? 0;
+            var trackCount = TimelineWindow.Document?.TrackCount ?? 0;
             for (var row = 0; row <= trackCount; row++)
             {
                 var y = row * TrackHeight;

@@ -6,6 +6,8 @@ namespace Ux
     /// <summary>只负责把设备输入转换成世界方向和逻辑帧命令。</summary>
     public sealed class OperateComponent : Entity, IAwakeSystem, InputActions.IPlayerActions
     {
+        private const int AttackActionId = 1001;
+
         private InputActions _input;
         private Unit Unit => ParentAs<Unit>();
 
@@ -52,6 +54,10 @@ namespace Ux
 
         public void OnFire(InputAction.CallbackContext context)
         {
+            if (context.performed && Unit.Combat != null)
+            {
+                Unit.Combat.RequestAction(AttackActionId);
+            }
         }
 
         public void OnKey(InputAction.CallbackContext context)
@@ -64,15 +70,7 @@ namespace Ux
             var control = context.control;
             if (control == Keyboard.current.qKey)
             {
-                Unit.Combat.EnqueueCommand(CombatCommandType.Attack);
-            }
-            else if (control == Keyboard.current.eKey)
-            {
-                Unit.Combat.EnqueueCommand(CombatCommandType.Skill01);
-            }
-            else if (control == Keyboard.current.spaceKey)
-            {
-                Unit.Combat.EnqueueCommand(CombatCommandType.Dodge);
+                Unit.Combat.RequestAction(AttackActionId);
             }
         }
     }

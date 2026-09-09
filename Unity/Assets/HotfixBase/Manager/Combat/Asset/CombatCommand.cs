@@ -9,25 +9,62 @@ namespace Ux
     {
         public readonly long RequestId;
         public readonly long SimulationFrame;
-        public readonly CombatCommandType Type;
-        public readonly int Parameter;
+        public readonly int ActionId;
         public readonly uint TargetId;
         public readonly Vector3 AimDirection;
 
         public CombatCommand(
             long requestId,
             long simulationFrame,
-            CombatCommandType type,
-            int parameter = 0,
+            int actionId,
             uint targetId = 0,
             Vector3 aimDirection = default)
         {
             RequestId = requestId;
             SimulationFrame = Math.Max(0, simulationFrame);
-            Type = type;
-            Parameter = parameter;
+            ActionId = actionId;
             TargetId = targetId;
             AimDirection = aimDirection;
+        }
+
+        internal static int Compare(CombatCommand a, CombatCommand b)
+        {
+            var result = a.SimulationFrame.CompareTo(b.SimulationFrame);
+            if (result != 0)
+            {
+                return result;
+            }
+            result = a.RequestId.CompareTo(b.RequestId);
+            if (result != 0)
+            {
+                return result;
+            }
+            result = a.ActionId.CompareTo(b.ActionId);
+            if (result != 0)
+            {
+                return result;
+            }
+            result = a.TargetId.CompareTo(b.TargetId);
+            if (result != 0)
+            {
+                return result;
+            }
+            result = CompareFloatBits(a.AimDirection.x, b.AimDirection.x);
+            if (result != 0)
+            {
+                return result;
+            }
+            result = CompareFloatBits(a.AimDirection.y, b.AimDirection.y);
+            return result != 0
+                ? result
+                : CompareFloatBits(a.AimDirection.z, b.AimDirection.z);
+        }
+
+        private static int CompareFloatBits(float a, float b)
+        {
+            var left = unchecked((uint)BitConverter.SingleToInt32Bits(a));
+            var right = unchecked((uint)BitConverter.SingleToInt32Bits(b));
+            return left.CompareTo(right);
         }
     }
 
@@ -40,10 +77,18 @@ namespace Ux
 
         public CombatFrameCommands(IReadOnlyList<CombatCommand> items)
         {
-            _items = items ?? Array.Empty<CombatCommand>();
+            if (items == null || items.Count == 0)
+            {
+                _items = Array.Empty<CombatCommand>();
+                return;
+            }
+
+            var sorted = new List<CombatCommand>(items);
+            sorted.Sort(CombatCommand.Compare);
+            _items = sorted;
         }
 
-        public bool Contains(CombatCommandType type)
+        public bool ContainsAction(int actionId)
         {
             if (_items == null)
             {
@@ -51,7 +96,7 @@ namespace Ux
             }
             for (var i = 0; i < _items.Count; i++)
             {
-                if (_items[i].Type == type)
+                if (_items[i].ActionId == actionId)
                 {
                     return true;
                 }
@@ -73,7 +118,6 @@ namespace Ux
                 _frames.Add(command.SimulationFrame, commands);
             }
             commands.Add(command);
-            commands.Sort(CompareCommand);
         }
 
         public CombatFrameCommands Consume(long simulationFrame)
@@ -112,10 +156,5 @@ namespace Ux
             _frames.Clear();
         }
 
-        private static int CompareCommand(CombatCommand a, CombatCommand b)
-        {
-            var requestCompare = a.RequestId.CompareTo(b.RequestId);
-            return requestCompare != 0 ? requestCompare : a.Type.CompareTo(b.Type);
-        }
     }
 }

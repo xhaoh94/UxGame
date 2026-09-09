@@ -1,56 +1,70 @@
 using Assets.Editor.Timeline;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UIElements;
+
 namespace Ux.Editor.Timeline.Animation
 {
     public partial class TLAnimTrackInspector : TimelineInspectorBase
     {
-        AnimationTrackAsset _asset;
-        public TLAnimTrackInspector(AnimationTrackAsset asset) : base(asset)
+        readonly ITimelineEditorTrack track;
+        readonly AnimationTrackAsset asset;
+
+        public TLAnimTrackInspector(
+            ITimelineEditorSource source,
+            ITimelineEditorTrack track,
+            AnimationTrackAsset asset) : base(source, track, asset)
         {
             CreateChildren();
             Add(root);
-            _asset = asset;
+            this.track = track;
+            this.asset = asset;
             ofAnimator.objectType = typeof(Animator);
             ofAnimator.allowSceneObjects = true;
             ofAvatarMask.objectType = typeof(AvatarMask);
             OnFreshView();
         }
-        partial void _OnOfAvatarMaskChanged(ChangeEvent<Object> e)
+
+        partial void _OnOfAvatarMaskChanged(ChangeEvent<Object> evt)
         {
-            _asset.avatarMask = e.newValue as AvatarMask;
-            CommitChange(_asset);
+            if (!Source.CanEdit) return;
+            track.RecordUndo("timeline_track_avatar_mask");
+            asset.avatarMask = evt.newValue as AvatarMask;
+            CommitChange();
         }
-        partial void _OnTgAdditiveChanged(ChangeEvent<bool> e)
+
+        partial void _OnTgAdditiveChanged(ChangeEvent<bool> evt)
         {
-            _asset.isAdditive = e.newValue;
-            CommitChange(_asset);
+            if (!Source.CanEdit) return;
+            track.RecordUndo("timeline_track_additive");
+            asset.isAdditive = evt.newValue;
+            CommitChange();
         }
-        partial void _OnTxtNameChanged(ChangeEvent<string> e)
+
+        partial void _OnTxtNameChanged(ChangeEvent<string> evt)
         {
-            _asset.trackName = e.newValue;
-            CommitChange(_asset);
+            track.Rename(evt.newValue);
             if (ofAnimator.value != null)
             {
-                TimelineWindow.RefreshBinds(_asset, ofAnimator.value);
+                TimelineWindow.RefreshBinds?.Invoke(asset, ofAnimator.value);
             }
         }
-        partial void _OnOfAnimatorChanged(ChangeEvent<Object> e)
+
+        partial void _OnOfAnimatorChanged(ChangeEvent<Object> evt)
         {
-            TimelineWindow.RefreshBinds(_asset, e.newValue);
+            TimelineWindow.RefreshBinds?.Invoke(asset, evt.newValue);
             TimelineWindow.RefreshEntity?.Invoke();
         }
 
         protected override void OnFreshView()
         {
-            txtName.SetValueWithoutNotify(_asset.trackName);
-            ofAvatarMask.SetValueWithoutNotify(_asset.avatarMask);
-            var animator = TimelineWindow.Timeline?.GetBinding<Animator>(_asset);
+            txtName.SetValueWithoutNotify(track.Name);
+            ofAvatarMask.SetValueWithoutNotify(asset.avatarMask);
+            var animator = TimelineWindow.Timeline?.GetBinding<Animator>(asset);
             ofAnimator.SetValueWithoutNotify(animator);
-            tgAdditive.SetValueWithoutNotify(_asset.isAdditive);
-            tgAdditive.style.display = _asset.avatarMask == null ? DisplayStyle.None : DisplayStyle.Flex;
+            tgAdditive.SetValueWithoutNotify(asset.isAdditive);
+            tgAdditive.style.display = asset.avatarMask == null
+                ? DisplayStyle.None
+                : DisplayStyle.Flex;
         }
     }
-
 }

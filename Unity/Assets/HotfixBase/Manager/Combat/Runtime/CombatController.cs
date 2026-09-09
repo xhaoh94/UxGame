@@ -15,6 +15,7 @@ namespace Ux
         public UnitStateMachine States { get; } = new();
         public CombatActionRunner Actions { get; } = new();
         public bool IsInitialized => Profile != null && States.IsInitialized;
+        public bool IsGrounded => _grounded;
 
         public bool CanStartActions =>
             States.Life == LifeState.Alive &&
@@ -114,9 +115,13 @@ namespace Ux
             }
             return new UnitCombatSnapshot
             {
+                Version = UnitCombatSnapshot.CurrentVersion,
                 StateMachine = States.CaptureSnapshot(),
                 Action = Actions.Current,
                 HasAction = Actions.HasAction,
+                AcceptedHits = Actions.CaptureAcceptedHits(),
+                LocalActionSequence = Actions.LocalSequence,
+                IsGrounded = _grounded,
             };
         }
 
@@ -126,11 +131,19 @@ namespace Ux
             {
                 return;
             }
+            if (snapshot.Version != UnitCombatSnapshot.CurrentVersion)
+            {
+                throw new InvalidOperationException(
+                    $"不支持的战斗快照版本: {snapshot.Version}");
+            }
+            _grounded = snapshot.IsGrounded;
             States.RestoreSnapshot(snapshot.StateMachine);
             Actions.Restore(
                 snapshot.Action,
                 snapshot.HasAction,
-                snapshot.StateMachine.SimulationFrame);
+                snapshot.StateMachine.SimulationFrame,
+                snapshot.AcceptedHits,
+                snapshot.LocalActionSequence);
         }
 
         public void Release()

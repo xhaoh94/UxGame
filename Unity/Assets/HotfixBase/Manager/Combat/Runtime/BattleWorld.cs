@@ -221,14 +221,40 @@ namespace Ux
                 return;
             }
 
-            for (var i = 0; i < snapshot.Entities.Length; i++)
+            EnsureOrder();
+            var snapshotIndex = 0;
+            for (var i = 0; i < _ordered.Length; i++)
             {
-                var entry = snapshot.Entities[i];
-                if (!_entities.TryGetValue(entry.Id, out var entity) || !entity.IsCombatActive)
+                var entity = _ordered[i];
+                if (!entity.IsCombatActive)
                 {
                     continue;
                 }
+                if (snapshotIndex >= snapshot.Entities.Length ||
+                    snapshot.Entities[snapshotIndex].Id != entity.Id)
+                {
+                    throw new InvalidOperationException(
+                        "无法恢复战斗快照：当前可恢复实体集合与快照不一致。");
+                }
+                var combat = snapshot.Entities[snapshotIndex].Combat;
+                if (combat?.StateMachine == null ||
+                    combat.Version != UnitCombatSnapshot.CurrentVersion)
+                {
+                    throw new InvalidOperationException(
+                        $"无法恢复战斗快照：实体 {entity.Id} 的战斗快照无效。");
+                }
+                snapshotIndex++;
+            }
+            if (snapshotIndex != snapshot.Entities.Length)
+            {
+                throw new InvalidOperationException(
+                    "无法恢复战斗快照：当前可恢复实体集合与快照不一致。");
+            }
 
+            for (var i = 0; i < snapshot.Entities.Length; i++)
+            {
+                var entry = snapshot.Entities[i];
+                var entity = _entities[entry.Id];
                 entity.Controller.RestoreSnapshot(entry.Combat);
                 entity.Position = entry.Position;
                 entity.Rotation = entry.Rotation;
@@ -245,7 +271,7 @@ namespace Ux
         public ulong ComputeStateHash()
         {
             EnsureOrder();
-            var hash = FnvOffsetBasis;
+            var hash = AppendHash(FnvOffsetBasis, (ulong)Frame);
             for (var i = 0; i < _ordered.Length; i++)
             {
                 var entity = _ordered[i];
@@ -262,8 +288,26 @@ namespace Ux
                 hash = AppendHash(hash, (ulong)controller.States.GetCurrentStateId(StateLayer.Control));
                 hash = AppendHash(hash, (ulong)controller.States.GetCurrentStateId(StateLayer.Life));
                 hash = AppendHash(hash, (ulong)controller.States.SimulationFrame);
+                hash = AppendHash(hash, controller.IsGrounded ? 1UL : 0UL);
+                hash = AppendHash(hash, controller.Actions.HasAction ? 1UL : 0UL);
                 hash = AppendHash(hash, (ulong)controller.Actions.Current.ActionId);
                 hash = AppendHash(hash, (ulong)controller.Actions.Current.ActionFrame);
+                hash = AppendHash(hash, (ulong)controller.Actions.Current.InstanceId);
+                hash = AppendHash(hash, (ulong)controller.Actions.Current.StartSimulationFrame);
+                hash = AppendHash(hash, controller.Actions.Current.HasHitConfirmed ? 1UL : 0UL);
+                hash = AppendHash(hash, (ulong)controller.Actions.Current.RequestId);
+                hash = AppendHash(hash, controller.Actions.Current.IsPredicted ? 1UL : 0UL);
+                hash = AppendHash(hash, controller.Actions.Current.IsConfirmed ? 1UL : 0UL);
+                hash = AppendHash(hash, (ulong)controller.Actions.LocalSequence);
+                var acceptedHits = controller.Actions.CaptureAcceptedHits();
+                hash = AppendHash(hash, (ulong)acceptedHits.Length);
+                for (var hitIndex = 0; hitIndex < acceptedHits.Length; hitIndex++)
+                {
+                    var accepted = acceptedHits[hitIndex];
+                    hash = AppendHash(hash, (ulong)accepted.ActionInstanceId);
+                    hash = AppendHash(hash, accepted.WindowId);
+                    hash = AppendHash(hash, (ulong)accepted.TargetId);
+                }
             }
             return hash;
         }
@@ -398,6 +442,20 @@ namespace Ux
         {
             hash ^= value;
             return hash * FnvPrime;
+        }
+
+        private static ulong AppendHash(ulong hash, string value)
+        {
+            if (value == null)
+            {
+                return AppendHash(hash, 0UL);
+            }
+            hash = AppendHash(hash, (ulong)value.Length);
+            for (var i = 0; i < value.Length; i++)
+            {
+                hash = AppendHash(hash, value[i]);
+            }
+            return hash;
         }
 
         private readonly struct SystemEntry

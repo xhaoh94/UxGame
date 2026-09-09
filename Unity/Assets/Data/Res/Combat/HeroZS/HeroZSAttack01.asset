@@ -14,10 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stableId: hero.action.attack01
   actionId: 1001
-  displayName: 普通攻击一段
-  triggerCommand: 1
-  priority: 100
+  displayName: 普通攻击
   durationFrames: 30
   movementPolicy: 1
-  timeline: {fileID: 0}
   cancelWindows: []

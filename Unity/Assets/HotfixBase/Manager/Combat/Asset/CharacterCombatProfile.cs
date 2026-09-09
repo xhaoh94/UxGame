@@ -18,18 +18,11 @@ namespace Ux
         [Header("状态表现列表（动态）")]
         [SerializeField] private List<CombatStatePresentation> statePresentations = new();
 
-        // 旧版本 Profile 使用固定字段保存状态 Timeline。字段仅保留用于导入旧资源，
-        // ValidateData 会把它们迁移到 statePresentations 后清空；编辑器不会再显示这些字段。
-        [SerializeField, HideInInspector] private TimelineAsset idleTimeline;
-        [SerializeField, HideInInspector] private TimelineAsset moveTimeline;
-        [SerializeField, HideInInspector] private TimelineAsset airborneTimeline;
-        [SerializeField, HideInInspector] private TimelineAsset stunnedTimeline;
-        [SerializeField, HideInInspector] private TimelineAsset knockbackTimeline;
-        [SerializeField, HideInInspector] private TimelineAsset frozenTimeline;
-        [SerializeField, HideInInspector] private TimelineAsset deadTimeline;
-
-        [Header("技能表现列表")]
+        [Header("技能逻辑列表")]
         [SerializeField] private List<CombatActionAsset> actions = new();
+
+        [Header("技能表现映射")]
+        [SerializeField] private List<CombatActionPresentation> actionPresentations = new();
 
         public int FrameRate => Mathf.Max(1, frameRate);
         public string Group => group;
@@ -37,6 +30,7 @@ namespace Ux
         public float TurnDegreesPerSecond => Mathf.Max(0, turnDegreesPerSecond);
         public IReadOnlyList<CombatStatePresentation> StatePresentations => statePresentations;
         public IReadOnlyList<CombatActionAsset> Actions => actions;
+        public IReadOnlyList<CombatActionPresentation> ActionPresentations => actionPresentations;
 
         /// <summary>
         /// 按逻辑状态和外部表现变体解析一条状态表现。
@@ -114,9 +108,158 @@ namespace Ux
             return null;
         }
 
+        public CombatActionPresentation GetActionPresentation(int actionId)
+        {
+            return GetActionPresentation(FindAction(actionId));
+        }
+
+        public CombatActionPresentation GetActionPresentation(CombatActionAsset action)
+        {
+            if (action == null || actionPresentations == null)
+            {
+                return null;
+            }
+
+            foreach (var presentation in actionPresentations)
+            {
+                if (presentation != null && presentation.Matches(action))
+                {
+                    return presentation;
+                }
+            }
+            return null;
+        }
+
+        public TimelineAsset GetActionTimeline(int actionId)
+        {
+            return GetActionPresentation(actionId)?.Timeline;
+        }
+
+        public TimelineAsset GetActionTimeline(CombatActionAsset action)
+        {
+            return GetActionPresentation(action)?.Timeline;
+        }
+
         public void ValidateRuntime()
         {
             ValidateData();
+
+            var actionIds = new HashSet<int>();
+            var actionStableIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var action in actions)
+            {
+                if (action.ActionId <= 0 || string.IsNullOrEmpty(action.StableId))
+                {
+                    throw new InvalidOperationException(
+                        $"动作缺少 ActionId 或 StableId: profile={name}, action={action.name}");
+                }
+                if (action.DurationFrames <= 0)
+                {
+                    throw new InvalidOperationException(
+                        $"动作逻辑持续帧必须大于 0: profile={name}, action={action.name}, duration={action.DurationFrames}");
+                }
+                if (!actionIds.Add(action.ActionId))
+                {
+                    throw new InvalidOperationException(
+                        $"动作 ID 重复: profile={name}, actionId={action.ActionId}");
+                }
+                if (!actionStableIds.Add(action.StableId))
+                {
+                    throw new InvalidOperationException(
+                        $"动作 StableId 重复: profile={name}, stableId={action.StableId}");
+                }
+            }
+
+            foreach (var action in actions)
+            {
+                if (action.CancelWindows == null)
+                {
+                    throw new InvalidOperationException(
+                        $"取消窗口列表为空引用: profile={name}, action={action.name}");
+                }
+                if (action.HitWindows == null)
+                {
+                    throw new InvalidOperationException(
+                        $"命中窗口列表为空引用: profile={name}, action={action.name}");
+                }
+
+                var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var window in action.CancelWindows)
+                {
+                    if (window == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"取消窗口为空引用: profile={name}, action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(window.StableId) ||
+                        !logicItemIds.Add(window.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: profile={name}, action={action.name}, item={window.StableId}");
+                    }
+                    if (window.StartFrame < 0 ||
+                        window.EndFrame <= window.StartFrame ||
+                        window.EndFrame > action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"取消窗口区间无效: profile={name}, action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                    }
+                    if (!actionIds.Contains(window.TargetActionId))
+                    {
+                        throw new InvalidOperationException(
+                            $"取消窗口目标动作不存在: profile={name}, action={action.name}, target={window.TargetActionId}");
+                    }
+                }
+                foreach (var window in action.HitWindows)
+                {
+                    if (window == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"命中窗口为空引用: profile={name}, action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(window.StableId) ||
+                        !logicItemIds.Add(window.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: profile={name}, action={action.name}, item={window.StableId}");
+                    }
+                    if (window.StartFrame < 0 ||
+                        window.EndFrame <= window.StartFrame ||
+                        window.EndFrame > action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"命中窗口区间无效: profile={name}, action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                    }
+                    if (!Enum.IsDefined(typeof(ActionHitShape), window.Shape) ||
+                        window.RadiusMillimeters <= 0 ||
+                        window.RadiusMillimeters > 10000000)
+                    {
+                        throw new InvalidOperationException(
+                            $"命中窗口形状参数无效: profile={name}, action={action.name}, shape={window.Shape}, radius={window.RadiusMillimeters}");
+                    }
+                }
+            }
+
+            var mappedActions = new HashSet<CombatActionAsset>();
+            foreach (var presentation in actionPresentations)
+            {
+                var action = presentation.Action;
+                if (action == null)
+                {
+                    throw new InvalidOperationException($"技能表现映射缺少逻辑技能: profile={name}");
+                }
+                if (!actions.Contains(action))
+                {
+                    throw new InvalidOperationException(
+                        $"技能表现映射引用了不属于当前 Profile 的动作: profile={name}, action={action.name}");
+                }
+                if (!mappedActions.Add(action))
+                {
+                    throw new InvalidOperationException(
+                        $"技能表现映射重复: profile={name}, actionId={action.ActionId}");
+                }
+                ValidateTimeline(presentation.Timeline, $"Action/{action.ActionId}");
+            }
 
             var stableIds = new HashSet<string>(StringComparer.Ordinal);
             var presentationKeys = new HashSet<string>(StringComparer.Ordinal);
@@ -127,15 +270,12 @@ namespace Ux
                     continue;
                 }
 
-                if (presentation.Layer == StateLayer.Action)
+                if (!CombatStateId.IsStatePresentationMappable(
+                        presentation.Layer,
+                        presentation.StateId))
                 {
                     throw new InvalidOperationException(
-                        $"状态表现不能使用 Action 层: profile={name}, state={presentation.StateId}, variant={presentation.VariantId}");
-                }
-                if (!CombatStateId.IsDefined(presentation.Layer, presentation.StateId))
-                {
-                    throw new InvalidOperationException(
-                        $"状态表现使用了未定义状态: profile={name}, layer={presentation.Layer}, state={presentation.StateId}, variant={presentation.VariantId}");
+                        $"状态表现不能映射该状态: profile={name}, layer={presentation.Layer}, state={presentation.StateId}, variant={presentation.VariantId}");
                 }
                 if (!stableIds.Add(presentation.StableId))
                 {
@@ -165,7 +305,6 @@ namespace Ux
 
             statePresentations ??= new List<CombatStatePresentation>();
             statePresentations.RemoveAll(presentation => presentation == null);
-            MigrateLegacyStateTimelines();
             foreach (var presentation in statePresentations)
             {
                 presentation?.ValidateData();
@@ -173,94 +312,9 @@ namespace Ux
 
             actions ??= new List<CombatActionAsset>();
             actions.RemoveAll(action => action == null);
-        }
 
-        private void MigrateLegacyStateTimelines()
-        {
-            MigrateLegacyStateTimeline(
-                StateLayer.Locomotion,
-                LocomotionState.Idle.ToId(),
-                "Idle",
-                ref idleTimeline);
-            MigrateLegacyStateTimeline(
-                StateLayer.Locomotion,
-                LocomotionState.Move.ToId(),
-                "Move",
-                ref moveTimeline);
-            MigrateLegacyStateTimeline(
-                StateLayer.Locomotion,
-                LocomotionState.Airborne.ToId(),
-                "Airborne",
-                ref airborneTimeline);
-            MigrateLegacyStateTimeline(
-                StateLayer.Control,
-                ControlState.Stunned.ToId(),
-                "Stunned",
-                ref stunnedTimeline);
-            MigrateLegacyStateTimeline(
-                StateLayer.Control,
-                ControlState.Knockback.ToId(),
-                "Knockback",
-                ref knockbackTimeline);
-            MigrateLegacyStateTimeline(
-                StateLayer.Control,
-                ControlState.Frozen.ToId(),
-                "Frozen",
-                ref frozenTimeline);
-            MigrateLegacyStateTimeline(
-                StateLayer.Life,
-                LifeState.Dead.ToId(),
-                "Dead",
-                ref deadTimeline);
-        }
-
-        private void MigrateLegacyStateTimeline(
-            StateLayer layer,
-            int stateId,
-            string displayName,
-            ref TimelineAsset legacyTimeline)
-        {
-            if (legacyTimeline == null)
-            {
-                return;
-            }
-
-            var existing = FindStatePresentation(
-                layer,
-                stateId,
-                CombatStatePresentation.DefaultVariantId);
-            if (existing == null)
-            {
-                statePresentations.Add(new CombatStatePresentation(
-                    layer,
-                    stateId,
-                    CombatStatePresentation.DefaultVariantId,
-                    legacyTimeline,
-                    $"legacy.{(int)layer}.{stateId}",
-                    displayName));
-            }
-            else if (existing.Timeline == null)
-            {
-                existing.SetTimeline(legacyTimeline);
-            }
-
-            legacyTimeline = null;
-        }
-
-        private CombatStatePresentation FindStatePresentation(
-            StateLayer layer,
-            int stateId,
-            string variantId)
-        {
-            var normalizedVariant = CombatStatePresentation.NormalizeVariantId(variantId);
-            foreach (var presentation in statePresentations)
-            {
-                if (presentation != null && presentation.Matches(layer, stateId, normalizedVariant))
-                {
-                    return presentation;
-                }
-            }
-            return null;
+            actionPresentations ??= new List<CombatActionPresentation>();
+            actionPresentations.RemoveAll(presentation => presentation == null);
         }
 
         private static CombatStatePresentation SelectBetter(

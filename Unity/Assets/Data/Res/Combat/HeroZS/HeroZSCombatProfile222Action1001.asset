@@ -15,9 +15,6 @@ MonoBehaviour:
   stableId: HeroZSCombatProfile222.action.1001
   actionId: 1001
   displayName: "\u666E\u901A\u653B\u51FB"
-  triggerCommand: 1
-  priority: 0
   durationFrames: 30
   movementPolicy: 1
-  timeline: {fileID: 11400000, guid: cfe789a91cd928d43a81faee4ee3f5a3, type: 2}
   cancelWindows: []

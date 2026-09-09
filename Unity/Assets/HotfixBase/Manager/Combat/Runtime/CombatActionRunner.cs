@@ -17,11 +17,25 @@ namespace Ux
     }
 
     [Serializable]
+    public struct CombatAcceptedHitSnapshot
+    {
+        public long ActionInstanceId;
+        public string WindowId;
+        public long TargetId;
+    }
+
+    [Serializable]
     public sealed class UnitCombatSnapshot
     {
+        public const int CurrentVersion = 1;
+
+        public int Version;
         public UnitStateMachineSnapshot StateMachine;
         public CombatActionSnapshot Action;
         public bool HasAction;
+        public CombatAcceptedHitSnapshot[] AcceptedHits;
+        public long LocalActionSequence;
+        public bool IsGrounded;
     }
 
     public readonly struct CombatActionChangedEvent
@@ -45,13 +59,48 @@ namespace Ux
     }
 
     /// <summary>
+    /// 当前逻辑帧内处于激活状态的一条命中窗口快照。它只携带可复制的逻辑形状参数，
+    /// 不持有 CombatActionAsset 引用，也不包含目标属性或伤害。
+    /// </summary>
+    public readonly struct CombatActiveHitWindow
+    {
+        public CombatActiveHitWindow(
+            long actionInstanceId,
+            int actionId,
+            int actionFrame,
+            int windowIndex,
+            ActionHitWindow window)
+        {
+            ActionInstanceId = actionInstanceId;
+            ActionId = actionId;
+            ActionFrame = actionFrame;
+            WindowIndex = windowIndex;
+            WindowId = window?.StableId ?? string.Empty;
+            StartFrame = window?.StartFrame ?? 0;
+            EndFrame = window?.EndFrame ?? 0;
+            Shape = window?.Shape ?? ActionHitShape.Circle;
+            RadiusMillimeters = window?.RadiusMillimeters ?? 0;
+        }
+
+        public long ActionInstanceId { get; }
+        public int ActionId { get; }
+        public int ActionFrame { get; }
+        public int WindowIndex { get; }
+        public string WindowId { get; }
+        public int StartFrame { get; }
+        public int EndFrame { get; }
+        public ActionHitShape Shape { get; }
+        public int RadiusMillimeters { get; }
+    }
+
+    /// <summary>
     /// 每 Unit 独立的动作生命周期。它直接消费逻辑帧命令，管理动作帧、取消、完成、预测确认和快照；
     /// 不再依赖“每个动作一个状态节点”的状态图。
     /// </summary>
     public sealed class CombatActionRunner
     {
         private readonly Dictionary<int, CombatActionAsset> _actions = new();
-        private readonly Dictionary<CombatCommandType, List<CombatActionAsset>> _startActions = new();
+        private readonly HashSet<CombatHitKey> _acceptedHits = new();
         private long _localSequence;
         private long _simulationFrame;
         private bool _initialized;
@@ -61,6 +110,7 @@ namespace Ux
         public CombatActionSnapshot Current { get; private set; }
         public CombatActionAsset CurrentAsset { get; private set; }
         public bool HasAction => CurrentAsset != null;
+        public long LocalSequence => _localSequence;
         public bool BlocksMovement =>
             CurrentAsset?.MovementPolicy == ActionMovementPolicy.Block;
 
@@ -84,6 +134,11 @@ namespace Ux
                 {
                     throw new InvalidOperationException($"动作缺少 ActionId 或 StableId: {action.name}");
                 }
+                if (action.DurationFrames <= 0)
+                {
+                    throw new InvalidOperationException(
+                        $"动作逻辑持续帧必须大于 0: action={action.name}, duration={action.DurationFrames}");
+                }
                 if (!_actions.TryAdd(action.ActionId, action))
                 {
                     throw new InvalidOperationException($"动作 ID 重复: {action.ActionId}");
@@ -92,33 +147,70 @@ namespace Ux
                 {
                     throw new InvalidOperationException($"动作 StableId 重复: {action.StableId}");
                 }
-                if (action.Timeline != null && action.Timeline.FrameRate != profile.FrameRate)
-                {
-                    throw new InvalidOperationException(
-                        $"动作 Timeline 帧率不一致: action={action.name}, actionRate={profile.FrameRate}, timelineRate={action.Timeline.FrameRate}");
-                }
-
-                if (!_startActions.TryGetValue(action.TriggerCommand, out var actions))
-                {
-                    actions = new List<CombatActionAsset>();
-                    _startActions.Add(action.TriggerCommand, actions);
-                }
-                actions.Add(action);
-            }
-
-            foreach (var pair in _startActions)
-            {
-                pair.Value.Sort(CompareAction);
             }
 
             foreach (var action in _actions.Values)
             {
+                if (action.CancelWindows == null)
+                {
+                    throw new InvalidOperationException($"取消窗口列表为空引用: action={action.name}");
+                }
+                if (action.HitWindows == null)
+                {
+                    throw new InvalidOperationException($"命中窗口列表为空引用: action={action.name}");
+                }
+
+                var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var window in action.CancelWindows)
                 {
-                    if (window != null && !_actions.ContainsKey(window.TargetActionId))
+                    if (window == null)
+                    {
+                        throw new InvalidOperationException($"取消窗口为空引用: action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(window.StableId) ||
+                        !logicItemIds.Add(window.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: action={action.name}, item={window.StableId}");
+                    }
+                    if (window.StartFrame < 0 ||
+                        window.EndFrame <= window.StartFrame ||
+                        window.EndFrame > action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"取消窗口区间无效: action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                    }
+                    if (!_actions.ContainsKey(window.TargetActionId))
                     {
                         throw new InvalidOperationException(
                             $"取消窗口目标动作不存在: action={action.name}, target={window.TargetActionId}");
+                    }
+                }
+                foreach (var window in action.HitWindows)
+                {
+                    if (window == null)
+                    {
+                        throw new InvalidOperationException($"命中窗口为空引用: action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(window.StableId) ||
+                        !logicItemIds.Add(window.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: action={action.name}, item={window.StableId}");
+                    }
+                    if (window.StartFrame < 0 ||
+                        window.EndFrame <= window.StartFrame ||
+                        window.EndFrame > action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"命中窗口区间无效: action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                    }
+                    if (!Enum.IsDefined(typeof(ActionHitShape), window.Shape) ||
+                        window.RadiusMillimeters <= 0 ||
+                        window.RadiusMillimeters > 10000000)
+                    {
+                        throw new InvalidOperationException(
+                            $"命中窗口形状参数无效: action={action.name}, shape={window.Shape}, radius={window.RadiusMillimeters}");
                     }
                 }
             }
@@ -177,11 +269,12 @@ namespace Ux
             long authoritativeInstanceId,
             long authoritativeStartFrame)
         {
-            if (!HasAction || Current.RequestId != requestId)
+            if (!HasAction || Current.RequestId != requestId || authoritativeInstanceId <= 0)
             {
                 return false;
             }
 
+            var previousInstanceId = Current.InstanceId;
             var current = Current;
             current.InstanceId = authoritativeInstanceId;
             current.StartSimulationFrame = Math.Max(0, authoritativeStartFrame);
@@ -190,6 +283,7 @@ namespace Ux
                 Math.Max(0, _simulationFrame - current.StartSimulationFrame));
             current.IsPredicted = false;
             current.IsConfirmed = true;
+            MigrateAcceptedHitInstanceId(previousInstanceId, authoritativeInstanceId);
             Current = current;
             _localSequence = Math.Max(_localSequence, authoritativeInstanceId);
             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
@@ -209,15 +303,119 @@ namespace Ux
             return true;
         }
 
-        public void MarkHitConfirmed()
+        /// <summary>
+        /// 按 CombatActionAsset 中的序列化顺序追加当前帧激活的命中窗口。
+        /// 该查询无副作用、不会分配内部集合，也不会执行空间查询或伤害结算。
+        /// </summary>
+        public int AppendActiveHitWindows(List<CombatActiveHitWindow> output)
         {
-            if (!HasAction)
+            if (output == null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+            if (!HasAction || CurrentAsset.HitWindows == null)
+            {
+                return 0;
+            }
+
+            var added = 0;
+            for (var i = 0; i < CurrentAsset.HitWindows.Count; i++)
+            {
+                var window = CurrentAsset.HitWindows[i];
+                if (window == null || !window.IsActive(Current.ActionFrame))
+                {
+                    continue;
+                }
+                output.Add(new CombatActiveHitWindow(
+                    Current.InstanceId,
+                    Current.ActionId,
+                    Current.ActionFrame,
+                    i,
+                    window));
+                added++;
+            }
+            return added;
+        }
+
+        private void MigrateAcceptedHitInstanceId(long previousInstanceId, long currentInstanceId)
+        {
+            if (previousInstanceId == currentInstanceId || _acceptedHits.Count == 0)
             {
                 return;
+            }
+
+            var migrated = new List<CombatHitKey>();
+            foreach (var key in _acceptedHits)
+            {
+                if (key.ActionInstanceId == previousInstanceId)
+                {
+                    migrated.Add(key);
+                }
+            }
+            for (var i = 0; i < migrated.Count; i++)
+            {
+                var key = migrated[i];
+                _acceptedHits.Remove(key);
+                _acceptedHits.Add(new CombatHitKey(
+                    currentInstanceId,
+                    key.WindowId,
+                    key.TargetId));
+            }
+        }
+
+        public bool TryAcceptHit(long actionInstanceId, string windowId, long targetId)
+        {
+            if (!HasAction || actionInstanceId != Current.InstanceId ||
+                string.IsNullOrEmpty(windowId) || targetId <= 0)
+            {
+                return false;
+            }
+            return _acceptedHits.Add(new CombatHitKey(actionInstanceId, windowId, targetId));
+        }
+
+        public CombatAcceptedHitSnapshot[] CaptureAcceptedHits()
+        {
+            if (_acceptedHits.Count == 0)
+            {
+                return Array.Empty<CombatAcceptedHitSnapshot>();
+            }
+
+            var result = new List<CombatAcceptedHitSnapshot>(_acceptedHits.Count);
+            foreach (var key in _acceptedHits)
+            {
+                if (key.ActionInstanceId == Current.InstanceId)
+                {
+                    result.Add(new CombatAcceptedHitSnapshot
+                    {
+                        ActionInstanceId = key.ActionInstanceId,
+                        WindowId = key.WindowId,
+                        TargetId = key.TargetId,
+                    });
+                }
+            }
+            result.Sort((left, right) =>
+            {
+                var windowCompare = string.Compare(
+                    left.WindowId,
+                    right.WindowId,
+                    StringComparison.Ordinal);
+                return windowCompare != 0
+                    ? windowCompare
+                    : left.TargetId.CompareTo(right.TargetId);
+            });
+            return result.ToArray();
+        }
+
+        public bool MarkHitConfirmed(long actionInstanceId)
+        {
+            if (!HasAction || Current.InstanceId != actionInstanceId)
+            {
+                return false;
             }
             var current = Current;
             current.HasHitConfirmed = true;
             Current = current;
+            return true;
         }
 
         public bool Interrupt(CombatActionEndReason reason = CombatActionEndReason.Interrupted)
@@ -230,9 +428,23 @@ namespace Ux
             return true;
         }
 
-        public void Restore(in CombatActionSnapshot snapshot, bool hasAction, long simulationFrame)
+        public void Restore(
+            in CombatActionSnapshot snapshot,
+            bool hasAction,
+            long simulationFrame,
+            CombatAcceptedHitSnapshot[] acceptedHits = null,
+            long localActionSequence = -1)
         {
             _simulationFrame = Math.Max(0, simulationFrame);
+            if (localActionSequence >= 0)
+            {
+                if (hasAction && (snapshot.InstanceId <= 0 || localActionSequence < snapshot.InstanceId))
+                {
+                    throw new InvalidOperationException(
+                        $"快照动作序列无效: instance={snapshot.InstanceId}, sequence={localActionSequence}");
+                }
+                _localSequence = localActionSequence;
+            }
             if (!hasAction)
             {
                 if (HasAction)
@@ -253,10 +465,30 @@ namespace Ux
 
             var previous = CurrentAsset;
             CurrentAsset = action;
+            _acceptedHits.Clear();
+            if (acceptedHits != null)
+            {
+                for (var i = 0; i < acceptedHits.Length; i++)
+                {
+                    var accepted = acceptedHits[i];
+                    if (accepted.ActionInstanceId == snapshot.InstanceId &&
+                        !string.IsNullOrEmpty(accepted.WindowId) &&
+                        accepted.TargetId > 0)
+                    {
+                        _acceptedHits.Add(new CombatHitKey(
+                            accepted.ActionInstanceId,
+                            accepted.WindowId,
+                            accepted.TargetId));
+                    }
+                }
+            }
             var current = snapshot;
             current.ActionFrame = Math.Max(0, current.ActionFrame);
             Current = current;
-            _localSequence = Math.Max(_localSequence, snapshot.InstanceId);
+            if (localActionSequence < 0)
+            {
+                _localSequence = Math.Max(_localSequence, snapshot.InstanceId);
+            }
             ActionChanged?.Invoke(new CombatActionChangedEvent(
                 previous,
                 action,
@@ -278,7 +510,7 @@ namespace Ux
             Current = default;
             CurrentAsset = null;
             _actions.Clear();
-            _startActions.Clear();
+            _acceptedHits.Clear();
             _localSequence = 0;
             _simulationFrame = 0;
             _initialized = false;
@@ -301,7 +533,9 @@ namespace Ux
             }
 
             var current = Current;
-            current.ActionFrame = (int)Math.Min(int.MaxValue, current.ActionFrame + delta);
+            current.ActionFrame = delta >= int.MaxValue - (long)current.ActionFrame
+                ? int.MaxValue
+                : current.ActionFrame + (int)delta;
             Current = current;
             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
             {
@@ -314,32 +548,12 @@ namespace Ux
             for (var i = 0; i < commands.Count; i++)
             {
                 var command = commands[i];
-                if (!_startActions.TryGetValue(command.Type, out var actions) || actions.Count == 0)
+                if (!_actions.TryGetValue(command.ActionId, out var action))
                 {
                     continue;
                 }
 
-                var selected = actions[0];
-                // Parameter > 0 表示调用方明确指定 ActionId；否则按该命令下的优先级排序选择。
-                // 这样既兼容旧的 EnqueueCommand(Attack)，也支持 RequestAction(actionId)。
-                if (command.Parameter > 0)
-                {
-                    selected = null;
-                    for (var actionIndex = 0; actionIndex < actions.Count; actionIndex++)
-                    {
-                        if (actions[actionIndex].ActionId == command.Parameter)
-                        {
-                            selected = actions[actionIndex];
-                            break;
-                        }
-                    }
-                    if (selected == null)
-                    {
-                        continue;
-                    }
-                }
-
-                Start(selected, command.RequestId, command.RequestId != 0);
+                Start(action, command.RequestId, command.RequestId != 0);
                 return true;
             }
             return false;
@@ -350,29 +564,23 @@ namespace Ux
             for (var commandIndex = 0; commandIndex < commands.Count; commandIndex++)
             {
                 var command = commands[commandIndex];
-                ActionCancelWindow selected = null;
-                foreach (var window in CurrentAsset.CancelWindows)
-                {
-                    if (window == null ||
-                        !window.IsOpen(Current.ActionFrame, command.Type, Current.HasHitConfirmed) ||
-                        (command.Parameter > 0 && window.TargetActionId != command.Parameter))
-                    {
-                        continue;
-                    }
-                    if (selected == null || CompareWindow(window, selected) < 0)
-                    {
-                        selected = window;
-                    }
-                }
-
-                if (selected == null || !_actions.TryGetValue(selected.TargetActionId, out var target))
+                if (!_actions.TryGetValue(command.ActionId, out var target))
                 {
                     continue;
                 }
 
-                EndCurrent(CombatActionEndReason.Cancelled);
-                Start(target, command.RequestId, command.RequestId != 0);
-                return true;
+                foreach (var window in CurrentAsset.CancelWindows)
+                {
+                    if (window.TargetActionId != command.ActionId ||
+                        !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
+                    {
+                        continue;
+                    }
+
+                    EndCurrent(CombatActionEndReason.Cancelled);
+                    Start(target, command.RequestId, command.RequestId != 0);
+                    return true;
+                }
             }
             return false;
         }
@@ -381,6 +589,7 @@ namespace Ux
         {
             var previous = CurrentAsset;
             CurrentAsset = action;
+            _acceptedHits.Clear();
             Current = new CombatActionSnapshot
             {
                 InstanceId = ++_localSequence,
@@ -402,6 +611,7 @@ namespace Ux
         private void EndCurrent(CombatActionEndReason reason)
         {
             var previous = CurrentAsset;
+            _acceptedHits.Clear();
             Current = default;
             CurrentAsset = null;
             ActionChanged?.Invoke(new CombatActionChangedEvent(
@@ -411,16 +621,5 @@ namespace Ux
                 _simulationFrame));
         }
 
-        private static int CompareAction(CombatActionAsset a, CombatActionAsset b)
-        {
-            var priority = b.Priority.CompareTo(a.Priority);
-            return priority != 0 ? priority : a.ActionId.CompareTo(b.ActionId);
-        }
-
-        private static int CompareWindow(ActionCancelWindow a, ActionCancelWindow b)
-        {
-            var priority = b.Priority.CompareTo(a.Priority);
-            return priority != 0 ? priority : a.TargetActionId.CompareTo(b.TargetActionId);
-        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Ux
 {
@@ -36,17 +37,6 @@ namespace Ux
     {
         Alive = 1,
         Dead = 2,
-    }
-
-    public enum CombatCommandType : byte
-    {
-        None,
-        Attack,
-        Skill01,
-        Skill02,
-        Skill03,
-        Dodge,
-        Jump,
     }
 
     public enum ActionMovementPolicy : byte
@@ -106,6 +96,64 @@ namespace Ux
                     typeof(LifeState),
                     (LifeState)stateId),
                 _ => false,
+            };
+        }
+
+        /// <summary>
+        /// 可作为“状态表现”映射候选的状态集合，从对应枚举反射生成（保持枚举定义顺序）。
+        /// 新增状态只需在枚举里加值，编辑器下拉与“添加默认映射”会自动包含，无需再维护手写列表。
+        /// 只排除结构性错误项：
+        /// - Action 层整层禁止（由技能列表管理，ValidateRuntime 会拒绝）；
+        /// - Control.Normal、Life.Alive 若配置会因 ResolveTimelineOwner 的层级优先级被优先命中，
+        ///   从而永远盖掉下层动作/移动表现，故不允许映射。
+        /// </summary>
+        public static int[] GetMappableStateIds(StateLayer layer)
+        {
+            var type = GetStateEnumType(layer);
+            if (type == null)
+            {
+                return Array.Empty<int>();
+            }
+
+            var result = new List<int>();
+            foreach (var value in Enum.GetValues(type))
+            {
+                var stateId = Convert.ToInt32(value);
+                if (IsStatePresentationMappable(layer, stateId))
+                {
+                    result.Add(stateId);
+                }
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>判断一个状态值是否能作为“状态表现”映射目标（结构允许且枚举已定义）。</summary>
+        public static bool IsStatePresentationMappable(StateLayer layer, int stateId)
+        {
+            if (layer == StateLayer.Action)
+            {
+                return false;
+            }
+            if (layer == StateLayer.Life && stateId == (int)LifeState.Alive)
+            {
+                return false;
+            }
+            if (layer == StateLayer.Control && stateId == (int)ControlState.Normal)
+            {
+                return false;
+            }
+            return IsDefined(layer, stateId);
+        }
+
+        private static Type GetStateEnumType(StateLayer layer)
+        {
+            return layer switch
+            {
+                StateLayer.Locomotion => typeof(LocomotionState),
+                StateLayer.Action => typeof(ActionState),
+                StateLayer.Control => typeof(ControlState),
+                StateLayer.Life => typeof(LifeState),
+                _ => null,
             };
         }
     }
