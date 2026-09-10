@@ -33,7 +33,7 @@ MonoBehaviour:
         id: f1fa83120a454dc8b310524781e2c85f
         clipName: Attack
         StartFrame: 0
-        EndFrame: 30
+        EndFrame: 70
         InFrame: 0
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 75f41ed80eab9704189a26e21e6c38cf, type: 3}

@@ -25,6 +25,35 @@ namespace Ux.Editor.Combat
         private const int DefaultActionId = 1001;
         private const int DefaultActionDuration = 30;
 
+        // 左栏宽度可拖动调整：默认 205，最小 150，并为右侧内容区保留 300。
+        private const float MinLeftPanelWidth = 150f;
+        private const float DefaultLeftPanelWidth = 205f;
+        private const float LeftPanelReserve = 300f;
+        private const float SplitterWidth = 5f;
+        private const string LeftPanelWidthKey = "Ux.CombatEditor.LeftPanelWidth";
+
+        // 右栏分区折叠状态：按分区独立记忆，避免每次打开都要重新展开。
+        private const string LogicSectionKey = "Ux.CombatEditor.Fold.Logic";
+        private const string LogicWindowSectionKey = "Ux.CombatEditor.Fold.LogicWindow";
+        private const string PresentationSectionKey = "Ux.CombatEditor.Fold.Presentation";
+        private const string ValidationSectionKey = "Ux.CombatEditor.Fold.Validation";
+        private static GUIStyle _sectionFoldoutStyle;
+
+        private static GUIStyle SectionFoldoutStyle
+        {
+            get
+            {
+                if (_sectionFoldoutStyle == null)
+                {
+                    _sectionFoldoutStyle = new GUIStyle(EditorStyles.foldout)
+                    {
+                        fontStyle = FontStyle.Bold,
+                    };
+                }
+                return _sectionFoldoutStyle;
+            }
+        }
+
         private static readonly StateLayer[] PresentationLayers =
         {
             StateLayer.Locomotion,
@@ -42,6 +71,8 @@ namespace Ux.Editor.Combat
         private SerializedObject _actionSerialized;
         private List<CombatValidationIssue> _issues = new List<CombatValidationIssue>();
         private bool _showIssues;
+        private float _leftPanelWidth = DefaultLeftPanelWidth;
+        private bool _resizingLeftPanel;
 
         [MenuItem("UxGame/工具/战斗/角色配置", false, 520)]
         public static void ShowWindow()
@@ -88,6 +119,7 @@ namespace Ux.Editor.Combat
         {
             titleContent = new GUIContent("角色战斗配置");
             minSize = new Vector2(760, 500);
+            _leftPanelWidth = EditorPrefs.GetFloat(LeftPanelWidthKey, DefaultLeftPanelWidth);
             var selected = Selection.activeObject as CharacterCombatProfile;
             if (selected != null)
             {
@@ -118,6 +150,11 @@ namespace Ux.Editor.Combat
             {
                 _selectedAction = FindFirstAction();
             }
+
+            _leftPanelWidth = Mathf.Clamp(
+                _leftPanelWidth,
+                MinLeftPanelWidth,
+                GetMaxLeftPanelWidth());
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -233,7 +270,7 @@ namespace Ux.Editor.Combat
 
         private void DrawNavigation()
         {
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(205)))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_leftPanelWidth)))
             {
                 GUILayout.Label("配置", EditorStyles.boldLabel);
                 DrawPageButton("基础参数", Page.Profile);
@@ -262,9 +299,10 @@ namespace Ux.Editor.Combat
                     }
                     else
                     {
+                        var rowWidth = MeasureLeftRowWidth();
                         for (var i = 0; i < _profile.Actions.Count; i++)
                         {
-                            DrawActionButton(_profile.Actions[i], i);
+                            DrawActionButton(_profile.Actions[i], i, rowWidth);
                         }
                     }
                 }
@@ -274,6 +312,100 @@ namespace Ux.Editor.Combat
                     "代码触发技能，Profile 提供数据，TimelineWindow 编辑表现。",
                     MessageType.None);
             }
+
+            // 分隔条不占布局宽度，贴在左栏右边界上，两栏之间不留空白带。
+            DrawLeftPanelSplitter(GUILayoutUtility.GetLastRect());
+        }
+
+        /// <summary>
+        /// 左栏与内容区之间的分隔条：拖动调整左栏宽度。
+        /// 命中区跨在左栏右边界上，本身不参与布局，所以两栏之间不会出现空白带；
+        /// 鼠标悬停或拖动时才画出高亮线，平时是不可见的拖动热区。
+        /// </summary>
+        private void DrawLeftPanelSplitter(Rect panelRect)
+        {
+            var edge = panelRect.xMax;
+            var hot = new Rect(
+                edge - SplitterWidth,
+                panelRect.y,
+                SplitterWidth * 2f,
+                panelRect.height);
+            EditorGUIUtility.AddCursorRect(hot, MouseCursor.ResizeHorizontal);
+
+            var evt = Event.current;
+            switch (evt.type)
+            {
+                case UnityEngine.EventType.MouseDown:
+                    if (evt.button == 0 && hot.Contains(evt.mousePosition))
+                    {
+                        _resizingLeftPanel = true;
+                        evt.Use();
+                    }
+                    break;
+                case UnityEngine.EventType.MouseDrag:
+                    if (_resizingLeftPanel)
+                    {
+                        _leftPanelWidth = Mathf.Clamp(
+                            _leftPanelWidth + evt.delta.x,
+                            MinLeftPanelWidth,
+                            GetMaxLeftPanelWidth());
+                        evt.Use();
+                        Repaint();
+                    }
+                    break;
+                case UnityEngine.EventType.MouseUp:
+                    if (_resizingLeftPanel)
+                    {
+                        _resizingLeftPanel = false;
+                        EditorPrefs.SetFloat(LeftPanelWidthKey, _leftPanelWidth);
+                        evt.Use();
+                    }
+                    break;
+            }
+
+            if (_resizingLeftPanel || hot.Contains(evt.mousePosition))
+            {
+                EditorGUI.DrawRect(
+                    new Rect(
+                        edge - 1f,
+                        panelRect.y + 2f,
+                        2f,
+                        Mathf.Max(0f, panelRect.height - 4f)),
+                    new Color(0.32f, 0.52f, 0.82f, 0.7f));
+            }
+        }
+
+        private float GetMaxLeftPanelWidth()
+        {
+            return Mathf.Max(MinLeftPanelWidth, position.width - LeftPanelReserve);
+        }
+
+        /// <summary>
+        /// 左栏技能行的可用宽度：直接问布局要一个整行矩形（零高度、可拉伸）。
+        /// 这样拿到的宽度就是滚动视图内容区的真实宽度（已扣除纵向滚动条），
+        /// 行宽不会超出视口（不出现横向滚动条），也能铺满（右侧不留空白）。
+        /// </summary>
+        private float MeasureLeftRowWidth()
+        {
+            var probe = GUILayoutUtility
+                .GetRect(0f, 0f, GUILayout.ExpandWidth(true))
+                .width - 2f;
+
+            if (probe <= 60f)
+            {
+                // 兜底：布局没给出可用宽度时按面板宽度估算。
+                probe = _leftPanelWidth
+                    - EditorStyles.helpBox.padding.horizontal
+                    - GUI.skin.verticalScrollbar.fixedWidth
+                    - 2f;
+            }
+
+            return Mathf.Clamp(probe, 60f, Mathf.Max(60f, _leftPanelWidth));
+        }
+
+        private void OnDisable()
+        {
+            EditorPrefs.SetFloat(LeftPanelWidthKey, _leftPanelWidth);
         }
 
         private void DrawPageButton(string text, Page page)
@@ -290,7 +422,7 @@ namespace Ux.Editor.Combat
             GUI.backgroundColor = oldColor;
         }
 
-        private void DrawActionButton(CombatActionAsset action, int index)
+        private void DrawActionButton(CombatActionAsset action, int index, float rowWidth)
         {
             if (action == null)
             {
@@ -308,7 +440,11 @@ namespace Ux.Editor.Combat
             {
                 GUI.backgroundColor = new Color(0.32f, 0.52f, 0.82f, 1f);
             }
-            if (GUILayout.Button(label, EditorStyles.toolbarButton, GUILayout.Height(25)))
+            if (GUILayout.Button(
+                    label,
+                    EditorStyles.toolbarButton,
+                    GUILayout.Height(25),
+                    GUILayout.Width(rowWidth)))
             {
                 _selectedAction = action;
                 _page = Page.Skills;
@@ -317,18 +453,17 @@ namespace Ux.Editor.Combat
             GUI.backgroundColor = oldColor;
 
             var timeline = GetActionTimeline(action);
+            // 固定宽度交给 GUIStyle 裁剪文本，既不留右侧空白，也不会撑出横向滚动条。
             EditorGUILayout.LabelField(
                 $"逻辑：{action.name}",
                 timeline == null ? "表现：未关联" : $"表现：{timeline.name}",
-                EditorStyles.miniLabel);
+                EditorStyles.miniLabel,
+                GUILayout.Width(rowWidth));
         }
 
         private void DrawProfilePage()
         {
             GUILayout.Label("基础参数", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "这里仅保存角色级参数。战斗状态的切换条件和技能触发规则由代码控制。",
-                MessageType.Info);
 
             var serialized = GetProfileSerialized();
             serialized.Update();
@@ -341,14 +476,7 @@ namespace Ux.Editor.Combat
             }
             ApplyProfile(serialized);
 
-            EditorGUILayout.Space(8);
-            GUILayout.Label("推荐工作流", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "1. 在状态表现映射中关联 Idle / Move / Dead 等宏观状态 Timeline。\n" +
-                "2. 点击“创建基础普攻示例”，生成 Attack 1001 和独立 Timeline。\n" +
-                "3. 在技能列表中配置技能参数，再打开 TimelineWindow 编辑动画。\n" +
-                "4. 运行时代码通过 RequestAction / EnqueueCommand 触发技能。",
-                MessageType.Info);
+            EditorGUILayout.Space(8);            
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -370,12 +498,6 @@ namespace Ux.Editor.Combat
 
         private void DrawStatesPage()
         {
-            GUILayout.Label("状态表现映射", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "这里不定义状态机，也不触发状态。代码负责设置 Idle / Move / Stunned / Dead 等逻辑状态；" +
-                "本页只配置当前状态应该使用哪条 Timeline。技能表现位于独立的技能列表。",
-                MessageType.Info);
-
             var serialized = GetProfileSerialized();
             serialized.Update();
             var presentations = serialized.FindProperty("statePresentations");
@@ -636,15 +758,15 @@ namespace Ux.Editor.Combat
             serialized.Update();
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                GUILayout.Label("逻辑数据（CombatActionAsset）", EditorStyles.boldLabel);
-                EditorGUILayout.ObjectField("逻辑资产", action, typeof(CombatActionAsset), false);
-                DrawProperty(serialized, "stableId", "StableId");
-                DrawProperty(serialized, "actionId", "技能 ID");
-                DrawProperty(serialized, "displayName", "显示名称");
-                DrawProperty(serialized, "durationFrames", "逻辑持续帧数");
-                DrawProperty(serialized, "movementPolicy", "移动策略");
-                DrawCancelWindows(serialized, action);
-                DrawHitWindows(serialized);
+                if (DrawSection("逻辑数据（CombatActionAsset）", LogicSectionKey))
+                {
+                    EditorGUILayout.ObjectField("逻辑资产", action, typeof(CombatActionAsset), false);
+                    DrawProperty(serialized, "stableId", "StableId");
+                    DrawProperty(serialized, "actionId", "技能 ID");
+                    DrawProperty(serialized, "displayName", "显示名称");
+                    DrawProperty(serialized, "durationFrames", "逻辑持续帧数");
+                    DrawProperty(serialized, "movementPolicy", "移动策略");
+                }
             }
             if (serialized.ApplyModifiedProperties())
             {
@@ -653,40 +775,54 @@ namespace Ux.Editor.Combat
                 _issues.Clear();
             }
 
-            timeline = DrawActionPresentation(action);
-            if (timeline == null)
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.HelpBox("尚未关联技能 Timeline。", MessageType.Warning);
-                if (GUILayout.Button("创建技能 Timeline", GUILayout.Width(150)))
+                if (DrawSection("逻辑窗口（在时间轴中编辑）", LogicWindowSectionKey))
                 {
-                    CreateActionTimeline(action);
-                    timeline = GetActionTimeline(action);
+                    DrawLogicWindowSummary(action);
                 }
             }
-            else
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                if (DrawSection("客户端表现映射（CharacterCombatProfile）", PresentationSectionKey))
                 {
-                    var clip = CombatEditorUtility.GetPrimaryAnimationClip(timeline);
-                    var nextClip = (AnimationClip)EditorGUILayout.ObjectField(
-                        "首个动画 Clip",
-                        clip,
-                        typeof(AnimationClip),
-                        false);
-                    if (nextClip != clip)
+                    timeline = DrawActionPresentation(action);
+                    if (timeline == null)
                     {
-                        Undo.RecordObject(timeline, "设置技能动画");
-                        if (CombatEditorUtility.SetPrimaryAnimationClip(timeline, nextClip, out _))
+                        EditorGUILayout.HelpBox("尚未关联技能 Timeline。", MessageType.Warning);
+                        if (GUILayout.Button("创建技能 Timeline", GUILayout.Width(150)))
                         {
-                            EditorUtility.SetDirty(timeline);
-                            AssetDatabase.SaveAssets();
+                            CreateActionTimeline(action);
+                            timeline = GetActionTimeline(action);
                         }
                     }
+                    else
+                    {
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            var clip = CombatEditorUtility.GetPrimaryAnimationClip(timeline);
+                            var nextClip = (AnimationClip)EditorGUILayout.ObjectField(
+                                "首个动画 Clip",
+                                clip,
+                                typeof(AnimationClip),
+                                false);
+                            if (nextClip != clip)
+                            {
+                                Undo.RecordObject(timeline, "设置技能动画");
+                                if (CombatEditorUtility.SetPrimaryAnimationClip(timeline, nextClip, out _))
+                                {
+                                    EditorUtility.SetDirty(timeline);
+                                    AssetDatabase.SaveAssets();
+                                }
+                            }
+                        }
+                        EditorGUILayout.LabelField(
+                            "Timeline",
+                            $"{timeline.FrameRate} fps / {timeline.DurationFrames} 帧",
+                            EditorStyles.miniLabel);
+                    }
                 }
-                EditorGUILayout.LabelField(
-                    "Timeline",
-                    $"{timeline.FrameRate} fps / {timeline.DurationFrames} 帧",
-                    EditorStyles.miniLabel);
             }
 
             DrawValidationPanel();
@@ -695,139 +831,116 @@ namespace Ux.Editor.Combat
         private TimelineAsset DrawActionPresentation(CombatActionAsset action)
         {
             var current = GetActionTimeline(action);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            EditorGUILayout.ObjectField(
+                "所属 Profile",
+                _profile,
+                typeof(CharacterCombatProfile),
+                false);
+            var next = (TimelineAsset)EditorGUILayout.ObjectField(
+                "表现 Timeline",
+                current,
+                typeof(TimelineAsset),
+                false);
+            if (next != current)
             {
-                GUILayout.Label("客户端表现映射（CharacterCombatProfile）", EditorStyles.boldLabel);
-                EditorGUILayout.ObjectField(
-                    "所属 Profile",
-                    _profile,
-                    typeof(CharacterCombatProfile),
-                    false);
-                var next = (TimelineAsset)EditorGUILayout.ObjectField(
-                    "表现 Timeline",
-                    current,
-                    typeof(TimelineAsset),
-                    false);
-                if (next != current)
+                if (CombatEditorUtility.TrySetActionTimeline(
+                        _profile,
+                        action,
+                        next,
+                        out var error))
                 {
-                    if (CombatEditorUtility.TrySetActionTimeline(
-                            _profile,
-                            action,
-                            next,
-                            out var error))
-                    {
-                        AssetDatabase.SaveAssets();
-                        _profileSerialized = null;
-                        _issues.Clear();
-                        current = next;
-                    }
-                    else
-                    {
-                        Debug.LogError(error, _profile);
-                        ShowNotification(new GUIContent(error));
-                    }
+                    AssetDatabase.SaveAssets();
+                    _profileSerialized = null;
+                    _issues.Clear();
+                    current = next;
                 }
+                else
+                {
+                    Debug.LogError(error, _profile);
+                    ShowNotification(new GUIContent(error));
+                }
+            }
 
-                if (current != null && current.DurationFrames != action.DurationFrames)
-                {
-                    EditorGUILayout.HelpBox(
-                        $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
-                        "两者独立保存，请确认差异符合设计。",
-                        MessageType.Warning);
-                }
+            if (current != null && current.DurationFrames != action.DurationFrames)
+            {
+                EditorGUILayout.HelpBox(
+                    $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
+                    "两者独立保存，请确认差异符合设计。",
+                    MessageType.Warning);
             }
             return current;
         }
 
-        private void DrawCancelWindows(SerializedObject serialized, CombatActionAsset action)
+        /// <summary>
+        /// 逻辑窗口在本窗口只做只读摘要与跳转：权威编辑入口是时间轴上的逻辑轨道
+        /// （CombatLogicTimelineSource），避免同一份数据出现第二个写入入口。
+        /// 新增一类逻辑窗口只需扩展这里的摘要，不需要再往本窗口加表单。
+        /// </summary>
+        private void DrawLogicWindowSummary(CombatActionAsset action)
         {
-            var windows = serialized.FindProperty("cancelWindows");
-            if (windows == null)
+            var cancelCount = action.CancelWindows?.Count ?? 0;
+            var hitCount = action.HitWindows?.Count ?? 0;
+            if (cancelCount == 0 && hitCount == 0)
             {
-                return;
+                EditorGUILayout.HelpBox(
+                    "未配置逻辑窗口。在时间轴逻辑轨上新增区间 Clip 即可。",
+                    MessageType.None);
             }
 
-            EditorGUILayout.Space(8);
+            for (var i = 0; i < cancelCount; i++)
+            {
+                var window = action.CancelWindows[i];
+                if (window == null)
+                {
+                    continue;
+                }
+                EditorGUILayout.LabelField(
+                    $"取消窗口 {i + 1}",
+                    $"帧 {window.StartFrame}–{window.EndFrame} → 目标 {window.TargetActionId}"
+                        + (window.RequiresHitConfirm ? "，需已命中" : "，无需命中"),
+                    EditorStyles.miniLabel);
+            }
+
+            for (var i = 0; i < hitCount; i++)
+            {
+                var window = action.HitWindows[i];
+                if (window == null)
+                {
+                    continue;
+                }
+                EditorGUILayout.LabelField(
+                    $"命中窗口 {i + 1}",
+                    $"帧 {window.StartFrame}–{window.EndFrame}，" +
+                    $"{window.Shape} 半径 {window.RadiusMillimeters} mm",
+                    EditorStyles.miniLabel);
+            }
+
             using (new EditorGUILayout.HorizontalScope())
             {
-                GUILayout.Label("取消窗口", EditorStyles.boldLabel);
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("+ 添加", GUILayout.Width(70)))
+                if (GUILayout.Button("在时间轴中编辑", GUILayout.Width(140)))
                 {
-                    var index = windows.arraySize;
-                    windows.InsertArrayElementAtIndex(index);
-                    var element = windows.GetArrayElementAtIndex(index);
-                    SetRelativeString(element, "stableId", Guid.NewGuid().ToString("N"));
-                    SetRelativeInt(element, "StartFrame", 0);
-                    SetRelativeInt(element, "EndFrame", 1);
-                    SetRelativeInt(element, "TargetActionId", action.ActionId);
-                    SetRelativeBool(element, "RequiresHitConfirm", false);
+                    OpenActionTimeline(action, GetActionTimeline(action));
                 }
+                GUILayout.FlexibleSpace();
             }
 
-            for (var i = 0; i < windows.arraySize; i++)
-            {
-                var element = windows.GetArrayElementAtIndex(i);
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
-                {
-                    EditorGUILayout.LabelField($"窗口 {i + 1}", GUILayout.Width(48));
-                    DrawRelativeProperty(element, "StartFrame", "开始（含）");
-                    DrawRelativeProperty(element, "EndFrame", "结束（不含）");
-                    DrawRelativeProperty(element, "TargetActionId", "目标 ID");
-                    DrawRelativeProperty(element, "RequiresHitConfirm", "需命中");
-                    if (GUILayout.Button("删除", GUILayout.Width(48)))
-                    {
-                        windows.DeleteArrayElementAtIndex(i);
-                        break;
-                    }
-                }
-            }
+            EditorGUILayout.LabelField(
+                "区间增删与拖动只在时间轴逻辑轨进行，本窗口不提供第二套编辑入口。",
+                EditorStyles.miniLabel);
         }
 
-        private void DrawHitWindows(SerializedObject serialized)
+        /// <summary>
+        /// 右栏分区折叠头：展开状态按分区记在 EditorPrefs，避免每次打开都要重新展开。
+        /// </summary>
+        private static bool DrawSection(string title, string foldKey, bool defaultExpanded = true)
         {
-            var windows = serialized.FindProperty("hitWindows");
-            if (windows == null)
+            var expanded = EditorPrefs.GetBool(foldKey, defaultExpanded);
+            var next = EditorGUILayout.Foldout(expanded, title, true, SectionFoldoutStyle);
+            if (next != expanded)
             {
-                return;
+                EditorPrefs.SetBool(foldKey, next);
             }
-
-            EditorGUILayout.Space(8);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                GUILayout.Label("命中激活窗口", EditorStyles.boldLabel);
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("+ 添加", GUILayout.Width(70)))
-                {
-                    var index = windows.arraySize;
-                    windows.InsertArrayElementAtIndex(index);
-                    var element = windows.GetArrayElementAtIndex(index);
-                    SetRelativeString(element, "stableId", Guid.NewGuid().ToString("N"));
-                    SetRelativeInt(element, "StartFrame", 0);
-                    SetRelativeInt(element, "EndFrame", 1);
-                }
-            }
-
-            EditorGUILayout.HelpBox(
-                "当前仅声明命中时序，不包含形状、目标查询或伤害。区间采用 [开始帧, 结束帧) 语义。",
-                MessageType.Info);
-            for (var i = 0; i < windows.arraySize; i++)
-            {
-                var element = windows.GetArrayElementAtIndex(i);
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
-                {
-                    EditorGUILayout.LabelField($"窗口 {i + 1}", GUILayout.Width(48));
-                    DrawRelativeProperty(element, "StartFrame", "开始（含）");
-                    DrawRelativeProperty(element, "EndFrame", "结束（不含）");
-                    DrawRelativeProperty(element, "shape", "形状");
-                    DrawRelativeProperty(element, "radiusMillimeters", "半径 mm");
-                    if (GUILayout.Button("删除", GUILayout.Width(48)))
-                    {
-                        windows.DeleteArrayElementAtIndex(i);
-                        break;
-                    }
-                }
-            }
+            return next;
         }
 
         private void DrawValidationPanel()
@@ -838,22 +951,26 @@ namespace Ux.Editor.Combat
             }
 
             EditorGUILayout.Space(8);
+            var errors = CountIssues(CombatValidationSeverity.Error);
+            var warnings = CountIssues(CombatValidationSeverity.Warning);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                var errors = CountIssues(CombatValidationSeverity.Error);
-                var warnings = CountIssues(CombatValidationSeverity.Warning);
-                GUILayout.Label($"校验：错误 {errors} / 警告 {warnings}", EditorStyles.boldLabel);
-                if (_issues.Count == 0)
+                if (DrawSection($"诊断（错误 {errors} / 警告 {warnings}）", ValidationSectionKey))
                 {
-                    EditorGUILayout.HelpBox("没有发现问题。", MessageType.Info);
-                    return;
-                }
-                foreach (var issue in _issues)
-                {
-                    var prefix = issue.Severity == CombatValidationSeverity.Error
-                        ? "错误"
-                        : issue.Severity == CombatValidationSeverity.Warning ? "警告" : "提示";
-                    EditorGUILayout.LabelField($"[{prefix}] {issue.Message}", EditorStyles.miniLabel);
+                    if (_issues.Count == 0)
+                    {
+                        EditorGUILayout.HelpBox("没有发现问题。", MessageType.Info);
+                    }
+                    else
+                    {
+                        foreach (var issue in _issues)
+                        {
+                            var prefix = issue.Severity == CombatValidationSeverity.Error
+                                ? "错误"
+                                : issue.Severity == CombatValidationSeverity.Warning ? "警告" : "提示";
+                            EditorGUILayout.LabelField($"[{prefix}] {issue.Message}", EditorStyles.miniLabel);
+                        }
+                    }
                 }
             }
         }
@@ -1476,15 +1593,6 @@ namespace Ux.Editor.Combat
             }
         }
 
-        private static void DrawRelativeProperty(SerializedProperty parent, string name, string label)
-        {
-            var property = parent.FindPropertyRelative(name);
-            if (property != null)
-            {
-                EditorGUILayout.PropertyField(property, new GUIContent(label), true);
-            }
-        }
-
         private static void SetProperty(SerializedObject serialized, string name, string value)
         {
             var property = serialized.FindProperty(name);
@@ -1534,15 +1642,6 @@ namespace Ux.Editor.Combat
             if (property != null)
             {
                 property.enumValueIndex = value;
-            }
-        }
-
-        private static void SetRelativeBool(SerializedProperty parent, string name, bool value)
-        {
-            var property = parent.FindPropertyRelative(name);
-            if (property != null)
-            {
-                property.boolValue = value;
             }
         }
 

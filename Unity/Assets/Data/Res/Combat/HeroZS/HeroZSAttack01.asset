@@ -14,7 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stableId: hero.action.attack01
   actionId: 1001
-  displayName: 普通攻击
+  displayName: "\u666E\u901A\u653B\u51FB"
   durationFrames: 30
   movementPolicy: 1
-  cancelWindows: []
+  cancelWindows:
+  - stableId: 9f48c08560274e35a8a3a6314c1fa436
+    StartFrame: 6
+    EndFrame: 24
+    TargetActionId: 1001
+    RequiresHitConfirm: 0
+  hitWindows:
+  - stableId: 3a28fcf418624cda974cccab02044a80
+    StartFrame: 17
+    EndFrame: 30
+    shape: 0
+    radiusMillimeters: 14
