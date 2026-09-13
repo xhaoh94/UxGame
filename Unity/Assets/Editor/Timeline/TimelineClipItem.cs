@@ -50,6 +50,12 @@ namespace Ux.Editor.Timeline
             BuildVisualTree();
             menu = new DropdownMenu();
             RegisterCallback<PointerDownEvent>(OnPointerDown);
+#if UNITY_2022_1_OR_NEWER
+            RegisterCallback<ContextualMenuPopulateEvent>(OnContextualMenuPopulate);
+#endif
+            RegisterCallback<PointerEnterEvent>(OnPointerEnter);
+            RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
             RegisterCallback<DragUpdatedEvent>(OnDragUpdated);
             RegisterCallback<DragPerformEvent>(OnDragPerform);
             clip.Bind(UpdateView);
@@ -57,6 +63,7 @@ namespace Ux.Editor.Timeline
 
         void BuildVisualTree()
         {
+            pickingMode = PickingMode.Position;
             style.position = Position.Absolute;
             style.height = 34;
             style.minHeight = 34;
@@ -76,6 +83,7 @@ namespace Ux.Editor.Timeline
             content.style.borderTopRightRadius = 3;
             content.style.borderBottomLeftRadius = 3;
             content.style.borderBottomRightRadius = 3;
+            content.pickingMode = PickingMode.Position;
             root.Add(content);
 
             lbType = new Label();
@@ -83,12 +91,56 @@ namespace Ux.Editor.Timeline
             lbType.style.unityTextAlign = TextAnchor.MiddleCenter;
             lbType.style.color = new Color(0.92f, 0.92f, 0.92f);
             lbType.style.overflow = Overflow.Hidden;
+            lbType.pickingMode = PickingMode.Ignore;
             content.Add(lbType);
+            SetCursor(MouseCursor.Pan);
         }
 
         public void Release()
         {
             Clip.Unbind(UpdateView);
+        }
+
+        void OnPointerEnter(PointerEnterEvent evt)
+        {
+            UpdateCursor(evt.position);
+        }
+
+        void OnPointerMove(PointerMoveEvent evt)
+        {
+            UpdateCursor(evt.position);
+        }
+
+        void OnPointerLeave(PointerLeaveEvent evt)
+        {
+            SetCursor(MouseCursor.Arrow);
+        }
+
+        void UpdateCursor(Vector2 mousePosition)
+        {
+            if (Clip?.Track?.Source?.CanEdit != true)
+            {
+                SetCursor(MouseCursor.Arrow);
+                return;
+            }
+
+            var localPosition = this.WorldToLocal(mousePosition);
+            var width = resolvedStyle.width;
+            if (width <= 0 || localPosition.x <= 18 || localPosition.x >= width - 18)
+            {
+                SetCursor(MouseCursor.ResizeHorizontal);
+                return;
+            }
+
+            SetCursor(MouseCursor.Pan);
+        }
+
+        void SetCursor(MouseCursor cursor)
+        {
+            var value = new StyleCursor(
+                YooAsset.Editor.UIElementsCursor.CreateCursor(cursor));
+            style.cursor = value;
+            content.style.cursor = value;
         }
 
         void OnDragUpdated(DragUpdatedEvent evt)
@@ -119,9 +171,40 @@ namespace Ux.Editor.Timeline
                     return;
                 }
                 EnsureMenu();
-                this.ShowMenu();
+                ShowContextMenu(evt);
+                evt.StopPropagation();
+#if !UNITY_2023_2_OR_NEWER
+                evt.PreventDefault();
+#endif
             }
         }
+
+        void ShowContextMenu(PointerDownEvent evt)
+        {
+#if UNITY_2022_1_OR_NEWER
+            var menuManager = panel?.contextualMenuManager;
+            if (menuManager == null)
+            {
+                return;
+            }
+            menuManager.DisplayMenu(evt, this);
+#else
+            this.ShowMenu();
+#endif
+        }
+
+#if UNITY_2022_1_OR_NEWER
+        void OnContextualMenuPopulate(ContextualMenuPopulateEvent evt)
+        {
+            if (!TimelineWindow.IsValid())
+            {
+                evt.StopImmediatePropagation();
+                return;
+            }
+            AppendMenuItems(evt.menu);
+            evt.StopImmediatePropagation();
+        }
+#endif
 
         void EnsureMenu()
         {
@@ -129,13 +212,18 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
-            menu.AppendAction("适配长度", _ => FitAnimationDuration(),
+            AppendMenuItems(menu);
+            menuInitialized = true;
+        }
+
+        void AppendMenuItems(DropdownMenu targetMenu)
+        {
+            targetMenu.AppendAction("适配长度", _ => FitAnimationDuration(),
                 _ => Clip.CanFitAnimationDuration
                     ? DropdownMenuAction.Status.Normal
                     : DropdownMenuAction.Status.Disabled);
-            menu.AppendAction("删除", _ => TrackItem.RemoveClipItem(this),
+            targetMenu.AppendAction("删除", _ => TrackItem.RemoveClipItem(this),
                 _ => DropdownMenuAction.Status.Normal);
-            menuInitialized = true;
         }
 
         void FitAnimationDuration()

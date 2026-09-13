@@ -6,9 +6,7 @@ namespace Ux.Editor.Combat
 {
     sealed class CombatHitWindowTrackInspector : TimelineInspectorBase
     {
-        public CombatHitWindowTrackInspector(
-            CombatLogicTimelineSource source,
-            CombatHitWindowEditorTrack track) : base(source, track, track)
+        public CombatHitWindowTrackInspector(CombatLogicTimelineSource source, CombatHitWindowEditorTrack track) : base(source, track, track)
         {
             Add(CreateTitle("战斗逻辑轨道"));
             Add(new Label("命中激活窗口"));
@@ -28,9 +26,7 @@ namespace Ux.Editor.Combat
         readonly Label durationLabel;
         bool refreshing;
 
-        public CombatHitWindowClipInspector(
-            CombatLogicTimelineSource source,
-            CombatHitWindowEditorClip clip) : base(source, clip, clip)
+        public CombatHitWindowClipInspector(CombatLogicTimelineSource source, CombatHitWindowEditorClip clip) : base(source, clip, clip)
         {
             this.clip = clip;
             Add(CreateTitle("命中激活窗口"));

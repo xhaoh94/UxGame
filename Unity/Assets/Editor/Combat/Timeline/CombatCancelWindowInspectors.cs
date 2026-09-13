@@ -6,9 +6,7 @@ namespace Ux.Editor.Combat
 {
     sealed class CombatCancelWindowTrackInspector : TimelineInspectorBase
     {
-        public CombatCancelWindowTrackInspector(
-            CombatLogicTimelineSource source,
-            CombatCancelWindowEditorTrack track) : base(source, track, track)
+        public CombatCancelWindowTrackInspector(CombatLogicTimelineSource source, CombatCancelWindowEditorTrack track) : base(source, track, track)
         {
             Add(CreateTitle("战斗逻辑轨道"));
             Add(new Label("取消窗口"));
@@ -28,9 +26,7 @@ namespace Ux.Editor.Combat
         readonly Label durationLabel;
         bool refreshing;
 
-        public CombatCancelWindowClipInspector(
-            CombatLogicTimelineSource source,
-            CombatCancelWindowEditorClip clip) : base(source, clip, clip)
+        public CombatCancelWindowClipInspector(CombatLogicTimelineSource source, CombatCancelWindowEditorClip clip) : base(source, clip, clip)
         {
             this.clip = clip;
             Add(CreateTitle("取消窗口"));

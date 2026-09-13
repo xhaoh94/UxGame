@@ -10,6 +10,7 @@ namespace Ux
         public Timeline Timeline => ParentAs<Timeline>();
         public int CurrentFrame => Timeline.CurrentFrame;
         public TimelineTrackAsset BaseAsset { get; private set; }
+        public int TrackOrder { get; internal set; }
         public bool IsDone => CurrentFrame >= (BaseAsset?.GetEndFrame() ?? 0);
         public virtual bool IsWeightFadeComplete => true;
 
@@ -32,7 +33,7 @@ namespace Ux
                     continue;
                 }
 
-                if (Add(clipAsset.ClipType, clipAsset, index) is TimelineClip clip)
+                if (Add(clipAsset.ClipType, clipAsset, index, IsFromPool) is TimelineClip clip)
                 {
                     _clips.Add(clip);
                 }
@@ -61,13 +62,14 @@ namespace Ux
         {
             foreach (var clip in _clips)
             {
-                clip.Evaluate(context);
+                clip.Evaluate(in context);
             }
-            OnEvaluate(context);
+            OnEvaluate(in context);
         }
 
         protected abstract void OnStart(TimelineTrackAsset asset);
         protected abstract void OnEvaluate(in TimelineEvaluationContext context);
         public virtual void StartWeightFade(float destWeight, float fadeDuration) { }
+        public virtual void AdvanceWeightFade(float deltaTime) { }
     }
 }

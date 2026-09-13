@@ -13,12 +13,7 @@ namespace Ux
         public readonly uint TargetId;
         public readonly Vector3 AimDirection;
 
-        public CombatCommand(
-            long requestId,
-            long simulationFrame,
-            int actionId,
-            uint targetId = 0,
-            Vector3 aimDirection = default)
+        public CombatCommand(long requestId, long simulationFrame, int actionId, uint targetId = 0, Vector3 aimDirection = default)
         {
             RequestId = requestId;
             SimulationFrame = Math.Max(0, simulationFrame);

@@ -27,14 +27,7 @@ namespace Ux
         {
         }
 
-        public CombatStatePresentation(
-            StateLayer layer,
-            int stateId,
-            string variantId,
-            TimelineAsset timeline,
-            string stableId = null,
-            string displayName = null,
-            int priority = 0)
+        public CombatStatePresentation(StateLayer layer, int stateId, string variantId, TimelineAsset timeline, string stableId = null, string displayName = null, int priority = 0)
         {
             this.layer = layer;
             this.stateId = stateId;
@@ -89,10 +82,7 @@ namespace Ux
                 : value.Trim();
         }
 
-        public static string BuildStableId(
-            StateLayer layer,
-            int stateId,
-            string variantId)
+        public static string BuildStableId(StateLayer layer, int stateId, string variantId)
         {
             return $"state.{(int)layer}.{stateId}.{NormalizeVariantId(variantId)}";
         }

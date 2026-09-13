@@ -538,11 +538,7 @@ namespace Ux.Editor.Combat.Tests
                 "窗口必须能区分逻辑变更与表现变更，避免逻辑编辑触发表现重播。");
         }
 
-        static void SetActionData(
-            CombatActionAsset target,
-            int actionId,
-            string displayName,
-            int durationFrames)
+        static void SetActionData(CombatActionAsset target, int actionId, string displayName, int durationFrames)
         {
             var serialized = new SerializedObject(target);
             serialized.FindProperty("actionId").intValue = actionId;
@@ -552,9 +548,7 @@ namespace Ux.Editor.Combat.Tests
             target.ValidateData();
         }
 
-        static void SetProfileActions(
-            CharacterCombatProfile target,
-            params CombatActionAsset[] actions)
+        static void SetProfileActions(CharacterCombatProfile target, params CombatActionAsset[] actions)
         {
             var serialized = new SerializedObject(target);
             var property = serialized.FindProperty("actions");

@@ -244,6 +244,10 @@ namespace Ux
 
             var rootId = data.GetParentID();
             var rootRecord = GetRecord(rootId);
+            if (rootRecord == null || rootRecord.IsHidingLike || rootRecord.Phase == UIPhase.Hidden)
+            {
+                return;
+            }
             var session = Pool.Get<HideSession>();
             session.Reset(id, rootId, isAnim, checkStack);
             try

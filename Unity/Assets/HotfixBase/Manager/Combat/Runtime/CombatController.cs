@@ -26,10 +26,7 @@ namespace Ux
             States.Control != ControlState.Normal ||
             Actions.BlocksMovement;
 
-        public void Initialize(
-            CharacterCombatProfile profile,
-            long ownerId,
-            long simulationFrame)
+        public void Initialize(CharacterCombatProfile profile, long ownerId, long simulationFrame)
         {
             Release();
             Profile = profile ?? throw new ArgumentNullException(nameof(profile));
@@ -38,10 +35,7 @@ namespace Ux
             Actions.Initialize(profile, simulationFrame);
         }
 
-        public void Tick(
-            long simulationFrame,
-            Vector2 moveInput,
-            in CombatFrameCommands commands)
+        public void Tick(long simulationFrame, Vector2 moveInput, in CombatFrameCommands commands)
         {
             if (!IsInitialized)
             {
@@ -50,11 +44,7 @@ namespace Ux
 
             States.AdvanceTo(simulationFrame);
             Actions.Tick(simulationFrame, commands, CanStartActions);
-            States.SetAction(
-                Actions.HasAction ? ActionState.Executing : ActionState.Free,
-                Actions.HasAction
-                    ? StateChangeReason.ActionStarted
-                    : StateChangeReason.ActionEnded);
+            States.SetAction(Actions.HasAction ? ActionState.Executing : ActionState.Free, Actions.HasAction ? StateChangeReason.ActionStarted : StateChangeReason.ActionEnded);
 
             if (!_grounded)
             {

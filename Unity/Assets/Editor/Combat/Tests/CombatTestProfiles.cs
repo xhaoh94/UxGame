@@ -21,10 +21,7 @@ namespace Ux.Editor.Combat.Tests
             return profile;
         }
 
-        public static CombatActionPresentation AddActionPresentation(
-            CharacterCombatProfile profile,
-            CombatActionAsset action,
-            TimelineAsset timeline)
+        public static CombatActionPresentation AddActionPresentation(CharacterCombatProfile profile, CombatActionAsset action, TimelineAsset timeline)
         {
             var serialized = new SerializedObject(profile);
             var list = serialized.FindProperty("actionPresentations");
@@ -43,15 +40,7 @@ namespace Ux.Editor.Combat.Tests
             return profile.ActionPresentations[index];
         }
 
-        public static CombatStatePresentation AddStatePresentation(
-            CharacterCombatProfile profile,
-            StateLayer layer,
-            int stateId,
-            string variantId,
-            TimelineAsset timeline,
-            int priority = 0,
-            string stableId = null,
-            string displayName = null)
+        public static CombatStatePresentation AddStatePresentation(CharacterCombatProfile profile, StateLayer layer, int stateId, string variantId, TimelineAsset timeline, int priority = 0, string stableId = null, string displayName = null)
         {
             var serialized = new SerializedObject(profile);
             var list = serialized.FindProperty("statePresentations");
@@ -77,10 +66,7 @@ namespace Ux.Editor.Combat.Tests
             return profile.StatePresentations[index];
         }
 
-        public static CombatActionAsset CreateAction(
-            int actionId,
-            string stableId,
-            int durationFrames)
+        public static CombatActionAsset CreateAction(int actionId, string stableId, int durationFrames)
         {
             var action = ScriptableObject.CreateInstance<CombatActionAsset>();
             var serialized = new SerializedObject(action);

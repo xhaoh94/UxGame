@@ -71,30 +71,22 @@ namespace Ux
             }
         }
 
-        public bool SetLocomotion(
-            LocomotionState state,
-            StateChangeReason reason = StateChangeReason.CodeRule)
+        public bool SetLocomotion(LocomotionState state, StateChangeReason reason = StateChangeReason.CodeRule)
         {
             return ChangeState(StateLayer.Locomotion, state.ToId(), reason);
         }
 
-        public bool SetAction(
-            ActionState state,
-            StateChangeReason reason = StateChangeReason.CodeRule)
+        public bool SetAction(ActionState state, StateChangeReason reason = StateChangeReason.CodeRule)
         {
             return ChangeState(StateLayer.Action, state.ToId(), reason);
         }
 
-        public bool SetControl(
-            ControlState state,
-            StateChangeReason reason = StateChangeReason.ExternalRequest)
+        public bool SetControl(ControlState state, StateChangeReason reason = StateChangeReason.ExternalRequest)
         {
             return ChangeState(StateLayer.Control, state.ToId(), reason);
         }
 
-        public bool SetLife(
-            LifeState state,
-            StateChangeReason reason = StateChangeReason.ExternalRequest)
+        public bool SetLife(LifeState state, StateChangeReason reason = StateChangeReason.ExternalRequest)
         {
             return ChangeState(StateLayer.Life, state.ToId(), reason);
         }

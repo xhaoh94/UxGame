@@ -56,10 +56,7 @@ namespace Ux
     /// <summary>一次确定性命中候选，不包含伤害数值或目标属性。</summary>
     public readonly struct CombatHitCandidate
     {
-        public CombatHitCandidate(
-            long sourceEntityId,
-            long targetEntityId,
-            CombatActiveHitWindow window)
+        public CombatHitCandidate(long sourceEntityId, long targetEntityId, CombatActiveHitWindow window)
         {
             SourceEntityId = sourceEntityId;
             TargetEntityId = targetEntityId;
@@ -111,11 +108,7 @@ namespace Ux
     /// </summary>
     public static class CombatHitResolver
     {
-        public static int AppendResolvedHits(
-            CombatActionRunner runner,
-            in CombatHitQuerySource source,
-            IReadOnlyList<CombatHitTarget> targets,
-            List<CombatHitCandidate> output)
+        public static int AppendResolvedHits(CombatActionRunner runner, in CombatHitQuerySource source, IReadOnlyList<CombatHitTarget> targets, List<CombatHitCandidate> output)
         {
             if (runner == null)
             {
@@ -201,10 +194,7 @@ namespace Ux
             return added;
         }
 
-        static bool IsInsideCircle(
-            CombatFixedPoint source,
-            CombatFixedPoint target,
-            int radiusMillimeters)
+        static bool IsInsideCircle(CombatFixedPoint source, CombatFixedPoint target, int radiusMillimeters)
         {
             // 坐标是 int、半径有资产上限；decimal 避免 long 平方溢出并保持精确整数比较。
             var dx = (decimal)target.XMillimeters - source.XMillimeters;

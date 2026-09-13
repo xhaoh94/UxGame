@@ -14,22 +14,19 @@ namespace Ux.Editor.Timeline
         readonly Action<string, UnityEngine.Object, Action> registerUndo;
         readonly Action afterSave;
         readonly Action completeUndo;
+        readonly Action beforeSave;
         readonly Func<bool> canEdit;
         readonly List<TimelineAssetEditorTrack> tracks = new();
         readonly Dictionary<object, HashSet<Action>> bindings = new();
 
-        public TimelineAssetEditorSource(
-            TimelineAsset asset,
-            Action<string, UnityEngine.Object, Action> registerUndo = null,
-            Action save = null,
-            Func<bool> canEdit = null,
-            Action completeUndo = null)
+        public TimelineAssetEditorSource(TimelineAsset asset, Action<string, UnityEngine.Object, Action> registerUndo = null, Action save = null, Func<bool> canEdit = null, Action completeUndo = null, Action beforeSave = null)
         {
             this.asset = asset ?? throw new ArgumentNullException(nameof(asset));
             this.registerUndo = registerUndo;
             afterSave = save;
             this.canEdit = canEdit;
             this.completeUndo = completeUndo;
+            this.beforeSave = beforeSave;
             asset.ValidateData();
             var assetPath = AssetDatabase.GetAssetPath(asset);
             var guid = string.IsNullOrEmpty(assetPath)
@@ -154,11 +151,7 @@ namespace Ux.Editor.Timeline
             Changed?.Invoke();
         }
 
-        internal TimelineAssetEditorClip AddClip(
-            TimelineAssetEditorTrack track,
-            Type clipType,
-            int startFrame,
-            string assetPath)
+        internal TimelineAssetEditorClip AddClip(TimelineAssetEditorTrack track, Type clipType, int startFrame, string assetPath)
         {
             if (!CanEdit)
             {
@@ -168,9 +161,7 @@ namespace Ux.Editor.Timeline
             return clipAsset == null ? null : AddClip(track, clipAsset);
         }
 
-        public TimelineAssetEditorClip AddClip(
-            TimelineAssetEditorTrack track,
-            TimelineClipAsset clipAsset)
+        public TimelineAssetEditorClip AddClip(TimelineAssetEditorTrack track, TimelineClipAsset clipAsset)
         {
             if (!CanEdit || track == null || clipAsset == null || !ReferenceEquals(track.Source, this) ||
                 track.Asset.clips.Contains(clipAsset))
@@ -282,8 +273,21 @@ namespace Ux.Editor.Timeline
 
         public void Save()
         {
+            SaveInternal(true, true);
+        }
+
+        void SaveInternal(bool runBeforeSave, bool completePendingUndo)
+        {
             asset.ValidateData();
-            completeUndo?.Invoke();
+            // beforeSave 必须在 completeUndo 之前记录其它 owner，才能与当前 Timeline 编辑共享同一 Undo group。
+            if (runBeforeSave)
+            {
+                beforeSave?.Invoke();
+            }
+            if (completePendingUndo)
+            {
+                completeUndo?.Invoke();
+            }
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
             afterSave?.Invoke();
@@ -371,14 +375,25 @@ namespace Ux.Editor.Timeline
 
         void RegisterUndo(string key)
         {
-            registerUndo?.Invoke(key, asset, RefreshAfterUndo);
+            if (registerUndo != null)
+            {
+                registerUndo.Invoke(key, asset, RefreshAfterUndo);
+            }
+            else if (key.IndexOf("drag", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                Undo.RegisterCompleteObjectUndo(asset, key);
+            }
+            else
+            {
+                Undo.RecordObject(asset, key);
+            }
         }
 
         public void RefreshAfterUndo()
         {
             asset.ValidateData();
             RebuildAdapters();
-            Save();
+            SaveInternal(false, false);
             StructureChanged?.Invoke();
             Changed?.Invoke();
         }

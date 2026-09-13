@@ -22,7 +22,7 @@ namespace Ux
 
             foreach (var output in _outputs)
             {
-                if (output != null && animator == output.Animator)
+                if (output != null && !output.IsDestroy && animator == output.Animator)
                 {
                     return output;
                 }
@@ -32,12 +32,20 @@ namespace Ux
             if (index < 0)
             {
                 index = _outputs.Count;
-                var output = Add<TLAnimationOutput, Animator, int>(animator, index);
+                var output = Add<TLAnimationOutput, Animator, int>(animator, index, IsFromPool);
+                if (output == null)
+                {
+                    return null;
+                }
                 _outputs.Add(output);
                 return output;
             }
 
-            var reusedOutput = Add<TLAnimationOutput, Animator, int>(animator, index);
+            var reusedOutput = Add<TLAnimationOutput, Animator, int>(animator, index, IsFromPool);
+            if (reusedOutput == null)
+            {
+                return null;
+            }
             _outputs[index] = reusedOutput;
             return reusedOutput;
         }

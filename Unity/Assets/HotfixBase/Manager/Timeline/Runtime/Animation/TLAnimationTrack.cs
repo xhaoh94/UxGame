@@ -11,24 +11,15 @@ namespace Ux
         public TLAnimationRoot Root { get; private set; }
         public TLAnimationOutput Output { get; private set; }
         public override bool IsWeightFadeComplete =>
-            !HasValidOutput || (!_isFading && Mathf.Approximately(Weight, _fadeWeight));
+            !HasValidOutput || (!_isFading && Mathf.Approximately(_currentWeight, _fadeWeight));
 
         private float _fadeSpeed;
         private float _fadeWeight;
+        private float _currentWeight;
         private bool _isFading;
 
         public int InputPort { get; private set; }
-        public float Weight
-        {
-            get => HasValidOutput ? Output.Mixer.GetInputWeight(InputPort) : 0;
-            private set
-            {
-                if (HasValidOutput)
-                {
-                    Output.Mixer.SetInputWeight(InputPort, Mathf.Clamp01(value));
-                }
-            }
-        }
+        public float Weight => HasValidOutput ? Output.Mixer.GetInputWeight(InputPort) : 0;
 
         private bool HasValidOutput =>
             Output != null &&
@@ -40,9 +31,15 @@ namespace Ux
         protected override void OnStart(TimelineTrackAsset asset)
         {
             Asset = asset as AnimationTrackAsset;
-            Root = Component.GetOrAdd<TLAnimationRoot>();
-            Mixer = AnimationMixerPlayable.Create(PlayableGraph, Asset?.clips?.Count ?? 0);
             _fadeWeight = 0;
+            _currentWeight = 0;
+            if (Asset == null || !PlayableGraph.IsValid())
+            {
+                return;
+            }
+            Root = Component.Get<TLAnimationRoot>() ??
+                   Component.Add<TLAnimationRoot>(Component.IsFromPool);
+            Mixer = AnimationMixerPlayable.Create(PlayableGraph, Mathf.Max(1, Asset.clips?.Count ?? 0));
         }
 
         protected override void OnDestroy()
@@ -82,8 +79,9 @@ namespace Ux
                 Output.Connect(this);
                 if (!_isFading)
                 {
-                    Weight = _fadeWeight;
+                    _currentWeight = _fadeWeight;
                 }
+                ApplyOutputWeight();
             }
         }
 
@@ -92,8 +90,9 @@ namespace Ux
             _fadeWeight = Mathf.Clamp01(destWeight);
             if (fadeDuration <= 0 || !Application.isPlaying || !HasValidOutput)
             {
-                Weight = _fadeWeight;
+                _currentWeight = _fadeWeight;
                 _isFading = false;
+                ApplyOutputWeight();
                 return;
             }
 
@@ -103,21 +102,7 @@ namespace Ux
 
         protected override void OnEvaluate(in TimelineEvaluationContext context)
         {
-            if (!_isFading)
-            {
-                return;
-            }
-            if (!HasValidOutput)
-            {
-                _isFading = false;
-                return;
-            }
-
-            Weight = Mathf.MoveTowards(Weight, _fadeWeight, _fadeSpeed * Mathf.Abs(context.DeltaTime));
-            if (Mathf.Approximately(Weight, _fadeWeight))
-            {
-                _isFading = false;
-            }
+            ApplyOutputWeight();
         }
 
         public void Connect(int parentInputPort)
@@ -129,13 +114,13 @@ namespace Ux
 
             InputPort = parentInputPort;
             PlayableGraph.Connect(Mixer, 0, Output.Mixer, parentInputPort);
-            Weight = _isFading ? 0 : _fadeWeight;
 
             if (Asset.avatarMask != null)
             {
                 Output.Mixer.SetLayerMaskFromAvatarMask((uint)parentInputPort, Asset.avatarMask);
             }
             Output.Mixer.SetLayerAdditive((uint)parentInputPort, Asset.isAdditive);
+            ApplyOutputWeight();
         }
 
         public void Disconnect()
@@ -150,6 +135,39 @@ namespace Ux
             {
                 _isFading = false;
             }
+        }
+
+        public override void AdvanceWeightFade(float deltaTime)
+        {
+            if (!_isFading)
+            {
+                ApplyOutputWeight();
+                return;
+            }
+            _currentWeight = Mathf.MoveTowards(
+                _currentWeight,
+                _fadeWeight,
+                _fadeSpeed * Mathf.Abs(deltaTime));
+            if (Mathf.Approximately(_currentWeight, _fadeWeight))
+            {
+                _isFading = false;
+            }
+            ApplyOutputWeight();
+        }
+
+        private void ApplyOutputWeight()
+        {
+            if (!HasValidOutput)
+            {
+                return;
+            }
+
+            var activeWeight = 0f;
+            for (var index = 0; index < Mixer.GetInputCount(); index++)
+            {
+                activeWeight = Mathf.Max(activeWeight, Mixer.GetInputWeight(index));
+            }
+            Output.Mixer.SetInputWeight(InputPort, Mathf.Clamp01(_currentWeight * activeWeight));
         }
     }
 }

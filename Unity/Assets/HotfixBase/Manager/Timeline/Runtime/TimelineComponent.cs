@@ -5,21 +5,26 @@ using UnityEngine.Playables;
 namespace Ux
 {
     /// <summary>
-    /// 战斗 Timeline 仅由外部逻辑帧驱动。每次 Tick 对应一个 Timeline 资源帧。
+    /// 同一角色共享一个表现图。命名层独立管理播放实例和本地帧，基础状态切换不会重启动作。
     /// </summary>
     public partial class TimelineComponent : Entity, IAwakeSystem
     {
-        public Timeline Current { get; private set; }
-        public Timeline Last { get; private set; }
-        public PlayableGraph PlayableGraph { get; private set; }
-        public bool IsPaused { get; private set; }
-
+        private readonly Dictionary<TimelinePlaybackLayer, Timeline> _layers = new();
+        private readonly List<Timeline> _fading = new();
         private readonly List<Timeline> _additives = new();
         private readonly Dictionary<TimelineTrackAsset, UnityEngine.Object> _bindings = new();
+        private int _playbackOrder;
+
+        /// <summary>兼容旧调用：Current/Last 仅表示基础层。</summary>
+        public Timeline Current => GetTimeline(TimelinePlaybackLayer.Base);
+        public Timeline Last => _fading.FindLast(timeline => timeline != null && timeline.PlaybackLayer == TimelinePlaybackLayer.Base);
+        public PlayableGraph PlayableGraph { get; private set; }
+        public bool IsPaused { get; private set; }
 
         void IAwakeSystem.OnAwake()
         {
             IsPaused = false;
+            _playbackOrder = 0;
             PlayableGraph = PlayableGraph.Create(Parent.Name);
             PlayableGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             PlayableGraph.Play();
@@ -27,123 +32,204 @@ namespace Ux
 
         protected override void OnDestroy()
         {
-            Current = null;
-            Last = null;
+            foreach (var timeline in _layers.Values)
+            {
+                RemoveTimeline(timeline);
+            }
+            foreach (var timeline in _fading)
+            {
+                RemoveTimeline(timeline);
+            }
+            foreach (var timeline in _additives)
+            {
+                RemoveTimeline(timeline);
+            }
+            _layers.Clear();
+            _fading.Clear();
             _additives.Clear();
             _bindings.Clear();
+            _playbackOrder = 0;
             if (PlayableGraph.IsValid())
             {
                 PlayableGraph.Destroy();
             }
         }
 
-        public void Pause()
+        internal int GetNextPlaybackOrder() => ++_playbackOrder;
+
+        public Timeline GetTimeline(TimelinePlaybackLayer layer)
         {
-            IsPaused = true;
+            return _layers.TryGetValue(layer, out var timeline) && timeline != null && !timeline.IsDestroy
+                ? timeline
+                : null;
         }
 
-        public void Resume()
+        public Timeline PlayOnLayer(TimelineAsset asset, TimelinePlaybackLayer layer, float fadeDuration = 0.15f)
         {
-            IsPaused = false;
+            if (!CanPlay(asset))
+            {
+                return null;
+            }
+
+            // 同一层最多保留一个退出实例，防止快速连续切换积累无界的淡出对象。
+            ClearFadingLayer(layer);
+            if (_layers.TryGetValue(layer, out var previous))
+            {
+                _layers.Remove(layer);
+                FadeOut(previous, fadeDuration);
+            }
+
+            var timeline = Add<Timeline, TimelineAsset, TimelinePlaybackLayer>(asset, layer, IsFromPool);
+            if (timeline == null)
+            {
+                return null;
+            }
+            _layers[layer] = timeline;
+            timeline.StartWeightFade(1, fadeDuration);
+            EvaluateGraph();
+            return timeline;
+        }
+
+        public void StopLayer(TimelinePlaybackLayer layer, float fadeDuration = 0.15f)
+        {
+            if (fadeDuration <= 0)
+            {
+                ClearFadingLayer(layer);
+            }
+            if (_layers.TryGetValue(layer, out var timeline))
+            {
+                _layers.Remove(layer);
+                FadeOut(timeline, fadeDuration);
+            }
+            EvaluateGraph();
+        }
+
+        /// <summary>只定位指定层；回滚、编辑器拖标尺等定位不会触发表现事件。</summary>
+        public void SetLayerFrame(TimelinePlaybackLayer layer, int frame, bool replayFrameZero = false)
+        {
+            GetTimeline(layer)?.Set(frame, replayFrameZero);
+            EvaluateGraph();
+        }
+
+        /// <summary>按权威本地帧播放指定层；相同帧重复求值不会重复触发事件。</summary>
+        public void EvaluateLayerFrame(TimelinePlaybackLayer layer, int frame)
+        {
+            if (IsPaused)
+            {
+                return;
+            }
+            GetTimeline(layer)?.EvaluatePlaybackFrame(frame);
+            EvaluateGraph();
         }
 
         /// <summary>
-        /// 战斗逻辑帧入口。帧源可以来自单机时钟、网络帧或录像；跳帧时事件区间不会遗漏。
+        /// 分层协调器提交帧后的收尾。退出实例冻结姿势只淡出；不能再次推进已求值的当前层。
+        /// 旧版并行播放的临时 Timeline 仍按自身本地帧推进。
         /// </summary>
+        public void CompleteLayerFrame(int deltaFrames = 1)
+        {
+            if (IsPaused)
+            {
+                return;
+            }
+            foreach (var timeline in _layers.Values)
+            {
+                timeline.AdvanceWeightFade(Mathf.Abs(deltaFrames) / (float)timeline.FrameRate);
+            }
+            foreach (var timeline in _fading)
+            {
+                timeline.AdvanceWeightFade(Mathf.Abs(deltaFrames) / (float)timeline.FrameRate);
+            }
+            for (var i = _fading.Count - 1; i >= 0; i--)
+            {
+                var timeline = _fading[i];
+                if (timeline.IsWeightFadeComplete)
+                {
+                    _fading.RemoveAt(i);
+                    RemoveTimeline(timeline);
+                }
+            }
+            for (var i = _additives.Count - 1; i >= 0; i--)
+            {
+                var timeline = _additives[i];
+                if (deltaFrames != 0)
+                {
+                    timeline.EvaluateFrames(deltaFrames);
+                }
+                if (timeline.IsDone)
+                {
+                    _additives.RemoveAt(i);
+                    RemoveTimeline(timeline);
+                }
+            }
+            EvaluateGraph();
+        }
+
+        public void Pause() => IsPaused = true;
+        public void Resume() => IsPaused = false;
+
         public void Tick(int deltaFrames = 1)
         {
             if (IsPaused || deltaFrames == 0)
             {
                 return;
             }
-
-            Current?.EvaluateFrames(deltaFrames);
-            Last?.EvaluateFrames(deltaFrames);
-            foreach (var additive in _additives)
+            foreach (var timeline in _layers.Values)
             {
-                additive.EvaluateFrames(deltaFrames);
+                timeline.EvaluateFrames(deltaFrames);
             }
-
-            CleanupFinishedTimelines();
-            EvaluateGraph();
+            CompleteLayerFrame(deltaFrames);
         }
 
-        /// <summary>执行当前主 Timeline 帧但不推进游标，用于新动作进入时的第 0 帧。</summary>
         public void TickCurrentFrame()
         {
-            if (IsPaused || Current == null)
+            if (IsPaused)
             {
                 return;
             }
-            Current.EvaluateCurrentFramePlayback();
-            CleanupFinishedTimelines(false);
-            EvaluateGraph();
+            Current?.EvaluateCurrentFramePlayback();
+            CompleteLayerFrame(0);
         }
 
+        /// <summary>兼容旧接口。并行 Timeline 不等于增量姿势，增量开关仍由动画轨道控制。</summary>
         public void Play(TimelineAsset timeline, bool isAdditive = false)
         {
-            if (timeline == null || !PlayableGraph.IsValid())
+            if (!isAdditive)
+            {
+                PlayOnLayer(timeline, TimelinePlaybackLayer.Base, 0.3f);
+                return;
+            }
+            if (!CanPlay(timeline))
             {
                 return;
             }
-
-            var frameClock = SimulationClock.Ins;
-            if (frameClock.IsRunning && timeline.FrameRate != frameClock.FrameRate)
+            var additive = Add<Timeline, TimelineAsset, bool>(timeline, true, IsFromPool);
+            if (additive == null)
             {
-                Log.Error($"Timeline 帧率必须与逻辑帧率一致: asset={timeline.name}, timeline={timeline.FrameRate}, logic={frameClock.FrameRate}");
                 return;
             }
-
-            if (isAdditive)
-            {
-                var additive = Add<Timeline, TimelineAsset, bool>(timeline, true);
-                additive.StartWeightFade(1, 0.3f);
-                _additives.Insert(0, additive);
-                EvaluateGraph();
-                return;
-            }
-
-            if (Last != null)
-            {
-                RemoveTimeline(Last);
-                Last = null;
-            }
-
-            if (Current != null)
-            {
-                if (Application.isPlaying)
-                {
-                    Last = Current;
-                }
-                else
-                {
-                    RemoveTimeline(Current);
-                }
-            }
-
-            Current = Add<Timeline, TimelineAsset, bool>(timeline, false);
-            Current.StartWeightFade(1, 0.3f);
-            Last?.StartWeightFade(0, 0.3f);
+            additive.StartWeightFade(1, 0.3f);
+            _additives.Add(additive);
             EvaluateGraph();
         }
 
         public void Stop(bool clearAdditives = true)
         {
-            if (Current != null)
+            foreach (var timeline in _layers.Values)
             {
-                RemoveTimeline(Current);
-                Current = null;
+                RemoveTimeline(timeline);
             }
-            if (Last != null)
+            _layers.Clear();
+            foreach (var timeline in _fading)
             {
-                RemoveTimeline(Last);
-                Last = null;
+                RemoveTimeline(timeline);
             }
+            _fading.Clear();
             if (clearAdditives)
             {
-                for (var i = _additives.Count - 1; i >= 0; i--)
+                foreach (var timeline in _additives)
                 {
-                    RemoveTimeline(_additives[i]);
+                    RemoveTimeline(timeline);
                 }
                 _additives.Clear();
             }
@@ -156,7 +242,6 @@ namespace Ux
             {
                 return;
             }
-
             if (target == null)
             {
                 _bindings.Remove(track);
@@ -165,18 +250,13 @@ namespace Ux
             {
                 _bindings[track] = target;
             }
-
             RebindTimelines();
             EvaluateGraph();
         }
 
         public T GetBinding<T>(TimelineTrackAsset track) where T : UnityEngine.Object
         {
-            if (track != null && _bindings.TryGetValue(track, out var target))
-            {
-                return target as T;
-            }
-            return null;
+            return track != null && _bindings.TryGetValue(track, out var target) ? target as T : null;
         }
 
         public void ClearBindings()
@@ -186,23 +266,17 @@ namespace Ux
             EvaluateGraph();
         }
 
-        /// <summary>
-        /// 绝对帧定位属于 Seek，不触发 Gameplay/Event Track。
-        /// </summary>
+        /// <summary>兼容旧的整图定位；分层播放应使用 SetLayerFrame 保持各层独立帧。</summary>
         public void Set(int frame, bool replayFrameZero = true)
         {
-            if (!PlayableGraph.IsValid())
+            foreach (var timeline in _layers.Values)
             {
-                return;
+                timeline.Set(frame, replayFrameZero);
             }
-
-            Current?.Set(frame, replayFrameZero);
-            Last?.Set(frame, replayFrameZero);
             foreach (var additive in _additives)
             {
                 additive.Set(frame, replayFrameZero);
             }
-            CleanupFinishedTimelines(false);
             EvaluateGraph();
         }
 
@@ -212,37 +286,72 @@ namespace Ux
             {
                 return;
             }
-
-            Current?.OnBinding();
-            Last?.OnBinding();
-            foreach (var additive in _additives)
+            foreach (var timeline in _layers.Values)
             {
-                additive.OnBinding();
+                timeline.OnBinding();
+            }
+            foreach (var timeline in _fading)
+            {
+                timeline.OnBinding();
+            }
+            foreach (var timeline in _additives)
+            {
+                timeline.OnBinding();
             }
         }
 
-        private void CleanupFinishedTimelines(bool removeCurrentFade = true)
+        private bool CanPlay(TimelineAsset asset)
         {
-            if (Last != null && removeCurrentFade && Last.IsWeightFadeComplete)
+            if (asset == null || !PlayableGraph.IsValid())
             {
-                RemoveTimeline(Last);
-                Last = null;
+                return false;
             }
-
-            for (var i = _additives.Count - 1; i >= 0; i--)
+            var clock = SimulationClock.Ins;
+            if (clock.IsRunning && asset.FrameRate != clock.FrameRate)
             {
-                var additive = _additives[i];
-                if (!additive.IsDone)
+                Log.Error($"Timeline 帧率必须与逻辑帧率一致：asset={asset.name}, timeline={asset.FrameRate}, logic={clock.FrameRate}");
+                return false;
+            }
+            return true;
+        }
+
+        private void FadeOut(Timeline timeline, float fadeDuration)
+        {
+            if (timeline == null || timeline.IsDestroy)
+            {
+                return;
+            }
+            timeline.StopImmediate();
+            timeline.StartWeightFade(0, fadeDuration);
+            if (timeline.IsWeightFadeComplete)
+            {
+                RemoveTimeline(timeline);
+            }
+            else
+            {
+                _fading.Add(timeline);
+            }
+        }
+
+        private void ClearFadingLayer(TimelinePlaybackLayer layer)
+        {
+            for (var i = _fading.Count - 1; i >= 0; i--)
+            {
+                if (_fading[i].PlaybackLayer == layer)
                 {
-                    continue;
+                    var timeline = _fading[i];
+                    _fading.RemoveAt(i);
+                    RemoveTimeline(timeline);
                 }
-                RemoveTimeline(additive);
-                _additives.RemoveAt(i);
             }
         }
 
         private void RemoveTimeline(Timeline timeline)
         {
+            if (timeline == null || timeline.IsDestroy)
+            {
+                return;
+            }
             timeline.StopImmediate();
             timeline.StartWeightFade(0, 0);
             Remove(timeline);
@@ -252,7 +361,6 @@ namespace Ux
         {
             if (PlayableGraph.IsValid())
             {
-                // Clip 使用绝对帧采样；Evaluate(0) 只刷新最终姿势。
                 PlayableGraph.Evaluate(0);
             }
         }

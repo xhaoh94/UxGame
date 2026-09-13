@@ -27,15 +27,7 @@ namespace Ux.Editor.Combat
         readonly IReadOnlyList<ITimelineEditorTrack> tracks;
         readonly string id;
 
-        public CombatLogicTimelineSource(
-            CombatActionAsset action,
-            CharacterCombatProfile profile = null,
-            int frameRate = TimelineEditorDocument.DefaultFrameRate,
-            Action<string, UnityEngine.Object, Action> registerUndo = null,
-            Action save = null,
-            Func<bool> canEdit = null,
-            Action completeUndo = null,
-            Func<int> frameRateProvider = null)
+        public CombatLogicTimelineSource(CombatActionAsset action, CharacterCombatProfile profile = null, int frameRate = TimelineEditorDocument.DefaultFrameRate, Action<string, UnityEngine.Object, Action> registerUndo = null, Action save = null, Func<bool> canEdit = null, Action completeUndo = null, Func<int> frameRateProvider = null)
         {
             this.action = action ?? throw new ArgumentNullException(nameof(action));
             this.profile = profile;
@@ -129,8 +121,16 @@ namespace Ux.Editor.Combat
 
         public void Save()
         {
+            SaveInternal(true);
+        }
+
+        void SaveInternal(bool completePendingUndo)
+        {
             action.ValidateData();
-            completeUndo?.Invoke();
+            if (completePendingUndo)
+            {
+                completeUndo?.Invoke();
+            }
             EditorUtility.SetDirty(action);
             AssetDatabase.SaveAssets();
             afterSave?.Invoke();
@@ -142,7 +142,7 @@ namespace Ux.Editor.Combat
             bindings.Clear();
             cancelTrack.RebuildAdapters();
             hitTrack.RebuildAdapters();
-            Save();
+            SaveInternal(false);
             StructureChanged?.Invoke();
             Changed?.Invoke();
         }
@@ -234,11 +234,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        internal void SetWindowFrames(
-            CombatCancelWindowEditorClip clip,
-            int startFrame,
-            int endFrame,
-            bool notify)
+        internal void SetWindowFrames(CombatCancelWindowEditorClip clip, int startFrame, int endFrame, bool notify)
         {
             if (!CanEdit || DurationFrames <= 0 || clip == null ||
                 !ReferenceEquals(clip.Source, this))
@@ -365,11 +361,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        internal void SetHitWindowFrames(
-            CombatHitWindowEditorClip clip,
-            int startFrame,
-            int endFrame,
-            bool notify)
+        internal void SetHitWindowFrames(CombatHitWindowEditorClip clip, int startFrame, int endFrame, bool notify)
         {
             if (!CanEdit || DurationFrames <= 0 || clip == null ||
                 !ReferenceEquals(clip.Source, this))
@@ -393,10 +385,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        internal void SetHitWindowGeometry(
-            CombatHitWindowEditorClip clip,
-            ActionHitShape shape,
-            int radiusMillimeters)
+        internal void SetHitWindowGeometry(CombatHitWindowEditorClip clip, ActionHitShape shape, int radiusMillimeters)
         {
             if (!CanEdit || clip == null || !ReferenceEquals(clip.Source, this))
             {
@@ -536,7 +525,18 @@ namespace Ux.Editor.Combat
 
         void RegisterUndo(string key)
         {
-            registerUndo?.Invoke(key, action, RefreshAfterUndo);
+            if (registerUndo != null)
+            {
+                registerUndo.Invoke(key, action, RefreshAfterUndo);
+            }
+            else if (key.IndexOf("drag", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                Undo.RegisterCompleteObjectUndo(action, key);
+            }
+            else
+            {
+                Undo.RecordObject(action, key);
+            }
         }
 
     }

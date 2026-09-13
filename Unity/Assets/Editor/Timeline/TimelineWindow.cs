@@ -23,18 +23,36 @@ namespace Ux.Editor.Timeline
         {
             var viewer = Viewer;
             base.OnDestroy();
-            if (viewer != null)
+            if (viewer != null && viewer.gameObject != null)
             {
                 UnityEngine.Object.DestroyImmediate(viewer.gameObject);
             }
         }
     }
+    [InitializeOnLoad]
     public partial class TimelineWindow : EditorWindow
     {
+        private const string PreviewObjectSuffix = " (Timeline Preview)";
+        private const HideFlags PreviewObjectHideFlags =
+            HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+
+        static TimelineWindow()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload += CleanupAllPreviewObjects;
+            EditorApplication.quitting += CleanupAllPreviewObjects;
+        }
+
         public enum PlayMode
         {
             Loop,
             Once,
+        }
+
+        private enum PreviewBaseMode
+        {
+            ActionOnly,
+            Idle,
+            Move,
         }
         public static TimelineWindow wnd;
         private TimelineAsset _requestedTimeline;
@@ -44,47 +62,103 @@ namespace Ux.Editor.Timeline
         private bool _requestedAutoPlay;
         private bool _autoPlayPending;
         private bool _hasOpenRequest;
+        private bool _isEmbedded;
+        private VisualElement _sourcePanel;
+        private Button _standaloneButton;
+        private PopupField<PreviewBaseMode> _previewBasePopup;
+        private PreviewBaseMode _previewBaseMode = PreviewBaseMode.Idle;
+        private CombatTimelinePlayer _previewPlayer;
 
-        [MenuItem("UxGame/工具/时间轴", false, 521)]
-        public static void ShowExample()
+        public static event Action StandaloneWindowOpened;
+        public static event Action StandaloneWindowClosed;
+
+        public static void CloseStandalone()
         {
-            wnd = GetWindow<TimelineWindow>();
-            wnd.titleContent = new GUIContent("时间轴");
+            if (wnd != null && !wnd._isEmbedded)
+            {
+                wnd.Close();
+            }
+        }
+
+        public static void RefreshCurrentDocumentAfterUndo()
+        {
+            if (wnd == null || TimelineWindow.Document == null)
+            {
+                return;
+            }
+
+            foreach (var source in TimelineWindow.Document.Sources)
+            {
+                source.RefreshAfterUndo();
+            }
+            InspectorContent?.FreshInspector(null, null);
+            RefreshView?.Invoke();
+            RefreshClip?.Invoke();
+            wnd.UpdateDurationLabel();
         }
 
         /// <summary>
         /// 从其它编辑器打开指定 Timeline，并尽可能复用传入的预览对象。
         /// 资源和对象通过待处理请求传递，兼容 EditorWindow 首次创建时 CreateGUI 尚未执行的时序。
         /// </summary>
-        public static TimelineWindow Open(
-            TimelineAsset timeline,
-            GameObject previewObject = null,
-            bool autoPlay = false)
+        public static TimelineWindow Open(TimelineAsset timeline, GameObject previewObject = null, bool autoPlay = false)
         {
             return OpenInternal(timeline, null, null, previewObject, autoPlay);
+        }
+
+        /// <summary>
+        /// 创建一个不显示独立窗口的 Timeline 面板，并把面板挂载到调用方容器中。
+        /// 角色战斗配置窗口使用该入口，独立打开 Timeline 仍使用 Open。
+        /// </summary>
+        public static TimelineWindow CreateEmbedded(VisualElement container, CombatActionAsset action, TimelineAsset timeline, CharacterCombatProfile profile, GameObject previewObject = null, bool autoPlay = false)
+        {
+            if (container == null || (timeline == null && action == null))
+            {
+                return null;
+            }
+
+            if (wnd != null)
+            {
+                UnityEngine.Object.DestroyImmediate(wnd);
+                wnd = null;
+            }
+
+            var host = CreateInstance<TimelineWindow>();
+            host.hideFlags = HideFlags.HideAndDontSave;
+            host.titleContent = new GUIContent("双源时间轴");
+            host._isEmbedded = true;
+            host._requestedTimeline = timeline;
+            host._requestedCombatAction = action;
+            host._requestedCombatProfile = profile;
+            host._requestedPreviewObject = previewObject;
+            host._requestedAutoPlay = autoPlay && timeline != null;
+            host._hasOpenRequest = true;
+            host.CreateGUI();
+
+            if (host.root.parent != null)
+            {
+                host.root.parent.Remove(host.root);
+            }
+            container.Add(host.root);
+            return host;
         }
 
         /// <summary>
         /// 同时打开技能的客户端表现 Timeline 与确定性逻辑轨道。两类数据共用帧标尺，
         /// 但分别以 TimelineAsset 和 CombatActionAsset 作为 Undo/Save owner。
         /// </summary>
-        public static TimelineWindow Open(
-            CombatActionAsset action,
-            TimelineAsset timeline,
-            CharacterCombatProfile profile = null,
-            GameObject previewObject = null,
-            bool autoPlay = false)
+        public static TimelineWindow Open(CombatActionAsset action, TimelineAsset timeline, CharacterCombatProfile profile = null, GameObject previewObject = null, bool autoPlay = false)
         {
             return OpenInternal(timeline, action, profile, previewObject, autoPlay);
         }
 
-        static TimelineWindow OpenInternal(
-            TimelineAsset timeline,
-            CombatActionAsset action,
-            CharacterCombatProfile profile,
-            GameObject previewObject,
-            bool autoPlay)
+        static TimelineWindow OpenInternal(TimelineAsset timeline, CombatActionAsset action, CharacterCombatProfile profile, GameObject previewObject, bool autoPlay)
         {
+            if (wnd != null && wnd._isEmbedded)
+            {
+                UnityEngine.Object.DestroyImmediate(wnd);
+                wnd = null;
+            }
             if (timeline == null && action == null)
             {
                 return null;
@@ -120,6 +194,7 @@ namespace Ux.Editor.Timeline
 
             wnd.Focus();
             wnd.Repaint();
+            StandaloneWindowOpened?.Invoke();
             return wnd;
         }
 
@@ -128,6 +203,7 @@ namespace Ux.Editor.Timeline
         double _lastTime;
         float _playTime;
         TLEntity _entity;
+        GameObject _previewInstance;
         List<int> _frameSelects = new List<int>() { 24, 30, 60, 120 };
         Dictionary<string, Dictionary<string, BindData>> _binds = new();
         PopupField<int> _framePopupField;
@@ -145,9 +221,9 @@ namespace Ux.Editor.Timeline
             rootVisualElement.Clear();
             EditorApplication.update -= OnPlay;
             Undo?.Dispose();
-            _entity?.Destroy();
-            _entity = null;
+            DestroyPreviewEntity();
             Timeline = null;
+            _previewPlayer = null;
             Asset = null;
             _combatAction = null;
             _combatProfile = null;
@@ -200,12 +276,19 @@ namespace Ux.Editor.Timeline
             frameContent.Add(_framePopupField);
 
             createView.style.display = DisplayStyle.None;
+            _sourcePanel.style.display = DisplayStyle.None;
+            UpdatePreviewBaseSelector();
 
             inputPath.SetValueWithoutNotify(Path);
 
-            _OnOfEntityChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
-            _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
+            if (!_isEmbedded)
+            {
+                _OnOfEntityChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<GameObject>("timeline_entity")));
+                _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object>.GetPooled(null, SettingTools.GetPlayerPrefs<TimelineAsset>("timeline_asset")));
+            }
             ApplyOpenRequest();
+            UpdateStandaloneButton();
+            UpdatePlayButton();
             _OnBindObjs();
             RefreshEntity();
             RefreshView();
@@ -238,13 +321,21 @@ namespace Ux.Editor.Timeline
 
             if (requestedPreviewObject != null && ofEntity != null)
             {
-                ofEntity.value = requestedPreviewObject;
+                previousPreviewObject = ofEntity.value as GameObject;
+                ofEntity.SetValueWithoutNotify(requestedPreviewObject);
+                if (_previewInstance == null || previousPreviewObject != requestedPreviewObject)
+                {
+                    _OnOfEntityChanged(ChangeEvent<UnityEngine.Object>.GetPooled(
+                        previousPreviewObject,
+                        requestedPreviewObject));
+                }
             }
 
             InspectorContent?.Clear();
             _combatProfile = requestedCombatProfile;
             Asset = requestedTimeline;
             _combatAction = requestedCombatAction;
+            UpdatePreviewBaseSelector();
             ofTimeline?.SetValueWithoutNotify(requestedTimeline);
             _combatActionField?.SetValueWithoutNotify(requestedCombatAction);
             ConfigureDocumentSources();
@@ -265,6 +356,7 @@ namespace Ux.Editor.Timeline
                 clipView?.RefreshLayout();
             }
             UpdateDurationLabel();
+            UpdateStandaloneButton();
 
             if (requestedAutoPlay)
             {
@@ -310,7 +402,8 @@ namespace Ux.Editor.Timeline
             root.focusable = true;
             root.RegisterCallback<KeyDownEvent>(OnShortcutKeyDown);
 
-            var sourcePanel = new VisualElement();
+            _sourcePanel = new VisualElement();
+            var sourcePanel = _sourcePanel;
             sourcePanel.style.flexShrink = 0;
             sourcePanel.style.paddingLeft = 8;
             sourcePanel.style.paddingRight = 8;
@@ -347,6 +440,27 @@ namespace Ux.Editor.Timeline
             logicRow.Add(_combatActionField);
             sourcePanel.Add(logicRow);
 
+            _previewBasePopup = new PopupField<PreviewBaseMode>(
+                new List<PreviewBaseMode>
+                {
+                    PreviewBaseMode.ActionOnly,
+                    PreviewBaseMode.Idle,
+                    PreviewBaseMode.Move,
+                },
+                PreviewBaseMode.Idle);
+            _previewBasePopup.label = "预览基底";
+            _previewBasePopup.formatSelectedValueCallback = GetPreviewBaseText;
+            _previewBasePopup.formatListItemCallback = GetPreviewBaseText;
+            _previewBasePopup.style.width = 130;
+            _previewBasePopup.style.minWidth = 130;
+            _previewBasePopup.style.flexShrink = 0;
+            _previewBasePopup.RegisterValueChangedCallback(evt =>
+            {
+                _previewBaseMode = evt.newValue;
+                RefreshEntity?.Invoke();
+                RefreshView?.Invoke();
+            });
+
             createView = new VisualElement();
             createView.style.flexDirection = FlexDirection.Row;
             createView.style.flexShrink = 0;
@@ -374,13 +488,10 @@ namespace Ux.Editor.Timeline
             playback.style.alignItems = Align.Center;
             btnLastFrame = CreatePlaybackButton("上一帧", _OnBtnLastFrameClick, 68);
             btnNextFrame = CreatePlaybackButton("下一帧", _OnBtnNextFrameClick, 68);
-            btnPlay = CreatePlaybackButton("播放", _OnBtnPlayClick, 56);
-            btnPause = CreatePlaybackButton("暂停", _OnBtnPauseClick, 56);
-            btnPause.SetEnabled(false);
+            btnPlay = CreatePlaybackButton("播放", OnPlayPauseButtonClick, 56);
             playback.Add(btnLastFrame);
             playback.Add(btnNextFrame);
             playback.Add(btnPlay);
-            playback.Add(btnPause);
 
             _currentFrameField = new IntegerField("当前帧");
             _currentFrameField.style.width = 145;
@@ -407,6 +518,7 @@ namespace Ux.Editor.Timeline
             _playModePopup.style.flexShrink = 0;
             CenterToolbarField(_playModePopup, _playModePopup.labelElement, 26);
             playback.Add(_playModePopup);
+            playback.Add(_previewBasePopup);
             frameContent = new VisualElement();
             frameContent.style.flexDirection = FlexDirection.Row;
             frameContent.style.flexShrink = 0;
@@ -421,6 +533,17 @@ namespace Ux.Editor.Timeline
             var saveButton = new Button(_SaveAssets) { text = "保存" };
             saveButton.tooltip = "分别保存当前表现与逻辑资源 (Ctrl+S)";
             playback.Add(saveButton);
+            _standaloneButton = new Button(OpenStandaloneWindow)
+            {
+                text = "独立窗口",
+                tooltip = "在独立窗口中编辑当前双源 Timeline",
+            };
+            _standaloneButton.style.width = 76;
+            _standaloneButton.style.minWidth = 76;
+            _standaloneButton.style.display = _isEmbedded
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+            playback.Add(_standaloneButton);
             root.Add(playback);
 
             var mainSplit = new TwoPaneSplitView(
@@ -476,6 +599,29 @@ namespace Ux.Editor.Timeline
         static string GetPlayModeText(PlayMode mode)
         {
             return mode == PlayMode.Loop ? "循环" : "单次";
+        }
+
+        private void OnPlayPauseButtonClick()
+        {
+            if (IsPlaying)
+            {
+                _OnBtnPauseClick();
+            }
+            else
+            {
+                _OnBtnPlayClick();
+            }
+        }
+
+        private void UpdatePlayButton()
+        {
+            if (btnPlay == null)
+            {
+                return;
+            }
+
+            btnPlay.text = IsPlaying ? "暂停" : "播放";
+            btnPlay.SetEnabled(Asset != null && Timeline != null);
         }
 
         void OnShortcutKeyDown(KeyDownEvent evt)
@@ -576,11 +722,48 @@ namespace Ux.Editor.Timeline
             }
         }
 
+        private void UpdateStandaloneButton()
+        {
+            if (_standaloneButton == null)
+            {
+                return;
+            }
+
+            _standaloneButton.style.display = _isEmbedded
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+            _standaloneButton.SetEnabled(_isEmbedded && Asset != null);
+        }
+
+        private void OpenStandaloneWindow()
+        {
+            if (!_isEmbedded || Asset == null)
+            {
+                return;
+            }
+
+            var previewObject = ofEntity?.value as GameObject;
+            var autoPlay = IsPlaying;
+            if (_combatAction != null)
+            {
+                TimelineWindow.Open(
+                    _combatAction,
+                    Asset,
+                    _combatProfile,
+                    previewObject,
+                    autoPlay);
+            }
+            else
+            {
+                TimelineWindow.Open(Asset, previewObject, autoPlay);
+            }
+        }
+
         void OnPlay()
         {
             if (IsPlaying)
             {
-                if (Asset == null || Timeline?.Current == null)
+                if (Asset == null || Timeline == null)
                 {
                     _OnBtnPauseClick();
                     return;
@@ -590,7 +773,8 @@ namespace Ux.Editor.Timeline
                 _playTime += deltaTime;
                 var frame = Asset.TimeToFrame(_playTime);
                 clipView.SetNowFrame(frame);
-                if (Timeline.Current.IsDone)
+                var duration = Document?.DurationFrames ?? Asset.DurationFrames;
+                if (frame >= duration)
                 {
                     switch (_playModePopup?.value ?? PlayMode.Once)
                     {
@@ -620,11 +804,7 @@ namespace Ux.Editor.Timeline
                 IsPlaying = false;
                 UnityEditor.EditorApplication.update -= OnPlay;
             }
-            if (_entity != null)
-            {
-                _entity.Destroy();
-                _entity = null;
-            }
+            DestroyPreviewEntity();
             Undo?.Dispose();
             Undo = null;
             Timeline = null;
@@ -645,6 +825,11 @@ namespace Ux.Editor.Timeline
             if (wnd == this)
             {
                 wnd = null;
+            }
+            UpdateStandaloneButton();
+            if (!_isEmbedded)
+            {
+                StandaloneWindowClosed?.Invoke();
             }
         }
         partial void _OnBtnLastFrameClick()
@@ -670,8 +855,7 @@ namespace Ux.Editor.Timeline
             UnityEditor.EditorApplication.update -= OnPlay;
             UnityEditor.EditorApplication.update += OnPlay;
             IsPlaying = true;
-            btnPlay?.SetEnabled(false);
-            btnPause?.SetEnabled(true);
+            UpdatePlayButton();
             _framePopupField?.SetEnabled(false);
         }
         partial void _OnBtnPauseClick()
@@ -679,15 +863,13 @@ namespace Ux.Editor.Timeline
             if (!IsPlaying) return;
             UnityEditor.EditorApplication.update -= OnPlay;
             IsPlaying = false;
-            btnPlay?.SetEnabled(Asset != null && Timeline != null);
-            btnPause?.SetEnabled(false);
+            UpdatePlayButton();
             _framePopupField?.SetEnabled(Asset != null && _combatProfile == null);
         }
 
         partial void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e)
         {
-            _entity?.Destroy();
-            _entity = null;
+            DestroyPreviewEntity();
             ofEntity.SetValueWithoutNotify(e.newValue);
             if (e.newValue is GameObject obj)
             {
@@ -695,14 +877,27 @@ namespace Ux.Editor.Timeline
                 {
                     return;
                 }
-                var model = Instantiate(obj);
-                model.name = $"{obj.name} (Timeline Preview)";
-                model.hideFlags = HideFlags.HideAndDontSave;
 
-                _entity?.Destroy();
-                _entity = Entity.Create<TLEntity>();
+                var model = Instantiate(obj);
+                model.name = $"{obj.name}{PreviewObjectSuffix}";
+                model.hideFlags = PreviewObjectHideFlags;
+                _previewInstance = model;
+
+                // 编辑器预览不依赖全局对象池，避免内嵌宿主在编辑器初始化阶段拿不到 Entity。
+                _entity = Entity.Create<TLEntity>(false);
+                if (_entity == null)
+                {
+                    DestroyPreviewEntity();
+                    return;
+                }
+
                 _entity.Link(model);
-                Timeline = _entity.Add<TimelineComponent>();
+                Timeline = _entity.Add<TimelineComponent>(false);
+                if (Timeline == null)
+                {
+                    DestroyPreviewEntity();
+                    return;
+                }
 
                 if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long _))
                 {
@@ -729,6 +924,7 @@ namespace Ux.Editor.Timeline
             }
             ofTimeline.SetValueWithoutNotify(e.newValue);
             Asset = requestedAsset;
+            UpdatePreviewBaseSelector();
             ConfigureDocumentSources();
             ApplyPresentationAssetSelection();
             InspectorContent?.FreshInspector(null, null);
@@ -738,12 +934,14 @@ namespace Ux.Editor.Timeline
                 clipView?.ResetView();
             }
             UpdateDurationLabel();
+            UpdateStandaloneButton();
         }
 
         void OnCombatActionChanged(ChangeEvent<UnityEngine.Object> e)
         {
             _combatActionField.SetValueWithoutNotify(e.newValue);
             _combatAction = e.newValue as CombatActionAsset;
+            UpdatePreviewBaseSelector();
             if (_combatProfile != null &&
                 (_combatAction == null || _combatProfile.FindAction(_combatAction.ActionId) != _combatAction))
             {
@@ -754,6 +952,7 @@ namespace Ux.Editor.Timeline
             RefreshView?.Invoke();
             clipView?.RefreshLayout();
             UpdateDurationLabel();
+            UpdateStandaloneButton();
         }
 
         void ConfigureDocumentSources()
@@ -766,7 +965,8 @@ namespace Ux.Editor.Timeline
                     Asset,
                     (key, owner, _) => Undo?.RegUndo(key, owner, () => OnTimelineUndoRedo(owner)),
                     canEdit: () => !IsPlaying,
-                    completeUndo: () => Undo?.CompleteUndo()));
+                    completeUndo: () => Undo?.CompleteUndo(),
+                    beforeSave: SyncCombatActionDurationBeforeSave));
             }
             if (_combatAction != null)
             {
@@ -783,7 +983,7 @@ namespace Ux.Editor.Timeline
             Document?.SetSources(sources.ToArray());
             _framePopupField?.SetEnabled(
                 Asset != null && _combatProfile == null && !IsPlaying);
-            btnPlay?.SetEnabled(Asset != null && Timeline != null && !IsPlaying);
+            UpdatePlayButton();
         }
 
         void ApplyPresentationAssetSelection()
@@ -951,6 +1151,43 @@ namespace Ux.Editor.Timeline
             ofTimeline.value = asset;
         }
 
+        private void DestroyPreviewEntity()
+        {
+            Timeline?.Stop();
+            _previewPlayer?.Release();
+            _previewPlayer = null;
+            Timeline = null;
+
+            if (_entity != null)
+            {
+                _entity.Destroy();
+                _entity = null;
+            }
+
+            if (_previewInstance != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_previewInstance);
+                _previewInstance = null;
+            }
+        }
+
+        private static void CleanupAllPreviewObjects()
+        {
+            var objects = Resources.FindObjectsOfTypeAll<GameObject>();
+            foreach (var gameObject in objects)
+            {
+                if (gameObject == null ||
+                    EditorUtility.IsPersistent(gameObject) ||
+                    !gameObject.name.EndsWith(PreviewObjectSuffix, StringComparison.Ordinal) ||
+                    (gameObject.hideFlags & PreviewObjectHideFlags) == 0)
+                {
+                    continue;
+                }
+
+                UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
         void OnTimelineUndoRedo(UnityEngine.Object owner)
         {
             if (Document?.RefreshAfterUndo(owner) == true)
@@ -994,6 +1231,25 @@ namespace Ux.Editor.Timeline
             }
             clipView?.RefreshLayout();
             UpdateDurationLabel();
+        }
+
+        void SyncCombatActionDurationBeforeSave()
+        {
+            if (_combatAction == null || Asset == null ||
+                Asset.DurationFrames <= _combatAction.DurationFrames)
+            {
+                return;
+            }
+
+            var combatAction = _combatAction;
+            Undo?.RecordAdditionalObject(
+                "同步技能逻辑时长",
+                combatAction,
+                () => OnTimelineUndoRedo(combatAction));
+            CombatEditorUtility.SyncActionDurationToTimeline(
+                combatAction,
+                Asset,
+                recordUndo: false);
         }
 
         void _SaveAssets()
@@ -1057,13 +1313,81 @@ namespace Ux.Editor.Timeline
             {
                 return;
             }
+            if (_combatAction != null && _combatProfile != null)
+            {
+                _previewPlayer ??= new CombatTimelinePlayer(Timeline);
+                var plan = BuildPreviewPlan();
+                _previewPlayer.Synchronize(
+                    plan,
+                    _entity?.Viewer?.GetComponentInChildren<Animator>(),
+                    true);
+                _previewPlayer.Evaluate(plan, false);
+                return;
+            }
             Timeline.Play(Asset);
             Timeline.Set(clipView?.CurFrame ?? 0);
         }
+
         void _MarkerMove(int frame)
         {
-            if (Asset == null || Timeline == null) return;
+            if (Asset == null || Timeline == null)
+            {
+                return;
+            }
+            if (_previewPlayer != null && _combatAction != null && _combatProfile != null)
+            {
+                _previewPlayer.Evaluate(BuildPreviewPlan(), false);
+                return;
+            }
             Timeline.Set(frame);
+        }
+
+        private CombatTimelinePlan BuildPreviewPlan()
+        {
+            var frame = clipView?.CurFrame ?? 0;
+            var baseAsset = default(TimelineAsset);
+            var baseKey = "preview:action-only";
+            if (_previewBaseMode != PreviewBaseMode.ActionOnly && _combatProfile != null)
+            {
+                var state = _previewBaseMode == PreviewBaseMode.Move
+                    ? LocomotionState.Move
+                    : LocomotionState.Idle;
+                baseAsset = _combatProfile.GetStateTimeline(StateLayer.Locomotion, (int)state);
+                baseKey = $"preview:locomotion:{(int)state}:{baseAsset?.name ?? "none"}";
+            }
+            var baseSelection = new CombatTimelineSelection(baseKey, baseAsset, frame);
+            var actionSelection = new CombatTimelineSelection(
+                $"preview:action:{Asset.GetInstanceID()}",
+                Asset,
+                frame);
+            return new CombatTimelinePlan(baseSelection, actionSelection);
+        }
+
+        private void UpdatePreviewBaseSelector()
+        {
+            if (_previewBasePopup == null)
+            {
+                return;
+            }
+            var enabled = _combatAction != null && _combatProfile != null && Asset != null;
+            _previewBasePopup.style.display = enabled
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+            if (enabled)
+            {
+                _previewBasePopup.SetValueWithoutNotify(_previewBaseMode);
+            }
+        }
+
+        private static string GetPreviewBaseText(PreviewBaseMode mode)
+        {
+            return mode switch
+            {
+                PreviewBaseMode.ActionOnly => "单独动作",
+                PreviewBaseMode.Idle => "站立基底",
+                PreviewBaseMode.Move => "移动基底",
+                _ => mode.ToString(),
+            };
         }
     }
 

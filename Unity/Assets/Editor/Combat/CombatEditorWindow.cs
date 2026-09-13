@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Ux.Editor.Timeline;
 
 namespace Ux.Editor.Combat
@@ -10,8 +11,8 @@ namespace Ux.Editor.Combat
     /// <summary>
     /// 角色战斗内容入口。
     ///
-    /// 这里仅负责三件事：角色 Profile 参数、宏观状态到 Timeline 的映射、技能资源列表。
-    /// 技能的具体轨道和 Clip 仍由 TimelineWindow 编辑，状态切换规则由运行时代码负责。
+    /// 这里负责角色 Profile 参数、宏观状态到 Timeline 的映射和技能资源列表。
+    /// 技能的逻辑轨道与表现 Clip 默认以内嵌双源时间轴编辑，仍保留独立 TimelineWindow 入口。
     /// </summary>
     public sealed class CombatEditorWindow : EditorWindow
     {
@@ -29,15 +30,19 @@ namespace Ux.Editor.Combat
         private const float MinLeftPanelWidth = 150f;
         private const float DefaultLeftPanelWidth = 205f;
         private const float LeftPanelReserve = 300f;
-        private const float SplitterWidth = 5f;
         private const string LeftPanelWidthKey = "Ux.CombatEditor.LeftPanelWidth";
+        private const string LastProfileKey = "Ux.CombatEditor.LastProfile";
+        private const string LastPreviewObjectKey = "Ux.CombatEditor.LastPreviewObject";
+        private const string PreviewObjectKeyPrefix = "Ux.CombatEditor.PreviewObject.";
+        private const string RightPanelRatioKey = "Ux.CombatEditor.RightPanelRatio";
 
         // 右栏分区折叠状态：按分区独立记忆，避免每次打开都要重新展开。
         private const string LogicSectionKey = "Ux.CombatEditor.Fold.Logic";
-        private const string LogicWindowSectionKey = "Ux.CombatEditor.Fold.LogicWindow";
         private const string PresentationSectionKey = "Ux.CombatEditor.Fold.Presentation";
         private const string ValidationSectionKey = "Ux.CombatEditor.Fold.Validation";
         private static GUIStyle _sectionFoldoutStyle;
+        private static GUIStyle _skillItemStyle;
+        private static GUIStyle _skillDeleteStyle;
 
         private static GUIStyle SectionFoldoutStyle
         {
@@ -51,6 +56,43 @@ namespace Ux.Editor.Combat
                     };
                 }
                 return _sectionFoldoutStyle;
+            }
+        }
+
+        private static GUIStyle SkillItemStyle
+        {
+            get
+            {
+                if (_skillItemStyle == null)
+                {
+                    _skillItemStyle = new GUIStyle(EditorStyles.label)
+                    {
+                        alignment = TextAnchor.MiddleLeft,
+                        padding = new RectOffset(12, 6, 0, 0),
+                        fontSize = 12,
+                    };
+                    _skillItemStyle.normal.textColor = new Color(0.88f, 0.88f, 0.88f);
+                    _skillItemStyle.hover.textColor = Color.white;
+                    _skillItemStyle.active.textColor = Color.white;
+                }
+                return _skillItemStyle;
+            }
+        }
+
+        private static GUIStyle SkillDeleteStyle
+        {
+            get
+            {
+                if (_skillDeleteStyle == null)
+                {
+                    _skillDeleteStyle = new GUIStyle(EditorStyles.miniButton)
+                    {
+                        alignment = TextAnchor.MiddleCenter,
+                        fontSize = 12,
+                        padding = new RectOffset(0, 0, 0, 0),
+                    };
+                }
+                return _skillDeleteStyle;
             }
         }
 
@@ -72,38 +114,281 @@ namespace Ux.Editor.Combat
         private List<CombatValidationIssue> _issues = new List<CombatValidationIssue>();
         private bool _showIssues;
         private float _leftPanelWidth = DefaultLeftPanelWidth;
-        private bool _resizingLeftPanel;
+        private IMGUIContainer _configContainer;
+        private IMGUIContainer _navigationContainer;
+        private VisualElement _rightPanel;
+        private ResizeSplitter _leftSplitter;
+        private ResizeSplitter _rightSplitter;
+        private VisualElement _embeddedTimelineContainer;
+        private TimelineWindow _embeddedTimeline;
+        private CombatActionAsset _embeddedAction;
+        private TimelineAsset _embeddedTimelineAsset;
+        private GameObject _embeddedPreviewObject;
+        private bool _embeddedRefreshPending;
+        private bool _timelineDetachedToStandalone;
+        private bool _rightPanelManuallySized;
+        private float _rightPanelRatio = 0.42f;
+        private float _rightPanelContentHeight;
+
+        private sealed class ResizeSplitter : VisualElement
+        {
+            private readonly bool _vertical;
+            private bool _dragging;
+            private int _pointerId;
+            private Vector2 _startPosition;
+
+            public event Action<Vector2> Dragged;
+
+            public ResizeSplitter(bool vertical)
+            {
+                _vertical = vertical;
+                style.flexShrink = 0;
+                if (vertical)
+                {
+                    style.width = 3;
+                }
+                else
+                {
+                    style.height = 3;
+                }
+                style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 1f);
+                tooltip = vertical ? "拖动调整左侧宽度" : "拖动调整上方信息高度";
+                RegisterCallback<PointerDownEvent>(OnPointerDown);
+                RegisterCallback<PointerMoveEvent>(OnPointerMove);
+                RegisterCallback<PointerUpEvent>(OnPointerUp);
+                RegisterCallback<PointerCaptureOutEvent>(_ => StopDragging());
+                RegisterCallback<MouseEnterEvent>(_ => SetHighlight(true));
+                RegisterCallback<MouseLeaveEvent>(_ => SetHighlight(_dragging));
+            }
+
+            private void OnPointerDown(PointerDownEvent evt)
+            {
+                if (evt.button != 0 || _dragging)
+                {
+                    return;
+                }
+
+                _dragging = true;
+                _pointerId = evt.pointerId;
+                _startPosition = (Vector2)evt.position;
+                this.CapturePointer(_pointerId);
+                SetHighlight(true);
+                evt.StopPropagation();
+            }
+
+            private void OnPointerMove(PointerMoveEvent evt)
+            {
+                if (!_dragging || evt.pointerId != _pointerId)
+                {
+                    return;
+                }
+
+                var position = (Vector2)evt.position;
+                var delta = position - _startPosition;
+                _startPosition = position;
+                Dragged?.Invoke(_vertical
+                    ? new Vector2(delta.x, 0)
+                    : new Vector2(0, delta.y));
+                evt.StopPropagation();
+            }
+
+            private void OnPointerUp(PointerUpEvent evt)
+            {
+                if (evt.pointerId != _pointerId)
+                {
+                    return;
+                }
+
+                StopDragging();
+                evt.StopPropagation();
+            }
+
+            private void StopDragging()
+            {
+                if (!_dragging)
+                {
+                    return;
+                }
+
+                _dragging = false;
+                if (this.HasPointerCapture(_pointerId))
+                {
+                    this.ReleasePointer(_pointerId);
+                }
+                SetHighlight(false);
+            }
+
+            private void SetHighlight(bool highlighted)
+            {
+                style.backgroundColor = highlighted
+                    ? new Color(0.32f, 0.52f, 0.82f, 0.85f)
+                    : new Color(0.16f, 0.16f, 0.16f, 1f);
+            }
+        }
 
         [MenuItem("UxGame/工具/战斗/角色配置", false, 520)]
         public static void ShowWindow()
         {
             var window = GetWindow<CombatEditorWindow>();
             window.titleContent = new GUIContent("角色战斗配置");
-            window.minSize = new Vector2(760, 500);
+            window.minSize = new Vector2(960, 680);
             window.Show();
         }
 
-        public static CombatEditorWindow Open(
-            CharacterCombatProfile profile,
-            GameObject previewObject = null)
+        public void CreateGUI()
+        {
+            rootVisualElement.Clear();
+            rootVisualElement.style.flexDirection = FlexDirection.Column;
+            rootVisualElement.style.flexGrow = 1;
+
+            var mainArea = new VisualElement();
+            mainArea.style.flexDirection = FlexDirection.Row;
+            mainArea.style.flexGrow = 1;
+
+            _navigationContainer = new IMGUIContainer(DrawNavigationGUI)
+            {
+                name = "CombatEditorNavigation",
+            };
+            _navigationContainer.style.minWidth = MinLeftPanelWidth;
+            _navigationContainer.style.width = _leftPanelWidth;
+            _navigationContainer.style.flexShrink = 0;
+            mainArea.Add(_navigationContainer);
+
+            _leftSplitter = new ResizeSplitter(true);
+            _leftSplitter.Dragged += OnLeftSplitterDragged;
+            mainArea.Add(_leftSplitter);
+
+            _rightPanel = new VisualElement();
+            _rightPanel.style.flexDirection = FlexDirection.Column;
+            _rightPanel.style.flexGrow = 1;
+            _rightPanel.RegisterCallback<GeometryChangedEvent>(_ => ApplyRightPanelLayout());
+
+            _configContainer = new IMGUIContainer(DrawRightEditorGUI)
+            {
+                name = "CombatEditorConfig",
+            };
+            _configContainer.style.flexGrow = 1;
+            _configContainer.style.minHeight = 0;
+            _rightPanel.Add(_configContainer);
+
+            _rightSplitter = new ResizeSplitter(false);
+            _rightSplitter.Dragged += OnRightSplitterDragged;
+            _rightSplitter.style.display = DisplayStyle.None;
+            _rightPanel.Add(_rightSplitter);
+
+            _embeddedTimelineContainer = new VisualElement
+            {
+                name = "EmbeddedCombatTimeline",
+            };
+            _embeddedTimelineContainer.style.flexGrow = 1;
+            _embeddedTimelineContainer.style.minHeight = 260;
+            _embeddedTimelineContainer.style.display = DisplayStyle.None;
+            _rightPanel.Add(_embeddedTimelineContainer);
+            mainArea.Add(_rightPanel);
+            rootVisualElement.Add(mainArea);
+            ScheduleEmbeddedTimelineRefresh();
+        }
+
+        private void OnLeftSplitterDragged(Vector2 delta)
+        {
+            _leftPanelWidth = Mathf.Clamp(
+                _leftPanelWidth + delta.x,
+                MinLeftPanelWidth,
+                GetMaxLeftPanelWidth());
+            if (_navigationContainer != null)
+            {
+                _navigationContainer.style.width = _leftPanelWidth;
+            }
+            EditorPrefs.SetFloat(LeftPanelWidthKey, _leftPanelWidth);
+        }
+
+        private void OnRightSplitterDragged(Vector2 delta)
+        {
+            if (_rightPanel == null || _configContainer == null)
+            {
+                return;
+            }
+
+            var totalHeight = _rightPanel.resolvedStyle.height;
+            if (totalHeight <= 0)
+            {
+                return;
+            }
+
+            var currentHeight = _configContainer.resolvedStyle.height;
+            var minimumHeight = Mathf.Max(150, _rightPanelContentHeight);
+            var maximumHeight = Mathf.Max(minimumHeight, totalHeight - 180);
+            var nextHeight = Mathf.Clamp(
+                currentHeight + delta.y,
+                Mathf.Min(minimumHeight, maximumHeight),
+                maximumHeight);
+            _rightPanelManuallySized = true;
+            _rightPanelRatio = Mathf.Clamp(nextHeight / totalHeight, 0.15f, 0.85f);
+            _configContainer.style.flexGrow = 0;
+            _configContainer.style.height = nextHeight;
+            EditorPrefs.SetFloat(RightPanelRatioKey, _rightPanelRatio);
+        }
+
+        private void ApplyRightPanelLayout()
+        {
+            if (_rightPanel == null || _configContainer == null || _rightSplitter == null)
+            {
+                return;
+            }
+
+            var timelineVisible = _embeddedTimelineContainer != null &&
+                _embeddedTimelineContainer.style.display != DisplayStyle.None;
+            _rightSplitter.style.display = timelineVisible
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+
+            if (!timelineVisible)
+            {
+                _configContainer.style.flexGrow = 1;
+                _configContainer.style.height = StyleKeyword.Auto;
+                return;
+            }
+
+            _configContainer.style.flexGrow = 0;
+            if (!_rightPanelManuallySized)
+            {
+                // 没有手动拖动过时使用 IMGUI 自身的内容高度，折叠分区后 Timeline 会自动上移。
+                _configContainer.style.height = StyleKeyword.Auto;
+                var measuredHeight = _configContainer.resolvedStyle.height;
+                if (measuredHeight > 0 && !float.IsNaN(measuredHeight))
+                {
+                    _rightPanelContentHeight = measuredHeight;
+                }
+                return;
+            }
+
+            var totalHeight = _rightPanel.resolvedStyle.height;
+            var minimumHeight = Mathf.Max(150, _rightPanelContentHeight);
+            var maximumHeight = Mathf.Max(minimumHeight, totalHeight - 180);
+            var nextHeight = Mathf.Clamp(
+                totalHeight * _rightPanelRatio,
+                Mathf.Min(minimumHeight, maximumHeight),
+                maximumHeight);
+            _configContainer.style.height = nextHeight;
+        }
+
+        public static CombatEditorWindow Open(CharacterCombatProfile profile, GameObject previewObject = null)
         {
             var window = GetWindow<CombatEditorWindow>();
             window.titleContent = new GUIContent("角色战斗配置");
-            window.minSize = new Vector2(760, 500);
+            window.minSize = new Vector2(960, 680);
             window.SetProfile(profile);
             if (previewObject != null)
             {
                 window._previewObject = previewObject;
+                SavePreviewObject(profile, previewObject);
             }
             window.Show();
             window.Repaint();
             return window;
         }
 
-        public static CombatEditorWindow OpenAction(
-            CharacterCombatProfile profile,
-            CombatActionAsset action,
-            GameObject previewObject = null)
+        public static CombatEditorWindow OpenAction(CharacterCombatProfile profile, CombatActionAsset action, GameObject previewObject = null)
         {
             var window = Open(profile, previewObject);
             if (action != null && window.IsActionInProfile(action))
@@ -117,13 +402,28 @@ namespace Ux.Editor.Combat
 
         private void OnEnable()
         {
+            TimelineWindow.StandaloneWindowClosed -= OnStandaloneTimelineClosed;
+            TimelineWindow.StandaloneWindowOpened -= OnStandaloneTimelineOpened;
+            TimelineWindow.StandaloneWindowClosed += OnStandaloneTimelineClosed;
+            TimelineWindow.StandaloneWindowOpened += OnStandaloneTimelineOpened;
+            Undo.undoRedoEvent -= OnUndoRedo;
+            Undo.undoRedoEvent += OnUndoRedo;
             titleContent = new GUIContent("角色战斗配置");
-            minSize = new Vector2(760, 500);
+            minSize = new Vector2(960, 680);
             _leftPanelWidth = EditorPrefs.GetFloat(LeftPanelWidthKey, DefaultLeftPanelWidth);
+            _rightPanelRatio = Mathf.Clamp(
+                EditorPrefs.GetFloat(RightPanelRatioKey, _rightPanelRatio),
+                0.15f,
+                0.85f);
             var selected = Selection.activeObject as CharacterCombatProfile;
-            if (selected != null)
+            var restored = selected ?? LoadAssetByGuid<CharacterCombatProfile>(LastProfileKey);
+            if (restored != null)
             {
-                SetProfile(selected);
+                SetProfile(restored);
+            }
+            else
+            {
+                _previewObject = null;
             }
         }
 
@@ -137,12 +437,56 @@ namespace Ux.Editor.Combat
             Repaint();
         }
 
-        private void OnGUI()
+        private void OnUndoRedo(in UndoRedoInfo undoRedoInfo)
+        {
+            if (this == null)
+            {
+                return;
+            }
+
+            if (_profileSerialized != null && _profileSerialized.targetObject != null)
+            {
+                _profileSerialized.Update();
+            }
+            if (_actionSerialized != null && _actionSerialized.targetObject != null)
+            {
+                _actionSerialized.Update();
+            }
+            if (_profile != null && !IsActionInProfile(_selectedAction))
+            {
+                ClosePreviewTimeline();
+                _selectedAction = FindFirstAction();
+                _actionSerialized = null;
+            }
+            _issues.Clear();
+            TimelineWindow.RefreshCurrentDocumentAfterUndo();
+            _navigationContainer?.MarkDirtyRepaint();
+            _configContainer?.MarkDirtyRepaint();
+            _embeddedTimeline?.Repaint();
+            ScheduleEmbeddedTimelineRefresh();
+            Repaint();
+        }
+
+        private void DrawNavigationGUI()
+        {
+            _leftPanelWidth = Mathf.Clamp(
+                _leftPanelWidth,
+                MinLeftPanelWidth,
+                GetMaxLeftPanelWidth());
+            if (_navigationContainer != null)
+            {
+                _navigationContainer.style.width = _leftPanelWidth;
+            }
+            DrawNavigation();
+        }
+
+        private void DrawRightEditorGUI()
         {
             DrawHeader();
             if (_profile == null)
             {
                 DrawEmptyState();
+                ScheduleEmbeddedTimelineRefresh();
                 return;
             }
 
@@ -151,14 +495,16 @@ namespace Ux.Editor.Combat
                 _selectedAction = FindFirstAction();
             }
 
-            _leftPanelWidth = Mathf.Clamp(
-                _leftPanelWidth,
-                MinLeftPanelWidth,
-                GetMaxLeftPanelWidth());
-
-            using (new EditorGUILayout.HorizontalScope())
+            if (_page == Page.Skills)
             {
-                DrawNavigation();
+                // 技能页需要把完整信息高度交给外层布局，避免 ScrollView 把 Timeline 顶出大段空白。
+                using (new EditorGUILayout.VerticalScope(GUILayout.ExpandWidth(true)))
+                {
+                    DrawSkillsPage();
+                }
+            }
+            else
+            {
                 using (var scroll = new EditorGUILayout.ScrollViewScope(_contentScroll))
                 {
                     _contentScroll = scroll.scrollPosition;
@@ -172,13 +518,92 @@ namespace Ux.Editor.Combat
                             case Page.States:
                                 DrawStatesPage();
                                 break;
-                            case Page.Skills:
-                                DrawSkillsPage();
-                                break;
                         }
                     }
                 }
             }
+            ScheduleEmbeddedTimelineRefresh();
+        }
+
+        private void ScheduleEmbeddedTimelineRefresh()
+        {
+            if (_embeddedRefreshPending)
+            {
+                return;
+            }
+
+            _embeddedRefreshPending = true;
+            EditorApplication.delayCall += RefreshEmbeddedTimeline;
+        }
+
+        private void RefreshEmbeddedTimeline()
+        {
+            _embeddedRefreshPending = false;
+            if (this == null || _embeddedTimelineContainer == null)
+            {
+                return;
+            }
+
+            if (_timelineDetachedToStandalone ||
+                _page != Page.Skills || !IsActionInProfile(_selectedAction))
+            {
+                DestroyEmbeddedTimeline();
+                return;
+            }
+
+            var timeline = GetActionTimeline(_selectedAction);
+            if (timeline == null)
+            {
+                DestroyEmbeddedTimeline();
+                return;
+            }
+
+            if (_embeddedTimeline != null &&
+                _embeddedAction == _selectedAction &&
+                _embeddedTimelineAsset == timeline &&
+                _embeddedPreviewObject == _previewObject)
+            {
+                return;
+            }
+
+            DestroyEmbeddedTimeline();
+            _embeddedAction = _selectedAction;
+            _embeddedTimelineAsset = timeline;
+            _embeddedPreviewObject = _previewObject;
+            _embeddedTimelineContainer.style.display = DisplayStyle.Flex;
+            ApplyRightPanelLayout();
+            _embeddedTimeline = TimelineWindow.CreateEmbedded(
+                _embeddedTimelineContainer,
+                _embeddedAction,
+                _embeddedTimelineAsset,
+                _profile,
+                _previewObject);
+            if (_embeddedTimeline == null)
+            {
+                DestroyEmbeddedTimeline();
+            }
+            Repaint();
+        }
+
+        private void DestroyEmbeddedTimeline()
+        {
+            EditorApplication.delayCall -= RefreshEmbeddedTimeline;
+            _embeddedRefreshPending = false;
+            if (_embeddedTimeline != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_embeddedTimeline);
+                _embeddedTimeline = null;
+            }
+
+            _embeddedAction = null;
+            _embeddedTimelineAsset = null;
+            _embeddedPreviewObject = null;
+            _embeddedTimelineContainer?.Clear();
+            if (_embeddedTimelineContainer != null)
+            {
+                _embeddedTimelineContainer.style.display = DisplayStyle.None;
+            }
+            ApplyRightPanelLayout();
         }
 
         private void DrawHeader()
@@ -227,11 +652,18 @@ namespace Ux.Editor.Combat
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
                 {
                     GUILayout.Label("预览对象", EditorStyles.miniLabel, GUILayout.Width(60));
-                    _previewObject = (GameObject)EditorGUILayout.ObjectField(
+                    EditorGUI.BeginChangeCheck();
+                    var previewObject = (GameObject)EditorGUILayout.ObjectField(
                         _previewObject,
                         typeof(GameObject),
                         false,
                         GUILayout.MinWidth(220));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        _previewObject = previewObject;
+                        SavePreviewObject(_profile, _previewObject);
+                        ScheduleEmbeddedTimelineRefresh();
+                    }
                     GUILayout.FlexibleSpace();
                     using (new EditorGUI.DisabledScope(_profile == null))
                     {
@@ -256,7 +688,7 @@ namespace Ux.Editor.Combat
                     EditorGUILayout.HelpBox(
                         "选择 CharacterCombatProfile 开始编辑。\n\n" +
                         "状态表现只做状态到 Timeline 的映射；技能列表管理主动动作；" +
-                        "Timeline 的轨道和 Clip 继续在 TimelineWindow 中编辑。",
+                        "技能的逻辑轨道和表现 Timeline 默认在当前窗口内编辑，也可以按需打开独立窗口。",
                         MessageType.Info);
                     if (GUILayout.Button("新建角色战斗配置", GUILayout.Height(30)))
                     {
@@ -309,70 +741,10 @@ namespace Ux.Editor.Combat
 
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.HelpBox(
-                    "代码触发技能，Profile 提供数据，TimelineWindow 编辑表现。",
+                    "代码触发技能，Profile 提供数据，双源时间轴在当前窗口内编辑表现。",
                     MessageType.None);
             }
 
-            // 分隔条不占布局宽度，贴在左栏右边界上，两栏之间不留空白带。
-            DrawLeftPanelSplitter(GUILayoutUtility.GetLastRect());
-        }
-
-        /// <summary>
-        /// 左栏与内容区之间的分隔条：拖动调整左栏宽度。
-        /// 命中区跨在左栏右边界上，本身不参与布局，所以两栏之间不会出现空白带；
-        /// 鼠标悬停或拖动时才画出高亮线，平时是不可见的拖动热区。
-        /// </summary>
-        private void DrawLeftPanelSplitter(Rect panelRect)
-        {
-            var edge = panelRect.xMax;
-            var hot = new Rect(
-                edge - SplitterWidth,
-                panelRect.y,
-                SplitterWidth * 2f,
-                panelRect.height);
-            EditorGUIUtility.AddCursorRect(hot, MouseCursor.ResizeHorizontal);
-
-            var evt = Event.current;
-            switch (evt.type)
-            {
-                case UnityEngine.EventType.MouseDown:
-                    if (evt.button == 0 && hot.Contains(evt.mousePosition))
-                    {
-                        _resizingLeftPanel = true;
-                        evt.Use();
-                    }
-                    break;
-                case UnityEngine.EventType.MouseDrag:
-                    if (_resizingLeftPanel)
-                    {
-                        _leftPanelWidth = Mathf.Clamp(
-                            _leftPanelWidth + evt.delta.x,
-                            MinLeftPanelWidth,
-                            GetMaxLeftPanelWidth());
-                        evt.Use();
-                        Repaint();
-                    }
-                    break;
-                case UnityEngine.EventType.MouseUp:
-                    if (_resizingLeftPanel)
-                    {
-                        _resizingLeftPanel = false;
-                        EditorPrefs.SetFloat(LeftPanelWidthKey, _leftPanelWidth);
-                        evt.Use();
-                    }
-                    break;
-            }
-
-            if (_resizingLeftPanel || hot.Contains(evt.mousePosition))
-            {
-                EditorGUI.DrawRect(
-                    new Rect(
-                        edge - 1f,
-                        panelRect.y + 2f,
-                        2f,
-                        Mathf.Max(0f, panelRect.height - 4f)),
-                    new Color(0.32f, 0.52f, 0.82f, 0.7f));
-            }
         }
 
         private float GetMaxLeftPanelWidth()
@@ -405,7 +777,59 @@ namespace Ux.Editor.Combat
 
         private void OnDisable()
         {
+            Undo.undoRedoEvent -= OnUndoRedo;
+            TimelineWindow.StandaloneWindowClosed -= OnStandaloneTimelineClosed;
+            TimelineWindow.StandaloneWindowOpened -= OnStandaloneTimelineOpened;
             EditorPrefs.SetFloat(LeftPanelWidthKey, _leftPanelWidth);
+            SaveEditorState();
+            ClosePreviewTimeline();
+        }
+
+        private void OnStandaloneTimelineOpened()
+        {
+            if (this == null)
+            {
+                return;
+            }
+
+            _timelineDetachedToStandalone = true;
+            DestroyEmbeddedTimeline();
+            Repaint();
+        }
+
+        private void OnStandaloneTimelineClosed()
+        {
+            if (this == null)
+            {
+                return;
+            }
+
+            var shouldRestore = _timelineDetachedToStandalone;
+            _timelineDetachedToStandalone = false;
+            if (shouldRestore && _page == Page.Skills)
+            {
+                ScheduleEmbeddedTimelineRefresh();
+            }
+            Repaint();
+        }
+
+        private void ClosePreviewTimeline()
+        {
+            var closeStandalone = _timelineDetachedToStandalone;
+            _timelineDetachedToStandalone = false;
+            if (closeStandalone)
+            {
+                TimelineWindow.CloseStandalone();
+            }
+            DestroyEmbeddedTimeline();
+        }
+
+        private void OnDestroy()
+        {
+            Undo.undoRedoEvent -= OnUndoRedo;
+            TimelineWindow.StandaloneWindowClosed -= OnStandaloneTimelineClosed;
+            TimelineWindow.StandaloneWindowOpened -= OnStandaloneTimelineOpened;
+            ClosePreviewTimeline();
         }
 
         private void DrawPageButton(string text, Page page)
@@ -417,6 +841,10 @@ namespace Ux.Editor.Combat
             }
             if (GUILayout.Button(text, EditorStyles.toolbarButton, GUILayout.Height(28)))
             {
+                if (page != _page || _timelineDetachedToStandalone)
+                {
+                    ClosePreviewTimeline();
+                }
                 _page = page;
             }
             GUI.backgroundColor = oldColor;
@@ -430,35 +858,58 @@ namespace Ux.Editor.Combat
                 return;
             }
 
-            var label = $"{action.ActionId}  {GetActionName(action)}";
+            var row = GUILayoutUtility.GetRect(
+                Mathf.Max(60, rowWidth),
+                32,
+                GUILayout.ExpandWidth(true));
+            var selected = _page == Page.Skills && _selectedAction == action;
+            var hovered = row.Contains(Event.current.mousePosition);
+            var background = selected
+                ? new Color(0.19f, 0.34f, 0.58f, 1f)
+                : hovered
+                    ? new Color(0.22f, 0.22f, 0.22f, 1f)
+                    : new Color(0.16f, 0.16f, 0.16f, 1f);
+            EditorGUI.DrawRect(row, background);
+            if (selected)
+            {
+                EditorGUI.DrawRect(
+                    new Rect(row.x, row.y, 3, row.height),
+                    new Color(0.35f, 0.65f, 1f, 1f));
+            }
+
+            const float deleteButtonHeight = 22;
+            var deleteRect = new Rect(
+                row.xMax - 28,
+                row.y + (row.height - deleteButtonHeight) * 0.5f,
+                24,
+                deleteButtonHeight);
+            var labelRect = new Rect(
+                row.x + 3,
+                row.y,
+                Mathf.Max(30, deleteRect.x - row.x - 3),
+                row.height);
+            var label = $"{action.ActionId}    {GetActionName(action)}";
             if (GetActionTimeline(action) == null)
             {
-                label += " *";
+                label += "  *";
             }
-            var oldColor = GUI.backgroundColor;
-            if (_page == Page.Skills && _selectedAction == action)
+
+            if (GUI.Button(labelRect, label, SkillItemStyle))
             {
-                GUI.backgroundColor = new Color(0.32f, 0.52f, 0.82f, 1f);
-            }
-            if (GUILayout.Button(
-                    label,
-                    EditorStyles.toolbarButton,
-                    GUILayout.Height(25),
-                    GUILayout.Width(rowWidth)))
-            {
+                if (_selectedAction != action || _timelineDetachedToStandalone)
+                {
+                    ClosePreviewTimeline();
+                }
                 _selectedAction = action;
                 _page = Page.Skills;
                 _actionSerialized = null;
+                _timelineDetachedToStandalone = false;
             }
-            GUI.backgroundColor = oldColor;
-
-            var timeline = GetActionTimeline(action);
-            // 固定宽度交给 GUIStyle 裁剪文本，既不留右侧空白，也不会撑出横向滚动条。
-            EditorGUILayout.LabelField(
-                $"逻辑：{action.name}",
-                timeline == null ? "表现：未关联" : $"表现：{timeline.name}",
-                EditorStyles.miniLabel,
-                GUILayout.Width(rowWidth));
+            if (GUI.Button(deleteRect, "-", SkillDeleteStyle))
+            {
+                RemoveAction(action);
+            }
+            GUILayout.Space(3);
         }
 
         private void DrawProfilePage()
@@ -467,6 +918,7 @@ namespace Ux.Editor.Combat
 
             var serialized = GetProfileSerialized();
             serialized.Update();
+            Undo.RecordObject(_profile, "修改角色战斗配置");
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 DrawProperty(serialized, "group", "角色分组");
@@ -500,6 +952,7 @@ namespace Ux.Editor.Combat
         {
             var serialized = GetProfileSerialized();
             serialized.Update();
+            Undo.RecordObject(_profile, "修改状态表现配置");
             var presentations = serialized.FindProperty("statePresentations");
             if (presentations == null)
             {
@@ -534,7 +987,7 @@ namespace Ux.Editor.Combat
                     MessageType.Warning);
             }
 
-            if (serialized.ApplyModifiedProperties() || changed)
+            if (serialized.ApplyModifiedPropertiesWithoutUndo() || changed)
             {
                 _profile.ValidateData();
                 EditorUtility.SetDirty(_profile);
@@ -656,6 +1109,9 @@ namespace Ux.Editor.Combat
                     {
                         if (timeline == null)
                         {
+                            Undo.IncrementCurrentGroup();
+                            var timelineUndoGroup = Undo.GetCurrentGroup();
+                            Undo.SetCurrentGroupName("创建状态 Timeline");
                             timeline = CombatEditorUtility.CreateTimelineAsset(
                                 _profile,
                                 CombatEditorUtility.GetStatePresentationTimelineSuffix(
@@ -663,8 +1119,13 @@ namespace Ux.Editor.Combat
                                     stateId.intValue,
                                     variant.stringValue),
                                 true);
+                            if (timeline != null)
+                            {
+                                Undo.RecordObject(_profile, "关联状态 Timeline");
+                            }
                             timelineProperty.objectReferenceValue = timeline;
                             changed = timeline != null;
+                            Undo.CollapseUndoOperations(timelineUndoGroup);
                         }
                         else
                         {
@@ -717,45 +1178,12 @@ namespace Ux.Editor.Combat
             var timeline = GetActionTimeline(action);
             GUILayout.Label($"技能：{GetActionName(action)}", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "技能逻辑保存在 CombatActionAsset；Timeline 通过 Profile 的独立表现映射关联，只负责客户端表现。",
+                "技能逻辑保存在 CombatActionAsset；表现 Timeline 通过 Profile 关联。下方双源时间轴共用同一帧标尺。",
                 MessageType.Info);
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("打开双源时间轴", GUILayout.Width(120)))
-                {
-                    OpenActionTimeline(action, timeline);
-                }
-                using (new EditorGUI.DisabledScope(timeline == null))
-                {
-                    if (GUILayout.Button("预览", GUILayout.Width(70)))
-                    {
-                        OpenActionTimeline(action, timeline, true);
-                    }
-                }
-                if (GUILayout.Button("定位逻辑资产", GUILayout.Width(100)))
-                {
-                    Selection.activeObject = action;
-                    EditorGUIUtility.PingObject(action);
-                }
-                using (new EditorGUI.DisabledScope(timeline == null))
-                {
-                    if (GUILayout.Button("定位表现资产", GUILayout.Width(100)))
-                    {
-                        Selection.activeObject = timeline;
-                        EditorGUIUtility.PingObject(timeline);
-                    }
-                }
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("从角色移除", GUILayout.Width(100)))
-                {
-                    RemoveSelectedAction();
-                    return;
-                }
-            }
 
             var serialized = GetActionSerialized();
             serialized.Update();
+            Undo.RecordObject(action, "修改技能逻辑配置");
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 if (DrawSection("逻辑数据（CombatActionAsset）", LogicSectionKey))
@@ -768,19 +1196,11 @@ namespace Ux.Editor.Combat
                     DrawProperty(serialized, "movementPolicy", "移动策略");
                 }
             }
-            if (serialized.ApplyModifiedProperties())
+            if (serialized.ApplyModifiedPropertiesWithoutUndo())
             {
                 action.ValidateData();
                 EditorUtility.SetDirty(action);
                 _issues.Clear();
-            }
-
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                if (DrawSection("逻辑窗口（在时间轴中编辑）", LogicWindowSectionKey))
-                {
-                    DrawLogicWindowSummary(action);
-                }
             }
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -809,12 +1229,18 @@ namespace Ux.Editor.Combat
                                 false);
                             if (nextClip != clip)
                             {
+                                Undo.IncrementCurrentGroup();
+                                var undoGroup = Undo.GetCurrentGroup();
+                                Undo.SetCurrentGroupName("设置技能动画");
                                 Undo.RecordObject(timeline, "设置技能动画");
                                 if (CombatEditorUtility.SetPrimaryAnimationClip(timeline, nextClip, out _))
                                 {
+                                    CombatEditorUtility.SyncActionDurationToTimeline(action, timeline);
+                                    _actionSerialized = null;
                                     EditorUtility.SetDirty(timeline);
                                     AssetDatabase.SaveAssets();
                                 }
+                                Undo.CollapseUndoOperations(undoGroup);
                             }
                         }
                         EditorGUILayout.LabelField(
@@ -831,11 +1257,6 @@ namespace Ux.Editor.Combat
         private TimelineAsset DrawActionPresentation(CombatActionAsset action)
         {
             var current = GetActionTimeline(action);
-            EditorGUILayout.ObjectField(
-                "所属 Profile",
-                _profile,
-                typeof(CharacterCombatProfile),
-                false);
             var next = (TimelineAsset)EditorGUILayout.ObjectField(
                 "表现 Timeline",
                 current,
@@ -872,73 +1293,18 @@ namespace Ux.Editor.Combat
         }
 
         /// <summary>
-        /// 逻辑窗口在本窗口只做只读摘要与跳转：权威编辑入口是时间轴上的逻辑轨道
-        /// （CombatLogicTimelineSource），避免同一份数据出现第二个写入入口。
-        /// 新增一类逻辑窗口只需扩展这里的摘要，不需要再往本窗口加表单。
-        /// </summary>
-        private void DrawLogicWindowSummary(CombatActionAsset action)
-        {
-            var cancelCount = action.CancelWindows?.Count ?? 0;
-            var hitCount = action.HitWindows?.Count ?? 0;
-            if (cancelCount == 0 && hitCount == 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "未配置逻辑窗口。在时间轴逻辑轨上新增区间 Clip 即可。",
-                    MessageType.None);
-            }
-
-            for (var i = 0; i < cancelCount; i++)
-            {
-                var window = action.CancelWindows[i];
-                if (window == null)
-                {
-                    continue;
-                }
-                EditorGUILayout.LabelField(
-                    $"取消窗口 {i + 1}",
-                    $"帧 {window.StartFrame}–{window.EndFrame} → 目标 {window.TargetActionId}"
-                        + (window.RequiresHitConfirm ? "，需已命中" : "，无需命中"),
-                    EditorStyles.miniLabel);
-            }
-
-            for (var i = 0; i < hitCount; i++)
-            {
-                var window = action.HitWindows[i];
-                if (window == null)
-                {
-                    continue;
-                }
-                EditorGUILayout.LabelField(
-                    $"命中窗口 {i + 1}",
-                    $"帧 {window.StartFrame}–{window.EndFrame}，" +
-                    $"{window.Shape} 半径 {window.RadiusMillimeters} mm",
-                    EditorStyles.miniLabel);
-            }
-
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("在时间轴中编辑", GUILayout.Width(140)))
-                {
-                    OpenActionTimeline(action, GetActionTimeline(action));
-                }
-                GUILayout.FlexibleSpace();
-            }
-
-            EditorGUILayout.LabelField(
-                "区间增删与拖动只在时间轴逻辑轨进行，本窗口不提供第二套编辑入口。",
-                EditorStyles.miniLabel);
-        }
-
-        /// <summary>
         /// 右栏分区折叠头：展开状态按分区记在 EditorPrefs，避免每次打开都要重新展开。
         /// </summary>
-        private static bool DrawSection(string title, string foldKey, bool defaultExpanded = true)
+        private bool DrawSection(string title, string foldKey, bool defaultExpanded = true)
         {
             var expanded = EditorPrefs.GetBool(foldKey, defaultExpanded);
             var next = EditorGUILayout.Foldout(expanded, title, true, SectionFoldoutStyle);
             if (next != expanded)
             {
                 EditorPrefs.SetBool(foldKey, next);
+                _rightPanelManuallySized = false;
+                _rightPanelContentHeight = 0;
+                ApplyRightPanelLayout();
             }
             return next;
         }
@@ -990,6 +1356,9 @@ namespace Ux.Editor.Combat
             }
 
             path = CombatEditorUtility.NormalizeAssetPath(path);
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("创建角色战斗配置");
             var profile = ScriptableObject.CreateInstance<CharacterCombatProfile>();
             var serialized = new SerializedObject(profile);
             var group = serialized.FindProperty("group");
@@ -1003,7 +1372,10 @@ namespace Ux.Editor.Combat
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
             AssetDatabase.ImportAsset(path);
-            SetProfile(AssetDatabase.LoadAssetAtPath<CharacterCombatProfile>(path) ?? profile);
+            var persistedProfile = AssetDatabase.LoadAssetAtPath<CharacterCombatProfile>(path);
+            Undo.RegisterCreatedObjectUndo(persistedProfile ?? profile, "创建角色战斗配置");
+            Undo.CollapseUndoOperations(undoGroup);
+            SetProfile(persistedProfile ?? profile);
             Selection.activeObject = _profile;
         }
 
@@ -1056,6 +1428,7 @@ namespace Ux.Editor.Combat
             _selectedAction = action;
             _page = Page.Skills;
             _actionSerialized = null;
+            _timelineDetachedToStandalone = false;
             Selection.activeObject = _selectedAction;
             ShowNotification(new GUIContent($"已创建：{displayName}（Action {actionId}）"));
         }
@@ -1078,8 +1451,12 @@ namespace Ux.Editor.Combat
                         continue;
                     }
 
+                    Undo.IncrementCurrentGroup();
+                    var undoGroup = Undo.GetCurrentGroup();
+                    Undo.SetCurrentGroupName("添加状态表现映射");
                     var serialized = GetProfileSerialized();
                     serialized.Update();
+                    Undo.RecordObject(_profile, "添加状态表现映射");
                     var list = serialized.FindProperty("statePresentations");
                     var index = list.arraySize;
                     list.InsertArrayElementAtIndex(index);
@@ -1091,9 +1468,10 @@ namespace Ux.Editor.Combat
                     SetRelativeString(element, "variantId", CombatStatePresentation.DefaultVariantId);
                     SetRelativeString(element, "displayName", CombatStateId.GetDisplayName(layer, stateId));
                     SetRelativeInt(element, "priority", 0);
-                    serialized.ApplyModifiedProperties();
+                    serialized.ApplyModifiedPropertiesWithoutUndo();
                     _profile.ValidateData();
                     EditorUtility.SetDirty(_profile);
+                    Undo.CollapseUndoOperations(undoGroup);
                     _page = Page.States;
                     Repaint();
                     return;
@@ -1108,8 +1486,12 @@ namespace Ux.Editor.Combat
             {
                 return;
             }
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("补齐状态 Timeline");
             var serialized = GetProfileSerialized();
             serialized.Update();
+            Undo.RecordObject(_profile, "补齐状态 Timeline");
             var list = serialized.FindProperty("statePresentations");
             var created = 0;
             for (var i = 0; i < list.arraySize; i++)
@@ -1139,11 +1521,13 @@ namespace Ux.Editor.Combat
             }
             if (created > 0)
             {
-                serialized.ApplyModifiedProperties();
+                Undo.RecordObject(_profile, "补齐状态 Timeline");
+                serialized.ApplyModifiedPropertiesWithoutUndo();
                 _profile.ValidateData();
                 EditorUtility.SetDirty(_profile);
                 AssetDatabase.SaveAssets();
             }
+            Undo.CollapseUndoOperations(undoGroup);
             ShowNotification(new GUIContent(created == 0 ? "没有需要创建的状态 Timeline" : $"已创建 {created} 条状态 Timeline"));
         }
 
@@ -1160,12 +1544,16 @@ namespace Ux.Editor.Combat
                 return existing;
             }
 
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("创建技能 Timeline");
             var timeline = CombatEditorUtility.CreateTimelineAsset(
                 _profile,
                 GetActionTimelineSuffix(action.ActionId),
                 true);
             if (timeline == null)
             {
+                Undo.CollapseUndoOperations(undoGroup);
                 return null;
             }
 
@@ -1177,11 +1565,13 @@ namespace Ux.Editor.Combat
             {
                 Debug.LogError(error, _profile);
                 DeleteAsset(timeline);
+                Undo.CollapseUndoOperations(undoGroup);
                 return null;
             }
 
             _profileSerialized = null;
             AssetDatabase.SaveAssets();
+            Undo.CollapseUndoOperations(undoGroup);
             _issues.Clear();
             return timeline;
         }
@@ -1192,6 +1582,9 @@ namespace Ux.Editor.Combat
             {
                 return;
             }
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("补齐技能 Timeline");
             var created = 0;
             foreach (var action in _profile.Actions)
             {
@@ -1205,6 +1598,7 @@ namespace Ux.Editor.Combat
                 }
             }
             AssetDatabase.SaveAssets();
+            Undo.CollapseUndoOperations(undoGroup);
             ShowNotification(new GUIContent(created == 0 ? "没有需要创建的技能 Timeline" : $"已创建 {created} 条技能 Timeline"));
         }
 
@@ -1235,6 +1629,9 @@ namespace Ux.Editor.Combat
                     }
                 }
             }
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("同步全部 Timeline 帧率");
             var changed = 0;
             foreach (var timeline in timelines)
             {
@@ -1242,7 +1639,7 @@ namespace Ux.Editor.Combat
                 {
                     continue;
                 }
-                Undo.RecordObject(timeline, "同步 Timeline 帧率");
+                Undo.RecordObject(timeline, "同步全部 Timeline 帧率");
                 if (timeline.SetFrameRate(_profile.FrameRate))
                 {
                     timeline.ValidateData();
@@ -1251,6 +1648,7 @@ namespace Ux.Editor.Combat
                 }
             }
             AssetDatabase.SaveAssets();
+            Undo.CollapseUndoOperations(undoGroup);
             ShowNotification(new GUIContent(changed == 0 ? "帧率已经一致" : $"已同步 {changed} 条 Timeline"));
         }
 
@@ -1260,11 +1658,15 @@ namespace Ux.Editor.Combat
             {
                 return;
             }
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("同步 Timeline 帧率");
             Undo.RecordObject(timeline, "同步 Timeline 帧率");
             timeline.SetFrameRate(frameRate);
             timeline.ValidateData();
             EditorUtility.SetDirty(timeline);
             AssetDatabase.SaveAssets();
+            Undo.CollapseUndoOperations(undoGroup);
         }
 
         private void SaveAll()
@@ -1273,6 +1675,10 @@ namespace Ux.Editor.Combat
             {
                 return;
             }
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("保存角色战斗配置");
+            Undo.RecordObject(_profile, "保存角色战斗配置");
             _profile.ValidateData();
             EditorUtility.SetDirty(_profile);
             if (_profile.Actions != null)
@@ -1283,6 +1689,7 @@ namespace Ux.Editor.Combat
                     {
                         continue;
                     }
+                    Undo.RecordObject(action, "保存角色战斗配置");
                     action.ValidateData();
                     EditorUtility.SetDirty(action);
                 }
@@ -1293,6 +1700,7 @@ namespace Ux.Editor.Combat
                 {
                     if (presentation?.Timeline != null)
                     {
+                        Undo.RecordObject(presentation.Timeline, "保存角色战斗配置");
                         presentation.Timeline.ValidateData();
                         EditorUtility.SetDirty(presentation.Timeline);
                     }
@@ -1304,12 +1712,14 @@ namespace Ux.Editor.Combat
                 {
                     if (presentation?.Timeline != null)
                     {
+                        Undo.RecordObject(presentation.Timeline, "保存角色战斗配置");
                         presentation.Timeline.ValidateData();
                         EditorUtility.SetDirty(presentation.Timeline);
                     }
                 }
             }
             AssetDatabase.SaveAssets();
+            Undo.CollapseUndoOperations(undoGroup);
             ShowNotification(new GUIContent("已保存"));
         }
 
@@ -1336,22 +1746,33 @@ namespace Ux.Editor.Combat
                 $"校验完成：错误 {CountIssues(CombatValidationSeverity.Error)}，警告 {CountIssues(CombatValidationSeverity.Warning)}"));
         }
 
-        private void RemoveSelectedAction()
+        private void RemoveAction(CombatActionAsset action)
         {
-            if (_profile == null || _selectedAction == null)
+            if (_profile == null || action == null)
             {
                 return;
             }
             if (!EditorUtility.DisplayDialog(
                     "移除技能",
-                    $"从 {_profile.name} 的技能列表中移除“{GetActionName(_selectedAction)}”？\n资源文件不会被删除。",
+                    $"从 {_profile.name} 的技能列表中移除“{GetActionName(action)}”？\n资源文件不会被删除。",
                     "移除",
                     "取消"))
             {
                 return;
             }
+
+            var wasSelected = _selectedAction == action;
+            if (wasSelected)
+            {
+                ClosePreviewTimeline();
+            }
+
+            Undo.IncrementCurrentGroup();
+            var undoGroup = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("从角色移除技能");
             var serialized = GetProfileSerialized();
             serialized.Update();
+            Undo.RecordObject(_profile, "从角色移除技能");
             var actions = serialized.FindProperty("actions");
             var presentations = serialized.FindProperty("actionPresentations");
             if (presentations != null)
@@ -1359,49 +1780,54 @@ namespace Ux.Editor.Combat
                 for (var i = presentations.arraySize - 1; i >= 0; i--)
                 {
                     var presentation = presentations.GetArrayElementAtIndex(i);
-                    if (presentation.FindPropertyRelative("action")?.objectReferenceValue == _selectedAction)
+                    if (presentation.FindPropertyRelative("action")?.objectReferenceValue == action)
                     {
                         presentations.DeleteArrayElementAtIndex(i);
                     }
                 }
             }
-            for (var i = actions.arraySize - 1; i >= 0; i--)
+            if (actions != null)
             {
-                if (actions.GetArrayElementAtIndex(i).objectReferenceValue == _selectedAction)
+                for (var i = actions.arraySize - 1; i >= 0; i--)
                 {
-                    actions.DeleteArrayElementAtIndex(i);
+                    if (actions.GetArrayElementAtIndex(i).objectReferenceValue == action)
+                    {
+                        actions.DeleteArrayElementAtIndex(i);
+                    }
                 }
             }
-            serialized.ApplyModifiedProperties();
+            serialized.ApplyModifiedPropertiesWithoutUndo();
             _profile.ValidateData();
             EditorUtility.SetDirty(_profile);
             AssetDatabase.SaveAssets();
-            _selectedAction = FindFirstAction();
-            _actionSerialized = null;
+            Undo.CollapseUndoOperations(undoGroup);
+            if (wasSelected)
+            {
+                _selectedAction = FindFirstAction();
+                _actionSerialized = null;
+                _timelineDetachedToStandalone = false;
+            }
+            ScheduleEmbeddedTimelineRefresh();
         }
 
         private void OpenTimeline(TimelineAsset timeline, bool autoPlay = false)
         {
             if (timeline != null)
             {
-                TimelineWindow.Open(timeline, _previewObject, autoPlay);
-            }
-        }
-
-        private void OpenActionTimeline(
-            CombatActionAsset action,
-            TimelineAsset timeline,
-            bool autoPlay = false)
-        {
-            if (action != null)
-            {
-                TimelineWindow.Open(action, timeline, _profile, _previewObject, autoPlay);
+                ClosePreviewTimeline();
+                var standalone = TimelineWindow.Open(timeline, _previewObject, autoPlay);
+                _timelineDetachedToStandalone = standalone != null;
             }
         }
 
         private void SetProfile(CharacterCombatProfile profile)
         {
+            if (_profile != profile)
+            {
+                ClosePreviewTimeline();
+            }
             _profile = profile;
+            _timelineDetachedToStandalone = false;
             _profileSerialized = null;
             _actionSerialized = null;
             _selectedAction = FindFirstAction();
@@ -1409,6 +1835,98 @@ namespace Ux.Editor.Combat
             _issues.Clear();
             _showIssues = false;
             _contentScroll = Vector2.zero;
+
+            if (_profile != null)
+            {
+                SaveProfile(_profile);
+                var profilePreview = LoadPreviewObject(_profile);
+                if (profilePreview != null || _previewObject == null)
+                {
+                    _previewObject = profilePreview ?? LoadAssetByGuid<GameObject>(
+                        LastPreviewObjectKey);
+                }
+
+            }
+        }
+
+        private void SaveEditorState()
+        {
+            SaveProfile(_profile);
+            SavePreviewObject(_profile, _previewObject);
+        }
+
+        private static void SaveProfile(CharacterCombatProfile profile)
+        {
+            var guid = GetAssetGuid(profile);
+            if (!string.IsNullOrEmpty(guid))
+            {
+                EditorPrefs.SetString(LastProfileKey, guid);
+            }
+        }
+
+        private static void SavePreviewObject(CharacterCombatProfile profile, GameObject previewObject)
+        {
+            var guid = GetAssetGuid(previewObject);
+            if (string.IsNullOrEmpty(guid))
+            {
+                EditorPrefs.DeleteKey(LastPreviewObjectKey);
+            }
+            else
+            {
+                EditorPrefs.SetString(LastPreviewObjectKey, guid);
+            }
+
+            var profileGuid = GetAssetGuid(profile);
+            if (!string.IsNullOrEmpty(profileGuid))
+            {
+                var key = $"{PreviewObjectKeyPrefix}{profileGuid}";
+                if (string.IsNullOrEmpty(guid))
+                {
+                    EditorPrefs.DeleteKey(key);
+                }
+                else
+                {
+                    EditorPrefs.SetString(key, guid);
+                }
+            }
+        }
+
+        private static GameObject LoadPreviewObject(CharacterCombatProfile profile)
+        {
+            var profileGuid = GetAssetGuid(profile);
+            if (string.IsNullOrEmpty(profileGuid))
+            {
+                return null;
+            }
+
+            return LoadAssetByGuid<GameObject>($"{PreviewObjectKeyPrefix}{profileGuid}");
+        }
+
+        private static string GetAssetGuid(UnityEngine.Object asset)
+        {
+            return asset != null &&
+                   AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out long _)
+                ? guid
+                : string.Empty;
+        }
+
+        private static T LoadAssetByGuid<T>(string key) where T : UnityEngine.Object
+        {
+            var guid = EditorPrefs.GetString(key, string.Empty);
+            if (string.IsNullOrEmpty(guid))
+            {
+                return null;
+            }
+
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var asset = string.IsNullOrEmpty(path)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<T>(path);
+            if (asset == null)
+            {
+                EditorPrefs.DeleteKey(key);
+            }
+            return asset;
         }
 
         private SerializedObject GetProfileSerialized()
@@ -1431,7 +1949,7 @@ namespace Ux.Editor.Combat
 
         private void ApplyProfile(SerializedObject serialized)
         {
-            if (serialized.ApplyModifiedProperties())
+            if (serialized.ApplyModifiedPropertiesWithoutUndo())
             {
                 _profile.ValidateData();
                 EditorUtility.SetDirty(_profile);

@@ -9,10 +9,7 @@ namespace Ux.Editor.Timeline.Animation
         readonly ITimelineEditorTrack track;
         readonly AnimationTrackAsset asset;
 
-        public TLAnimTrackInspector(
-            ITimelineEditorSource source,
-            ITimelineEditorTrack track,
-            AnimationTrackAsset asset) : base(source, track, asset)
+        public TLAnimTrackInspector(ITimelineEditorSource source, ITimelineEditorTrack track, AnimationTrackAsset asset) : base(source, track, asset)
         {
             CreateChildren();
             Add(root);
@@ -21,6 +18,11 @@ namespace Ux.Editor.Timeline.Animation
             ofAnimator.objectType = typeof(Animator);
             ofAnimator.allowSceneObjects = true;
             ofAvatarMask.objectType = typeof(AvatarMask);
+            var maskHelp = new HelpBox(
+                "AvatarMask 说明：空 Mask = 全身覆盖；非空 Mask = 仅限定骨骼。IsAdditive 是真正的增量动画开关，不是并行播放开关。Generic 动画应使用 TransformMask；Humanoid 若只包含人体位且没有 transform paths，可能无法按预期驱动骨骼。",
+                HelpBoxMessageType.Info);
+            maskHelp.tooltip = "空 Mask 为全身覆盖，非空 Mask 限定骨骼；IsAdditive 表示增量动画。";
+            root.Add(maskHelp);
             OnFreshView();
         }
 
@@ -62,9 +64,9 @@ namespace Ux.Editor.Timeline.Animation
             var animator = TimelineWindow.Timeline?.GetBinding<Animator>(asset);
             ofAnimator.SetValueWithoutNotify(animator);
             tgAdditive.SetValueWithoutNotify(asset.isAdditive);
-            tgAdditive.style.display = asset.avatarMask == null
-                ? DisplayStyle.None
-                : DisplayStyle.Flex;
+            tgAdditive.style.display = DisplayStyle.Flex;
+            tgAdditive.tooltip = "IsAdditive：启用真正的增量动画混合，不代表并行播放。";
+            ofAvatarMask.tooltip = "空 Mask = 全身覆盖；非空 Mask = 限定骨骼。Generic 动画请使用 TransformMask。";
         }
     }
 }

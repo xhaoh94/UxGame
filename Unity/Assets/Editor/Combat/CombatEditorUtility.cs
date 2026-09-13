@@ -15,10 +15,7 @@ namespace Ux.Editor.Combat
 
     internal sealed class CombatValidationIssue
     {
-        public CombatValidationIssue(
-            CombatValidationSeverity severity,
-            string message,
-            UnityEngine.Object context = null)
+        public CombatValidationIssue(CombatValidationSeverity severity, string message, UnityEngine.Object context = null)
         {
             Severity = severity;
             Message = message ?? string.Empty;
@@ -57,10 +54,7 @@ namespace Ux.Editor.Combat
             return CombatStateId.GetMappableStateIds(layer);
         }
 
-        internal static string GetStatePresentationTimelineSuffix(
-            StateLayer layer,
-            int stateId,
-            string variantId)
+        internal static string GetStatePresentationTimelineSuffix(StateLayer layer, int stateId, string variantId)
         {
             var stateName = CombatStateId.GetDisplayName(layer, stateId);
             var normalizedVariant = CombatStatePresentation.NormalizeVariantId(variantId);
@@ -119,17 +113,13 @@ namespace Ux.Editor.Combat
             return NormalizeAssetPath($"{TimelineRoot}/{GetCharacterKey(profile)}");
         }
 
-        internal static string GetTimelineAssetName(
-            CharacterCombatProfile profile,
-            string suffix)
+        internal static string GetTimelineAssetName(CharacterCombatProfile profile, string suffix)
         {
             var profileName = profile == null ? "Character" : profile.name;
             return SanitizeFileName($"{profileName}{suffix}");
         }
 
-        internal static string GetActionAssetName(
-            CharacterCombatProfile profile,
-            int actionId)
+        internal static string GetActionAssetName(CharacterCombatProfile profile, int actionId)
         {
             var profileName = profile == null ? "Character" : profile.name;
             return SanitizeFileName($"{profileName}Action{Mathf.Max(1, actionId):000}");
@@ -190,11 +180,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        internal static TimelineAsset CreateTimelineAsset(
-            CharacterCombatProfile profile,
-            string suffix,
-            bool addDefaultAnimationTrack = true,
-            AnimationClip primaryAnimation = null)
+        internal static TimelineAsset CreateTimelineAsset(CharacterCombatProfile profile, string suffix, bool addDefaultAnimationTrack = true, AnimationClip primaryAnimation = null)
         {
             var directory = GetTimelineDirectory(profile);
             EnsureFolder(directory);
@@ -239,18 +225,7 @@ namespace Ux.Editor.Combat
         /// 以单个 Undo 事务创建逻辑技能、表现 Timeline 和 Profile 映射。
         /// 任一步骤失败都会撤销 Profile 修改并删除本次新建的资产。
         /// </summary>
-        internal static bool TryCreateActionAssets(
-            CharacterCombatProfile profile,
-            int actionId,
-            string stableId,
-            string displayName,
-            int durationFrames,
-            ActionMovementPolicy movementPolicy,
-            string timelineSuffix,
-            AnimationClip primaryAnimation,
-            out CombatActionAsset action,
-            out TimelineAsset timeline,
-            out string error)
+        internal static bool TryCreateActionAssets(CharacterCombatProfile profile, int actionId, string stableId, string displayName, int durationFrames, ActionMovementPolicy movementPolicy, string timelineSuffix, AnimationClip primaryAnimation, out CombatActionAsset action, out TimelineAsset timeline, out string error)
         {
             action = null;
             timeline = null;
@@ -284,16 +259,25 @@ namespace Ux.Editor.Combat
             Undo.IncrementCurrentGroup();
             var undoGroup = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName($"创建技能 Action {actionId}");
+            Undo.RecordObject(profile, $"创建技能 Action {actionId}");
             string actionPath = null;
             string timelinePath = null;
             try
             {
                 action = ScriptableObject.CreateInstance<CombatActionAsset>();
+                var actionDurationFrames = Mathf.Max(1, durationFrames);
+                if (primaryAnimation != null)
+                {
+                    actionDurationFrames = Mathf.Max(
+                        actionDurationFrames,
+                        GetAnimationDurationFrames(primaryAnimation, profile.FrameRate));
+                }
+
                 var actionSerialized = new SerializedObject(action);
                 actionSerialized.FindProperty("stableId").stringValue = stableId ?? string.Empty;
                 actionSerialized.FindProperty("actionId").intValue = actionId;
                 actionSerialized.FindProperty("displayName").stringValue = displayName ?? string.Empty;
-                actionSerialized.FindProperty("durationFrames").intValue = durationFrames;
+                actionSerialized.FindProperty("durationFrames").intValue = actionDurationFrames;
                 actionSerialized.FindProperty("movementPolicy").enumValueIndex = (int)movementPolicy;
                 actionSerialized.ApplyModifiedPropertiesWithoutUndo();
                 action.ValidateData();
@@ -316,6 +300,7 @@ namespace Ux.Editor.Combat
                 }
                 timelinePath = AssetDatabase.GetAssetPath(timeline);
 
+                Undo.RecordObject(profile, $"创建技能 Action {actionId}");
                 actions.InsertArrayElementAtIndex(actions.arraySize);
                 actions.GetArrayElementAtIndex(actions.arraySize - 1).objectReferenceValue = action;
                 var presentationIndex = presentations.arraySize;
@@ -323,7 +308,7 @@ namespace Ux.Editor.Combat
                 var presentation = presentations.GetArrayElementAtIndex(presentationIndex);
                 presentation.FindPropertyRelative("action").objectReferenceValue = action;
                 presentation.FindPropertyRelative("timeline").objectReferenceValue = timeline;
-                if (!profileSerialized.ApplyModifiedProperties())
+                if (!profileSerialized.ApplyModifiedPropertiesWithoutUndo())
                 {
                     throw new InvalidOperationException("Profile 技能列表和表现映射保存失败。");
                 }
@@ -379,11 +364,7 @@ namespace Ux.Editor.Combat
         /// 仅修改 Profile 持有的客户端表现映射，不写入 CombatActionAsset。
         /// 编辑器中的逻辑资产与表现映射必须分别通过各自 SerializedObject 保存。
         /// </summary>
-        internal static bool TrySetActionTimeline(
-            CharacterCombatProfile profile,
-            CombatActionAsset action,
-            TimelineAsset timeline,
-            out string error)
+        internal static bool TrySetActionTimeline(CharacterCombatProfile profile, CombatActionAsset action, TimelineAsset timeline, out string error)
         {
             error = string.Empty;
             if (profile == null || action == null)
@@ -451,7 +432,7 @@ namespace Ux.Editor.Combat
                 return false;
             }
             timelineProperty.objectReferenceValue = timeline;
-            if (!serialized.ApplyModifiedProperties())
+            if (!serialized.ApplyModifiedPropertiesWithoutUndo())
             {
                 return true;
             }
@@ -459,6 +440,16 @@ namespace Ux.Editor.Combat
             profile.ValidateData();
             EditorUtility.SetDirty(profile);
             return true;
+        }
+
+        internal static int GetAnimationDurationFrames(AnimationClip clip, int frameRate)
+        {
+            if (clip == null)
+            {
+                return 0;
+            }
+
+            return Mathf.Max(1, Mathf.RoundToInt(clip.length * Mathf.Max(1, frameRate)));
         }
 
         /// <summary>
@@ -494,10 +485,7 @@ namespace Ux.Editor.Combat
         /// 设置技能 Timeline 首条动画轨道中的首个动画 Clip，并返回对应帧数。
         /// 不负责轨道/Clip 的完整编辑，复杂编排继续交给 TimelineWindow。
         /// </summary>
-        internal static bool SetPrimaryAnimationClip(
-            TimelineAsset timeline,
-            AnimationClip clip,
-            out int durationFrames)
+        internal static bool SetPrimaryAnimationClip(TimelineAsset timeline, AnimationClip clip, out int durationFrames)
         {
             durationFrames = 0;
             if (timeline == null)
@@ -552,7 +540,7 @@ namespace Ux.Editor.Combat
                 return true;
             }
 
-            durationFrames = Mathf.Max(1, Mathf.RoundToInt(clip.length * timeline.FrameRate));
+            durationFrames = GetAnimationDurationFrames(clip, timeline.FrameRate);
             if (primary == null)
             {
                 primary = new AnimationClipAsset
@@ -576,8 +564,43 @@ namespace Ux.Editor.Combat
             return true;
         }
 
-        internal static List<CombatValidationIssue> ValidateProfile(
-            CharacterCombatProfile profile)
+        /// <summary>
+        /// 表现 Timeline 是客户端资源，不能缩短逻辑动作；当表现长度超过逻辑动作时，
+        /// 自动把逻辑动作扩展到表现末尾，保证运行时不会在动画尾帧前切回其它状态。
+        /// 逻辑窗口使用半开区间，扩展动作时不会改写已有窗口。
+        /// </summary>
+        internal static bool SyncActionDurationToTimeline(CombatActionAsset action, TimelineAsset timeline, bool recordUndo = true)
+        {
+            if (action == null || timeline == null || timeline.DurationFrames <= action.DurationFrames)
+            {
+                return false;
+            }
+
+            if (recordUndo)
+            {
+                Undo.RecordObject(action, "同步技能逻辑时长");
+            }
+
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var duration = serialized.FindProperty("durationFrames");
+            if (duration == null || duration.intValue >= timeline.DurationFrames)
+            {
+                return false;
+            }
+
+            duration.intValue = timeline.DurationFrames;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            action.ValidateData();
+            EditorUtility.SetDirty(action);
+            if (AssetDatabase.Contains(action))
+            {
+                AssetDatabase.SaveAssetIfDirty(action);
+            }
+            return true;
+        }
+
+        internal static List<CombatValidationIssue> ValidateProfile(CharacterCombatProfile profile)
         {
             var issues = new List<CombatValidationIssue>();
             if (profile == null)
@@ -913,12 +936,7 @@ namespace Ux.Editor.Combat
             return issues;
         }
 
-        private static void ValidateLogicItemId(
-            List<CombatValidationIssue> issues,
-            CombatActionAsset action,
-            HashSet<string> ids,
-            string stableId,
-            string label)
+        private static void ValidateLogicItemId(List<CombatValidationIssue> issues, CombatActionAsset action, HashSet<string> ids, string stableId, string label)
         {
             if (string.IsNullOrEmpty(stableId))
             {
@@ -936,12 +954,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        private static void ValidateLogicWindowRange(
-            List<CombatValidationIssue> issues,
-            CombatActionAsset action,
-            int startFrame,
-            int endFrame,
-            string label)
+        private static void ValidateLogicWindowRange(List<CombatValidationIssue> issues, CombatActionAsset action, int startFrame, int endFrame, string label)
         {
             if (startFrame < 0 || endFrame <= startFrame)
             {
@@ -959,11 +972,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        private static void ValidateTimelineRate(
-            List<CombatValidationIssue> issues,
-            CharacterCombatProfile profile,
-            TimelineAsset timeline,
-            string label)
+        private static void ValidateTimelineRate(List<CombatValidationIssue> issues, CharacterCombatProfile profile, TimelineAsset timeline, string label)
         {
             if (profile == null || timeline == null || timeline.FrameRate == profile.FrameRate)
             {
@@ -976,10 +985,7 @@ namespace Ux.Editor.Combat
                 timeline));
         }
 
-        private static void ValidateTimelineStructure(
-            List<CombatValidationIssue> issues,
-            TimelineAsset timeline,
-            string label)
+        private static void ValidateTimelineStructure(List<CombatValidationIssue> issues, TimelineAsset timeline, string label)
         {
             if (timeline == null)
             {

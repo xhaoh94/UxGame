@@ -12,10 +12,7 @@ namespace Ux.Editor.Timeline
         readonly TextField nameField;
         readonly ObjectField particleField;
 
-        public ParticleTrackInspector(
-            ITimelineEditorSource source,
-            ITimelineEditorTrack track,
-            ParticleAssetTrack asset) : base(source, track, asset)
+        public ParticleTrackInspector(ITimelineEditorSource source, ITimelineEditorTrack track, ParticleAssetTrack asset) : base(source, track, asset)
         {
             this.track = track;
             this.asset = asset;
@@ -60,10 +57,7 @@ namespace Ux.Editor.Timeline
         readonly ITimelineEditorTrack track;
         readonly TextField nameField;
 
-        public BasicTrackInspector(
-            ITimelineEditorSource source,
-            ITimelineEditorTrack track,
-            TimelineTrackAsset asset) : base(source, track, asset)
+        public BasicTrackInspector(ITimelineEditorSource source, ITimelineEditorTrack track, TimelineTrackAsset asset) : base(source, track, asset)
         {
             this.track = track;
             Add(CreateTitle("轨道"));
@@ -89,10 +83,7 @@ namespace Ux.Editor.Timeline
         readonly Label durationLabel;
         bool refreshing;
 
-        public BasicClipInspector(
-            ITimelineEditorSource source,
-            ITimelineEditorClip clip,
-            TimelineClipAsset asset) : base(source, clip, asset)
+        public BasicClipInspector(ITimelineEditorSource source, ITimelineEditorClip clip, TimelineClipAsset asset) : base(source, clip, asset)
         {
             this.clip = clip;
             Add(CreateTitle(asset is ParticleClipAsset ? "粒子 Clip" : "Timeline Clip"));

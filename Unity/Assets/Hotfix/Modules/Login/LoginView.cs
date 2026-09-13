@@ -22,17 +22,17 @@ namespace Ux.UI
 
         partial void OnBtnLoginClick(EventContext e)
         {
-            // LoginModule.Ins.Connect(OnConnect);
-            OnConnectAsync().Forget();
+            LoginModule.Ins.Connect(null);
+            // OnConnectAsync().Forget();
         }
 
         async UniTaskVoid OnConnectAsync()
         {
-            // int mask =(int) Mathf.Pow(2, camp.selectedIndex);
-            // LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask).Forget();
+            int mask =(int) Mathf.Pow(2, camp.selectedIndex);
+            LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask).Forget();
             //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
 
-            await UIMgr.Ins.Create().Show<UI.MainView>().Task();
+            // await UIMgr.Ins.Create().Show<UI.MainView>().Task();
             UIMgr.Ins.Hide<UI.LoginView>();
         }
 

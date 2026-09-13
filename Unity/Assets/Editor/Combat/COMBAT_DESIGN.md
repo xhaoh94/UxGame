@@ -341,8 +341,8 @@ HitEvent → 取攻方属性快照 → 取守方属性快照
 
 ## 七、当前编辑器工作流（Combat 重构后的边界）
 
-`CombatEditorWindow` 现在是 **角色技能编辑器 + 状态表现映射配置器**，不再复制
-`TimelineWindow` 的轨道/Clip 编辑能力。
+`CombatEditorWindow` 现在是 **角色技能编辑器 + 状态表现映射配置器 + 双源时间轴宿主**。
+技能页默认以内嵌 Timeline 面板编辑逻辑轨和表现轨；`TimelineWindow` 仍作为独立窗口入口保留。
 
 ### 7.1 Profile
 
@@ -367,7 +367,9 @@ Profile 保存角色级参数、动态状态表现列表、动态技能逻辑资
 `CombatActionAsset` 现在只保存 ActionId、逻辑持续帧、移动策略和取消窗口，不再序列化
 `TimelineAsset`。客户端表现由 `CharacterCombatProfile.ActionPresentations` 独立关联；
 `CombatActionRunner` 不读取表现资源，`CombatComponent` 仅在表现阶段按 ActionId 向 Profile 查询 Timeline。
-逻辑持续帧必须显式大于 0，不再回退或同步为 Timeline 长度。
+逻辑持续帧仍由 `CombatActionAsset` 作为运行时权威，必须显式大于 0；但编辑器在新建技能、打开角色配置或调整双源时间轴时，
+会在表现时长超过逻辑时长时将逻辑时长向上扩展到表现末尾，避免动作提前结束而截断动画。该同步不会缩短逻辑时长，
+也不会改写已有取消/命中窗口。
 
 技能启动与取消命令只携带显式 `ActionId`。动作资产已删除 `TriggerCommand` 和启动 `Priority`，
 取消窗口已删除 `AcceptedCommand` 与取消 `Priority`，只通过 `TargetActionId` 匹配；后续不得向逻辑资产
@@ -429,7 +431,7 @@ CharacterCombatProfile
 - 删除启动 `Priority`：显式 ActionId 不需要按命令分组自动选择；
 - 删除取消窗口的 `AcceptedCommand`：窗口直接匹配 `TargetActionId`；
 - 不保留含义模糊的取消 `Priority`；取消请求只按 `TargetActionId` 匹配，重叠窗口不参与目标选择；
-- 保留逻辑 `DurationFrames`，禁止回退到客户端 Timeline 长度；
+- 保留逻辑 `DurationFrames` 作为运行时权威；编辑器只允许在表现时长更长时向上扩展它，禁止用 Timeline 静默缩短逻辑时长；
 - 保留或细化 `MovementPolicy`，它属于权威逻辑而不是表现；
 - 保留取消窗口数据，但将编辑体验迁移为时间轴 Clip。
 
@@ -534,7 +536,7 @@ Combat/Timeline 回归集已通过。
 
 - 技能列表同时显示逻辑资产和表现映射，但分别通过各自 `SerializedObject` 保存；
 - “打开 Timeline”和预览只操作表现 Timeline；
-- 校验逻辑时长与表现 Timeline 时长，默认只警告，不互相自动覆盖；
+- 校验逻辑时长与表现 Timeline 时长；表现时长更长时，编辑器只向上扩展逻辑时长以避免动画被截断，不会缩短逻辑时长或改写逻辑窗口；
 - 资源创建流程一次创建逻辑资产、表现 Timeline 和 Profile 映射。
 
 验收标准：即使尚未有逻辑时间轴轨道，用户也能在统一技能条目中安全维护两类资产。
@@ -543,8 +545,9 @@ Combat/Timeline 回归集已通过。
 逻辑字段与取消窗口只通过逻辑资产的 `SerializedObject` 保存，表现 Timeline 则通过 Profile 的独立
 `SerializedObject` 映射保存。编辑器按技能资产引用定位映射，避免编辑过程中临时重复的 ActionId 导致
 表现串线；打开、预览及动画 Clip 快捷编辑只操作表现 Timeline。创建技能时会在同一 Undo 事务中一次生成
-逻辑资产、Timeline 和 Profile 映射，失败时回滚新资产与 Profile 修改；缺失映射也可单独补建。逻辑时长
-与表现时长不一致只产生警告，不会自动覆盖任一侧。新增编辑器测试覆盖持久化创建与 Undo/Redo、映射身份
+逻辑资产、Timeline 和 Profile 映射，失败时回滚新资产与 Profile 修改；缺失映射也可单独补建。表现时长
+超过逻辑时长时，创建技能、打开角色配置或调整双源时间轴会自动向上同步逻辑时长；表现较短时仍保留逻辑
+时长，避免无意改变战斗窗口。新增编辑器测试覆盖持久化创建与 Undo/Redo、映射身份
 解析、两类资产隔离保存、外部技能拒绝关联及持续帧差异警告。
 `Unity.HotfixBase` 与 Combat/Timeline 编辑器过滤程序集已通过手动 Roslyn 编译；Unity EditMode Test Runner
 的 Combat/Timeline 回归集已通过。

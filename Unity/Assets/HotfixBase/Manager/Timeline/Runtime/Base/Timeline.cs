@@ -55,7 +55,7 @@ namespace Ux
         }
     }
 
-    public class Timeline : Entity, IAwakeSystem<TimelineAsset, bool>
+    public class Timeline : Entity, IAwakeSystem<TimelineAsset, bool>, IAwakeSystem<TimelineAsset, TimelinePlaybackLayer>
     {
         public int CurrentFrame { get; private set; }
         public int FrameRate => Asset.FrameRate;
@@ -63,6 +63,8 @@ namespace Ux
         public TimelineComponent Component => ParentAs<TimelineComponent>();
         public bool IsDone { get; private set; }
         public bool IsAdditive { get; private set; }
+        public TimelinePlaybackLayer PlaybackLayer { get; private set; }
+        public int PlaybackOrder { get; private set; }
         public bool IsWeightFadeComplete
         {
             get
@@ -83,22 +85,36 @@ namespace Ux
 
         void IAwakeSystem<TimelineAsset, bool>.OnAwake(TimelineAsset asset, bool isAdditive)
         {
+            Awake(asset, isAdditive ? TimelinePlaybackLayer.Additive : TimelinePlaybackLayer.Base);
+        }
+
+        void IAwakeSystem<TimelineAsset, TimelinePlaybackLayer>.OnAwake(TimelineAsset asset, TimelinePlaybackLayer layer)
+        {
+            Awake(asset, layer);
+        }
+
+        private void Awake(TimelineAsset asset, TimelinePlaybackLayer layer)
+        {
             Asset = asset;
-            IsAdditive = isAdditive;
+            PlaybackLayer = layer;
+            PlaybackOrder = Component?.GetNextPlaybackOrder() ?? 0;
+            IsAdditive = layer == TimelinePlaybackLayer.Additive;
             CurrentFrame = 0;
             _hasPlaybackEvaluation = false;
 
             if (asset?.tracks != null)
             {
-                foreach (var trackAsset in asset.tracks)
+                for (var index = 0; index < asset.tracks.Count; index++)
                 {
+                    var trackAsset = asset.tracks[index];
                     if (trackAsset?.TrackType == null)
                     {
                         continue;
                     }
 
-                    if (Add(trackAsset.TrackType, trackAsset) is TimelineTrack track)
+                    if (Add(trackAsset.TrackType, trackAsset, IsFromPool) is TimelineTrack track)
                     {
+                        track.TrackOrder = index;
                         _tracks.Add(track);
                     }
                 }
@@ -115,6 +131,8 @@ namespace Ux
             CurrentFrame = 0;
             IsDone = false;
             IsAdditive = false;
+            PlaybackLayer = TimelinePlaybackLayer.Base;
+            PlaybackOrder = 0;
             _hasPlaybackEvaluation = false;
         }
 
@@ -153,13 +171,32 @@ namespace Ux
             EvaluateInternal(new TimelineEvaluationContext(previousFrame, CurrentFrame, FrameRate, TimelineEvaluationMode.Seek));
         }
 
+        public void EvaluatePlaybackFrame(int frame)
+        {
+            var nextFrame = Mathf.Max(0, frame);
+            if (_hasPlaybackEvaluation && nextFrame == CurrentFrame)
+            {
+                return;
+            }
+
+            var previousFrame = _hasPlaybackEvaluation ? CurrentFrame : -1;
+            CurrentFrame = nextFrame;
+            _hasPlaybackEvaluation = true;
+            EvaluateInternal(new TimelineEvaluationContext(
+                previousFrame,
+                CurrentFrame,
+                FrameRate,
+                TimelineEvaluationMode.Playback));
+        }
+
         /// <summary>
         /// 动作进入逻辑帧执行当前帧而不推进游标。主要用于新动作第 0 帧，确保不会在一个逻辑帧内同时执行第 0、1 帧事件。
         /// </summary>
         public void EvaluateCurrentFramePlayback()
         {
+            var previousFrame = _hasPlaybackEvaluation ? CurrentFrame : CurrentFrame - 1;
             EvaluateInternal(new TimelineEvaluationContext(
-                CurrentFrame - 1,
+                previousFrame,
                 CurrentFrame,
                 FrameRate,
                 TimelineEvaluationMode.Playback));
@@ -170,7 +207,7 @@ namespace Ux
         {
             foreach (var track in _tracks)
             {
-                track.Evaluate(context);
+                track.Evaluate(in context);
             }
             IsDone = CurrentFrame >= (Asset?.DurationFrames ?? 0);
         }
@@ -188,6 +225,14 @@ namespace Ux
             foreach (var track in _tracks)
             {
                 track.StartWeightFade(destWeight, fadeDuration);
+            }
+        }
+
+        public void AdvanceWeightFade(float deltaTime)
+        {
+            foreach (var track in _tracks)
+            {
+                track.AdvanceWeightFade(deltaTime);
             }
         }
     }

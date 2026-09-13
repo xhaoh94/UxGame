@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1420382afa24de4e8b1a9fce371ab3e, type: 3}
+  m_Name: HeroZSCombatProfileAction1002
+  m_EditorClassIdentifier: Unity.HotfixBase::Ux.TimelineAsset
+  frameRate: 60
+  tracks:
+  - rid: 2154703322464125000
+  references:
+    version: 2
+    RefIds:
+    - rid: 2154703322464125000
+      type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        id: c7a581f6340d40f7a58cd4c13ee828b3
+        trackName: "\u52A8\u753B"
+        clips: []
+        isAdditive: 0
+        avatarMask: {fileID: 0}

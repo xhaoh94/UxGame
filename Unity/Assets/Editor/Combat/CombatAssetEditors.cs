@@ -172,9 +172,7 @@ namespace Ux.Editor.Combat
             return result;
         }
 
-        private static bool ContainsAction(
-            CharacterCombatProfile profile,
-            CombatActionAsset action)
+        private static bool ContainsAction(CharacterCombatProfile profile, CombatActionAsset action)
         {
             if (profile?.Actions == null)
             {
@@ -190,9 +188,7 @@ namespace Ux.Editor.Combat
             return false;
         }
 
-        private static TimelineAsset FindTimeline(
-            CharacterCombatProfile profile,
-            CombatActionAsset action)
+        private static TimelineAsset FindTimeline(CharacterCombatProfile profile, CombatActionAsset action)
         {
             if (profile?.ActionPresentations == null)
             {

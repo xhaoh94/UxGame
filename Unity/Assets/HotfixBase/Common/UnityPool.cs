@@ -42,14 +42,22 @@ public static class UnityPool
         }
         else
         {
-            var obj = queue.Dequeue();
-            if (obj is GameObject go)
+            while (queue.Count > 0)
             {
-                go.Visible(true);
-                go.transform.SetParent(null);
-                SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
+                var obj = queue.Dequeue();
+                if (obj == null)
+                {
+                    continue;
+                }
+                if (obj is GameObject go)
+                {
+                    go.Visible(true);
+                    go.transform.SetParent(null);
+                    SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
+                }
+                return obj as T;
             }
-            return obj as T;
+            return create?.Invoke();
         }
     }
 

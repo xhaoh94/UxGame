@@ -45,11 +45,7 @@ namespace Ux
         public readonly CombatActionEndReason EndReason;
         public readonly long SimulationFrame;
 
-        public CombatActionChangedEvent(
-            CombatActionAsset previous,
-            CombatActionAsset current,
-            CombatActionEndReason endReason,
-            long simulationFrame)
+        public CombatActionChangedEvent(CombatActionAsset previous, CombatActionAsset current, CombatActionEndReason endReason, long simulationFrame)
         {
             Previous = previous;
             Current = current;
@@ -64,12 +60,7 @@ namespace Ux
     /// </summary>
     public readonly struct CombatActiveHitWindow
     {
-        public CombatActiveHitWindow(
-            long actionInstanceId,
-            int actionId,
-            int actionFrame,
-            int windowIndex,
-            ActionHitWindow window)
+        public CombatActiveHitWindow(long actionInstanceId, int actionId, int actionFrame, int windowIndex, ActionHitWindow window)
         {
             ActionInstanceId = actionInstanceId;
             ActionId = actionId;
@@ -217,10 +208,7 @@ namespace Ux
             _initialized = true;
         }
 
-        public void Tick(
-            long simulationFrame,
-            in CombatFrameCommands commands,
-            bool canStartActions)
+        public void Tick(long simulationFrame, in CombatFrameCommands commands, bool canStartActions)
         {
             if (!_initialized)
             {
@@ -244,11 +232,7 @@ namespace Ux
             }
         }
 
-        public bool StartAction(
-            int actionId,
-            long requestId,
-            long simulationFrame,
-            bool predicted)
+        public bool StartAction(int actionId, long requestId, long simulationFrame, bool predicted)
         {
             if (!_initialized || !_actions.TryGetValue(actionId, out var action))
             {
@@ -264,10 +248,7 @@ namespace Ux
             return true;
         }
 
-        public bool Confirm(
-            long requestId,
-            long authoritativeInstanceId,
-            long authoritativeStartFrame)
+        public bool Confirm(long requestId, long authoritativeInstanceId, long authoritativeStartFrame)
         {
             if (!HasAction || Current.RequestId != requestId || authoritativeInstanceId <= 0)
             {
@@ -428,12 +409,7 @@ namespace Ux
             return true;
         }
 
-        public void Restore(
-            in CombatActionSnapshot snapshot,
-            bool hasAction,
-            long simulationFrame,
-            CombatAcceptedHitSnapshot[] acceptedHits = null,
-            long localActionSequence = -1)
+        public void Restore(in CombatActionSnapshot snapshot, bool hasAction, long simulationFrame, CombatAcceptedHitSnapshot[] acceptedHits = null, long localActionSequence = -1)
         {
             _simulationFrame = Math.Max(0, simulationFrame);
             if (localActionSequence >= 0)

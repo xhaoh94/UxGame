@@ -37,10 +37,7 @@ namespace Ux
         /// 当指定变体不存在时，优先回退到同一状态的 default，再回退到优先级最高的条目。
         /// 这样旧调用方无需传变体也能继续工作，同时皮肤/武器可以明确选择自己的变体。
         /// </summary>
-        public CombatStatePresentation GetStatePresentation(
-            StateLayer layer,
-            int stateId,
-            string variantId = null)
+        public CombatStatePresentation GetStatePresentation(StateLayer layer, int stateId, string variantId = null)
         {
             var requestedVariant = CombatStatePresentation.NormalizeVariantId(variantId);
             CombatStatePresentation exact = null;
@@ -84,10 +81,7 @@ namespace Ux
             return exact ?? defaultPresentation ?? fallback;
         }
 
-        public TimelineAsset GetStateTimeline(
-            StateLayer layer,
-            int stateId,
-            string variantId = null)
+        public TimelineAsset GetStateTimeline(StateLayer layer, int stateId, string variantId = null)
         {
             return GetStatePresentation(layer, stateId, variantId)?.Timeline;
         }
@@ -317,9 +311,7 @@ namespace Ux
             actionPresentations.RemoveAll(presentation => presentation == null);
         }
 
-        private static CombatStatePresentation SelectBetter(
-            CombatStatePresentation current,
-            CombatStatePresentation candidate)
+        private static CombatStatePresentation SelectBetter(CombatStatePresentation current, CombatStatePresentation candidate)
         {
             if (current == null)
             {

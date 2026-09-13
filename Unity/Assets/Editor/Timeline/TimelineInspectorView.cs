@@ -12,10 +12,7 @@ namespace Assets.Editor.Timeline
         readonly object selection;
         Func<bool> callback;
 
-        public TimelineInspectorBase(
-            ITimelineEditorSource source,
-            object selection,
-            object assetObject)
+        public TimelineInspectorBase(ITimelineEditorSource source, object selection, object assetObject)
         {
             Source = source;
             this.selection = selection;

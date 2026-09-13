@@ -21,7 +21,7 @@ namespace Ux.Editor
 
     public sealed class UxUndo : IDisposable
     {
-        readonly Dictionary<int, UndoData> records = new();
+        readonly Dictionary<int, List<UndoData>> records = new();
         int pendingGroup = -1;
 
         public UxUndo()
@@ -42,11 +42,45 @@ namespace Ux.Editor
             Undo.IncrementCurrentGroup();
             var group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(key);
-            Undo.RecordObject(obj, key);
-            // 不能在调用方真正修改对象之前 Flush/Collapse；否则 Unity 会把尚无差异的记录丢弃。
+            if (key.IndexOf("drag", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                // 拖拽跨越多个 UI 事件/帧，必须在拖拽开始时立即保存完整快照。
+                Undo.RegisterCompleteObjectUndo(obj, key);
+            }
+            else
+            {
+                Undo.RecordObject(obj, key);
+            }
+            // 普通编辑不能在真正修改对象之前 Flush/Collapse，否则 Unity 会把尚无差异的记录丢弃。
             // 调用方完成本次修改后必须调用 CompleteUndo，再推进到下一组。
-            records[group] = new UndoData(key, obj, action);
+            records[group] = new List<UndoData>
+            {
+                new UndoData(key, obj, action),
+            };
             pendingGroup = group;
+        }
+
+        public void RecordAdditionalObject(string key, UnityEngine.Object obj, Action action)
+        {
+            if (obj == null)
+            {
+                return;
+            }
+
+            if (pendingGroup < 0)
+            {
+                RegUndo(key, obj, action);
+                return;
+            }
+
+            // 额外资源通常由同一次跨源提交在当前回调中修改，立即保存完整快照，避免跨帧差异记录丢失。
+            Undo.RegisterCompleteObjectUndo(obj, key);
+            if (!records.TryGetValue(pendingGroup, out var groupRecords))
+            {
+                groupRecords = new List<UndoData>();
+                records[pendingGroup] = groupRecords;
+            }
+            groupRecords.Add(new UndoData(key, obj, action));
         }
 
         public void CompleteUndo()
@@ -70,13 +104,20 @@ namespace Ux.Editor
 
         void UndoRedoEventCallBack(in UndoRedoInfo undo)
         {
-            if (!records.TryGetValue(undo.undoGroup, out var data) || data.Owner == null)
+            if (!records.TryGetValue(undo.undoGroup, out var groupRecords))
             {
                 return;
             }
 
-            data.Action?.Invoke();
-            Log.Info(undo.isRedo ? $"redo: {data.Key}" : $"undo: {data.Key}");
+            foreach (var data in groupRecords)
+            {
+                if (data.Owner == null)
+                {
+                    continue;
+                }
+                data.Action?.Invoke();
+                Log.Info(undo.isRedo ? $"redo: {data.Key}" : $"undo: {data.Key}");
+            }
         }
     }
 }

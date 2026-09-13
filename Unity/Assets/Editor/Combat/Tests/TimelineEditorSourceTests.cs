@@ -217,6 +217,38 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
+        public void UxUndoTracksAdditionalObjectsInOneGroup()
+        {
+            var other = ScriptableObject.CreateInstance<TimelineAsset>();
+            var callbackCount = 0;
+            using var uxUndo = new UxUndo();
+            try
+            {
+                var originalAssetName = asset.name;
+                var originalOtherName = other.name;
+                uxUndo.RegUndo("tracked_timeline", asset, () => callbackCount++);
+                asset.name = "tracked";
+                uxUndo.RecordAdditionalObject("tracked_other", other, () => callbackCount++);
+                other.name = "other";
+                uxUndo.CompleteUndo();
+
+                Undo.PerformUndo();
+                Assert.AreEqual(originalAssetName, asset.name);
+                Assert.AreEqual(originalOtherName, other.name);
+                Assert.AreEqual(2, callbackCount);
+
+                Undo.PerformRedo();
+                Assert.AreEqual("tracked", asset.name);
+                Assert.AreEqual("other", other.name);
+                Assert.AreEqual(4, callbackCount);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(other);
+            }
+        }
+
+        [Test]
         public void NoOpTimelineRecordDoesNotCaptureLaterUnrelatedUndo()
         {
             var other = ScriptableObject.CreateInstance<TimelineAsset>();

@@ -12,10 +12,7 @@ namespace Ux.Editor.Timeline.Animation
         int startFrame;
         int endFrame;
 
-        public TLAnimClipInspector(
-            ITimelineEditorSource source,
-            ITimelineEditorClip clip,
-            AnimationClipAsset asset) : base(source, clip, asset)
+        public TLAnimClipInspector(ITimelineEditorSource source, ITimelineEditorClip clip, AnimationClipAsset asset) : base(source, clip, asset)
         {
             CreateChildren();
             Add(root);

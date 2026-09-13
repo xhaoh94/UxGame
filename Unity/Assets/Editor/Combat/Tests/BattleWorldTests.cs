@@ -376,12 +376,7 @@ namespace Ux.Editor.Combat.Tests
             private readonly List<long> _order;
             private readonly long _attackFrame;
 
-            public StubEntity(
-                long id,
-                CharacterCombatProfile profile,
-                List<long> order = null,
-                List<string> log = null,
-                long attackFrame = 0)
+            public StubEntity(long id, CharacterCombatProfile profile, List<long> order = null, List<string> log = null, long attackFrame = 0)
             {
                 Id = id;
                 _order = order;

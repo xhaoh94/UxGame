@@ -187,7 +187,7 @@ namespace Ux.Editor.Combat.Tests
                 string.Empty,
                 typeof(Transform),
                 "m_LocalPosition.x",
-                AnimationCurve.Linear(0f, 0f, 0.5f, 1f));
+                AnimationCurve.Linear(0f, 0f, 0.75f, 1f));
             AssetDatabase.CreateAsset(animation, animationPath);
             AssetDatabase.SaveAssets();
 
@@ -213,6 +213,10 @@ namespace Ux.Editor.Combat.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(actionPath));
                 Assert.IsFalse(string.IsNullOrEmpty(timelinePath));
                 Assert.AreSame(action, profile.FindAction(1001));
+                Assert.AreEqual(45, action.DurationFrames,
+                    "新建技能时，逻辑时长至少必须覆盖表现动画时长。");
+                Assert.AreEqual(45, timeline.DurationFrames,
+                    "新建技能时，表现 Timeline 时长必须与动画采样帧一致。");
                 Assert.AreSame(timeline, profile.GetActionTimeline(action));
                 Assert.AreSame(animation, CombatEditorUtility.GetPrimaryAnimationClip(timeline));
                 Assert.IsNull(new SerializedObject(action).FindProperty("timeline"));
@@ -554,9 +558,7 @@ namespace Ux.Editor.Combat.Tests
         [TestCase(false, false)]
         [TestCase(true, false)]
         [TestCase(true, true)]
-        public void StatePresentationValidationUsesTimelineOrProfileContext(
-            bool hasTimeline,
-            bool destroyTimeline)
+        public void StatePresentationValidationUsesTimelineOrProfileContext(bool hasTimeline, bool destroyTimeline)
         {
             var profile = CombatTestProfiles.CreateProfile();
             var timeline = hasTimeline ? ScriptableObject.CreateInstance<TimelineAsset>() : null;

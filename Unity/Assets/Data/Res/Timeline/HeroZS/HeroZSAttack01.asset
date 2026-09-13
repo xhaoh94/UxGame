@@ -22,11 +22,11 @@ MonoBehaviour:
       type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
         id: 28921978fbc743bea95f6db556868b65
-        trackName: Animation
+        trackName: Attack
         clips:
         - rid: 1176164152299749450
         isAdditive: 0
-        avatarMask: {fileID: 0}
+        avatarMask: {fileID: 31900000, guid: c93943888ec64050899cb0dd185da004, type: 2}
     - rid: 1176164152299749450
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
@@ -38,6 +38,6 @@ MonoBehaviour:
         OutFrame: 0
         clip: {fileID: 1827226128182048838, guid: 75f41ed80eab9704189a26e21e6c38cf, type: 3}
         pre: 0
-        post: 2
+        post: 0
         PreFrame: 0
         PostFrame: 2147483647

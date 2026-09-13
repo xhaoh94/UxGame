@@ -225,11 +225,7 @@ namespace Ux.Editor.Combat.Tests
 
         private class TimelineFixture : IDisposable
         {
-            protected TimelineFixture(
-                TestRootEntity root,
-                TimelineComponent component,
-                TimelineAsset asset,
-                Ux.Timeline timeline)
+            protected TimelineFixture(TestRootEntity root, TimelineComponent component, TimelineAsset asset, Ux.Timeline timeline)
             {
                 Root = root;
                 Component = component;
@@ -265,12 +261,7 @@ namespace Ux.Editor.Combat.Tests
 
         private sealed class RecordingFixture : TimelineFixture
         {
-            private RecordingFixture(
-                TestRootEntity root,
-                TimelineComponent component,
-                TimelineAsset asset,
-                Ux.Timeline timeline,
-                RecordingClip clip)
+            private RecordingFixture(TestRootEntity root, TimelineComponent component, TimelineAsset asset, Ux.Timeline timeline, RecordingClip clip)
                 : base(root, component, asset, timeline)
             {
                 Clip = clip;
@@ -278,10 +269,7 @@ namespace Ux.Editor.Combat.Tests
 
             public RecordingClip Clip { get; }
 
-            public static RecordingFixture Create(
-                int startFrame,
-                int endFrame,
-                int triggerFrame = 0)
+            public static RecordingFixture Create(int startFrame, int endFrame, int triggerFrame = 0)
             {
                 var asset = ScriptableObject.CreateInstance<TimelineAsset>();
                 var trackAsset = new RecordingTrackAsset { trackName = "测试" };

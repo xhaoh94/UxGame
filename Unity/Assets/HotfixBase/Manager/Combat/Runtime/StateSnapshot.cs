@@ -10,12 +10,7 @@ namespace Ux
         public readonly StateChangeReason Reason;
         public readonly long SimulationFrame;
 
-        public StateChangedEvent(
-            StateLayer layer,
-            int previousStateId,
-            int currentStateId,
-            StateChangeReason reason,
-            long simulationFrame)
+        public StateChangedEvent(StateLayer layer, int previousStateId, int currentStateId, StateChangeReason reason, long simulationFrame)
         {
             Layer = layer;
             PreviousStateId = previousStateId;

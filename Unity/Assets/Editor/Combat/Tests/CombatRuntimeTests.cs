@@ -1126,19 +1126,13 @@ namespace Ux.Editor.Combat.Tests
             return CombatTestProfiles.CreateProfile(actions);
         }
 
-        private static void SetWindowRange(
-            SerializedProperty window,
-            int startFrame,
-            int endFrame)
+        private static void SetWindowRange(SerializedProperty window, int startFrame, int endFrame)
         {
             window.FindPropertyRelative("StartFrame").intValue = startFrame;
             window.FindPropertyRelative("EndFrame").intValue = endFrame;
         }
 
-        private static CombatActionAsset CreateAction(
-            int actionId,
-            string stableId,
-            int durationFrames)
+        private static CombatActionAsset CreateAction(int actionId, string stableId, int durationFrames)
         {
             return CombatTestProfiles.CreateAction(actionId, stableId, durationFrames);
         }
