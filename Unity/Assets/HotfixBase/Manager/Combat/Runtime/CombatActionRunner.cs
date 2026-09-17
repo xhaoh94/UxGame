@@ -27,7 +27,11 @@ namespace Ux
     [Serializable]
     public sealed class UnitCombatSnapshot
     {
-        public const int CurrentVersion = 1;
+        /// <summary>
+        /// 1 → 2：加入 Attributes 与 Buffs。版本号必须跟着字段一起涨（RestoreSnapshot 会拒绝版本不一致的快照）——
+        /// 旧快照还原新结构会让 HP 与增益静默回到默认值，比直接拒绝危险。快照无落盘、无网络传输，升级不需兼容旧数据。
+        /// </summary>
+        public const int CurrentVersion = 2;
 
         public int Version;
         public UnitStateMachineSnapshot StateMachine;
@@ -36,6 +40,8 @@ namespace Ux
         public CombatAcceptedHitSnapshot[] AcceptedHits;
         public long LocalActionSequence;
         public bool IsGrounded;
+        public UnitAttributeSnapshot Attributes;
+        public CombatBuffSnapshot[] Buffs;
     }
 
     public readonly struct CombatActionChangedEvent
@@ -85,8 +91,10 @@ namespace Ux
     }
 
     /// <summary>
-    /// 每 Unit 独立的动作生命周期。它直接消费逻辑帧命令，管理动作帧、取消、完成、预测确认和快照；
-    /// 不再依赖“每个动作一个状态节点”的状态图。
+    /// 每 Unit 独立的动作生命周期：消费逻辑帧命令，管理动作帧、取消、完成、预测确认和快照。
+    ///
+    /// 职责边界：UnitStateMachine 回答"现在处于什么状态"，本类回答"这一招播到第几帧了"。
+    /// 所以加一个新技能不用动状态机，加一个 CombatActionAsset 资产就行。
     /// </summary>
     public sealed class CombatActionRunner
     {
@@ -102,6 +110,11 @@ namespace Ux
         public CombatActionAsset CurrentAsset { get; private set; }
         public bool HasAction => CurrentAsset != null;
         public long LocalSequence => _localSequence;
+
+        /// <summary>
+        /// 当前动作是否锁移动。CombatController.IsMovementBlocked 会读它，
+        /// 所以这一个属性就是"普攻能不能边跑边打"的开关（值来自资源的 movementPolicy）。
+        /// </summary>
         public bool BlocksMovement =>
             CurrentAsset?.MovementPolicy == ActionMovementPolicy.Block;
 
@@ -208,6 +221,11 @@ namespace Ux
             _initialized = true;
         }
 
+        /// <summary>
+        /// 动作系统每帧的唯一入口，由 CombatController.Tick 调用。
+        /// 走向按顺序判断：推进动作帧 → 不允许起手就打断 → 有动作走 TryCancel → 没动作走 TryStart。
+        /// "有动作只能取消、没动作才能起手"这条互斥，保证同一单位同一时刻只有一条动作在跑。
+        /// </summary>
         public void Tick(long simulationFrame, in CombatFrameCommands commands, bool canStartActions)
         {
             if (!_initialized)
@@ -215,19 +233,24 @@ namespace Ux
                 return;
             }
 
+            // 0. 动作帧 +1，到 DurationFrames 会自动 Completed 结束（见 AdvanceTo）
             AdvanceTo(simulationFrame);
+
             if (!canStartActions)
             {
+                // 1. 死了或被控：无条件打断，命令也不看了
                 Interrupt(CombatActionEndReason.Interrupted);
                 return;
             }
 
             if (HasAction)
             {
+                // 2. 手上正忙 —— 只判断"能不能被下一招取消"
                 TryCancel(commands);
             }
             else
             {
+                // 3. 手上空闲 —— 判断"能不能起手"
                 TryStart(commands);
             }
         }
@@ -493,11 +516,19 @@ namespace Ux
             ActionChanged = null;
         }
 
+        /// <summary>
+        /// 逐帧推进：把动作帧推进到目标帧。
+        ///
+        /// 推的是差值而不是"帧号 = 帧号"：卡顿被补跑 3 帧时 ActionFrame 一次 +3，
+        /// 动作总时长在帧率波动下保持一致，也不会因为丢帧永远播不完。
+        /// 累加到 DurationFrames 就自动 Completed 结束，不需要任何人手动触发。
+        /// </summary>
         private void AdvanceTo(long simulationFrame)
         {
             var target = Math.Max(0, simulationFrame);
             if (target <= _simulationFrame)
             {
+                // 只允许正向推进；帧号回退会被静默忽略（BattleWorld 那边会告警）
                 return;
             }
 
@@ -509,16 +540,23 @@ namespace Ux
             }
 
             var current = Current;
+            // 溢出保护：ActionFrame 是 int，长时间不结束的动作也不会翻负
             current.ActionFrame = delta >= int.MaxValue - (long)current.ActionFrame
                 ? int.MaxValue
                 : current.ActionFrame + (int)delta;
             Current = current;
+
+            // 播完了自动收尾。这里的 DurationFrames 就是资产里的 70。
             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
             {
                 EndCurrent(CombatActionEndReason.Completed);
             }
         }
 
+        /// <summary>
+        /// 空闲时尝试起手：取第一条能在本单位动作表里找到的命令，找到就起手并返回 —— 一帧最多起手一次。
+        /// 技能的一切（时长、窗口、锁不锁移动）都查表得到，所以命令本身只需要一个 ActionId。
+        /// </summary>
         private bool TryStart(in CombatFrameCommands commands)
         {
             for (var i = 0; i < commands.Count; i++)
@@ -526,15 +564,25 @@ namespace Ux
                 var command = commands[i];
                 if (!_actions.TryGetValue(command.ActionId, out var action))
                 {
+                    // 本单位没有这个 ActionId（比如别的角色的技能）→ 跳过
                     continue;
                 }
 
+                // RequestId != 0 视为"预测执行"：本地先跑，等服务器确认再校正起始帧。
                 Start(action, command.RequestId, command.RequestId != 0);
                 return true;
             }
             return false;
         }
 
+        /// <summary>
+        /// 忙碌时尝试取消（连招 / 取消后摇）。两个条件必须同时满足：窗口指向的就是这条命令的动作，
+        /// 且当前动作帧落在窗口内（RequiresHitConfirm 为真时还要求已命中）。
+        /// 命中则结束当前动作（原因 Cancelled）并立刻起手新动作，ActionFrame 从 0 开始。
+        ///
+        /// ⚠ 这正是"狂点打不出伤害"的成因：普攻 1001 的取消窗口是 [5,26) 且指向自己，
+        /// 帧 5-26 之间每次按键都会把动作重置回帧 0，永远走不到帧 41 的命中窗口。
+        /// </summary>
         private bool TryCancel(in CombatFrameCommands commands)
         {
             for (var commandIndex = 0; commandIndex < commands.Count; commandIndex++)
@@ -547,12 +595,15 @@ namespace Ux
 
                 foreach (var window in CurrentAsset.CancelWindows)
                 {
+                    // ① 窗口指向的就是这条命令要执行的动作吗？
+                    // ② 当前动作帧在窗口内吗？（RequiresHitConfirm 为真时还要求已命中）
                     if (window.TargetActionId != command.ActionId ||
                         !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
                     {
                         continue;
                     }
 
+                    // 取消 → 立刻接上新动作，一步到位，中间没有"空闲帧"
                     EndCurrent(CombatActionEndReason.Cancelled);
                     Start(target, command.RequestId, command.RequestId != 0);
                     return true;
@@ -561,6 +612,13 @@ namespace Ux
             return false;
         }
 
+        /// <summary>
+        /// 建立一次动作实例 —— "出手"真正发生的地方。
+        /// InstanceId 每次起手唯一（表现层用它当 owner key，连招时能强制重播动画），
+        /// StartSimulationFrame 用于服务器确认时重算 ActionFrame，IsPredicted 表示本地先跑等 Confirm 转正。
+        ///
+        /// 这里必须清 _acceptedHits：新动作不能复用上一招已命中的目标，否则连招第二下会打不出伤害。
+        /// </summary>
         private void Start(CombatActionAsset action, long requestId, bool predicted)
         {
             var previous = CurrentAsset;
@@ -577,6 +635,8 @@ namespace Ux
                 IsConfirmed = !predicted,
                 HasHitConfirmed = false,
             };
+            // 广播"动作开始"，表现层据此把新的攻击 Timeline 铺到 Action 轨道上。
+            // 事件只是通知不是命令：没人监听也不影响逻辑，无渲染环境照样跑。
             ActionChanged?.Invoke(new CombatActionChangedEvent(
                 previous,
                 action,

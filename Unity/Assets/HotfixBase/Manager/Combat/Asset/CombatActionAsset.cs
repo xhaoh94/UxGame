@@ -86,6 +86,32 @@ namespace Ux
     }
 
     /// <summary>
+    /// 动作附带增益的配置 —— ⚠ 最小版本（完整形态属于 P4）。
+    /// BuffId 为 0 表示不附带任何增益（默认值），所以旧资产不需要迁移。
+    /// </summary>
+    [Serializable]
+    public sealed class ActionBuffApply
+    {
+        [SerializeField, Min(0)] private int buffId;
+        [SerializeField, Min(1)] private int durationFrames = 120;
+        [SerializeField, Min(0)] private int damagePerTick;
+
+        public int BuffId => buffId;
+        public int DurationFrames => Mathf.Max(1, durationFrames);
+        public int DamagePerTick => Mathf.Max(0, damagePerTick);
+
+        /// <summary>是否配置了增益。为 false 时命中不会往目标身上挂任何东西。</summary>
+        public bool IsEnabled => buffId > 0;
+
+        public void ValidateData()
+        {
+            buffId = Mathf.Max(0, buffId);
+            durationFrames = Mathf.Max(1, durationFrames);
+            damagePerTick = Mathf.Max(0, damagePerTick);
+        }
+    }
+
+    /// <summary>
     /// 一个可执行战斗动作的权威逻辑配置。状态机只表示 Free/Executing，具体动作生命周期由
     /// CombatActionRunner 管理；客户端 Timeline 通过 CharacterCombatProfile 的独立表现映射关联。
     /// </summary>
@@ -100,6 +126,11 @@ namespace Ux
         [SerializeField] private List<ActionCancelWindow> cancelWindows = new();
         [SerializeField] private List<ActionHitWindow> hitWindows = new();
 
+        // 伤害配置 —— 最小版本，固定值，没有修改器栈与随机区间（见 CombatDamageSystem 的类注释）。
+        [Header("伤害与效果（最小版本）")]
+        [SerializeField, Min(0)] private int damage = 10;
+        [SerializeField] private ActionBuffApply appliedBuff = new();
+
         public string StableId => stableId;
         public int ActionId => actionId;
         public string DisplayName => displayName;
@@ -107,6 +138,12 @@ namespace Ux
         public ActionMovementPolicy MovementPolicy => movementPolicy;
         public IReadOnlyList<ActionCancelWindow> CancelWindows => cancelWindows;
         public IReadOnlyList<ActionHitWindow> HitWindows => hitWindows;
+
+        /// <summary>这一招打中后扣多少血。固定值，不参与任何公式。</summary>
+        public int Damage => Mathf.Max(0, damage);
+
+        /// <summary>这一招打中后往目标身上挂什么增益。BuffId 为 0 表示不挂。</summary>
+        public ActionBuffApply AppliedBuff => appliedBuff;
 
         public void ValidateData()
         {
@@ -116,6 +153,9 @@ namespace Ux
             }
             actionId = Mathf.Max(1, actionId);
             displayName ??= string.Empty;
+            damage = Mathf.Max(0, damage);
+            appliedBuff ??= new ActionBuffApply();
+            appliedBuff.ValidateData();
             MigrateLogicItemStableIds();
             foreach (var window in cancelWindows)
             {
@@ -190,6 +230,7 @@ namespace Ux
             displayName ??= string.Empty;
             cancelWindows ??= new List<ActionCancelWindow>();
             hitWindows ??= new List<ActionHitWindow>();
+            appliedBuff ??= new ActionBuffApply();
         }
 #endif
     }

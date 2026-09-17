@@ -292,16 +292,42 @@ HitEvent → 取攻方属性快照 → 取守方属性快照
 ```
 1 Commands     插件 → 各单位 ConsumeCommands
 2 Actions      插件 → 各单位 TickLogic（状态机 + 动作 + 位移）
-3 Timeline     插件（P2 的 Gameplay Track 接入后才有内置实现）
-4 Hitbox       插件（P2）
-5 Damage       插件（P1）
-6 Buff         插件（P4）
-7 Death        插件（P1）
+3 Timeline     CombatTimelineSystem  求值本帧帧事件（命中窗口 / 取消窗口）
+4 Hitbox       HitboxSystem          几何查询，产出待结算命中
+5 Damage       CombatDamageSystem    固定伤害扣血 + 施加附带增益
+6 Buff         CombatBuffSystem      周期结算 + 到期移除
+7 Death        CombatDeathSystem     HP ≤ 0 → LifeState.Dead
 8 Presentation 插件 → 各单位 TickPresentation
 ```
 
-每个阶段内**插件先执行、内置核心后执行**。1/2/8 是内置核心，3-7 目前只有插件位，
-这样后续阶段不用改动核心循环。
+每个阶段内**插件先执行、内置核心后执行**。1/2/8 是内置核心；3-7 由 `BattleWorld`
+构造函数注册的默认插件填充。这些插件只是"默认组合"，槽位本身允许被替换或再叠加，
+所以后续接入更完整的实现不需要改动核心循环。
+
+**阶段之间怎么交接数据**（不要互相持有引用）
+
+```
+FrameEvents   阶段 3 写入 → 阶段 4/5/6 读取    每个逻辑帧开头由 BattleWorld 复位
+PendingHits   阶段 4 写入 → 阶段 5 读取        同上
+```
+
+两张表都挂在 `BattleWorld` 上（`FrameEvents` / `PendingHits`），生产者在自己的阶段里填充，
+消费者在后面的阶段里读取，插件之间零耦合。"每帧复位"由 BattleWorld 负责而不是生产者自己清，
+这样生产者漏注册时下游读到的是空表，而不是上一帧的残留数据。
+
+**插件状态**
+
+| 阶段 | 实现 | 状态 |
+|---|---|---|
+| Timeline | `CombatTimelineSystem` | 已落地。求值命中窗口与取消窗口，取消窗口目前无消费者（留给连招提示类 UI） |
+| Hitbox | `HitboxSystem` | 已落地。几何查询 + 同窗去重，结果写入 `PendingHits` |
+| Damage | `CombatDamageSystem` | **最小实现**：固定伤害，无修改器栈/暴击/减免（完整管线属 P1） |
+| Buff | `CombatBuffSystem` | **最小实现**：身份/寿命/每帧扣血三字段，无叠层/驱散（完整形态属 P4） |
+| Death | `CombatDeathSystem` | **最小实现**：判据只有 HP ≤ 0 |
+
+属性系统同理只有 `AttributeSet`（MaxHp/Hp），设计文档 4.3 描述的修改器栈尚未实现。
+`UnitCombatSnapshot.CurrentVersion` 已因加入属性与增益从 1 升到 2；
+快照目前只在模块内部使用（没有落盘、没有网络传输），所以这次升级不需要兼容旧数据。
 
 **驱动链变更**
 

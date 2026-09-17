@@ -64,9 +64,20 @@ namespace Ux
             _BcstUnitMove(resp);
         }
 
+        /// <summary>
+        /// 移动链路中转：把方向输入包成"服务器广播格式"，再抛回本地事件。
+        ///
+        /// 这里刻意复用 Pb.BcstUnitMove 而不是自定义本地结构 —— 本地玩家和远端玩家的移动，
+        /// 走的是同一套消息、同一个事件、同一段处理代码，区别只在于数据来源
+        /// （本地来自摇杆，远端来自 _BcstUnitMove 的网络回调）。
+        /// 等接上真实网络时，只需把下面被注释的 Send 打开，整条逻辑不用动。
+        ///
+        /// 注意 roleId 目前写死 1：只支持自己移动。多单位要改成传真实 roleId。
+        /// </summary>
         public void SendMove(Vector2 vector2)
         {
             var resp = new Pb.BcstUnitMove() { roleId = 1, pointIndex = 0 };
+            // Vector2 的 (x, y) 映射到世界坐标的 (X, Z)，Y 恒为 0。
             resp.Points.Add(new Pb.Vector3() { X = vector2.x,Y = 0, Z = vector2.y });
             EventMgr.Ins.Run(EventType.UNIT_MOVE, resp);
         }

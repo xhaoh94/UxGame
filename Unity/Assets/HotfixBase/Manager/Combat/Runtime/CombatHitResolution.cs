@@ -103,21 +103,29 @@ namespace Ux
     }
 
     /// <summary>
-    /// 逻辑命中查询适配层。它只使用固定坐标和已筛选目标，不调用 Unity Physics。
-    /// 当前形状集合只有圆形；新增形状必须保持整数/确定性计算，并补充独立校验。
+    /// 逻辑命中查询适配层，只用固定坐标和已筛选目标，不调用 Unity Physics。
+    /// 形状目前只有圆形；新增形状必须保持整数/确定性计算。
+    ///
+    /// 两个入口的差别只在窗口从哪来：全参重载由调用方传入（正式路径，Timeline 阶段已求值），
+    /// 短参重载自己问 Runner 要（留给测试与单点调试）；几何与去重逻辑完全共用。
     /// </summary>
     public static class CombatHitResolver
     {
-        public static int AppendResolvedHits(CombatActionRunner runner, in CombatHitQuerySource source, IReadOnlyList<CombatHitTarget> targets, List<CombatHitCandidate> output)
+        /// <summary>用外部传入的窗口做命中查询。窗口帧区间的合法性由调用方保证。</summary>
+        public static int AppendResolvedHits(
+            CombatActionRunner runner,
+            in CombatHitQuerySource source,
+            IReadOnlyList<CombatActiveHitWindow> windows,
+            IReadOnlyList<CombatHitTarget> targets,
+            List<CombatHitCandidate> output)
         {
             if (runner == null)
             {
                 throw new ArgumentNullException(nameof(runner));
             }
-            if (source.EntityId <= 0)
+            if (windows == null)
             {
-                throw new InvalidOperationException(
-                    $"命中查询攻击者 ID 必须为正数：{source.EntityId}");
+                throw new ArgumentNullException(nameof(windows));
             }
             if (targets == null)
             {
@@ -126,6 +134,11 @@ namespace Ux
             if (output == null)
             {
                 throw new ArgumentNullException(nameof(output));
+            }
+            if (source.EntityId <= 0)
+            {
+                throw new InvalidOperationException(
+                    $"命中查询攻击者 ID 必须为正数：{source.EntityId}");
             }
             var targetOrder = new List<int>(targets.Count);
             var targetIds = new HashSet<long>();
@@ -153,8 +166,6 @@ namespace Ux
                 return 0;
             }
 
-            var windows = new List<CombatActiveHitWindow>();
-            runner.AppendActiveHitWindows(windows);
             if (windows.Count == 0 || targetOrder.Count == 0)
             {
                 return 0;
@@ -192,6 +203,19 @@ namespace Ux
                 }
             }
             return added;
+        }
+
+        /// <summary>自行向 Runner 取本帧激活窗口的便利重载。每次调用新建窗口列表，不要放进逐帧热路径。</summary>
+        public static int AppendResolvedHits(CombatActionRunner runner, in CombatHitQuerySource source, IReadOnlyList<CombatHitTarget> targets, List<CombatHitCandidate> output)
+        {
+            if (runner == null)
+            {
+                throw new ArgumentNullException(nameof(runner));
+            }
+
+            var windows = new List<CombatActiveHitWindow>();
+            runner.AppendActiveHitWindows(windows);
+            return AppendResolvedHits(runner, source, windows, targets, output);
         }
 
         static bool IsInsideCircle(CombatFixedPoint source, CombatFixedPoint target, int radiusMillimeters)

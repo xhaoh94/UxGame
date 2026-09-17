@@ -100,11 +100,17 @@ namespace Ux
         }
     }
 
-    /// <summary>按逻辑帧保存输入命令，供本地模拟、网络同步和录像共用。</summary>
+    /// <summary>
+    /// 按逻辑帧保存输入命令，供本地模拟、网络同步和录像共用。
+    ///
+    /// 分桶的键是 command.SimulationFrame：网络与录像会送来"未来帧"的命令，必须先存着，等世界推进到那一帧再执行。
+    /// 本地输入走的帧号是 CurrentFrame + 1。取走即从字典删除，保证同一条命令不会被执行两次（含追赶帧）。
+    /// </summary>
     public sealed class CombatCommandBuffer
     {
         private readonly SortedDictionary<long, List<CombatCommand>> _frames = new();
 
+        /// <summary>入队。调用点在按键 / 收包回调里，不在任何逻辑帧内部；键就是 command.SimulationFrame。</summary>
         public void Enqueue(in CombatCommand command)
         {
             if (!_frames.TryGetValue(command.SimulationFrame, out var commands))
@@ -125,6 +131,7 @@ namespace Ux
             return new CombatFrameCommands(commands);
         }
 
+        /// <summary>丢弃早于指定帧的命令。只用在回滚到快照之后：旧命令必须扔掉，否则会被重复执行。</summary>
         public void DiscardBefore(long simulationFrame)
         {
             if (_frames.Count == 0)

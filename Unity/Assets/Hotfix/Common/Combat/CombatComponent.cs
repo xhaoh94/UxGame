@@ -4,7 +4,11 @@ using UnityEngine;
 namespace Ux
 {
     /// <summary>
-    /// Unit 的战斗入口：输入命令、代码状态规则、动作生命周期、移动和 Timeline 表现协调。
+    /// Unit 的战斗入口：输入命令、状态规则、动作生命周期、移动与 Timeline 表现协调。
+    ///
+    /// 它是 Unit（Unity 侧）与 BattleWorld（纯逻辑侧）之间的唯一桥接 —— 后者只认识 ICombatEntity，
+    /// 这个组件就是那个实现。两条链路：移动是"输入 → 状态 → 位移"，攻击是"命令 → 动作 → 表现"，
+    /// 两者在 TickLogic 里同帧汇合，所以能互相打断。分步说明见 OperateComponent.cs 类头。
     /// </summary>
     public sealed class CombatComponent : Entity, IAwakeSystem, ICombatEntity
     {
@@ -33,6 +37,13 @@ namespace Ux
 
         public long Id => Unit?.ID ?? 0;
         public bool IsCombatActive => Controller?.IsInitialized == true;
+
+        /// <summary>
+        /// 移动链路 · 输入交接点：把 PathComponent 的方向向量转交给逻辑层。
+        ///
+        /// 它不是命令、不走 CombatCommandBuffer：移动是每帧都要的连续输入，新值直接覆盖旧值，
+        /// 没有历史也没有帧号。位移结果靠 UNIT_UPDATE_POSITION 广播，不靠重放命令算出来。
+        /// </summary>
         public Vector2 MoveInput => Unit?.Path?.MoveVector2 ?? Vector2.zero;
 
         public Vector3 Position
@@ -106,12 +117,13 @@ namespace Ux
         }
 
         /// <summary>
-        /// 按 ActionId 请求技能。输入、网络和录像命令都只携带权威 ActionId，
-        /// 不再通过命令类型或优先级推断技能。
+        /// 请求执行指定动作
         /// </summary>
         public long RequestAction(int actionId, uint targetId = 0, Vector3 aimDirection = default)
         {
             var requestId = ++_nextRequestId;
+
+            //下一帧触发
             var frame = SimulationClock.Ins.CurrentFrame + 1;
             _commands.Enqueue(new CombatCommand(
                 requestId,
@@ -128,13 +140,27 @@ namespace Ux
             _nextRequestId = Math.Max(_nextRequestId, command.RequestId);
         }
 
-        // 阶段 Commands
+        // ── BattleWorld 一个逻辑帧的第 1 个阶段：Commands ──
+
+        /// <summary>
+        /// 攻击链路 · 取出：取走"帧号 == frame"那一桶命令，由 BattleWorld 的阶段 1 调用。
+        /// frame 是传入的世界帧号（不是命令产生的时间点）；取走即删除，所以同一条命令不会被执行两次。
+        /// </summary>
         public CombatFrameCommands ConsumeCommands(long frame)
         {
             return _commands.Consume(frame);
         }
 
-        // 阶段 Actions
+        // ── BattleWorld 一个逻辑帧的第 2 个阶段：Actions ──
+        // 一个单位一帧里全部的实质逻辑都在这一个方法里。
+
+        /// <summary>
+        /// 两条链路在这一帧汇合的地方 —— 移动判定、攻击执行、动画铺排都在这里，由 BattleWorld 的阶段 2 调用。
+        ///
+        /// 四步顺序不能换：Controller.Tick 推进状态与动作 → Resolve 决定这帧播什么 →
+        /// Synchronize 切轨道 → TickMovement 结算位移。顺序错的表现：先算位移再推进动作，
+        /// "这一帧刚起手的普攻"锁不住移动，会滑步（IsMovementBlocked 读的就是 Actions 的状态）。
+        /// </summary>
         public void TickLogic(long frame, in CombatFrameCommands commands)
         {
             SimulationFrame = frame;
@@ -143,13 +169,17 @@ namespace Ux
                 return;
             }
 
+            // 两个入参对应两条链路的输入：MoveInput 是"当前值"（每帧现读），
+            // commands 是阶段 1 刚从队列里取出的本帧命令。两者在这里汇合，所以移动和攻击能互相打断。
             Controller.Tick(frame, MoveInput, commands);
 
-            // 保持原有先后：先按新状态同步基础表现与动作覆盖层，再结算本帧位移。
+            // 攻击链路 · 表现落地：Base = 当前 Locomotion 的 Idle/Move 时间线，Action = 当前动作的攻击时间线。
             _framePlan = CombatTimelineResolver.Resolve(Profile, States, Actions, _presentationVariant);
             EnsureTimelinePlayer();
             _timelinePlayer?.Synchronize(_framePlan, Unit?.Viewer?.GetComponentInChildren<Animator>());
             _framePlanInitialized = true;
+
+            // 移动链路收尾：只有 Locomotion 判定为 Move 且没被阻挡，这一帧才真的产生位移。
             TickMovement();
         }
 
@@ -344,23 +374,37 @@ namespace Ux
             Profile = null;
         }
 
+        /// <summary>
+        /// 移动链路终点：位移结算。两重门禁都通过才动（没被阻挡 + Locomotion 是 Move）。
+        ///
+        /// 读的是"判定结果"而不是输入，所以想让技能期间不能跑只改 MovementPolicy 就行，这里不需要技能判断。
+        /// 除以 FrameRate 是为了把位移按逻辑帧均匀摊开，保证帧率一致时结果完全可复现。
+        /// </summary>
         private void TickMovement()
         {
+            // 门禁 ①：死亡 / 被控制 / 当前动作锁移动 → 本帧不产生位移
             if (Controller.IsMovementBlocked || States.Locomotion != LocomotionState.Move)
             {
                 return;
             }
 
+            // 门禁 ②：Locomotion 已经是 Move，这里再确认输入确实有效（防御性检查）
             var input = Unit.Path?.MoveVector2 ?? Vector2.zero;
             if (input.sqrMagnitude <= 0.0001f)
             {
                 return;
             }
 
+            // 二维输入 (x, y) 映射到世界水平面 (x, 0, z)
             var direction = new Vector3(input.x, 0, input.y).normalized;
             var frameRate = Math.Max(1, Profile.FrameRate);
+
+            // 位移：方向 × (每秒移速 ÷ 帧率)，逐帧累加到 Position。
+            // Position 的 setter 内部会把结果同步到 Viewer 的 transform.position。
             Unit.Position += direction * (Profile.MoveSpeedPerSecond / frameRate);
 
+            // 转向：朝移动方向转，但每帧最多转 TurnDegreesPerSecond / 帧率 度，
+            // 所以急转弯会有一个转身过程，不会瞬间贴面。
             var targetRotation = Quaternion.LookRotation(direction, Vector3.up);
             Unit.Rotation = Quaternion.RotateTowards(
                 Unit.Rotation,

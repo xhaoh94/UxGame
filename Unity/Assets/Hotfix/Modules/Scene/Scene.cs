@@ -20,10 +20,16 @@ namespace Ux
             Link(Go);
             Camera = Add<CameraComponent>();
             AStar = Add<AStarComponent, AstarPath>(Go.GetOrAddComponent<AstarPath>());
+            // 移动链路的前置：订阅移动事件。注意：不区分本地/远端，两者共用一个事件。
             EventMgr.Ins.On<Pb.BcstUnitMove>(EventType.UNIT_MOVE, this, _OnUnitMove);
             EventMgr.Ins.On<Pb.BcstUnitUpdatePosition>(EventType.UNIT_UPDATE_POSITION, this, _OnUnitUpdatePosition);
             EventMgr.Ins.On<Pb.BcstUnitIntoView>(EventType.UNIT_INTO_VIEW, this, _OnUnitIntoView);
             EventMgr.Ins.On<Pb.BcstUnitOutofView>(EventType.UNIT_OUTOF_VIEW, this, _OnUnitOutofView);
+            // ★ 全项目战斗逻辑的时间起点 ★
+            // 逻辑帧时钟一旦跑起来，它会以 60Hz 不断发出"帧号 +1"的事件；
+            // CombatMgr 订阅了这个事件，于是 BattleWorld.Tick 被反复调用 ——
+            // 上面两条链路真正"跑起来"的那一段（取出命令、判定状态、结算位移）都在那一层里发生。
+            // 注意：Unity 的 Update 只负责喂时间，它不参与战斗逻辑。
             var simulationClock = SimulationClock.Ins;
             if (!simulationClock.IsRunning)
             {
@@ -39,6 +45,13 @@ namespace Ux
             players.Add(playerData.id, player);
         }
 
+        /// <summary>
+        /// 移动链路中转：按 roleId 找到对应 Unit，把输入交给它的 PathComponent。
+        ///
+        /// 本地玩家和远端玩家在这里汇合：本地走 SceneModule.SendMove，
+        /// 远端走 _BcstUnitMove 的网络回调，但两者发的是同一个事件、进的是同一个方法。
+        /// 所以"自己移动"和"看到别人移动"在逻辑层完全等价，表现代码不需要区分。
+        /// </summary>
         void _OnUnitMove(Pb.BcstUnitMove param)
         {
             //Log.Debug("移动Unit" + param.roleId);

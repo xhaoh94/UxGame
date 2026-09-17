@@ -10,9 +10,50 @@ namespace Ux
     /// </summary>
     public sealed class BattleWorld
     {
+        // 阶段种类数。必须与 BattlePhase 成员数、_systemBuckets 的 new() 个数同步，
+        // 漏改不会编译报错，只会静默失效（越界错误日志 / 直接数组越界）。
         private const int PhaseCount = 8;
         private const ulong FnvOffsetBasis = 14695981039346656037UL;
         private const ulong FnvPrime = 1099511628211UL;
+
+        // 逻辑帧内各阶段的执行顺序，是阶段顺序的唯一事实来源。
+        // 不用 Enum.GetValues：BattlePhase 是 : byte，它返回的是 byte[]（强转会抛 InvalidCastException）；
+        // 而且它每次调用都新建数组，写死在这里才能被下面的静态构造校验抓住漏补。
+        private static readonly BattlePhase[] PhaseOrder = BuildPhaseOrder();
+
+        /// <summary>启动校验：PhaseOrder 与 PhaseCount / 枚举值不一致时记错误日志。不抛异常，避免 TypeInitializationException 让整个类型不可用。</summary>
+        static BattleWorld()
+        {
+            if (PhaseOrder.Length != PhaseCount)
+            {
+                Log.Error(
+                    $"BattlePhase 成员数与 PhaseCount 不一致: enum={PhaseOrder.Length}, PhaseCount={PhaseCount}");
+            }
+
+            for (var i = 0; i < PhaseOrder.Length; i++)
+            {
+                if ((int)PhaseOrder[i] != i)
+                {
+                    Log.Error($"PhaseOrder 第 {i} 项应为 {(BattlePhase)i}，实际为 {PhaseOrder[i]}");
+                }
+            }
+        }
+
+        private static BattlePhase[] BuildPhaseOrder()
+        {
+            // 顺序 = 枚举值升序，和 BattlePhase 里的定义顺序保持一致。
+            return new[]
+            {
+                BattlePhase.Commands,
+                BattlePhase.Actions,
+                BattlePhase.Timeline,
+                BattlePhase.Hitbox,
+                BattlePhase.Damage,
+                BattlePhase.Buff,
+                BattlePhase.Death,
+                BattlePhase.Presentation,
+            };
+        }
 
         // SortedDictionary 保证按 Id 升序遍历，这是遍历顺序确定性的来源。
         private readonly SortedDictionary<long, ICombatEntity> _entities = new();
@@ -32,11 +73,20 @@ namespace Ux
         public event Action<ICombatEntity> EntityRegistered;
         public event Action<ICombatEntity> EntityUnregistered;
 
+
         public BattleWorld(string key, int frameRate, long startFrame = 0)
         {
             Key = key ?? string.Empty;
             FrameRate = Math.Max(1, frameRate);
             Frame = Math.Max(0, startFrame);
+
+            // 框架随世界一起创建的内置插件。它们填的阶段槽位在设计上允许被替换或再叠加，
+            // 只是当前这套实现是所有玩法都要用的默认组合。
+            AddSystem(new CombatTimelineSystem());
+            AddSystem(new HitboxSystem());
+            AddSystem(new CombatDamageSystem());
+            AddSystem(new CombatBuffSystem());
+            AddSystem(new CombatDeathSystem());
         }
 
         public string Key { get; }
@@ -51,6 +101,18 @@ namespace Ux
         public int MaxCatchUpFrames { get; set; } = 8;
 
         public IReadOnlyCollection<ICombatEntity> Entities => _entities.Values;
+
+        /// <summary>
+        /// 按 Id 升序的单位数组快照，给逐帧遍历用（foreach Entities 会装箱接口枚举器，每帧一个堆对象）。
+        /// 内容在 Tick 开头刷新：中途注册/注销的单位下一次 Tick 才可见，与内置阶段是同一个视图。
+        /// </summary>
+        public IReadOnlyList<ICombatEntity> OrderedEntities => _ordered;
+
+        /// <summary>本帧帧事件表：Timeline 阶段的产物，Hitbox / Damage / Buff 的输入。每帧开头复位，插件之间唯一的交接方式。</summary>
+        public CombatFrameEventTable FrameEvents { get; } = new();
+
+        /// <summary>本帧待结算命中：Hitbox 阶段的产物，Damage 阶段的输入。</summary>
+        public CombatHitBuffer PendingHits { get; } = new();
 
         #region 单位注册
 
@@ -151,7 +213,11 @@ namespace Ux
 
         #endregion
 
-        /// <summary>推进到目标逻辑帧。只允许正向推进，回退帧会被忽略并告警。</summary>
+        /// <summary>
+        /// 推进到目标逻辑帧，只允许正向推进，回退会被忽略并告警。
+        /// 这是个追赶循环而不是"推一帧"：卡顿时一帧连补多次 TickFrame，保证逻辑帧号连续、绝不跳号
+        /// （跳号会让帧同步直接失效）；补得太多只告警不截断，因为截断同样是跳号。
+        /// </summary>
         public void Tick(long frame)
         {
             if (frame <= Frame)
@@ -267,6 +333,7 @@ namespace Ux
         /// 世界状态的确定性哈希。相同输入序列跑两次必须得到相同的值，
         /// 这是战报校验和帧同步发散排查的基础。位置与朝向不参与计算：P0 尚未引入定点数，
         /// 浮点跨机器不一致会把哈希变成噪声。
+        /// 覆盖范围：状态机各层状态、动作实例与动作帧、已确认命中、属性（血量）、增益列表。
         /// </summary>
         public ulong ComputeStateHash()
         {
@@ -308,16 +375,30 @@ namespace Ux
                     hash = AppendHash(hash, accepted.WindowId);
                     hash = AppendHash(hash, (ulong)accepted.TargetId);
                 }
+
+                // 血量与增益是玩法上可见的状态，必须进哈希：少了它们，"血量在发散但状态机一致"会被判为校验通过。
+                var attributes = controller.Attributes;
+                hash = AppendHash(hash, (ulong)attributes.MaxHp);
+                hash = AppendHash(hash, (ulong)attributes.Hp);
+
+                var buffs = controller.Buffs;
+                hash = AppendHash(hash, (ulong)buffs.Count);
+                for (var buffIndex = 0; buffIndex < buffs.Count; buffIndex++)
+                {
+                    var buff = buffs[buffIndex];
+                    hash = AppendHash(hash, (ulong)buff.BuffId);
+                    hash = AppendHash(hash, (ulong)buff.RemainingFrames);
+                    hash = AppendHash(hash, (ulong)buff.DamagePerTick);
+                }
             }
             return hash;
         }
 
-        private void TickFrame(long frame)
+        /// <summary>
+        /// Commands 阶段的内置核心：把每个单位本帧要执行的命令取出来，放进 _frameCommands
+        /// </summary>
+        private void PhaseCommands(int count, long frame)
         {
-            var count = _ordered.Length;
-
-            // 1 命令采样
-            RunSystems(BattlePhase.Commands, frame);
             for (var i = 0; i < count; i++)
             {
                 var entity = _ordered[i];
@@ -325,9 +406,11 @@ namespace Ux
                     ? entity.ConsumeCommands(frame)
                     : CombatFrameCommands.Empty;
             }
+        }
 
-            // 2 状态与动作推进（含位移）
-            RunSystems(BattlePhase.Actions, frame);
+        /// <summary>Actions 阶段的内置核心：推进每个战斗单位的逻辑（状态机、动作生命周期、位移）。</summary>
+        private void PhaseActions(int count, long frame)
+        {
             for (var i = 0; i < count; i++)
             {
                 var entity = _ordered[i];
@@ -336,24 +419,42 @@ namespace Ux
                     entity.TickLogic(frame, _frameCommands[i]);
                 }
             }
+        }
 
-            // 3 Timeline 求值（P2 的 Gameplay Track 接入后才有内置实现）
-            RunSystems(BattlePhase.Timeline, frame);
-
-            // 4-7 命中查询 / 伤害结算 / Buff / 死亡判定，全部由插件提供
-            RunSystems(BattlePhase.Hitbox, frame);
-            RunSystems(BattlePhase.Damage, frame);
-            RunSystems(BattlePhase.Buff, frame);
-            RunSystems(BattlePhase.Death, frame);
-
-            // 8 表现同步
-            RunSystems(BattlePhase.Presentation, frame);
+        /// <summary>Presentation 阶段的内置核心：逻辑帧全部结束后，才把本帧结果同步给表现层。</summary>
+        private void PhasePresentation(int count, long frame)
+        {
             for (var i = 0; i < count; i++)
             {
                 var entity = _ordered[i];
                 if (entity.IsCombatActive)
                 {
                     entity.TickPresentation(frame);
+                }
+            }
+        }
+
+        private void TickFrame(long frame)
+        {
+            FrameEvents.BeginFrame(frame);
+            PendingHits.BeginFrame(frame);
+
+            var count = _ordered.Length;
+            for (var i = 0; i < PhaseOrder.Length; i++)
+            {
+                var phase = PhaseOrder[i];
+                RunSystems(phase, frame);
+                switch (phase)
+                {
+                    case BattlePhase.Commands:
+                        PhaseCommands(count, frame);
+                        break;
+                    case BattlePhase.Actions:
+                        PhaseActions(count, frame);
+                        break;
+                    case BattlePhase.Presentation:
+                        PhasePresentation(count, frame);
+                        break;
                 }
             }
         }
@@ -381,6 +482,9 @@ namespace Ux
                 _frameCommands = new CombatFrameCommands[count];
             }
 
+            // 注意这里**没有任何排序**：_entities 是 SortedDictionary，本身就已经按 Id 升序，
+            // 这一句只是把它的值序列"摊平"进数组，顺序原样带过来。
+            // 名字叫 ordered 指的是"顺序已经是确定且有序的"，不是"这里做了排序"。
             var index = 0;
             foreach (var pair in _entities)
             {

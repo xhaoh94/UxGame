@@ -15,6 +15,9 @@ namespace Ux
         [SerializeField, Min(0)] private float moveSpeedPerSecond = 5f;
         [SerializeField, Min(0)] private float turnDegreesPerSecond = 720f;
 
+        [Header("基础属性（最小版本）")]
+        [SerializeField, Min(1)] private int maxHp = 100;
+
         [Header("状态表现列表（动态）")]
         [SerializeField] private List<CombatStatePresentation> statePresentations = new();
 
@@ -28,6 +31,9 @@ namespace Ux
         public string Group => group;
         public float MoveSpeedPerSecond => Mathf.Max(0, moveSpeedPerSecond);
         public float TurnDegreesPerSecond => Mathf.Max(0, turnDegreesPerSecond);
+
+        /// <summary>最大生命值。最小版本的属性系统只有这一项。</summary>
+        public int MaxHp => Mathf.Max(1, maxHp);
         public IReadOnlyList<CombatStatePresentation> StatePresentations => statePresentations;
         public IReadOnlyList<CombatActionAsset> Actions => actions;
         public IReadOnlyList<CombatActionPresentation> ActionPresentations => actionPresentations;
@@ -296,6 +302,7 @@ namespace Ux
             group ??= string.Empty;
             moveSpeedPerSecond = Mathf.Max(0, moveSpeedPerSecond);
             turnDegreesPerSecond = Mathf.Max(0, turnDegreesPerSecond);
+            maxHp = Mathf.Max(1, maxHp);
 
             statePresentations ??= new List<CombatStatePresentation>();
             statePresentations.RemoveAll(presentation => presentation == null);
