@@ -19,22 +19,22 @@ namespace Ux
         {
             var table = world.FrameEvents;
 
-            // 顺序 = OrderedEntities 的 Id 升序，决定帧事件表与伤害结算的先后。
-            // 按索引遍历，不用 foreach world.Entities（接口枚举器会装箱，每帧一个堆对象）。
-            var entities = world.OrderedEntities;
+            // 只遍历 Actions 阶段收集好的出招单位，不再扫全场。
+            // 顺序 = 收集顺序（Id 升序），决定帧事件表与伤害结算的先后。
+            var entities = world.ActionActiveEntities;
             for (var i = 0; i < entities.Count; i++)
             {
                 var entity = entities[i];
-                if (!entity.IsCombatActive || entity.Id <= 0)
+                if (entity.Id <= 0)
                 {
-                    // Id <= 0 会让命中解析器抛异常，未初始化的单位也没有可求值的动作。
+                    // Id <= 0 会让命中解析器抛异常。IsCombatActive 已由 Actions 阶段筛过。
                     continue;
                 }
 
                 var actions = entity.Controller.Actions;
                 if (!actions.HasAction)
                 {
-                    // 没在出招就没有帧事件，这是常态。
+                    // 防御：Actions 阶段刚筛过，但 Timeline 阶段的插件理论上可以改动作状态。
                     continue;
                 }
 

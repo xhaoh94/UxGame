@@ -15,8 +15,8 @@
 | 逻辑帧时钟 | `HotfixBase/Manager/Timeline/TimelineMgr.cs:27` `SimulationClock` | 固定步长 + 追帧上限 + 插值 alpha；三种帧源（LocalRealtime / External / Replay） |
 | 逐帧编排 | `HotfixBase/Manager/Timeline/Runtime/Base/Timeline.cs` | 帧驱动而非时间驱动；`ShouldTriggerFrame` 保证跳帧不漏事件 |
 | 帧事件语义 | `Timeline.cs:44` `ShouldTriggerFrame` | Seek/初始化不触发事件，播放区间严格 `(prev, cur]`——命中帧判定就靠它 |
-| 宏观状态机 | `Manager/Combat/Runtime/UnitStateMachine.cs` | 4 层（Locomotion/Action/Control/Life），代码驱动规则，非资源求值 |
-| 动作生命周期 | `Manager/Combat/Runtime/CombatActionRunner.cs` | 显式 ActionId 命令消费、取消窗口（连招）、预测/确认/拒绝 |
+| 宏观状态机 | `Manager/Combat/Runtime/Unit/UnitStateMachine.cs` | 4 层（Locomotion/Action/Control/Life），代码驱动规则，非资源求值 |
+| 动作生命周期 | `Manager/Combat/Runtime/Unit/CombatActionRunner.cs` | 显式 ActionId 命令消费、取消窗口（连招）、预测/确认/拒绝 |
 | 预测与回滚 | `CombatActionRunner.cs:175` `Confirm` / `:202` `Reject`；`CombatController.cs:109` `CaptureSnapshot` | 客户端预测 + 服务器纠偏的骨架已完备 |
 | 输入命令 | `Manager/Combat/Asset/CombatCommand.cs` | 逐帧命令队列，本地 / 网络 / 录像共用 |
 | 表现桥接 | `Hotfix/Common/Combat/CombatComponent.cs:243` `ResolveTimelineOwner` | Life > Control > Action > Locomotion 优先级选 Timeline |
@@ -72,7 +72,7 @@
 | KCP 传输 | `NetMgr.cs:15-20` | KCP / TCP / WebSocket 三选一，KCP 是可靠 UDP，实时战斗首选 |
 | 外部帧驱动 | `TimelineMgr.cs:107 AdvanceExternalTo` | 帧同步的时钟入口已预留 |
 | 命令缓冲 | `Asset/CombatCommand.cs` | 注释明写"本地 / 网络 / 录像共用" |
-| 快照 + 回滚 | `Runtime/CombatController.cs:109-134` | 配 `Replay` 模式可重放 |
+| 快照 + 回滚 | `Runtime/Unit/CombatController.cs:109-134` | 配 `Replay` 模式可重放 |
 
 **确定性审计（结论：这套代码是照着确定性写的）：**
 
@@ -118,6 +118,45 @@ BattleWorld           战斗世界：实体注册 + 固定 tick 顺序
        ├─ HitboxSet          (待建)
        └─ EffectContainer    (待建)
 ```
+
+### 代码目录结构
+
+`HotfixBase/Manager/Combat/` 按**职责**分层。目录不影响编译 —— 命名空间统一是 `Ux`，
+所以调整目录结构本身不带动任何代码改动。
+
+```
+Manager/Combat/
+├─ CombatMgr.cs / CombatProfileMgr.cs    模块入口、配置加载与查询
+├─ Asset/                                策划可配的资源（ScriptableObject）
+│    CombatActionAsset                   动作：时长 / 命中窗口 / 取消窗口 / 伤害 / 附带增益
+│    CharacterCombatProfile              角色：表现映射 / 移速 / 最大生命
+│    CombatCommand                       逐帧输入命令（本地 / 网络 / 录像共用）
+│    CombatState / CombatStatePresentation / CombatActionPresentation / StateChangeReason
+├─ Runtime/
+│    Core/                               世界与阶段框架，与具体玩法无关
+│         BattleWorld                    实体注册 + 八阶段 tick + 快照 + 状态 hash
+│         BattlePhase                    阶段枚举 + ICombatSystem 插件接口
+│         ICombatEntity                  单位抽象（不依赖 Unit / GameObject）
+│         BattleWorldSnapshot            世界级快照
+│         CombatStageBuffers             阶段之间的交接缓冲
+│    Unit/                               单位侧逻辑
+│         CombatController               单位逻辑总装（状态机 + 动作 + 属性 + 增益）
+│         UnitStateMachine               宏观状态机（Locomotion / Action / Control / Life）
+│         CombatActionRunner             动作生命周期 + UnitCombatSnapshot
+│         AttributeSet / CombatBuff / StateSnapshot
+│    Systems/                            阶段插件，按 BattlePhase 挂载
+│         CombatTimelineSystem           阶段 3：求值本帧帧事件
+│         HitboxSystem                   阶段 4：几何查询 → 待结算命中
+│         CombatDamageSystem             阶段 5：扣血 + 施加附带增益
+│         CombatBuffSystem               阶段 6：周期结算 + 到期移除
+│         CombatDeathSystem              阶段 7：HP ≤ 0 → Dead
+│         CombatHitResolution            命中几何的纯函数内核（被 HitboxSystem 调用）
+│    Presentation/                       只读投影，不反向写逻辑
+│         CombatTimelinePlayer
+```
+
+`Hotfix/Common/Combat/CombatComponent.cs` 单独留在 Hotfix 程序集：它既是 `ICombatEntity` 的实现，
+也是 Unit（Unity 侧）与 BattleWorld（纯逻辑侧）之间唯一的桥接，因此刻意与 HotfixBase 分开。
 
 ### 一个逻辑帧的固定执行顺序（关键）
 
@@ -282,10 +321,10 @@ HitEvent → 取攻方属性快照 → 取守方属性快照
 | 文件 | 职责 |
 |---|---|
 | `Manager/Combat/CombatMgr.cs` | 模块入口单例，管理多世界并分发逻辑帧 |
-| `Manager/Combat/Runtime/BattleWorld.cs` | 战斗实例：实体注册、8 阶段 tick、快照、状态 hash |
-| `Manager/Combat/Runtime/ICombatEntity.cs` | 单位抽象，刻意不依赖 `Unit`/`GameObject` |
-| `Manager/Combat/Runtime/BattlePhase.cs` | 阶段枚举 + `ICombatSystem` 插件接口 |
-| `Manager/Combat/Runtime/BattleWorldSnapshot.cs` | 世界级快照（含位置与朝向） |
+| `Manager/Combat/Runtime/Core/BattleWorld.cs` | 战斗实例：实体注册、8 阶段 tick、快照、状态 hash |
+| `Manager/Combat/Runtime/Core/ICombatEntity.cs` | 单位抽象，刻意不依赖 `Unit`/`GameObject` |
+| `Manager/Combat/Runtime/Core/BattlePhase.cs` | 阶段枚举 + `ICombatSystem` 插件接口 |
+| `Manager/Combat/Runtime/Core/BattleWorldSnapshot.cs` | 世界级快照（含位置与朝向） |
 
 **一帧的八个阶段**（`BattleWorld.TickFrame`）
 
@@ -307,19 +346,24 @@ HitEvent → 取攻方属性快照 → 取守方属性快照
 **阶段之间怎么交接数据**（不要互相持有引用）
 
 ```
-FrameEvents   阶段 3 写入 → 阶段 4/5/6 读取    每个逻辑帧开头由 BattleWorld 复位
-PendingHits   阶段 4 写入 → 阶段 5 读取        同上
+ActionActiveEntities   阶段 2 写入 → 阶段 3 读取      阶段 2 开头清空
+FrameEvents            阶段 3 写入 → 阶段 4/5/6 读取  每个逻辑帧开头由 BattleWorld 复位
+PendingHits            阶段 4 写入 → 阶段 5 读取      同上
 ```
 
-两张表都挂在 `BattleWorld` 上（`FrameEvents` / `PendingHits`），生产者在自己的阶段里填充，
-消费者在后面的阶段里读取，插件之间零耦合。"每帧复位"由 BattleWorld 负责而不是生产者自己清，
-这样生产者漏注册时下游读到的是空表，而不是上一帧的残留数据。
+这些缓冲都挂在 `BattleWorld` 上，生产者在自己的阶段里填充，消费者在后面的阶段里读取，
+插件之间零耦合。"每帧复位"由框架负责而不是消费者自己清，这样生产者漏注册时下游读到的
+是空表，而不是上一帧的残留数据。
+
+`ActionActiveEntities` 是唯一的例外：它由 Actions 阶段的内置核心自己复位。这么做是因为
+那一层本来就在遍历全场推进逻辑，顺手记下"谁在出招"就能让 Timeline 阶段免掉一次全场扫描 ——
+索引应该在已经付过遍历成本的地方建，而不是让下游再扫一遍。
 
 **插件状态**
 
 | 阶段 | 实现 | 状态 |
 |---|---|---|
-| Timeline | `CombatTimelineSystem` | 已落地。求值命中窗口与取消窗口，取消窗口目前无消费者（留给连招提示类 UI） |
+| Timeline | `CombatTimelineSystem` | 已落地。只遍历 Actions 阶段收集的 `ActionActiveEntities`（不再扫全场）；求值命中窗口与取消窗口，取消窗口目前无消费者（留给连招提示类 UI） |
 | Hitbox | `HitboxSystem` | 已落地。几何查询 + 同窗去重，结果写入 `PendingHits` |
 | Damage | `CombatDamageSystem` | **最小实现**：固定伤害，无修改器栈/暴击/减免（完整管线属 P1） |
 | Buff | `CombatBuffSystem` | **最小实现**：身份/寿命/每帧扣血三字段，无叠层/驱散（完整形态属 P4） |

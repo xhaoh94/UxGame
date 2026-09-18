@@ -66,6 +66,10 @@ namespace Ux
         // 遍历快照，避免每帧从 SortedDictionary 取枚举器。
         private ICombatEntity[] _ordered = Array.Empty<ICombatEntity>();
         private CombatFrameCommands[] _frameCommands = Array.Empty<CombatFrameCommands>();
+
+        // 本帧出招中的单位：Actions 阶段末尾收集，Timeline 阶段直接消费，省掉插件再扫一遍全场。
+        private readonly List<ICombatEntity> _actionActive = new();
+
         private bool _entityOrderDirty = true;
         private bool _systemOrderDirty = true;
         private long _systemSequence;
@@ -107,6 +111,15 @@ namespace Ux
         /// 内容在 Tick 开头刷新：中途注册/注销的单位下一次 Tick 才可见，与内置阶段是同一个视图。
         /// </summary>
         public IReadOnlyList<ICombatEntity> OrderedEntities => _ordered;
+
+        /// <summary>
+        /// 本帧出招中的单位，由 Actions 阶段在 TickLogic 之后收集，Timeline 阶段直接消费。
+        /// "谁在出招"因此成了阶段产出的显式事实，插件不必自己扫全场推断。
+        /// 顺序 = _ordered 的 Id 升序，与帧事件表的写入顺序一致。
+        ///
+        /// 它是 Actions 阶段末尾的快照：之后的阶段再改 IsCombatActive 不会反映到这里。
+        /// </summary>
+        public IReadOnlyList<ICombatEntity> ActionActiveEntities => _actionActive;
 
         /// <summary>本帧帧事件表：Timeline 阶段的产物，Hitbox / Damage / Buff 的输入。每帧开头复位，插件之间唯一的交接方式。</summary>
         public CombatFrameEventTable FrameEvents { get; } = new();
@@ -408,15 +421,29 @@ namespace Ux
             }
         }
 
-        /// <summary>Actions 阶段的内置核心：推进每个战斗单位的逻辑（状态机、动作生命周期、位移）。</summary>
+        /// <summary>
+        /// Actions 阶段的内置核心：推进每个战斗单位的逻辑（状态机、动作生命周期、位移），
+        /// 并顺手收集"本帧出招中"的单位给 Timeline 阶段——这一层本来就在遍历全场，
+        /// 顺手记一笔就能免掉下游再扫一遍。
+        /// </summary>
         private void PhaseActions(int count, long frame)
         {
+            // 与生产者同处复位：Actions 阶段末尾的"谁在出招"是本帧的权威事实。
+            _actionActive.Clear();
             for (var i = 0; i < count; i++)
             {
                 var entity = _ordered[i];
-                if (entity.IsCombatActive)
+                if (!entity.IsCombatActive)
                 {
-                    entity.TickLogic(frame, _frameCommands[i]);
+                    continue;
+                }
+
+                entity.TickLogic(frame, _frameCommands[i]);
+
+                // 必须在 TickLogic 之后收集：起手、取消、结束都发生在这一步里。
+                if (entity.Controller.Actions.HasAction)
+                {
+                    _actionActive.Add(entity);
                 }
             }
         }
