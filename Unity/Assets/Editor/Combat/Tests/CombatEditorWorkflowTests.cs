@@ -513,16 +513,9 @@ namespace Ux.Editor.Combat.Tests
             Assert.Contains((int)LifeState.Dead, life);
             CollectionAssert.DoesNotContain(life, (int)LifeState.Alive);
 
-            // Action 层整层禁止作为状态表现映射目标。
-            Assert.IsEmpty(CombatStateId.GetMappableStateIds(StateLayer.Action));
-
             // IsStatePresentationMappable 与反射集合保持一致。
             Assert.IsTrue(CombatStateId.IsStatePresentationMappable(
                 StateLayer.Locomotion, (int)LocomotionState.Move));
-            Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
-                StateLayer.Action, (int)ActionState.Free));
-            Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
-                StateLayer.Action, (int)ActionState.Executing));
             Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
                 StateLayer.Control, (int)ControlState.Normal));
             Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
@@ -568,10 +561,12 @@ namespace Ux.Editor.Combat.Tests
                 {
                     timeline.SetFrameRate(profile.FrameRate);
                 }
+                // Control/Normal 与已删除的 Action 层落在同一个「不允许映射」分支，
+                // 用它替代即可继续覆盖 issue.Context 挂到哪个对象上。
                 CombatTestProfiles.AddStatePresentation(
                     profile,
-                    StateLayer.Action,
-                    (int)ActionState.Executing,
+                    StateLayer.Control,
+                    (int)ControlState.Normal,
                     CombatStatePresentation.DefaultVariantId,
                     timeline);
                 if (destroyTimeline)
@@ -582,7 +577,7 @@ namespace Ux.Editor.Combat.Tests
                 var issues = CombatEditorUtility.ValidateProfile(profile);
                 var issue = issues.Find(value =>
                     value.Severity == CombatValidationSeverity.Error &&
-                    value.Message.Contains("Action 层"));
+                    value.Message.Contains("不是允许配置表现映射"));
 
                 Assert.IsNotNull(issue);
                 if (hasTimeline && !destroyTimeline)

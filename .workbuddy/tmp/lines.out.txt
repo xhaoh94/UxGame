@@ -1,0 +1,11 @@
+--- CombatActionRunner.cs (total 656) ---
+    76 | WindowId = window?.StableId ?? string.Empty;
+   212 | }
+   285 | current.StartSimulationFrame = Math.Max(0, authoritativeStartFrame);
+   275 | public bool Confirm(long requestId, long authoritativeInstanceId, long authoritativeStartFrame)
+   301 | public bool Reject(long requestId)
+
+--- CombatController.cs (total 196) ---
+   138 | public UnitCombatSnapshot CaptureSnapshot()
+   149 | HasAction = ActionRunner.HasAction,
+

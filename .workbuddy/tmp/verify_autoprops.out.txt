@@ -1,0 +1,24 @@
+AttributeSet.cs            琛屽熬 LF(crlf=0 lf=84)           闈濧SCII OK (old=185 new=185)
+    琛屾暟 89 -> 85
+CombatStageBuffers.cs      琛屽熬 LF(crlf=0 lf=164)          闈濧SCII OK (old=479 new=479)
+    琛屾暟 168 -> 165
+    ?? 鐤戜技娈嬬暀杞彂灞炴€? public CombatFrameEventSet this[int index] => _pool[index];
+    ?? 鐤戜技娈嬬暀杞彂灞炴€? public int Count => _hits.Count;
+    ?? 鐤戜技娈嬬暀杞彂灞炴€? public CombatHitCandidate this[int index] => _hits[index];
+CombatActionRunner.cs      琛屽熬 CRLF(crlf=658 lf=658)      闈濧SCII OK (old=1198 new=1198)
+    琛屾暟 660 -> 659
+CombatComponent.cs         琛屽熬 CRLF(crlf=409 lf=409)      闈濧SCII OK (old=1159 new=1159)
+    琛屾暟 411 -> 410
+CombatController.cs        琛屽熬 CRLF(crlf=194 lf=194)      闈濧SCII OK (old=710 new=710)
+    琛屾暟 197 -> 195
+
+RESULT: ALL OK
+
+Name                  Length
+----                  ------
+AttributeSet.cs         2544
+CombatActionRunner.cs  27007
+CombatComponent.cs     16332
+CombatController.cs     8423
+CombatStageBuffers.cs   6054
+

@@ -28,13 +28,14 @@ namespace Ux
     public sealed class UnitCombatSnapshot
     {
         /// <summary>
-        /// 1 → 2：加入 Attributes 与 Buffs。版本号必须跟着字段一起涨（RestoreSnapshot 会拒绝版本不一致的快照）——
-        /// 旧快照还原新结构会让 HP 与增益静默回到默认值，比直接拒绝危险。快照无落盘、无网络传输，升级不需兼容旧数据。
+        /// 1 → 2：加入 Attributes 与 Buffs；2 → 3：移除 CombatStateMachineSnapshot 的 Action 层快照。
+        /// 版本号必须跟着字段一起涨（RestoreSnapshot 会拒绝版本不一致的快照）——旧快照还原新结构会让状态数据
+        /// 静默错位，比直接拒绝危险。快照无落盘、无网络传输，升级不需兼容旧数据。
         /// </summary>
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         public int Version;
-        public UnitStateMachineSnapshot StateMachine;
+        public CombatStateMachineSnapshot StateMachine;
         public CombatActionSnapshot Action;
         public bool HasAction;
         public CombatAcceptedHitSnapshot[] AcceptedHits;
@@ -93,14 +94,13 @@ namespace Ux
     /// <summary>
     /// 每 Unit 独立的动作生命周期：消费逻辑帧命令，管理动作帧、取消、完成、预测确认和快照。
     ///
-    /// 职责边界：UnitStateMachine 回答"现在处于什么状态"，本类回答"这一招播到第几帧了"。
+    /// 职责边界：CombatStateMachine 回答"现在处于什么状态"，本类回答"这一招播到第几帧了"。
     /// 所以加一个新技能不用动状态机，加一个 CombatActionAsset 资产就行。
     /// </summary>
     public sealed class CombatActionRunner
     {
         private readonly Dictionary<int, CombatActionAsset> _actions = new();
         private readonly HashSet<CombatHitKey> _acceptedHits = new();
-        private long _localSequence;
         private long _simulationFrame;
         private bool _initialized;
 
@@ -109,7 +109,7 @@ namespace Ux
         public CombatActionSnapshot Current { get; private set; }
         public CombatActionAsset CurrentAsset { get; private set; }
         public bool HasAction => CurrentAsset != null;
-        public long LocalSequence => _localSequence;
+        public long LocalSequence { get; private set; }
 
         /// <summary>
         /// 当前动作是否锁移动。CombatController.IsMovementBlocked 会读它，
@@ -245,12 +245,12 @@ namespace Ux
 
             if (HasAction)
             {
-                // 2. 手上正忙 —— 只判断"能不能被下一招取消"
+                //当前有动作在执行，则判断是否能被新的命令取消，能打断则用新命令打断
                 TryCancel(commands);
             }
             else
             {
-                // 3. 手上空闲 —— 判断"能不能起手"
+                // 当前没有动作在执行，尝试执行新动作命令
                 TryStart(commands);
             }
         }
@@ -289,7 +289,7 @@ namespace Ux
             current.IsConfirmed = true;
             MigrateAcceptedHitInstanceId(previousInstanceId, authoritativeInstanceId);
             Current = current;
-            _localSequence = Math.Max(_localSequence, authoritativeInstanceId);
+            LocalSequence = Math.Max(LocalSequence, authoritativeInstanceId);
             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
             {
                 EndCurrent(CombatActionEndReason.Completed);
@@ -442,7 +442,7 @@ namespace Ux
                     throw new InvalidOperationException(
                         $"快照动作序列无效: instance={snapshot.InstanceId}, sequence={localActionSequence}");
                 }
-                _localSequence = localActionSequence;
+                LocalSequence = localActionSequence;
             }
             if (!hasAction)
             {
@@ -486,7 +486,7 @@ namespace Ux
             Current = current;
             if (localActionSequence < 0)
             {
-                _localSequence = Math.Max(_localSequence, snapshot.InstanceId);
+                LocalSequence = Math.Max(LocalSequence, snapshot.InstanceId);
             }
             ActionChanged?.Invoke(new CombatActionChangedEvent(
                 previous,
@@ -510,7 +510,7 @@ namespace Ux
             CurrentAsset = null;
             _actions.Clear();
             _acceptedHits.Clear();
-            _localSequence = 0;
+            LocalSequence = 0;
             _simulationFrame = 0;
             _initialized = false;
             ActionChanged = null;
@@ -546,7 +546,6 @@ namespace Ux
                 : current.ActionFrame + (int)delta;
             Current = current;
 
-            // 播完了自动收尾。这里的 DurationFrames 就是资产里的 70。
             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
             {
                 EndCurrent(CombatActionEndReason.Completed);
@@ -576,36 +575,34 @@ namespace Ux
         }
 
         /// <summary>
-        /// 忙碌时尝试取消（连招 / 取消后摇）。两个条件必须同时满足：窗口指向的就是这条命令的动作，
-        /// 且当前动作帧落在窗口内（RequiresHitConfirm 为真时还要求已命中）。
-        /// 命中则结束当前动作（原因 Cancelled）并立刻起手新动作，ActionFrame 从 0 开始。
+        /// 有动作时尝试被新命令取消：窗口由当前动作提供，且必须指向命令里的那个动作；
+        /// 条件成立就结束当前动作（Cancelled）并立刻起手新动作，ActionFrame 从 0 开始。
         ///
-        /// ⚠ 这正是"狂点打不出伤害"的成因：普攻 1001 的取消窗口是 [5,26) 且指向自己，
+        /// ⚠ "狂点打不出伤害"就是这么来的：普攻 1001 的取消窗口是 [5,26) 且指向自己，
         /// 帧 5-26 之间每次按键都会把动作重置回帧 0，永远走不到帧 41 的命中窗口。
         /// </summary>
         private bool TryCancel(in CombatFrameCommands commands)
         {
-            for (var commandIndex = 0; commandIndex < commands.Count; commandIndex++)
+            for (var i = 0; i < commands.Count; i++)
             {
-                var command = commands[commandIndex];
-                if (!_actions.TryGetValue(command.ActionId, out var target))
+                var command = commands[i];
+                if (!_actions.TryGetValue(command.ActionId, out var action))
                 {
                     continue;
                 }
 
                 foreach (var window in CurrentAsset.CancelWindows)
                 {
-                    // ① 窗口指向的就是这条命令要执行的动作吗？
-                    // ② 当前动作帧在窗口内吗？（RequiresHitConfirm 为真时还要求已命中）
                     if (window.TargetActionId != command.ActionId ||
                         !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
                     {
                         continue;
                     }
 
-                    // 取消 → 立刻接上新动作，一步到位，中间没有"空闲帧"
+                    // 取消当前的动作
                     EndCurrent(CombatActionEndReason.Cancelled);
-                    Start(target, command.RequestId, command.RequestId != 0);
+                    // 立即开始新动作
+                    Start(action, command.RequestId, command.RequestId != 0);
                     return true;
                 }
             }
@@ -619,16 +616,16 @@ namespace Ux
         ///
         /// 这里必须清 _acceptedHits：新动作不能复用上一招已命中的目标，否则连招第二下会打不出伤害。
         /// </summary>
-        private void Start(CombatActionAsset action, long requestId, bool predicted)
+        private void Start(CombatActionAsset actionAsset, long requestId, bool predicted)
         {
             var previous = CurrentAsset;
-            CurrentAsset = action;
+            CurrentAsset = actionAsset;
             _acceptedHits.Clear();
             Current = new CombatActionSnapshot
             {
-                InstanceId = ++_localSequence,
+                InstanceId = ++LocalSequence,
                 RequestId = requestId,
-                ActionId = action.ActionId,
+                ActionId = actionAsset.ActionId,
                 StartSimulationFrame = _simulationFrame,
                 ActionFrame = 0,
                 IsPredicted = predicted,
@@ -639,7 +636,7 @@ namespace Ux
             // 事件只是通知不是命令：没人监听也不影响逻辑，无渲染环境照样跑。
             ActionChanged?.Invoke(new CombatActionChangedEvent(
                 previous,
-                action,
+                actionAsset,
                 CombatActionEndReason.Started,
                 _simulationFrame));
         }

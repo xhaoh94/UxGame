@@ -1,0 +1,75 @@
+diff --git a/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs b/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
+index 13733cd1..70ce0a40 100644
+--- a/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
++++ b/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
+@@ -513,16 +513,9 @@ namespace Ux.Editor.Combat.Tests
+             Assert.Contains((int)LifeState.Dead, life);
+             CollectionAssert.DoesNotContain(life, (int)LifeState.Alive);
+ 
+-            // Action 灞傛暣灞傜姝綔涓虹姸鎬佽〃鐜版槧灏勭洰鏍囥€?-            Assert.IsEmpty(CombatStateId.GetMappableStateIds(StateLayer.Action));
+-
+             // IsStatePresentationMappable 涓庡弽灏勯泦鍚堜繚鎸佷竴鑷淬€?             Assert.IsTrue(CombatStateId.IsStatePresentationMappable(
+                 StateLayer.Locomotion, (int)LocomotionState.Move));
+-            Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+-                StateLayer.Action, (int)ActionState.Free));
+-            Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+-                StateLayer.Action, (int)ActionState.Executing));
+             Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+                 StateLayer.Control, (int)ControlState.Normal));
+             Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+@@ -555,55 +548,6 @@ namespace Ux.Editor.Combat.Tests
+             }
+         }
+ 
+-        [TestCase(false, false)]
+-        [TestCase(true, false)]
+-        [TestCase(true, true)]
+-        public void StatePresentationValidationUsesTimelineOrProfileContext(bool hasTimeline, bool destroyTimeline)
+-        {
+-            var profile = CombatTestProfiles.CreateProfile();
+-            var timeline = hasTimeline ? ScriptableObject.CreateInstance<TimelineAsset>() : null;
+-            try
+-            {
+-                if (timeline != null)
+-                {
+-                    timeline.SetFrameRate(profile.FrameRate);
+-                }
+-                CombatTestProfiles.AddStatePresentation(
+-                    profile,
+-                    StateLayer.Action,
+-                    (int)ActionState.Executing,
+-                    CombatStatePresentation.DefaultVariantId,
+-                    timeline);
+-                if (destroyTimeline)
+-                {
+-                    Object.DestroyImmediate(timeline);
+-                }
+-
+-                var issues = CombatEditorUtility.ValidateProfile(profile);
+-                var issue = issues.Find(value =>
+-                    value.Severity == CombatValidationSeverity.Error &&
+-                    value.Message.Contains("Action 灞?));
+-
+-                Assert.IsNotNull(issue);
+-                if (hasTimeline && !destroyTimeline)
+-                {
+-                    Assert.AreSame(timeline, issue.Context);
+-                }
+-                else
+-                {
+-                    Assert.AreSame(profile, issue.Context);
+-                }
+-            }
+-            finally
+-            {
+-                Object.DestroyImmediate(profile);
+-                if (timeline != null)
+-                {
+-                    Object.DestroyImmediate(timeline);
+-                }
+-            }
+-        }
+-
+         [Test]
+         public void SameStateCanKeepMultiplePresentationVariants()
+         {

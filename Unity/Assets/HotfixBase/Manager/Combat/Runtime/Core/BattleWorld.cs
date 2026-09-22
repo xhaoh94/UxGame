@@ -363,23 +363,22 @@ namespace Ux
                     continue;
                 }
 
-                hash = AppendHash(hash, (ulong)controller.States.GetCurrentStateId(StateLayer.Locomotion));
-                hash = AppendHash(hash, (ulong)controller.States.GetCurrentStateId(StateLayer.Action));
-                hash = AppendHash(hash, (ulong)controller.States.GetCurrentStateId(StateLayer.Control));
-                hash = AppendHash(hash, (ulong)controller.States.GetCurrentStateId(StateLayer.Life));
-                hash = AppendHash(hash, (ulong)controller.States.SimulationFrame);
+                hash = AppendHash(hash, (ulong)controller.StateMachine.GetCurrentStateId(StateLayer.Locomotion));
+                hash = AppendHash(hash, (ulong)controller.StateMachine.GetCurrentStateId(StateLayer.Control));
+                hash = AppendHash(hash, (ulong)controller.StateMachine.GetCurrentStateId(StateLayer.Life));
+                hash = AppendHash(hash, (ulong)controller.StateMachine.SimulationFrame);
                 hash = AppendHash(hash, controller.IsGrounded ? 1UL : 0UL);
-                hash = AppendHash(hash, controller.Actions.HasAction ? 1UL : 0UL);
-                hash = AppendHash(hash, (ulong)controller.Actions.Current.ActionId);
-                hash = AppendHash(hash, (ulong)controller.Actions.Current.ActionFrame);
-                hash = AppendHash(hash, (ulong)controller.Actions.Current.InstanceId);
-                hash = AppendHash(hash, (ulong)controller.Actions.Current.StartSimulationFrame);
-                hash = AppendHash(hash, controller.Actions.Current.HasHitConfirmed ? 1UL : 0UL);
-                hash = AppendHash(hash, (ulong)controller.Actions.Current.RequestId);
-                hash = AppendHash(hash, controller.Actions.Current.IsPredicted ? 1UL : 0UL);
-                hash = AppendHash(hash, controller.Actions.Current.IsConfirmed ? 1UL : 0UL);
-                hash = AppendHash(hash, (ulong)controller.Actions.LocalSequence);
-                var acceptedHits = controller.Actions.CaptureAcceptedHits();
+                hash = AppendHash(hash, controller.ActionRunner.HasAction ? 1UL : 0UL);
+                hash = AppendHash(hash, (ulong)controller.ActionRunner.Current.ActionId);
+                hash = AppendHash(hash, (ulong)controller.ActionRunner.Current.ActionFrame);
+                hash = AppendHash(hash, (ulong)controller.ActionRunner.Current.InstanceId);
+                hash = AppendHash(hash, (ulong)controller.ActionRunner.Current.StartSimulationFrame);
+                hash = AppendHash(hash, controller.ActionRunner.Current.HasHitConfirmed ? 1UL : 0UL);
+                hash = AppendHash(hash, (ulong)controller.ActionRunner.Current.RequestId);
+                hash = AppendHash(hash, controller.ActionRunner.Current.IsPredicted ? 1UL : 0UL);
+                hash = AppendHash(hash, controller.ActionRunner.Current.IsConfirmed ? 1UL : 0UL);
+                hash = AppendHash(hash, (ulong)controller.ActionRunner.LocalSequence);
+                var acceptedHits = controller.ActionRunner.CaptureAcceptedHits();
                 hash = AppendHash(hash, (ulong)acceptedHits.Length);
                 for (var hitIndex = 0; hitIndex < acceptedHits.Length; hitIndex++)
                 {
@@ -441,7 +440,7 @@ namespace Ux
                 entity.TickLogic(frame, _frameCommands[i]);
 
                 // 必须在 TickLogic 之后收集：起手、取消、结束都发生在这一步里。
-                if (entity.Controller.Actions.HasAction)
+                if (entity.Controller.ActionRunner.HasAction)
                 {
                     _actionActive.Add(entity);
                 }

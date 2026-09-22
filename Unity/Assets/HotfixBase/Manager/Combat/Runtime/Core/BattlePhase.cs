@@ -13,7 +13,7 @@ namespace Ux
         /// <summary>推进宏观状态机与动作生命周期，并结算本帧位移。</summary>
         Actions = 1,
 
-        /// <summary>Timeline 求值。P2 的 Gameplay Track 接入后由它驱动帧事件。</summary>
+        /// <summary>Timeline 解析出当前帧的所有帧事件。供后面阶段使用。</summary>
         Timeline = 2,
 
         /// <summary>命中查询。由 BattleWorld 统一调度，不在 Clip 内各自结算。</summary>

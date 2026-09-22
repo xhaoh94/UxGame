@@ -5,8 +5,6 @@ namespace Ux
     {
         Initialize,
         CodeRule,
-        ActionStarted,
-        ActionEnded,
         ExternalRequest,
         SnapshotRestore,
     }

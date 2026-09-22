@@ -1,0 +1,112 @@
+=== EOL ===
+  CombatActionRunner.cs              lines=659   CRLF=659   LF=659   OK
+  CombatController.cs                lines=196   CRLF=196   LF=196   OK
+  COMBAT_DESIGN.md                   lines=722   CRLF=722   LF=722   OK
+  CombatEditorWorkflowTests.cs       lines=642   CRLF=642   LF=642   OK
+
+=== 寮曞彿瀛楃妫€鏌ワ紙U+201C/U+201D 鍑虹幇琛岋級===
+  CombatActionRunner.cs: 0 line(s) with full-width quotes
+  CombatController.cs: 0 line(s) with full-width quotes
+
+=== CombatController.Tick ===
+    59 | 
+    60 |         /// <summary>
+    61 |         /// 鍗曚綅姣忛€昏緫甯х殑鍞竴鍏ュ彛锛岀敱 <see cref="CombatComponent.TickLogic"/> 璋冪敤
+    62 |         /// 锛堝嵆 BattleWorld 涓€涓€昏緫甯х殑绗?2 涓樁娈碉級銆?
+    63 |         ///
+    64 |         /// 涓変釜鍏ュ弬鍏ㄩ兘鏉ヨ嚜閫昏緫甯э紝娌℃湁涓€涓槸鐜颁粠 Unity 缁勪欢韬笂鍙栫殑锛?
+    65 |         ///   simulationFrame 鈥?褰撳墠閫昏緫甯у彿
+    66 |         ///   moveInput       鈥?鏈抚绉诲姩杈撳叆锛堟潵鑷?PathComponent.MoveVector2锛?
+    67 |         ///   commands        鈥?鏈抚鍛戒护锛堟潵鑷?CombatCommandBuffer锛?
+    68 |         ///
+    69 |         /// moveInput 鍜?commands 铏界劧閮芥槸"鏈抚鐨勮緭鍏?锛屼絾鎬ц川涓嶅悓锛屽埆娣蜂负涓€璋堬細
+    70 |         ///   moveInput 鏄?*褰撳墠鍊?*锛氫竴涓彲瑕嗙洊鐨勬柟鍚戝瓧娈碉紝娌℃湁鍘嗗彶锛岄€昏緫灞傛瘡甯т富鍔ㄦ潵璇汇€?
+    71 |         ///   commands  鏄?*浜嬩欢娴?*锛氭瘡鏉″甫甯у彿鍜?RequestId锛屾寜閿椂鍏ラ槦銆佸埌甯ф墠鍙栧嚭銆佸彇璧板嵆鍒犮€?
+    72 |         /// 鎵€浠ュ彧鏈?commands 闇€瑕侀槦鍒楀拰甯у彿 鈥斺€?闃熷垪瀛樺湪鐨勬剰涔夊氨鏄绂绘暎浜嬩欢鑳藉榻愬埌鏌愪竴甯с€?
+    73 |         ///
+    74 |         /// 鎵ц椤哄簭鍥哄畾涓?鍏堟帹杩涘姩浣溿€佸悗鍒ゅ畾绉诲姩"锛岄『搴忎笉鑳芥崲锛?
+    75 |         /// Locomotion 鍒ゅ畾瑕佽 ActionRunner 鏈抚鐨勯攣绉诲姩鐘舵€侊紝鍔ㄤ綔娌″厛鎺ㄨ繘灏变細鎷垮埌涓婁竴甯х殑鍊笺€?
+    76 |         /// </summary>
+    77 |         public void Tick(long simulationFrame, Vector2 moveInput, in CombatFrameCommands commands)
+    78 |         {
+    79 |             if (!IsInitialized)
+    80 |             {
+    81 |                 return;
+    82 |             }
+    83 | 
+    84 |             //杩欓噷鍙槸鎺ㄨ繘浜嗙姸鎬佸抚鍙凤紝鐘舵€佹湰韬殑鏀瑰彉瑕佸湪 CombatActionRunner 閲屽仛銆?
+    85 |             StateMachine.AdvanceTo(simulationFrame);
+    86 | 
+    87 |             //鎺ㄨ繘鍔ㄤ綔鍛戒护锛堝唴閮ㄦ湁鍙兘鎵撴柇褰撳墠鐨勫姩浣滐紝涔熸湁鍙兘鐩存帴璧锋柊鍔ㄤ綔锛?
+    88 |             ActionRunner.Tick(simulationFrame, commands, CanStartActions);
+    89 | 
+    90 |             if (!_grounded)
+    91 |             {
+    92 |                 StateMachine.SetLocomotion(LocomotionState.Airborne);
+    93 |             }
+    94 |             else if (IsMovementBlocked || moveInput.sqrMagnitude <= 0.0001f)
+    95 |             {
+    96 |                 StateMachine.SetLocomotion(LocomotionState.Idle);
+    97 |             }
+    98 |             else
+    99 |             {
+   100 |                 StateMachine.SetLocomotion(LocomotionState.Move);
+   101 |             }
+   102 |         }
+
+=== 鎭㈠鐨勬祴璇曠敤渚?===
+   550 | 
+   551 |         [TestCase(false, false)]
+   552 |         [TestCase(true, false)]
+   553 |         [TestCase(true, true)]
+   554 |         public void StatePresentationValidationUsesTimelineOrProfileContext(bool hasTimeline, bool destroyTimeline)
+   555 |         {
+   556 |             var profile = CombatTestProfiles.CreateProfile();
+   557 |             var timeline = hasTimeline ? ScriptableObject.CreateInstance<TimelineAsset>() : null;
+   558 |             try
+   559 |             {
+   560 |                 if (timeline != null)
+   561 |                 {
+   562 |                     timeline.SetFrameRate(profile.FrameRate);
+   563 |                 }
+   564 |                 // Control/Normal 涓庡凡鍒犻櫎鐨?Action 灞傝惤鍦ㄥ悓涓€涓€屼笉鍏佽鏄犲皠銆嶅垎鏀紝
+   565 |                 // 鐢ㄥ畠鏇夸唬鍗冲彲缁х画瑕嗙洊 issue.Context 鎸傚埌鍝釜瀵硅薄涓娿€?
+   566 |                 CombatTestProfiles.AddStatePresentation(
+   567 |                     profile,
+   568 |                     StateLayer.Control,
+   569 |                     (int)ControlState.Normal,
+   570 |                     CombatStatePresentation.DefaultVariantId,
+   571 |                     timeline);
+   572 |                 if (destroyTimeline)
+   573 |                 {
+   574 |                     Object.DestroyImmediate(timeline);
+   575 |                 }
+   576 | 
+   577 |                 var issues = CombatEditorUtility.ValidateProfile(profile);
+   578 |                 var issue = issues.Find(value =>
+   579 |                     value.Severity == CombatValidationSeverity.Error &&
+   580 |                     value.Message.Contains("涓嶆槸鍏佽閰嶇疆琛ㄧ幇鏄犲皠"));
+   581 | 
+   582 |                 Assert.IsNotNull(issue);
+   583 |                 if (hasTimeline && !destroyTimeline)
+   584 |                 {
+   585 |                     Assert.AreSame(timeline, issue.Context);
+   586 |                 }
+   587 |                 else
+   588 |                 {
+   589 |                     Assert.AreSame(profile, issue.Context);
+   590 |                 }
+   591 |             }
+   592 |             finally
+   593 |             {
+   594 |                 Object.DestroyImmediate(profile);
+   595 |                 if (timeline != null)
+   596 |                 {
+   597 |                     Object.DestroyImmediate(timeline);
+   598 |                 }
+   599 |             }
+   600 |         }
+   601 | 
+
+=== git diff --check rc=0 ===
+  (clean)

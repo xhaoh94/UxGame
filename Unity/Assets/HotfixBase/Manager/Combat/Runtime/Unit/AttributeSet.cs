@@ -16,49 +16,45 @@ namespace Ux
     /// </summary>
     public sealed class AttributeSet
     {
-        private int _maxHp;
-        private int _hp;
-        private bool _initialized;
+        public bool IsInitialized { get; private set; }
 
-        public bool IsInitialized => _initialized;
+        public int MaxHp { get; private set; }
 
-        public int MaxHp => _maxHp;
-
-        public int Hp => _hp;
+        public int Hp { get; private set; }
 
         /// <summary>未初始化时返回 false —— 否则未初始化的单位会被死亡阶段一跑就全判死。</summary>
-        public bool IsDepleted => _initialized && _hp <= 0;
+        public bool IsDepleted => IsInitialized && Hp <= 0;
 
         public void Initialize(int maxHp)
         {
-            _maxHp = Math.Max(1, maxHp);
-            _hp = _maxHp;
-            _initialized = true;
+            MaxHp = Math.Max(1, maxHp);
+            Hp = MaxHp;
+            IsInitialized = true;
         }
 
         /// <summary>扣血，返回实际扣掉的量（夹到 0，不会出现负数 HP）。逻辑判定只看 IsDepleted。</summary>
         public int ApplyDamage(int amount)
         {
-            if (!_initialized || amount <= 0 || _hp <= 0)
+            if (!IsInitialized || amount <= 0 || Hp <= 0)
             {
                 return 0;
             }
 
-            var applied = Math.Min(_hp, amount);
-            _hp -= applied;
+            var applied = Math.Min(Hp, amount);
+            Hp -= applied;
             return applied;
         }
 
         /// <summary>回血，返回实际回复的量（不会超过上限）。已经死了就不再接受治疗，复活走显式流程。</summary>
         public int ApplyHeal(int amount)
         {
-            if (!_initialized || amount <= 0 || _hp <= 0)
+            if (!IsInitialized || amount <= 0 || Hp <= 0)
             {
                 return 0;
             }
 
-            var applied = Math.Min(_maxHp - _hp, amount);
-            _hp += applied;
+            var applied = Math.Min(MaxHp - Hp, amount);
+            Hp += applied;
             return applied;
         }
 
@@ -66,23 +62,23 @@ namespace Ux
         {
             return new UnitAttributeSnapshot
             {
-                MaxHp = _maxHp,
-                Hp = _hp,
+                MaxHp = MaxHp,
+                Hp = Hp,
             };
         }
 
         public void RestoreSnapshot(in UnitAttributeSnapshot snapshot)
         {
-            _maxHp = Math.Max(1, snapshot.MaxHp);
-            _hp = Math.Clamp(snapshot.Hp, 0, _maxHp);
-            _initialized = true;
+            MaxHp = Math.Max(1, snapshot.MaxHp);
+            Hp = Math.Clamp(snapshot.Hp, 0, MaxHp);
+            IsInitialized = true;
         }
 
         public void Release()
         {
-            _maxHp = 0;
-            _hp = 0;
-            _initialized = false;
+            MaxHp = 0;
+            Hp = 0;
+            IsInitialized = false;
         }
     }
 }

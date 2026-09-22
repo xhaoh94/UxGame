@@ -33,7 +33,7 @@ namespace Ux
 
     public static class CombatTimelineResolver
     {
-        public static CombatTimelinePlan Resolve(CharacterCombatProfile profile, UnitStateMachine states, CombatActionRunner actions, string variantId = null)
+        public static CombatTimelinePlan Resolve(CharacterCombatProfile profile, CombatStateMachine states, CombatActionRunner actions, string variantId = null)
         {
             if (profile == null || states == null)
             {

@@ -1,0 +1,36 @@
+--- HashSet<string> ---
+   131 | var stableIds = new HashSet<string>(StringComparer.Ordinal);
+   168 | var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
+
+--- HasHitConfirmed ---
+    16 | public bool HasHitConfirmed;
+   421 | current.HasHitConfirmed = true;
+   594 | !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
+   630 | HasHitConfirmed = false,
+
+--- ActionChanged ---
+    48 | public readonly struct CombatActionChangedEvent
+    55 | public CombatActionChangedEvent(CombatActionAsset previous, CombatActionAsset current, CombatActionEndReason endReason, 
+   108 | public event Action<CombatActionChangedEvent> ActionChanged;
+   492 | ActionChanged?.Invoke(new CombatActionChangedEvent(
+   517 | ActionChanged = null;
+   634 | ActionChanged?.Invoke(new CombatActionChangedEvent(
+   647 | ActionChanged?.Invoke(new CombatActionChangedEvent(
+
+--- _acceptedHits ---
+   103 | private readonly HashSet<CombatHitKey> _acceptedHits = new();
+   347 | if (previousInstanceId == currentInstanceId || _acceptedHits.Count == 0)
+   353 | foreach (var key in _acceptedHits)
+   363 | _acceptedHits.Remove(key);
+   364 | _acceptedHits.Add(new CombatHitKey(
+   378 | return _acceptedHits.Add(new CombatHitKey(actionInstanceId, windowId, targetId));
+   383 | if (_acceptedHits.Count == 0)
+   388 | var result = new List<CombatAcceptedHitSnapshot>(_acceptedHits.Count);
+   389 | foreach (var key in _acceptedHits)
+   468 | _acceptedHits.Clear();
+   478 | _acceptedHits.Add(new CombatHitKey(
+   513 | _acceptedHits.Clear();
+   614 | /// 杩欓噷蹇呴』娓?_acceptedHits锛氭柊鍔ㄤ綔涓嶈兘澶嶇敤涓婁竴鎷涘凡鍛戒腑鐨勭洰鏍囷紝鍚﹀垯杩炴嫑绗簩涓嬩細鎵撲笉鍑轰激瀹炽€?
+   620 | _acceptedHits.Clear();
+   644 | _acceptedHits.Clear();
+

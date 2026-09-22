@@ -4,21 +4,20 @@ namespace Ux
 {
     /// <summary>
     /// 代码驱动的确定性宏观状态容器。它不求值资源条件，也不决定攻击内容；
-    /// CombatController 在固定逻辑帧中集中提交 Life、Control、Locomotion 和 Action 状态。
+    /// CombatController 在固定逻辑帧中集中提交 Life、Control、Locomotion 状态。
     /// </summary>
-    public sealed class UnitStateMachine
+    public sealed class CombatStateMachine
     {
         private static readonly StateLayer[] Layers =
         {
             StateLayer.Locomotion,
-            StateLayer.Action,
             StateLayer.Control,
             StateLayer.Life,
         };
 
         private readonly StateLayerRuntime[] _layers =
         {
-            new(), new(), new(), new(),
+            new(), new(), new(),
         };
 
         public event Action<StateChangedEvent> StateChanged;
@@ -29,8 +28,6 @@ namespace Ux
 
         public LocomotionState Locomotion =>
             (LocomotionState)GetCurrentStateId(StateLayer.Locomotion);
-        public ActionState Action =>
-            (ActionState)GetCurrentStateId(StateLayer.Action);
         public ControlState Control =>
             (ControlState)GetCurrentStateId(StateLayer.Control);
         public LifeState Life =>
@@ -44,7 +41,6 @@ namespace Ux
             IsInitialized = true;
 
             ChangeState(StateLayer.Locomotion, LocomotionState.Idle.ToId(), StateChangeReason.Initialize);
-            ChangeState(StateLayer.Action, ActionState.Free.ToId(), StateChangeReason.Initialize);
             ChangeState(StateLayer.Control, ControlState.Normal.ToId(), StateChangeReason.Initialize);
             ChangeState(StateLayer.Life, LifeState.Alive.ToId(), StateChangeReason.Initialize);
         }
@@ -76,11 +72,6 @@ namespace Ux
             return ChangeState(StateLayer.Locomotion, state.ToId(), reason);
         }
 
-        public bool SetAction(ActionState state, StateChangeReason reason = StateChangeReason.CodeRule)
-        {
-            return ChangeState(StateLayer.Action, state.ToId(), reason);
-        }
-
         public bool SetControl(ControlState state, StateChangeReason reason = StateChangeReason.ExternalRequest)
         {
             return ChangeState(StateLayer.Control, state.ToId(), reason);
@@ -106,19 +97,18 @@ namespace Ux
             return GetCurrentStateId(layer) == stateId;
         }
 
-        public UnitStateMachineSnapshot CaptureSnapshot()
+        public CombatStateMachineSnapshot CaptureSnapshot()
         {
-            return new UnitStateMachineSnapshot
+            return new CombatStateMachineSnapshot
             {
                 SimulationFrame = SimulationFrame,
                 Locomotion = CaptureLayer(StateLayer.Locomotion),
-                Action = CaptureLayer(StateLayer.Action),
                 Control = CaptureLayer(StateLayer.Control),
                 Life = CaptureLayer(StateLayer.Life),
             };
         }
 
-        public void RestoreSnapshot(UnitStateMachineSnapshot snapshot)
+        public void RestoreSnapshot(CombatStateMachineSnapshot snapshot)
         {
             if (!IsInitialized || snapshot == null)
             {
@@ -202,9 +192,8 @@ namespace Ux
             return layer switch
             {
                 StateLayer.Locomotion => 0,
-                StateLayer.Action => 1,
-                StateLayer.Control => 2,
-                StateLayer.Life => 3,
+                StateLayer.Control => 1,
+                StateLayer.Life => 2,
                 _ => throw new ArgumentOutOfRangeException(nameof(layer), layer, null),
             };
         }

@@ -1,0 +1,11 @@
+=== MD dry run ===
+  hit=1 expect=1 OK | `CombatController.cs:149`
+  hit=1 expect=1 OK | `CombatActionRunner.cs:76`
+  hit=1 expect=1 OK | `CombatActionRunner.cs:212`
+  hit=1 expect=1 OK | `CombatActionRunner.Clear()` 浼氱疆绌?`ActionChanged`锛坄:285`锛?
+  hit=1 expect=1 OK | Life/Control 鍛戒腑鏃剁嫭鍗犲苟鍋滄帀 Action 灞?
+=== TEST dry run ===
+  anchor hit=1 expect=1 OK
+EOL md: CRLF=722 LF=722
+EOL test: CRLF=591 LF=591
+DRY_RUN_OK

@@ -28,7 +28,7 @@ namespace Ux
                     continue;
                 }
 
-                var actions = source.Controller.Actions;
+                var actions = source.Controller.ActionRunner;
 
                 // 与"扣没扣到血"无关：几何已经确认打到，即使目标 0 血、本次不再扣血，标记也要打上。
                 actions.MarkHitConfirmed(hit.ActionInstanceId);
@@ -38,7 +38,7 @@ namespace Ux
                     continue;
                 }
 
-                if (target.Controller.States.Life != LifeState.Alive)
+                if (target.Controller.StateMachine.Life != LifeState.Alive)
                 {
                     // 同帧内先被打死的单位不会被重复结算。
                     continue;

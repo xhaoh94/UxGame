@@ -56,7 +56,7 @@ namespace Ux
                 // 必须在循环内清：_hits 跨攻击者复用，上一位的命中不能带进下一位。
                 _hits.Clear();
                 var added = CombatHitResolver.AppendResolvedHits(
-                    entity.Controller.Actions,
+                    entity.Controller.ActionRunner,
                     new CombatHitQuerySource(set.EntityId, ToFixedPoint(entity.Position)),
                     set.HitWindows,
                     _targets,
@@ -98,7 +98,7 @@ namespace Ux
                     continue;
                 }
 
-                if (entity.Controller.States.Life == LifeState.Alive)
+                if (entity.Controller.StateMachine.Life == LifeState.Alive)
                 {
                     _targets.Add(new CombatHitTarget(entity.Id, ToFixedPoint(entity.Position)));
                 }

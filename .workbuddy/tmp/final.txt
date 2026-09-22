@@ -1,0 +1,141 @@
+ .workbuddy/memory/MEMORY.md                        |  37 +++-
+ Unity/Assets/Editor/Combat/COMBAT_DESIGN.md        |  20 +-
+ Unity/Assets/Editor/Combat/CombatEditorUtility.cs  |   5 +-
+ .../Assets/Editor/Combat/Tests/BattleWorldTests.cs |  14 +-
+ .../Combat/Tests/CombatEditorWorkflowTests.cs      |  15 +-
+ .../Editor/Combat/Tests/CombatRuntimeTests.cs      |  38 ++--
+ .../Assets/Hotfix/Common/Combat/CombatComponent.cs |  20 +-
+ .../HotfixBase/Manager/Combat/Asset/CombatState.cs |  45 ++---
+ .../Manager/Combat/Asset/StateChangeReason.cs      |   2 -
+ .../Manager/Combat/Runtime/Core/BattlePhase.cs     |   2 +-
+ .../Manager/Combat/Runtime/Core/BattleWorld.cs     |  33 ++--
+ .../Runtime/Presentation/CombatTimelinePlayer.cs   |   2 +-
+ .../Combat/Runtime/Systems/CombatDamageSystem.cs   |   4 +-
+ .../Combat/Runtime/Systems/CombatDeathSystem.cs    |   2 +-
+ .../Combat/Runtime/Systems/CombatHitResolution.cs  |   8 +-
+ .../Combat/Runtime/Systems/CombatTimelineSystem.cs |   2 +-
+ .../Manager/Combat/Runtime/Systems/HitboxSystem.cs |   4 +-
+ .../Combat/Runtime/Unit/CombatActionRunner.cs      |  36 ++--
+ .../Combat/Runtime/Unit/CombatController.cs        |  92 ++++-----
+ .../Manager/Combat/Runtime/Unit/StateSnapshot.cs   |   4 +-
+ .../Combat/Runtime/Unit/UnitStateMachine.cs        | 212 ---------------------
+ .../Combat/Runtime/Unit/UnitStateMachine.cs.meta   |  11 --
+ 22 files changed, 175 insertions(+), 433 deletions(-)
+diff --git a/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md b/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
+index 46225525..d2ae5a9a 100644
+--- a/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
++++ b/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
+@@ -17,7 +17,7 @@
+ | 甯т簨浠惰涔?| `Timeline.cs:44` `ShouldTriggerFrame` | Seek/鍒濆鍖栦笉瑙﹀彂浜嬩欢锛屾挱鏀惧尯闂翠弗鏍?`(prev, cur]`鈥斺€斿懡涓抚鍒ゅ畾灏遍潬瀹?|
+-| 瀹忚鐘舵€佹満 | `Manager/Combat/Runtime/Unit/UnitStateMachine.cs` | 4 灞傦紙Locomotion/Action/Control/Life锛夛紝浠ｇ爜椹卞姩瑙勫垯锛岄潪璧勬簮姹傚€?|
++| 瀹忚鐘舵€佹満 | `Manager/Combat/Runtime/Unit/CombatStateMachine.cs` | 3 灞傦紙Locomotion/Control/Life锛夛紝浠ｇ爜椹卞姩瑙勫垯锛岄潪璧勬簮姹傚€硷紱鍏蜂綋鍔ㄤ綔鐢?CombatActionRunner 绠＄悊 |
+ | 鍔ㄤ綔鐢熷懡鍛ㄦ湡 | `Manager/Combat/Runtime/Unit/CombatActionRunner.cs` | 鏄惧紡 ActionId 鍛戒护娑堣垂銆佸彇娑堢獥鍙ｏ紙杩炴嫑锛夈€侀娴?纭/鎷掔粷 |
+-| 棰勬祴涓庡洖婊?| `CombatActionRunner.cs:175` `Confirm` / `:202` `Reject`锛沗CombatController.cs:109` `CaptureSnapshot` | 瀹㈡埛绔娴?+ 鏈嶅姟鍣ㄧ籂鍋忕殑楠ㄦ灦宸插畬澶?|
++| 棰勬祴涓庡洖婊?| `CombatActionRunner.cs:275` `Confirm` / `:301` `Reject`锛沗CombatController.cs:138` `CaptureSnapshot` | 瀹㈡埛绔娴?+ 鏈嶅姟鍣ㄧ籂鍋忕殑楠ㄦ灦宸插畬澶?|
+ | 杈撳叆鍛戒护 | `Manager/Combat/Asset/CombatCommand.cs` | 閫愬抚鍛戒护闃熷垪锛屾湰鍦?/ 缃戠粶 / 褰曞儚鍏辩敤 |
+-| 琛ㄧ幇妗ユ帴 | `Hotfix/Common/Combat/CombatComponent.cs:243` `ResolveTimelineOwner` | Life > Control > Action > Locomotion 浼樺厛绾ч€?Timeline |
++| 琛ㄧ幇妗ユ帴 | `Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs:36` `CombatTimelineResolver.Resolve` | Life > Control > Locomotion 浼樺厛绾ч€夊熀纭€灞傦紱Life/Control 鍛戒腑鏃剁嫭鍗犲苟鍋滄帀 Action 鎾斁灞?|
+ | 缂栬緫鍣?| `Assets/Editor/Timeline/*` | TimelineWindow / TrackView / ClipView / Inspector 榻愬叏 |
+@@ -81,3 +81,3 @@
+ 
+-- `CombatActionRunner.cs:76` 鐨?`HashSet<string>` 鐢ㄤ簡 `StringComparer.Ordinal`锛?+- `CombatActionRunner.cs:131` 鐨?`HashSet<string>` 鐢ㄤ簡 `StringComparer.Ordinal`锛?   閬垮紑 .NET 闅忔満鍝堝笇绉嶅瓙锛屼笖鍙敤浜庡垵濮嬪寲鍘婚噸鏍￠獙锛屼笉鍦ㄦ瘡甯ч€昏緫閲?@@ -143,3 +143,3 @@ Manager/Combat/
+ 鈹?        CombatController               鍗曚綅閫昏緫鎬昏锛堢姸鎬佹満 + 鍔ㄤ綔 + 灞炴€?+ 澧炵泭锛?-鈹?        UnitStateMachine               瀹忚鐘舵€佹満锛圠ocomotion / Action / Control / Life锛?+鈹?        CombatStateMachine             瀹忚鐘舵€佹満锛圠ocomotion / Control / Life锛? 鈹?        CombatActionRunner             鍔ㄤ綔鐢熷懡鍛ㄦ湡 + UnitCombatSnapshot
+@@ -167,3 +167,3 @@ Manager/Combat/
+ | 1 | `ConsumeCommands` | 鍙栧嚭鏈抚鍛戒护 |
+-| 2 | `States.AdvanceTo` + `Actions.Tick` | 鐘舵€佷笌鍔ㄤ綔鎺ㄨ繘锛堝凡鏈夛級 |
++| 2 | `StateMachine.AdvanceTo` + `ActionRunner.Tick` | 鐘舵€佷笌鍔ㄤ綔鎺ㄨ繘锛堝凡鏈夛級 |
+ | 3 | `Timeline.EvaluateFrames` | 姹傚€?鈫?瑙﹀彂 Gameplay Track锛堝紑鍏冲懡涓銆佷綅绉伙級 |
+@@ -230,3 +230,3 @@ public class TLHitboxClip : TimelineClip
+ - 褰㈢姸鐢?*绾暟瀛?*锛堢悆/鑳跺泭/OBB/鎵囧舰锛夛紝**涓嶈鐢?Unity 鐗╃悊**鈥斺€擿Physics.Overlap` 涓嶇‘瀹氫笖鏃犳硶鍦ㄦ湇鍔＄/閲嶆斁鐜璺?-- 鍛戒腑鍒ゅ畾缁撴灉璁颁负 `HasHitConfirmed`锛坄CombatActionRunner.cs:212` 宸查鍩嬶級锛屼緵鍙栨秷绐楀彛鍋?鍛戒腑纭鍚庢墠鑳藉彇娑?
++- 鍛戒腑鍒ゅ畾缁撴灉璁颁负 `HasHitConfirmed`锛坄CombatActionRunner.cs:16` 宸查鍩嬶級锛屼緵鍙栨秷绐楀彛鍋?鍛戒腑纭鍚庢墠鑳藉彇娑?
+ 
+@@ -372,3 +372,3 @@ PendingHits            闃舵 4 鍐欏叆 鈫?闃舵 5 璇诲彇      鍚屼笂
+ 灞炴€х郴缁熷悓鐞嗗彧鏈?`AttributeSet`锛圡axHp/Hp锛夛紝璁捐鏂囨。 4.3 鎻忚堪鐨勪慨鏀瑰櫒鏍堝皻鏈疄鐜般€?-`UnitCombatSnapshot.CurrentVersion` 宸插洜鍔犲叆灞炴€т笌澧炵泭浠?1 鍗囧埌 2锛?+`UnitCombatSnapshot.CurrentVersion` 宸插洜鍔犲叆灞炴€т笌澧炵泭浠?1 鍗囧埌 2锛涙湰娆″垹闄ゅ畯瑙?Action 灞傚悗鍗囧埌 3銆? 蹇収鐩墠鍙湪妯″潡鍐呴儴浣跨敤锛堟病鏈夎惤鐩樸€佹病鏈夌綉缁滀紶杈擄級锛屾墍浠ヨ繖娆″崌绾т笉闇€瑕佸吋瀹规棫鏁版嵁銆?@@ -406,3 +406,3 @@ PendingHits            闃舵 4 鍐欏叆 鈫?闃舵 5 璇诲彇      鍚屼笂
+ 3. **鎴樻姤鏍￠獙鍊掗€肩‘瀹氭€?*锛岃繖涓害鏉熻秺鏃╁紩鍏ユ垚鏈秺浣庯紱鎷栧埌鍚庢湡琛ワ紝绛変簬閲嶅啓銆?-4. 鐜版湁 `CombatActionRunner.Clear()` 浼氱疆绌?`ActionChanged`锛坄:285`锛夛紝
++4. 鐜版湁 `CombatActionRunner.Clear()` 浼氱疆绌?`ActionChanged`锛坄:517`锛夛紝
+    娉ㄦ剰瀵硅薄姹犲鐢ㄦ椂鐨勪簨浠惰В娉ㄥ唽锛屽惁鍒欎細涓蹭簨浠躲€?@@ -427,3 +427,3 @@ Profile 淇濆瓨瑙掕壊绾у弬鏁般€佸姩鎬佺姸鎬佽〃鐜板垪琛ㄣ€佸姩鎬佹妧鑳介€昏緫璧? 
+-- `StateLayer.Action` 鏁村眰鐢辨妧鑳界郴缁熺鐞嗭紝涓嶄綔涓哄畯瑙傜姸鎬佽〃鐜版槧灏勶紱
++- 鍏蜂綋鏀诲嚮鍜屾妧鑳戒笉鍐嶅崰鐢ㄥ畯瑙傜姸鎬佸眰锛岀敱 `CombatActionRunner` 绠＄悊锛涚姸鎬佽〃鐜板彧鏄犲皠 Locomotion / Control / Life 涓夊眰锛? - `ControlState.Normal` 涓嶅簲鎶㈠崰 Locomotion 琛ㄧ幇锛?diff --git a/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs b/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
+index 13733cd1..7f908f81 100644
+--- a/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
++++ b/Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
+@@ -515,5 +515,2 @@ namespace Ux.Editor.Combat.Tests
+ 
+-            // Action 灞傛暣灞傜姝綔涓虹姸鎬佽〃鐜版槧灏勭洰鏍囥€?-            Assert.IsEmpty(CombatStateId.GetMappableStateIds(StateLayer.Action));
+-
+             // IsStatePresentationMappable 涓庡弽灏勯泦鍚堜繚鎸佷竴鑷淬€?@@ -521,6 +518,2 @@ namespace Ux.Editor.Combat.Tests
+                 StateLayer.Locomotion, (int)LocomotionState.Move));
+-            Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+-                StateLayer.Action, (int)ActionState.Free));
+-            Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+-                StateLayer.Action, (int)ActionState.Executing));
+             Assert.IsFalse(CombatStateId.IsStatePresentationMappable(
+@@ -570,6 +563,8 @@ namespace Ux.Editor.Combat.Tests
+                 }
++                // Control/Normal 涓庡凡鍒犻櫎鐨?Action 灞傝惤鍦ㄥ悓涓€涓€屼笉鍏佽鏄犲皠銆嶅垎鏀紝
++                // 鐢ㄥ畠鏇夸唬鍗冲彲缁х画瑕嗙洊 issue.Context 鎸傚埌鍝釜瀵硅薄涓娿€?                 CombatTestProfiles.AddStatePresentation(
+                     profile,
+-                    StateLayer.Action,
+-                    (int)ActionState.Executing,
++                    StateLayer.Control,
++                    (int)ControlState.Normal,
+                     CombatStatePresentation.DefaultVariantId,
+@@ -584,3 +579,3 @@ namespace Ux.Editor.Combat.Tests
+                     value.Severity == CombatValidationSeverity.Error &&
+-                    value.Message.Contains("Action 灞?));
++                    value.Message.Contains("涓嶆槸鍏佽閰嶇疆琛ㄧ幇鏄犲皠"));
+ 
+diff --git a/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs b/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
+index 97e5d3b1..532e6422 100644
+--- a/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
++++ b/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
+@@ -30,9 +30,10 @@ namespace Ux
+         /// <summary>
+-        /// 1 鈫?2锛氬姞鍏?Attributes 涓?Buffs銆傜増鏈彿蹇呴』璺熺潃瀛楁涓€璧锋定锛圧estoreSnapshot 浼氭嫆缁濈増鏈笉涓€鑷寸殑蹇収锛夆€斺€?-        /// 鏃у揩鐓ц繕鍘熸柊缁撴瀯浼氳 HP 涓庡鐩婇潤榛樺洖鍒伴粯璁ゅ€硷紝姣旂洿鎺ユ嫆缁濆嵄闄┿€傚揩鐓ф棤钀界洏銆佹棤缃戠粶浼犺緭锛屽崌绾т笉闇€鍏煎鏃ф暟鎹€?+        /// 1 鈫?2锛氬姞鍏?Attributes 涓?Buffs锛? 鈫?3锛氱Щ闄?CombatStateMachineSnapshot 鐨?Action 灞傚揩鐓с€?+        /// 鐗堟湰鍙峰繀椤昏窡鐫€瀛楁涓€璧锋定锛圧estoreSnapshot 浼氭嫆缁濈増鏈笉涓€鑷寸殑蹇収锛夆€斺€旀棫蹇収杩樺師鏂扮粨鏋勪細璁╃姸鎬佹暟鎹?+        /// 闈欓粯閿欎綅锛屾瘮鐩存帴鎷掔粷鍗遍櫓銆傚揩鐓ф棤钀界洏銆佹棤缃戠粶浼犺緭锛屽崌绾т笉闇€鍏煎鏃ф暟鎹€?         /// </summary>
+-        public const int CurrentVersion = 2;
++        public const int CurrentVersion = 3;
+ 
+         public int Version;
+-        public UnitStateMachineSnapshot StateMachine;
++        public CombatStateMachineSnapshot StateMachine;
+         public CombatActionSnapshot Action;
+@@ -95,3 +96,3 @@ namespace Ux
+     ///
+-    /// 鑱岃矗杈圭晫锛歎nitStateMachine 鍥炵瓟"鐜板湪澶勪簬浠€涔堢姸鎬?锛屾湰绫诲洖绛?杩欎竴鎷涙挱鍒扮鍑犲抚浜?銆?+    /// 鑱岃矗杈圭晫锛欳ombatStateMachine 鍥炵瓟"鐜板湪澶勪簬浠€涔堢姸鎬?锛屾湰绫诲洖绛?杩欎竴鎷涙挱鍒扮鍑犲抚浜?銆?     /// 鎵€浠ュ姞涓€涓柊鎶€鑳戒笉鐢ㄥ姩鐘舵€佹満锛屽姞涓€涓?CombatActionAsset 璧勪骇灏辫銆?@@ -247,3 +248,3 @@ namespace Ux
+             {
+-                // 2. 鎵嬩笂姝ｅ繖 鈥斺€?鍙垽鏂?鑳戒笉鑳借涓嬩竴鎷涘彇娑?
++                //褰撳墠鏈夊姩浣滃湪鎵ц锛屽垯鍒ゆ柇鏄惁鑳借鏂扮殑鍛戒护鍙栨秷锛岃兘鎵撴柇鍒欑敤鏂板懡浠ゆ墦鏂?                 TryCancel(commands);
+@@ -252,3 +253,3 @@ namespace Ux
+             {
+-                // 3. 鎵嬩笂绌洪棽 鈥斺€?鍒ゆ柇"鑳戒笉鑳借捣鎵?
++                // 褰撳墠娌℃湁鍔ㄤ綔鍦ㄦ墽琛岋紝灏濊瘯鎵ц鏂板姩浣滃懡浠?                 TryStart(commands);
+@@ -548,3 +549,2 @@ namespace Ux
+ 
+-            // 鎾畬浜嗚嚜鍔ㄦ敹灏俱€傝繖閲岀殑 DurationFrames 灏辨槸璧勪骇閲岀殑 70銆?             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
+@@ -578,7 +578,6 @@ namespace Ux
+         /// <summary>
+-        /// 蹇欑鏃跺皾璇曞彇娑堬紙杩炴嫑 / 鍙栨秷鍚庢憞锛夈€備袱涓潯浠跺繀椤诲悓鏃舵弧瓒筹細绐楀彛鎸囧悜鐨勫氨鏄繖鏉″懡浠ょ殑鍔ㄤ綔锛?-        /// 涓斿綋鍓嶅姩浣滃抚钀藉湪绐楀彛鍐咃紙RequiresHitConfirm 涓虹湡鏃惰繕瑕佹眰宸插懡涓級銆?-        /// 鍛戒腑鍒欑粨鏉熷綋鍓嶅姩浣滐紙鍘熷洜 Cancelled锛夊苟绔嬪埢璧锋墜鏂板姩浣滐紝ActionFrame 浠?0 寮€濮嬨€?+        /// 鏈夊姩浣滄椂灏濊瘯琚柊鍛戒护鍙栨秷锛氱獥鍙ｇ敱褰撳墠鍔ㄤ綔鎻愪緵锛屼笖蹇呴』鎸囧悜鍛戒护閲岀殑閭ｄ釜鍔ㄤ綔锛?+        /// 鏉′欢鎴愮珛灏辩粨鏉熷綋鍓嶅姩浣滐紙Cancelled锛夊苟绔嬪埢璧锋墜鏂板姩浣滐紝ActionFrame 浠?0 寮€濮嬨€?         ///
+-        /// 鈿?杩欐鏄?鐙傜偣鎵撲笉鍑轰激瀹?鐨勬垚鍥狅細鏅敾 1001 鐨勫彇娑堢獥鍙ｆ槸 [5,26) 涓旀寚鍚戣嚜宸憋紝
++        /// 鈿?"鐙傜偣鎵撲笉鍑轰激瀹?灏辨槸杩欎箞鏉ョ殑锛氭櫘鏀?1001 鐨勫彇娑堢獥鍙ｆ槸 [5,26) 涓旀寚鍚戣嚜宸憋紝
+         /// 甯?5-26 涔嬮棿姣忔鎸夐敭閮戒細鎶婂姩浣滈噸缃洖甯?0锛屾案杩滆蛋涓嶅埌甯?41 鐨勫懡涓獥鍙ｃ€?@@ -587,6 +586,6 @@ namespace Ux
+         {
+-            for (var commandIndex = 0; commandIndex < commands.Count; commandIndex++)
++            for (var i = 0; i < commands.Count; i++)
+             {
+-                var command = commands[commandIndex];
+-                if (!_actions.TryGetValue(command.ActionId, out var target))
++                var command = commands[i];
++                if (!_actions.TryGetValue(command.ActionId, out var action))
+                 {
+@@ -597,4 +596,2 @@ namespace Ux
+                 {
+-                    // 鈶?绐楀彛鎸囧悜鐨勫氨鏄繖鏉″懡浠よ鎵ц鐨勫姩浣滃悧锛?-                    // 鈶?褰撳墠鍔ㄤ綔甯у湪绐楀彛鍐呭悧锛燂紙RequiresHitConfirm 涓虹湡鏃惰繕瑕佹眰宸插懡涓級
+                     if (window.TargetActionId != command.ActionId ||
+@@ -605,5 +602,6 @@ namespace Ux
+ 
+-                    // 鍙栨秷 鈫?绔嬪埢鎺ヤ笂鏂板姩浣滐紝涓€姝ュ埌浣嶏紝涓棿娌℃湁"绌洪棽甯?
++                    // 鍙栨秷褰撳墠鐨勫姩浣?                     EndCurrent(CombatActionEndReason.Cancelled);
+-                    Start(target, command.RequestId, command.RequestId != 0);
++                    // 绔嬪嵆寮€濮嬫柊鍔ㄤ綔
++                    Start(action, command.RequestId, command.RequestId != 0);
+                     return true;

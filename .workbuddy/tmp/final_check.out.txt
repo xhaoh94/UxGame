@@ -1,0 +1,19 @@
+=== 鎷彿骞宠　锛堜笌 HEAD 瀵规瘮锛?==
+  CombatActionRunner.cs            cur=(0, -3) head=(0, -3) OK
+  CombatController.cs              cur=(0, 0) head=(0, 0) OK
+  CombatEditorWorkflowTests.cs     cur=(0, 0) head=(0, 0) OK
+
+=== 娈嬬暀鎵弿锛圓ssets 涓?.cs/.md锛屾帓闄?ThirdParty锛?==
+  StateLayer.Action        0 hit(s) 
+  ActionState              2 hit(s) ['Main\\HybridCLR\\Generated\\AOTGenericReferences.cs:856', 'Main\\HybridCLR\\Generated\\AOTGenericReferences.cs:857']
+  SyncAction               3 hit(s) ['Editor\\Combat\\CombatEditorUtility.cs:571', 'Editor\\Combat\\CombatEditorWindow.cs:1238', 'Editor\\Timeline\\TimelineWindow.cs:1249']
+  UnitStateMachine         0 hit(s) 
+  ResolveTimelineOwner     0 hit(s) 
+  ActionStarted            0 hit(s) 
+  ActionEnded              0 hit(s) 
+  States.AdvanceTo         0 hit(s) 
+  Actions.Tick             0 hit(s) 
+  绗?4 姝?                   0 hit(s) 
+
+=== git diff --check rc=0 ===
+  (clean)

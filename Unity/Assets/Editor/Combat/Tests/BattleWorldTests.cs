@@ -101,21 +101,21 @@ namespace Ux.Editor.Combat.Tests
                 var world = new BattleWorld("hit-hash", 30);
                 var entity = new StubEntity(1L, profile);
                 world.Register(entity);
-                Assert.IsTrue(entity.Controller.Actions.StartAction(action.ActionId, 1, 0, false));
+                Assert.IsTrue(entity.Controller.ActionRunner.StartAction(action.ActionId, 1, 0, false));
                 var before = world.ComputeStateHash();
-                var requestId = entity.Controller.Actions.Current.RequestId;
-                var authoritativeId = entity.Controller.Actions.Current.InstanceId + 1000;
-                Assert.IsTrue(entity.Controller.Actions.Confirm(requestId, authoritativeId, 0));
+                var requestId = entity.Controller.ActionRunner.Current.RequestId;
+                var authoritativeId = entity.Controller.ActionRunner.Current.InstanceId + 1000;
+                Assert.IsTrue(entity.Controller.ActionRunner.Confirm(requestId, authoritativeId, 0));
                 var afterConfirm = world.ComputeStateHash();
                 Assert.AreNotEqual(before, afterConfirm,
                     "动作实例身份属于逻辑状态，必须参与世界哈希。");
-                Assert.IsTrue(entity.Controller.Actions.MarkHitConfirmed(authoritativeId));
+                Assert.IsTrue(entity.Controller.ActionRunner.MarkHitConfirmed(authoritativeId));
                 var afterHitConfirm = world.ComputeStateHash();
                 Assert.AreNotEqual(afterConfirm, afterHitConfirm,
                     "命中确认状态属于逻辑状态，必须参与世界哈希。");
 
-                Assert.IsTrue(entity.Controller.Actions.TryAcceptHit(
-                    entity.Controller.Actions.Current.InstanceId,
+                Assert.IsTrue(entity.Controller.ActionRunner.TryAcceptHit(
+                    entity.Controller.ActionRunner.Current.InstanceId,
                     action.HitWindows[0].StableId,
                     2));
                 Assert.AreNotEqual(before, world.ComputeStateHash(),

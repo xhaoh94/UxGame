@@ -1,0 +1,6 @@
+=== 琛屽彿寮曠敤鏍搁獙 ===
+md:15   TimelineMgr.cs             :27    SimulationClock        -> OK
+md:17   Timeline.cs                :44    ShouldTriggerFrame     -> OK
+md:20   CombatActionRunner.cs      :275   Confirm                -> OK
+md:20   CombatController.cs        :149   CaptureSnapshot        -> MISMATCH real=[138, 147, 153, 154]   doc_line='HasAction = ActionRunner.HasAction,'
+md:22   CombatTimelinePlayer.cs    :36    CombatTimelineResolver.Resolve -> MISMATCH real=[]   doc_line='public static CombatTimelinePlan Resolve(CharacterCombatProfile profile, CombatS'

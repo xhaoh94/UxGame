@@ -1,0 +1,81 @@
+=== git diff --check rc=2 ===
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs:248: trailing whitespace.
++            {                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs:550: trailing whitespace.
++                        
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs:589: trailing whitespace.
++                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:88: trailing whitespace.
++            
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:90: trailing whitespace.
++            {                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:94: trailing whitespace.
++            {                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:98: trailing whitespace.
++            {             
+
+warning: in the working copy of '.workbuddy/memory/MEMORY.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Asset/CombatState.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Asset/StateChangeReason.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Runtime/Core/BattlePhase.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Runtime/Core/BattleWorld.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatDamageSystem.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatDeathSystem.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatTimelineSystem.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/HitboxSystem.cs', LF will be replaced by CRLF the next time Git touches it
+
+=== git status --porcelain ===
+ M .workbuddy/memory/MEMORY.md
+ M Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
+ M Unity/Assets/Editor/Combat/CombatEditorUtility.cs
+ M Unity/Assets/Editor/Combat/Tests/BattleWorldTests.cs
+ M Unity/Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs
+ M Unity/Assets/Editor/Combat/Tests/CombatRuntimeTests.cs
+ M Unity/Assets/Hotfix/Common/Combat/CombatComponent.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Asset/CombatState.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Asset/StateChangeReason.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Core/BattlePhase.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Core/BattleWorld.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatDamageSystem.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatDeathSystem.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatHitResolution.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/CombatTimelineSystem.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Systems/HitboxSystem.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs
+ M Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/StateSnapshot.cs
+ D Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/UnitStateMachine.cs
+ D Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/UnitStateMachine.cs.meta
+?? .workbuddy/memory/2026-09-20.md
+?? .workbuddy/memory/2026-09-21.md
+?? .workbuddy/review/
+?? .workbuddy/tmp/
+?? Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatStateMachine.cs
+?? Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatStateMachine.cs.meta
+
+=== git diff --stat ===
+ .workbuddy/memory/MEMORY.md                        |  37 +++-
+ Unity/Assets/Editor/Combat/COMBAT_DESIGN.md        |  14 +-
+ Unity/Assets/Editor/Combat/CombatEditorUtility.cs  |   5 +-
+ .../Assets/Editor/Combat/Tests/BattleWorldTests.cs |  14 +-
+ .../Combat/Tests/CombatEditorWorkflowTests.cs      |  56 ------
+ .../Editor/Combat/Tests/CombatRuntimeTests.cs      |  38 ++--
+ .../Assets/Hotfix/Common/Combat/CombatComponent.cs |  20 +-
+ .../HotfixBase/Manager/Combat/Asset/CombatState.cs |  45 ++---
+ .../Manager/Combat/Asset/StateChangeReason.cs      |   2 -
+ .../Manager/Combat/Runtime/Core/BattlePhase.cs     |   2 +-
+ .../Manager/Combat/Runtime/Core/BattleWorld.cs     |  33 ++--
+ .../Runtime/Presentation/CombatTimelinePlayer.cs   |   2 +-
+ .../Combat/Runtime/Systems/CombatDamageSystem.cs   |   4 +-
+ .../Combat/Runtime/Systems/CombatDeathSystem.cs    |   2 +-
+ .../Combat/Runtime/Systems/CombatHitResolution.cs  |   8 +-
+ .../Combat/Runtime/Systems/CombatTimelineSystem.cs |   2 +-
+ .../Manager/Combat/Runtime/Systems/HitboxSystem.cs |   4 +-
+ .../Combat/Runtime/Unit/CombatActionRunner.cs      |  44 ++---
+ .../Combat/Runtime/Unit/CombatController.cs        |  99 ++++------
+ .../Manager/Combat/Runtime/Unit/StateSnapshot.cs   |   4 +-
+ .../Combat/Runtime/Unit/UnitStateMachine.cs        | 212 ---------------------
+ .../Combat/Runtime/Unit/UnitStateMachine.cs.meta   |  11 --
+ 22 files changed, 172 insertions(+), 486 deletions(-)
+

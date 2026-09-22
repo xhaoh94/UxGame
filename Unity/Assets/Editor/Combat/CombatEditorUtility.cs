@@ -43,7 +43,6 @@ namespace Ux.Editor.Combat
                 StateLayer.Locomotion => "Locomotion",
                 StateLayer.Control => "Control",
                 StateLayer.Life => "Life",
-                StateLayer.Action => "Action（技能由技能列表管理）",
                 _ => layer.ToString(),
             };
         }
@@ -657,9 +656,7 @@ namespace Ux.Editor.Combat
                             presentation.Layer,
                             presentation.StateId))
                     {
-                        var reason = presentation.Layer == StateLayer.Action
-                            ? "使用了 Action 层；技能表现必须放在动态技能列表中。"
-                            : "不是允许配置表现映射的逻辑状态。";
+                        const string reason = "不是允许配置表现映射的逻辑状态。";
                         issues.Add(new CombatValidationIssue(
                             CombatValidationSeverity.Error,
                             $"{label} {reason}",

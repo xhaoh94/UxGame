@@ -1,0 +1,26 @@
+Assets/Editor/Combat/CombatEditorWindow.cs:647 [Actions.] var actions = _profile.Actions == null ? 0 : _profile.Actions.Count;
+Assets/Editor/Combat/CombatEditorWindow.cs:728 [Actions.] if (_profile?.Actions == null || _profile.Actions.Count == 0)
+Assets/Editor/Combat/CombatEditorWindow.cs:735 [Actions.] for (var i = 0; i < _profile.Actions.Count; i++)
+Assets/Editor/Combat/Tests/CombatEditorWorkflowTests.cs:242 [Actions.] Assert.AreEqual(0, revertedProfile.Actions.Count);
+Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:74 [绗?姝?绗?3 姝 /// 鎵ц椤哄簭鍥哄畾涓?鍏堟帹杩涘姩浣溿€佸悗鍒ゅ畾绉诲姩"锛岄『搴忎笉鑳芥崲锛屽師鍥犺绗?3 姝ャ€?
+Assets/Hotfix/Common/Combat/CombatComponent.cs:141 [鈹€鈹€] // 鈹€鈹€ BattleWorld 涓€涓€昏緫甯х殑绗?1 涓樁娈碉細Commands 鈹€鈹€
+Assets/Hotfix/Common/Combat/CombatComponent.cs:141 [鈹€鈹€] // 鈹€鈹€ BattleWorld 涓€涓€昏緫甯х殑绗?1 涓樁娈碉細Commands 鈹€鈹€
+Assets/Hotfix/Common/Combat/CombatComponent.cs:152 [鈹€鈹€] // 鈹€鈹€ BattleWorld 涓€涓€昏緫甯х殑绗?2 涓樁娈碉細Actions 鈹€鈹€
+Assets/Hotfix/Common/Combat/CombatComponent.cs:152 [鈹€鈹€] // 鈹€鈹€ BattleWorld 涓€涓€昏緫甯х殑绗?2 涓樁娈碉細Actions 鈹€鈹€
+
+=== trailing whitespace in modified files ===
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs:248: trailing whitespace.
++            {                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs:550: trailing whitespace.
++                        
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs:589: trailing whitespace.
++                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:88: trailing whitespace.
++            
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:90: trailing whitespace.
++            {                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:94: trailing whitespace.
++            {                
+Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatController.cs:98: trailing whitespace.
++            {             
+

@@ -29,7 +29,7 @@ namespace Ux
                 }
 
                 var controller = entity.Controller;
-                if (controller.States.Life != LifeState.Alive)
+                if (controller.StateMachine.Life != LifeState.Alive)
                 {
                     continue;
                 }

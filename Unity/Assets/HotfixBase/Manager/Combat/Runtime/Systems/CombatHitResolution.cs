@@ -112,12 +112,8 @@ namespace Ux
     public static class CombatHitResolver
     {
         /// <summary>用外部传入的窗口做命中查询。窗口帧区间的合法性由调用方保证。</summary>
-        public static int AppendResolvedHits(
-            CombatActionRunner runner,
-            in CombatHitQuerySource source,
-            IReadOnlyList<CombatActiveHitWindow> windows,
-            IReadOnlyList<CombatHitTarget> targets,
-            List<CombatHitCandidate> output)
+        public static int AppendResolvedHits(CombatActionRunner runner,in CombatHitQuerySource source,IReadOnlyList<CombatActiveHitWindow> windows,
+        IReadOnlyList<CombatHitTarget> targets,List<CombatHitCandidate> output)
         {
             if (runner == null)
             {

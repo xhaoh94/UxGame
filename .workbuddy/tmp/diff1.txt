@@ -1,0 +1,66 @@
+diff --git a/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md b/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
+index 46225525..ac36d362 100644
+--- a/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
++++ b/Unity/Assets/Editor/Combat/COMBAT_DESIGN.md
+@@ -15,11 +15,11 @@
+ | 閫昏緫甯ф椂閽?| `HotfixBase/Manager/Timeline/TimelineMgr.cs:27` `SimulationClock` | 鍥哄畾姝ラ暱 + 杩藉抚涓婇檺 + 鎻掑€?alpha锛涗笁绉嶅抚婧愶紙LocalRealtime / External / Replay锛?|
+ | 閫愬抚缂栨帓 | `HotfixBase/Manager/Timeline/Runtime/Base/Timeline.cs` | 甯ч┍鍔ㄨ€岄潪鏃堕棿椹卞姩锛沗ShouldTriggerFrame` 淇濊瘉璺冲抚涓嶆紡浜嬩欢 |
+ | 甯т簨浠惰涔?| `Timeline.cs:44` `ShouldTriggerFrame` | Seek/鍒濆鍖栦笉瑙﹀彂浜嬩欢锛屾挱鏀惧尯闂翠弗鏍?`(prev, cur]`鈥斺€斿懡涓抚鍒ゅ畾灏遍潬瀹?|
+-| 瀹忚鐘舵€佹満 | `Manager/Combat/Runtime/Unit/UnitStateMachine.cs` | 4 灞傦紙Locomotion/Action/Control/Life锛夛紝浠ｇ爜椹卞姩瑙勫垯锛岄潪璧勬簮姹傚€?|
++| 瀹忚鐘舵€佹満 | `Manager/Combat/Runtime/Unit/CombatStateMachine.cs` | 3 灞傦紙Locomotion/Control/Life锛夛紝浠ｇ爜椹卞姩瑙勫垯锛岄潪璧勬簮姹傚€硷紱鍏蜂綋鍔ㄤ綔鐢?CombatActionRunner 绠＄悊 |
+ | 鍔ㄤ綔鐢熷懡鍛ㄦ湡 | `Manager/Combat/Runtime/Unit/CombatActionRunner.cs` | 鏄惧紡 ActionId 鍛戒护娑堣垂銆佸彇娑堢獥鍙ｏ紙杩炴嫑锛夈€侀娴?纭/鎷掔粷 |
+-| 棰勬祴涓庡洖婊?| `CombatActionRunner.cs:175` `Confirm` / `:202` `Reject`锛沗CombatController.cs:109` `CaptureSnapshot` | 瀹㈡埛绔娴?+ 鏈嶅姟鍣ㄧ籂鍋忕殑楠ㄦ灦宸插畬澶?|
++| 棰勬祴涓庡洖婊?| `CombatActionRunner.cs:275` `Confirm` / `:301` `Reject`锛沗CombatController.cs:149` `CaptureSnapshot` | 瀹㈡埛绔娴?+ 鏈嶅姟鍣ㄧ籂鍋忕殑楠ㄦ灦宸插畬澶?|
+ | 杈撳叆鍛戒护 | `Manager/Combat/Asset/CombatCommand.cs` | 閫愬抚鍛戒护闃熷垪锛屾湰鍦?/ 缃戠粶 / 褰曞儚鍏辩敤 |
+-| 琛ㄧ幇妗ユ帴 | `Hotfix/Common/Combat/CombatComponent.cs:243` `ResolveTimelineOwner` | Life > Control > Action > Locomotion 浼樺厛绾ч€?Timeline |
++| 琛ㄧ幇妗ユ帴 | `Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs:36` `CombatTimelineResolver.Resolve` | Life > Control > Locomotion 浼樺厛绾ч€夊熀纭€灞傦紱Life/Control 鍛戒腑鏃剁嫭鍗犲苟鍋滄帀 Action 灞?|
+ | 缂栬緫鍣?| `Assets/Editor/Timeline/*` | TimelineWindow / TrackView / ClipView / Inspector 榻愬叏 |
+ 
+ ### 缂哄け锛堝叏椤圭洰闆跺疄鐜帮級
+@@ -141,7 +141,7 @@ Manager/Combat/
+ 鈹?        CombatStageBuffers             闃舵涔嬮棿鐨勪氦鎺ョ紦鍐? 鈹?   Unit/                               鍗曚綅渚ч€昏緫
+ 鈹?        CombatController               鍗曚綅閫昏緫鎬昏锛堢姸鎬佹満 + 鍔ㄤ綔 + 灞炴€?+ 澧炵泭锛?-鈹?        UnitStateMachine               瀹忚鐘舵€佹満锛圠ocomotion / Action / Control / Life锛?+鈹?        CombatStateMachine             瀹忚鐘舵€佹満锛圠ocomotion / Control / Life锛? 鈹?        CombatActionRunner             鍔ㄤ綔鐢熷懡鍛ㄦ湡 + UnitCombatSnapshot
+ 鈹?        AttributeSet / CombatBuff / StateSnapshot
+ 鈹?   Systems/                            闃舵鎻掍欢锛屾寜 BattlePhase 鎸傝浇
+@@ -165,7 +165,7 @@ Manager/Combat/
+ | 搴?| 闃舵 | 璇存槑 |
+ |---|---|---|
+ | 1 | `ConsumeCommands` | 鍙栧嚭鏈抚鍛戒护 |
+-| 2 | `States.AdvanceTo` + `Actions.Tick` | 鐘舵€佷笌鍔ㄤ綔鎺ㄨ繘锛堝凡鏈夛級 |
++| 2 | `StateMachine.AdvanceTo` + `ActionRunner.Tick` | 鐘舵€佷笌鍔ㄤ綔鎺ㄨ繘锛堝凡鏈夛級 |
+ | 3 | `Timeline.EvaluateFrames` | 姹傚€?鈫?瑙﹀彂 Gameplay Track锛堝紑鍏冲懡涓銆佷綅绉伙級 |
+ | 4 | **Hitbox Query** | 褰㈢姸鏌ヨ锛屼骇鍑?`HitEvent`锛屽悓鐩爣鍘婚噸 |
+ | 5 | **Damage Resolve** | 灞炴€у揩鐓?鈫?淇敼鍣ㄦ爤 鈫?浼ゅ鍏紡 鈫?搴旂敤 |
+@@ -370,7 +370,7 @@ PendingHits            闃舵 4 鍐欏叆 鈫?闃舵 5 璇诲彇      鍚屼笂
+ | Death | `CombatDeathSystem` | **鏈€灏忓疄鐜?*锛氬垽鎹彧鏈?HP 鈮?0 |
+ 
+ 灞炴€х郴缁熷悓鐞嗗彧鏈?`AttributeSet`锛圡axHp/Hp锛夛紝璁捐鏂囨。 4.3 鎻忚堪鐨勪慨鏀瑰櫒鏍堝皻鏈疄鐜般€?-`UnitCombatSnapshot.CurrentVersion` 宸插洜鍔犲叆灞炴€т笌澧炵泭浠?1 鍗囧埌 2锛?+`UnitCombatSnapshot.CurrentVersion` 宸插洜鍔犲叆灞炴€т笌澧炵泭浠?1 鍗囧埌 2锛涙湰娆″垹闄ゅ畯瑙?Action 灞傚悗鍗囧埌 3銆? 蹇収鐩墠鍙湪妯″潡鍐呴儴浣跨敤锛堟病鏈夎惤鐩樸€佹病鏈夌綉缁滀紶杈擄級锛屾墍浠ヨ繖娆″崌绾т笉闇€瑕佸吋瀹规棫鏁版嵁銆? 
+ **椹卞姩閾惧彉鏇?*
+@@ -425,7 +425,7 @@ Profile 淇濆瓨瑙掕壊绾у弬鏁般€佸姩鎬佺姸鎬佽〃鐜板垪琛ㄣ€佸姩鎬佹妧鑳介€昏緫璧? 鐘舵€佸€欓€夌敱 `CombatStateId.GetMappableStateIds` 鍙嶅皠瀵瑰簲灞傜殑鏋氫妇鐢熸垚銆傛柊澧炴灇涓惧€间細鑷姩杩涘叆
+ 缂栬緫鍣ㄤ笅鎷夊拰鈥滄坊鍔犻粯璁ゆ槧灏勨€濇祦绋嬶紝涓嶅啀缁存姢鎵嬪啓鐘舵€佺櫧鍚嶅崟銆傚彧淇濈暀涓夐」缁撴瀯鎬ф帓闄わ細
+ 
+-- `StateLayer.Action` 鏁村眰鐢辨妧鑳界郴缁熺鐞嗭紝涓嶄綔涓哄畯瑙傜姸鎬佽〃鐜版槧灏勶紱
++- 鍏蜂綋鏀诲嚮鍜屾妧鑳戒笉鍐嶅崰鐢ㄥ畯瑙傜姸鎬佸眰锛岀敱 `CombatActionRunner` 绠＄悊锛涚姸鎬佽〃鐜板彧鏄犲皠 Locomotion / Control / Life 涓夊眰锛? - `ControlState.Normal` 涓嶅簲鎶㈠崰 Locomotion 琛ㄧ幇锛? - `LifeState.Alive` 涓嶅簲浠ユ渶楂樺眰浼樺厛绾ч暱鏈熻鐩栧叾瀹冭〃鐜般€? 
+diff --git a/Unity/Assets/Editor/Combat/CombatEditorUtility.cs b/Unity/Assets/Editor/Combat/CombatEditorUtility.cs
+index fc14e453..fc34ce9b 100644
+--- a/Unity/Assets/Editor/Combat/CombatEditorUtility.cs
++++ b/Unity/Assets/Editor/Combat/CombatEditorUtility.cs
+@@ -43,7 +43,6 @@ namespace Ux.Editor.Combat
+                 StateLayer.Locomotion => "Locomotion",
+                 StateLayer.Control => "Control",
+                 StateLayer.Life => "Life",
+-                StateLayer.Action => "Action锛堟妧鑳界敱鎶€鑳藉垪琛ㄧ鐞嗭級",
+                 _ => layer.ToString(),
+             };
+         }
+@@ -657,9 +656,7 @@ namespace Ux.Editor.Combat
+                             presentation.Layer,
+                             presentation.StateId))
+                     {
+-                        var reason = presentation.Layer == StateLayer.Action
+-                            ? "浣跨敤浜?Action 灞傦紱鎶€鑳借〃鐜板繀椤绘斁鍦ㄥ姩鎬佹妧鑳藉垪琛ㄤ腑銆?
+-                            : "涓嶆槸鍏佽閰嶇疆琛ㄧ幇鏄犲皠鐨勯€昏緫鐘舵€併€?;
++                        const string reason = "涓嶆槸鍏佽閰嶇疆琛ㄧ幇鏄犲皠鐨勯€昏緫鐘舵€併€?;
+                         issues.Add(new CombatValidationIssue(
+                             CombatValidationSeverity.Error,
+                             $"{label} {reason}",

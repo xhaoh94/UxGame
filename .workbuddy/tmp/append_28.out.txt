@@ -1,0 +1,3 @@
+bytes 27497 -> 29934
+crlf 0 lf 252
+bare_lf 252

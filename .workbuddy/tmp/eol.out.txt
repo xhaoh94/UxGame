@@ -1,0 +1,18 @@
+HotfixBase\Manager\Combat\Runtime\Unit\CombatActionRunner.cs             EOL=CRLF CRLF=655 LF=655
+HotfixBase\Manager\Combat\Runtime\Unit\CombatController.cs               EOL=CRLF CRLF=195 LF=195
+HotfixBase\Manager\Combat\Runtime\Unit\CombatStateMachine.cs             EOL=CRLF CRLF=201 LF=201
+Editor\Combat\COMBAT_DESIGN.md                                           EOL=CRLF CRLF=722 LF=722
+Editor\Combat\CombatEditorUtility.cs                                     EOL=CRLF CRLF=1023 LF=1023
+Editor\Combat\Tests\CombatEditorWorkflowTests.cs                         EOL=CRLF CRLF=591 LF=591
+Editor\Combat\Tests\CombatRuntimeTests.cs                                EOL=CRLF CRLF=1136 LF=1136
+Editor\Combat\Tests\BattleWorldTests.cs                                  EOL=CRLF CRLF=455 LF=455
+
+=== total lines ===
+HotfixBase\Manager\Combat\Runtime\Unit\CombatActionRunner.cs             655
+HotfixBase\Manager\Combat\Runtime\Unit\CombatController.cs               195
+HotfixBase\Manager\Combat\Runtime\Unit\CombatStateMachine.cs             201
+Editor\Combat\COMBAT_DESIGN.md                                           722
+Editor\Combat\CombatEditorUtility.cs                                     1023
+Editor\Combat\Tests\CombatEditorWorkflowTests.cs                         591
+Editor\Combat\Tests\CombatRuntimeTests.cs                                1136
+Editor\Combat\Tests\BattleWorldTests.cs                                  455

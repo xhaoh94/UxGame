@@ -1,0 +1,139 @@
+files scanned: 28
+
+BattleWorld.cs:113
+   prop  : IReadOnlyList<ICombatEntity> OrderedEntities => _ordered
+   field : 67 | private ICombatEntity[] _ordered = Array.Empty<ICombatEntity>();
+   refs(17):
+      67 | private ICombatEntity[] _ordered = Array.Empty<ICombatEntity>();
+      113 | public IReadOnlyList<ICombatEntity> OrderedEntities => _ordered;
+      118 | /// 椤哄簭 = _ordered 鐨?Id 鍗囧簭锛屼笌甯т簨浠惰〃鐨勫啓鍏ラ『搴忎竴鑷淬€?
+      265 | var buffer = new EntityCombatSnapshot[_ordered.Length];
+      266 | for (var i = 0; i < _ordered.Length; i++)
+      268 | var entity = _ordered[i];
+      305 | for (var i = 0; i < _ordered.Length; i++)
+      307 | var entity = _ordered[i];
+      355 | for (var i = 0; i < _ordered.Length; i++)
+      357 | var entity = _ordered[i];
+      416 | var entity = _ordered[i];
+      434 | var entity = _ordered[i];
+      455 | var entity = _ordered[i];
+      468 | var count = _ordered.Length;
+      505 | if (_ordered.Length != count)
+      507 | _ordered = new ICombatEntity[count];
+      517 | _ordered[index++] = pair.Value;
+
+BattleWorld.cs:122
+   prop  : IReadOnlyList<ICombatEntity> ActionActiveEntities => _actionActive
+   field : 71 | private readonly List<ICombatEntity> _actionActive = new();
+   refs(4):
+      71 | private readonly List<ICombatEntity> _actionActive = new();
+      122 | public IReadOnlyList<ICombatEntity> ActionActiveEntities => _actionActive;
+      431 | _actionActive.Clear();
+      445 | _actionActive.Add(entity);
+
+CombatStageBuffers.cs:91
+   prop  : long Frame => _frame
+   field : 89 | private long _frame = -1;
+   refs(7):
+      89 | private long _frame = -1;
+      91 | public long Frame => _frame;
+      100 | _frame = frame;
+      142 | private long _frame = -1;
+      144 | public long Frame => _frame;
+      152 | _frame = frame;
+      163 | _frame = -1;
+
+CombatStageBuffers.cs:93
+   prop  : int Count => _count
+   field : 88 | private int _count;
+   refs(6):
+      88 | private int _count;
+      93 | public int Count => _count;
+      101 | _count = 0;
+      107 | if (_count == _pool.Count)
+      112 | var set = _pool[_count++];
+      120 | for (var i = 0; i < _count; i++)
+
+CombatStageBuffers.cs:144
+   prop  : long Frame => _frame
+   field : 89 | private long _frame = -1;
+   refs(7):
+      89 | private long _frame = -1;
+      91 | public long Frame => _frame;
+      100 | _frame = frame;
+      142 | private long _frame = -1;
+      144 | public long Frame => _frame;
+      152 | _frame = frame;
+      163 | _frame = -1;
+
+AttributeSet.cs:23
+   prop  : bool IsInitialized => _initialized
+   field : 21 | private bool _initialized;
+   refs(8):
+      21 | private bool _initialized;
+      23 | public bool IsInitialized => _initialized;
+      30 | public bool IsDepleted => _initialized && _hp <= 0;
+      36 | _initialized = true;
+      42 | if (!_initialized || amount <= 0 || _hp <= 0)
+      55 | if (!_initialized || amount <= 0 || _hp <= 0)
+      78 | _initialized = true;
+      85 | _initialized = false;
+
+AttributeSet.cs:25
+   prop  : int MaxHp => _maxHp
+   field : 19 | private int _maxHp;
+   refs(9):
+      19 | private int _maxHp;
+      25 | public int MaxHp => _maxHp;
+      34 | _maxHp = Math.Max(1, maxHp);
+      35 | _hp = _maxHp;
+      60 | var applied = Math.Min(_maxHp - _hp, amount);
+      69 | MaxHp = _maxHp,
+      76 | _maxHp = Math.Max(1, snapshot.MaxHp);
+      77 | _hp = Math.Clamp(snapshot.Hp, 0, _maxHp);
+      83 | _maxHp = 0;
+
+AttributeSet.cs:27
+   prop  : int Hp => _hp
+   field : 20 | private int _hp;
+   refs(13):
+      20 | private int _hp;
+      27 | public int Hp => _hp;
+      30 | public bool IsDepleted => _initialized && _hp <= 0;
+      35 | _hp = _maxHp;
+      42 | if (!_initialized || amount <= 0 || _hp <= 0)
+      47 | var applied = Math.Min(_hp, amount);
+      48 | _hp -= applied;
+      55 | if (!_initialized || amount <= 0 || _hp <= 0)
+      60 | var applied = Math.Min(_maxHp - _hp, amount);
+      61 | _hp += applied;
+      70 | Hp = _hp,
+      77 | _hp = Math.Clamp(snapshot.Hp, 0, _maxHp);
+      84 | _hp = 0;
+
+CombatActionRunner.cs:113
+   prop  : long LocalSequence => _localSequence
+   field : 104 | private long _localSequence;
+   refs(9):
+      104 | private long _localSequence;
+      113 | public long LocalSequence => _localSequence;
+      293 | _localSequence = Math.Max(_localSequence, authoritativeInstanceId);
+      293 | _localSequence = Math.Max(_localSequence, authoritativeInstanceId);
+      446 | _localSequence = localActionSequence;
+      490 | _localSequence = Math.Max(_localSequence, snapshot.InstanceId);
+      490 | _localSequence = Math.Max(_localSequence, snapshot.InstanceId);
+      514 | _localSequence = 0;
+      627 | InstanceId = ++_localSequence,
+
+CombatComponent.cs:27
+   prop  : string PresentationVariant => _presentationVariant
+   field : 21 | private string _presentationVariant = CombatStatePresentation.DefaultVariantId;
+   refs(7):
+      21 | private string _presentationVariant = CombatStatePresentation.DefaultVariantId;
+      27 | public string PresentationVariant => _presentationVariant;
+      176 | _framePlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.A
+      240 | if (string.Equals(normalized, _presentationVariant, StringComparison.Ordinal))
+      245 | _presentationVariant = normalized;
+      325 | _presentationVariant = CombatStatePresentation.DefaultVariantId;
+      341 | var nextPlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller
+

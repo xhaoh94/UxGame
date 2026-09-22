@@ -1,0 +1,18 @@
+applied 6 edit(s) -> CombatActionRunner.cs
+     248 | {
+     550 | <DELETED>
+     579 | /// <summary> -> /// 鏈夊姩浣滄椂灏濊瘯琚柊鍛戒护鍙栨秷锛氱獥鍙ｇ敱褰撳墠鍔ㄤ綔鎻愪緵锛屼笖蹇呴』鎸囧悜鍛戒护閲岀殑閭ｄ釜鍔ㄤ綔锛?-> /// 鏉′欢鎴愮珛灏辩粨鏉熷綋鍓嶅姩浣滐紙Cancelled锛夊苟绔嬪埢璧锋墜鏂板姩浣滐紝ActionFrame 浠?0 寮€濮嬨€?-> /// -> /// 鈿?"鐙傜偣鎵撲笉鍑轰激瀹?灏辨槸杩欎箞鏉ョ殑锛氭櫘鏀?1001 鐨勫彇娑堢獥鍙ｆ槸 [5,26) 涓旀寚鍚戣嚜宸憋紝 -> /// 甯?5-26 涔嬮棿姣忔鎸夐敭閮戒細鎶婂姩浣滈噸缃洖甯?0锛屾案杩滆蛋涓嶅埌甯?41 鐨勫懡涓獥鍙ｃ€?-> /// </summary> -> private bool TryCancel(in CombatFrameCommands commands)
+     581 | <DELETED>
+     589 | <DELETED>
+     592 | <DELETED>
+applied 5 edit(s) -> CombatController.cs
+      74 | /// 鎵ц椤哄簭鍥哄畾涓?鍏堟帹杩涘姩浣溿€佸悗鍒ゅ畾绉诲姩"锛歀ocomotion 鍒ゅ畾瑕佽 ActionRunner 鏈抚鐨勯攣绉诲姩鐘舵€侊紝鍔ㄤ綔娌″厛鎺ㄨ繘灏?
+      88 | <DELETED>
+      90 | {
+      94 | {
+      98 | {
+Traceback (most recent call last):
+  File "C:\Project\UxGame\.workbuddy\tmp\apply_fixes.py", line 91, in <module>
+    assert md.count('\r\n') == md.count('\n')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

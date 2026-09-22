@@ -18,12 +18,12 @@ namespace Ux.Editor.Combat.Tests
                 var empty = CombatFrameCommands.Empty;
 
                 controller.Tick(1, Vector2.up, empty);
-                Assert.AreEqual(LocomotionState.Move, controller.States.Locomotion);
-                Assert.AreEqual(0, controller.States.GetStateFrame(StateLayer.Locomotion));
+                Assert.AreEqual(LocomotionState.Move, controller.StateMachine.Locomotion);
+                Assert.AreEqual(0, controller.StateMachine.GetStateFrame(StateLayer.Locomotion));
 
                 controller.Tick(2, Vector2.zero, empty);
-                Assert.AreEqual(LocomotionState.Idle, controller.States.Locomotion);
-                Assert.AreEqual(0, controller.States.GetStateFrame(StateLayer.Locomotion));
+                Assert.AreEqual(LocomotionState.Idle, controller.StateMachine.Locomotion);
+                Assert.AreEqual(0, controller.StateMachine.GetStateFrame(StateLayer.Locomotion));
             }
             finally
             {
@@ -167,15 +167,13 @@ namespace Ux.Editor.Combat.Tests
                 });
 
                 controller.Tick(5, Vector2.zero, commands);
-                Assert.AreEqual(ActionState.Executing, controller.States.Action);
-                Assert.AreEqual(0, controller.States.GetStateFrame(StateLayer.Action));
-                Assert.IsTrue(controller.Actions.HasAction);
-                Assert.AreEqual(1001, controller.Actions.Current.ActionId);
-                Assert.AreEqual(0, controller.Actions.Current.ActionFrame);
-                Assert.AreEqual(77, controller.Actions.Current.RequestId);
+                Assert.IsTrue(controller.ActionRunner.HasAction);
+                Assert.AreEqual(1001, controller.ActionRunner.Current.ActionId);
+                Assert.AreEqual(0, controller.ActionRunner.Current.ActionFrame);
+                Assert.AreEqual(77, controller.ActionRunner.Current.RequestId);
 
                 controller.Tick(6, Vector2.zero, CombatFrameCommands.Empty);
-                Assert.AreEqual(1, controller.Actions.Current.ActionFrame);
+                Assert.AreEqual(1, controller.ActionRunner.Current.ActionFrame);
             }
             finally
             {
@@ -1019,11 +1017,10 @@ namespace Ux.Editor.Combat.Tests
                 controller.Tick(1, Vector2.zero, commands); // frame 0
                 controller.Tick(2, Vector2.zero, CombatFrameCommands.Empty); // frame 1
                 controller.Tick(3, Vector2.zero, CombatFrameCommands.Empty); // frame 2
-                Assert.IsTrue(controller.Actions.HasAction);
+                Assert.IsTrue(controller.ActionRunner.HasAction);
 
                 controller.Tick(4, Vector2.zero, CombatFrameCommands.Empty);
-                Assert.IsFalse(controller.Actions.HasAction);
-                Assert.AreEqual(ActionState.Free, controller.States.Action);
+                Assert.IsFalse(controller.ActionRunner.HasAction);
             }
             finally
             {
@@ -1053,15 +1050,14 @@ namespace Ux.Editor.Combat.Tests
 
                 controller.SetGrounded(false);
                 controller.SetControl(ControlState.Stunned);
-                Assert.IsFalse(controller.Actions.HasAction);
+                Assert.IsFalse(controller.ActionRunner.HasAction);
 
                 controller.RestoreSnapshot(snapshot);
-                Assert.AreEqual(ControlState.Normal, controller.States.Control);
-                Assert.AreEqual(ActionState.Executing, controller.States.Action);
-                Assert.AreEqual(1, controller.Actions.Current.ActionFrame);
+                Assert.AreEqual(ControlState.Normal, controller.StateMachine.Control);
+                Assert.AreEqual(1, controller.ActionRunner.Current.ActionFrame);
                 Assert.IsTrue(controller.IsGrounded);
                 controller.Tick(3, Vector2.zero, CombatFrameCommands.Empty);
-                Assert.AreEqual(LocomotionState.Idle, controller.States.Locomotion,
+                Assert.AreEqual(LocomotionState.Idle, controller.StateMachine.Locomotion,
                     "恢复后的 grounded 隐藏状态必须保证下一帧继续走相同路径。");
             }
             finally
@@ -1087,8 +1083,8 @@ namespace Ux.Editor.Combat.Tests
                 controller.Initialize(profile, 1, 0);
                 controller.Tick(1, Vector2.zero, buffer.Consume(1));
 
-                Assert.AreEqual(first.ActionId, controller.Actions.Current.ActionId);
-                Assert.AreEqual(1, controller.Actions.Current.RequestId);
+                Assert.AreEqual(first.ActionId, controller.ActionRunner.Current.ActionId);
+                Assert.AreEqual(1, controller.ActionRunner.Current.RequestId);
             }
             finally
             {

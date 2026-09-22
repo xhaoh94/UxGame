@@ -18,15 +18,12 @@ namespace Ux
         private CombatTimelinePlan _framePlan;
         private bool _framePlanInitialized;
         private bool _registered;
-        private string _presentationVariant = CombatStatePresentation.DefaultVariantId;
 
         public CombatController Controller { get; private set; }
-        public UnitStateMachine States => Controller?.States;
-        public CombatActionRunner Actions => Controller?.Actions;
         public CharacterCombatProfile Profile { get; private set; }
         public string ProfileName { get; private set; }
         /// <summary>当前外部指定的状态表现变体；不存在时由 Profile 回退到 default/优先级规则。</summary>
-        public string PresentationVariant => _presentationVariant;
+        public string PresentationVariant { get; private set; } = CombatStatePresentation.DefaultVariantId;
 
         /// <summary>本组件已推进到的逻辑帧。Unit.SimulationFrame 直接透传这个值。</summary>
         public long SimulationFrame { get; private set; }
@@ -159,10 +156,11 @@ namespace Ux
         ///
         /// 四步顺序不能换：Controller.Tick 推进状态与动作 → Resolve 决定这帧播什么 →
         /// Synchronize 切轨道 → TickMovement 结算位移。顺序错的表现：先算位移再推进动作，
-        /// "这一帧刚起手的普攻"锁不住移动，会滑步（IsMovementBlocked 读的就是 Actions 的状态）。
+        /// "这一帧刚起手的普攻"锁不住移动，会滑步（IsMovementBlocked 读的就是 ActionRunner.BlocksMovement）。
         /// </summary>
         public void TickLogic(long frame, in CombatFrameCommands commands)
         {
+            //当前的帧
             SimulationFrame = frame;
             if (Controller?.IsInitialized != true)
             {
@@ -174,7 +172,7 @@ namespace Ux
             Controller.Tick(frame, MoveInput, commands);
 
             // 攻击链路 · 表现落地：Base = 当前 Locomotion 的 Idle/Move 时间线，Action = 当前动作的攻击时间线。
-            _framePlan = CombatTimelineResolver.Resolve(Profile, States, Actions, _presentationVariant);
+            _framePlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.ActionRunner, PresentationVariant);
             EnsureTimelinePlayer();
             _timelinePlayer?.Synchronize(_framePlan, Unit?.Viewer?.GetComponentInChildren<Animator>());
             _framePlanInitialized = true;
@@ -238,12 +236,12 @@ namespace Ux
         public bool SetPresentationVariant(string variantId)
         {
             var normalized = CombatStatePresentation.NormalizeVariantId(variantId);
-            if (string.Equals(normalized, _presentationVariant, StringComparison.Ordinal))
+            if (string.Equals(normalized, PresentationVariant, StringComparison.Ordinal))
             {
                 return false;
             }
 
-            _presentationVariant = normalized;
+            PresentationVariant = normalized;
             if (Controller?.IsInitialized == true)
             {
                 // 变体只影响基础状态表现；动作层保持当前动作与当前帧。
@@ -259,7 +257,7 @@ namespace Ux
 
         public bool ConfirmAction(long requestId, long authoritativeInstanceId, long authoritativeStartFrame)
         {
-            if (Actions?.Confirm(
+            if (Controller?.ActionRunner?.Confirm(
                     requestId,
                     authoritativeInstanceId,
                     authoritativeStartFrame) != true)
@@ -267,22 +265,17 @@ namespace Ux
                 return false;
             }
 
-            if (!Actions.HasAction)
-            {
-                States.SetAction(ActionState.Free, StateChangeReason.ActionEnded);
-            }
             RefreshTimeline(true);
             return true;
         }
 
         public bool RejectAction(long requestId)
         {
-            if (Actions?.Reject(requestId) != true || States?.IsInitialized != true)
+            if (Controller?.ActionRunner?.Reject(requestId) != true || Controller?.StateMachine?.IsInitialized != true)
             {
                 return false;
             }
 
-            States.SetAction(ActionState.Free, StateChangeReason.ActionEnded);
             RefreshTimeline(false);
             return true;
         }
@@ -328,7 +321,7 @@ namespace Ux
             Controller?.Release();
             Controller = null;
             Profile = null;
-            _presentationVariant = CombatStatePresentation.DefaultVariantId;
+            PresentationVariant = CombatStatePresentation.DefaultVariantId;
             _framePlan = default;
             _framePlanInitialized = false;
             _timelinePlayer?.Release();
@@ -344,7 +337,7 @@ namespace Ux
             }
 
             EnsureTimelinePlayer();
-            var nextPlan = CombatTimelineResolver.Resolve(Profile, States, Actions, _presentationVariant);
+            var nextPlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.ActionRunner, PresentationVariant);
             var changed = force || !_framePlanInitialized ||
                 !string.Equals(nextPlan.Base.OwnerKey, _framePlan.Base.OwnerKey, StringComparison.Ordinal) ||
                 !string.Equals(nextPlan.Action.OwnerKey, _framePlan.Action.OwnerKey, StringComparison.Ordinal) ||
@@ -383,7 +376,7 @@ namespace Ux
         private void TickMovement()
         {
             // 门禁 ①：死亡 / 被控制 / 当前动作锁移动 → 本帧不产生位移
-            if (Controller.IsMovementBlocked || States.Locomotion != LocomotionState.Move)
+            if (Controller.IsMovementBlocked || Controller.StateMachine.Locomotion != LocomotionState.Move)
             {
                 return;
             }

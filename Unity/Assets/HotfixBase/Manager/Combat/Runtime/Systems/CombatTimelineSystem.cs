@@ -31,16 +31,16 @@ namespace Ux
                     continue;
                 }
 
-                var actions = entity.Controller.Actions;
-                if (!actions.HasAction)
+                var actionRunner = entity.Controller.ActionRunner;
+                if (!actionRunner.HasAction)
                 {
                     // 防御：Actions 阶段刚筛过，但 Timeline 阶段的插件理论上可以改动作状态。
                     continue;
                 }
 
-                var set = table.Append(entity.Id, actions.Current, actions.Current.HasHitConfirmed);
-                AppendHitWindows(actions, set);
-                AppendCancelWindows(actions, set);
+                var set = table.Append(entity.Id, actionRunner.Current, actionRunner.Current.HasHitConfirmed);
+                AppendHitWindows(actionRunner, set);
+                AppendCancelWindows(actionRunner, set);
 
                 if (Verbose && set.HasHitWindows && !set.HasCancelWindows)
                 {
@@ -51,15 +51,15 @@ namespace Ux
         }
 
         /// <summary>命中窗口求值：只管有没有，不管打没打到。</summary>
-        private static void AppendHitWindows(CombatActionRunner actions, CombatFrameEventSet set)
+        private static void AppendHitWindows(CombatActionRunner actionRunner, CombatFrameEventSet set)
         {
-            actions.AppendActiveHitWindows(set.HitWindows);
+            actionRunner.AppendActiveHitWindows(set.HitWindows);
         }
 
         /// <summary>取消窗口求值：判定条件与 CombatActionRunner.TryCancel 一致（ActionCancelWindow.IsOpen）。</summary>
-        private static void AppendCancelWindows(CombatActionRunner actions, CombatFrameEventSet set)
+        private static void AppendCancelWindows(CombatActionRunner actionRunner, CombatFrameEventSet set)
         {
-            var asset = actions.CurrentAsset;
+            var asset = actionRunner.CurrentAsset;
             if (asset?.CancelWindows == null)
             {
                 return;

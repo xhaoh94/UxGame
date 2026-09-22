@@ -85,31 +85,29 @@ namespace Ux
     public sealed class CombatFrameEventTable
     {
         private readonly List<CombatFrameEventSet> _pool = new();
-        private int _count;
-        private long _frame = -1;
 
-        public long Frame => _frame;
+        public long Frame { get; private set; } = -1;
 
-        public int Count => _count;
+        public int Count { get; private set; }
 
         public CombatFrameEventSet this[int index] => _pool[index];
 
         /// <summary>本帧开始：标记表为空，池里的表项留作复用。</summary>
         public void BeginFrame(long frame)
         {
-            _frame = frame;
-            _count = 0;
+            Frame = frame;
+            Count = 0;
         }
 
         /// <summary>Timeline 阶段为某个单位追加一组帧事件，返回可写的表项。</summary>
         public CombatFrameEventSet Append(long entityId, in CombatActionSnapshot action, bool hasHitConfirmed)
         {
-            if (_count == _pool.Count)
+            if (Count == _pool.Count)
             {
                 _pool.Add(new CombatFrameEventSet());
             }
 
-            var set = _pool[_count++];
+            var set = _pool[Count++];
             set.Reset(entityId, action, hasHitConfirmed);
             return set;
         }
@@ -117,7 +115,7 @@ namespace Ux
         /// <summary>按单位 ID 查找本帧帧事件。表项数等于"本帧出招的单位数"，比全单位少，线性扫足够。</summary>
         public bool TryFind(long entityId, out CombatFrameEventSet set)
         {
-            for (var i = 0; i < _count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 if (_pool[i].EntityId == entityId)
                 {
@@ -139,9 +137,8 @@ namespace Ux
     public sealed class CombatHitBuffer
     {
         private readonly List<CombatHitCandidate> _hits = new();
-        private long _frame = -1;
 
-        public long Frame => _frame;
+        public long Frame { get; private set; } = -1;
 
         public int Count => _hits.Count;
 
@@ -149,7 +146,7 @@ namespace Ux
 
         public void BeginFrame(long frame)
         {
-            _frame = frame;
+            Frame = frame;
             _hits.Clear();
         }
 
@@ -160,7 +157,7 @@ namespace Ux
 
         public void Clear()
         {
-            _frame = -1;
+            Frame = -1;
             _hits.Clear();
         }
     }

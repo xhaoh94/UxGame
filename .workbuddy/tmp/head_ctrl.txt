@@ -1,0 +1,185 @@
+using System;
+using UnityEngine;
+
+namespace Ux
+{
+    /// <summary>
+    /// 鎴樻枟閫昏緫鐨勯泦涓紡浠ｇ爜鍏ュ彛銆傚畯瑙傜姸鎬佽鍒欏湪杩欓噷鍥哄畾鎵ц椤哄簭锛岃祫婧愬彧鎻愪緵鏁板€笺€佸姩浣滃拰 Timeline銆?    ///
+    /// 涓€涓崟浣嶇殑閫昏緫鎬昏锛歎nitStateMachine 绠″畯瑙傜姸鎬侊紝CombatActionRunner 绠℃嫑寮忕敓鍛藉懆鏈燂紝
+    /// 姣忓抚璋冪敤椤哄簭鐢?Tick 鍥哄畾銆備笉寮曠敤浠讳綍 Unity 缁勪欢锛屾湇鍔″櫒鍜屾垬鎶ユ牎楠岄噷鑳界洿鎺ヨ窇銆?    /// </summary>
+    // 瀹忚鎴樻枟鐘舵€佸彧鍦ㄥ浐瀹氶€昏緫甯т腑鎸夌ǔ瀹氶『搴忔帹杩涖€?    public sealed class CombatController
+    {
+        private bool _grounded = true;
+
+        public CharacterCombatProfile Profile { get; private set; }
+        public UnitStateMachine States { get; } = new();
+        public CombatActionRunner Actions { get; } = new();
+
+        /// <summary>鍗曚綅灞炴€?鈥斺€?鈿?鏈€灏忕増鏈紝鍙湁鐢熷懡鍊笺€備笉鍙備笌 Tick锛氱敱浼ゅ闃舵鏀瑰啓銆佹浜￠樁娈佃鍙栥€?/summary>
+        public AttributeSet Attributes { get; } = new();
+
+        /// <summary>澧炵泭瀹瑰櫒銆傚悓涓婏紝鐢卞鐩婇樁娈电粨绠椼€佹浜￠樁娈垫竻绌恒€?/summary>
+        public CombatBuffContainer Buffs { get; } = new();
+
+        public bool IsInitialized => Profile != null && States.IsInitialized;
+        public bool IsGrounded => _grounded;
+
+        /// <summary>鑳戒笉鑳藉紑濮嬫柊鍔ㄤ綔 = 娲荤潃 + 鎺у埗姝ｅ父銆傛敞鎰忓畠**涓?*鐪嬪綋鍓嶆湁娌℃湁鍔ㄤ綔銆?/summary>
+        public bool CanStartActions =>
+            States.Life == LifeState.Alive &&
+            States.Control == ControlState.Normal;
+
+        /// <summary>
+        /// 鑳戒笉鑳界Щ鍔?= 娲荤潃 + 鎺у埗姝ｅ父 + 褰撳墠鍔ㄤ綔娌℃湁閿佺Щ鍔ㄣ€?        /// 鏈€鍚庝竴涓潯浠舵潵鑷?CombatActionAsset.movementPolicy锛?        ///   Allow(0) 鈫?涓嶉攣锛屾敾鍑绘湡闂寸収鏍疯兘璺?        ///   Block(1) 鈫?閿侊紝涓€鏃﹁繘鍏ヨ鍔ㄤ綔锛孡ocomotion 浼氳寮鸿鍘嬫垚 Idle 骞跺仠姝綅绉?        /// </summary>
+        public bool IsMovementBlocked =>
+            States.Life != LifeState.Alive ||
+            States.Control != ControlState.Normal ||
+            Actions.BlocksMovement;
+
+        public void Initialize(CharacterCombatProfile profile, long ownerId, long simulationFrame)
+        {
+            Release();
+            Profile = profile ?? throw new ArgumentNullException(nameof(profile));
+            profile.ValidateRuntime();
+            States.Initialize(ownerId, simulationFrame);
+            Actions.Initialize(profile, simulationFrame);
+
+            // 灞炴€т笌澧炵泭閮戒粠閰嶇疆閲嶆柊璧风畻銆侷nitialize 鍙互琚噸澶嶈皟鐢紙鎹㈢毊鑲?鐑噸杞藉満鏅級锛?            // 鎵€浠ヨ繖閲屽繀椤绘槸鎶婃棫鐘舵€佷涪鎺夐噸寤猴紝鑰屼笉鏄?鍦ㄦ棫鍊间笂缁х画"銆?            Attributes.Initialize(profile.MaxHp);
+            Buffs.Clear();
+        }
+
+        /// <summary>
+        /// 鍗曚綅姣忛€昏緫甯х殑鍞竴鍏ュ彛锛岀敱 <see cref="CombatComponent.TickLogic"/> 璋冪敤
+        /// 锛堝嵆 BattleWorld 涓€涓€昏緫甯х殑绗?2 涓樁娈碉級銆?        ///
+        /// 涓変釜鍏ュ弬鍏ㄩ兘鏉ヨ嚜閫昏緫甯э紝娌℃湁涓€涓槸鐜颁粠 Unity 缁勪欢韬笂鍙栫殑锛?        ///   simulationFrame 鈥?褰撳墠閫昏緫甯у彿
+        ///   moveInput       鈥?鏈抚绉诲姩杈撳叆锛堟潵鑷?PathComponent.MoveVector2锛?        ///   commands        鈥?鏈抚鍛戒护锛堟潵鑷?CombatCommandBuffer锛?        ///
+        /// moveInput 鍜?commands 铏界劧閮芥槸"鏈抚鐨勮緭鍏?锛屼絾鎬ц川涓嶅悓锛屽埆娣蜂负涓€璋堬細
+        ///   moveInput 鏄?*褰撳墠鍊?*锛氫竴涓彲瑕嗙洊鐨勬柟鍚戝瓧娈碉紝娌℃湁鍘嗗彶锛岄€昏緫灞傛瘡甯т富鍔ㄦ潵璇汇€?        ///   commands  鏄?*浜嬩欢娴?*锛氭瘡鏉″甫甯у彿鍜?RequestId锛屾寜閿椂鍏ラ槦銆佸埌甯ф墠鍙栧嚭銆佸彇璧板嵆鍒犮€?        /// 鎵€浠ュ彧鏈?commands 闇€瑕侀槦鍒楀拰甯у彿 鈥斺€?闃熷垪瀛樺湪鐨勬剰涔夊氨鏄绂绘暎浜嬩欢鑳藉榻愬埌鏌愪竴甯с€?        ///
+        /// 鎵ц椤哄簭鍥哄畾涓?鍏堟帹杩涘姩浣溿€佸悗鍒ゅ畾绉诲姩"锛岄『搴忎笉鑳芥崲锛屽師鍥犺绗?4 姝ャ€?        /// </summary>
+        public void Tick(long simulationFrame, Vector2 moveInput, in CombatFrameCommands commands)
+        {
+            if (!IsInitialized)
+            {
+                return;
+            }
+
+            // 鈹€鈹€ 1. 鎶婃墍鏈夌姸鎬佸眰鐨勫抚璁℃暟鎺ㄥ埌褰撳墠甯?鈹€鈹€
+            // 琛ㄧ幇灞傜◢鍚庤鐢ㄨ繖涓抚鍙峰幓姹傚€?Idle/Move 鐨?Timeline锛屾墍浠ュ繀椤昏刀鍦ㄥ垽瀹氫箣鍓嶆帹杩涖€?            States.AdvanceTo(simulationFrame);
+
+            // 鈹€鈹€ 2. 鎺ㄨ繘鍔ㄤ綔鐢熷懡鍛ㄦ湡锛堟敾鍑婚摼璺殑鎵ц娈碉級鈹€鈹€
+            // 鏈夊姩浣滄椂锛氭嬁鏈抚鍛戒护鍘绘瘮瀵瑰彇娑堢獥鍙ｏ紙鑳戒笉鑳借涓嬩竴鎷涙墦鏂級锛?            // 娌″姩浣滄椂锛氭嬁鏈抚鍛戒护鍘诲皾璇曡捣鎵嬨€?            // canStartActions 涓?false锛堟浜?琚帶锛夋椂锛屽唴閮ㄤ細鎶婂綋鍓嶅姩浣滅洿鎺ユ墦鏂€?            Actions.Tick(simulationFrame, commands, CanStartActions);
+
+            // 鈹€鈹€ 3. 鎶?鏈夋病鏈夊姩浣?鍚屾鍒?Action 鐘舵€佸眰锛團ree / Executing锛夆攢鈹€
+            // 杩欎竴灞傚彧鏄粰琛ㄧ幇灞傚拰澶栭儴鏌ヨ鐪嬬殑鏍囩锛岀湡姝ｇ殑鍔ㄤ綔鏁版嵁鍦?CombatActionRunner 閲屻€?            States.SetAction(Actions.HasAction ? ActionState.Executing : ActionState.Free, Actions.HasAction ? StateChangeReason.ActionStarted : StateChangeReason.ActionEnded);
+
+            // 鈹€鈹€ 4. 鍒ゅ畾 Locomotion锛屼笁閫変竴锛屼紭鍏堢骇浠庝笂鍒颁笅锛堢Щ鍔ㄩ摼璺殑鍒ゅ畾娈碉級鈹€鈹€
+            if (!_grounded)
+            {
+                // 绂诲湴浼樺厛锛氱┖涓笉鍖哄垎 Idle/Move锛屼氦缁欎笓闂ㄧ殑璺宠惤琛ㄧ幇鍘绘紨
+                States.SetLocomotion(LocomotionState.Airborne);
+            }
+            else if (IsMovementBlocked || moveInput.sqrMagnitude <= 0.0001f)
+            {
+                // 琚樆鎸★紙姝讳骸 / 琚帶 / 褰撳墠鍔ㄤ綔閿佺Щ鍔級鎴栬緭鍏ユ帴杩戦浂 鈫?Idle銆?                // 0.0001f 鏄钩鏂归槇鍊硷紝瀵瑰簲鍚戦噺闀垮害 0.01锛岀敤鏉ユ护鎺夋憞鏉嗗洖涓椂鐨勫井灏忔姈鍔ㄣ€?                //
+                // 娉ㄦ剰 IsMovementBlocked 閲屽惈 Actions.BlocksMovement锛岃€屽姩浣滃垰鍦ㄧ 2 姝ユ帹杩涜繃锛?                // 鎵€浠?杩欎竴甯у垰璧锋墜鐨勯攣绉诲姩鎶€鑳?鑳藉湪鍚屼竴甯х珛鍒绘妸鍗曚綅鍘嬫垚 Idle 鈥斺€?涓嶉渶瑕?                // 浠讳綍涓€琛岄澶栫殑"鎵撴柇浣嶇Щ"浠ｇ爜銆傝繖灏辨槸绗?2 姝ュ繀椤绘帓鍦ㄥ墠闈㈢殑鍘熷洜銆?                States.SetLocomotion(LocomotionState.Idle);
+            }
+            else
+            {
+                // 鏈夋湁鏁堣緭鍏ヤ笖娌¤闃绘尅 鈫?Move銆?                // 杩欓噷灏辨槸"绔欏畾"鍜?璧拌矾"鐨勫敮涓€鍒嗙晫鐐癸細瀹冨彧鐪?*鏈夋病鏈夎緭鍏?*锛屼笉鐪嬮€熷害锛?                // 椤圭洰閲屼篃涓嶅瓨鍦?Run 鐘舵€併€傝窇姝ュ彧浣撶幇涓鸿〃鐜板眰鍒囧埌浜嗗摢鏉?Timeline銆?                States.SetLocomotion(LocomotionState.Move);
+            }
+        }
+
+        public void SetGrounded(bool grounded)
+        {
+            _grounded = grounded;
+        }
+
+        public bool SetControl(ControlState state)
+        {
+            if (!IsInitialized)
+            {
+                return false;
+            }
+            var changed = States.SetControl(state, StateChangeReason.ExternalRequest);
+            if (state != ControlState.Normal)
+            {
+                Actions.Interrupt();
+                States.SetAction(ActionState.Free, StateChangeReason.ActionEnded);
+                States.SetLocomotion(LocomotionState.Idle);
+            }
+            return changed;
+        }
+
+        public bool SetLife(LifeState state)
+        {
+            if (!IsInitialized)
+            {
+                return false;
+            }
+            var changed = States.SetLife(state, StateChangeReason.ExternalRequest);
+            if (state == LifeState.Dead)
+            {
+                Actions.Interrupt();
+                States.SetAction(ActionState.Free, StateChangeReason.ActionEnded);
+                States.SetLocomotion(LocomotionState.Idle);
+            }
+            return changed;
+        }
+
+        public UnitCombatSnapshot CaptureSnapshot()
+        {
+            if (!IsInitialized)
+            {
+                return null;
+            }
+            return new UnitCombatSnapshot
+            {
+                Version = UnitCombatSnapshot.CurrentVersion,
+                StateMachine = States.CaptureSnapshot(),
+                Action = Actions.Current,
+                HasAction = Actions.HasAction,
+                AcceptedHits = Actions.CaptureAcceptedHits(),
+                LocalActionSequence = Actions.LocalSequence,
+                IsGrounded = _grounded,
+                Attributes = Attributes.CaptureSnapshot(),
+                Buffs = Buffs.CaptureSnapshot(),
+            };
+        }
+
+        public void RestoreSnapshot(UnitCombatSnapshot snapshot)
+        {
+            if (!IsInitialized || snapshot?.StateMachine == null)
+            {
+                return;
+            }
+            if (snapshot.Version != UnitCombatSnapshot.CurrentVersion)
+            {
+                throw new InvalidOperationException(
+                    $"涓嶆敮鎸佺殑鎴樻枟蹇収鐗堟湰: {snapshot.Version}");
+            }
+            _grounded = snapshot.IsGrounded;
+            States.RestoreSnapshot(snapshot.StateMachine);
+
+            // 灞炴€т笌澧炵泭蹇呴』鍜岀姸鎬佹満銆佸姩浣滀竴璧峰洖婊氥€傚皯杩樺師浠讳綍涓€椤癸紝
+            // 鍥炴粴鍚庣殑涓栫晫灏变細鍑虹幇"鐘舵€佸洖鍒颁簡杩囧幓銆佽閲忚繕鍋滃湪鏈潵"杩欑瑁傚紑鐨勭姸鎬併€?            Attributes.RestoreSnapshot(in snapshot.Attributes);
+            Buffs.RestoreSnapshot(snapshot.Buffs);
+
+            Actions.Restore(
+                snapshot.Action,
+                snapshot.HasAction,
+                snapshot.StateMachine.SimulationFrame,
+                snapshot.AcceptedHits,
+                snapshot.LocalActionSequence);
+        }
+
+        public void Release()
+        {
+            Actions.Clear();
+            States.Release();
+            Attributes.Release();
+            Buffs.Clear();
+            Profile = null;
+            _grounded = true;
+        }
+    }
+}

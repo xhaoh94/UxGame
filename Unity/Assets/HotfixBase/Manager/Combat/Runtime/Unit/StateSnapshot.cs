@@ -29,11 +29,10 @@ namespace Ux
     }
 
     [Serializable]
-    public sealed class UnitStateMachineSnapshot
+    public sealed class CombatStateMachineSnapshot
     {
         public long SimulationFrame;
         public StateLayerSnapshot Locomotion;
-        public StateLayerSnapshot Action;
         public StateLayerSnapshot Control;
         public StateLayerSnapshot Life;
 
@@ -42,7 +41,6 @@ namespace Ux
             return layer switch
             {
                 StateLayer.Locomotion => Locomotion,
-                StateLayer.Action => Action,
                 StateLayer.Control => Control,
                 StateLayer.Life => Life,
                 _ => throw new ArgumentOutOfRangeException(nameof(layer), layer, null),

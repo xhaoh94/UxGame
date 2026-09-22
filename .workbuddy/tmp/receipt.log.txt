@@ -1,0 +1,2 @@
+detect: CRLF=0 LF=197 -> using '\n'
+after: CRLF=0 LF=229 *** MIXED ***

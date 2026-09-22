@@ -1,0 +1,4 @@
+  wrote COMBAT_DESIGN.md: lines=722 CRLF=722 LF=722 OK
+  md: 5 substitution(s)
+  wrote CombatEditorWorkflowTests.cs: lines=642 CRLF=642 LF=642 OK
+  test: restored StatePresentationValidationUsesTimelineOrProfileContext

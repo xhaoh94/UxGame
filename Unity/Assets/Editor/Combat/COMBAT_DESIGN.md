@@ -15,11 +15,11 @@
 | 逻辑帧时钟 | `HotfixBase/Manager/Timeline/TimelineMgr.cs:27` `SimulationClock` | 固定步长 + 追帧上限 + 插值 alpha；三种帧源（LocalRealtime / External / Replay） |
 | 逐帧编排 | `HotfixBase/Manager/Timeline/Runtime/Base/Timeline.cs` | 帧驱动而非时间驱动；`ShouldTriggerFrame` 保证跳帧不漏事件 |
 | 帧事件语义 | `Timeline.cs:44` `ShouldTriggerFrame` | Seek/初始化不触发事件，播放区间严格 `(prev, cur]`——命中帧判定就靠它 |
-| 宏观状态机 | `Manager/Combat/Runtime/Unit/UnitStateMachine.cs` | 4 层（Locomotion/Action/Control/Life），代码驱动规则，非资源求值 |
+| 宏观状态机 | `Manager/Combat/Runtime/Unit/CombatStateMachine.cs` | 3 层（Locomotion/Control/Life），代码驱动规则，非资源求值；具体动作由 CombatActionRunner 管理 |
 | 动作生命周期 | `Manager/Combat/Runtime/Unit/CombatActionRunner.cs` | 显式 ActionId 命令消费、取消窗口（连招）、预测/确认/拒绝 |
-| 预测与回滚 | `CombatActionRunner.cs:175` `Confirm` / `:202` `Reject`；`CombatController.cs:109` `CaptureSnapshot` | 客户端预测 + 服务器纠偏的骨架已完备 |
+| 预测与回滚 | `CombatActionRunner.cs:275` `Confirm` / `:301` `Reject`；`CombatController.cs:138` `CaptureSnapshot` | 客户端预测 + 服务器纠偏的骨架已完备 |
 | 输入命令 | `Manager/Combat/Asset/CombatCommand.cs` | 逐帧命令队列，本地 / 网络 / 录像共用 |
-| 表现桥接 | `Hotfix/Common/Combat/CombatComponent.cs:243` `ResolveTimelineOwner` | Life > Control > Action > Locomotion 优先级选 Timeline |
+| 表现桥接 | `Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs:36` `CombatTimelineResolver.Resolve` | Life > Control > Locomotion 优先级选基础层；Life/Control 命中时独占并停掉 Action 播放层 |
 | 编辑器 | `Assets/Editor/Timeline/*` | TimelineWindow / TrackView / ClipView / Inspector 齐全 |
 
 ### 缺失（全项目零实现）
@@ -79,7 +79,7 @@
 扫描 `Manager/Combat/` 全部源码，未发现任何 `UnityEngine.Random` / `System.Random` /
 `Time.deltaTime` / `Physics.*` / `DateTime.Now`。两个易踩的坑也规避了：
 
-- `CombatActionRunner.cs:76` 的 `HashSet<string>` 用了 `StringComparer.Ordinal`，
+- `CombatActionRunner.cs:131` 的 `HashSet<string>` 用了 `StringComparer.Ordinal`，
   避开 .NET 随机哈希种子，且只用于初始化去重校验，不在每帧逻辑里
 - `CombatCommand.Compare` 对 SimulationFrame、RequestId、ActionId、TargetId 和 AimDirection 原始位序
   建立**完整稳定次序**，`CombatFrameCommands` 还会复制并排序输入列表，不依赖调用方容器顺序
@@ -141,7 +141,7 @@ Manager/Combat/
 │         CombatStageBuffers             阶段之间的交接缓冲
 │    Unit/                               单位侧逻辑
 │         CombatController               单位逻辑总装（状态机 + 动作 + 属性 + 增益）
-│         UnitStateMachine               宏观状态机（Locomotion / Action / Control / Life）
+│         CombatStateMachine             宏观状态机（Locomotion / Control / Life）
 │         CombatActionRunner             动作生命周期 + UnitCombatSnapshot
 │         AttributeSet / CombatBuff / StateSnapshot
 │    Systems/                            阶段插件，按 BattlePhase 挂载
@@ -165,7 +165,7 @@ Manager/Combat/
 | 序 | 阶段 | 说明 |
 |---|---|---|
 | 1 | `ConsumeCommands` | 取出本帧命令 |
-| 2 | `States.AdvanceTo` + `Actions.Tick` | 状态与动作推进（已有） |
+| 2 | `StateMachine.AdvanceTo` + `ActionRunner.Tick` | 状态与动作推进（已有） |
 | 3 | `Timeline.EvaluateFrames` | 求值 → 触发 Gameplay Track（开关命中框、位移） |
 | 4 | **Hitbox Query** | 形状查询，产出 `HitEvent`，同目标去重 |
 | 5 | **Damage Resolve** | 属性快照 → 修改器栈 → 伤害公式 → 应用 |
@@ -228,7 +228,7 @@ public class TLHitboxClip : TimelineClip
 - **命中框查询由 BattleWorld 统一调度**（阶段 4），不在 Clip 里各自结算，保证顺序确定
 - 用 `HashSet<uint>` 对同一激活周期内的目标去重
 - 形状用**纯数学**（球/胶囊/OBB/扇形），**不要用 Unity 物理**——`Physics.Overlap` 不确定且无法在服务端/重放环境跑
-- 命中判定结果记为 `HasHitConfirmed`（`CombatActionRunner.cs:212` 已预埋），供取消窗口做"命中确认后才能取消"
+- 命中判定结果记为 `HasHitConfirmed`（`CombatActionRunner.cs:16` 已预埋），供取消窗口做"命中确认后才能取消"
 
 ### 4.3 属性系统
 
@@ -370,7 +370,7 @@ PendingHits            阶段 4 写入 → 阶段 5 读取      同上
 | Death | `CombatDeathSystem` | **最小实现**：判据只有 HP ≤ 0 |
 
 属性系统同理只有 `AttributeSet`（MaxHp/Hp），设计文档 4.3 描述的修改器栈尚未实现。
-`UnitCombatSnapshot.CurrentVersion` 已因加入属性与增益从 1 升到 2；
+`UnitCombatSnapshot.CurrentVersion` 已因加入属性与增益从 1 升到 2；本次删除宏观 Action 层后升到 3。
 快照目前只在模块内部使用（没有落盘、没有网络传输），所以这次升级不需要兼容旧数据。
 
 **驱动链变更**
@@ -404,7 +404,7 @@ PendingHits            阶段 4 写入 → 阶段 5 读取      同上
 2. **Section 4.1 的逻辑/表现分离是硬约束**，一旦把伤害写进 Playable Track，
    后面想做服务器校验就要推倒重来。
 3. **战报校验倒逼确定性**，这个约束越早引入成本越低；拖到后期补，等于重写。
-4. 现有 `CombatActionRunner.Clear()` 会置空 `ActionChanged`（`:285`），
+4. 现有 `CombatActionRunner.Clear()` 会置空 `ActionChanged`（`:517`），
    注意对象池复用时的事件解注册，否则会串事件。
 
 ---
@@ -425,7 +425,7 @@ Profile 保存角色级参数、动态状态表现列表、动态技能逻辑资
 状态候选由 `CombatStateId.GetMappableStateIds` 反射对应层的枚举生成。新增枚举值会自动进入
 编辑器下拉和“添加默认映射”流程，不再维护手写状态白名单。只保留三项结构性排除：
 
-- `StateLayer.Action` 整层由技能系统管理，不作为宏观状态表现映射；
+- 具体攻击和技能不再占用宏观状态层，由 `CombatActionRunner` 管理；状态表现只映射 Locomotion / Control / Life 三层；
 - `ControlState.Normal` 不应抢占 Locomotion 表现；
 - `LifeState.Alive` 不应以最高层优先级长期覆盖其它表现。
 

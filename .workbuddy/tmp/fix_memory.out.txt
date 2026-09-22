@@ -1,0 +1,5 @@
+eol='\n' crlf=0 lf=81
+鍐欏悗 crlf=0 lf=82
+line 19: - **涓嶈鍐?绉佹湁瀛楁 + 杞彂灞炴€?**锛?026-09-21 鐢ㄦ埛瑕佹眰鎶?Combat 妯″潡鍏ㄩ儴鏀规帀锛夛細`public X Foo => _foo;` 鐩存帴鍐欐垚 `public X Foo { get; private set; }`锛岀渷鎺夐偅涓瓧娈点€傝兘涓嶈兘杞湅涓夋潯锛氬瓧娈垫槸 `readonly` 鐨勮鐢?`{ ge
+line 34: - **鏇炬湁鐨勪袱涓浆鍙戝睘鎬у凡浜?2026-09-20 鍒犻櫎**锛歚States => Controller?.States` / `Actions => Controller?.Actions` 鏄〃杈惧紡灞炴€э紙闆跺瓨鍌級锛屼笖**闆跺閮ㄨ皟鐢ㄨ€?* 鈥斺€?瀹冧滑鍞竴鐨勬晥鏋滄槸璁?`CombatComponent` 鍐呴儴鍑虹幇"涓ょ
+line 81: - **鏈粨搴撹灏炬槸娣风殑锛屽埆鍋囪 CRLF**锛歚Assets/HotfixBase/Manager/Combat/` 涓嬫棦鏈夌函 LF 涔熸湁绾?CRLF 鐨?.cs锛?026-09-21 瀹炴祴锛?0 涓?*鏈敼鍔?*鐨勬枃浠跺氨鏄函 LF锛夈€俙newline=''` 璇诲嚭鐨?`\r\n` 鐩村啓浼氭敼鍙樿灏?鈫?鐢?`git 

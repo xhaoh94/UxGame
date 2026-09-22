@@ -1,0 +1,5 @@
+ Unity/Assets/Editor/Combat/COMBAT_DESIGN.md        | 20 ++---
+ .../Combat/Tests/CombatEditorWorkflowTests.cs      | 15 ++--
+ .../Combat/Runtime/Unit/CombatActionRunner.cs      | 37 ++++-----
+ .../Combat/Runtime/Unit/CombatController.cs        | 92 ++++++++--------------
+ 4 files changed, 67 insertions(+), 97 deletions(-)

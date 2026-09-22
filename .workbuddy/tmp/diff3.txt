@@ -1,0 +1,87 @@
+diff --git a/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs b/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
+index 97e5d3b1..be0a52e2 100644
+--- a/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
++++ b/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Unit/CombatActionRunner.cs
+@@ -28,13 +28,14 @@ namespace Ux
+     public sealed class UnitCombatSnapshot
+     {
+         /// <summary>
+-        /// 1 鈫?2锛氬姞鍏?Attributes 涓?Buffs銆傜増鏈彿蹇呴』璺熺潃瀛楁涓€璧锋定锛圧estoreSnapshot 浼氭嫆缁濈増鏈笉涓€鑷寸殑蹇収锛夆€斺€?-        /// 鏃у揩鐓ц繕鍘熸柊缁撴瀯浼氳 HP 涓庡鐩婇潤榛樺洖鍒伴粯璁ゅ€硷紝姣旂洿鎺ユ嫆缁濆嵄闄┿€傚揩鐓ф棤钀界洏銆佹棤缃戠粶浼犺緭锛屽崌绾т笉闇€鍏煎鏃ф暟鎹€?+        /// 1 鈫?2锛氬姞鍏?Attributes 涓?Buffs锛? 鈫?3锛氱Щ闄?CombatStateMachineSnapshot 鐨?Action 灞傚揩鐓с€?+        /// 鐗堟湰鍙峰繀椤昏窡鐫€瀛楁涓€璧锋定锛圧estoreSnapshot 浼氭嫆缁濈増鏈笉涓€鑷寸殑蹇収锛夆€斺€旀棫蹇収杩樺師鏂扮粨鏋勪細璁╃姸鎬佹暟鎹?+        /// 闈欓粯閿欎綅锛屾瘮鐩存帴鎷掔粷鍗遍櫓銆傚揩鐓ф棤钀界洏銆佹棤缃戠粶浼犺緭锛屽崌绾т笉闇€鍏煎鏃ф暟鎹€?         /// </summary>
+-        public const int CurrentVersion = 2;
++        public const int CurrentVersion = 3;
+ 
+         public int Version;
+-        public UnitStateMachineSnapshot StateMachine;
++        public CombatStateMachineSnapshot StateMachine;
+         public CombatActionSnapshot Action;
+         public bool HasAction;
+         public CombatAcceptedHitSnapshot[] AcceptedHits;
+@@ -93,7 +94,7 @@ namespace Ux
+     /// <summary>
+     /// 姣?Unit 鐙珛鐨勫姩浣滅敓鍛藉懆鏈燂細娑堣垂閫昏緫甯у懡浠わ紝绠＄悊鍔ㄤ綔甯с€佸彇娑堛€佸畬鎴愩€侀娴嬬‘璁ゅ拰蹇収銆?     ///
+-    /// 鑱岃矗杈圭晫锛歎nitStateMachine 鍥炵瓟"鐜板湪澶勪簬浠€涔堢姸鎬?锛屾湰绫诲洖绛?杩欎竴鎷涙挱鍒扮鍑犲抚浜?銆?+    /// 鑱岃矗杈圭晫锛欳ombatStateMachine 鍥炵瓟"鐜板湪澶勪簬浠€涔堢姸鎬?锛屾湰绫诲洖绛?杩欎竴鎷涙挱鍒扮鍑犲抚浜?銆?     /// 鎵€浠ュ姞涓€涓柊鎶€鑳戒笉鐢ㄥ姩鐘舵€佹満锛屽姞涓€涓?CombatActionAsset 璧勪骇灏辫銆?     /// </summary>
+     public sealed class CombatActionRunner
+@@ -244,13 +245,13 @@ namespace Ux
+             }
+ 
+             if (HasAction)
+-            {
+-                // 2. 鎵嬩笂姝ｅ繖 鈥斺€?鍙垽鏂?鑳戒笉鑳借涓嬩竴鎷涘彇娑?
++            {                
++                //褰撳墠鏈夊姩浣滃湪鎵ц锛屽垯鍒ゆ柇鏄惁鑳借鏂扮殑鍛戒护鍙栨秷锛岃兘鎵撴柇鍒欑敤鏂板懡浠ゆ墦鏂?                 TryCancel(commands);
+             }
+             else
+             {
+-                // 3. 鎵嬩笂绌洪棽 鈥斺€?鍒ゆ柇"鑳戒笉鑳借捣鎵?
++                // 褰撳墠娌℃湁鍔ㄤ綔鍦ㄦ墽琛岋紝灏濊瘯鎵ц鏂板姩浣滃懡浠?                 TryStart(commands);
+             }
+         }
+@@ -546,7 +547,7 @@ namespace Ux
+                 : current.ActionFrame + (int)delta;
+             Current = current;
+ 
+-            // 鎾畬浜嗚嚜鍔ㄦ敹灏俱€傝繖閲岀殑 DurationFrames 灏辨槸璧勪骇閲岀殑 70銆?+                        
+             if (Current.ActionFrame >= CurrentAsset.DurationFrames)
+             {
+                 EndCurrent(CombatActionEndReason.Completed);
+@@ -575,37 +576,30 @@ namespace Ux
+             return false;
+         }
+ 
+-        /// <summary>
+-        /// 蹇欑鏃跺皾璇曞彇娑堬紙杩炴嫑 / 鍙栨秷鍚庢憞锛夈€備袱涓潯浠跺繀椤诲悓鏃舵弧瓒筹細绐楀彛鎸囧悜鐨勫氨鏄繖鏉″懡浠ょ殑鍔ㄤ綔锛?-        /// 涓斿綋鍓嶅姩浣滃抚钀藉湪绐楀彛鍐咃紙RequiresHitConfirm 涓虹湡鏃惰繕瑕佹眰宸插懡涓級銆?-        /// 鍛戒腑鍒欑粨鏉熷綋鍓嶅姩浣滐紙鍘熷洜 Cancelled锛夊苟绔嬪埢璧锋墜鏂板姩浣滐紝ActionFrame 浠?0 寮€濮嬨€?-        ///
+-        /// 鈿?杩欐鏄?鐙傜偣鎵撲笉鍑轰激瀹?鐨勬垚鍥狅細鏅敾 1001 鐨勫彇娑堢獥鍙ｆ槸 [5,26) 涓旀寚鍚戣嚜宸憋紝
+-        /// 甯?5-26 涔嬮棿姣忔鎸夐敭閮戒細鎶婂姩浣滈噸缃洖甯?0锛屾案杩滆蛋涓嶅埌甯?41 鐨勫懡涓獥鍙ｃ€?-        /// </summary>
+         private bool TryCancel(in CombatFrameCommands commands)
+         {
+-            for (var commandIndex = 0; commandIndex < commands.Count; commandIndex++)
++            //閬嶅巻褰撳墠瑕佹墽琛岀殑鍏ㄩ儴鍛戒护
++            for (var i = 0; i < commands.Count; i++)
+             {
+-                var command = commands[commandIndex];
+-                if (!_actions.TryGetValue(command.ActionId, out var target))
++                var command = commands[i];
++                if (!_actions.TryGetValue(command.ActionId, out var action))
+                 {
+                     continue;
+                 }
+-
++                
+                 foreach (var window in CurrentAsset.CancelWindows)
+                 {
+-                    // 鈶?绐楀彛鎸囧悜鐨勫氨鏄繖鏉″懡浠よ鎵ц鐨勫姩浣滃悧锛?-                    // 鈶?褰撳墠鍔ㄤ綔甯у湪绐楀彛鍐呭悧锛燂紙RequiresHitConfirm 涓虹湡鏃惰繕瑕佹眰宸插懡涓級
++                    //杩欓噷瑕佺湅鍙栨秷绐楀彛鐨勭洰鏍囧姩浣滄槸鍚﹀拰鍛戒护鐨勫姩浣滀竴鑷达紝骞朵笖褰撳墠鍔ㄤ綔鏄惁鍦ㄥ彇娑堢獥鍙ｅ唴
+                     if (window.TargetActionId != command.ActionId ||
+                         !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
+                     {
+                         continue;
+                     }
+ 
+-                    // 鍙栨秷 鈫?绔嬪埢鎺ヤ笂鏂板姩浣滐紝涓€姝ュ埌浣嶏紝涓棿娌℃湁"绌洪棽甯?
++                    // 鍙栨秷褰撳墠鐨勫姩浣?                     EndCurrent(CombatActionEndReason.Cancelled);
+-                    Start(target, command.RequestId, command.RequestId != 0);
++                    // 绔嬪嵆寮€濮嬫柊鍔ㄤ綔
++                    Start(action, command.RequestId, command.RequestId != 0);
+                     return true;
+                 }
+             }
