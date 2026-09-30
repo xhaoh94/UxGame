@@ -179,12 +179,14 @@ namespace Ux.Editor.Combat
             }
         }
 
-        internal static TimelineAsset CreateTimelineAsset(CharacterCombatProfile profile, string suffix, bool addDefaultAnimationTrack = true, AnimationClip primaryAnimation = null)
+        internal static TimelineAsset CreateTimelineAsset(CharacterCombatProfile profile, string suffix, bool addDefaultAnimationTrack = true, AnimationClip primaryAnimation = null, string assetNameOverride = null)
         {
             var directory = GetTimelineDirectory(profile);
             EnsureFolder(directory);
 
-            var assetName = GetTimelineAssetName(profile, suffix);
+            var assetName = string.IsNullOrWhiteSpace(assetNameOverride)
+                ? GetTimelineAssetName(profile, suffix)
+                : SanitizeFileName(assetNameOverride);
             var assetPath = AssetDatabase.GenerateUniqueAssetPath(
                 NormalizeAssetPath($"{directory}/{assetName}.asset"));
             var timeline = ScriptableObject.CreateInstance<TimelineAsset>();
@@ -221,10 +223,31 @@ namespace Ux.Editor.Combat
         }
 
         /// <summary>
-        /// 以单个 Undo 事务创建逻辑技能、表现 Timeline 和 Profile 映射。
-        /// 任一步骤失败都会撤销 Profile 修改并删除本次新建的资产。
+        /// 使用默认资源名创建逻辑技能、表现 Timeline 和 Profile 映射。
         /// </summary>
         internal static bool TryCreateActionAssets(CharacterCombatProfile profile, int actionId, string stableId, string displayName, int durationFrames, ActionMovementPolicy movementPolicy, string timelineSuffix, AnimationClip primaryAnimation, out CombatActionAsset action, out TimelineAsset timeline, out string error)
+        {
+            return TryCreateActionAssets(
+                profile,
+                actionId,
+                stableId,
+                displayName,
+                durationFrames,
+                movementPolicy,
+                timelineSuffix,
+                null,
+                null,
+                primaryAnimation,
+                out action,
+                out timeline,
+                out error);
+        }
+
+        /// <summary>
+        /// 以单个 Undo 事务创建逻辑技能、表现 Timeline 和 Profile 映射，并允许调用方指定两个资产文件名。
+        /// 任一步骤失败都会撤销 Profile 修改并删除本次新建的资产。
+        /// </summary>
+        internal static bool TryCreateActionAssets(CharacterCombatProfile profile, int actionId, string stableId, string displayName, int durationFrames, ActionMovementPolicy movementPolicy, string timelineSuffix, string actionAssetName, string timelineAssetName, AnimationClip primaryAnimation, out CombatActionAsset action, out TimelineAsset timeline, out string error)
         {
             action = null;
             timeline = null;
@@ -283,8 +306,11 @@ namespace Ux.Editor.Combat
 
                 var directory = GetProfileDirectory(profile);
                 EnsureFolder(directory);
+                var actionFileName = string.IsNullOrWhiteSpace(actionAssetName)
+                    ? GetActionAssetName(profile, actionId)
+                    : SanitizeFileName(actionAssetName);
                 actionPath = AssetDatabase.GenerateUniqueAssetPath(NormalizeAssetPath(
-                    $"{directory}/{GetActionAssetName(profile, actionId)}.asset"));
+                    $"{directory}/{actionFileName}.asset"));
                 AssetDatabase.CreateAsset(action, actionPath);
                 Undo.RegisterCreatedObjectUndo(action, "创建技能逻辑资产");
 
@@ -292,7 +318,8 @@ namespace Ux.Editor.Combat
                     profile,
                     timelineSuffix,
                     true,
-                    primaryAnimation);
+                    primaryAnimation,
+                    timelineAssetName);
                 if (timeline == null)
                 {
                     throw new InvalidOperationException("表现 Timeline 创建失败。");
@@ -599,6 +626,104 @@ namespace Ux.Editor.Combat
             return true;
         }
 
+        /// <summary>
+        /// 以表现 Timeline 的实际长度作为逻辑动作的权威长度。
+        /// 当表现变短时，会删除超出新长度的窗口/帧事件，并夹取跨越边界的窗口。
+        /// </summary>
+        internal static bool SyncActionDurationExactlyToTimeline(
+            CombatActionAsset action,
+            TimelineAsset timeline,
+            bool recordUndo = true)
+        {
+            if (action == null || timeline == null || timeline.DurationFrames <= 0 ||
+                timeline.DurationFrames == action.DurationFrames)
+            {
+                return false;
+            }
+
+            if (recordUndo)
+            {
+                Undo.RecordObject(action, "以表现 Timeline 同步逻辑时长");
+            }
+
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var duration = serialized.FindProperty("durationFrames");
+            if (duration == null)
+            {
+                return false;
+            }
+
+            var targetDuration = timeline.DurationFrames;
+            duration.intValue = targetDuration;
+            ClampWindowList(serialized.FindProperty("cancelWindows"), targetDuration);
+            ClampWindowList(serialized.FindProperty("linkWindows"), targetDuration);
+            ClampWindowList(serialized.FindProperty("hitboxWindows"), targetDuration);
+            ClampFrameEventList(serialized.FindProperty("frameEvents"), targetDuration);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            action.ValidateData();
+            EditorUtility.SetDirty(action);
+            if (AssetDatabase.Contains(action))
+            {
+                AssetDatabase.SaveAssetIfDirty(action);
+            }
+            return true;
+        }
+
+        private static void ClampWindowList(SerializedProperty windows, int durationFrames)
+        {
+            if (windows == null)
+            {
+                return;
+            }
+
+            for (var i = windows.arraySize - 1; i >= 0; i--)
+            {
+                var element = windows.GetArrayElementAtIndex(i);
+                var start = element.FindPropertyRelative("StartFrame");
+                var end = element.FindPropertyRelative("EndFrame");
+                if (start == null || end == null)
+                {
+                    continue;
+                }
+
+                if (start.intValue >= durationFrames)
+                {
+                    windows.DeleteArrayElementAtIndex(i);
+                    continue;
+                }
+
+                start.intValue = Mathf.Clamp(start.intValue, 0, durationFrames - 1);
+                end.intValue = Mathf.Clamp(end.intValue, start.intValue + 1, durationFrames);
+            }
+        }
+
+        private static void ClampFrameEventList(SerializedProperty events, int durationFrames)
+        {
+            if (events == null)
+            {
+                return;
+            }
+
+            for (var i = events.arraySize - 1; i >= 0; i--)
+            {
+                var element = events.GetArrayElementAtIndex(i);
+                var frame = element.FindPropertyRelative("Frame");
+                if (frame == null)
+                {
+                    continue;
+                }
+
+                if (frame.intValue >= durationFrames)
+                {
+                    events.DeleteArrayElementAtIndex(i);
+                    continue;
+                }
+                frame.intValue = Mathf.Clamp(frame.intValue, 0, durationFrames - 1);
+            }
+        }
+
         internal static List<CombatValidationIssue> ValidateProfile(CharacterCombatProfile profile)
         {
             var issues = new List<CombatValidationIssue>();
@@ -820,8 +945,8 @@ namespace Ux.Editor.Combat
                     if (timeline.DurationFrames <= 0)
                     {
                         issues.Add(new CombatValidationIssue(
-                            CombatValidationSeverity.Warning,
-                            $"{label} 的 Timeline 尚未添加表现 Clip。",
+                            CombatValidationSeverity.Info,
+                            $"{label} 未配置表现 Clip，当前仅使用逻辑时序。",
                             timeline));
                     }
                     else if (timeline.DurationFrames != action.DurationFrames)
@@ -889,41 +1014,79 @@ namespace Ux.Editor.Combat
                     }
                 }
 
-                var hitWindows = action.HitWindows;
-                if (hitWindows == null)
+                var linkWindows = action.LinkWindows;
+                if (linkWindows == null)
                 {
                     issues.Add(new CombatValidationIssue(
                         CombatValidationSeverity.Error,
-                        $"技能 {action.name} 的命中窗口列表为空引用。",
+                        $"技能 {action.name} 的连招衔接窗口列表为空引用。",
                         action));
                 }
                 else
                 {
-                    foreach (var window in hitWindows)
+                    foreach (var window in linkWindows)
                     {
                         if (window == null)
                         {
                             issues.Add(new CombatValidationIssue(
                                 CombatValidationSeverity.Error,
-                                $"技能 {action.name} 包含空的命中窗口。",
+                                $"技能 {action.name} 包含空的连招衔接窗口。",
                                 action));
                             continue;
                         }
 
-                        ValidateLogicItemId(issues, action, logicItemIds, window.StableId, "命中窗口");
+                        ValidateLogicItemId(issues, action, logicItemIds, window.StableId, "连招衔接窗口");
+                        if (window.TargetActionId <= 0 || !actionIds.Contains(window.TargetActionId))
+                        {
+                            issues.Add(new CombatValidationIssue(
+                                CombatValidationSeverity.Error,
+                                $"技能 {action.name} 的连招衔接窗口目标不存在：{window.TargetActionId}。",
+                                action));
+                        }
                         ValidateLogicWindowRange(
                             issues,
                             action,
                             window.StartFrame,
                             window.EndFrame,
-                            "命中窗口");
+                            "连招衔接窗口");
+                    }
+                }
+
+                var hitboxWindows = action.HitboxWindows;
+                if (hitboxWindows == null)
+                {
+                    issues.Add(new CombatValidationIssue(
+                        CombatValidationSeverity.Error,
+                        $"技能 {action.name} 的攻击判定列表为空引用。",
+                        action));
+                }
+                else
+                {
+                    foreach (var window in hitboxWindows)
+                    {
+                        if (window == null)
+                        {
+                            issues.Add(new CombatValidationIssue(
+                                CombatValidationSeverity.Error,
+                                $"技能 {action.name} 包含空的攻击判定。",
+                                action));
+                            continue;
+                        }
+
+                        ValidateLogicItemId(issues, action, logicItemIds, window.StableId, "攻击判定");
+                        ValidateLogicWindowRange(
+                            issues,
+                            action,
+                            window.StartFrame,
+                            window.EndFrame,
+                            "攻击判定");
                         if (!Enum.IsDefined(typeof(ActionHitShape), window.Shape) ||
                             window.RadiusMillimeters <= 0 ||
                             window.RadiusMillimeters > 10000000)
                         {
                             issues.Add(new CombatValidationIssue(
                                 CombatValidationSeverity.Error,
-                                $"技能 {action.name} 的命中窗口形状参数无效：shape={window.Shape}, radius={window.RadiusMillimeters}。",
+                                $"技能 {action.name} 的攻击判定形状参数无效：shape={window.Shape}, radius={window.RadiusMillimeters}。",
                                 action));
                         }
                     }

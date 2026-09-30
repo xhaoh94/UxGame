@@ -1,0 +1,5 @@
+OK  CombatTimelinePlayer.cs  琛屾暟 147 -> 161  eol=CRLF
+OK  CombatComponent.cs       琛屾暟 410 -> 400  eol=CRLF
+OK  TimelineWindow.cs        琛屾暟 1396 -> 1392  eol=CRLF
+OK  CombatTimelinePlayerTests.cs 琛屾暟 32 -> 51  eol=CRLF
+鍏ㄩ儴钀界洏瀹屾垚

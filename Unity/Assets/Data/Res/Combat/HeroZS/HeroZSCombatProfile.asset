@@ -16,6 +16,7 @@ MonoBehaviour:
   group: HeroZS
   moveSpeedPerSecond: 5
   turnDegreesPerSecond: 720
+  maxHp: 100
   statePresentations:
   - stableId: state.0.1.default
     layer: 0
@@ -33,6 +34,13 @@ MonoBehaviour:
     timeline: {fileID: 11400000, guid: a519ec3fd5c101a4bb00cd20ebad28e7, type: 2}
   actions:
   - {fileID: 11400000, guid: bcf1d7b44ac84f749e130a537270b60a, type: 2}
+  - {fileID: 11400000, guid: df5c55665ccb4cceb28669de4efbd78f, type: 2}
+  - {fileID: 11400000, guid: 3a0daab5585b46358429a7bbac37f885, type: 2}
   actionPresentations:
   - action: {fileID: 11400000, guid: bcf1d7b44ac84f749e130a537270b60a, type: 2}
     timeline: {fileID: 11400000, guid: 8c3a15de724e45b4a93ed9a8ee7dfc42, type: 2}
+  - action: {fileID: 11400000, guid: df5c55665ccb4cceb28669de4efbd78f, type: 2}
+    timeline: {fileID: 11400000, guid: d75ea863b6a74277bb812072364d9a97, type: 2}
+  - action: {fileID: 11400000, guid: 3a0daab5585b46358429a7bbac37f885, type: 2}
+    timeline: {fileID: 11400000, guid: 710f4ee4576d4110a1e07b5fda2dfa0f, type: 2}
+  spawnPresentations: []

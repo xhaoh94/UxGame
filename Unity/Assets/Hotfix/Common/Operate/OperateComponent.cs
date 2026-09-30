@@ -26,7 +26,7 @@ namespace Ux
     /// 链路 B：按 Q / 开火键 → 普攻动作跑起来
     /// ═══════════════════════════════════════════════════════════════
     ///   OnFire / OnKey（本文件）
-    ///     → CombatComponent.RequestAction   包成 CombatCommand，帧号 = 当前帧 + 1，入队
+    ///     → CombatComponent.RequestComboAttack 按当前连招衔接窗口算出这一段是第几段，包成 CombatCommand（帧号 = 当前帧 + 1）入队
     ///   ┈┈ 以上发生在按键的瞬间，不在任何逻辑帧内部 ┈┈
     ///     → BattleWorld 阶段 1              取出"帧号 == 当前帧"的命令（取走即删）
     ///     → BattleWorld 阶段 2              把命令交给 CombatComponent.TickLogic
@@ -46,7 +46,7 @@ namespace Ux
     /// </remarks>
     public sealed class OperateComponent : Entity, IAwakeSystem, InputActions.IPlayerActions
     {
-        /// <summary>普攻动作的 ActionId，对应 HeroZSAttack01.asset 里的 actionId 字段。</summary>
+        /// <summary>普攻链头的 ActionId，对应 HeroZSAttack01.asset。后续段位由连招衔接窗口决定，输入层只认识这一个。</summary>
         private const int AttackActionId = 1001;
 
         private InputActions _input;
@@ -104,17 +104,17 @@ namespace Ux
         /// <summary>开火键（鼠标左键/手柄 RT）入口，攻击链路起点。</summary>
         public void OnFire(InputAction.CallbackContext context)
         {
-            // 只认按下，不认持续按住 —— 连发逻辑不在这里，而在动作的取消窗口里
-            // （见 CombatActionRunner.TryCancel）。
+            // 只认按下，不认持续按住 —— 连发与连招推进都在连招衔接窗口里
+            // （见 CombatActionRunner.ResolveComboTarget / TryCancel）。
             if (context.performed && Unit.Combat != null)
             {
-                // 只传 ActionId，不传"这是什么技能"。
-                // 具体动作的时长、能不能取消、打多远，全部由资源决定，输入层不参与。
-                Unit.Combat.RequestAction(AttackActionId);
+                // 只传链头 ActionId，不传"这是第几段"。
+                // 段位、时长、能不能取消、打多远，全部由资源决定，输入层不参与。
+                Unit.Combat.RequestComboAttack(AttackActionId);
             }
         }
 
-        /// <summary>Q 键入口。和 OnFire 走的是完全相同的一条路（两条入口共用一个 ActionId）。</summary>
+        /// <summary>Q 键入口。和 OnFire 走的是完全相同的一条路（两条入口共用同一个链头）。</summary>
         public void OnKey(InputAction.CallbackContext context)
         {
             if (!context.performed || Unit.Combat == null)
@@ -125,7 +125,7 @@ namespace Ux
             var control = context.control;
             if (control == Keyboard.current.qKey)
             {
-                Unit.Combat.RequestAction(AttackActionId);
+                Unit.Combat.RequestComboAttack(AttackActionId);
             }
         }
     }

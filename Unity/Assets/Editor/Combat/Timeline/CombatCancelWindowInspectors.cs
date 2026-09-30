@@ -9,9 +9,9 @@ namespace Ux.Editor.Combat
         public CombatCancelWindowTrackInspector(CombatLogicTimelineSource source, CombatCancelWindowEditorTrack track) : base(source, track, track)
         {
             Add(CreateTitle("战斗逻辑轨道"));
-            Add(new Label("取消窗口"));
+            Add(new Label("可取消窗口"));
             Add(new HelpBox(
-                "区间采用 [开始帧, 结束帧) 半开语义。多个取消窗口允许重叠，并由目标 ActionId 与命中条件分别判定。",
+                "区间采用 [开始帧, 结束帧) 半开语义。多个可取消窗口允许重叠，并由目标 ActionId 与命中条件分别判定。",
                 HelpBoxMessageType.Info));
         }
     }
@@ -29,7 +29,7 @@ namespace Ux.Editor.Combat
         public CombatCancelWindowClipInspector(CombatLogicTimelineSource source, CombatCancelWindowEditorClip clip) : base(source, clip, clip)
         {
             this.clip = clip;
-            Add(CreateTitle("取消窗口"));
+            Add(CreateTitle("可取消窗口"));
 
             startField = new IntegerField("开始帧（含）");
             endField = new IntegerField("结束帧（不含）");
@@ -72,7 +72,7 @@ namespace Ux.Editor.Combat
             idLabel.style.marginTop = 10;
             Add(idLabel);
             Add(new HelpBox(
-                "结束帧本身不属于取消窗口；运行时仅在 actionFrame < EndFrame 时接受目标动作。",
+                "结束帧本身不属于可取消窗口；运行时仅在 actionFrame < EndFrame 时接受目标动作。",
                 HelpBoxMessageType.Info));
             RefreshFields();
         }

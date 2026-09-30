@@ -38,7 +38,6 @@ namespace Ux.Editor.Combat
 
         // 右栏分区折叠状态：按分区独立记忆，避免每次打开都要重新展开。
         private const string LogicSectionKey = "Ux.CombatEditor.Fold.Logic";
-        private const string PresentationSectionKey = "Ux.CombatEditor.Fold.Presentation";
         private const string ValidationSectionKey = "Ux.CombatEditor.Fold.Validation";
         private static GUIStyle _sectionFoldoutStyle;
         private static GUIStyle _skillItemStyle;
@@ -1176,37 +1175,27 @@ namespace Ux.Editor.Combat
 
             var action = _selectedAction;
             var timeline = GetActionTimeline(action);
-            GUILayout.Label($"技能：{GetActionName(action)}", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "技能逻辑保存在 CombatActionAsset；表现 Timeline 通过 Profile 关联。下方双源时间轴共用同一帧标尺。",
-                MessageType.Info);
-
             var serialized = GetActionSerialized();
             serialized.Update();
             Undo.RecordObject(action, "修改技能逻辑配置");
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                if (DrawSection("逻辑数据（CombatActionAsset）", LogicSectionKey))
+                if (DrawSection("配置", LogicSectionKey))
                 {
                     EditorGUILayout.ObjectField("逻辑资产", action, typeof(CombatActionAsset), false);
                     DrawProperty(serialized, "stableId", "StableId");
                     DrawProperty(serialized, "actionId", "技能 ID");
                     DrawProperty(serialized, "displayName", "显示名称");
-                    DrawProperty(serialized, "durationFrames", "逻辑持续帧数");
+                    DrawProperty(serialized, "durationFrames", "逻辑帧数");
                     DrawProperty(serialized, "movementPolicy", "移动策略");
-                }
-            }
-            if (serialized.ApplyModifiedPropertiesWithoutUndo())
-            {
-                action.ValidateData();
-                EditorUtility.SetDirty(action);
-                _issues.Clear();
-            }
 
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                if (DrawSection("客户端表现映射（CharacterCombatProfile）", PresentationSectionKey))
-                {
+                    if (serialized.ApplyModifiedPropertiesWithoutUndo())
+                    {
+                        action.ValidateData();
+                        EditorUtility.SetDirty(action);
+                        _issues.Clear();
+                    }
+
                     timeline = DrawActionPresentation(action);
                     if (timeline == null)
                     {
@@ -1216,37 +1205,6 @@ namespace Ux.Editor.Combat
                             CreateActionTimeline(action);
                             timeline = GetActionTimeline(action);
                         }
-                    }
-                    else
-                    {
-                        using (new EditorGUILayout.HorizontalScope())
-                        {
-                            var clip = CombatEditorUtility.GetPrimaryAnimationClip(timeline);
-                            var nextClip = (AnimationClip)EditorGUILayout.ObjectField(
-                                "首个动画 Clip",
-                                clip,
-                                typeof(AnimationClip),
-                                false);
-                            if (nextClip != clip)
-                            {
-                                Undo.IncrementCurrentGroup();
-                                var undoGroup = Undo.GetCurrentGroup();
-                                Undo.SetCurrentGroupName("设置技能动画");
-                                Undo.RecordObject(timeline, "设置技能动画");
-                                if (CombatEditorUtility.SetPrimaryAnimationClip(timeline, nextClip, out _))
-                                {
-                                    CombatEditorUtility.SyncActionDurationToTimeline(action, timeline);
-                                    _actionSerialized = null;
-                                    EditorUtility.SetDirty(timeline);
-                                    AssetDatabase.SaveAssets();
-                                }
-                                Undo.CollapseUndoOperations(undoGroup);
-                            }
-                        }
-                        EditorGUILayout.LabelField(
-                            "Timeline",
-                            $"{timeline.FrameRate} fps / {timeline.DurationFrames} 帧",
-                            EditorStyles.miniLabel);
                     }
                 }
             }
@@ -1258,7 +1216,7 @@ namespace Ux.Editor.Combat
         {
             var current = GetActionTimeline(action);
             var next = (TimelineAsset)EditorGUILayout.ObjectField(
-                "表现 Timeline",
+                "Timeline",
                 current,
                 typeof(TimelineAsset),
                 false);
@@ -1282,12 +1240,25 @@ namespace Ux.Editor.Combat
                 }
             }
 
-            if (current != null && current.DurationFrames != action.DurationFrames)
+            if (current != null && current.DurationFrames <= 0)
             {
                 EditorGUILayout.HelpBox(
-                    $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
-                    "两者独立保存，请确认差异符合设计。",
-                    MessageType.Warning);
+                    "当前 Timeline 没有表现 Clip，该技能仅使用逻辑时序。",
+                    MessageType.Info);
+            }
+            else if (current != null && current.DurationFrames != action.DurationFrames)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.HelpBox(
+                        $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
+                        "两者独立保存，请确认差异符合设计。",
+                        MessageType.Warning);
+                    if (GUILayout.Button("以Timeline帧为准同步", GUILayout.Width(112), GUILayout.Height(38)))
+                    {
+                        SyncActionDurationFromTimeline(action, current);
+                    }
+                }
             }
             return current;
         }
@@ -1334,11 +1305,79 @@ namespace Ux.Editor.Combat
                             var prefix = issue.Severity == CombatValidationSeverity.Error
                                 ? "错误"
                                 : issue.Severity == CombatValidationSeverity.Warning ? "警告" : "提示";
-                            EditorGUILayout.LabelField($"[{prefix}] {issue.Message}", EditorStyles.miniLabel);
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                EditorGUILayout.LabelField($"[{prefix}] {issue.Message}", EditorStyles.miniLabel);
+                                if (issue.Severity == CombatValidationSeverity.Warning &&
+                                    TryGetDurationMismatch(issue, out var action, out var timeline) &&
+                                    GUILayout.Button("以Timeline帧为准同步", GUILayout.Width(112)))
+                                {
+                                    SyncActionDurationFromTimeline(action, timeline);
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+
+        private bool TryGetDurationMismatch(
+            CombatValidationIssue issue,
+            out CombatActionAsset action,
+            out TimelineAsset timeline)
+        {
+            action = null;
+            timeline = issue?.Context as TimelineAsset;
+            if (timeline == null || _profile?.ActionPresentations == null ||
+                issue.Message.IndexOf("逻辑时长与表现时长不一致", StringComparison.Ordinal) < 0)
+            {
+                return false;
+            }
+
+            foreach (var presentation in _profile.ActionPresentations)
+            {
+                if (presentation?.Timeline == timeline && presentation.Action != null)
+                {
+                    action = presentation.Action;
+                    return action.DurationFrames != timeline.DurationFrames;
+                }
+            }
+            return false;
+        }
+
+        private void SyncActionDurationFromTimeline(
+            CombatActionAsset action,
+            TimelineAsset timeline)
+        {
+            if (action == null || timeline == null || timeline.DurationFrames <= 0)
+            {
+                return;
+            }
+
+            if (action.DurationFrames > timeline.DurationFrames &&
+                !EditorUtility.DisplayDialog(
+                    "同步逻辑时长",
+                    "表现 Timeline 比逻辑动作更短。同步后，超出表现长度的命中/取消窗口和帧事件将被删除，是否继续？",
+                    "继续同步",
+                    "取消"))
+            {
+                return;
+            }
+
+            if (!CombatEditorUtility.SyncActionDurationExactlyToTimeline(action, timeline))
+            {
+                return;
+            }
+
+            _actionSerialized = null;
+            _issues = CombatEditorUtility.ValidateProfile(_profile);
+            TimelineWindow.RefreshView?.Invoke();
+            TimelineWindow.RefreshClip?.Invoke();
+            _navigationContainer?.MarkDirtyRepaint();
+            _configContainer?.MarkDirtyRepaint();
+            _embeddedTimeline?.Repaint();
+            Repaint();
         }
 
         private void CreateProfile()
@@ -1406,22 +1445,54 @@ namespace Ux.Editor.Combat
 
             var actionId = basicAttack ? DefaultActionId : GetNextActionId();
             var displayName = basicAttack ? "普通攻击" : $"技能 {actionId}";
+            var actionAssetName = CombatEditorUtility.GetActionAssetName(_profile, actionId);
+            var timelineAssetName = CombatEditorUtility.GetTimelineAssetName(
+                _profile,
+                GetActionTimelineSuffix(actionId));
             var sampleClip = basicAttack ? FindHeroZsAttackClip() : null;
+
+            CombatActionCreatePopup.Open(
+                actionId,
+                BuildActionStableId(actionId),
+                displayName,
+                actionAssetName,
+                timelineAssetName,
+                (string stableId, string name, string logicName, string timelineName, out string error) =>
+                    CreateActionFromPopup(
+                        actionId,
+                        sampleClip,
+                        stableId,
+                        name,
+                        logicName,
+                        timelineName,
+                        out error));
+        }
+
+        private bool CreateActionFromPopup(
+            int actionId,
+            AnimationClip sampleClip,
+            string stableId,
+            string displayName,
+            string actionAssetName,
+            string timelineAssetName,
+            out string error)
+        {
             if (!CombatEditorUtility.TryCreateActionAssets(
                     _profile,
                     actionId,
-                    BuildActionStableId(actionId),
+                    stableId,
                     displayName,
                     DefaultActionDuration,
                     ActionMovementPolicy.Block,
                     GetActionTimelineSuffix(actionId),
+                    actionAssetName,
+                    timelineAssetName,
                     sampleClip,
                     out var action,
                     out _,
-                    out var error))
+                    out error))
             {
-                EditorUtility.DisplayDialog("无法创建技能", error, "确定");
-                return;
+                return false;
             }
 
             _profileSerialized = null;
@@ -1431,6 +1502,8 @@ namespace Ux.Editor.Combat
             _timelineDetachedToStandalone = false;
             Selection.activeObject = _selectedAction;
             ShowNotification(new GUIContent($"已创建：{displayName}（Action {actionId}）"));
+            Repaint();
+            return true;
         }
 
         private void AddNextDefaultPresentation()

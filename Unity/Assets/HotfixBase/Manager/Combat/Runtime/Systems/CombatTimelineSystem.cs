@@ -1,9 +1,11 @@
+using System.Collections.Generic;
+
 namespace Ux
 {
     /// <summary>
     /// 阶段 Timeline 插件：把时间轴配置翻译成本帧的逻辑事实，写进 BattleWorld.FrameEvents。
     ///
-    /// 求值命中窗口与取消窗口，只报告"哪些窗口本帧成立"——不判几何、不判去重、不碰表现层。
+    /// 求值命中/取消窗口与离散帧事件，只报告本帧成立的逻辑事实——不判几何、不判去重、不碰表现层。
     /// 纯逻辑侧实现，不引用 Unity 对象，战报重放也能跑。
     /// </summary>
     public sealed class CombatTimelineSystem : ICombatSystem
@@ -39,46 +41,91 @@ namespace Ux
                 }
 
                 var set = table.Append(entity.Id, actionRunner.Current, actionRunner.Current.HasHitConfirmed);
-                AppendHitWindows(actionRunner, set);
-                AppendCancelWindows(actionRunner, set);
+                AppendHitboxWindows(actionRunner, set);
+                AppendActionWindows(actionRunner, set);
+                AppendFrameEvents(actionRunner, set);
 
-                if (Verbose && set.HasHitWindows && !set.HasCancelWindows)
+                if (Verbose && set.HasHitboxWindows && !set.HasActionWindows)
                 {
                     Log.Debug($"[Timeline] frame={frame} {entity.Id} action={set.ActionId} " +
-                              $"actionFrame={set.ActionFrame} 命中窗口={set.HitWindows.Count} 取消窗口=0");
+                              $"actionFrame={set.ActionFrame} 攻击判定={set.HitboxWindows.Count} 动作窗口=0");
                 }
             }
         }
 
-        /// <summary>命中窗口求值：只管有没有，不管打没打到。</summary>
-        private static void AppendHitWindows(CombatActionRunner actionRunner, CombatFrameEventSet set)
+        /// <summary>攻击判定求值：只管有没有，不管打没打到。</summary>
+        private static void AppendHitboxWindows(CombatActionRunner actionRunner, CombatFrameEventSet set)
         {
-            actionRunner.AppendActiveHitWindows(set.HitWindows);
+            actionRunner.AppendActiveHitboxWindows(set.HitboxWindows);
         }
 
-        /// <summary>取消窗口求值：判定条件与 CombatActionRunner.TryCancel 一致（ActionCancelWindow.IsOpen）。</summary>
-        private static void AppendCancelWindows(CombatActionRunner actionRunner, CombatFrameEventSet set)
+        /// <summary>连招衔接与泛化取消求值：两者都写入本帧开放的动作窗口事实。</summary>
+        private static void AppendActionWindows(CombatActionRunner actionRunner, CombatFrameEventSet set)
         {
             var asset = actionRunner.CurrentAsset;
-            if (asset?.CancelWindows == null)
+            if (asset == null)
             {
                 return;
             }
 
-            for (var i = 0; i < asset.CancelWindows.Count; i++)
+            AppendTargetWindows(asset.CancelWindows, set);
+            AppendTargetWindows(asset.LinkWindows, set);
+        }
+
+        private static void AppendTargetWindows<TWindow>(
+            IReadOnlyList<TWindow> windows,
+            CombatFrameEventSet set)
+            where TWindow : ActionTargetWindow
+        {
+            if (windows == null)
             {
-                var window = asset.CancelWindows[i];
+                return;
+            }
+
+            for (var i = 0; i < windows.Count; i++)
+            {
+                var window = windows[i];
                 if (window == null || !window.IsOpen(set.ActionFrame, set.HasHitConfirmed))
                 {
                     continue;
                 }
 
-                set.CancelWindows.Add(new CombatActiveCancelWindow(
+                set.ActionWindows.Add(new CombatActiveActionWindow(
                     set.ActionInstanceId,
                     set.ActionId,
                     set.ActionFrame,
                     i,
                     window));
+            }
+        }
+
+        /// <summary>
+        /// 离散帧事件求值：事件只在自己的 Frame 上成立一次，不使用区间窗口语义。
+        /// 这里按资产顺序写入帧事件缓冲，具体消费由对应系统负责。
+        /// </summary>
+        private static void AppendFrameEvents(CombatActionRunner actionRunner, CombatFrameEventSet set)
+        {
+            var asset = actionRunner.CurrentAsset;
+            if (asset?.FrameEvents == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < asset.FrameEvents.Count; i++)
+            {
+                var frameEvent = asset.FrameEvents[i];
+                if (!(frameEvent is ActionSpawnEvent spawnEvent) ||
+                    spawnEvent.Frame != set.ActionFrame)
+                {
+                    continue;
+                }
+
+                set.SpawnEvents.Add(new CombatActiveSpawnEvent(
+                    set.ActionInstanceId,
+                    set.ActionId,
+                    set.ActionFrame,
+                    i,
+                    spawnEvent));
             }
         }
     }

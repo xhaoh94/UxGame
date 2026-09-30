@@ -218,10 +218,10 @@ namespace Ux.Editor.Timeline
 
         void AppendMenuItems(DropdownMenu targetMenu)
         {
-            targetMenu.AppendAction("适配长度", _ => FitAnimationDuration(),
-                _ => Clip.CanFitAnimationDuration
-                    ? DropdownMenuAction.Status.Normal
-                    : DropdownMenuAction.Status.Disabled);
+            if (Clip.CanFitAnimationDuration)
+            {
+                targetMenu.AppendAction("适配长度", _ => FitAnimationDuration());
+            }
             targetMenu.AppendAction("删除", _ => TrackItem.RemoveClipItem(this),
                 _ => DropdownMenuAction.Status.Normal);
         }

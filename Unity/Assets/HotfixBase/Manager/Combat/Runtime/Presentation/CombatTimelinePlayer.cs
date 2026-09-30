@@ -5,16 +5,25 @@ namespace Ux
 {
     public readonly struct CombatTimelineSelection
     {
-        public readonly string OwnerKey;
         public readonly TimelineAsset Asset;
         public readonly int Frame;
 
-        public CombatTimelineSelection(string ownerKey, TimelineAsset asset, int frame)
+        /// <summary>同一资产的第几次播放。只有 Action 槽用：连招时同一资产再次起手必须强制重播动画。</summary>
+        public readonly long InstanceId;
+
+        public CombatTimelineSelection(TimelineAsset asset, int frame, long instanceId = 0)
         {
-            OwnerKey = ownerKey ?? string.Empty;
             Asset = asset;
             Frame = Math.Max(0, frame);
+            InstanceId = instanceId;
         }
+
+        /// <summary>
+        /// 是否同一个来源 —— 唯一用途是判断"要不要重新切轨道"。
+        /// 所以 Frame 必须不参与：帧每帧都在变，它变了不该重播。
+        /// </summary>
+        public bool SameOwner(in CombatTimelineSelection other) =>
+            ReferenceEquals(Asset, other.Asset) && InstanceId == other.InstanceId;
     }
 
     public readonly struct CombatTimelinePlan
@@ -31,62 +40,23 @@ namespace Ux
         }
     }
 
-    public static class CombatTimelineResolver
-    {
-        public static CombatTimelinePlan Resolve(CharacterCombatProfile profile, CombatStateMachine states, CombatActionRunner actions, string variantId = null)
-        {
-            if (profile == null || states == null)
-            {
-                return default;
-            }
-
-            var variant = CombatStatePresentation.NormalizeVariantId(variantId);
-            var lifeId = states.GetCurrentStateId(StateLayer.Life);
-            var life = profile.GetStatePresentation(StateLayer.Life, lifeId, variant);
-            if (life?.Timeline != null)
-            {
-                return new CombatTimelinePlan(new CombatTimelineSelection($"state:{(int)StateLayer.Life}:{lifeId}:{life.StableId}:{life.VariantId}", life.Timeline, states.GetStateFrame(StateLayer.Life)), default, true);
-            }
-
-            var controlId = states.GetCurrentStateId(StateLayer.Control);
-            var control = profile.GetStatePresentation(StateLayer.Control, controlId, variant);
-            if (control?.Timeline != null)
-            {
-                return new CombatTimelinePlan(new CombatTimelineSelection($"state:{(int)StateLayer.Control}:{controlId}:{control.StableId}:{control.VariantId}", control.Timeline, states.GetStateFrame(StateLayer.Control)), default, true);
-            }
-
-            var locomotionId = states.GetCurrentStateId(StateLayer.Locomotion);
-            var locomotion = profile.GetStatePresentation(StateLayer.Locomotion, locomotionId, variant);
-            var actionSelection = default(CombatTimelineSelection);
-            if (actions?.HasAction == true)
-            {
-                var asset = profile.GetActionTimeline(actions.Current.ActionId);
-                if (asset != null)
-                {
-                    actionSelection = new CombatTimelineSelection($"action:{actions.Current.InstanceId}", asset, actions.Current.ActionFrame);
-                }
-            }
-            var baseSelection = new CombatTimelineSelection($"state:{(int)StateLayer.Locomotion}:{locomotionId}:{locomotion?.StableId ?? "none"}:{locomotion?.VariantId ?? ""}", locomotion?.Timeline, states.GetStateFrame(StateLayer.Locomotion));
-            return new CombatTimelinePlan(baseSelection, actionSelection);
-        }
-    }
 
     public sealed class CombatTimelinePlayer
     {
         private readonly TimelineComponent _component;
-        private string _baseOwner = string.Empty;
-        private string _actionOwner = string.Empty;
+        private CombatTimelineSelection _baseOwner;
+        private CombatTimelineSelection _actionOwner;
 
         public CombatTimelinePlayer(TimelineComponent component) { _component = component; }
 
-        public void Synchronize(in CombatTimelinePlan plan, Animator animator, bool force = false, float fadeDuration = 0.15f)
+        public void Synchronize(in CombatTimelinePlan plan, Animator animator, bool force = false, float fadeDuration = 0.15f, ParticleSystem vfx = null)
         {
             if (_component == null) return;
-            var baseChanged = force || !string.Equals(_baseOwner, plan.Base.OwnerKey, StringComparison.Ordinal) ||
+            var baseChanged = force || !_baseOwner.SameOwner(plan.Base) ||
                 plan.Base.Asset != null && _component.GetTimeline(TimelinePlaybackLayer.Base) == null;
-            var actionChanged = force || !string.Equals(_actionOwner, plan.Action.OwnerKey, StringComparison.Ordinal) ||
+            var actionChanged = force || !_actionOwner.SameOwner(plan.Action) ||
                 plan.Action.Asset != null && _component.GetTimeline(TimelinePlaybackLayer.Action) == null;
-            if (baseChanged) SyncLayer(plan.Base, TimelinePlaybackLayer.Base, animator, fadeDuration, false);
+            if (baseChanged) SyncLayer(plan.Base, TimelinePlaybackLayer.Base, animator, vfx, fadeDuration, false);
             if (plan.ExclusiveBase)
             {
                 _component.StopLayer(TimelinePlaybackLayer.Action, 0);
@@ -94,10 +64,10 @@ namespace Ux
             else if (actionChanged)
             {
                 var replayFrameZero = !force && plan.Action.Asset != null && plan.Action.Frame == 0;
-                SyncLayer(plan.Action, TimelinePlaybackLayer.Action, animator, fadeDuration, replayFrameZero);
+                SyncLayer(plan.Action, TimelinePlaybackLayer.Action, animator, vfx, fadeDuration, replayFrameZero);
             }
-            _baseOwner = plan.Base.OwnerKey;
-            _actionOwner = plan.ExclusiveBase ? string.Empty : plan.Action.OwnerKey;
+            _baseOwner = plan.Base;
+            _actionOwner = plan.ExclusiveBase ? default : plan.Action;
         }
 
         public void Evaluate(in CombatTimelinePlan plan, bool playback, int deltaFrames = 1)
@@ -118,11 +88,11 @@ namespace Ux
 
         public void Release()
         {
-            _baseOwner = string.Empty;
-            _actionOwner = string.Empty;
+            _baseOwner = default;
+            _actionOwner = default;
         }
 
-        private void SyncLayer(CombatTimelineSelection selection, TimelinePlaybackLayer layer, Animator animator, float fadeDuration, bool replayFrameZero)
+        private void SyncLayer(CombatTimelineSelection selection, TimelinePlaybackLayer layer, Animator animator, ParticleSystem vfx, float fadeDuration, bool replayFrameZero)
         {
             if (selection.Asset == null)
             {
@@ -130,17 +100,29 @@ namespace Ux
                 return;
             }
             _component.PlayOnLayer(selection.Asset, layer, fadeDuration);
-            if (selection.Asset.tracks != null && animator != null)
+            BindTracks(selection.Asset, animator, vfx);
+            _component.SetLayerFrame(layer, selection.Frame, replayFrameZero);
+        }
+
+        /// <summary>
+        /// 必须在 PlayOnLayer 之后绑定：PlayOnLayer 会新建播放实例并让旧实例淡出，先绑会被新实例丢掉。
+        /// 粒子轨没有资产级引用，只能绑外部 ParticleSystem —— 传 null 时该轨静默不播。
+        /// </summary>
+        private void BindTracks(TimelineAsset asset, Animator animator, ParticleSystem vfx)
+        {
+            if (asset.tracks == null) return;
+            foreach (var track in asset.tracks)
             {
-                foreach (var track in selection.Asset.tracks)
+                switch (track)
                 {
-                    if (track is AnimationTrackAsset)
-                    {
+                    case AnimationTrackAsset when animator != null:
                         _component.SetBinding(track, animator);
-                    }
+                        break;
+                    case ParticleAssetTrack when vfx != null:
+                        _component.SetBinding(track, vfx);
+                        break;
                 }
             }
-            _component.SetLayerFrame(layer, selection.Frame, replayFrameZero);
         }
     }
 }

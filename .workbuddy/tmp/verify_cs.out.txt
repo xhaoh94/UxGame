@@ -1,0 +1,13 @@
+=== C# 静态自检（剥注释/字符串后）===
+  OK   CRLF   braces 110/110  parens 193/193  CombatActionRunner.cs
+  OK   CRLF   braces 19/19  parens 39/39  CombatTimelinePlayer.cs
+  OK   LF     braces 2/2  parens 1/1  ParticleClipAsset.cs
+  OK   LF     braces 24/24  parens 35/35  TLParticleClip.cs
+  OK   CRLF   braces 64/64  parens 126/126  CombatComponent.cs
+  OK   LF     braces 18/18  parens 30/30  CombatVfxHost.cs
+  OK   LF     braces 12/12  parens 26/26  OperateComponent.cs
+  OK   CRLF   braces 31/31  parens 153/153  TimelineAssetInspectors.cs
+  OK   CRLF   braces 66/66  parens 201/201  TimelineAssetEditorSource.cs
+  OK   CRLF   braces 195/195  parens 541/541  TimelineWindow.cs
+  OK   CRLF   braces 148/148  parens 815/815  CombatRuntimeTests.cs
+=== ALL OK ===

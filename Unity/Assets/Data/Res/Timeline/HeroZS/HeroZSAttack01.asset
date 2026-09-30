@@ -15,6 +15,7 @@ MonoBehaviour:
   frameRate: 60
   tracks:
   - rid: 1176164152299749448
+  - rid: 1176164152299749460
   references:
     version: 2
     RefIds:
@@ -41,3 +42,23 @@ MonoBehaviour:
         post: 0
         PreFrame: 0
         PostFrame: 2147483647
+    - rid: 1176164152299749460
+      type: {class: ParticleAssetTrack, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        id: 56c517c8ce3b4a4090f5df0ae97cd9df
+        trackName: HitFx01
+        clips:
+        - rid: 1176164152299749462
+    - rid: 1176164152299749462
+      type: {class: ParticleClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        id: e6195515d48e4ba9ba62591611995f66
+        clipName: HitFx01
+        StartFrame: 29
+        EndFrame: 53
+        InFrame: 0
+        OutFrame: 0
+        startColor: {r: 0.55, g: 0.85, b: 1, a: 1}
+        positionOffset: {x: 0, y: 0, z: 0}
+        rotationEuler: {x: 0, y: 0, z: 0}
+        scaleFactor: 1

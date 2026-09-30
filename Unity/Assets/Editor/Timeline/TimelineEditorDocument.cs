@@ -16,6 +16,7 @@ namespace Ux.Editor.Timeline
         readonly Func<bool> isPlaying;
         readonly List<ITimelineEditorSource> sources = new();
         readonly List<ITimelineEditorTrack> tracks = new();
+        readonly List<ITimelineEditorFrameEvent> frameEvents = new();
         readonly Dictionary<ITimelineEditorSource, Action> structureHandlers = new();
         readonly Dictionary<ITimelineEditorSource, Action> changedHandlers = new();
 
@@ -48,6 +49,7 @@ namespace Ux.Editor.Timeline
         }
         public int TrackCount => tracks.Count;
         public IReadOnlyList<ITimelineEditorTrack> Tracks => tracks;
+        public IReadOnlyList<ITimelineEditorFrameEvent> FrameEvents => frameEvents;
 
         public event Action StructureChanged;
         public event Action Changed;
@@ -113,6 +115,18 @@ namespace Ux.Editor.Timeline
             return trackType?.Name ?? string.Empty;
         }
 
+        public TimelineEditorSourceRole GetTrackRole(Type trackType)
+        {
+            foreach (var source in sources)
+            {
+                if (ContainsTrackType(source, trackType))
+                {
+                    return source.Role;
+                }
+            }
+            return TimelineEditorSourceRole.Presentation;
+        }
+
         public ITimelineEditorTrack AddTrack(Type trackType)
         {
             if (!CanEdit)
@@ -137,6 +151,80 @@ namespace Ux.Editor.Timeline
             return owner?.AddTrack(trackType);
         }
 
+        public IReadOnlyList<Type> GetFrameEventTypes()
+        {
+            var result = new List<Type>();
+            foreach (var source in sources)
+            {
+                if (!(source is ITimelineEditorFrameEventSource eventSource))
+                {
+                    continue;
+                }
+                foreach (var eventType in eventSource.GetFrameEventTypes())
+                {
+                    if (eventType != null && !result.Contains(eventType))
+                    {
+                        result.Add(eventType);
+                    }
+                }
+            }
+            return result;
+        }
+
+        public string GetFrameEventDisplayName(Type eventType)
+        {
+            foreach (var source in sources)
+            {
+                if (!(source is ITimelineEditorFrameEventSource eventSource))
+                {
+                    continue;
+                }
+                foreach (var candidate in eventSource.GetFrameEventTypes())
+                {
+                    if (candidate == eventType)
+                    {
+                        return eventSource.GetFrameEventDisplayName(eventType);
+                    }
+                }
+            }
+            return eventType?.Name ?? string.Empty;
+        }
+
+        public ITimelineEditorFrameEvent AddFrameEvent(Type eventType, int frame)
+        {
+            if (!CanEdit)
+            {
+                return null;
+            }
+
+            ITimelineEditorFrameEventSource owner = null;
+            foreach (var source in sources)
+            {
+                if (!source.CanEdit ||
+                    !(source is ITimelineEditorFrameEventSource eventSource) ||
+                    !ContainsFrameEventType(eventSource, eventType))
+                {
+                    continue;
+                }
+                if (owner != null)
+                {
+                    return null;
+                }
+                owner = eventSource;
+            }
+            return owner?.AddFrameEvent(eventType, frame);
+        }
+
+        public bool RemoveFrameEvent(ITimelineEditorFrameEvent frameEvent)
+        {
+            if (frameEvent == null || !CanEdit ||
+                !(frameEvent.Source is ITimelineEditorFrameEventSource eventSource))
+            {
+                return false;
+            }
+            return eventSource.RemoveFrameEvent(frameEvent);
+        }
+
         public bool SetFrameRate(int frameRate)
         {
             if (!CanEdit)
@@ -159,6 +247,7 @@ namespace Ux.Editor.Timeline
             {
                 ITimelineEditorTrack track => track.Source,
                 ITimelineEditorClip clip => clip.Track?.Source,
+                ITimelineEditorFrameEvent frameEvent => frameEvent.Source,
                 _ => null,
             };
             return owner != null && sources.Contains(owner)
@@ -256,6 +345,7 @@ namespace Ux.Editor.Timeline
         void RebuildTracks()
         {
             tracks.Clear();
+            frameEvents.Clear();
             foreach (var source in sources)
             {
                 foreach (var track in source.Tracks)
@@ -265,7 +355,33 @@ namespace Ux.Editor.Timeline
                         tracks.Add(track);
                     }
                 }
+                if (source is ITimelineEditorFrameEventSource eventSource)
+                {
+                    foreach (var frameEvent in eventSource.FrameEvents)
+                    {
+                        if (frameEvent != null)
+                        {
+                            frameEvents.Add(frameEvent);
+                        }
+                    }
+                }
             }
+        }
+
+        static bool ContainsFrameEventType(ITimelineEditorFrameEventSource source, Type eventType)
+        {
+            if (source == null || eventType == null)
+            {
+                return false;
+            }
+            foreach (var candidate in source.GetFrameEventTypes())
+            {
+                if (candidate == eventType)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         static bool ContainsTrackType(ITimelineEditorSource source, Type trackType)

@@ -330,8 +330,8 @@ namespace Ux.Editor.Combat.Tests
                 StringAssert.DoesNotContain("CombatLogicTimelineSource", script.text, path);
                 StringAssert.DoesNotContain("CombatCancelWindowEditorTrack", script.text, path);
                 StringAssert.DoesNotContain("CombatCancelWindowEditorClip", script.text, path);
-                StringAssert.DoesNotContain("CombatHitWindowEditorTrack", script.text, path);
-                StringAssert.DoesNotContain("CombatHitWindowEditorClip", script.text, path);
+                StringAssert.DoesNotContain("CombatHitboxWindowEditorTrack", script.text, path);
+                StringAssert.DoesNotContain("CombatHitboxWindowEditorClip", script.text, path);
             }
         }
 

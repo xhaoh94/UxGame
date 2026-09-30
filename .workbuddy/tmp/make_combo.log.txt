@@ -1,0 +1,14 @@
+OK  combat  C:\Project\UxGame\Unity\Assets\Data\Res\Combat\HeroZS\HeroZSAttack01.asset
+OK  combat  C:\Project\UxGame\Unity\Assets\Data\Res\Combat\HeroZS\HeroZSAttack02.asset
+OK  combat  C:\Project\UxGame\Unity\Assets\Data\Res\Combat\HeroZS\HeroZSAttack03.asset
+    refs ok: ['1176164152299749448', '1176164152299749450', '1176164152299749460', '1176164152299749462']
+OK  timeline C:\Project\UxGame\Unity\Assets\Data\Res\Timeline\HeroZS\HeroZSAttack01.asset
+    refs ok: ['1176164152299749470', '1176164152299749472', '1176164152299749474', '1176164152299749476']
+OK  timeline C:\Project\UxGame\Unity\Assets\Data\Res\Timeline\HeroZS\HeroZSAttack02.asset
+    refs ok: ['1176164152299749480', '1176164152299749482', '1176164152299749484', '1176164152299749486']
+OK  timeline C:\Project\UxGame\Unity\Assets\Data\Res\Timeline\HeroZS\HeroZSAttack03.asset
+OK  meta    C:\Project\UxGame\Unity\Assets\Data\Res\Combat\HeroZS\HeroZSAttack02.asset.meta
+OK  meta    C:\Project\UxGame\Unity\Assets\Data\Res\Timeline\HeroZS\HeroZSAttack02.asset.meta
+OK  meta    C:\Project\UxGame\Unity\Assets\Data\Res\Combat\HeroZS\HeroZSAttack03.asset.meta
+OK  meta    C:\Project\UxGame\Unity\Assets\Data\Res\Timeline\HeroZS\HeroZSAttack03.asset.meta
+SKIP profile锛堝凡娉ㄥ唽涓夋锛?

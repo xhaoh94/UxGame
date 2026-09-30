@@ -2,15 +2,15 @@ using System.Collections.Generic;
 
 namespace Ux
 {
-    /// <summary>本帧开放的一条取消窗口快照。只复制可序列化参数，不持有 CombatActionAsset 引用。</summary>
-    public readonly struct CombatActiveCancelWindow
+    /// <summary>本帧开放的一条动作窗口快照（可取消窗口或连招衔接）。只复制可序列化参数，不持有 CombatActionAsset 引用。</summary>
+    public readonly struct CombatActiveActionWindow
     {
-        public CombatActiveCancelWindow(
+        public CombatActiveActionWindow(
             long actionInstanceId,
             int actionId,
             int actionFrame,
             int windowIndex,
-            ActionCancelWindow window)
+            ActionTargetWindow window)
         {
             ActionInstanceId = actionInstanceId;
             ActionId = actionId;
@@ -31,17 +31,47 @@ namespace Ux
         public int StartFrame { get; }
         public int EndFrame { get; }
 
-        /// <summary>允许取消成哪个动作。0 表示没有指向任何动作。</summary>
+        /// <summary>允许切换到哪个动作。0 表示没有指向任何动作。</summary>
         public int TargetActionId { get; }
 
         public bool RequiresHitConfirm { get; }
+    }
+
+    /// <summary>本帧成立的一条离散生成事件快照。只复制事件位置、身份与生成物配置。</summary>
+    public readonly struct CombatActiveSpawnEvent
+    {
+        public CombatActiveSpawnEvent(
+            long actionInstanceId,
+            int actionId,
+            int actionFrame,
+            int eventIndex,
+            ActionSpawnEvent frameEvent)
+        {
+            ActionInstanceId = actionInstanceId;
+            ActionId = actionId;
+            ActionFrame = actionFrame;
+            EventIndex = eventIndex;
+            EventId = frameEvent?.StableId ?? string.Empty;
+            Frame = frameEvent?.Frame ?? 0;
+            SpawnProfile = frameEvent?.SpawnProfile;
+        }
+
+        public long ActionInstanceId { get; }
+        public int ActionId { get; }
+        public int ActionFrame { get; }
+        public int EventIndex { get; }
+        public string EventId { get; }
+        public int Frame { get; }
+
+        /// <summary>生成什么。为空表示事件配置不完整，消费方跳过。</summary>
+        public CombatSpawnProfile SpawnProfile { get; }
     }
 
     /// <summary>
     /// 单个单位在一个逻辑帧内的帧事件集合，Timeline 阶段的产物、后续阶段的输入。
     ///
     /// 可变对象 + 池化复用（表项内含 List，做成 struct 会陷进引用共享），每帧 Reset 后填充、之后只读。
-    /// 只放"按帧区间成立"的东西；单位自身状态（位置、HP）不在这里。
+    /// 窗口记录"当前帧成立的区间事实"，事件记录"当前帧触发的离散事实"；单位自身状态（位置、HP）不在这里。
     /// </summary>
     public sealed class CombatFrameEventSet
     {
@@ -50,18 +80,23 @@ namespace Ux
         public int ActionId { get; private set; }
         public int ActionFrame { get; private set; }
 
-        /// <summary>本帧该动作是否已确认命中，取消窗口的 RequiresHitConfirm 靠它判定。</summary>
+        /// <summary>本帧该动作是否已确认命中，动作窗口的 RequiresHitConfirm 靠它判定。</summary>
         public bool HasHitConfirmed { get; private set; }
 
-        /// <summary>本帧处于激活区间的命中窗口，顺序与资产配置顺序一致。</summary>
-        public List<CombatActiveHitWindow> HitWindows { get; } = new();
+        /// <summary>本帧处于激活区间的攻击判定，顺序与资产配置顺序一致。</summary>
+        public List<CombatActiveHitboxWindow> HitboxWindows { get; } = new();
 
-        /// <summary>本帧处于开放区间的取消窗口，顺序与资产配置顺序一致。</summary>
-        public List<CombatActiveCancelWindow> CancelWindows { get; } = new();
+        /// <summary>本帧处于开放区间的动作窗口，顺序与资产配置顺序一致。</summary>
+        public List<CombatActiveActionWindow> ActionWindows { get; } = new();
 
-        public bool HasHitWindows => HitWindows.Count > 0;
+        /// <summary>本帧成立的离散生成事件，顺序与资产事件列表顺序一致。</summary>
+        public List<CombatActiveSpawnEvent> SpawnEvents { get; } = new();
 
-        public bool HasCancelWindows => CancelWindows.Count > 0;
+        public bool HasHitboxWindows => HitboxWindows.Count > 0;
+
+        public bool HasActionWindows => ActionWindows.Count > 0;
+
+        public bool HasSpawnEvents => SpawnEvents.Count > 0;
 
         internal void Reset(long entityId, in CombatActionSnapshot action, bool hasHitConfirmed)
         {
@@ -70,14 +105,15 @@ namespace Ux
             ActionId = action.ActionId;
             ActionFrame = action.ActionFrame;
             HasHitConfirmed = hasHitConfirmed;
-            HitWindows.Clear();
-            CancelWindows.Clear();
+            HitboxWindows.Clear();
+            ActionWindows.Clear();
+            SpawnEvents.Clear();
         }
     }
 
     /// <summary>
     /// 一个世界的「本帧帧事件表」：阶段之间唯一的交接方式，插件互不持有引用。
-    /// Timeline 阶段写，Hitbox / Damage / Buff 读。
+    /// Timeline 阶段写，Hitbox / Damage / Buff / Spawn 读。
     ///
     /// 每逻辑帧开头由 BattleWorld 调 BeginFrame 清空，所以读到的永远是本帧结果、不会残留上一帧 ——
     /// 即使 Timeline 插件没注册，读到的也只是空表而不是脏数据。

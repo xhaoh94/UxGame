@@ -1,5 +1,7 @@
 using Assets.Editor.Timeline;
 using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -27,7 +29,12 @@ namespace Ux.Editor.Timeline
         VisualElement _rulerViewport;
         VisualElement _canvas;
         VisualElement _grid;
+        VisualElement _frameEventMarkerContent;
         VisualElement _playheadLine;
+        readonly Dictionary<ITimelineEditorFrameEvent, VisualElement> _frameEventMarkers = new();
+        ITimelineEditorFrameEvent _draggingFrameEvent;
+        VisualElement _draggingFrameEventMarker;
+        int _draggingFrameEventPointerId = -1;
         ScrollView _inspectorScroll;
         bool _syncingVerticalScroll;
         bool _scrubbing;
@@ -68,6 +75,7 @@ namespace Ux.Editor.Timeline
             RegisterCallback<PointerMoveEvent>(OnMiddlePointerMove);
             RegisterCallback<PointerUpEvent>(OnMiddlePointerUp);
 
+            _rulerViewport.RegisterCallback<PointerDownEvent>(OnRulerContextMenu);
             _rulerViewport.RegisterCallback<PointerDownEvent>(OnScrubDown);
             _rulerViewport.RegisterCallback<PointerMoveEvent>(OnScrubMove);
             _rulerViewport.RegisterCallback<PointerUpEvent>(OnScrubUp);
@@ -116,6 +124,13 @@ namespace Ux.Editor.Timeline
             veLineContent.style.height = RulerHeight;
             veLineContent.generateVisualContent += OnDrawRuler;
             _rulerViewport.Add(veLineContent);
+
+            _frameEventMarkerContent = new VisualElement { pickingMode = PickingMode.Ignore };
+            _frameEventMarkerContent.style.position = Position.Absolute;
+            _frameEventMarkerContent.style.left = 0;
+            _frameEventMarkerContent.style.top = 0;
+            _frameEventMarkerContent.style.height = RulerHeight;
+            _rulerViewport.Add(_frameEventMarkerContent);
 
             veMarkerContent = new VisualElement { pickingMode = PickingMode.Ignore };
             veMarkerContent.style.position = Position.Absolute;
@@ -231,8 +246,10 @@ namespace Ux.Editor.Timeline
             veClipContent.style.height = rowsHeight;
             _playheadLine.style.height = _contentHeight;
             veLineContent.style.width = _contentWidth;
+            _frameEventMarkerContent.style.width = _contentWidth;
             veMarkerContent.style.width = _contentWidth;
 
+            RefreshFrameEventMarkers();
             UpdateHorizontalOffset();
             UpdateMarker();
             veLineContent.MarkDirtyRepaint();
@@ -264,6 +281,7 @@ namespace Ux.Editor.Timeline
         {
             var x = -(scrClipView?.scrollOffset.x ?? 0);
             veLineContent.style.translate = new Translate(x, 0);
+            _frameEventMarkerContent.style.translate = new Translate(x, 0);
             veMarkerContent.style.translate = new Translate(x, 0);
         }
 
@@ -344,6 +362,45 @@ namespace Ux.Editor.Timeline
             evt.StopPropagation();
         }
 
+        void OnRulerContextMenu(PointerDownEvent evt)
+        {
+            if (evt.button != 1 || TimelineWindow.Document?.CanEdit != true)
+            {
+                return;
+            }
+
+            var eventTypes = TimelineWindow.Document.GetFrameEventTypes();
+            var frame = GetFrameAtRulerPosition(evt.position);
+            var menu = new GenericMenu();
+            if (eventTypes == null || eventTypes.Count == 0)
+            {
+                menu.AddDisabledItem(new GUIContent("没有可用的帧事件类型"));
+            }
+            else
+            {
+                for (var i = 0; i < eventTypes.Count; i++)
+                {
+                    var eventType = eventTypes[i];
+                    var displayName = TimelineWindow.Document.GetFrameEventDisplayName(eventType);
+                    menu.AddItem(
+                        new GUIContent($"添加/{displayName}"),
+                        false,
+                        () => AddFrameEventAt(eventType, frame));
+                }
+            }
+            menu.ShowAsContext();
+            evt.StopPropagation();
+        }
+
+        void AddFrameEventAt(Type eventType, int frame)
+        {
+            var frameEvent = TimelineWindow.Document?.AddFrameEvent(eventType, frame);
+            if (frameEvent != null)
+            {
+                TimelineWindow.InspectorContent?.FreshInspector(frameEvent, null);
+            }
+        }
+
         void OnScrubDown(PointerDownEvent evt)
         {
             if (evt.button != 0 || !TimelineWindow.IsValid())
@@ -382,10 +439,15 @@ namespace Ux.Editor.Timeline
 
         void ScrubAt(Vector2 worldPosition)
         {
+            SetNowFrame(GetFrameAtRulerPosition(worldPosition));
+        }
+
+        int GetFrameAtRulerPosition(Vector2 worldPosition)
+        {
             var local = _rulerViewport.WorldToLocal(worldPosition);
             var frame = Mathf.RoundToInt(
                 (local.x + scrClipView.scrollOffset.x - TimeOriginPadding) / _pixelsPerFrame);
-            SetNowFrame(Mathf.Max(0, frame));
+            return Mathf.Clamp(frame, 0, Mathf.Max(0, TimelineWindow.Document?.DurationFrames ?? 0));
         }
 
         float GetPositionByFrame(int frame)
@@ -443,6 +505,174 @@ namespace Ux.Editor.Timeline
         void RefreshClipItems()
         {
             RefreshLayout();
+        }
+
+        void RefreshFrameEventMarkers()
+        {
+            if (_frameEventMarkerContent == null)
+            {
+                return;
+            }
+
+            var events = TimelineWindow.Document?.FrameEvents;
+            var active = new HashSet<ITimelineEditorFrameEvent>();
+            if (events != null)
+            {
+                for (var i = 0; i < events.Count; i++)
+                {
+                    if (events[i] != null)
+                    {
+                        active.Add(events[i]);
+                    }
+                }
+            }
+
+            var stale = new List<ITimelineEditorFrameEvent>();
+            foreach (var pair in _frameEventMarkers)
+            {
+                if (!active.Contains(pair.Key))
+                {
+                    _frameEventMarkerContent.Remove(pair.Value);
+                    stale.Add(pair.Key);
+                }
+            }
+            for (var i = 0; i < stale.Count; i++)
+            {
+                _frameEventMarkers.Remove(stale[i]);
+            }
+
+            if (events == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < events.Count; i++)
+            {
+                var frameEvent = events[i];
+                if (frameEvent == null)
+                {
+                    continue;
+                }
+
+                if (!_frameEventMarkers.TryGetValue(frameEvent, out var marker))
+                {
+                    marker = CreateFrameEventMarker(frameEvent);
+                    _frameEventMarkers.Add(frameEvent, marker);
+                    _frameEventMarkerContent.Add(marker);
+                }
+
+                marker.tooltip = $"{frameEvent.Name} @ {frameEvent.Frame}";
+                marker.style.left = GetPositionByFrame(frameEvent.Frame) - 5;
+                marker.style.backgroundColor = frameEvent.Color;
+            }
+        }
+
+        VisualElement CreateFrameEventMarker(ITimelineEditorFrameEvent frameEvent)
+        {
+            var marker = new VisualElement
+            {
+                pickingMode = PickingMode.Position,
+            };
+            marker.style.position = Position.Absolute;
+            marker.style.top = 10;
+            marker.style.width = 10;
+            marker.style.minWidth = 10;
+            marker.style.height = 16;
+            marker.style.minHeight = 16;
+            marker.style.borderTopLeftRadius = 5;
+            marker.style.borderTopRightRadius = 5;
+            marker.style.borderBottomLeftRadius = 5;
+            marker.style.borderBottomRightRadius = 5;
+
+            marker.RegisterCallback<PointerDownEvent>(evt => OnFrameEventPointerDown(marker, frameEvent, evt));
+            marker.RegisterCallback<PointerMoveEvent>(evt => OnFrameEventPointerMove(marker, frameEvent, evt));
+            marker.RegisterCallback<PointerUpEvent>(evt => OnFrameEventPointerUp(marker, frameEvent, evt));
+            marker.RegisterCallback<PointerCaptureOutEvent>(_ =>
+            {
+                if (ReferenceEquals(_draggingFrameEventMarker, marker))
+                {
+                    ClearFrameEventDrag(marker);
+                }
+            });
+            return marker;
+        }
+
+        void OnFrameEventPointerDown(
+            VisualElement marker,
+            ITimelineEditorFrameEvent frameEvent,
+            PointerDownEvent evt)
+        {
+            if (evt.button == 1)
+            {
+                ShowFrameEventContextMenu(frameEvent);
+                evt.StopPropagation();
+                return;
+            }
+            if (evt.button != 0 || TimelineWindow.Document?.CanEdit != true)
+            {
+                return;
+            }
+
+            TimelineWindow.InspectorContent?.FreshInspector(frameEvent, null);
+            _draggingFrameEvent = frameEvent;
+            _draggingFrameEventMarker = marker;
+            _draggingFrameEventPointerId = evt.pointerId;
+            marker.CapturePointer(evt.pointerId);
+            evt.StopPropagation();
+        }
+
+        void OnFrameEventPointerMove(
+            VisualElement marker,
+            ITimelineEditorFrameEvent frameEvent,
+            PointerMoveEvent evt)
+        {
+            if (!ReferenceEquals(_draggingFrameEvent, frameEvent) ||
+                !ReferenceEquals(_draggingFrameEventMarker, marker) ||
+                !marker.HasPointerCapture(evt.pointerId))
+            {
+                return;
+            }
+
+            frameEvent.SetFrame(GetFrameAtRulerPosition(evt.position));
+            evt.StopPropagation();
+        }
+
+        void OnFrameEventPointerUp(
+            VisualElement marker,
+            ITimelineEditorFrameEvent frameEvent,
+            PointerUpEvent evt)
+        {
+            if (!ReferenceEquals(_draggingFrameEvent, frameEvent) ||
+                !ReferenceEquals(_draggingFrameEventMarker, marker) ||
+                evt.button != 0)
+            {
+                return;
+            }
+
+            ClearFrameEventDrag(marker);
+            evt.StopPropagation();
+        }
+
+        void ClearFrameEventDrag(VisualElement marker)
+        {
+            var pointerId = _draggingFrameEventPointerId;
+            _draggingFrameEvent = null;
+            _draggingFrameEventMarker = null;
+            _draggingFrameEventPointerId = -1;
+            if (marker != null && pointerId >= 0 && marker.HasPointerCapture(pointerId))
+            {
+                marker.ReleasePointer(pointerId);
+            }
+        }
+
+        void ShowFrameEventContextMenu(ITimelineEditorFrameEvent frameEvent)
+        {
+            var menu = new GenericMenu();
+            menu.AddItem(
+                new GUIContent("删除事件"),
+                false,
+                () => TimelineWindow.Document?.RemoveFrameEvent(frameEvent));
+            menu.ShowAsContext();
         }
 
         void OnDrawPlayheadHandle(MeshGenerationContext mgc)

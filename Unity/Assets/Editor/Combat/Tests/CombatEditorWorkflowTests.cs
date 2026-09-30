@@ -415,7 +415,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var action = CombatTestProfiles.CreateAction(1001, "attack", 3);
             var serialized = new SerializedObject(action);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             window.FindPropertyRelative("StartFrame").intValue = 2;
@@ -429,7 +429,7 @@ namespace Ux.Editor.Combat.Tests
                 var issues = CombatEditorUtility.ValidateProfile(profile);
                 Assert.IsNotNull(issues.Find(value =>
                     value.Severity == CombatValidationSeverity.Error &&
-                    value.Message.Contains("命中窗口终点超出逻辑时长")));
+                    value.Message.Contains("攻击判定终点超出逻辑时长")));
             }
             finally
             {

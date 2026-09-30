@@ -1,0 +1,14 @@
+=== 1. 资产层 ===
+  OK   HeroZSAttack01.asset  pos=0 0 0  rot=0 0 0  scale=1
+  OK   HeroZSAttack02.asset  pos=0.25 0.15 0  rot=0 45 0  scale=1.4
+  OK   HeroZSAttack03.asset  pos=-0.3 0.3 0.4  rot=0 0 30  scale=2
+=== 2. 代码层 ===
+  OK   ParticleClipAsset 三个位姿字段
+  OK   TLParticleClip 应用/还原/复位
+  OK   scaleFactor 哨兵
+  OK   ParticleClipInspector 字段与回填
+  OK   TimelineWindow 预览接上占位特效宿主
+=== 3. 字段引用一致性 ===
+  OK   引用闭合：StartFrame, positionOffset, rotationEuler, scaleFactor, startColor
+       （声明的其它字段 DurationFrames, EndFrame, Id, InFrame, OutFrame, clipName）
+ALL OK

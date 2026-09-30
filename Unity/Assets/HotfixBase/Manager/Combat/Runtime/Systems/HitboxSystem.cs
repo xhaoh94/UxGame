@@ -37,7 +37,7 @@ namespace Ux
             for (var i = 0; i < events.Count; i++)
             {
                 var set = events[i];
-                if (!set.HasHitWindows)
+                if (!set.HasHitboxWindows)
                 {
                     continue;
                 }
@@ -55,10 +55,12 @@ namespace Ux
 
                 // 必须在循环内清：_hits 跨攻击者复用，上一位的命中不能带进下一位。
                 _hits.Clear();
+                // 投射物豁免发射者自己：弹体在发射者位置生成，不豁免会当场打中发射者。
+                var exclude = entity is ICombatProjectile projectile ? projectile.SpawnerId : 0;
                 var added = CombatHitResolver.AppendResolvedHits(
                     entity.Controller.ActionRunner,
-                    new CombatHitQuerySource(set.EntityId, ToFixedPoint(entity.Position)),
-                    set.HitWindows,
+                    new CombatHitQuerySource(set.EntityId, ToFixedPoint(entity.Position), exclude),
+                    set.HitboxWindows,
                     _targets,
                     _hits);
 
@@ -98,6 +100,12 @@ namespace Ux
                     continue;
                 }
 
+                // 投射物没有阵营，也不该被刀光砍下来。不排除它，同场的多个投射物会互相命中。
+                if (entity is ICombatProjectile projectile && !projectile.CanBeTargeted)
+                {
+                    continue;
+                }
+
                 if (entity.Controller.StateMachine.Life == LifeState.Alive)
                 {
                     _targets.Add(new CombatHitTarget(entity.Id, ToFixedPoint(entity.Position)));
@@ -108,13 +116,13 @@ namespace Ux
         /// <summary>窗口激活但一个目标都没进圈时的诊断输出。</summary>
         private static void LogActiveWindowWithoutHit(CombatFrameEventSet set, long frame, int targetCount)
         {
-            for (var i = 0; i < set.HitWindows.Count; i++)
+            for (var i = 0; i < set.HitboxWindows.Count; i++)
             {
-                var window = set.HitWindows[i];
-                Log.Debug($"[Hitbox] frame={frame} {set.EntityId} 窗口激活 " +
-                          $"actionFrame={window.ActionFrame} [{window.StartFrame},{window.EndFrame}) " +
-                          $"shape={window.Shape} radius={window.RadiusMillimeters}mm " +
-                          $"候选目标={targetCount} 命中=0");
+                var window = set.HitboxWindows[i];
+                // Log.Debug($"[Hitbox] frame={frame} {set.EntityId} 窗口激活 " +
+                //           $"actionFrame={window.ActionFrame} [{window.StartFrame},{window.EndFrame}) " +
+                //           $"shape={window.Shape} radius={window.RadiusMillimeters}mm " +
+                //           $"候选目标={targetCount} 命中=0");
             }
         }
 

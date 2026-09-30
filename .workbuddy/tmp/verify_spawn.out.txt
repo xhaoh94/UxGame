@@ -1,0 +1,49 @@
+== 1. 括号配平（剥注释） ==
+  OK     {} 6/6  () 15/15  [] 4/4  CombatLogicWindow.cs
+  OK     {} 33/33  () 88/88  [] 23/23  CombatActionAsset.cs
+  OK     {} 7/7  () 19/19  [] 8/8  CombatSpawnProfile.cs
+  OK     {} 5/5  () 3/3  [] 4/4  CombatSpawnPresentation.cs
+  OK     {} 72/72  () 174/174  [] 16/16  CharacterCombatProfile.cs
+  OK     {} 57/57  () 122/122  [] 5/5  CombatWindowEditorBase.cs
+  OK     {} 44/44  () 105/105  [] 2/2  CombatLogicTimelineSource.cs
+  OK     {} 14/14  () 30/30  [] 0/0  CombatCancelWindowEditorAdapters.cs
+  OK     {} 14/14  () 34/34  [] 1/1  CombatHitWindowEditorAdapters.cs
+  OK     {} 13/13  () 30/30  [] 0/0  CombatSpawnWindowEditorAdapters.cs
+  OK     {} 11/11  () 44/44  [] 0/0  CombatSpawnWindowInspectors.cs
+  OK     {} 50/50  () 410/410  [] 68/68  CombatLogicTimelineSourceTests.cs
+  OK     {} 40/40  () 193/193  [] 16/16  TimelineEditorSourceTests.cs
+
+== 2. 新增类型定义齐全 ==
+  OK   CombatLogicWindow
+  OK   ActionSpawnWindow
+  OK   ActionCancelWindow 继承基类
+  OK   ActionHitWindow 继承基类
+  OK   CombatSpawnProfile
+  OK   CombatSpawnPresentation
+  OK   ICombatLogicTimelineInspectorSource
+  OK   CombatWindowEditorTrackBase
+  OK   CombatWindowEditorClipBase
+  OK   CombatCancelWindowEditorTrack
+  OK   CombatHitWindowEditorTrack
+  OK   CombatSpawnWindowEditorTrack
+  OK   CombatSpawnWindowTrackInspector
+  OK   CombatSpawnWindowClipInspector
+
+== 3. CombatActionAsset 加轨的 5 处同步 ==
+  字段 / 属性 / ValidateData / Migrate / OnValidate 全部就位
+
+== 4. CharacterCombatProfile 加映射的 4 处同步 ==
+  字段 / 属性 / 查询 / ValidateData / ValidateRuntime 全部就位
+
+== 5. 轨基类抽象成员在各子类都有实现 ==
+  OK   cancel 轨 8 个抽象成员 + 片段成员
+  OK   hit 轨 8 个抽象成员 + 片段成员
+  OK   spawn 轨 8 个抽象成员 + 片段成员
+
+== 6. Source 不再认识具体窗口类型 ==
+  三条轨按顺序构造，Inspector 走接口分派，无具体类型 switch
+
+== 7. 测试同步 ==
+  TrackCount=4、索引 2、3 个新测试、契约测试类型名 全部就位
+
+ALL OK

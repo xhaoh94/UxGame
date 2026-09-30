@@ -1,0 +1,46 @@
+== 琛屽熬锛堝師濮嬪瓧鑺傦級 ==
+player     crlf=160 lf=160 -> CRLF
+component  crlf=399 lf=399 -> CRLF
+window     crlf=1391 lf=1391 -> CRLF
+test       crlf=50 lf=50 -> CRLF
+
+== 娈嬬暀璇嶆壂鎻忥紙Assets 鍏ㄩ噺锛?==
+OwnerKey               0 澶?[]
+_framePlanInitialized  0 澶?[]
+preview:action-only    0 澶?[]
+preview:action:        0 澶?[]
+state:{(int)           0 澶?[]
+
+== 鎷彿鍑€閰嶅宸紙{ - } / ( - ) 锛?==
+player     鑺辨嫭鍙峰樊=0 鍦嗘嫭鍙峰樊=0
+component  鑺辨嫭鍙峰樊=0 鍦嗘嫭鍙峰樊=0
+window     鑺辨嫭鍙峰樊=0 鍦嗘嫭鍙峰樊=0
+test       鑺辨嫭鍙峰樊=0 鍦嗘嫭鍙峰樊=0
+
+== 鍏抽敭璋冪敤鐐?==
+player       25  public bool SameOwner(in CombatTimelineSelection other) =>
+player       62  return new CombatTimelinePlan(new CombatTimelineSelection(life.Timeline, states.GetStateFrame(StateLayer.Life)), default, true);
+player       69  return new CombatTimelinePlan(new CombatTimelineSelection(control.Timeline, states.GetStateFrame(StateLayer.Control)), default, true);
+player       80  actionSelection = new CombatTimelineSelection(asset, actions.Current.ActionFrame, actions.Current.InstanceId);
+player       83  var baseSelection = new CombatTimelineSelection(locomotion?.Timeline, states.GetStateFrame(StateLayer.Locomotion));
+player       99  var baseChanged = force || !_baseOwner.SameOwner(plan.Base) ||
+player      101  var actionChanged = force || !_actionOwner.SameOwner(plan.Action) ||
+component    96  RefreshTimeline(true);
+component   216  RefreshTimeline(false);
+component   226  RefreshTimeline(false);
+component   246  RefreshTimeline(false);
+component   266  RefreshTimeline(true);
+component   277  RefreshTimeline(false);
+component   294  RefreshTimeline(true);
+component   306  RefreshTimeline(true);
+component   329  private void RefreshTimeline(bool force)
+window     1357  var baseSelection = new CombatTimelineSelection(baseAsset, frame);
+window     1358  var actionSelection = new CombatTimelineSelection(Asset, frame);
+test         11  var selection = new CombatTimelineSelection(null, -4);
+test         21  var baseSelection = new CombatTimelineSelection(null, 12);
+test         22  var actionSelection = new CombatTimelineSelection(null, 4, 7);
+test         36  public void SameOwnerIgnoresFrameAndTracksAssetAndInstance()
+test         41  Assert.IsTrue(new CombatTimelineSelection(first, 3).SameOwner(new CombatTimelineSelection(first, 90)));
+test         42  Assert.IsFalse(new CombatTimelineSelection(first, 3).SameOwner(new CombatTimelineSelection(second, 3)));
+test         43  Assert.IsFalse(new CombatTimelineSelection(first, 3, 1).SameOwner(new CombatTimelineSelection(first, 3, 2)));
+test         44  Assert.IsTrue(default(CombatTimelineSelection).SameOwner(new CombatTimelineSelection(null, 5)));

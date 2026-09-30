@@ -24,21 +24,31 @@ namespace Ux
         public long TargetId;
     }
 
+    /// <summary>已消费生成事件的去重快照。生成不针对目标，因此没有 TargetId。</summary>
+    [Serializable]
+    public struct CombatSpawnedEventSnapshot
+    {
+        public long ActionInstanceId;
+        public string EventId;
+    }
+
     [Serializable]
     public sealed class UnitCombatSnapshot
     {
         /// <summary>
-        /// 1 → 2：加入 Attributes 与 Buffs；2 → 3：移除 CombatStateMachineSnapshot 的 Action 层快照。
+        /// 1 → 2：加入 Attributes 与 Buffs；2 → 3：移除 CombatStateMachineSnapshot 的 Action 层快照；
+        /// 3 → 4：加入 SpawnedEvents（生成事件去重）。
         /// 版本号必须跟着字段一起涨（RestoreSnapshot 会拒绝版本不一致的快照）——旧快照还原新结构会让状态数据
         /// 静默错位，比直接拒绝危险。快照无落盘、无网络传输，升级不需兼容旧数据。
         /// </summary>
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int Version;
         public CombatStateMachineSnapshot StateMachine;
         public CombatActionSnapshot Action;
         public bool HasAction;
         public CombatAcceptedHitSnapshot[] AcceptedHits;
+        public CombatSpawnedEventSnapshot[] SpawnedEvents;
         public long LocalActionSequence;
         public bool IsGrounded;
         public UnitAttributeSnapshot Attributes;
@@ -62,12 +72,12 @@ namespace Ux
     }
 
     /// <summary>
-    /// 当前逻辑帧内处于激活状态的一条命中窗口快照。它只携带可复制的逻辑形状参数，
+    /// 当前逻辑帧内处于激活状态的一条攻击判定快照。它只携带可复制的逻辑形状参数，
     /// 不持有 CombatActionAsset 引用，也不包含目标属性或伤害。
     /// </summary>
-    public readonly struct CombatActiveHitWindow
+    public readonly struct CombatActiveHitboxWindow
     {
-        public CombatActiveHitWindow(long actionInstanceId, int actionId, int actionFrame, int windowIndex, ActionHitWindow window)
+        public CombatActiveHitboxWindow(long actionInstanceId, int actionId, int actionFrame, int windowIndex, ActionHitboxWindow window)
         {
             ActionInstanceId = actionInstanceId;
             ActionId = actionId;
@@ -101,6 +111,9 @@ namespace Ux
     {
         private readonly Dictionary<int, CombatActionAsset> _actions = new();
         private readonly HashSet<CombatHitKey> _acceptedHits = new();
+
+        // 生成去重与命中去重共用键类型：生成不针对目标，TargetId 恒为 0。
+        private readonly HashSet<CombatHitKey> _spawnedEvents = new();
         private long _simulationFrame;
         private bool _initialized;
 
@@ -117,6 +130,35 @@ namespace Ux
         /// </summary>
         public bool BlocksMovement =>
             CurrentAsset?.MovementPolicy == ActionMovementPolicy.Block;
+
+        /// <summary>
+        /// 连招查表：当前动作第一条已打开的连招衔接窗口指向哪个动作；没有动作或窗口都没打开时返回链头。
+        ///
+        /// 只读 LinkWindows。泛化取消窗口（CancelWindows）由各自的技能输入触发，
+        /// 不参与连招解析 —— 否则"按攻击键出闪避"这种串台会随资源增长而必然出现。
+        ///
+        /// 与 TryCancel 共用 IsOpen 判据，所以返回的动作号下一帧一定能被 TryCancel 接受，
+        /// 输入层因此只需要认识"链头"这一个 ActionId。读取发生在逻辑帧之外、下一帧才被消费 ——
+        /// 窗口最后一帧按下会落到窗口外，这是命令"下一帧生效"的固有代价。
+        /// </summary>
+        public int ResolveComboTarget(int chainRootActionId)
+        {
+            if (!HasAction || CurrentAsset.LinkWindows == null)
+            {
+                return chainRootActionId;
+            }
+
+            var links = CurrentAsset.LinkWindows;
+            for (var i = 0; i < links.Count; i++)
+            {
+                var window = links[i];
+                if (window != null && window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
+                {
+                    return window.TargetActionId;
+                }
+            }
+            return chainRootActionId;
+        }
 
         public void Initialize(CharacterCombatProfile profile, long simulationFrame)
         {
@@ -159,9 +201,17 @@ namespace Ux
                 {
                     throw new InvalidOperationException($"取消窗口列表为空引用: action={action.name}");
                 }
-                if (action.HitWindows == null)
+                if (action.LinkWindows == null)
                 {
-                    throw new InvalidOperationException($"命中窗口列表为空引用: action={action.name}");
+                    throw new InvalidOperationException($"连招衔接窗口列表为空引用: action={action.name}");
+                }
+                if (action.HitboxWindows == null)
+                {
+                    throw new InvalidOperationException($"攻击判定列表为空引用: action={action.name}");
+                }
+                if (action.FrameEvents == null)
+                {
+                    throw new InvalidOperationException($"帧事件列表为空引用: action={action.name}");
                 }
 
                 var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
@@ -190,11 +240,11 @@ namespace Ux
                             $"取消窗口目标动作不存在: action={action.name}, target={window.TargetActionId}");
                     }
                 }
-                foreach (var window in action.HitWindows)
+                foreach (var window in action.LinkWindows)
                 {
                     if (window == null)
                     {
-                        throw new InvalidOperationException($"命中窗口为空引用: action={action.name}");
+                        throw new InvalidOperationException($"连招衔接窗口为空引用: action={action.name}");
                     }
                     if (string.IsNullOrEmpty(window.StableId) ||
                         !logicItemIds.Add(window.StableId))
@@ -207,15 +257,59 @@ namespace Ux
                         window.EndFrame > action.DurationFrames)
                     {
                         throw new InvalidOperationException(
-                            $"命中窗口区间无效: action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                            $"连招衔接窗口区间无效: action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                    }
+                    if (!_actions.ContainsKey(window.TargetActionId))
+                    {
+                        throw new InvalidOperationException(
+                            $"连招衔接窗口目标动作不存在: action={action.name}, target={window.TargetActionId}");
+                    }
+                }
+                foreach (var window in action.HitboxWindows)
+                {
+                    if (window == null)
+                    {
+                        throw new InvalidOperationException($"攻击判定为空引用: action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(window.StableId) ||
+                        !logicItemIds.Add(window.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: action={action.name}, item={window.StableId}");
+                    }
+                    if (window.StartFrame < 0 ||
+                        window.EndFrame <= window.StartFrame ||
+                        window.EndFrame > action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"攻击判定区间无效: action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
                     }
                     if (!Enum.IsDefined(typeof(ActionHitShape), window.Shape) ||
                         window.RadiusMillimeters <= 0 ||
                         window.RadiusMillimeters > 10000000)
                     {
                         throw new InvalidOperationException(
-                            $"命中窗口形状参数无效: action={action.name}, shape={window.Shape}, radius={window.RadiusMillimeters}");
+                            $"攻击判定形状参数无效: action={action.name}, shape={window.Shape}, radius={window.RadiusMillimeters}");
                     }
+                }
+                foreach (var frameEvent in action.FrameEvents)
+                {
+                    if (frameEvent == null)
+                    {
+                        throw new InvalidOperationException($"帧事件为空引用: action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(frameEvent.StableId) ||
+                        !logicItemIds.Add(frameEvent.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: action={action.name}, item={frameEvent.StableId}");
+                    }
+                    if (frameEvent.Frame < 0 || frameEvent.Frame >= action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"帧事件位置无效: action={action.name}, frame={frameEvent.Frame}, duration={action.DurationFrames}");
+                    }
+                    frameEvent.ValidateRuntime(action);
                 }
             }
             _initialized = true;
@@ -308,29 +402,29 @@ namespace Ux
         }
 
         /// <summary>
-        /// 按 CombatActionAsset 中的序列化顺序追加当前帧激活的命中窗口。
+        /// 按 CombatActionAsset 中的序列化顺序追加当前帧激活的攻击判定。
         /// 该查询无副作用、不会分配内部集合，也不会执行空间查询或伤害结算。
         /// </summary>
-        public int AppendActiveHitWindows(List<CombatActiveHitWindow> output)
+        public int AppendActiveHitboxWindows(List<CombatActiveHitboxWindow> output)
         {
             if (output == null)
             {
                 throw new ArgumentNullException(nameof(output));
             }
-            if (!HasAction || CurrentAsset.HitWindows == null)
+            if (!HasAction || CurrentAsset.HitboxWindows == null)
             {
                 return 0;
             }
 
             var added = 0;
-            for (var i = 0; i < CurrentAsset.HitWindows.Count; i++)
+            for (var i = 0; i < CurrentAsset.HitboxWindows.Count; i++)
             {
-                var window = CurrentAsset.HitWindows[i];
+                var window = CurrentAsset.HitboxWindows[i];
                 if (window == null || !window.IsActive(Current.ActionFrame))
                 {
                     continue;
                 }
-                output.Add(new CombatActiveHitWindow(
+                output.Add(new CombatActiveHitboxWindow(
                     Current.InstanceId,
                     Current.ActionId,
                     Current.ActionFrame,
@@ -410,6 +504,46 @@ namespace Ux
             return result.ToArray();
         }
 
+        /// <summary>
+        /// 生成事件去重：同一个动作实例的同一个事件只接受一次。
+        /// 事件本身是单帧语义，这个集合仍作为重放／重复求值时的防御性护栏。
+        /// </summary>
+        public bool TryAcceptSpawn(long actionInstanceId, string eventId)
+        {
+            if (!HasAction || actionInstanceId != Current.InstanceId ||
+                string.IsNullOrEmpty(eventId))
+            {
+                return false;
+            }
+            return _spawnedEvents.Add(new CombatHitKey(actionInstanceId, eventId, 0));
+        }
+
+        public CombatSpawnedEventSnapshot[] CaptureSpawnedEvents()
+        {
+            if (_spawnedEvents.Count == 0)
+            {
+                return Array.Empty<CombatSpawnedEventSnapshot>();
+            }
+
+            var result = new List<CombatSpawnedEventSnapshot>(_spawnedEvents.Count);
+            foreach (var key in _spawnedEvents)
+            {
+                if (key.ActionInstanceId == Current.InstanceId)
+                {
+                    result.Add(new CombatSpawnedEventSnapshot
+                    {
+                        ActionInstanceId = key.ActionInstanceId,
+                        EventId = key.WindowId,
+                    });
+                }
+            }
+            result.Sort((left, right) => string.Compare(
+                left.EventId,
+                right.EventId,
+                StringComparison.Ordinal));
+            return result.ToArray();
+        }
+
         public bool MarkHitConfirmed(long actionInstanceId)
         {
             if (!HasAction || Current.InstanceId != actionInstanceId)
@@ -432,7 +566,7 @@ namespace Ux
             return true;
         }
 
-        public void Restore(in CombatActionSnapshot snapshot, bool hasAction, long simulationFrame, CombatAcceptedHitSnapshot[] acceptedHits = null, long localActionSequence = -1)
+        public void Restore(in CombatActionSnapshot snapshot, bool hasAction, long simulationFrame, CombatAcceptedHitSnapshot[] acceptedHits = null, long localActionSequence = -1, CombatSpawnedEventSnapshot[] spawnedEvents = null)
         {
             _simulationFrame = Math.Max(0, simulationFrame);
             if (localActionSequence >= 0)
@@ -481,6 +615,22 @@ namespace Ux
                     }
                 }
             }
+            _spawnedEvents.Clear();
+            if (spawnedEvents != null)
+            {
+                for (var i = 0; i < spawnedEvents.Length; i++)
+                {
+                    var spawned = spawnedEvents[i];
+                    if (spawned.ActionInstanceId == snapshot.InstanceId &&
+                        !string.IsNullOrEmpty(spawned.EventId))
+                    {
+                        _spawnedEvents.Add(new CombatHitKey(
+                            spawned.ActionInstanceId,
+                            spawned.EventId,
+                            0));
+                    }
+                }
+            }
             var current = snapshot;
             current.ActionFrame = Math.Max(0, current.ActionFrame);
             Current = current;
@@ -510,6 +660,7 @@ namespace Ux
             CurrentAsset = null;
             _actions.Clear();
             _acceptedHits.Clear();
+            _spawnedEvents.Clear();
             LocalSequence = 0;
             _simulationFrame = 0;
             _initialized = false;
@@ -578,8 +729,8 @@ namespace Ux
         /// 有动作时尝试被新命令取消：窗口由当前动作提供，且必须指向命令里的那个动作；
         /// 条件成立就结束当前动作（Cancelled）并立刻起手新动作，ActionFrame 从 0 开始。
         ///
-        /// ⚠ "狂点打不出伤害"就是这么来的：普攻 1001 的取消窗口是 [5,26) 且指向自己，
-        /// 帧 5-26 之间每次按键都会把动作重置回帧 0，永远走不到帧 41 的命中窗口。
+        /// ⚠ "狂点打不出伤害"就是这么来的：普攻 1001 的可取消窗口是 [5,26) 且指向自己，
+        /// 帧 5-26 之间每次按键都会把动作重置回帧 0，永远走不到帧 41 的攻击判定。
         /// </summary>
         private bool TryCancel(in CombatFrameCommands commands)
         {
@@ -591,20 +742,39 @@ namespace Ux
                     continue;
                 }
 
-                foreach (var window in CurrentAsset.CancelWindows)
+                // 连招衔接优先；泛化取消窗口由各自技能输入触发，两者共用同一套窗口判定。
+                if (TryCancelFromWindows(CurrentAsset.LinkWindows, command, action) ||
+                    TryCancelFromWindows(CurrentAsset.CancelWindows, command, action))
                 {
-                    if (window.TargetActionId != command.ActionId ||
-                        !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
-                    {
-                        continue;
-                    }
-
-                    // 取消当前的动作
-                    EndCurrent(CombatActionEndReason.Cancelled);
-                    // 立即开始新动作
-                    Start(action, command.RequestId, command.RequestId != 0);
                     return true;
                 }
+            }
+            return false;
+        }
+
+        private bool TryCancelFromWindows<TWindow>(
+            IReadOnlyList<TWindow> windows,
+            in CombatCommand command,
+            CombatActionAsset action)
+            where TWindow : ActionTargetWindow
+        {
+            if (windows == null)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < windows.Count; i++)
+            {
+                var window = windows[i];
+                if (window == null || window.TargetActionId != command.ActionId ||
+                    !window.IsOpen(Current.ActionFrame, Current.HasHitConfirmed))
+                {
+                    continue;
+                }
+
+                EndCurrent(CombatActionEndReason.Cancelled);
+                Start(action, command.RequestId, command.RequestId != 0);
+                return true;
             }
             return false;
         }
@@ -621,6 +791,7 @@ namespace Ux
             var previous = CurrentAsset;
             CurrentAsset = actionAsset;
             _acceptedHits.Clear();
+            _spawnedEvents.Clear();
             Current = new CombatActionSnapshot
             {
                 InstanceId = ++LocalSequence,
@@ -645,6 +816,7 @@ namespace Ux
         {
             var previous = CurrentAsset;
             _acceptedHits.Clear();
+            _spawnedEvents.Clear();
             Current = default;
             CurrentAsset = null;
             ActionChanged?.Invoke(new CombatActionChangedEvent(

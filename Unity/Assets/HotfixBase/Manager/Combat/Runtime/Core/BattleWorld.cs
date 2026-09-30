@@ -91,6 +91,7 @@ namespace Ux
             AddSystem(new CombatDamageSystem());
             AddSystem(new CombatBuffSystem());
             AddSystem(new CombatDeathSystem());
+            AddSystem(new CombatSpawnSystem());
         }
 
         public string Key { get; }
@@ -181,8 +182,20 @@ namespace Ux
 
         public void Clear()
         {
+            if (_entities.Count == 0)
+            {
+                _entityOrderDirty = true;
+                return;
+            }
+
+            // Clear 也要发注销事件，表现层才能回收由 EntityRegistered 创建的对象。
+            var entities = new List<ICombatEntity>(_entities.Values);
             _entities.Clear();
             _entityOrderDirty = true;
+            for (var i = 0; i < entities.Count; i++)
+            {
+                EntityUnregistered?.Invoke(entities[i]);
+            }
         }
 
         #endregion

@@ -18,9 +18,9 @@ namespace Ux.Editor.Timeline
         const float HeaderHeight = 32f;
         readonly Dictionary<ITimelineEditorTrack, TimelineTrackItem> trackItemDic = new();
         ScrollView _trackScroll;
+        Toolbar _trackToolbar;
         Label _emptyLabel;
         bool _syncingVerticalScroll;
-        bool _trackMenuBuilt;
 
         public event Action<float> VerticalScrollChanged;
 
@@ -41,14 +41,15 @@ namespace Ux.Editor.Timeline
             root.style.flexDirection = FlexDirection.Column;
             Add(root);
 
-            var toolbar = new Toolbar();
-            toolbar.style.height = HeaderHeight;
-            toolbar.style.minHeight = HeaderHeight;
-            toolbar.style.flexShrink = 0;
+            _trackToolbar = new Toolbar();
+            _trackToolbar.style.height = HeaderHeight;
+            _trackToolbar.style.minHeight = HeaderHeight;
+            _trackToolbar.style.flexShrink = 0;
             btnAddTrack = new ToolbarMenu { text = "＋ 添加轨道" };
             btnAddTrack.style.flexGrow = 1;
-            toolbar.Add(btnAddTrack);
-            root.Add(toolbar);
+            _trackToolbar.Add(btnAddTrack);
+
+            root.Add(_trackToolbar);
 
             _trackScroll = new ScrollView(ScrollViewMode.Vertical);
             _trackScroll.style.flexGrow = 1;
@@ -71,28 +72,37 @@ namespace Ux.Editor.Timeline
 
         void BuildTrackMenu()
         {
-            if (_trackMenuBuilt)
+            if (_trackToolbar == null)
             {
                 return;
             }
 
-            var trackTypes = TimelineWindow.Document?.GetTrackTypes();
-            if (trackTypes == null || trackTypes.Count == 0)
+            var document = TimelineWindow.Document;
+            var trackTypes = document?.GetTrackTypes();
+            var nextButton = new ToolbarMenu { text = "＋ 添加轨道" };
+            nextButton.style.flexGrow = 1;
+
+            if (trackTypes != null && document != null)
             {
-                return;
+                for (var i = 0; i < trackTypes.Count; i++)
+                {
+                    var trackType = trackTypes[i];
+                    var displayName = document.GetTrackDisplayName(trackType);
+                    var category = document.GetTrackRole(trackType) == TimelineEditorSourceRole.Logic
+                        ? "逻辑"
+                        : "表现";
+                    nextButton.menu.AppendAction(
+                        $"添加/{category}/{displayName}",
+                        _ => AddTrack(trackType),
+                        _ => document.CanEdit
+                            ? DropdownMenuAction.Status.Normal
+                            : DropdownMenuAction.Status.Disabled);
+                }
             }
 
-            foreach (var trackType in trackTypes)
-            {
-                var displayName = TimelineWindow.Document.GetTrackDisplayName(trackType);
-                btnAddTrack.menu.AppendAction(
-                    $"添加/{displayName}",
-                    _ => AddTrack(trackType),
-                    _ => TimelineWindow.Document?.CanEdit == true
-                        ? DropdownMenuAction.Status.Normal
-                        : DropdownMenuAction.Status.Disabled);
-            }
-            _trackMenuBuilt = true;
+            _trackToolbar.Remove(btnAddTrack);
+            btnAddTrack = nextButton;
+            _trackToolbar.Insert(0, btnAddTrack);
         }
 
         void AddTrack(Type trackType)

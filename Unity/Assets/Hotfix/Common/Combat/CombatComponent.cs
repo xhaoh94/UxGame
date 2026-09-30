@@ -16,7 +16,7 @@ namespace Ux
         private long _nextRequestId;
         private CombatTimelinePlayer _timelinePlayer;
         private CombatTimelinePlan _framePlan;
-        private bool _framePlanInitialized;
+        private ParticleSystem _vfxHost;
         private bool _registered;
 
         public CombatController Controller { get; private set; }
@@ -107,7 +107,10 @@ namespace Ux
         /// <summary>把本单位交给主战斗世界统一调度。逻辑帧不再由 Scene 逐个驱动。</summary>
         private void RegisterWorld()
         {
-            if (_registered || CombatMgr.Ins.Main.Register(this))
+            var world = CombatMgr.Ins.Main;
+            // 投射物由 Timeline 阶段动态注册，表现桥必须先订阅 EntityRegistered，不能晚于本单位注册。
+            CombatProjectilePresentation.Ensure(world);
+            if (_registered || world.Register(this))
             {
                 _registered = true;
             }
@@ -129,6 +132,16 @@ namespace Ux
                 targetId,
                 aimDirection));
             return requestId;
+        }
+
+        /// <summary>
+        /// 连招入口：同一个按键每按一次推进一段，推进到哪一段由当前动作的取消窗口决定（资源权威）。
+        /// 窗口没打开时会重新发回链头，命令被 Runner 丢弃 —— 这就是"按早了没用"。
+        /// </summary>
+        public long RequestComboAttack(int chainRootActionId)
+        {
+            var next = Controller?.ActionRunner?.ResolveComboTarget(chainRootActionId) ?? chainRootActionId;
+            return RequestAction(next);
         }
 
         public void EnqueueCommand(in CombatCommand command)
@@ -171,11 +184,10 @@ namespace Ux
             // commands 是阶段 1 刚从队列里取出的本帧命令。两者在这里汇合，所以移动和攻击能互相打断。
             Controller.Tick(frame, MoveInput, commands);
 
-            // 攻击链路 · 表现落地：Base = 当前 Locomotion 的 Idle/Move 时间线，Action = 当前动作的攻击时间线。
-            _framePlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.ActionRunner, PresentationVariant);
             EnsureTimelinePlayer();
-            _timelinePlayer?.Synchronize(_framePlan, Unit?.Viewer?.GetComponentInChildren<Animator>());
-            _framePlanInitialized = true;
+            // 将逻辑翻译为timeline表现
+            _framePlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.ActionRunner, PresentationVariant);
+            _timelinePlayer?.Synchronize(_framePlan, Unit?.Viewer?.GetComponentInChildren<Animator>(), vfx: EnsureVfx());
 
             // 移动链路收尾：只有 Locomotion 判定为 Move 且没被阻挡，这一帧才真的产生位移。
             TickMovement();
@@ -323,30 +335,23 @@ namespace Ux
             Profile = null;
             PresentationVariant = CombatStatePresentation.DefaultVariantId;
             _framePlan = default;
-            _framePlanInitialized = false;
             _timelinePlayer?.Release();
             _timelinePlayer = null;
+            _vfxHost = null;
             base.OnDestroy();
         }
 
-        private bool RefreshTimeline(bool force)
+        private void RefreshTimeline(bool force)
         {
             if (Controller?.IsInitialized != true || Unit.Timeline == null)
             {
-                return false;
+                return;
             }
 
             EnsureTimelinePlayer();
-            var nextPlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.ActionRunner, PresentationVariant);
-            var changed = force || !_framePlanInitialized ||
-                !string.Equals(nextPlan.Base.OwnerKey, _framePlan.Base.OwnerKey, StringComparison.Ordinal) ||
-                !string.Equals(nextPlan.Action.OwnerKey, _framePlan.Action.OwnerKey, StringComparison.Ordinal) ||
-                nextPlan.ExclusiveBase != _framePlan.ExclusiveBase;
-            _framePlan = nextPlan;
-            _timelinePlayer.Synchronize(_framePlan, Unit.Viewer?.GetComponentInChildren<Animator>(), force);
+            _framePlan = CombatTimelineResolver.Resolve(Profile, Controller.StateMachine, Controller.ActionRunner, PresentationVariant);
+            _timelinePlayer.Synchronize(_framePlan, Unit.Viewer?.GetComponentInChildren<Animator>(), force, vfx: EnsureVfx());
             _timelinePlayer.Evaluate(_framePlan, false);
-            _framePlanInitialized = true;
-            return changed;
         }
 
         private void EnsureTimelinePlayer()
@@ -355,6 +360,41 @@ namespace Ux
             {
                 _timelinePlayer = new CombatTimelinePlayer(Unit.Timeline);
             }
+        }
+
+        /// <summary>
+        /// 特效轨没有资产级引用，只能绑一个外部 ParticleSystem。没有特效轨的单位不建，
+        /// 免得给所有角色都悄悄挂上一个空系统。
+        /// </summary>
+        private ParticleSystem EnsureVfx()
+        {
+            if (_vfxHost != null)
+            {
+                return _vfxHost;
+            }
+            if (!HasParticleTrack(_framePlan.Base.Asset) && !HasParticleTrack(_framePlan.Action.Asset))
+            {
+                return null;
+            }
+
+            _vfxHost = CombatVfxHost.Ensure(Unit?.Viewer?.transform);
+            return _vfxHost;
+        }
+
+        private static bool HasParticleTrack(TimelineAsset asset)
+        {
+            if (asset?.tracks == null)
+            {
+                return false;
+            }
+            foreach (var track in asset.tracks)
+            {
+                if (track is ParticleAssetTrack)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void AbortInitialization()

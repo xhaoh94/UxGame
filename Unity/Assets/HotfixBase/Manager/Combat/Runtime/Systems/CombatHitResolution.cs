@@ -27,17 +27,20 @@ namespace Ux
 
     /// <summary>
     /// 命中查询的攻击者输入。坐标必须由上层从本帧逻辑状态提供，核心不读取 Transform 或 Physics。
+    /// ExcludeEntityId 供投射物豁免发射者自己（弹体在发射者脚下生成，几何上必然命中）；0 表示无豁免。
     /// </summary>
     public readonly struct CombatHitQuerySource
     {
-        public CombatHitQuerySource(long entityId, CombatFixedPoint position)
+        public CombatHitQuerySource(long entityId, CombatFixedPoint position, long excludeEntityId = 0)
         {
             EntityId = entityId;
             Position = position;
+            ExcludeEntityId = excludeEntityId;
         }
 
         public long EntityId { get; }
         public CombatFixedPoint Position { get; }
+        public long ExcludeEntityId { get; }
     }
 
     /// <summary>上层筛选后的逻辑目标快照。目标顺序不作为规则，Resolver 会按 Id 排序。</summary>
@@ -56,7 +59,7 @@ namespace Ux
     /// <summary>一次确定性命中候选，不包含伤害数值或目标属性。</summary>
     public readonly struct CombatHitCandidate
     {
-        public CombatHitCandidate(long sourceEntityId, long targetEntityId, CombatActiveHitWindow window)
+        public CombatHitCandidate(long sourceEntityId, long targetEntityId, CombatActiveHitboxWindow window)
         {
             SourceEntityId = sourceEntityId;
             TargetEntityId = targetEntityId;
@@ -112,7 +115,7 @@ namespace Ux
     public static class CombatHitResolver
     {
         /// <summary>用外部传入的窗口做命中查询。窗口帧区间的合法性由调用方保证。</summary>
-        public static int AppendResolvedHits(CombatActionRunner runner,in CombatHitQuerySource source,IReadOnlyList<CombatActiveHitWindow> windows,
+        public static int AppendResolvedHits(CombatActionRunner runner,in CombatHitQuerySource source,IReadOnlyList<CombatActiveHitboxWindow> windows,
         IReadOnlyList<CombatHitTarget> targets,List<CombatHitCandidate> output)
         {
             if (runner == null)
@@ -151,10 +154,12 @@ namespace Ux
                     throw new InvalidOperationException(
                         $"命中查询目标 ID 重复：{target.EntityId}");
                 }
-                if (target.EntityId != source.EntityId)
+                if (target.EntityId == source.EntityId ||
+                    target.EntityId == source.ExcludeEntityId)
                 {
-                    targetOrder.Add(i);
+                    continue;
                 }
+                targetOrder.Add(i);
             }
 
             if (!runner.HasAction)
@@ -209,8 +214,8 @@ namespace Ux
                 throw new ArgumentNullException(nameof(runner));
             }
 
-            var windows = new List<CombatActiveHitWindow>();
-            runner.AppendActiveHitWindows(windows);
+            var windows = new List<CombatActiveHitboxWindow>();
+            runner.AppendActiveHitboxWindows(windows);
             return AppendResolvedHits(runner, source, windows, targets, output);
         }
 

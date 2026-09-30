@@ -1,45 +1,41 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Ux
 {
+    /// <summary>带目标动作的通用转移窗口基类。</summary>
     [Serializable]
-    public sealed class ActionCancelWindow
+    public abstract class ActionTargetWindow : CombatLogicWindow
     {
-        [SerializeField, HideInInspector] private string stableId = string.Empty;
-        [Min(0)] public int StartFrame;
-        [Min(1)] public int EndFrame = 1;
         [Min(1)] public int TargetActionId;
         public bool RequiresHitConfirm;
 
-        public string StableId => stableId;
-
-        /// <summary>取消窗口统一使用 [StartFrame, EndFrame) 半开区间。</summary>
+        /// <summary>目标动作窗口统一使用 [StartFrame, EndFrame) 半开区间。</summary>
         public bool IsOpen(int actionFrame, bool hasHitConfirmed)
         {
-            return actionFrame >= StartFrame &&
-                   actionFrame < EndFrame &&
+            return ContainsFrame(actionFrame) &&
                    (!RequiresHitConfirm || hasHitConfirmed);
         }
 
-        public void ValidateData()
+        public override void ValidateData()
         {
-            if (string.IsNullOrEmpty(stableId))
-            {
-                RegenerateStableId();
-            }
-            StartFrame = Mathf.Clamp(StartFrame, 0, int.MaxValue - 1);
-            EndFrame = (int)Math.Min(
-                int.MaxValue,
-                Math.Max((long)StartFrame + 1, EndFrame));
+            base.ValidateData();
             TargetActionId = Mathf.Max(1, TargetActionId);
         }
+    }
 
-        internal void RegenerateStableId()
-        {
-            stableId = Guid.NewGuid().ToString("N");
-        }
+    /// <summary>泛化取消窗口：闪避、受击反制或其它非连招打断。</summary>
+    [Serializable]
+    public sealed class ActionCancelWindow : ActionTargetWindow
+    {
+    }
+
+    /// <summary>连招衔接窗口：连招和动作分支的输入衔接。</summary>
+    [Serializable]
+    public sealed class ActionLinkWindow : ActionTargetWindow
+    {
     }
 
     public enum ActionHitShape : byte
@@ -48,40 +44,24 @@ namespace Ux
     }
 
     [Serializable]
-    public sealed class ActionHitWindow
+    public sealed class ActionHitboxWindow : CombatLogicWindow
     {
-        [SerializeField, HideInInspector] private string stableId = string.Empty;
-        [Min(0)] public int StartFrame;
-        [Min(1)] public int EndFrame = 1;
         [SerializeField] private ActionHitShape shape = ActionHitShape.Circle;
         [SerializeField, Min(1)] private int radiusMillimeters = 1000;
 
-        public string StableId => stableId;
         public ActionHitShape Shape => shape;
         public int RadiusMillimeters => radiusMillimeters;
 
-        /// <summary>命中激活窗口统一使用 [StartFrame, EndFrame) 半开区间。</summary>
+        /// <summary>攻击判定窗口统一使用 [StartFrame, EndFrame) 半开区间。</summary>
         public bool IsActive(int actionFrame)
         {
-            return actionFrame >= StartFrame && actionFrame < EndFrame;
+            return ContainsFrame(actionFrame);
         }
 
-        public void ValidateData()
+        public override void ValidateData()
         {
-            if (string.IsNullOrEmpty(stableId))
-            {
-                RegenerateStableId();
-            }
-            StartFrame = Mathf.Clamp(StartFrame, 0, int.MaxValue - 1);
-            EndFrame = (int)Math.Min(
-                int.MaxValue,
-                Math.Max((long)StartFrame + 1, EndFrame));
+            base.ValidateData();
             radiusMillimeters = Mathf.Clamp(radiusMillimeters, 1, 10000000);
-        }
-
-        internal void RegenerateStableId()
-        {
-            stableId = Guid.NewGuid().ToString("N");
         }
     }
 
@@ -124,7 +104,11 @@ namespace Ux
         [SerializeField, Min(1)] private int durationFrames = 30;
         [SerializeField] private ActionMovementPolicy movementPolicy = ActionMovementPolicy.Block;
         [SerializeField] private List<ActionCancelWindow> cancelWindows = new();
-        [SerializeField] private List<ActionHitWindow> hitWindows = new();
+        [FormerlySerializedAs("transitionWindows")]
+        [SerializeField] private List<ActionLinkWindow> linkWindows = new();
+        [FormerlySerializedAs("hitWindows")]
+        [SerializeField] private List<ActionHitboxWindow> hitboxWindows = new();
+        [SerializeReference] private List<CombatFrameEvent> frameEvents = new();
 
         // 伤害配置 —— 最小版本，固定值，没有修改器栈与随机区间（见 CombatDamageSystem 的类注释）。
         [Header("伤害与效果（最小版本）")]
@@ -137,7 +121,11 @@ namespace Ux
         public int DurationFrames => durationFrames;
         public ActionMovementPolicy MovementPolicy => movementPolicy;
         public IReadOnlyList<ActionCancelWindow> CancelWindows => cancelWindows;
-        public IReadOnlyList<ActionHitWindow> HitWindows => hitWindows;
+        public IReadOnlyList<ActionLinkWindow> LinkWindows => linkWindows;
+        public IReadOnlyList<ActionHitboxWindow> HitboxWindows => hitboxWindows;
+
+        /// <summary>这一招包含的离散帧事件。事件只在自身 Frame 上成立一次。</summary>
+        public IReadOnlyList<CombatFrameEvent> FrameEvents => frameEvents;
 
         /// <summary>这一招打中后扣多少血。固定值，不参与任何公式。</summary>
         public int Damage => Mathf.Max(0, damage);
@@ -161,9 +149,17 @@ namespace Ux
             {
                 window?.ValidateData();
             }
-            foreach (var window in hitWindows)
+            foreach (var window in linkWindows)
             {
                 window?.ValidateData();
+            }
+            foreach (var window in hitboxWindows)
+            {
+                window?.ValidateData();
+            }
+            foreach (var frameEvent in frameEvents)
+            {
+                frameEvent?.ValidateData();
             }
         }
 
@@ -178,14 +174,24 @@ namespace Ux
                 cancelWindows = new List<ActionCancelWindow>();
                 changed = true;
             }
-            if (hitWindows == null)
+            if (linkWindows == null)
             {
-                hitWindows = new List<ActionHitWindow>();
+                linkWindows = new List<ActionLinkWindow>();
+                changed = true;
+            }
+            if (hitboxWindows == null)
+            {
+                hitboxWindows = new List<ActionHitboxWindow>();
+                changed = true;
+            }
+            if (frameEvents == null)
+            {
+                frameEvents = new List<CombatFrameEvent>();
                 changed = true;
             }
 
-            // 同一动作内所有逻辑子项共享 ItemId 唯一域。固定先扫描取消窗口，保证新增轨道时
-            // 已有取消窗口 ID 不会被无故改写；后续逻辑轨也必须追加到这个固定扫描顺序中。
+            // 同一动作内所有逻辑子项共享 StableId 唯一域。固定先扫描取消窗口，保证后续新增
+            // 攻击判定窗口或帧事件时，已有取消窗口 ID 不会被无故改写。
             var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var window in cancelWindows)
             {
@@ -201,7 +207,7 @@ namespace Ux
                     changed = true;
                 }
             }
-            foreach (var window in hitWindows)
+            foreach (var window in linkWindows)
             {
                 if (window == null)
                 {
@@ -212,6 +218,34 @@ namespace Ux
                 {
                     window.RegenerateStableId();
                     logicItemIds.Add(window.StableId);
+                    changed = true;
+                }
+            }
+            foreach (var window in hitboxWindows)
+            {
+                if (window == null)
+                {
+                    continue;
+                }
+                if (string.IsNullOrEmpty(window.StableId) ||
+                    !logicItemIds.Add(window.StableId))
+                {
+                    window.RegenerateStableId();
+                    logicItemIds.Add(window.StableId);
+                    changed = true;
+                }
+            }
+            foreach (var frameEvent in frameEvents)
+            {
+                if (frameEvent == null)
+                {
+                    continue;
+                }
+                if (string.IsNullOrEmpty(frameEvent.StableId) ||
+                    !logicItemIds.Add(frameEvent.StableId))
+                {
+                    frameEvent.RegenerateStableId();
+                    logicItemIds.Add(frameEvent.StableId);
                     changed = true;
                 }
             }
@@ -229,7 +263,9 @@ namespace Ux
             }
             displayName ??= string.Empty;
             cancelWindows ??= new List<ActionCancelWindow>();
-            hitWindows ??= new List<ActionHitWindow>();
+            linkWindows ??= new List<ActionLinkWindow>();
+            hitboxWindows ??= new List<ActionHitboxWindow>();
+            frameEvents ??= new List<CombatFrameEvent>();
             appliedBuff ??= new ActionBuffApply();
         }
 #endif

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b75265136ed4c240ba71ab0bd53273f, type: 3}
+  m_Name: HeroZSAttack02
+  m_EditorClassIdentifier: 
+  stableId: hero.action.attack02
+  actionId: 1002
+  displayName: "\u666E\u901A\u653B\u51FB\xB7\u4E8C\u6BB5"
+  durationFrames: 70
+  movementPolicy: 0
+  cancelWindows: []
+  linkWindows:
+  - stableId: 88b93b20121e42688c635bd5f4004202
+    StartFrame: 38
+    EndFrame: 56
+    TargetActionId: 1003
+    RequiresHitConfirm: 0
+  hitboxWindows:
+  - stableId: e7d5d4b5b0e14121bbd58e591be5b1d6
+    StartFrame: 28
+    EndFrame: 38
+    shape: 0
+    radiusMillimeters: 1
+  frameEvents: []
+  damage: 12
+  appliedBuff:
+    buffId: 0
+    durationFrames: 120
+    damagePerTick: 0
+  references:
+    version: 2
+    RefIds: []

@@ -204,6 +204,7 @@ namespace Ux.Editor.Timeline
         float _playTime;
         TLEntity _entity;
         GameObject _previewInstance;
+        Light _previewLight;
         List<int> _frameSelects = new List<int>() { 24, 30, 60, 120 };
         Dictionary<string, Dictionary<string, BindData>> _binds = new();
         PopupField<int> _framePopupField;
@@ -438,7 +439,6 @@ namespace Ux.Editor.Timeline
             _combatActionField.style.flexGrow = 1;
             _combatActionField.RegisterValueChangedCallback(OnCombatActionChanged);
             logicRow.Add(_combatActionField);
-            sourcePanel.Add(logicRow);
 
             _previewBasePopup = new PopupField<PreviewBaseMode>(
                 new List<PreviewBaseMode>
@@ -451,15 +451,18 @@ namespace Ux.Editor.Timeline
             _previewBasePopup.label = "预览基底";
             _previewBasePopup.formatSelectedValueCallback = GetPreviewBaseText;
             _previewBasePopup.formatListItemCallback = GetPreviewBaseText;
-            _previewBasePopup.style.width = 130;
-            _previewBasePopup.style.minWidth = 130;
+            _previewBasePopup.style.width = 150;
+            _previewBasePopup.style.minWidth = 150;
             _previewBasePopup.style.flexShrink = 0;
+            CenterToolbarField(_previewBasePopup, _previewBasePopup.labelElement, 26);
+            _previewBasePopup.labelElement.style.minWidth = 64;
             _previewBasePopup.RegisterValueChangedCallback(evt =>
             {
                 _previewBaseMode = evt.newValue;
                 RefreshEntity?.Invoke();
                 RefreshView?.Invoke();
             });
+            sourcePanel.Add(logicRow);
 
             createView = new VisualElement();
             createView.style.flexDirection = FlexDirection.Row;
@@ -486,16 +489,16 @@ namespace Ux.Editor.Timeline
             playback.style.minHeight = 34;
             playback.style.flexShrink = 0;
             playback.style.alignItems = Align.Center;
-            btnLastFrame = CreatePlaybackButton("上一帧", _OnBtnLastFrameClick, 68);
-            btnNextFrame = CreatePlaybackButton("下一帧", _OnBtnNextFrameClick, 68);
+            btnLastFrame = CreatePlaybackButton("上一帧", _OnBtnLastFrameClick, 58);
+            btnNextFrame = CreatePlaybackButton("下一帧", _OnBtnNextFrameClick, 58);
             btnPlay = CreatePlaybackButton("播放", OnPlayPauseButtonClick, 56);
             playback.Add(btnLastFrame);
             playback.Add(btnNextFrame);
             playback.Add(btnPlay);
 
             _currentFrameField = new IntegerField("当前帧");
-            _currentFrameField.style.width = 145;
-            _currentFrameField.style.minWidth = 145;
+            _currentFrameField.style.width = 100;
+            _currentFrameField.style.minWidth = 100;
             _currentFrameField.style.flexShrink = 0;
             CenterToolbarField(_currentFrameField, _currentFrameField.labelElement, 26);
             _currentFrameField.labelElement.style.minWidth = 48;
@@ -513,10 +516,11 @@ namespace Ux.Editor.Timeline
             _playModePopup.label = "模式";
             _playModePopup.formatSelectedValueCallback = GetPlayModeText;
             _playModePopup.formatListItemCallback = GetPlayModeText;
-            _playModePopup.style.width = 125;
-            _playModePopup.style.minWidth = 125;
+            _playModePopup.style.width = 100;
+            _playModePopup.style.minWidth = 100;
             _playModePopup.style.flexShrink = 0;
             CenterToolbarField(_playModePopup, _playModePopup.labelElement, 26);
+            _playModePopup.labelElement.style.minWidth = 32;
             playback.Add(_playModePopup);
             playback.Add(_previewBasePopup);
             frameContent = new VisualElement();
@@ -571,6 +575,7 @@ namespace Ux.Editor.Timeline
             {
                 label.style.height = height;
                 label.style.minHeight = height;
+                label.style.flexShrink = 0;
                 label.style.alignSelf = Align.Center;
                 label.style.unityTextAlign = TextAnchor.MiddleLeft;
                 label.style.marginTop = 0;
@@ -582,6 +587,8 @@ namespace Ux.Editor.Timeline
             {
                 input.style.height = height;
                 input.style.minHeight = height;
+                input.style.flexGrow = 1;
+                input.style.flexShrink = 0;
                 input.style.alignItems = Align.Center;
                 input.style.marginTop = 0;
                 input.style.marginBottom = 0;
@@ -674,7 +681,7 @@ namespace Ux.Editor.Timeline
             var duration = Document?.DurationFrames ?? 0;
             _durationLabel.text = Document?.HasSource != true
                 ? "未选择时间轴数据"
-                : $"会话长度 {duration} 帧 / {duration / (float)Document.FrameRate:0.###} 秒";
+                : $"{duration} 帧 / {duration / (float)Document.FrameRate:0.###} 秒";
         }
 
         bool keyCtrl = false;
@@ -882,6 +889,7 @@ namespace Ux.Editor.Timeline
                 model.name = $"{obj.name}{PreviewObjectSuffix}";
                 model.hideFlags = PreviewObjectHideFlags;
                 _previewInstance = model;
+                _previewLight = EnsurePreviewDirectionalLight();
 
                 // 编辑器预览不依赖全局对象池，避免内嵌宿主在编辑器初始化阶段拿不到 Entity。
                 _entity = Entity.Create<TLEntity>(false);
@@ -1086,7 +1094,7 @@ namespace Ux.Editor.Timeline
                         target = _entity.Viewer.GetComponentInChildren<Animator>(true);
                         break;
                     case ParticleAssetTrack particleTrack when Timeline.GetBinding<ParticleSystem>(particleTrack) == null:
-                        target = _entity.Viewer.GetComponentInChildren<ParticleSystem>(true);
+                        target = ResolvePreviewVfx();
                         break;
                 }
 
@@ -1169,6 +1177,36 @@ namespace Ux.Editor.Timeline
                 UnityEngine.Object.DestroyImmediate(_previewInstance);
                 _previewInstance = null;
             }
+
+            if (_previewLight != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_previewLight.gameObject);
+                _previewLight = null;
+            }
+        }
+
+        // 角色 cel shader 的漫反射只乘主光颜色，场景没有平行光时输出纯黑；
+        // 预览场景（如 Boot）没有灯，这里补一盏，参数与 Hotfix.unity 的主光一致，随预览销毁。
+        private static Light EnsurePreviewDirectionalLight()
+        {
+            var lights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+            foreach (var light in lights)
+            {
+                if (light != null && light.enabled && light.type == LightType.Directional && light.intensity > 0f)
+                {
+                    return null;
+                }
+            }
+
+            var go = new GameObject($"Timeline Preview Light{PreviewObjectSuffix}");
+            go.hideFlags = PreviewObjectHideFlags;
+            go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            var l = go.AddComponent<Light>();
+            l.type = LightType.Directional;
+            l.color = Color.white;
+            l.intensity = 1f;
+            l.shadows = LightShadows.Soft;
+            return l;
         }
 
         private static void CleanupAllPreviewObjects()
@@ -1320,12 +1358,32 @@ namespace Ux.Editor.Timeline
                 _previewPlayer.Synchronize(
                     plan,
                     _entity?.Viewer?.GetComponentInChildren<Animator>(),
-                    true);
+                    true,
+                    vfx: ResolvePreviewVfx());
                 _previewPlayer.Evaluate(plan, false);
                 return;
             }
             Timeline.Play(Asset);
             Timeline.Set(clipView?.CurFrame ?? 0);
+        }
+
+        /// <summary>
+        /// 预览期的粒子宿主。模型上没摆 ParticleSystem 时编辑期就没有可绑对象，特效轨在窗口里看不到、
+        /// 运行期却看得到 —— 这里补一个与运行时同款的占位。hideFlags 跟随预览副本，免得落进场景文件。
+        /// </summary>
+        ParticleSystem ResolvePreviewVfx()
+        {
+            if (_entity?.Viewer == null)
+            {
+                return null;
+            }
+
+            var vfx = CombatVfxHost.Ensure(_entity.Viewer.transform);
+            if (vfx != null)
+            {
+                vfx.gameObject.hideFlags = PreviewObjectHideFlags;
+            }
+            return vfx;
         }
 
         void _MarkerMove(int frame)
@@ -1346,20 +1404,16 @@ namespace Ux.Editor.Timeline
         {
             var frame = clipView?.CurFrame ?? 0;
             var baseAsset = default(TimelineAsset);
-            var baseKey = "preview:action-only";
             if (_previewBaseMode != PreviewBaseMode.ActionOnly && _combatProfile != null)
             {
                 var state = _previewBaseMode == PreviewBaseMode.Move
                     ? LocomotionState.Move
                     : LocomotionState.Idle;
                 baseAsset = _combatProfile.GetStateTimeline(StateLayer.Locomotion, (int)state);
-                baseKey = $"preview:locomotion:{(int)state}:{baseAsset?.name ?? "none"}";
             }
-            var baseSelection = new CombatTimelineSelection(baseKey, baseAsset, frame);
-            var actionSelection = new CombatTimelineSelection(
-                $"preview:action:{Asset.GetInstanceID()}",
-                Asset,
-                frame);
+            // 预览的来源就是资产本身；切换预览模式走 force 同步，不依赖来源变化。
+            var baseSelection = new CombatTimelineSelection(baseAsset, frame);
+            var actionSelection = new CombatTimelineSelection(Asset, frame);
             return new CombatTimelinePlan(baseSelection, actionSelection);
         }
 

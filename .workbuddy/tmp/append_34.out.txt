@@ -1,0 +1,5 @@
+BEFORE crlf=0 lf=72 bytes=6198
+eol='\n'
+AFTER  crlf=0 lf=81 bytes=6959
+PREFIX_PRESERVED=True
+FAIL

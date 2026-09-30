@@ -10,8 +10,11 @@ namespace Ux.Editor.Combat
     /// <summary>
     /// 将 CombatActionAsset 的确定性帧数据适配到通用 Timeline 编辑器。
     /// 逻辑轨只声明确定性时序；表现 Timeline 仍由 TimelineAssetEditorSource 独立负责。
+    ///
+    /// 区间窗口轨由各自适配器声明；离散帧事件通过独立的事件源接口暴露，不占用轨道。
+    /// 本类负责暴露资产与帧参数、统一 Undo 与保存，并把 Inspector 分派回元素自己。
     /// </summary>
-    public sealed class CombatLogicTimelineSource : ITimelineEditorSource
+    public sealed class CombatLogicTimelineSource : ITimelineEditorSource, ITimelineEditorFrameEventSource
     {
         readonly CombatActionAsset action;
         readonly CharacterCombatProfile profile;
@@ -22,9 +25,11 @@ namespace Ux.Editor.Combat
         readonly Action completeUndo;
         readonly Func<bool> canEdit;
         readonly Dictionary<object, HashSet<Action>> bindings = new();
-        readonly CombatCancelWindowEditorTrack cancelTrack;
-        readonly CombatHitWindowEditorTrack hitTrack;
-        readonly IReadOnlyList<ITimelineEditorTrack> tracks;
+        readonly List<ITimelineEditorTrack> tracks = new();
+        readonly List<ITimelineEditorFrameEvent> frameEvents = new();
+        CombatCancelWindowEditorTrack cancelTrack;
+        CombatLinkWindowEditorTrack linkTrack;
+        CombatHitboxWindowEditorTrack hitboxTrack;
         readonly string id;
 
         public CombatLogicTimelineSource(CombatActionAsset action, CharacterCombatProfile profile = null, int frameRate = TimelineEditorDocument.DefaultFrameRate, Action<string, UnityEngine.Object, Action> registerUndo = null, Action save = null, Func<bool> canEdit = null, Action completeUndo = null, Func<int> frameRateProvider = null)
@@ -52,9 +57,8 @@ namespace Ux.Editor.Combat
                 ? $"combat-action-instance:{action.GetInstanceID()}"
                 : $"combat-action:{guid}";
 
-            cancelTrack = new CombatCancelWindowEditorTrack(this);
-            hitTrack = new CombatHitWindowEditorTrack(this);
-            tracks = new ITimelineEditorTrack[] { cancelTrack, hitTrack };
+            SyncTracks();
+            SyncFrameEvents();
         }
 
         public string Id => id;
@@ -66,6 +70,7 @@ namespace Ux.Editor.Combat
         public int DurationFrames => action.DurationFrames;
         public int TrackCount => tracks.Count;
         public IReadOnlyList<ITimelineEditorTrack> Tracks => tracks;
+        public IReadOnlyList<ITimelineEditorFrameEvent> FrameEvents => frameEvents;
         public CombatActionAsset Action => action;
         public CharacterCombatProfile Profile => profile;
 
@@ -74,18 +79,77 @@ namespace Ux.Editor.Combat
 
         public IReadOnlyList<Type> GetTrackTypes()
         {
-            // 取消窗口与命中窗口都是动作存在时自动出现的固定逻辑轨，不允许重复添加。
-            return Array.Empty<Type>();
+            var result = new List<Type>();
+            if (cancelTrack == null)
+            {
+                result.Add(typeof(CombatCancelWindowEditorTrack));
+            }
+            if (linkTrack == null)
+            {
+                result.Add(typeof(CombatLinkWindowEditorTrack));
+            }
+            if (hitboxTrack == null)
+            {
+                result.Add(typeof(CombatHitboxWindowEditorTrack));
+            }
+            return result;
         }
 
         public string GetTrackDisplayName(Type trackType)
         {
+            if (trackType == typeof(CombatCancelWindowEditorTrack))
+            {
+                return "可取消窗口";
+            }
+            if (trackType == typeof(CombatLinkWindowEditorTrack))
+            {
+                return "连招衔接";
+            }
+            if (trackType == typeof(CombatHitboxWindowEditorTrack))
+            {
+                return "攻击判定";
+            }
             return trackType?.Name ?? string.Empty;
         }
 
         public ITimelineEditorTrack AddTrack(Type trackType)
         {
-            return null;
+            if (!CanEdit || action.DurationFrames <= 0)
+            {
+                return null;
+            }
+
+            if (trackType == typeof(CombatCancelWindowEditorTrack) && cancelTrack == null)
+            {
+                cancelTrack = new CombatCancelWindowEditorTrack(this);
+            }
+            else if (trackType == typeof(CombatLinkWindowEditorTrack) && linkTrack == null)
+            {
+                linkTrack = new CombatLinkWindowEditorTrack(this);
+            }
+            else if (trackType == typeof(CombatHitboxWindowEditorTrack) && hitboxTrack == null)
+            {
+                hitboxTrack = new CombatHitboxWindowEditorTrack(this);
+            }
+            else
+            {
+                return null;
+            }
+
+            var track = trackType == typeof(CombatCancelWindowEditorTrack)
+                ? (ITimelineEditorTrack)cancelTrack
+                : trackType == typeof(CombatLinkWindowEditorTrack)
+                    ? linkTrack
+                    : hitboxTrack;
+            if (track == null || track.CreateClip() == null)
+            {
+                cancelTrack = null;
+                linkTrack = null;
+                hitboxTrack = null;
+                SyncTracks();
+                return null;
+            }
+            return track;
         }
 
         public bool SetFrameRate(int value)
@@ -93,20 +157,13 @@ namespace Ux.Editor.Combat
             return false;
         }
 
+        /// <summary>把 Inspector 分派回元素自己 —— 本类因此不认识任何一种具体窗口类型。</summary>
         public TimelineInspectorBase CreateInspector(object selection)
         {
-            return selection switch
-            {
-                CombatCancelWindowEditorTrack track when ReferenceEquals(track.Source, this) =>
-                    new CombatCancelWindowTrackInspector(this, track),
-                CombatCancelWindowEditorClip clip when ReferenceEquals(clip.Source, this) =>
-                    new CombatCancelWindowClipInspector(this, clip),
-                CombatHitWindowEditorTrack track when ReferenceEquals(track.Source, this) =>
-                    new CombatHitWindowTrackInspector(this, track),
-                CombatHitWindowEditorClip clip when ReferenceEquals(clip.Source, this) =>
-                    new CombatHitWindowClipInspector(this, clip),
-                _ => null,
-            };
+            return selection is ICombatLogicTimelineInspectorSource inspectorSource &&
+                   ReferenceEquals(inspectorSource.Owner, this)
+                ? inspectorSource.CreateInspector()
+                : null;
         }
 
         public void CommitInspectorChange(object assetObject)
@@ -124,27 +181,14 @@ namespace Ux.Editor.Combat
             SaveInternal(true);
         }
 
-        void SaveInternal(bool completePendingUndo)
-        {
-            action.ValidateData();
-            if (completePendingUndo)
-            {
-                completeUndo?.Invoke();
-            }
-            EditorUtility.SetDirty(action);
-            AssetDatabase.SaveAssets();
-            afterSave?.Invoke();
-        }
-
         public void RefreshAfterUndo()
         {
             action.ValidateData();
             bindings.Clear();
-            cancelTrack.RebuildAdapters();
-            hitTrack.RebuildAdapters();
+            SyncTracks();
+            SyncFrameEvents();
             SaveInternal(false);
-            StructureChanged?.Invoke();
-            Changed?.Invoke();
+            NotifyStructureChanged();
         }
 
         public void Bind(object selection, Action callback)
@@ -169,287 +213,19 @@ namespace Ux.Editor.Combat
             }
         }
 
-        internal CombatCancelWindowEditorClip AddCancelWindow()
+        internal ActionCancelWindow FindCancelWindow(string stableId)
         {
-            if (!CanEdit || DurationFrames <= 0)
-            {
-                return null;
-            }
-
-            RegisterUndo("combat_add_cancel_window");
-            var serialized = new SerializedObject(action);
-            serialized.Update();
-            var windows = serialized.FindProperty("cancelWindows");
-            var index = windows.arraySize;
-            windows.InsertArrayElementAtIndex(index);
-            var element = windows.GetArrayElementAtIndex(index);
-            var stableId = Guid.NewGuid().ToString("N");
-            element.FindPropertyRelative("stableId").stringValue = stableId;
-            var startFrame = Mathf.Clamp(cancelTrack.EndFrame, 0, DurationFrames - 1);
-            element.FindPropertyRelative("StartFrame").intValue = startFrame;
-            element.FindPropertyRelative("EndFrame").intValue = startFrame + 1;
-            element.FindPropertyRelative("TargetActionId").intValue = Mathf.Max(1, action.ActionId);
-            element.FindPropertyRelative("RequiresHitConfirm").boolValue = false;
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-
-            action.ValidateData();
-            cancelTrack.RebuildAdapters();
-            Save();
-            StructureChanged?.Invoke();
-            Changed?.Invoke();
-            return cancelTrack.FindClip(stableId);
+            return FindWindow(action.CancelWindows, stableId);
         }
 
-        internal bool RemoveCancelWindow(CombatCancelWindowEditorClip clip)
+        internal ActionLinkWindow FindLinkWindow(string stableId)
         {
-            if (!CanEdit || clip == null || !ReferenceEquals(clip.Source, this))
-            {
-                return false;
-            }
-
-            var index = FindWindowIndex("cancelWindows", clip.Id);
-            if (index < 0)
-            {
-                return false;
-            }
-
-            RegisterUndo("combat_remove_cancel_window");
-            var serialized = new SerializedObject(action);
-            serialized.Update();
-            serialized.FindProperty("cancelWindows").DeleteArrayElementAtIndex(index);
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            action.ValidateData();
-            cancelTrack.RebuildAdapters();
-            Save();
-            StructureChanged?.Invoke();
-            Changed?.Invoke();
-            return true;
+            return FindWindow(action.LinkWindows, stableId);
         }
 
-        internal void BeginWindowDrag(CombatCancelWindowEditorClip clip)
+        internal ActionHitboxWindow FindHitboxWindow(string stableId)
         {
-            if (CanEdit && clip != null && ReferenceEquals(clip.Source, this))
-            {
-                RegisterUndo("combat_drag_cancel_window");
-            }
-        }
-
-        internal void SetWindowFrames(CombatCancelWindowEditorClip clip, int startFrame, int endFrame, bool notify)
-        {
-            if (!CanEdit || DurationFrames <= 0 || clip == null ||
-                !ReferenceEquals(clip.Source, this))
-            {
-                return;
-            }
-
-            var window = FindWindow(clip.Id);
-            if (window == null)
-            {
-                return;
-            }
-
-            startFrame = Mathf.Clamp(startFrame, 0, DurationFrames - 1);
-            endFrame = Mathf.Clamp(endFrame, startFrame + 1, DurationFrames);
-            window.StartFrame = startFrame;
-            window.EndFrame = endFrame;
-            if (notify)
-            {
-                Run(clip);
-            }
-        }
-
-        internal void CommitWindowEdit(CombatCancelWindowEditorClip clip)
-        {
-            if (!CanEdit || clip == null || !ReferenceEquals(clip.Source, this))
-            {
-                return;
-            }
-            var window = FindWindow(clip.Id);
-            window?.ValidateData();
-            Save();
-            Run(clip);
-            Changed?.Invoke();
-        }
-
-        internal void SetTargetActionId(CombatCancelWindowEditorClip clip, int targetActionId)
-        {
-            var window = FindWindow(clip?.Id);
-            targetActionId = Mathf.Max(1, targetActionId);
-            if (!CanEdit || window == null || window.TargetActionId == targetActionId)
-            {
-                return;
-            }
-
-            RegisterUndo("combat_cancel_target_action");
-            window.TargetActionId = targetActionId;
-            CommitWindowEdit(clip);
-        }
-
-        internal void SetRequiresHitConfirm(CombatCancelWindowEditorClip clip, bool value)
-        {
-            var window = FindWindow(clip?.Id);
-            if (!CanEdit || window == null || window.RequiresHitConfirm == value)
-            {
-                return;
-            }
-
-            RegisterUndo("combat_cancel_hit_confirm");
-            window.RequiresHitConfirm = value;
-            CommitWindowEdit(clip);
-        }
-
-        internal CombatHitWindowEditorClip AddHitWindow()
-        {
-            if (!CanEdit || DurationFrames <= 0)
-            {
-                return null;
-            }
-
-            RegisterUndo("combat_add_hit_window");
-            var serialized = new SerializedObject(action);
-            serialized.Update();
-            var windows = serialized.FindProperty("hitWindows");
-            var index = windows.arraySize;
-            windows.InsertArrayElementAtIndex(index);
-            var element = windows.GetArrayElementAtIndex(index);
-            var stableId = Guid.NewGuid().ToString("N");
-            element.FindPropertyRelative("stableId").stringValue = stableId;
-            var startFrame = Mathf.Clamp(hitTrack.EndFrame, 0, DurationFrames - 1);
-            element.FindPropertyRelative("StartFrame").intValue = startFrame;
-            element.FindPropertyRelative("EndFrame").intValue = startFrame + 1;
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-
-            action.ValidateData();
-            hitTrack.RebuildAdapters();
-            Save();
-            StructureChanged?.Invoke();
-            Changed?.Invoke();
-            return hitTrack.FindClip(stableId);
-        }
-
-        internal bool RemoveHitWindow(CombatHitWindowEditorClip clip)
-        {
-            if (!CanEdit || clip == null || !ReferenceEquals(clip.Source, this))
-            {
-                return false;
-            }
-
-            var index = FindWindowIndex("hitWindows", clip.Id);
-            if (index < 0)
-            {
-                return false;
-            }
-
-            RegisterUndo("combat_remove_hit_window");
-            var serialized = new SerializedObject(action);
-            serialized.Update();
-            serialized.FindProperty("hitWindows").DeleteArrayElementAtIndex(index);
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            action.ValidateData();
-            hitTrack.RebuildAdapters();
-            Save();
-            StructureChanged?.Invoke();
-            Changed?.Invoke();
-            return true;
-        }
-
-        internal void BeginHitWindowDrag(CombatHitWindowEditorClip clip)
-        {
-            if (CanEdit && clip != null && ReferenceEquals(clip.Source, this))
-            {
-                RegisterUndo("combat_drag_hit_window");
-            }
-        }
-
-        internal void SetHitWindowFrames(CombatHitWindowEditorClip clip, int startFrame, int endFrame, bool notify)
-        {
-            if (!CanEdit || DurationFrames <= 0 || clip == null ||
-                !ReferenceEquals(clip.Source, this))
-            {
-                return;
-            }
-
-            var window = FindHitWindow(clip.Id);
-            if (window == null)
-            {
-                return;
-            }
-
-            startFrame = Mathf.Clamp(startFrame, 0, DurationFrames - 1);
-            endFrame = Mathf.Clamp(endFrame, startFrame + 1, DurationFrames);
-            window.StartFrame = startFrame;
-            window.EndFrame = endFrame;
-            if (notify)
-            {
-                Run(clip);
-            }
-        }
-
-        internal void SetHitWindowGeometry(CombatHitWindowEditorClip clip, ActionHitShape shape, int radiusMillimeters)
-        {
-            if (!CanEdit || clip == null || !ReferenceEquals(clip.Source, this))
-            {
-                return;
-            }
-            var index = FindWindowIndex("hitWindows", clip.Id);
-            if (index < 0)
-            {
-                return;
-            }
-            var serialized = new SerializedObject(action);
-            serialized.Update();
-            var element = serialized.FindProperty("hitWindows").GetArrayElementAtIndex(index);
-            element.FindPropertyRelative("shape").enumValueIndex = (int)shape;
-            element.FindPropertyRelative("radiusMillimeters").intValue =
-                Mathf.Clamp(radiusMillimeters, 1, 10000000);
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            Save();
-            Run(clip);
-            Changed?.Invoke();
-        }
-
-        internal void CommitHitWindowEdit(CombatHitWindowEditorClip clip)
-        {
-            if (!CanEdit || clip == null || !ReferenceEquals(clip.Source, this))
-            {
-                return;
-            }
-            FindHitWindow(clip.Id)?.ValidateData();
-            Save();
-            Run(clip);
-            Changed?.Invoke();
-        }
-
-        internal ActionHitWindow FindHitWindow(string stableId)
-        {
-            if (string.IsNullOrEmpty(stableId) || action.HitWindows == null)
-            {
-                return null;
-            }
-            foreach (var window in action.HitWindows)
-            {
-                if (window != null && string.Equals(window.StableId, stableId, StringComparison.Ordinal))
-                {
-                    return window;
-                }
-            }
-            return null;
-        }
-
-        internal string GetHitWindowDisplayName(ActionHitWindow window)
-        {
-            if (window == null || action.HitWindows == null)
-            {
-                return "命中窗口";
-            }
-            for (var i = 0; i < action.HitWindows.Count; i++)
-            {
-                if (ReferenceEquals(action.HitWindows[i], window))
-                {
-                    return $"命中 {i + 1}";
-                }
-            }
-            return "命中窗口";
+            return FindWindow(action.HitboxWindows, stableId);
         }
 
         internal bool RecordEdit(string key)
@@ -460,36 +236,6 @@ namespace Ux.Editor.Combat
             }
             RegisterUndo(key);
             return true;
-        }
-
-        internal ActionCancelWindow FindWindow(string stableId)
-        {
-            if (string.IsNullOrEmpty(stableId) || action.CancelWindows == null)
-            {
-                return null;
-            }
-            foreach (var window in action.CancelWindows)
-            {
-                if (window != null && string.Equals(window.StableId, stableId, StringComparison.Ordinal))
-                {
-                    return window;
-                }
-            }
-            return null;
-        }
-
-        internal string GetWindowDisplayName(ActionCancelWindow window)
-        {
-            if (window == null)
-            {
-                return "取消窗口";
-            }
-
-            var target = profile?.FindAction(window.TargetActionId);
-            var targetName = target == null || string.IsNullOrEmpty(target.DisplayName)
-                ? window.TargetActionId.ToString()
-                : $"{target.DisplayName} ({window.TargetActionId})";
-            return window.RequiresHitConfirm ? $"→ {targetName} [需命中]" : $"→ {targetName}";
         }
 
         internal void Run(object selection)
@@ -503,7 +249,258 @@ namespace Ux.Editor.Combat
             }
         }
 
-        int FindWindowIndex(string propertyName, string stableId)
+        /// <summary>轨道增删后必须同时通知结构变更与内容变更，帧标尺与 Inspector 都要重建。</summary>
+        internal void NotifyStructureChanged()
+        {
+            SyncTracks();
+            SyncFrameEvents();
+            StructureChanged?.Invoke();
+            Changed?.Invoke();
+        }
+
+        internal void NotifyChanged()
+        {
+            Changed?.Invoke();
+        }
+
+        public IReadOnlyList<Type> GetFrameEventTypes()
+        {
+            return new[] { typeof(ActionSpawnEvent) };
+        }
+
+        public string GetFrameEventDisplayName(Type eventType)
+        {
+            return eventType == typeof(ActionSpawnEvent)
+                ? "生成物事件"
+                : eventType?.Name ?? string.Empty;
+        }
+
+        public ITimelineEditorFrameEvent AddFrameEvent(Type eventType, int frame)
+        {
+            if (!CanEdit || eventType != typeof(ActionSpawnEvent) || action.DurationFrames <= 0)
+            {
+                return null;
+            }
+
+            RecordEdit("combat_add_frame_event");
+            var stableId = Guid.NewGuid().ToString("N");
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var events = serialized.FindProperty("frameEvents");
+            if (events == null)
+            {
+                return null;
+            }
+
+            var index = events.arraySize;
+            events.InsertArrayElementAtIndex(index);
+            var element = events.GetArrayElementAtIndex(index);
+            element.managedReferenceValue = new ActionSpawnEvent();
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            serialized.Update();
+            element = serialized.FindProperty("frameEvents").GetArrayElementAtIndex(index);
+            element.FindPropertyRelative("stableId").stringValue = stableId;
+            element.FindPropertyRelative("Frame").intValue = Mathf.Clamp(frame, 0, action.DurationFrames - 1);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            CommitFrameEventStructure();
+            return FindFrameEvent(stableId);
+        }
+
+        public bool RemoveFrameEvent(ITimelineEditorFrameEvent frameEvent)
+        {
+            if (!CanEdit || frameEvent == null || !ReferenceEquals(frameEvent.Source, this))
+            {
+                return false;
+            }
+
+            var index = FindFrameEventIndex(frameEvent.Id);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            RecordEdit("combat_remove_frame_event");
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            serialized.FindProperty("frameEvents").DeleteArrayElementAtIndex(index);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            CommitFrameEventStructure();
+            return true;
+        }
+
+        internal CombatFrameEventEditorAdapter FindFrameEvent(string stableId)
+        {
+            for (var i = 0; i < frameEvents.Count; i++)
+            {
+                if (string.Equals(frameEvents[i].Id, stableId, StringComparison.Ordinal))
+                {
+                    return frameEvents[i] as CombatFrameEventEditorAdapter;
+                }
+            }
+            return null;
+        }
+
+        internal CombatFrameEvent FindFrameEventData(string stableId)
+        {
+            if (string.IsNullOrEmpty(stableId) || action.FrameEvents == null)
+            {
+                return null;
+            }
+            for (var i = 0; i < action.FrameEvents.Count; i++)
+            {
+                var frameEvent = action.FrameEvents[i];
+                if (frameEvent != null && string.Equals(frameEvent.StableId, stableId, StringComparison.Ordinal))
+                {
+                    return frameEvent;
+                }
+            }
+            return null;
+        }
+
+        internal ActionSpawnEvent FindSpawnEvent(string stableId)
+        {
+            return FindFrameEventData(stableId) as ActionSpawnEvent;
+        }
+
+        internal int FindFrameEventIndex(string stableId)
+        {
+            if (string.IsNullOrEmpty(stableId))
+            {
+                return -1;
+            }
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var events = serialized.FindProperty("frameEvents");
+            if (events == null)
+            {
+                return -1;
+            }
+            for (var i = 0; i < events.arraySize; i++)
+            {
+                var idProperty = events.GetArrayElementAtIndex(i).FindPropertyRelative("stableId");
+                if (idProperty != null && idProperty.stringValue == stableId)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        internal void SetFrameEventFrame(string stableId, int frame)
+        {
+            var index = FindFrameEventIndex(stableId);
+            if (index < 0 || action.DurationFrames <= 0)
+            {
+                return;
+            }
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var element = serialized.FindProperty("frameEvents").GetArrayElementAtIndex(index);
+            element.FindPropertyRelative("Frame").intValue = Mathf.Clamp(frame, 0, action.DurationFrames - 1);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        internal void SetSpawnEventProfile(string stableId, CombatSpawnProfile spawn)
+        {
+            var index = FindFrameEventIndex(stableId);
+            if (index < 0)
+            {
+                return;
+            }
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var element = serialized.FindProperty("frameEvents").GetArrayElementAtIndex(index);
+            element.FindPropertyRelative("spawnProfile").objectReferenceValue = spawn;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        internal void SetFrameEventDisplayName(string stableId, string displayName)
+        {
+            var index = FindFrameEventIndex(stableId);
+            if (index < 0)
+            {
+                return;
+            }
+            var serialized = new SerializedObject(action);
+            serialized.Update();
+            var element = serialized.FindProperty("frameEvents").GetArrayElementAtIndex(index);
+            element.FindPropertyRelative("displayName").stringValue = displayName ?? string.Empty;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        void CommitFrameEventStructure()
+        {
+            action.ValidateData();
+            SyncFrameEvents();
+            Save();
+            NotifyStructureChanged();
+        }
+
+        void SyncTracks()
+        {
+            if (action.CancelWindows != null && action.CancelWindows.Count > 0)
+            {
+                cancelTrack ??= new CombatCancelWindowEditorTrack(this);
+            }
+            else
+            {
+                cancelTrack = null;
+            }
+
+            if (action.LinkWindows != null && action.LinkWindows.Count > 0)
+            {
+                linkTrack ??= new CombatLinkWindowEditorTrack(this);
+            }
+            else
+            {
+                linkTrack = null;
+            }
+
+            if (action.HitboxWindows != null && action.HitboxWindows.Count > 0)
+            {
+                hitboxTrack ??= new CombatHitboxWindowEditorTrack(this);
+            }
+            else
+            {
+                hitboxTrack = null;
+            }
+
+            tracks.Clear();
+            if (cancelTrack != null)
+            {
+                tracks.Add(cancelTrack);
+            }
+            if (linkTrack != null)
+            {
+                tracks.Add(linkTrack);
+            }
+            if (hitboxTrack != null)
+            {
+                tracks.Add(hitboxTrack);
+            }
+        }
+
+        void SyncFrameEvents()
+        {
+            frameEvents.Clear();
+            if (action.FrameEvents == null)
+            {
+                return;
+            }
+            for (var i = 0; i < action.FrameEvents.Count; i++)
+            {
+                var frameEvent = action.FrameEvents[i];
+                if (frameEvent != null)
+                {
+                    frameEvents.Add(new CombatFrameEventEditorAdapter(this, frameEvent.StableId));
+                }
+            }
+        }
+
+        /// <summary>按稳定 ID 取窗口在序列化列表中的下标，找不到返回 -1。</summary>
+        internal int FindWindowIndex(string propertyName, string stableId)
         {
             if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(stableId))
             {
@@ -512,6 +509,10 @@ namespace Ux.Editor.Combat
             var serialized = new SerializedObject(action);
             serialized.Update();
             var windows = serialized.FindProperty(propertyName);
+            if (windows == null)
+            {
+                return -1;
+            }
             for (var i = 0; i < windows.arraySize; i++)
             {
                 var idProperty = windows.GetArrayElementAtIndex(i).FindPropertyRelative("stableId");
@@ -521,6 +522,18 @@ namespace Ux.Editor.Combat
                 }
             }
             return -1;
+        }
+
+        void SaveInternal(bool completePendingUndo)
+        {
+            action.ValidateData();
+            if (completePendingUndo)
+            {
+                completeUndo?.Invoke();
+            }
+            EditorUtility.SetDirty(action);
+            AssetDatabase.SaveAssets();
+            afterSave?.Invoke();
         }
 
         void RegisterUndo(string key)
@@ -539,173 +552,22 @@ namespace Ux.Editor.Combat
             }
         }
 
-    }
-
-    public sealed class CombatCancelWindowEditorTrack : ITimelineEditorTrack
-    {
-        readonly List<CombatCancelWindowEditorClip> clips = new();
-
-        internal CombatCancelWindowEditorTrack(CombatLogicTimelineSource source)
+        static TWindow FindWindow<TWindow>(IReadOnlyList<TWindow> windows, string stableId)
+            where TWindow : CombatLogicWindow
         {
-            Source = source;
-            RebuildAdapters();
-        }
-
-        public CombatLogicTimelineSource Source { get; }
-        ITimelineEditorSource ITimelineEditorTrack.Source => Source;
-        public string Id => $"{Source.Id}/cancel-windows";
-        public string Name => "取消窗口";
-        public string TypeName => nameof(ActionCancelWindow);
-        public string DisplayTypeName => "逻辑";
-        public Color Color => new(0.88f, 0.52f, 0.18f);
-        public int EndFrame
-        {
-            get
+            if (string.IsNullOrEmpty(stableId) || windows == null)
             {
-                var endFrame = 0;
-                foreach (var clip in clips)
-                {
-                    endFrame = Mathf.Max(endFrame, clip.EndFrame);
-                }
-                return endFrame;
+                return null;
             }
-        }
-        public bool CanRename => false;
-        public bool CanRemove => false;
-        public bool CanCreateClip => true;
-        public IReadOnlyList<CombatCancelWindowEditorClip> Clips => clips;
-        IReadOnlyList<ITimelineEditorClip> ITimelineEditorTrack.Clips => clips;
-
-        public void Rename(string name) { }
-        public bool Remove() => false;
-        public CombatCancelWindowEditorClip CreateClip(string assetPath = null) =>
-            Source.AddCancelWindow();
-        ITimelineEditorClip ITimelineEditorTrack.CreateClip(string assetPath) => CreateClip(assetPath);
-
-        public bool RemoveClip(ITimelineEditorClip clip)
-        {
-            return clip is CombatCancelWindowEditorClip cancelClip &&
-                   Source.RemoveCancelWindow(cancelClip);
-        }
-
-        public bool IsLayoutValid()
-        {
-            var ids = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var window in Source.Action.CancelWindows)
+            for (var i = 0; i < windows.Count; i++)
             {
-                if (window == null || string.IsNullOrEmpty(window.StableId) ||
-                    !ids.Add(window.StableId) || window.StartFrame < 0 ||
-                    window.EndFrame <= window.StartFrame ||
-                    window.EndFrame > Source.DurationFrames)
+                var window = windows[i];
+                if (window != null && string.Equals(window.StableId, stableId, StringComparison.Ordinal))
                 {
-                    return false;
+                    return window;
                 }
             }
-            // 多个取消目标在同一帧区间同时开放是合法配置，因此不做重叠限制。
-            return true;
+            return null;
         }
-
-        public void UpdateMixData() { }
-        public void RecordUndo(string key) => Source.RecordEdit(key);
-        public void Bind(Action callback) => Source.Bind(this, callback);
-        public void Unbind(Action callback) => Source.Unbind(this, callback);
-
-        internal CombatCancelWindowEditorClip FindClip(string stableId)
-        {
-            return clips.Find(clip => clip.Id == stableId);
-        }
-
-        internal void RebuildAdapters()
-        {
-            clips.Clear();
-            foreach (var window in Source.Action.CancelWindows)
-            {
-                if (window != null)
-                {
-                    clips.Add(new CombatCancelWindowEditorClip(this, window.StableId));
-                }
-            }
-        }
-    }
-
-    public sealed class CombatCancelWindowEditorClip : ITimelineEditorClip
-    {
-        internal CombatCancelWindowEditorClip(CombatCancelWindowEditorTrack track, string stableId)
-        {
-            Track = track;
-            Id = stableId;
-        }
-
-        public CombatCancelWindowEditorTrack Track { get; }
-        public CombatLogicTimelineSource Source => Track.Source;
-        ITimelineEditorTrack ITimelineEditorClip.Track => Track;
-        ActionCancelWindow Window => Source.FindWindow(Id);
-        public string Id { get; }
-        public string Name => Source.GetWindowDisplayName(Window);
-        public string TypeName => "取消";
-        public int StartFrame => Window?.StartFrame ?? 0;
-        public int EndFrame => Window?.EndFrame ?? 1;
-        public int InFrame => 0;
-        public int OutFrame => 0;
-        public int DurationFrames => Mathf.Max(1, EndFrame - StartFrame);
-        public bool CanFitAnimationDuration => false;
-        public int TargetActionId => Window?.TargetActionId ?? 1;
-        public bool RequiresHitConfirm => Window?.RequiresHitConfirm == true;
-
-        public void Rename(string name) { }
-        public void BeginDrag() => Source.BeginWindowDrag(this);
-
-        public void Drag(DragStatus status, int nowFrame, int lastFrame)
-        {
-            if (!Source.CanEdit)
-            {
-                return;
-            }
-
-            switch (status)
-            {
-                case DragStatus.Left:
-                    Source.SetWindowFrames(this, nowFrame, EndFrame, true);
-                    break;
-                case DragStatus.Right:
-                    Source.SetWindowFrames(this, StartFrame, nowFrame, true);
-                    break;
-                case DragStatus.Move:
-                    var length = DurationFrames;
-                    var start = Mathf.Clamp(
-                        StartFrame + nowFrame - lastFrame,
-                        0,
-                        Source.DurationFrames - length);
-                    Source.SetWindowFrames(this, start, start + length, true);
-                    break;
-            }
-        }
-
-        public void SetFrames(int startFrame, int endFrame, bool save = true)
-        {
-            if (!Source.CanEdit)
-            {
-                return;
-            }
-            if (save)
-            {
-                RecordUndo("combat_cancel_window_frames");
-            }
-            Source.SetWindowFrames(this, startFrame, endFrame, true);
-            if (save)
-            {
-                CommitEdit();
-            }
-        }
-
-        public void CommitEdit() => Source.CommitWindowEdit(this);
-        public bool TryAssignAnimation(string assetPath) => false;
-        public bool TryAssignAnimation(AnimationClip animation) => false;
-        public bool FitAnimationDuration() => false;
-        public void RecordUndo(string key) => Source.RecordEdit(key);
-        public void Bind(Action callback) => Source.Bind(this, callback);
-        public void Unbind(Action callback) => Source.Unbind(this, callback);
-        public void SetTargetActionId(int actionId) => Source.SetTargetActionId(this, actionId);
-        public void SetRequiresHitConfirm(bool value) => Source.SetRequiresHitConfirm(this, value);
     }
 }

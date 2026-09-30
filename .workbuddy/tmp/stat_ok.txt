@@ -1,0 +1,85 @@
+ .../Combat/Tests/CombatTimelinePlayerTests.cs      | 35 +++++++++++++----
+ Unity/Assets/Editor/Timeline/TimelineWindow.cs     | 10 ++---
+ .../Assets/Hotfix/Common/Combat/CombatComponent.cs | 16 ++------
+ .../Runtime/Presentation/CombatTimelinePlayer.cs   | 44 ++++++++++++++--------
+ 4 files changed, 62 insertions(+), 43 deletions(-)
+diff --git a/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs b/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs
+index 2c349e37..fee9c612 100644
+--- a/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs
++++ b/Unity/Assets/HotfixBase/Manager/Combat/Runtime/Presentation/CombatTimelinePlayer.cs
+@@ -7,3 +7,2 @@ namespace Ux
+     {
+-        public readonly string OwnerKey;
+         public readonly TimelineAsset Asset;
+@@ -11,8 +10,18 @@ namespace Ux
+ 
+-        public CombatTimelineSelection(string ownerKey, TimelineAsset asset, int frame)
++        /// <summary>鍚屼竴璧勪骇鐨勭鍑犳鎾斁銆傚彧鏈?Action 妲界敤锛氳繛鎷涙椂鍚屼竴璧勪骇鍐嶆璧锋墜蹇呴』寮哄埗閲嶆挱鍔ㄧ敾銆?/summary>
++        public readonly long InstanceId;
++
++        public CombatTimelineSelection(TimelineAsset asset, int frame, long instanceId = 0)
+         {
+-            OwnerKey = ownerKey ?? string.Empty;
+             Asset = asset;
+             Frame = Math.Max(0, frame);
++            InstanceId = instanceId;
+         }
++
++        /// <summary>
++        /// 鏄惁鍚屼竴涓潵婧?鈥斺€?鍞竴鐢ㄩ€旀槸鍒ゆ柇"瑕佷笉瑕侀噸鏂板垏杞ㄩ亾"銆?+        /// 鎵€浠?Frame 蹇呴』涓嶅弬涓庯細甯ф瘡甯ч兘鍦ㄥ彉锛屽畠鍙樹簡涓嶈閲嶆挱銆?+        /// </summary>
++        public bool SameOwner(in CombatTimelineSelection other) =>
++            ReferenceEquals(Asset, other.Asset) && InstanceId == other.InstanceId;
+     }
+@@ -35,2 +44,7 @@ namespace Ux
+     {
++        /// <summary>
++        /// 鎶婄姸鎬佹満涓庡姩浣滆繍琛屾椂鐨勫綋鍓嶄簨瀹炵炕璇戞垚"杩欎竴甯т袱涓挱鏀惧眰鍚勬挱鍝潯鏃堕棿绾裤€佹挱鍒扮鍑犲抚"銆?+        /// 绾銆佹棤鍓綔鐢紱鍒囪建閬撲笌鎺ㄦ挱鏀惧ご鐢?CombatTimelinePlayer 鍋氥€?+        /// 鍩虹灞傛寜 Life > Control > Locomotion 閫夛紝Life/Control 鍛戒腑鍗崇嫭鍗狅紙ExclusiveBase锛夈€?+        /// </summary>
+         public static CombatTimelinePlan Resolve(CharacterCombatProfile profile, CombatStateMachine states, CombatActionRunner actions, string variantId = null)
+@@ -47,3 +61,3 @@ namespace Ux
+             {
+-                return new CombatTimelinePlan(new CombatTimelineSelection($"state:{(int)StateLayer.Life}:{lifeId}:{life.StableId}:{life.VariantId}", life.Timeline, states.GetStateFrame(StateLayer.Life)), default, true);
++                return new CombatTimelinePlan(new CombatTimelineSelection(life.Timeline, states.GetStateFrame(StateLayer.Life)), default, true);
+             }
+@@ -54,3 +68,3 @@ namespace Ux
+             {
+-                return new CombatTimelinePlan(new CombatTimelineSelection($"state:{(int)StateLayer.Control}:{controlId}:{control.StableId}:{control.VariantId}", control.Timeline, states.GetStateFrame(StateLayer.Control)), default, true);
++                return new CombatTimelinePlan(new CombatTimelineSelection(control.Timeline, states.GetStateFrame(StateLayer.Control)), default, true);
+             }
+@@ -65,6 +79,6 @@ namespace Ux
+                 {
+-                    actionSelection = new CombatTimelineSelection($"action:{actions.Current.InstanceId}", asset, actions.Current.ActionFrame);
++                    actionSelection = new CombatTimelineSelection(asset, actions.Current.ActionFrame, actions.Current.InstanceId);
+                 }
+             }
+-            var baseSelection = new CombatTimelineSelection($"state:{(int)StateLayer.Locomotion}:{locomotionId}:{locomotion?.StableId ?? "none"}:{locomotion?.VariantId ?? ""}", locomotion?.Timeline, states.GetStateFrame(StateLayer.Locomotion));
++            var baseSelection = new CombatTimelineSelection(locomotion?.Timeline, states.GetStateFrame(StateLayer.Locomotion));
+             return new CombatTimelinePlan(baseSelection, actionSelection);
+@@ -76,4 +90,4 @@ namespace Ux
+         private readonly TimelineComponent _component;
+-        private string _baseOwner = string.Empty;
+-        private string _actionOwner = string.Empty;
++        private CombatTimelineSelection _baseOwner;
++        private CombatTimelineSelection _actionOwner;
+ 
+@@ -84,5 +98,5 @@ namespace Ux
+             if (_component == null) return;
+-            var baseChanged = force || !string.Equals(_baseOwner, plan.Base.OwnerKey, StringComparison.Ordinal) ||
++            var baseChanged = force || !_baseOwner.SameOwner(plan.Base) ||
+                 plan.Base.Asset != null && _component.GetTimeline(TimelinePlaybackLayer.Base) == null;
+-            var actionChanged = force || !string.Equals(_actionOwner, plan.Action.OwnerKey, StringComparison.Ordinal) ||
++            var actionChanged = force || !_actionOwner.SameOwner(plan.Action) ||
+                 plan.Action.Asset != null && _component.GetTimeline(TimelinePlaybackLayer.Action) == null;
+@@ -98,4 +112,4 @@ namespace Ux
+             }
+-            _baseOwner = plan.Base.OwnerKey;
+-            _actionOwner = plan.ExclusiveBase ? string.Empty : plan.Action.OwnerKey;
++            _baseOwner = plan.Base;
++            _actionOwner = plan.ExclusiveBase ? default : plan.Action;
+         }
+@@ -120,4 +134,4 @@ namespace Ux
+         {
+-            _baseOwner = string.Empty;
+-            _actionOwner = string.Empty;
++            _baseOwner = default;
++            _actionOwner = default;
+         }

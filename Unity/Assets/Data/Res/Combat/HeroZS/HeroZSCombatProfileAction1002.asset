@@ -18,4 +18,6 @@ MonoBehaviour:
   durationFrames: 30
   movementPolicy: 1
   cancelWindows: []
-  hitWindows: []
+  linkWindows: []
+  hitboxWindows: []
+  frameEvents: []

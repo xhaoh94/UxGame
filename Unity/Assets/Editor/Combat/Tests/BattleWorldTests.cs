@@ -88,7 +88,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var action = CombatTestProfiles.CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(action);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             window.FindPropertyRelative("StartFrame").intValue = 0;
@@ -116,7 +116,7 @@ namespace Ux.Editor.Combat.Tests
 
                 Assert.IsTrue(entity.Controller.ActionRunner.TryAcceptHit(
                     entity.Controller.ActionRunner.Current.InstanceId,
-                    action.HitWindows[0].StableId,
+                    action.HitboxWindows[0].StableId,
                     2));
                 Assert.AreNotEqual(before, world.ComputeStateHash(),
                     "已命中去重集合属于逻辑状态，必须参与世界哈希。");

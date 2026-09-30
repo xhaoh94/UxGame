@@ -14,18 +14,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stableId: hero.action.attack01
   actionId: 1001
-  displayName: "\u666E\u901A\u653B\u51FB"
+  displayName: "\u666E\u901A\u653B\u51FB\xB7\u4E00\u6BB5"
   durationFrames: 70
   movementPolicy: 0
-  cancelWindows:
-  - stableId: 9f48c08560274e35a8a3a6314c1fa436
-    StartFrame: 5
-    EndFrame: 26
-    TargetActionId: 1001
+  cancelWindows: []
+  linkWindows:
+  - stableId: 79664458ccd34c4ea272c91c160e928e
+    StartFrame: 25
+    EndFrame: 48
+    TargetActionId: 1002
     RequiresHitConfirm: 0
-  hitWindows:
-  - stableId: 3a28fcf418624cda974cccab02044a80
-    StartFrame: 41
-    EndFrame: 45
+  hitboxWindows:
+  - stableId: 46fa5701a77c47568910ffe5f67b884f
+    StartFrame: 25
+    EndFrame: 47
     shape: 0
-    radiusMillimeters: 14
+    radiusMillimeters: 1
+  frameEvents: []
+  damage: 10
+  appliedBuff:
+    buffId: 0
+    durationFrames: 120
+    damagePerTick: 0
+  references:
+    version: 2
+    RefIds: []

@@ -1,0 +1,3 @@
+BEFORE crlf=0 lf=81 bytes=6959 eol='\n'
+AFTER  crlf=0 lf=88 bytes=7472
+PREFIX_PRESERVED=True EOL_UNCHANGED=True

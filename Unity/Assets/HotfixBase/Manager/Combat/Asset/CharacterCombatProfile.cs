@@ -27,6 +27,9 @@ namespace Ux
         [Header("技能表现映射")]
         [SerializeField] private List<CombatActionPresentation> actionPresentations = new();
 
+        [Header("生成物表现映射")]
+        [SerializeField] private List<CombatSpawnPresentation> spawnPresentations = new();
+
         public int FrameRate => Mathf.Max(1, frameRate);
         public string Group => group;
         public float MoveSpeedPerSecond => Mathf.Max(0, moveSpeedPerSecond);
@@ -37,6 +40,7 @@ namespace Ux
         public IReadOnlyList<CombatStatePresentation> StatePresentations => statePresentations;
         public IReadOnlyList<CombatActionAsset> Actions => actions;
         public IReadOnlyList<CombatActionPresentation> ActionPresentations => actionPresentations;
+        public IReadOnlyList<CombatSpawnPresentation> SpawnPresentations => spawnPresentations;
 
         /// <summary>
         /// 按逻辑状态和外部表现变体解析一条状态表现。
@@ -58,25 +62,17 @@ namespace Ux
             for (var i = 0; i < statePresentations.Count; i++)
             {
                 var presentation = statePresentations[i];
-                if (presentation == null ||
-                    presentation.Layer != layer ||
-                    presentation.StateId != stateId)
+                if (presentation == null || presentation.Layer != layer || presentation.StateId != stateId)
                 {
                     continue;
                 }
 
-                if (string.Equals(
-                        presentation.VariantId,
-                        requestedVariant,
-                        StringComparison.Ordinal))
+                if (string.Equals(presentation.VariantId,requestedVariant,StringComparison.Ordinal))
                 {
                     exact = SelectBetter(exact, presentation);
                 }
 
-                if (string.Equals(
-                        presentation.VariantId,
-                        CombatStatePresentation.DefaultVariantId,
-                        StringComparison.Ordinal))
+                if (string.Equals(presentation.VariantId,CombatStatePresentation.DefaultVariantId,StringComparison.Ordinal))
                 {
                     defaultPresentation = SelectBetter(defaultPresentation, presentation);
                 }
@@ -140,6 +136,28 @@ namespace Ux
             return GetActionPresentation(action)?.Timeline;
         }
 
+        public CombatSpawnPresentation GetSpawnPresentation(CombatSpawnProfile spawn)
+        {
+            if (spawn == null || spawnPresentations == null)
+            {
+                return null;
+            }
+
+            foreach (var presentation in spawnPresentations)
+            {
+                if (presentation != null && presentation.Matches(spawn))
+                {
+                    return presentation;
+                }
+            }
+            return null;
+        }
+
+        public TimelineAsset GetSpawnTimeline(CombatSpawnProfile spawn)
+        {
+            return GetSpawnPresentation(spawn)?.Timeline;
+        }
+
         public void ValidateRuntime()
         {
             ValidateData();
@@ -177,10 +195,20 @@ namespace Ux
                     throw new InvalidOperationException(
                         $"取消窗口列表为空引用: profile={name}, action={action.name}");
                 }
-                if (action.HitWindows == null)
+                if (action.LinkWindows == null)
                 {
                     throw new InvalidOperationException(
-                        $"命中窗口列表为空引用: profile={name}, action={action.name}");
+                        $"连招衔接窗口列表为空引用: profile={name}, action={action.name}");
+                }
+                if (action.HitboxWindows == null)
+                {
+                    throw new InvalidOperationException(
+                        $"攻击判定列表为空引用: profile={name}, action={action.name}");
+                }
+                if (action.FrameEvents == null)
+                {
+                    throw new InvalidOperationException(
+                        $"帧事件列表为空引用: profile={name}, action={action.name}");
                 }
 
                 var logicItemIds = new HashSet<string>(StringComparer.Ordinal);
@@ -210,12 +238,12 @@ namespace Ux
                             $"取消窗口目标动作不存在: profile={name}, action={action.name}, target={window.TargetActionId}");
                     }
                 }
-                foreach (var window in action.HitWindows)
+                foreach (var window in action.LinkWindows)
                 {
                     if (window == null)
                     {
                         throw new InvalidOperationException(
-                            $"命中窗口为空引用: profile={name}, action={action.name}");
+                            $"连招衔接窗口为空引用: profile={name}, action={action.name}");
                     }
                     if (string.IsNullOrEmpty(window.StableId) ||
                         !logicItemIds.Add(window.StableId))
@@ -228,15 +256,61 @@ namespace Ux
                         window.EndFrame > action.DurationFrames)
                     {
                         throw new InvalidOperationException(
-                            $"命中窗口区间无效: profile={name}, action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                            $"连招衔接窗口区间无效: profile={name}, action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
+                    }
+                    if (!actionIds.Contains(window.TargetActionId))
+                    {
+                        throw new InvalidOperationException(
+                            $"连招衔接窗口目标动作不存在: profile={name}, action={action.name}, target={window.TargetActionId}");
+                    }
+                }
+                foreach (var window in action.HitboxWindows)
+                {
+                    if (window == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"攻击判定为空引用: profile={name}, action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(window.StableId) ||
+                        !logicItemIds.Add(window.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: profile={name}, action={action.name}, item={window.StableId}");
+                    }
+                    if (window.StartFrame < 0 ||
+                        window.EndFrame <= window.StartFrame ||
+                        window.EndFrame > action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"攻击判定区间无效: profile={name}, action={action.name}, range=[{window.StartFrame}, {window.EndFrame}), duration={action.DurationFrames}");
                     }
                     if (!Enum.IsDefined(typeof(ActionHitShape), window.Shape) ||
                         window.RadiusMillimeters <= 0 ||
                         window.RadiusMillimeters > 10000000)
                     {
                         throw new InvalidOperationException(
-                            $"命中窗口形状参数无效: profile={name}, action={action.name}, shape={window.Shape}, radius={window.RadiusMillimeters}");
+                            $"攻击判定形状参数无效: profile={name}, action={action.name}, shape={window.Shape}, radius={window.RadiusMillimeters}");
                     }
+                }
+                foreach (var frameEvent in action.FrameEvents)
+                {
+                    if (frameEvent == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"帧事件为空引用: profile={name}, action={action.name}");
+                    }
+                    if (string.IsNullOrEmpty(frameEvent.StableId) ||
+                        !logicItemIds.Add(frameEvent.StableId))
+                    {
+                        throw new InvalidOperationException(
+                            $"逻辑子项 StableId 缺失或重复: profile={name}, action={action.name}, item={frameEvent.StableId}");
+                    }
+                    if (frameEvent.Frame < 0 || frameEvent.Frame >= action.DurationFrames)
+                    {
+                        throw new InvalidOperationException(
+                            $"帧事件位置无效: profile={name}, action={action.name}, frame={frameEvent.Frame}, duration={action.DurationFrames}");
+                    }
+                    frameEvent.ValidateRuntime(action);
                 }
             }
 
@@ -259,6 +333,21 @@ namespace Ux
                         $"技能表现映射重复: profile={name}, actionId={action.ActionId}");
                 }
                 ValidateTimeline(presentation.Timeline, $"Action/{action.ActionId}");
+            }
+
+            var mappedSpawns = new HashSet<CombatSpawnProfile>();
+            foreach (var presentation in spawnPresentations)
+            {
+                var spawn = presentation.Spawn;
+                if (spawn == null)
+                {
+                    throw new InvalidOperationException($"生成物表现映射缺少逻辑生成物: profile={name}");
+                }
+                if (!mappedSpawns.Add(spawn))
+                {
+                    throw new InvalidOperationException(
+                        $"生成物表现映射重复: profile={name}, spawn={spawn.name}");
+                }
             }
 
             var stableIds = new HashSet<string>(StringComparer.Ordinal);
@@ -316,6 +405,9 @@ namespace Ux
 
             actionPresentations ??= new List<CombatActionPresentation>();
             actionPresentations.RemoveAll(presentation => presentation == null);
+
+            spawnPresentations ??= new List<CombatSpawnPresentation>();
+            spawnPresentations.RemoveAll(presentation => presentation == null);
         }
 
         private static CombatStatePresentation SelectBetter(CombatStatePresentation current, CombatStatePresentation candidate)

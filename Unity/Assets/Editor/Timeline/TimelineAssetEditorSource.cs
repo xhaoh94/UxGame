@@ -301,6 +301,8 @@ namespace Ux.Editor.Timeline
                     return new TLAnimTrackInspector(this, track, animationTrack);
                 case TimelineAssetEditorClip clip when clip.Asset is AnimationClipAsset animationClip:
                     return new TLAnimClipInspector(this, clip, animationClip);
+                case TimelineAssetEditorClip clip when clip.Asset is ParticleClipAsset particleClip:
+                    return new ParticleClipInspector(this, clip, particleClip);
                 case TimelineAssetEditorTrack track when track.Asset is ParticleAssetTrack particleTrack:
                     return new ParticleTrackInspector(this, track, particleTrack);
                 case TimelineAssetEditorClip clip:

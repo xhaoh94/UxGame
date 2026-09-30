@@ -41,6 +41,32 @@ namespace Ux.Editor.Timeline
         void RefreshAfterUndo();
     }
 
+    /// <summary>可选的离散帧事件数据源。事件不占用 Timeline 轨道，只以标记显示。</summary>
+    public interface ITimelineEditorFrameEventSource
+    {
+        IReadOnlyList<ITimelineEditorFrameEvent> FrameEvents { get; }
+        IReadOnlyList<Type> GetFrameEventTypes();
+        string GetFrameEventDisplayName(Type eventType);
+        ITimelineEditorFrameEvent AddFrameEvent(Type eventType, int frame);
+        bool RemoveFrameEvent(ITimelineEditorFrameEvent frameEvent);
+    }
+
+    public interface ITimelineEditorFrameEvent
+    {
+        ITimelineEditorSource Source { get; }
+        string Id { get; }
+        string Name { get; }
+        string TypeName { get; }
+        int Frame { get; }
+        Color Color { get; }
+        bool CanRemove { get; }
+
+        void SetFrame(int frame);
+        bool Remove();
+        void Bind(Action action);
+        void Unbind(Action action);
+    }
+
     public interface ITimelineEditorTrack
     {
         ITimelineEditorSource Source { get; }

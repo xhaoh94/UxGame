@@ -130,6 +130,7 @@ namespace Ux
                 Action = ActionRunner.Current,
                 HasAction = ActionRunner.HasAction,
                 AcceptedHits = ActionRunner.CaptureAcceptedHits(),
+                SpawnedEvents = ActionRunner.CaptureSpawnedEvents(),
                 LocalActionSequence = ActionRunner.LocalSequence,
                 IsGrounded = IsGrounded,
                 Attributes = Attributes.CaptureSnapshot(),
@@ -161,7 +162,8 @@ namespace Ux
                 snapshot.HasAction,
                 snapshot.StateMachine.SimulationFrame,
                 snapshot.AcceptedHits,
-                snapshot.LocalActionSequence);
+                snapshot.LocalActionSequence,
+                snapshot.SpawnedEvents);
         }
 
         public void Release()

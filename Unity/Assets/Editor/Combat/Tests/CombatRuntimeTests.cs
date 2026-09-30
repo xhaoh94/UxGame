@@ -541,9 +541,207 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
+        public void ResolveComboTargetFallsBackToChainRoot()
+        {
+            var chain = CreateComboChain();
+            var profile = CreateProfile(chain);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+
+                Assert.AreEqual(1001, runner.ResolveComboTarget(1001),
+                    "没有动作在跑时必须回落到链头，输入层不用自己判断有没有动作。");
+
+                runner.Tick(1, Frame(1, 1001), true);
+                Assert.AreEqual(1001, runner.ResolveComboTarget(1001),
+                    "动作在跑但窗口没打开时同样回落链头。");
+            }
+            finally
+            {
+                DestroyChain(profile, chain);
+            }
+        }
+
+        [Test]
+        public void ResolveComboTargetReturnsWindowTargetOnlyWhileOpen()
+        {
+            var chain = CreateComboChain();
+            var profile = CreateProfile(chain);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+                runner.Tick(1, Frame(1, 1001), true);
+
+                // 取消窗口 [4,12)：ActionFrame 3 还没开，4 才开
+                runner.Tick(4, CombatFrameCommands.Empty, true);
+                Assert.AreEqual(3, runner.Current.ActionFrame);
+                Assert.AreEqual(1001, runner.ResolveComboTarget(1001));
+
+                runner.Tick(5, CombatFrameCommands.Empty, true);
+                Assert.AreEqual(4, runner.Current.ActionFrame);
+                Assert.AreEqual(1002, runner.ResolveComboTarget(1001));
+
+                // 半开区间：ActionFrame 12 已关闭
+                runner.Tick(13, CombatFrameCommands.Empty, true);
+                Assert.AreEqual(12, runner.Current.ActionFrame);
+                Assert.AreEqual(1001, runner.ResolveComboTarget(1001));
+            }
+            finally
+            {
+                DestroyChain(profile, chain);
+            }
+        }
+
+        [Test]
+        public void ResolveComboTargetHonoursHitConfirmRequirement()
+        {
+            var attack = CreateAction(1001, "attack", 20);
+            var followUp = CreateAction(1002, "follow-up", 20);
+            ConfigureLinkWindow(attack, 2, 8, followUp.ActionId, requiresHitConfirm: true);
+            var profile = CreateProfile(attack, followUp);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+                runner.Tick(1, Frame(1, attack.ActionId), true);
+
+                runner.Tick(3, CombatFrameCommands.Empty, true);
+                Assert.AreEqual(2, runner.Current.ActionFrame);
+                Assert.AreEqual(attack.ActionId, runner.ResolveComboTarget(attack.ActionId),
+                    "需要命中确认的窗口在确认之前不能成为连招目标。");
+
+                Assert.IsTrue(runner.MarkHitConfirmed(runner.Current.InstanceId));
+                Assert.AreEqual(followUp.ActionId, runner.ResolveComboTarget(attack.ActionId));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+                UnityEngine.Object.DestroyImmediate(attack);
+                UnityEngine.Object.DestroyImmediate(followUp);
+            }
+        }
+
+        [Test]
+        public void ResolveComboTargetIgnoresCancelWindows()
+        {
+            var attack = CreateAction(1001, "attack", 20);
+            var dodge = CreateAction(2001, "dodge", 20);
+            ConfigureCancelWindow(attack, 2, 8, dodge.ActionId);
+            var profile = CreateProfile(attack, dodge);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+                runner.Tick(1, Frame(1, attack.ActionId), true);
+                runner.Tick(3, CombatFrameCommands.Empty, true);
+
+                Assert.AreEqual(attack.ActionId, runner.ResolveComboTarget(attack.ActionId),
+                    "泛化取消窗口不能泄漏成连招目标：连招只读 LinkWindows。");
+
+                runner.Tick(4, Frame(4, dodge.ActionId), true);
+                Assert.AreEqual(dodge.ActionId, runner.Current.ActionId,
+                    "显式输入闪避技能时，仍然要能被取消窗口接受。");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+                UnityEngine.Object.DestroyImmediate(attack);
+                UnityEngine.Object.DestroyImmediate(dodge);
+            }
+        }
+
+        [Test]
+        public void ResolveComboTargetWalksFullThreeSegmentChain()
+        {
+            var chain = CreateComboChain();
+            var profile = CreateProfile(chain);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+
+                var starts = new List<int>();
+                runner.ActionChanged += e =>
+                {
+                    if (e.EndReason == CombatActionEndReason.Started)
+                    {
+                        starts.Add(e.Current.ActionId);
+                    }
+                };
+
+                runner.Tick(1, Frame(1, 1001), true);
+
+                Assert.AreEqual(1002, QueryThenCancel(runner, 5, 1001));
+                Assert.AreEqual(1003, QueryThenCancel(runner, 10, 1001));
+                Assert.AreEqual(1001, QueryThenCancel(runner, 15, 1001));
+
+                CollectionAssert.AreEqual(new[] { 1001, 1002, 1003, 1001 }, starts,
+                    "三段打完必须回到链头，才能无限连；最后一跳说明链是环不是线。");
+            }
+            finally
+            {
+                DestroyChain(profile, chain);
+            }
+        }
+
+        [Test]
+        public void ComboQueryResultIsCancellableOnNextFrame()
+        {
+            var chain = CreateComboChain();
+            var profile = CreateProfile(chain);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+                runner.Tick(1, Frame(1, 1001), true);
+                runner.Tick(5, CombatFrameCommands.Empty, true);
+
+                // 查表发生在窗口内、且不是窗口最后一帧 —— 下一帧消费时仍在窗口内
+                var target = runner.ResolveComboTarget(1001);
+                Assert.AreEqual(1002, target);
+                runner.Tick(6, Frame(6, target), true);
+                Assert.AreEqual(target, runner.Current.ActionId);
+                Assert.AreEqual(0, runner.Current.ActionFrame);
+            }
+            finally
+            {
+                DestroyChain(profile, chain);
+            }
+        }
+
+        [Test]
+        public void ComboQueryOnLastWindowFrameFallsOutsideAfterOneFrameDelay()
+        {
+            var chain = CreateComboChain();
+            var profile = CreateProfile(chain);
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+                runner.Tick(1, Frame(1, 1001), true);
+
+                // ActionFrame 11 是 [4,12) 的最后一帧：这一帧查表有目标，但命令下一帧才生效
+                runner.Tick(12, CombatFrameCommands.Empty, true);
+                Assert.AreEqual(11, runner.Current.ActionFrame);
+                var target = runner.ResolveComboTarget(1001);
+                Assert.AreEqual(1002, target);
+
+                runner.Tick(13, Frame(13, target), true);
+                Assert.AreEqual(1001, runner.Current.ActionId,
+                    "窗口最后一帧按下会落到窗口外 —— 命令延迟一帧的固有代价，不是缺陷。");
+            }
+            finally
+            {
+                DestroyChain(profile, chain);
+            }
+        }
+
+        [Test]
         public void HitWindowUsesHalfOpenConfiguredFrameRange()
         {
-            var window = new ActionHitWindow
+            var window = new ActionHitboxWindow
             {
                 StartFrame = 2,
                 EndFrame = 4,
@@ -556,11 +754,11 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
-        public void RunnerAppendsActiveHitWindowsInSerializedOrderWithoutSideEffects()
+        public void RunnerAppendsActiveHitboxWindowsInSerializedOrderWithoutSideEffects()
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 3;
             SetWindowRange(windows.GetArrayElementAtIndex(0), 1, 4);
             SetWindowRange(windows.GetArrayElementAtIndex(1), 2, 3);
@@ -582,33 +780,33 @@ namespace Ux.Editor.Combat.Tests
                     true);
                 runner.Tick(2, CombatFrameCommands.Empty, true); // ActionFrame 1
 
-                var output = new List<CombatActiveHitWindow>();
-                Assert.AreEqual(1, runner.AppendActiveHitWindows(output));
+                var output = new List<CombatActiveHitboxWindow>();
+                Assert.AreEqual(1, runner.AppendActiveHitboxWindows(output));
                 Assert.AreEqual(0, output[0].WindowIndex);
                 Assert.AreEqual(runner.Current.InstanceId, output[0].ActionInstanceId);
                 Assert.AreEqual(1, output[0].ActionFrame);
 
                 runner.Tick(3, CombatFrameCommands.Empty, true); // ActionFrame 2
                 output.Clear();
-                Assert.AreEqual(2, runner.AppendActiveHitWindows(output));
+                Assert.AreEqual(2, runner.AppendActiveHitboxWindows(output));
                 CollectionAssert.AreEqual(new[] { 0, 1 },
                     output.ConvertAll(item => item.WindowIndex));
                 var firstResult = output[0];
-                var firstWindow = attack.HitWindows[0];
+                var firstWindow = attack.HitboxWindows[0];
                 firstWindow.EndFrame = 9;
                 Assert.AreEqual(4, firstResult.EndFrame,
                     "查询结果必须复制帧值，不能持有会随权威资产变化的可变窗口引用。");
                 firstWindow.EndFrame = 4;
-                Assert.AreEqual(2, runner.AppendActiveHitWindows(output),
+                Assert.AreEqual(2, runner.AppendActiveHitboxWindows(output),
                     "重复查询必须无状态，并只向调用方集合追加结果。");
                 CollectionAssert.AreEqual(new[] { 0, 1, 0, 1 },
                     output.ConvertAll(item => item.WindowIndex));
 
                 runner.Tick(5, CombatFrameCommands.Empty, true); // ActionFrame 4
                 output.Clear();
-                Assert.AreEqual(1, runner.AppendActiveHitWindows(output));
+                Assert.AreEqual(1, runner.AppendActiveHitboxWindows(output));
                 Assert.AreEqual(2, output[0].WindowIndex,
-                    "EndFrame 本身不属于前两条命中窗口。");
+                    "EndFrame 本身不属于前两条攻击判定。");
             }
             finally
             {
@@ -618,11 +816,11 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
-        public void SnapshotRestoreReconstructsActiveHitWindowsWithoutExtraState()
+        public void SnapshotRestoreReconstructsActiveHitboxWindowsWithoutExtraState()
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             SetWindowRange(windows.GetArrayElementAtIndex(0), 1, 3);
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -642,15 +840,15 @@ namespace Ux.Editor.Combat.Tests
                     true);
                 runner.Tick(2, CombatFrameCommands.Empty, true);
                 var snapshot = runner.Current;
-                var before = new List<CombatActiveHitWindow>();
-                Assert.AreEqual(1, runner.AppendActiveHitWindows(before));
+                var before = new List<CombatActiveHitboxWindow>();
+                Assert.AreEqual(1, runner.AppendActiveHitboxWindows(before));
 
                 runner.Tick(5, CombatFrameCommands.Empty, true);
-                Assert.AreEqual(0, runner.AppendActiveHitWindows(new List<CombatActiveHitWindow>()));
+                Assert.AreEqual(0, runner.AppendActiveHitboxWindows(new List<CombatActiveHitboxWindow>()));
                 runner.Restore(snapshot, true, 2);
 
-                var restored = new List<CombatActiveHitWindow>();
-                Assert.AreEqual(1, runner.AppendActiveHitWindows(restored));
+                var restored = new List<CombatActiveHitboxWindow>();
+                Assert.AreEqual(1, runner.AppendActiveHitboxWindows(restored));
                 Assert.AreEqual(before[0].WindowId, restored[0].WindowId);
                 Assert.AreEqual(before[0].ActionFrame, restored[0].ActionFrame);
                 Assert.AreEqual(before[0].ActionInstanceId, restored[0].ActionInstanceId);
@@ -667,7 +865,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             SetWindowRange(window, 0, 4);
@@ -713,11 +911,61 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
+        public void HitResolverExcludesSpawnerForProjectiles()
+        {
+            // 刀波在发射者脚下生成（距离 0），不豁免发射者会当场打中自己把自己耗死。
+            var attack = CreateAction(1001, "attack", 10);
+            var serialized = new SerializedObject(attack);
+            var windows = serialized.FindProperty("hitboxWindows");
+            windows.arraySize = 1;
+            var window = windows.GetArrayElementAtIndex(0);
+            SetWindowRange(window, 0, 2);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            attack.ValidateData();
+            var profile = CreateProfile(attack);
+
+            try
+            {
+                var runner = new CombatActionRunner();
+                runner.Initialize(profile, 0);
+                Assert.IsTrue(runner.StartAction(attack.ActionId, 1, 0, false));
+
+                var targets = new List<CombatHitTarget>
+                {
+                    new CombatHitTarget(77, new CombatFixedPoint(0, 0)),
+                    new CombatHitTarget(20, new CombatFixedPoint(500, 0)),
+                };
+                var hits = new List<CombatHitCandidate>();
+                Assert.AreEqual(1, CombatHitResolver.AppendResolvedHits(
+                    runner,
+                    new CombatHitQuerySource(1, new CombatFixedPoint(0, 0), 77),
+                    targets,
+                    hits),
+                    "发射者 77 必须被豁免，只剩 20 中招。");
+                CollectionAssert.AreEqual(new long[] { 20 },
+                    hits.ConvertAll(hit => hit.TargetEntityId));
+
+                // 不带豁免时行为不变：发射者恢复为合法目标。
+                hits.Clear();
+                Assert.AreEqual(2, CombatHitResolver.AppendResolvedHits(
+                    runner,
+                    new CombatHitQuerySource(1, new CombatFixedPoint(0, 0)),
+                    targets,
+                    hits));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(profile);
+                UnityEngine.Object.DestroyImmediate(attack);
+            }
+        }
+
+        [Test]
         public void PredictedHitDeduplicationMigratesWhenActionIsConfirmed()
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             SetWindowRange(window, 0, 2);
@@ -759,7 +1007,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             SetWindowRange(window, 0, 2);
@@ -805,7 +1053,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             SetWindowRange(window, 0, 2);
@@ -851,7 +1099,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             SetWindowRange(window, 0, 4);
@@ -897,7 +1145,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var attack = CreateAction(1001, "attack", 10);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             var window = windows.GetArrayElementAtIndex(0);
             SetWindowRange(window, 0, 2);
@@ -954,7 +1202,7 @@ namespace Ux.Editor.Combat.Tests
         [Test]
         public void WindowValidationHandlesMaximumIntegerStartFrame()
         {
-            var hitWindow = new ActionHitWindow
+            var hitWindow = new ActionHitboxWindow
             {
                 StartFrame = int.MaxValue,
                 EndFrame = int.MaxValue,
@@ -980,7 +1228,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var attack = CreateAction(1001, "attack", 3);
             var serialized = new SerializedObject(attack);
-            var windows = serialized.FindProperty("hitWindows");
+            var windows = serialized.FindProperty("hitboxWindows");
             windows.arraySize = 1;
             SetWindowRange(windows.GetArrayElementAtIndex(0), 2, 4);
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -1115,6 +1363,77 @@ namespace Ux.Editor.Combat.Tests
             Assert.AreEqual(2u, commands[4].TargetId);
             Assert.AreEqual(1002, commands[5].ActionId);
             Assert.AreEqual(2, commands[6].RequestId);
+        }
+
+        private static CombatFrameCommands Frame(int simulationFrame, int actionId)
+        {
+            return new CombatFrameCommands(new[]
+            {
+                new CombatCommand(simulationFrame, simulationFrame, actionId),
+            });
+        }
+
+        /// <summary>
+        /// 复刻输入层语义：在 frame 这一帧查表，把结果包成"下一帧生效"的命令，返回下一帧实际起手的动作号。
+        /// 查表与消费跨帧，正是连招手感的关键。
+        /// </summary>
+        private static int QueryThenCancel(CombatActionRunner runner, int frame, int chainRoot)
+        {
+            runner.Tick(frame, CombatFrameCommands.Empty, true);
+            var target = runner.ResolveComboTarget(chainRoot);
+            runner.Tick(frame + 1, Frame(frame + 1, target), true);
+            return runner.Current.ActionId;
+        }
+
+        /// <summary>三段环链：每段取消窗口 [4,12) 指向下一段，第三段指回第一段。</summary>
+        private static CombatActionAsset[] CreateComboChain()
+        {
+            var first = CreateAction(1001, "attack01", 20);
+            var second = CreateAction(1002, "attack02", 20);
+            var third = CreateAction(1003, "attack03", 20);
+            ConfigureLinkWindow(first, 4, 12, second.ActionId);
+            ConfigureLinkWindow(second, 4, 12, third.ActionId);
+            ConfigureLinkWindow(third, 4, 12, first.ActionId);
+            return new[] { first, second, third };
+        }
+
+        private static void ConfigureLinkWindow(
+            CombatActionAsset action, int startFrame, int endFrame, int targetActionId,
+            bool requiresHitConfirm = false)
+        {
+            var serialized = new SerializedObject(action);
+            var windows = serialized.FindProperty("linkWindows");
+            windows.arraySize = 1;
+            var window = windows.GetArrayElementAtIndex(0);
+            SetWindowRange(window, startFrame, endFrame);
+            window.FindPropertyRelative("TargetActionId").intValue = targetActionId;
+            window.FindPropertyRelative("RequiresHitConfirm").boolValue = requiresHitConfirm;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            action.ValidateData();
+        }
+
+        private static void ConfigureCancelWindow(
+            CombatActionAsset action, int startFrame, int endFrame, int targetActionId,
+            bool requiresHitConfirm = false)
+        {
+            var serialized = new SerializedObject(action);
+            var windows = serialized.FindProperty("cancelWindows");
+            windows.arraySize = 1;
+            var window = windows.GetArrayElementAtIndex(0);
+            SetWindowRange(window, startFrame, endFrame);
+            window.FindPropertyRelative("TargetActionId").intValue = targetActionId;
+            window.FindPropertyRelative("RequiresHitConfirm").boolValue = requiresHitConfirm;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            action.ValidateData();
+        }
+
+        private static void DestroyChain(CharacterCombatProfile profile, CombatActionAsset[] chain)
+        {
+            UnityEngine.Object.DestroyImmediate(profile);
+            foreach (var action in chain)
+            {
+                UnityEngine.Object.DestroyImmediate(action);
+            }
         }
 
         private static CharacterCombatProfile CreateProfile(params CombatActionAsset[] actions)

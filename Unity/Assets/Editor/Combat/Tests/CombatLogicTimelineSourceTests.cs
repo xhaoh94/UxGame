@@ -70,9 +70,9 @@ namespace Ux.Editor.Combat.Tests
                 profile,
                 registerUndo: (key, owner, _) => undoRecords.Add((key, owner)),
                 save: () => saveCount++);
-            var track = (CombatCancelWindowEditorTrack)source.Tracks[0];
+            var track = EnsureCancelTrack(source);
 
-            var first = track.CreateClip();
+            var first = track.Clips[0];
             var second = track.CreateClip();
             first.SetFrames(0, 10);
             second.SetFrames(5, 15);
@@ -89,11 +89,65 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
+        public void WindowTracksCanBeAddedAndRemovedDynamically()
+        {
+            var source = new CombatLogicTimelineSource(action, profile);
+
+            Assert.AreEqual(0, source.Tracks.Count);
+            var cancelTrack = (CombatCancelWindowEditorTrack)source.AddTrack(
+                typeof(CombatCancelWindowEditorTrack));
+            Assert.IsNotNull(cancelTrack);
+            Assert.AreEqual(1, action.CancelWindows.Count);
+            Assert.AreEqual(1, source.Tracks.Count);
+            Assert.IsTrue(cancelTrack.CanRemove);
+            Assert.IsTrue(cancelTrack.Remove());
+            Assert.AreEqual(0, action.CancelWindows.Count);
+            Assert.AreEqual(0, source.Tracks.Count);
+
+            var hitboxTrack = (CombatHitboxWindowEditorTrack)source.AddTrack(
+                typeof(CombatHitboxWindowEditorTrack));
+            Assert.IsNotNull(hitboxTrack);
+            Assert.AreEqual(1, action.HitboxWindows.Count);
+            Assert.IsTrue(hitboxTrack.Remove());
+            Assert.AreEqual(0, action.HitboxWindows.Count);
+            Assert.AreEqual(0, source.Tracks.Count);
+        }
+
+        [Test]
+        public void NewWindowDefaultsToReadableMultiFrameSpan()
+        {
+            var source = new CombatLogicTimelineSource(action, profile);
+            var clip = EnsureCancelTrack(source).Clips[0];
+
+            Assert.AreEqual(0, clip.StartFrame);
+            Assert.AreEqual(5, clip.EndFrame);
+        }
+
+        [Test]
+        public void LinkTrackEditsActionLinkWindows()
+        {
+            var source = new CombatLogicTimelineSource(action, profile);
+            var track = (CombatLinkWindowEditorTrack)source.AddTrack(
+                typeof(CombatLinkWindowEditorTrack));
+            var clip = track.Clips[0];
+
+            clip.SetFrames(6, 18);
+            clip.SetTargetActionId(action.ActionId);
+
+            Assert.AreEqual(1, action.LinkWindows.Count);
+            Assert.AreEqual(6, action.LinkWindows[0].StartFrame);
+            Assert.AreEqual(18, action.LinkWindows[0].EndFrame);
+            Assert.AreEqual(action.ActionId, action.LinkWindows[0].TargetActionId);
+            Assert.IsNotNull(source.CreateInspector(track));
+            Assert.IsNotNull(source.CreateInspector(clip));
+        }
+
+        [Test]
         public void LogicClipClampsRangeToActionDuration()
         {
             var source = new CombatLogicTimelineSource(action, profile);
-            var track = (CombatCancelWindowEditorTrack)source.Tracks[0];
-            var clip = track.CreateClip();
+            var track = EnsureCancelTrack(source);
+            var clip = track.Clips[0];
 
             clip.SetFrames(-5, 100);
             Assert.AreEqual(0, clip.StartFrame);
@@ -112,7 +166,7 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
-        public void HitWindowsShareStableIdDomainWithCancelWindows()
+        public void HitboxWindowsShareStableIdDomainWithCancelWindows()
         {
             var serialized = new SerializedObject(action);
             var cancelWindows = serialized.FindProperty("cancelWindows");
@@ -123,9 +177,9 @@ namespace Ux.Editor.Combat.Tests
             cancel.FindPropertyRelative("EndFrame").intValue = 1;
             cancel.FindPropertyRelative("TargetActionId").intValue = action.ActionId;
 
-            var hitWindows = serialized.FindProperty("hitWindows");
-            hitWindows.arraySize = 1;
-            var hit = hitWindows.GetArrayElementAtIndex(0);
+            var hitboxWindows = serialized.FindProperty("hitboxWindows");
+            hitboxWindows.arraySize = 1;
+            var hit = hitboxWindows.GetArrayElementAtIndex(0);
             hit.FindPropertyRelative("stableId").stringValue = "shared";
             hit.FindPropertyRelative("StartFrame").intValue = 1;
             hit.FindPropertyRelative("EndFrame").intValue = 2;
@@ -137,24 +191,24 @@ namespace Ux.Editor.Combat.Tests
                 "固定扫描顺序必须优先保留已有取消窗口 ID。");
             Assert.AreNotEqual(
                 action.CancelWindows[0].StableId,
-                action.HitWindows[0].StableId,
+                action.HitboxWindows[0].StableId,
                 "同一 CombatActionAsset 的全部逻辑子项必须共享 ItemId 唯一域。");
         }
 
         [Test]
         public void LogicSourceStableIdMigrationDoesNotRepairInvalidWindowRange()
         {
-            var invalidWindow = new ActionHitWindow
+            var invalidWindow = new ActionHitboxWindow
             {
                 StartFrame = -5,
                 EndFrame = -2,
             };
             var field = typeof(CombatActionAsset).GetField(
-                "hitWindows",
+                "hitboxWindows",
                 System.Reflection.BindingFlags.Instance |
                 System.Reflection.BindingFlags.NonPublic);
             Assert.IsNotNull(field);
-            field.SetValue(action, new List<ActionHitWindow> { invalidWindow });
+            field.SetValue(action, new List<ActionHitboxWindow> { invalidWindow });
 
             var source = new CombatLogicTimelineSource(action, profile);
 
@@ -162,7 +216,7 @@ namespace Ux.Editor.Combat.Tests
             Assert.AreEqual(-5, invalidWindow.StartFrame,
                 "打开逻辑时间轴只能迁移身份，不得静默修正非法业务区间。");
             Assert.AreEqual(-2, invalidWindow.EndFrame);
-            Assert.IsFalse(((CombatHitWindowEditorTrack)source.Tracks[1]).IsLayoutValid());
+            Assert.IsFalse(EnsureHitboxTrack(source).IsLayoutValid());
         }
 
         [Test]
@@ -180,7 +234,7 @@ namespace Ux.Editor.Combat.Tests
                     EndFrame = 1,
                     TargetActionId = 2001,
                 };
-                var hitWindow = new ActionHitWindow
+                var hitWindow = new ActionHitboxWindow
                 {
                     StartFrame = 0,
                     EndFrame = 1,
@@ -196,11 +250,11 @@ namespace Ux.Editor.Combat.Tests
                     persistedAction,
                     new List<ActionCancelWindow> { cancelWindow });
                 typeof(CombatActionAsset).GetField(
-                    "hitWindows",
+                    "hitboxWindows",
                     System.Reflection.BindingFlags.Instance |
                     System.Reflection.BindingFlags.NonPublic)?.SetValue(
                     persistedAction,
-                    new List<ActionHitWindow> { hitWindow });
+                    new List<ActionHitboxWindow> { hitWindow });
                 AssetDatabase.CreateAsset(persistedAction, path);
 
                 cancelWindow.StartFrame = -7;
@@ -219,8 +273,8 @@ namespace Ux.Editor.Combat.Tests
                 var loaded = AssetDatabase.LoadAssetAtPath<CombatActionAsset>(path);
                 Assert.AreEqual(-7, loaded.CancelWindows[0].StartFrame,
                     "导入旧资源不得通过 OnValidate 静默修正取消窗口。");
-                Assert.AreEqual(-5, loaded.HitWindows[0].StartFrame,
-                    "导入旧资源不得通过 OnValidate 静默修正命中窗口。");
+                Assert.AreEqual(-5, loaded.HitboxWindows[0].StartFrame,
+                    "导入旧资源不得通过 OnValidate 静默修正攻击判定。");
 
                 _ = new CombatLogicTimelineSource(loaded);
 
@@ -229,7 +283,7 @@ namespace Ux.Editor.Combat.Tests
                     $"stableId: {loaded.CancelWindows[0].StableId}",
                     savedYaml);
                 StringAssert.Contains(
-                    $"stableId: {loaded.HitWindows[0].StableId}",
+                    $"stableId: {loaded.HitboxWindows[0].StableId}",
                     savedYaml);
                 StringAssert.Contains("StartFrame: -7", savedYaml);
                 StringAssert.Contains("EndFrame: -3", savedYaml);
@@ -247,26 +301,26 @@ namespace Ux.Editor.Combat.Tests
         }
 
         [Test]
-        public void LogicSourceEditsOverlappingHitWindows()
+        public void LogicSourceEditsOverlappingHitboxWindows()
         {
             var undoOwners = new List<UnityEngine.Object>();
             var source = new CombatLogicTimelineSource(
                 action,
                 profile,
                 registerUndo: (_, owner, _) => undoOwners.Add(owner));
-            var track = (CombatHitWindowEditorTrack)source.Tracks[1];
+            var track = EnsureHitboxTrack(source);
 
-            var first = track.CreateClip();
+            var first = track.Clips[0];
             var second = track.CreateClip();
             first.SetFrames(2, 8);
             second.SetFrames(5, 12);
 
-            Assert.AreEqual(2, action.HitWindows.Count);
+            Assert.AreEqual(2, action.HitboxWindows.Count);
             Assert.AreEqual(2, first.StartFrame);
             Assert.AreEqual(8, first.EndFrame);
             Assert.AreEqual(5, second.StartFrame);
             Assert.AreEqual(12, second.EndFrame);
-            Assert.IsTrue(track.IsLayoutValid(), "不同命中窗口代表独立命中周期，允许显式重叠。");
+            Assert.IsTrue(track.IsLayoutValid(), "不同攻击判定代表独立命中周期，允许显式重叠。");
             Assert.IsTrue(undoOwners.TrueForAll(owner => ReferenceEquals(action, owner)));
             Assert.IsNotNull(source.CreateInspector(track));
             Assert.IsNotNull(source.CreateInspector(first));
@@ -282,13 +336,13 @@ namespace Ux.Editor.Combat.Tests
                 profile,
                 registerUndo: (_, owner, _) => undoOwners.Add(owner),
                 save: () => saveCount++);
-            var clip = ((CombatHitWindowEditorTrack)source.Tracks[1]).CreateClip();
+            var clip = EnsureHitboxTrack(source).Clips[0];
             var saveBefore = saveCount;
 
             clip.SetGeometry(ActionHitShape.Circle, 2500);
 
-            Assert.AreEqual(ActionHitShape.Circle, action.HitWindows[0].Shape);
-            Assert.AreEqual(2500, action.HitWindows[0].RadiusMillimeters);
+            Assert.AreEqual(ActionHitShape.Circle, action.HitboxWindows[0].Shape);
+            Assert.AreEqual(2500, action.HitboxWindows[0].RadiusMillimeters);
             Assert.AreSame(action, undoOwners[undoOwners.Count - 1]);
             Assert.Greater(saveCount, saveBefore);
             Assert.IsNotNull(source.CreateInspector(clip));
@@ -308,7 +362,7 @@ namespace Ux.Editor.Combat.Tests
                     () => document.RefreshAfterUndo(owner)),
                 completeUndo: uxUndo.CompleteUndo);
             document.SetSource(source);
-            var clip = ((CombatHitWindowEditorTrack)source.Tracks[1]).CreateClip();
+            var clip = EnsureHitboxTrack(source).Clips[0];
 
             clip.SetFrames(-5, 100);
             Assert.AreEqual(0, clip.StartFrame);
@@ -317,12 +371,90 @@ namespace Ux.Editor.Combat.Tests
             clip.BeginDrag();
             clip.Drag(DragStatus.Right, 10, 30);
             clip.CommitEdit();
-            Assert.AreEqual(10, action.HitWindows[0].EndFrame);
+            Assert.AreEqual(10, action.HitboxWindows[0].EndFrame);
 
             Undo.PerformUndo();
-            Assert.AreEqual(30, action.HitWindows[0].EndFrame);
+            Assert.AreEqual(30, action.HitboxWindows[0].EndFrame);
             Undo.PerformRedo();
-            Assert.AreEqual(10, action.HitWindows[0].EndFrame);
+            Assert.AreEqual(10, action.HitboxWindows[0].EndFrame);
+        }
+
+        [Test]
+        public void LogicSourceEditsSpawnEventsWithProfileReference()
+        {
+            var undoOwners = new List<UnityEngine.Object>();
+            var saveCount = 0;
+            var source = new CombatLogicTimelineSource(
+                action,
+                profile,
+                registerUndo: (_, owner, _) => undoOwners.Add(owner),
+                save: () => saveCount++);
+            var frameEvent = EnsureSpawnEvent(source);
+
+            Assert.IsNotNull(frameEvent);
+            Assert.AreEqual(1, action.FrameEvents.Count);
+            Assert.AreEqual(27, frameEvent.Frame);
+            frameEvent.SetDisplayName("刀波");
+            Assert.AreEqual("刀波", frameEvent.Name);
+            Assert.IsNotNull(source.CreateInspector(frameEvent));
+            Assert.IsTrue(undoOwners.TrueForAll(owner => ReferenceEquals(action, owner)),
+                "帧事件的 Undo 必须记录完整 CombatActionAsset owner。");
+
+            var spawn = ScriptableObject.CreateInstance<CombatSpawnProfile>();
+            try
+            {
+                var saveBefore = saveCount;
+                frameEvent.SetSpawnProfile(spawn);
+
+                Assert.AreSame(spawn, ((ActionSpawnEvent)action.FrameEvents[0]).SpawnProfile);
+                Assert.AreSame(action, undoOwners[undoOwners.Count - 1]);
+                Assert.Greater(saveCount, saveBefore);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(spawn);
+            }
+        }
+
+        [Test]
+        public void SpawnEventClampsFrameAndSharesItemIdDomain()
+        {
+            var source = new CombatLogicTimelineSource(action, profile);
+            var frameEvent = EnsureSpawnEvent(source);
+
+            frameEvent.SetFrame(-5);
+            Assert.AreEqual(0, frameEvent.Frame);
+            frameEvent.SetFrame(100);
+            Assert.AreEqual(29, frameEvent.Frame);
+
+            EnsureCancelTrack(source);
+            EnsureHitboxTrack(source);
+
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var window in action.CancelWindows)
+            {
+                Assert.IsTrue(ids.Add(window.StableId));
+            }
+            foreach (var window in action.HitboxWindows)
+            {
+                Assert.IsTrue(ids.Add(window.StableId));
+            }
+            foreach (var frameItem in action.FrameEvents)
+            {
+                Assert.IsTrue(ids.Add(frameItem.StableId),
+                    "帧事件与取消/攻击判定必须共享同一个 ItemId 唯一域。");
+            }
+        }
+
+        [Test]
+        public void ProfileValidationRejectsSpawnEventWithoutSpawnProfile()
+        {
+            var source = new CombatLogicTimelineSource(action, profile);
+            Assert.IsNotNull(EnsureSpawnEvent(source));
+
+            Assert.Throws<InvalidOperationException>(
+                () => profile.ValidateRuntime(),
+                "生成事件未配置生成物时必须被角色 Profile 校验拒绝。");
         }
 
         [Test]
@@ -340,14 +472,14 @@ namespace Ux.Editor.Combat.Tests
                 completeUndo: uxUndo.CompleteUndo);
             document.SetSource(source);
 
-            Assert.IsNotNull(((CombatCancelWindowEditorTrack)source.Tracks[0]).CreateClip());
+            Assert.IsNotNull(EnsureCancelTrack(source).Clips[0]);
             Assert.AreEqual(1, action.CancelWindows.Count);
 
             Undo.PerformUndo();
 
             Assert.AreEqual(0, action.CancelWindows.Count);
-            Assert.AreEqual(0, source.Tracks[0].Clips.Count,
-                "Undo 后必须按稳定 ID 重建当前逻辑 source 的 adapters。");
+            Assert.AreEqual(0, source.Tracks.Count,
+                "Undo 删除最后一个窗口后，空逻辑轨必须被移除。");
         }
 
         [Test]
@@ -364,7 +496,7 @@ namespace Ux.Editor.Combat.Tests
                     () => document.RefreshAfterUndo(owner)),
                 completeUndo: uxUndo.CompleteUndo);
             document.SetSource(source);
-            var clip = ((CombatCancelWindowEditorTrack)source.Tracks[0]).CreateClip();
+            var clip = EnsureCancelTrack(source).Clips[0];
 
             clip.BeginDrag();
             clip.Drag(DragStatus.Move, 5, 0);
@@ -400,7 +532,7 @@ namespace Ux.Editor.Combat.Tests
             document.SetSources(presentation, logic);
 
             presentation.AddTrack(typeof(AnimationTrackAsset));
-            ((CombatCancelWindowEditorTrack)logic.Tracks[0]).CreateClip();
+            EnsureCancelTrack(logic);
             Assert.AreEqual(1, timeline.tracks.Count);
             Assert.AreEqual(1, action.CancelWindows.Count);
 
@@ -438,8 +570,18 @@ namespace Ux.Editor.Combat.Tests
             document.SetSources(presentation, logic);
 
             Assert.AreEqual(2, document.Sources.Count);
+            EnsureCancelTrack(logic);
+            EnsureHitboxTrack(logic);
             Assert.AreEqual(3, document.TrackCount,
-                "表现轨、取消窗口轨与命中窗口轨必须共用同一个 Document/帧标尺。");
+                "表现轨与实际存在的取消/命中逻辑轨必须共用同一个 Document/帧标尺。");
+            Assert.AreEqual(0, document.FrameEvents.Count,
+                "没有帧事件时不应伪造生成轨或事件标记。");
+            var frameEvent = document.AddFrameEvent(typeof(ActionSpawnEvent), 12);
+            Assert.IsNotNull(frameEvent);
+            Assert.AreEqual(1, document.FrameEvents.Count);
+            Assert.AreEqual(3, document.TrackCount,
+                "添加帧事件不得创建生成轨。");
+            Assert.IsNotNull(document.CreateInspector(frameEvent));
             Assert.AreEqual(30, document.DurationFrames,
                 "会话宽度采用所有 source 的最大持续帧。逻辑时长不能从表现 Timeline 推导。");
             Assert.AreEqual(timeline.FrameRate, document.FrameRate);
@@ -447,9 +589,10 @@ namespace Ux.Editor.Combat.Tests
                 "Inspector 必须按 selection 所属 source 分派。");
 
             var presentationBefore = presentationSaveCount;
+            var logicBefore = logicSaveCount;
             document.SaveAll();
             Assert.AreEqual(presentationBefore + 1, presentationSaveCount);
-            Assert.AreEqual(1, logicSaveCount);
+            Assert.AreEqual(logicBefore + 1, logicSaveCount);
         }
 
         [Test]
@@ -459,12 +602,14 @@ namespace Ux.Editor.Combat.Tests
             serialized.FindProperty("durationFrames").intValue = 0;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             var source = new CombatLogicTimelineSource(action, profile);
-            var track = (CombatCancelWindowEditorTrack)source.Tracks[0];
 
             Assert.AreEqual(0, action.DurationFrames);
             Assert.AreEqual(0, source.DurationFrames,
                 "逻辑时长非法时必须原样暴露给校验，不能从表现 Timeline 或编辑器默认值推导。");
-            Assert.IsNull(track.CreateClip(), "非法逻辑时长不得创建看似有效的取消窗口。");
+            Assert.AreEqual(0, source.Tracks.Count,
+                "非法逻辑时长不得创建看似有效的取消窗口轨。");
+            Assert.IsNull(source.AddTrack(typeof(CombatCancelWindowEditorTrack)),
+                "非法逻辑时长不得创建看似有效的取消窗口。");
         }
 
         [Test]
@@ -472,7 +617,7 @@ namespace Ux.Editor.Combat.Tests
         {
             var document = new TimelineEditorDocument();
             var first = new CombatLogicTimelineSource(action, profile);
-            var detachedTrack = first.Tracks[0];
+            var detachedTrack = EnsureCancelTrack(first);
             document.SetSource(first);
             Assert.IsNotNull(document.CreateInspector(detachedTrack));
 
@@ -501,7 +646,7 @@ namespace Ux.Editor.Combat.Tests
                 SetActionData(persistedAction, 2001, "persisted", 10);
                 AssetDatabase.CreateAsset(persistedAction, path);
                 var source = new CombatLogicTimelineSource(persistedAction);
-                var clip = ((CombatCancelWindowEditorTrack)source.Tracks[0]).CreateClip();
+                var clip = EnsureCancelTrack(source).Clips[0];
                 Assert.IsNotNull(clip);
                 AssetDatabase.SaveAssets();
 
@@ -529,13 +674,49 @@ namespace Ux.Editor.Combat.Tests
             document.SourceChanged += changedSources.Add;
             document.SetSources(presentation, logic);
 
-            ((CombatCancelWindowEditorTrack)logic.Tracks[0]).CreateClip();
+            EnsureCancelTrack(logic);
             presentation.AddTrack(typeof(AnimationTrackAsset));
 
             CollectionAssert.AreEqual(
                 new ITimelineEditorSource[] { logic, presentation },
                 changedSources,
                 "窗口必须能区分逻辑变更与表现变更，避免逻辑编辑触发表现重播。");
+        }
+
+        static CombatCancelWindowEditorTrack EnsureCancelTrack(CombatLogicTimelineSource source)
+        {
+            foreach (var track in source.Tracks)
+            {
+                if (track is CombatCancelWindowEditorTrack cancelTrack)
+                {
+                    return cancelTrack;
+                }
+            }
+            return (CombatCancelWindowEditorTrack)source.AddTrack(typeof(CombatCancelWindowEditorTrack));
+        }
+
+        static CombatHitboxWindowEditorTrack EnsureHitboxTrack(CombatLogicTimelineSource source)
+        {
+            foreach (var track in source.Tracks)
+            {
+                if (track is CombatHitboxWindowEditorTrack hitboxTrack)
+                {
+                    return hitboxTrack;
+                }
+            }
+            return (CombatHitboxWindowEditorTrack)source.AddTrack(typeof(CombatHitboxWindowEditorTrack));
+        }
+
+        static CombatFrameEventEditorAdapter EnsureSpawnEvent(CombatLogicTimelineSource source)
+        {
+            foreach (var frameEvent in source.FrameEvents)
+            {
+                if (frameEvent is CombatFrameEventEditorAdapter spawnEvent)
+                {
+                    return spawnEvent;
+                }
+            }
+            return (CombatFrameEventEditorAdapter)source.AddFrameEvent(typeof(ActionSpawnEvent), 27);
         }
 
         static void SetActionData(CombatActionAsset target, int actionId, string displayName, int durationFrames)

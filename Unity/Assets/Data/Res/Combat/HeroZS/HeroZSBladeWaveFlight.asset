@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b75265136ed4c240ba71ab0bd53273f, type: 3}
+  m_Name: HeroZSBladeWaveFlight
+  m_EditorClassIdentifier: Unity.HotfixBase::Ux.CombatActionAsset
+  stableId: hero.spawn.blade_wave.flight
+  actionId: 9001
+  displayName: "\u5200\u6CE2\xB7\u98DE\u884C"
+  durationFrames: 300
+  movementPolicy: 1
+  cancelWindows: []
+  linkWindows: []
+  hitboxWindows:
+  - stableId: hero.spawn.blade_wave.hit
+    StartFrame: 0
+    EndFrame: 300
+    shape: 0
+    radiusMillimeters: 700
+  frameEvents: []
+  damage: 24
+  appliedBuff:
+    buffId: 0
+    durationFrames: 120
+    damagePerTick: 0
+  references:
+    version: 2
+    RefIds: []
