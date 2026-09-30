@@ -80,7 +80,7 @@ namespace Ux
                 data.data = role;
                 data.self = false;
                 data.name = "name_" + role.roleId;
-                data.res = "Hero_ZS";
+                data.res = string.Format(PathHelper.Res.Prefab, "Role_Dummy");
                 AddPlayer(data);
             }
         }

@@ -31,3 +31,9 @@
 - 同一批里对**同一文件**发多个 Edit 会互相覆盖 → 串行发。
 - **本仓库行尾是混的** → 按文件保留、别归一化。`core.autocrlf=true` ⇒ **`git diff --stat` 测不出行尾翻转**（git 归一化后比较；实测整文件 LF 化仍只显示纯插入）。真实行尾看 `git ls-files --eol <p>` 的 `w/` 列；判断"原本是什么"只能靠动手前的备份。
 - Unity 挪文件必须 `.cs` + `.cs.meta` 成对，新目录要补 `.meta`。
+
+## 资源与命名
+- YooAsset 定位地址 = **组名_文件名**（`AddressByGroupAndFileName`；分组见 `Settings/YooAsset/AssetBundleCollectorSetting.asset`），**与文件夹层级无关** → 挪目录不影响加载，关键是文件名。前缀来自分组：`Prefab_` / `Combat_` / `Timeline_`。
+- 单位资源根（2026-09-30 起，原 Hero_ZS 已改名）：预制 `Res/Prefab/Unit/Role/Role_Dummy.prefab`（地址 `Prefab_Role_Dummy`），配置 `Res/Combat/Role/Role_DummyCombatProfile.asset`，时间轴 `Res/Timeline/Role/`。这些名字在 `Scene.cs`、`SceneModule.cs`、`Unit.cs` 三处硬编码，改名必须同步。
+- 单位 Prefab 必须带 `Pathfinding.Seeker`（`Unit.LoadModel` 取 `Model.GetComponent<Seeker>()`）和带 Avatar 的 Animator（动画走 AnimationClipPlayable）。
+- **Rig 规则（本项目裸 Playables 只支持 Generic）**：Dummy 下**所有**角色 FBX（含模型本体 `HumanM_Model.fbx`）必须 `animationType: 2`；**模型 FBX 保留 `avatarSetup: 1`**（自动生成 Generic Avatar，fileID 9000000，预制 `m_Avatar` 引用它），**只有带 `@` 的动画 FBX 才 NoAvatar**。模型是 Humanoid 而剪辑是 Generic 时动画完全不播（T-pose）。批量工具：`UxGame/工具/战斗/配置 Dummy 动画导入(Rig=Generic)`。Kevin 包 `takeName: Untitled` ⇒ 剪辑 fileID 恒为 3094330708855449807（名称哈希），换绑只需改 guid。

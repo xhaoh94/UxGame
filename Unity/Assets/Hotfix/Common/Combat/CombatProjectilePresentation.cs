@@ -15,6 +15,9 @@ namespace Ux
     {
         private static readonly List<WeakReference> ActiveBridges = new();
 
+        /// <summary>占位方块共用的 URP 材质，避免每个投射物造一份材质实例。</summary>
+        private static Material _placeholderMaterial;
+
         private readonly BattleWorld world;
         private readonly Dictionary<long, ProjectileView> views = new();
         private readonly List<long> staleIds = new();
@@ -138,7 +141,9 @@ namespace Ux
                 }
 
                 gameObject.name = $"__CombatProjectile_{entity.Id}";
-                gameObject.hideFlags |= HideFlags.DontSave;
+                // 只禁构建，不要用 HideFlags.DontSave：DontSave 的对象不属于任何场景，
+                // 退播放时不会被带走，会永久赖在编辑器场景里。
+                gameObject.hideFlags |= HideFlags.DontSaveInBuild;
                 gameObject.transform.position = entity.Position;
                 gameObject.transform.rotation = entity.Rotation;
                 return new ProjectileView(entity, gameObject);
@@ -158,30 +163,50 @@ namespace Ux
             var collider = gameObject.GetComponent<Collider>();
             if (collider != null)
             {
-                UnityEngine.Object.Destroy(collider);
+                // 同 DestroyViewObject：编辑模式下 Destroy 不生效，占位方块的碰撞体不能留在场景里。
+                DestroyViewObject(collider);
             }
 
             var renderer = gameObject.GetComponent<Renderer>();
             if (renderer != null)
             {
-                var material = renderer.material;
                 var color = spawn != null && (spawn.SpawnId & 1) == 0
                     ? new Color(0.2f, 0.8f, 1f, 1f)
                     : new Color(1f, 0.55f, 0.15f, 1f);
+
+                // CreatePrimitive 给的是 Built-in 默认材质，URP 下渲染成洋红且没有颜色属性可写；
+                // 换成 URP 材质 + 属性块，颜色才真的生效，也不给每个实例造一份材质。
+                var material = PlaceholderMaterial();
                 if (material != null)
                 {
-                    if (material.HasProperty("_BaseColor"))
-                    {
-                        material.SetColor("_BaseColor", color);
-                    }
-                    if (material.HasProperty("_Color"))
-                    {
-                        material.SetColor("_Color", color);
-                    }
+                    renderer.sharedMaterial = material;
+                    var block = new MaterialPropertyBlock();
+                    block.SetColor("_BaseColor", color);
+                    block.SetColor("_Color", color);
+                    renderer.SetPropertyBlock(block);
                 }
             }
 
             return gameObject;
+        }
+
+        private static Material PlaceholderMaterial()
+        {
+            if (_placeholderMaterial != null)
+            {
+                return _placeholderMaterial;
+            }
+
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ??
+                         Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null)
+            {
+                return null;
+            }
+
+            _placeholderMaterial = new Material(shader) { name = "__CombatProjectilePlaceholder" };
+            _placeholderMaterial.hideFlags = HideFlags.DontSaveInBuild;
+            return _placeholderMaterial;
         }
 
         private static void Sync(ProjectileView view, ICombatEntity entity)
@@ -203,9 +228,27 @@ namespace Ux
             }
 
             views.Remove(entityId);
-            if (view.GameObject != null)
+            DestroyViewObject(view.GameObject);
+        }
+
+        /// <summary>
+        /// 编辑模式下 Object.Destroy 是空操作（不会报错，只是什么都不做），残留物会永久留在场景里；
+        /// 所以非播放态必须走 DestroyImmediate。这条路径在 Timeline 预览、回放校验里都会走到。
+        /// </summary>
+        private static void DestroyViewObject(UnityEngine.Object target)
+        {
+            if (target == null)
             {
-                UnityEngine.Object.Destroy(view.GameObject);
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                UnityEngine.Object.Destroy(target);
+            }
+            else
+            {
+                UnityEngine.Object.DestroyImmediate(target);
             }
         }
 

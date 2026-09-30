@@ -28,7 +28,7 @@ namespace Ux
         /// <summary>透传战斗组件已推进到的逻辑帧，避免维护一份会过期的副本。</summary>
         public long SimulationFrame => Combat?.SimulationFrame ?? 0;
         public string CombatProfileName => string.IsNullOrEmpty(_playerData?.combatProfileName)
-            ? "HeroZSCombatProfile"
+            ? "Role_DummyCombatProfile"
             : _playerData.combatProfileName;
 
         #region Get-Set

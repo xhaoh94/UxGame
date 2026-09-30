@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b75265136ed4c240ba71ab0bd53273f, type: 3}
+  m_Name: Role_DummyAttack01
+  m_EditorClassIdentifier: Unity.HotfixBase::Ux.CombatActionAsset
+  stableId: role_dummy.action.attack01
+  actionId: 1001
+  displayName: "\u666E\u901A\u653B\u51FB"
+  durationFrames: 86
+  movementPolicy: 0
+  cancelWindows: []
+  linkWindows:
+  - stableId: ed675423504347b3b96c4d9d5e387da0
+    StartFrame: 42
+    EndFrame: 72
+    TargetActionId: 1002
+    RequiresHitConfirm: 0
+  hitboxWindows:
+  - stableId: 1797b388da18481c85ea1345dcdf375f
+    StartFrame: 26
+    EndFrame: 51
+    shape: 0
+    radiusMillimeters: 1500
+  frameEvents: []
+  damage: 10
+  appliedBuff:
+    buffId: 0
+    durationFrames: 120
+    damagePerTick: 0
+  references:
+    version: 2
+    RefIds: []

@@ -29,8 +29,8 @@ namespace Ux
             data.data = LoginModule.Ins.resp.Self;
             data.self = true;
             data.name = "name_" + data.data.roleId;
-            data.res = string.Format(PathHelper.Res.Prefab, "Hero_ZS");
-            data.combatProfileName = "HeroZSCombatProfile";
+            data.res = string.Format(PathHelper.Res.Prefab, "Role_Dummy");
+            data.combatProfileName = "Role_DummyCombatProfile";
             map.AddPlayer(data);
 
             //foreach (var other in resp.Others)

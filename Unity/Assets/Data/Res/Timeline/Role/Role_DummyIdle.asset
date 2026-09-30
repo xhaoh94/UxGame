@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1420382afa24de4e8b1a9fce371ab3e, type: 3}
+  m_Name: Role_DummyIdle
+  m_EditorClassIdentifier: Unity.HotfixBase::Ux.TimelineAsset
+  frameRate: 60
+  tracks:
+  - rid: 1176164724382105726
+  references:
+    version: 2
+    RefIds:
+    - rid: 1176164724382105726
+      type: {class: AnimationTrackAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        id: 47b61ead4a4a4f138d2c837521b68345
+        trackName: Idle
+        clips:
+        - rid: 1176164724382105727
+        isAdditive: 0
+        avatarMask: {fileID: 0}
+    - rid: 1176164724382105727
+      type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
+      data:
+        id: 316ec15f4b03426c9e38b0a12586339f
+        clipName: Idle01
+        StartFrame: 0
+        EndFrame: 162
+        InFrame: 0
+        OutFrame: 0
+        clip: {fileID: 3094330708855449807, guid: bd9f437a6d5998e45a3d4b0c5b7b67fd, type: 3}
+        pre: 0
+        post: 2
+        PreFrame: 0
+        PostFrame: 2147483647

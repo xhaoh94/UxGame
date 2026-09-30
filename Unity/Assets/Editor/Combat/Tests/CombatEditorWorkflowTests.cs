@@ -80,7 +80,7 @@ namespace Ux.Editor.Combat.Tests
         public void BasicAttackExampleLinksProfileActionTimelineAndAnimation()
         {
             const string profilePath =
-                "Assets/Data/Res/Combat/HeroZS/HeroZSCombatProfile.asset";
+                "Assets/Data/Res/Combat/Role/Role_DummyCombatProfile.asset";
             var profile = AssetDatabase.LoadAssetAtPath<CharacterCombatProfile>(profilePath);
 
             Assert.IsNotNull(profile, $"缺少基础普攻示例 Profile：{profilePath}");
@@ -145,10 +145,10 @@ namespace Ux.Editor.Combat.Tests
         public void DefaultHeroProfileKeepsIdleRunAndBasicAttackPresentations()
         {
             const string profilePath =
-                "Assets/Data/Res/Combat/HeroZS/HeroZSCombatProfile.asset";
+                "Assets/Data/Res/Combat/Role/Role_DummyCombatProfile.asset";
             var profile = AssetDatabase.LoadAssetAtPath<CharacterCombatProfile>(profilePath);
 
-            Assert.IsNotNull(profile, $"缺少默认 HeroZS Profile：{profilePath}");
+            Assert.IsNotNull(profile, $"缺少默认 Role Profile：{profilePath}");
             var idleTimeline = profile.GetStateTimeline(
                 StateLayer.Locomotion,
                 (int)LocomotionState.Idle);

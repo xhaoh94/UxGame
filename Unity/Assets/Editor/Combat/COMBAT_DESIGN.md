@@ -575,7 +575,7 @@ PlayableGraph 作为服务端权威执行路径。
 
 验收标准：逻辑技能资产序列化内容中不存在动画、Prefab、粒子或 Timeline 引用。
 
-当前验收结果：现有三个 `CombatActionAsset` 已完成迁移；默认 HeroZS 的 Idle/Move 状态表现也已从旧固定字段
+当前验收结果：现有三个 `CombatActionAsset` 已完成迁移；默认 Role 的 Idle/Move 状态表现也已从旧固定字段
 迁移到动态列表。手动 Roslyn 编译中 `Unity.HotfixBase` 与业务程序集通过，编辑器程序集未出现 Combat 新错误；
 Unity EditMode Test Runner 的 Combat/Timeline 回归集已通过。
 
@@ -725,7 +725,7 @@ Unity EditMode Test Runner 实际执行 94 项 Combat/Timeline 测试并全部�
 
 前八个批次都在收敛工具与边界，本批次换一条路径验证：**只用现有机制能不能做出玩得通的连招，并把表现层的特效轨真正接上运行时**。结论是机制够用，缺口只在一处绑定代码。
 
-**连招的数据载体是可取消窗口。** 普攻三段 `HeroZSAttack01/02/03` 的可取消窗口依次指向下一段，第三段指回第一段构成环。链的拓扑完全由资源决定，加第四段不需要改任何 C#。
+**连招的数据载体是可取消窗口。** 普攻三段 `Role_DummyAttack01/02/03` 的可取消窗口依次指向下一段，第三段指回第一段构成环。链的拓扑完全由资源决定，加第四段不需要改任何 C#。
 
 **输入层只认识链头。** `OperateComponent` 把同一个按键固定映射到链头 `1001`；`CombatActionRunner.ResolveComboTarget(chainRoot)` 按当前动作已打开的可取消窗口算出"这一段该推到哪个动作"，`CombatComponent.RequestComboAttack` 用它入队。所以"按的是同一个键、出的是第几段"这件事由资源回答。
 
@@ -814,4 +814,4 @@ Unity EditMode Test Runner 实际执行 94 项 Combat/Timeline 测试并全部�
   三者都是可选的：空列表就是“没有这种行为”。
 - **连招解析只读 LinkWindows**：`ResolveComboTarget` 不再回退读取 cancelWindows，
   否则“按攻击键触发闪避”这类串台会随资源增长必然出现。显式技能输入（`RequestAction`）依然走取消窗口。
-  HeroZS 三段普攻（1001→1002→1003→1001）已迁移到连招衔接轨。
+  Role 三段普攻（1001→1002→1003→1001）已迁移到连招衔接轨。
