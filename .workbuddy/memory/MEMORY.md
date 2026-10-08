@@ -25,6 +25,7 @@
 - 技能配置 =「双源时间轴」：表现源 `ActionPresentations[i].Timeline` + 逻辑源 `CombatLogicTimelineSource`（读写 `hitWindows`/`cancelWindows`）。资产须先被某 `CharacterCombatProfile` 引用才能打开。
 - 关联键是 `ActionId`；编辑器按字段名取属性（`FindProperty`）⇒ 加字段安全。本项目 `TimelineAsset` 是 `Ux.*`，非 UnityEngine.Timeline。
 - **加逻辑轨**：同步位置见 `COMBAT_DESIGN.md` 批次 K；**漏改 `ValidateData`/`MigrateLogicItemStableIds`/`tracks` 不报错**。
+- 编辑器面板混排宽度坑：`GUILayout.Width(n)` 限制的是**标签列 + 输入框**整体，标签列由 `EditorGUIUtility.labelWidth`（默认 150）占，`n` 不够大时输入框被压成 0、只剩标签。固定宽度列别和可伸缩控件放同一 `HorizontalScope` —— 用 `EditorGUILayout.GetControlRect` 取整行手动切分（`CombatEditorWindow.DrawPresentationRow` 的 variantId/优先级 行是范例）。
 
 ## 环境与工具坑
 - 沙箱**不能编 C#** → 只能静态校验 + 剥注释比对，必须让用户在 Unity 里过编译；改了热更类型名要重编 `Data/Res/Code/*.dll.bytes`。

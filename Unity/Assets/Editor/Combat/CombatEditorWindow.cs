@@ -1078,20 +1078,33 @@ namespace Ux.Editor.Combat
                     }
                 }
 
-                using (new EditorGUILayout.HorizontalScope())
+                // 不放进 HorizontalScope：variantId 可伸缩、优先级是固定列，混排时后者宽度还要被 labelWidth
+                // 吃掉一截（默认 150 > 列宽就只剩标签）。整行取矩形自己切分，两侧宽度都可控。
+                var variantRow = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+                const float priorityWidth = 150f;
+                const float priorityGap = 6f;
+
+                var previousLabelWidth = EditorGUIUtility.labelWidth;
+                EditorGUI.BeginChangeCheck();
+                EditorGUI.PropertyField(
+                    new Rect(variantRow.x, variantRow.y, Mathf.Max(80f, variantRow.width - priorityWidth - priorityGap), variantRow.height),
+                    variant,
+                    new GUIContent("variantId"));
+                if (EditorGUI.EndChangeCheck())
                 {
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(variant, new GUIContent("variantId"));
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        variant.stringValue = CombatStatePresentation.NormalizeVariantId(variant.stringValue);
-                        changed = true;
-                    }
-                    if (priority != null)
-                    {
-                        EditorGUILayout.PropertyField(priority, new GUIContent("优先级"), GUILayout.Width(130));
-                    }
+                    variant.stringValue = CombatStatePresentation.NormalizeVariantId(variant.stringValue);
+                    changed = true;
                 }
+
+                if (priority != null)
+                {
+                    EditorGUIUtility.labelWidth = 56f;
+                    EditorGUI.PropertyField(
+                        new Rect(variantRow.xMax - priorityWidth, variantRow.y, priorityWidth, variantRow.height),
+                        priority,
+                        new GUIContent("优先级"));
+                }
+                EditorGUIUtility.labelWidth = previousLabelWidth;
 
                 if (displayName != null)
                 {
