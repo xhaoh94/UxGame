@@ -30,7 +30,7 @@ MonoBehaviour:
     stateId: 2
     variantId: default
     displayName: Move
-    priority: 0
+    priority: -1
     timeline: {fileID: 11400000, guid: 9fa00166279e2e34b9de2d86e05c226c, type: 2}
   actions:
   - {fileID: 11400000, guid: cfa64b3f480f7724395159a0d9a36013, type: 2}

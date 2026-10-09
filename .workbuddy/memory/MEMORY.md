@@ -20,6 +20,7 @@
 - 状态层 `Frame` 是基础时间轴的**权威播放头**（`StateId == 0` 时跳过）；`AdvanceTo` 必须排在同帧 `SetLocomotion` 之前。
 - 表现层"要不要换轨道"靠 `CombatTimelineSelection.SameOwner`（**Asset 引用 + InstanceId**）。**`Frame` 必须不参与比较**；`InstanceId` 必须参与（连招第二下要重播）。
 - **粒子轨**：运行期唯一绑定入口 `CombatTimelinePlayer.BindTracks`，必须在 `PlayOnLayer` **之后**（先绑会被新实例丢掉）；编辑期 `AutoBindMissingTracks`/`ResolvePreviewVfx`，两边都经 `CombatVfxHost.Ensure`。`TLParticleClip` 用 `Simulate` 重建 ⇒ 宿主须 `playOnAwake = false` 且保持停止。位姿 `positionOffset`/`rotationEuler`/`scaleFactor` 是**相对美术值的偏移**；`scaleFactor <= 0` 回落 1（旧资产反序列化成 0 会吃掉特效）；覆盖/还原成栈。
+- **上半身遮罩（边走边打）**：动作轨 `avatarMask` → `AnimationLayerMixerPlayable.SetLayerMaskFromAvatarMask`（`TLAnimationTrack.Connect`），Action 层按 `CompareTracks` 排在 Base 之后 ⇒ 天然压在上层；前提是动作 `movementPolicy = Allow`（否则起手 Locomotion 被压成 Idle）。遮罩资产由 `UxGame/工具/战斗/配置边走边攻击(上半身遮罩)` 生成（`B-spine` 起递归）。**AvatarMask 无 `ClearTransformPaths`**（清空走 `transformCount = 0`），`AddTransformPath` 只有 `Transform` 重载 ⇒ 用 `AddTransformPath(bone, true)` 递归写入。
 
 ## 编辑器与资产
 - 技能配置 =「双源时间轴」：表现源 `ActionPresentations[i].Timeline` + 逻辑源 `CombatLogicTimelineSource`（读写 `hitWindows`/`cancelWindows`）。资产须先被某 `CharacterCombatProfile` 引用才能打开。

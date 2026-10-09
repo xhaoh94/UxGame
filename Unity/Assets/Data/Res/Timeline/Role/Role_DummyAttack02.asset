@@ -26,7 +26,7 @@ MonoBehaviour:
         clips:
         - rid: 1176164724382105733
         isAdditive: 0
-        avatarMask: {fileID: 0}
+        avatarMask: {fileID: 31900000, guid: dcae10d3949d1b44b934dda7c07d3fe4, type: 2}
     - rid: 1176164724382105733
       type: {class: AnimationClipAsset, ns: Ux, asm: Unity.HotfixBase}
       data:
