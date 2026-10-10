@@ -32,6 +32,10 @@ namespace Ux.Editor.Timeline
 
     public partial class TimelineClipItem : VisualElement, IToolbarMenuElement
     {
+        protected VisualElement root;
+        public VisualElement content;
+        public Label lbType;
+
         public DragStatus Status { get; private set; }
         readonly Color color;
         public ITimelineEditorClip Clip { get; }

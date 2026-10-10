@@ -8,15 +8,18 @@ using UnityEngine.UIElements;
 
 namespace Ux.Editor.Timeline
 {
-#if UNITY_6000_0_OR_NEWER
-    [UxmlElement]
-#endif
     public partial class TimelineClipView : VisualElement
     {
-#if !UNITY_6000_0_OR_NEWER
-        public new class UxmlFactory : UxmlFactory<TimelineClipView, UxmlTraits> { }
-        public new class UxmlTraits : VisualElement.UxmlTraits { }
-#endif
+        protected VisualElement root;
+        public ScrollView scrClipView;
+        public Toolbar Toolbar;
+        public VisualElement veLineContent;
+        public VisualElement veClipContent;
+        public VisualElement veMarkerContent;
+        public VisualElement veMarkerIcon;
+        public Label lbMarker;
+        public VisualElement veInspector;
+
         const float RulerHeight = 32f;
         const float TrackHeight = 34f;
         // Give frame zero a small gutter so the playhead handle stays centered.

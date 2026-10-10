@@ -8,7 +8,7 @@ namespace Ux
     {
         public class Res
         {
-            public const string Root = "Assets/Data/Res";
+            public const string Root = "Assets/GameRes/Res";
             public const string UI = "UI_{0}_{1}";     
             public const string UIAtlas = "UI_{0}";     
             public const string Combat = "Combat_{0}";

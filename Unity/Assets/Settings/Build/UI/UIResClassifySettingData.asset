@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaa9c08cc02074343b563e44decf44a8, type: 3}
   m_Name: UIResClassifySettingData
   m_EditorClassIdentifier: 
-  path: Assets/Data/Res/UI
+  path: Assets/GameRes/Res/UI
   proloads:
   - Test
   lazyloads:

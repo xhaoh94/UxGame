@@ -47,7 +47,7 @@ namespace Ux.Editor.Build.Version
             }
         }
 
-        partial void _OnClearClick()
+        private void _OnClearClick()
         {
             if (EditorUtility.DisplayDialog("提示", $"是否清空构建缓存\n将删除所有构建相关的目录？", "确定", "取消"))
             {
@@ -135,7 +135,7 @@ namespace Ux.Editor.Build.Version
                 UniTask<bool> CollectSVC(string packageName)
                 {
                     Log.Debug($"---------------------------------------->{packageName}:收集着色器变体<---------------------------------------");
-                    var collectPath = $"Assets/Data/Art/ShaderVariants/{packageName}";
+                    var collectPath = $"Assets/GameRes/Art/ShaderVariants/{packageName}";
                     string savePath = $"{collectPath}/{packageName}SV.shadervariants";
                     ShaderVariantCollectorSetting.SetFileSavePath(packageName, savePath);
                     int processCapacity = ShaderVariantCollectorSetting.GeProcessCapacity(packageName);

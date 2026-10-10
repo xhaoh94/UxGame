@@ -33,7 +33,7 @@ namespace Ux.Editor.Build.Config
 
         [CommandPathAttribute]
         [Command("-x", "outputDataDir=", false)]
-        public string OutDataPath = "Assets/Data/Res/Config";
+        public string OutDataPath = "Assets/GameRes/Res/Config";
 
 
 

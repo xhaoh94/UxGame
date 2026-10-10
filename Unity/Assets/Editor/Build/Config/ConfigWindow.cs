@@ -43,12 +43,81 @@ namespace Ux.Editor.Build.Config
 
 
        
+        protected VisualElement root;
+        public TextField txtDllFile;
+        public Button btnDllFile;
+        public TextField txtDefineFile;
+        public Button btnDefineFile;
+        public TextField txtOutDataPath;
+        public Button btnOutDataPath;
+        public TextField txtOutCodePath;
+        public Button btnOutCodePath;
+        public VisualElement popContainer;
+        public Button btnExport;
+
+        /// <summary>原 ConfigWindow.uxml 的手搭等价版本。</summary>
+        private void BuildUI()
+        {
+            root = new VisualElement();
+            root.style.flexGrow = 1f;
+
+            var body = new VisualElement();
+            root.Add(body);
+
+            (VisualElement row, TextField field) PathRow(string fieldName, string label, string buttonName, Action onPick)
+            {
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.flexGrow = 0f;
+                var field = new TextField(label) { name = fieldName, pickingMode = PickingMode.Ignore };
+                field.style.flexGrow = 1f;
+                row.Add(field);
+                var button = new Button(onPick) { name = buttonName, text = "选择" };
+                button.style.flexGrow = 0f;
+                row.Add(button);
+                return (row, field);
+            }
+
+            var dllRow = PathRow("txtDllFile", "Luban.dll", "btnDllFile", _OnBtnDllFileClick);
+            txtDllFile = dllRow.field;
+            txtDllFile.RegisterValueChangedCallback(_OnTxtDllFileChanged);
+            body.Add(dllRow.row);
+
+            var defineRow = PathRow("txtDefineFile", "Lunban.conf", "btnDefineFile", _OnBtnDefineFileClick);
+            txtDefineFile = defineRow.field;
+            txtDefineFile.RegisterValueChangedCallback(_OnTxtDefineFileChanged);
+            body.Add(defineRow.row);
+
+            var foldout = new Foldout { text = "导出设置" };
+            body.Add(foldout);
+
+            var dataRow = PathRow("txtOutDataPath", "导出数据目录", "btnOutDataPath", _OnBtnOutDataPathClick);
+            txtOutDataPath = dataRow.field;
+            txtOutDataPath.RegisterValueChangedCallback(_OnTxtOutDataPathChanged);
+            foldout.Add(dataRow.row);
+
+            var codeRow = PathRow("txtOutCodePath", "导出代码目录", "btnOutCodePath", _OnBtnOutCodePathClick);
+            txtOutCodePath = codeRow.field;
+            txtOutCodePath.RegisterValueChangedCallback(_OnTxtOutCodePathChanged);
+            foldout.Add(codeRow.row);
+
+            popContainer = new VisualElement { name = "popContainer" };
+            foldout.Add(popContainer);
+
+            var updateButton = new Button { text = "更新" };
+            updateButton.style.display = DisplayStyle.None;
+            root.Add(updateButton);
+
+            btnExport = new Button(_OnBtnExportClick) { name = "btnExport", text = "导出" };
+            root.Add(btnExport);
+        }
+
         public void CreateGUI()
         {
             try
             {
                 Setting = ConfigSettingData.LoadConfig();
-                CreateChildren();
+                BuildUI();
                 rootVisualElement.Add(root);
                 
                 txtDllFile.SetValueWithoutNotify(Setting.DllFile);                    
@@ -101,39 +170,39 @@ namespace Ux.Editor.Build.Config
             ConfigSettingData.SaveConfig();
             AssetDatabase.Refresh();
         }
-        partial void _OnTxtDllFileChanged(ChangeEvent<string> e)
+        private void _OnTxtDllFileChanged(ChangeEvent<string> e)
         {
             Setting.DllFile = e.newValue;
         }
-        partial void _OnBtnDllFileClick()
+        private void _OnBtnDllFileClick()
         {
             BuildHelper.OpenFilePanel(Setting.DllFile, "Luban.Dll", txtDllFile, "dll");
         }
-        partial void _OnTxtDefineFileChanged(ChangeEvent<string> e)
+        private void _OnTxtDefineFileChanged(ChangeEvent<string> e)
         {
             Setting.ConfFile = e.newValue;
         }
-        partial void _OnBtnDefineFileClick()
+        private void _OnBtnDefineFileClick()
         {
             BuildHelper.OpenFilePanel(Setting.ConfFile, "luban.conf", txtDefineFile, "conf");
         }
-        partial void _OnTxtOutCodePathChanged(ChangeEvent<string> e)
+        private void _OnTxtOutCodePathChanged(ChangeEvent<string> e)
         {
             Setting.OutCodePath = e.newValue;
         }
-        partial void _OnBtnOutCodePathClick()
+        private void _OnBtnOutCodePathClick()
         {
             BuildHelper.OpenFolderPanel(Setting.OutCodePath, "选择输出目录", txtOutCodePath);
         }
-        partial void _OnTxtOutDataPathChanged(ChangeEvent<string> e)
+        private void _OnTxtOutDataPathChanged(ChangeEvent<string> e)
         {
             Setting.OutDataPath = e.newValue;
         }
-        partial void _OnBtnOutDataPathClick()
+        private void _OnBtnOutDataPathClick()
         {
             BuildHelper.OpenFolderPanel(Setting.OutDataPath, "选择输出目录", txtOutDataPath);
         }
-        partial void _OnBtnExportClick()
+        private void _OnBtnExportClick()
         {
             Export().Forget();
         }

@@ -16,7 +16,7 @@ namespace Ux.Editor.HybridCLR
 {
     public class HybridCLRCommand
     {
-        private const string HotDir = "Assets/Data/Res/Code";
+        private const string HotDir = "Assets/GameRes/Res/Code";
         private const string AotDir = "Assets/Resources/Code";
         private const string ComplileAOTTempPath = "./Release_Temp";
 

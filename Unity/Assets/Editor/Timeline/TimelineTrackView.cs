@@ -6,15 +6,12 @@ using UnityEngine.UIElements;
 
 namespace Ux.Editor.Timeline
 {
-#if UNITY_6000_0_OR_NEWER
-    [UxmlElement]
-#endif
     public partial class TimelineTrackView : VisualElement
     {
-#if !UNITY_6000_0_OR_NEWER
-        public new class UxmlFactory : UxmlFactory<TimelineTrackView, UxmlTraits> { }
-        public new class UxmlTraits : VisualElement.UxmlTraits { }
-#endif
+        protected VisualElement root;
+        public ToolbarMenu btnAddTrack;
+        public VisualElement trackContent;
+
         const float HeaderHeight = 32f;
         readonly Dictionary<ITimelineEditorTrack, TimelineTrackItem> trackItemDic = new();
         ScrollView _trackScroll;

@@ -1,19 +1,40 @@
 using System;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 namespace Ux.Editor.Debugger.Event
 {
     public partial class EventDebuggerItem : TemplateContainer, IDebuggerListItem<EventList>
     {
-        private VisualTreeAsset _visualAsset;
-        
+        protected VisualElement root;
+        public Label txtID;
+        public ListView listEvt;
+
         DebuggerStringListView _list;
         public EventDebuggerItem()
         {
-            CreateChildren();
+            BuildUI();
             style.flexGrow = 1f;
             Add(root);
             CreateView();
+        }
+
+        /// <summary>原 EventDebuggerItem.uxml 的手搭等价版本。</summary>
+        private void BuildUI()
+        {
+            root = new VisualElement();
+            root.style.flexDirection = FlexDirection.Row;
+            root.style.flexGrow = 1f;
+            root.style.flexShrink = 1f;
+            root.SetBorder(Color.black);
+            root.SetMargin(1f);
+
+            txtID = DebuggerUiUtil.IdLabel("txtID");
+            root.Add(DebuggerUiUtil.IdBox(txtID));
+
+            listEvt = DebuggerUiUtil.DynamicList("listEvt");
+            listEvt.style.flexGrow = 1f;
+            root.Add(listEvt);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using Assets.Editor.Timeline;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -6,12 +7,18 @@ namespace Ux.Editor.Timeline.Animation
 {
     public partial class TLAnimTrackInspector : TimelineInspectorBase
     {
+        protected VisualElement root;
+        public TextField txtName;
+        public ObjectField ofAvatarMask;
+        public Toggle tgAdditive;
+        public ObjectField ofAnimator;
+
         readonly ITimelineEditorTrack track;
         readonly AnimationTrackAsset asset;
 
         public TLAnimTrackInspector(ITimelineEditorSource source, ITimelineEditorTrack track, AnimationTrackAsset asset) : base(source, track, asset)
         {
-            CreateChildren();
+            BuildUI();
             Add(root);
             this.track = track;
             this.asset = asset;
@@ -26,7 +33,7 @@ namespace Ux.Editor.Timeline.Animation
             OnFreshView();
         }
 
-        partial void _OnOfAvatarMaskChanged(ChangeEvent<Object> evt)
+        private void _OnOfAvatarMaskChanged(ChangeEvent<Object> evt)
         {
             if (!Source.CanEdit) return;
             track.RecordUndo("timeline_track_avatar_mask");
@@ -34,7 +41,7 @@ namespace Ux.Editor.Timeline.Animation
             CommitChange();
         }
 
-        partial void _OnTgAdditiveChanged(ChangeEvent<bool> evt)
+        private void _OnTgAdditiveChanged(ChangeEvent<bool> evt)
         {
             if (!Source.CanEdit) return;
             track.RecordUndo("timeline_track_additive");
@@ -42,7 +49,7 @@ namespace Ux.Editor.Timeline.Animation
             CommitChange();
         }
 
-        partial void _OnTxtNameChanged(ChangeEvent<string> evt)
+        private void _OnTxtNameChanged(ChangeEvent<string> evt)
         {
             track.Rename(evt.newValue);
             if (ofAnimator.value != null)
@@ -51,10 +58,32 @@ namespace Ux.Editor.Timeline.Animation
             }
         }
 
-        partial void _OnOfAnimatorChanged(ChangeEvent<Object> evt)
+        private void _OnOfAnimatorChanged(ChangeEvent<Object> evt)
         {
             TimelineWindow.RefreshBinds?.Invoke(asset, evt.newValue);
             TimelineWindow.RefreshEntity?.Invoke();
+        }
+
+        /// <summary>原 TLAnimTrackInspector.uxml 的手搭等价版本。</summary>
+        private void BuildUI()
+        {
+            root = new VisualElement { style = { flexGrow = 1f } };
+
+            txtName = new TextField("Name") { pickingMode = PickingMode.Ignore };
+            txtName.RegisterValueChangedCallback(_OnTxtNameChanged);
+            root.Add(txtName);
+
+            ofAvatarMask = new ObjectField("Avatar Mask");
+            ofAvatarMask.RegisterValueChangedCallback(_OnOfAvatarMaskChanged);
+            root.Add(ofAvatarMask);
+
+            tgAdditive = new Toggle("IsAdditive");
+            tgAdditive.RegisterValueChangedCallback(_OnTgAdditiveChanged);
+            root.Add(tgAdditive);
+
+            ofAnimator = new ObjectField("动画组件");
+            ofAnimator.RegisterValueChangedCallback(_OnOfAnimatorChanged);
+            root.Add(ofAnimator);
         }
 
         protected override void OnFreshView()

@@ -33,8 +33,8 @@ namespace Ux.Editor.Combat
     /// </summary>
     internal static class CombatEditorUtility
     {
-        internal const string CombatRoot = "Assets/Data/Res/Combat";
-        internal const string TimelineRoot = "Assets/Data/Res/Timeline";
+        internal const string CombatRoot = "Assets/GameRes/Res/Combat";
+        internal const string TimelineRoot = "Assets/GameRes/Res/Timeline";
 
         internal static string GetStateLayerDisplayName(StateLayer layer)
         {

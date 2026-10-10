@@ -21,12 +21,84 @@ namespace Ux.Editor.Build.Proto
         PopupField<string> _type;
         ProtoSettingData Setting;
         
+        protected VisualElement root;
+        public TextField txtPbTool;
+        public Button btnPbTool;
+        public TextField txtConfig;
+        public Button btnConfig;
+        public TextField txtInPath;
+        public Button btnInPath;
+        public TextField txtOutPath;
+        public Button btnOutPath;
+        public TextField txtNamespace;
+        public VisualElement popContainer;
+        public Button btnExport;
+
+        /// <summary>原 ProtoWindow.uxml 的手搭等价版本。</summary>
+        private void BuildUI()
+        {
+            root = new VisualElement();
+            root.style.flexGrow = 1f;
+
+            var body = new VisualElement();
+            root.Add(body);
+
+            (VisualElement row, TextField field) PathRow(string fieldName, string label, string buttonName, Action onPick)
+            {
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.flexGrow = 0f;
+                var field = new TextField(label) { name = fieldName, pickingMode = PickingMode.Ignore };
+                field.style.flexGrow = 1f;
+                row.Add(field);
+                var button = new Button(onPick) { name = buttonName, text = "选择" };
+                button.style.flexGrow = 0f;
+                row.Add(button);
+                return (row, field);
+            }
+
+            var pbToolRow = PathRow("txtPbTool", "PbTool", "btnPbTool", _OnBtnPbToolClick);
+            txtPbTool = pbToolRow.field;
+            txtPbTool.RegisterValueChangedCallback(_OnTxtPbToolChanged);
+            body.Add(pbToolRow.row);
+
+            var configRow = PathRow("txtConfig", "Config.json", "btnConfig", _OnBtnConfigClick);
+            txtConfig = configRow.field;
+            txtConfig.RegisterValueChangedCallback(_OnTxtConfigChanged);
+            body.Add(configRow.row);
+
+            var inPathRow = PathRow("txtInPath", "Proto目录", "btnInPath", _OnBtnInPathClick);
+            txtInPath = inPathRow.field;
+            txtInPath.RegisterValueChangedCallback(_OnTxtInPathChanged);
+            body.Add(inPathRow.row);
+
+            var outPathRow = PathRow("txtOutPath", "导出目录", "btnOutPath", _OnBtnOutPathClick);
+            txtOutPath = outPathRow.field;
+            txtOutPath.RegisterValueChangedCallback(_OnTxtOutPathChanged);
+            body.Add(outPathRow.row);
+
+            var namespaceRow = new VisualElement();
+            namespaceRow.style.flexDirection = FlexDirection.Row;
+            namespaceRow.style.flexGrow = 0f;
+            txtNamespace = new TextField("命名空间") { name = "txtNamespace", pickingMode = PickingMode.Ignore };
+            txtNamespace.style.flexGrow = 1f;
+            txtNamespace.RegisterValueChangedCallback(_OnTxtNamespaceChanged);
+            namespaceRow.Add(txtNamespace);
+            body.Add(namespaceRow);
+
+            popContainer = new VisualElement { name = "popContainer" };
+            body.Add(popContainer);
+
+            btnExport = new Button(_OnBtnExportClick) { name = "btnExport", text = "导出" };
+            root.Add(btnExport);
+        }
+
         public void CreateGUI()
         {
             try
             {
                 Setting = ProtoSettingData.LoadConfig();
-                CreateChildren();
+                BuildUI();
                 rootVisualElement.Add(root);  
                 
                 txtPbTool.SetValueWithoutNotify(Setting.PbTool);                                   
@@ -58,44 +130,44 @@ namespace Ux.Editor.Build.Proto
             ProtoSettingData.SaveConfig();
             AssetDatabase.Refresh();
         }
-        partial void _OnTxtPbToolChanged(ChangeEvent<string> e)
+        private void _OnTxtPbToolChanged(ChangeEvent<string> e)
         {
             Setting.PbTool = e.newValue;
         }
-        partial void _OnBtnPbToolClick()
+        private void _OnBtnPbToolClick()
         {
             BuildHelper.OpenFilePanel(Setting.PbTool, "PbTool", txtPbTool, "dll");
         }
-        partial void _OnTxtConfigChanged(ChangeEvent<string> e)
+        private void _OnTxtConfigChanged(ChangeEvent<string> e)
         {
             Setting.Config = e.newValue;
         }
-        partial void _OnBtnConfigClick()
+        private void _OnBtnConfigClick()
         {
             BuildHelper.OpenFilePanel(Setting.Config, "Config.json", txtConfig, "json");
         }
 
-        partial void _OnTxtInPathChanged(ChangeEvent<string> e)
+        private void _OnTxtInPathChanged(ChangeEvent<string> e)
         {
             Setting.InPath = e.newValue;
         }
-        partial void _OnBtnInPathClick()
+        private void _OnBtnInPathClick()
         {
             BuildHelper.OpenFolderPanel(Setting.InPath, "请选择Proto目录", txtInPath);
         }
-        partial void _OnTxtOutPathChanged(ChangeEvent<string> e)
+        private void _OnTxtOutPathChanged(ChangeEvent<string> e)
         {
             Setting.OutPath = e.newValue;
         }
-        partial void _OnBtnOutPathClick()
+        private void _OnBtnOutPathClick()
         {
             BuildHelper.OpenFolderPanel(Setting.OutPath, "请选择导出目录", txtOutPath);
         }
-        partial void _OnTxtNamespaceChanged(ChangeEvent<string> e)
+        private void _OnTxtNamespaceChanged(ChangeEvent<string> e)
         {
             Setting.NameSpace = e.newValue;
         }
-        partial void _OnBtnExportClick()
+        private void _OnBtnExportClick()
         {
             Export().Forget();
         }

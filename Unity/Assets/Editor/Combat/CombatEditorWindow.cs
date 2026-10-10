@@ -1371,7 +1371,7 @@ namespace Ux.Editor.Combat
             if (action.DurationFrames > timeline.DurationFrames &&
                 !EditorUtility.DisplayDialog(
                     "同步逻辑时长",
-                    "表现 Timeline 比逻辑动作更短。同步后，超出表现长度的命中/取消窗口和帧事件将被删除，是否继续？",
+                    "Timeline 比逻辑动作更短。同步后，超出表现长度的命中/取消窗口和帧事件将被删除，是否继续？",
                     "继续同步",
                     "取消"))
             {
@@ -2134,7 +2134,7 @@ namespace Ux.Editor.Combat
         private static AnimationClip FindHeroZsAttackClip()
         {
             const string path =
-                "Assets/Data/Art/Model/Unit/Hero_ZS/Hero_ZS/Animations/Hero_ZS@Attack.FBX";
+                "Assets/GameRes/Art/Model/Unit/Hero_ZS/Hero_ZS/Animations/Hero_ZS@Attack.FBX";
             var assets = AssetDatabase.LoadAllAssetsAtPath(path);
             foreach (var asset in assets)
             {

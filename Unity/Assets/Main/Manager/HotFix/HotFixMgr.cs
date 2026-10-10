@@ -41,7 +41,7 @@ namespace Ux
                 foreach (var hotfixName in HotfixAssembly)
                 {
                     byte[] assBytes = null;
-                    var codePath = $"Assets/Data/Res/Code/{hotfixName}.dll";
+                    var codePath = $"Assets/GameRes/Res/Code/{hotfixName}.dll";
                     using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(codePath))
                     {
                         assBytes = handle.GetAssetObject<TextAsset>().bytes;

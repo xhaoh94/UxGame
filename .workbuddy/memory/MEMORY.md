@@ -27,6 +27,7 @@
 - 关联键是 `ActionId`；编辑器按字段名取属性（`FindProperty`）⇒ 加字段安全。本项目 `TimelineAsset` 是 `Ux.*`，非 UnityEngine.Timeline。
 - **加逻辑轨**：同步位置见 `COMBAT_DESIGN.md` 批次 K；**漏改 `ValidateData`/`MigrateLogicItemStableIds`/`tracks` 不报错**。
 - 编辑器面板混排宽度坑：`GUILayout.Width(n)` 限制的是**标签列 + 输入框**整体，标签列由 `EditorGUIUtility.labelWidth`（默认 150）占，`n` 不够大时输入框被压成 0、只剩标签。固定宽度列别和可伸缩控件放同一 `HorizontalScope` —— 用 `EditorGUILayout.GetControlRect` 取整行手动切分（`CombatEditorWindow.DrawPresentationRow` 的 variantId/优先级 行是范例）。
+- **全项目已彻底去 UXML**（2026-10-09）：24 个 uxml + 24 个 `*_GenCode.cs` 已删，所有编辑器窗口改为 `BuildUI()` 手搭；`Editor/UIElements/{CodeGenHelper,UxmlParser}.cs`（uxml→GenCode 生成器）也已删。只剩 YooAsset 插件的 `ShaderVariantCollectorWindow.uxml`（第三方，故意不动）。判据：uxml 是否被用的唯一入口是 `CreateChildren()` 有没有调用点。**GenCode 里只声明未实现、主类没实现的 `partial void _OnXxx`，调用会被编译器擦除 ⇒ 手搭时不要补注册**（Timeline/Debugger/Build 三处都踩到）。Debugger 窗口的真实交互在 `DebuggerObjectSearchListView` 一类辅助里，靠 `root.Q<T>("name")` 取控件 ⇒ **手搭必须给控件设 `name`**。手搭样式帮手见 `Editor/Debugger/DebuggerUiUtil.cs`（`Ux.Editor.Debugger` 命名空间内可见）。
 
 ## 环境与工具坑
 - 沙箱**不能编 C#** → 只能静态校验 + 剥注释比对，必须让用户在 Unity 里过编译；改了热更类型名要重编 `Data/Res/Code/*.dll.bytes`。

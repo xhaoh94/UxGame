@@ -80,7 +80,7 @@ namespace Ux.Editor.Combat.Tests
         public void BasicAttackExampleLinksProfileActionTimelineAndAnimation()
         {
             const string profilePath =
-                "Assets/Data/Res/Combat/Role/Role_DummyCombatProfile.asset";
+                "Assets/GameRes/Res/Combat/Role/Role_DummyCombatProfile.asset";
             var profile = AssetDatabase.LoadAssetAtPath<CharacterCombatProfile>(profilePath);
 
             Assert.IsNotNull(profile, $"缺少基础普攻示例 Profile：{profilePath}");
@@ -145,7 +145,7 @@ namespace Ux.Editor.Combat.Tests
         public void DefaultHeroProfileKeepsIdleRunAndBasicAttackPresentations()
         {
             const string profilePath =
-                "Assets/Data/Res/Combat/Role/Role_DummyCombatProfile.asset";
+                "Assets/GameRes/Res/Combat/Role/Role_DummyCombatProfile.asset";
             var profile = AssetDatabase.LoadAssetAtPath<CharacterCombatProfile>(profilePath);
 
             Assert.IsNotNull(profile, $"缺少默认 Role Profile：{profilePath}");
@@ -270,7 +270,7 @@ namespace Ux.Editor.Combat.Tests
                     AssetDatabase.DeleteAsset(timelinePath);
                 }
                 AssetDatabase.DeleteAsset(testFolder);
-                AssetDatabase.DeleteAsset($"Assets/Data/Res/Timeline/{key}");
+                AssetDatabase.DeleteAsset($"Assets/GameRes/Res/Timeline/{key}");
                 AssetDatabase.SaveAssets();
             }
         }

@@ -32,6 +32,23 @@ namespace Ux.Editor.Timeline
     [InitializeOnLoad]
     public partial class TimelineWindow : EditorWindow
     {
+        protected VisualElement root;
+        public VisualElement VisualElement;
+        public TimelineTrackView trackView;
+        public TimelineClipView clipView;
+        public ObjectField ofEntity;
+        public ObjectField ofTimeline;
+        public Button btnCreate;
+        public VisualElement createView;
+        public TextField inputPath;
+        public Button btnPath;
+        public TextField inputName;
+        public Button btnOk;
+        public Button btnLastFrame;
+        public Button btnNextFrame;
+        public Button btnPlay;
+        public VisualElement frameContent;
+
         private const string PreviewObjectSuffix = " (Timeline Preview)";
         private const HideFlags PreviewObjectHideFlags =
             HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
@@ -198,7 +215,7 @@ namespace Ux.Editor.Timeline
             return wnd;
         }
 
-        static string Path = "Assets/Data/Res/Timeline";
+        static string Path = "Assets/GameRes/Res/Timeline";
         bool isCreateing = false;
         double _lastTime;
         float _playTime;
@@ -839,7 +856,7 @@ namespace Ux.Editor.Timeline
                 StandaloneWindowClosed?.Invoke();
             }
         }
-        partial void _OnBtnLastFrameClick()
+        private void _OnBtnLastFrameClick()
         {
             if (!IsValid()) return;
             if (clipView.CurFrame > 0)
@@ -847,13 +864,13 @@ namespace Ux.Editor.Timeline
                 clipView.SetNowFrame(clipView.CurFrame - 1);
             }
         }
-        partial void _OnBtnNextFrameClick()
+        private void _OnBtnNextFrameClick()
         {
             if (!IsValid()) return;
             clipView.SetNowFrame(clipView.CurFrame + 1);
         }
 
-        partial void _OnBtnPlayClick()
+        private void _OnBtnPlayClick()
         {
             if (!IsValid() || Asset == null || Timeline == null) return;
             _OnBindObjs();
@@ -865,7 +882,7 @@ namespace Ux.Editor.Timeline
             UpdatePlayButton();
             _framePopupField?.SetEnabled(false);
         }
-        partial void _OnBtnPauseClick()
+        private void _OnBtnPauseClick()
         {
             if (!IsPlaying) return;
             UnityEditor.EditorApplication.update -= OnPlay;
@@ -874,7 +891,7 @@ namespace Ux.Editor.Timeline
             _framePopupField?.SetEnabled(Asset != null && _combatProfile == null);
         }
 
-        partial void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e)
+        private void _OnOfEntityChanged(ChangeEvent<UnityEngine.Object> e)
         {
             DestroyPreviewEntity();
             ofEntity.SetValueWithoutNotify(e.newValue);
@@ -918,7 +935,7 @@ namespace Ux.Editor.Timeline
                 }
             }
         }
-        partial void _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object> e)
+        private void _OnOfTimelineChanged(ChangeEvent<UnityEngine.Object> e)
         {
             var requestedAsset = e.newValue as TimelineAsset;
             if (_combatProfile != null && requestedAsset != null &&
@@ -1105,7 +1122,7 @@ namespace Ux.Editor.Timeline
             }
         }
 
-        partial void _OnBtnCreateClick()
+        private void _OnBtnCreateClick()
         {
             if (createView.style.display == DisplayStyle.None)
             {
@@ -1116,11 +1133,6 @@ namespace Ux.Editor.Timeline
                 createView.style.display = DisplayStyle.None;
             }
         }
-        partial void _OnInputPathChanged(ChangeEvent<string> e)
-        {
-            SelectCreatePath();
-        }
-
         void SelectCreatePath()
         {
             var temPath = EditorUtility.OpenFolderPanel("请选择保存路径", inputPath?.value ?? Path, "");
@@ -1137,7 +1149,7 @@ namespace Ux.Editor.Timeline
             }
             inputPath.SetValueWithoutNotify(projectPath);
         }
-        partial void _OnBtnOkClick()
+        private void _OnBtnOkClick()
         {
             if (string.IsNullOrEmpty(inputName.text))
             {

@@ -8,6 +8,11 @@ namespace Ux.Editor.Timeline
 {
     public partial class TimelineTrackItem : VisualElement, IToolbarMenuElement
     {
+        protected VisualElement root;
+        public VisualElement content;
+        public Label lbType;
+        public TextField inputName;
+
         public ITimelineEditorTrack Track { get; }
         VisualElement clipContent;
         VisualElement clipParent;
@@ -211,7 +216,7 @@ namespace Ux.Editor.Timeline
             inputName.SetValueWithoutNotify(Track.Name);
         }
 
-        partial void _OnInputNameChanged(ChangeEvent<string> evt)
+        private void _OnInputNameChanged(ChangeEvent<string> evt)
         {
             Track.Rename(evt.newValue);
         }

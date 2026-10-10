@@ -90,10 +90,70 @@ namespace Ux.Editor.Build.UI
         }
 
 
+        protected VisualElement root;
+        public ObjectField pathField;
+        public Button btnLoad;
+        public Button btnBuildinAdd;
+        public VisualElement buildin;
+        public Button btnLazyloadAdd;
+        public VisualElement lazyload;
+        public Button btnApply;
+
+        /// <summary>原 UIClassifyWindow.uxml 的手搭等价版本（uxml 根节点是 IMGUIContainer）。</summary>
+        private void BuildUI()
+        {
+            root = new IMGUIContainer();
+            root.style.flexGrow = 1f;
+
+            pathField = new ObjectField("资源目录") { name = "pathField", allowSceneObjects = true };
+            pathField.style.flexGrow = 1f;
+            pathField.RegisterValueChangedCallback(_OnPathFieldChanged);
+            root.Add(pathField);
+
+            btnLoad = new Button(_OnBtnLoadClick) { name = "btnLoad", text = "重载配置" };
+            root.Add(btnLoad);
+
+            var buildinGroup = new VisualElement();
+            var buildinFoldout = new Foldout { text = "预加载资源", value = false };
+            var buildinRow = new VisualElement();
+            buildinRow.style.flexGrow = 1f;
+            buildinRow.style.flexDirection = FlexDirection.Row;
+            btnBuildinAdd = new Button(_OnBtnBuildinAddClick) { name = "btnBuildinAdd", text = "[+]" };
+            btnBuildinAdd.style.width = 30f;
+            btnBuildinAdd.style.height = 30f;
+            buildinRow.Add(btnBuildinAdd);
+            buildinFoldout.Add(buildinRow);
+            buildin = new VisualElement { name = "buildin" };
+            buildinFoldout.Add(buildin);
+            buildinGroup.Add(buildinFoldout);
+            root.Add(buildinGroup);
+
+            var lazyloadGroup = new VisualElement();
+            var lazyloadFoldout = new Foldout { text = "懒加载资源", value = true };
+            var lazyloadRow = new VisualElement();
+            lazyloadRow.style.flexGrow = 1f;
+            lazyloadRow.style.flexDirection = FlexDirection.Row;
+            btnLazyloadAdd = new Button(_OnBtnLazyloadAddClick) { name = "btnLazyloadAdd", text = "[+]" };
+            btnLazyloadAdd.style.width = 30f;
+            btnLazyloadAdd.style.height = 30f;
+            lazyloadRow.Add(btnLazyloadAdd);
+            lazyloadFoldout.Add(lazyloadRow);
+            lazyload = new VisualElement { name = "lazyload" };
+            lazyloadFoldout.Add(lazyload);
+            lazyloadGroup.Add(lazyloadFoldout);
+            root.Add(lazyloadGroup);
+
+            btnApply = new Button(_OnBtnApplyClick) { name = "btnApply", text = "生成配置" };
+            btnApply.style.height = 50f;
+            btnApply.style.marginTop = 10f;
+            btnApply.style.backgroundColor = new Color(40f / 255f, 106f / 255f, 42f / 255f);
+            root.Add(btnApply);
+        }
+
         public void CreateGUI()
         {
             _ResClassifySettings = null;
-            CreateChildren();
+            BuildUI();
             rootVisualElement.Add(root);
             var pathObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(ResClassifySettings.path);
             if (pathObject != null)
@@ -109,24 +169,24 @@ namespace Ux.Editor.Build.UI
             UpdateLazyload();
         }
 
-        partial void _OnPathFieldChanged(ChangeEvent<Object> e)
+        private void _OnPathFieldChanged(ChangeEvent<Object> e)
         {
             ResClassifySettings.path = AssetDatabase.GetAssetPath(e.newValue);
             pathField.value.name = ResClassifySettings.path;
         }
-        partial void _OnBtnBuildinAddClick()
+        private void _OnBtnBuildinAddClick()
         {
             var element = MakeBuildinItem();
             BindBuildinItem(element, buildin.childCount);
             buildin.Add(element);
         }
-        partial void _OnBtnLazyloadAddClick()
+        private void _OnBtnLazyloadAddClick()
         {
             var element = MakeLazyloadItem();
             BindLazyloadItem(element, lazyload.childCount);
             lazyload.Add(element);
         }
-        partial void _OnBtnApplyClick()
+        private void _OnBtnApplyClick()
         {
             List<string> builtins = new List<string>();
             for (int i = 0; i < buildin.childCount; i++)
@@ -154,7 +214,7 @@ namespace Ux.Editor.Build.UI
                 _OnBtnLoadClick();
             }
         }
-        partial void _OnBtnLoadClick()
+        private void _OnBtnLoadClick()
         {
             _ResClassifySettings = null;
             UpdateBuildIn();

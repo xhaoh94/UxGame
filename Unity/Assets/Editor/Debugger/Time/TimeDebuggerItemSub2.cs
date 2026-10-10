@@ -4,12 +4,36 @@ using UnityEngine.UIElements;
 using static Ux.TimeMgr;
 namespace Ux.Editor.Debugger.Time
 {
-    public partial class TimeDebuggerItemSub2:TemplateContainer{}
+    public partial class TimeDebuggerItemSub2 : TemplateContainer
+    {
+        protected VisualElement root;
+        public TextField txtKey;
+        public TextField txtCorn;
+        public TextField txtTimeDesc;
+        public TextField txtTimeStamp;
+
+        /// <summary>原 TimeDebuggerItemSub2.uxml 的手搭等价版本。</summary>
+        protected void BuildUI()
+        {
+            root = new VisualElement();
+            root.style.flexGrow = 1f;
+
+            txtKey = DebuggerUiUtil.LockedField("txtKey", "Key");
+            root.Add(txtKey);
+            txtCorn = DebuggerUiUtil.LockedField("txtCorn", "Cron表达式");
+            root.Add(txtCorn);
+            txtTimeDesc = DebuggerUiUtil.LockedField("txtTimeDesc", "触发时间");
+            root.Add(txtTimeDesc);
+            txtTimeStamp = DebuggerUiUtil.LockedField("txtTimeStamp", "时间戳");
+            root.Add(txtTimeStamp);
+        }
+    }
+
     public class TimeDebuggerItemSub2<T> : TimeDebuggerItemSub2, IDebuggerListItem<T>
     {
         public TimeDebuggerItemSub2()
         {
-            CreateChildren();
+            BuildUI();
             Add(root);
         }
 

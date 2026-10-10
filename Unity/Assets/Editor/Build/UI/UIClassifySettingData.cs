@@ -15,7 +15,7 @@ namespace Ux.Editor.Build.UI
             public string key;
             public string value;
         }
-        public string path = "Assets/Data/Res/UI";
+        public string path = "Assets/GameRes/Res/UI";
 
         [Header("不在预加载资源或懒加载资源的，都是内置资源，出包的时候会打进包体里的")]
         public string[] proloads;

@@ -24,9 +24,58 @@ namespace Ux.Editor.Build.Version
         PopupField<string> _popupFieldManifestProess;
         PopupField<string> _popupFieldManifestRestore;
 
+        protected VisualElement root;
+        public VisualElement exportElement;
+        public Toggle tgCollectSV;
+        public EnumField pipelineType;
+        public EnumField nameStyleType;
+        public EnumField compressionType;
+        public TextField inputBuiltinTags;
+        public VisualElement encryptionContainer;
+        public VisualElement manifestContainer;
+
+        /// <summary>原 VersionPackageViewer.uxml 的手搭等价版本；uxml 根元素本身就是 exportElement。</summary>
+        private void BuildUI()
+        {
+            exportElement = new VisualElement { name = "exportElement" };
+            exportElement.style.flexGrow = 1f;
+            root = exportElement;
+
+            tgCollectSV = new Toggle("收集着色体变体") { name = "tgCollectSV" };
+            tgCollectSV.RegisterValueChangedCallback(_OnTgCollectSVChanged);
+            root.Add(tgCollectSV);
+
+            pipelineType = new EnumField { name = "pipelineType", label = "构建管线" };
+            pipelineType.style.flexShrink = 1f;
+            pipelineType.RegisterValueChangedCallback(_OnPipelineTypeChanged);
+            root.Add(pipelineType);
+
+            nameStyleType = new EnumField { name = "nameStyleType", label = "资源命名格式" };
+            nameStyleType.style.flexShrink = 1f;
+            nameStyleType.RegisterValueChangedCallback(_OnNameStyleTypeChanged);
+            root.Add(nameStyleType);
+
+            compressionType = new EnumField { name = "compressionType", label = "压缩方式" };
+            compressionType.style.flexShrink = 1f;
+            compressionType.RegisterValueChangedCallback(_OnCompressionTypeChanged);
+            root.Add(compressionType);
+
+            inputBuiltinTags = new TextField("首包资源标签") { name = "inputBuiltinTags", pickingMode = PickingMode.Ignore };
+            inputBuiltinTags.RegisterValueChangedCallback(_OnInputBuiltinTagsChanged);
+            root.Add(inputBuiltinTags);
+
+            encryptionContainer = new VisualElement { name = "encryptionContainer" };
+            encryptionContainer.style.height = StyleKeyword.Auto;
+            root.Add(encryptionContainer);
+
+            manifestContainer = new VisualElement { name = "manifestContainer" };
+            manifestContainer.style.height = StyleKeyword.Auto;
+            root.Add(manifestContainer);
+        }
+
         public VersionPackageViewer(VisualElement parent)
         {
-            CreateChildren();
+            BuildUI();
             root.style.flexGrow = 1f;
             parent.Add(root);
             pipelineType.Init(EBuildPipeline.ScriptableBuildPipeline);
@@ -102,24 +151,24 @@ namespace Ux.Editor.Build.Version
                 manifestContainer.Add(_popupFieldManifestRestore);
             }
         }
-        partial void _OnTgCollectSVChanged(ChangeEvent<bool> e)
+        private void _OnTgCollectSVChanged(ChangeEvent<bool> e)
         {
             PackageSetting.IsCollectShaderVariant = e.newValue;
         }
-        partial void _OnPipelineTypeChanged(ChangeEvent<Enum> e)
+        private void _OnPipelineTypeChanged(ChangeEvent<Enum> e)
         {
             PackageSetting.PiplineOption = e.newValue.ToString();
             RefreshElement();
         }
-        partial void _OnCompressionTypeChanged(ChangeEvent<Enum> e)
+        private void _OnCompressionTypeChanged(ChangeEvent<Enum> e)
         {
             PackageSetting.CompressOption = (ECompressOption)e.newValue;
         }
-        partial void _OnNameStyleTypeChanged(ChangeEvent<Enum> e)
+        private void _OnNameStyleTypeChanged(ChangeEvent<Enum> e)
         {
             PackageSetting.NameStyleOption = (EFileNameStyle)e.newValue;
         }
-        partial void _OnInputBuiltinTagsChanged(ChangeEvent<string> e)
+        private void _OnInputBuiltinTagsChanged(ChangeEvent<string> e)
         {
             PackageSetting.BuildTags = e.newValue;
         }

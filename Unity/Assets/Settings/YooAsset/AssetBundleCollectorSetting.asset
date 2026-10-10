@@ -29,7 +29,7 @@ MonoBehaviour:
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Code
+      - CollectPath: Assets/GameRes/Res/Code
         CollectorGUID: 5136dcfd732443e4fbcedd13488bb8d5
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -42,7 +42,7 @@ MonoBehaviour:
       AssetTags: builtin
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Config
+      - CollectPath: Assets/GameRes/Res/Config
         CollectorGUID: 8f52838e936dc4e42976f151a4bf6d17
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -55,7 +55,7 @@ MonoBehaviour:
       AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/UI
+      - CollectPath: Assets/GameRes/Res/UI
         CollectorGUID: 
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -63,7 +63,7 @@ MonoBehaviour:
         FilterRuleName: CollectBuiltinUI
         AssetTags: builtin
         UserData: 
-      - CollectPath: Assets/Data/Res/UI
+      - CollectPath: Assets/GameRes/Res/UI
         CollectorGUID: 
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -71,7 +71,7 @@ MonoBehaviour:
         FilterRuleName: CollectPreloadUI
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/UI/Bag
+      - CollectPath: Assets/GameRes/Res/UI/Bag
         CollectorGUID: 
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -79,7 +79,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: lazyload_bag
         UserData: 
-      - CollectPath: Assets/Data/Res/UI/Multiple
+      - CollectPath: Assets/GameRes/Res/UI/Multiple
         CollectorGUID: 
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -92,7 +92,7 @@ MonoBehaviour:
       AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Atlas
+      - CollectPath: Assets/GameRes/Res/Atlas
         CollectorGUID: bbf62020395cb4c489585f2ffd312862
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -105,7 +105,7 @@ MonoBehaviour:
       AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/Data/Res/Prefab/Common
+      - CollectPath: Assets/GameRes/Res/Prefab/Common
         CollectorGUID: 9dfef7769977a774bb51fbe27ef660e3
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -113,7 +113,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: builtin
         UserData: 
-      - CollectPath: Assets/Data/Res/Prefab/Map
+      - CollectPath: Assets/GameRes/Res/Prefab/Map
         CollectorGUID: 81531e71e6b35264bad074572c22b908
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -121,7 +121,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/Prefab/Unit
+      - CollectPath: Assets/GameRes/Res/Prefab/Unit
         CollectorGUID: fc832313cf58974478c3ac031ba7f277
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -142,7 +142,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: builtin
         UserData: 
-      - CollectPath: Assets/Data/Res/Timeline
+      - CollectPath: Assets/GameRes/Res/Timeline
         CollectorGUID: de523ac24d0eef34d83b36ad0bf292a6
         CollectorType: 0
         AddressRuleName: AddressCollectRule
@@ -150,7 +150,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/Data/Res/Combat
+      - CollectPath: Assets/GameRes/Res/Combat
         CollectorGUID: 6f674d35e7cacd841b1c1d4feac8c10a
         CollectorType: 0
         AddressRuleName: AddressCollectRule
