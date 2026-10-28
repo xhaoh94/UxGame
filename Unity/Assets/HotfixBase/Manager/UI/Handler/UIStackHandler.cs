@@ -16,7 +16,7 @@ namespace Ux
             _entries.Clear();
         }
 
-        internal void CommitVisible(int rootId, int activeId, IUIParam param, UIType type)
+        internal void CommitVisible(int rootId, int activeId, int activeTypeId, IUIParam param, UIType type)
         {
             if (type == UIType.Fixed)
             {
@@ -29,7 +29,7 @@ namespace Ux
                 var last = _entries[lastIndex];
                 if (last.RootId == rootId)
                 {
-                    _entries[lastIndex] = new UIMgr.StackEntry(rootId, activeId, param, type);
+                    _entries[lastIndex] = new UIMgr.StackEntry(rootId, activeId, activeTypeId, param, type);
 #if UNITY_EDITOR
                     UIMgr.__Debugger_Stack_Event();
 #endif
@@ -37,7 +37,7 @@ namespace Ux
                 }
             }
 
-            _entries.Add(new UIMgr.StackEntry(rootId, activeId, param, type));
+            _entries.Add(new UIMgr.StackEntry(rootId, activeId, activeTypeId, param, type));
 #if UNITY_EDITOR
             UIMgr.__Debugger_Stack_Event();
 #endif
@@ -55,18 +55,6 @@ namespace Ux
 #if UNITY_EDITOR
             UIMgr.__Debugger_Stack_Event();
 #endif
-        }
-
-        internal bool ContainsActive(int id)
-        {
-            for (int i = _entries.Count - 1; i >= 0; i--)
-            {
-                if (_entries[i].ActiveId == id)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         internal UIMgr.StackEntry? PeekPrevious(int rootId)

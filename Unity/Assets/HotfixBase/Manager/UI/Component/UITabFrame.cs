@@ -1,4 +1,4 @@
-﻿using FairyGUI;
+using FairyGUI;
 using System;
 using System.Collections.Generic;
 
@@ -103,7 +103,7 @@ namespace Ux
                 return;
             }
 
-            int index = GetIndex(tab.ID);
+            int index = GetIndex(tab.TypeId);
             if (index < 0)
             {
                 Log.Error("找不到对应的CHILD");
@@ -140,7 +140,8 @@ namespace Ux
         {
             var id = __listTab.GetData<int>(index);
             if (id == 0) return;
-            if (SelectItem.ID == id)
+            // 列表里存的是类型ID，SelectItem.ID 是实例ID：这里要按类型比较，否则每次点击都会以为没选中而重开。
+            if (SelectItem.TypeId == id)
             {
                 return;
             }

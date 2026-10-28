@@ -13,14 +13,9 @@ namespace Ux
         private sealed class ShowSession
         {
             /// <summary>
-            /// 请求显示的UI ID
+            /// 请求显示的UI ID（类型 ID：调用方传进来的那个）
             /// </summary>
             public int RequestedId { get; private set; }
-            
-            /// <summary>
-            /// 目标UI ID（可能是Tab页的子界面）
-            /// </summary>
-            public int TargetId { get; private set; }
             
             /// <summary>
             /// 显示参数
@@ -36,6 +31,11 @@ namespace Ux
             /// 是否检查栈
             /// </summary>
             public bool CheckStack { get; private set; }
+
+            /// <summary>
+            /// 同类型已有可见实例时的处理策略
+            /// </summary>
+            public UIShowMode Mode { get; private set; }
             
             /// <summary>
             /// 显示链，包含从根界面到目标界面的所有UI ID
@@ -53,23 +53,30 @@ namespace Ux
             internal readonly List<int> ActivatedVersions = new ();
 
             internal int PreviousMountedChildId { get; private set; }
-            
-            /// <summary>
-            /// 获取根界面ID
-            /// </summary>
-            public int RootId => Chain.Count > 0 ? Chain[0] : TargetId;
 
+            /// <summary>
+            /// 根界面记录 ID（实例 ID）。显示链准备阶段解析出来后填入。
+            /// </summary>
+            public int RootRecordId { get; set; }
+
+            /// <summary>
+            /// 目标界面记录 ID（实例 ID）。显示链准备阶段解析出来后填入。
+            /// </summary>
+            public int TargetRecordId { get; set; }
+            
             /// <summary>
             /// 重置会话数据
             /// </summary>
-            public void Reset(int requestedId, int targetId, IUIParam param, bool isAnim, bool checkStack)
+            public void Reset(int requestedId, IUIParam param, bool isAnim, bool checkStack, UIShowMode mode)
             {
                 RequestedId = requestedId;
-                TargetId = targetId;
                 Param = param;
                 IsAnim = isAnim;
                 CheckStack = checkStack;
+                Mode = mode;
                 PreviousMountedChildId = 0;
+                RootRecordId = 0;
+                TargetRecordId = 0;
                 Chain.Clear();
                 Activated.Clear();
                 ActivatedVersions.Clear();
@@ -86,11 +93,13 @@ namespace Ux
             public void Release()
             {
                 RequestedId = 0;
-                TargetId = 0;
                 Param = null;
                 IsAnim = true;
                 CheckStack = true;
+                Mode = UIShowMode.Reuse;
                 PreviousMountedChildId = 0;
+                RootRecordId = 0;
+                TargetRecordId = 0;
                 Chain.Clear();
                 Activated.Clear();
                 ActivatedVersions.Clear();
@@ -113,8 +122,9 @@ namespace Ux
         /// <summary>
         /// 异步显示UI
         /// </summary>
-        private async UniTask<T> _ShowAsync<T>(int id, IUIParam param, bool isAnim, bool checkStack) where T : IUI
+        private async UniTask<T> _ShowAsync<T>(int id, IUIParam param, bool isAnim, bool checkStack, UIShowMode mode = UIShowMode.Reuse) where T : IUI
         {
+            EnsureInitialized();
             var data = GetUIData(id);
             if (data == null)
             {
@@ -130,8 +140,31 @@ namespace Ux
                 return default;
             }
 
+            // 同类型已有可见实例时，按调用方声明的策略处理，避免「静默覆盖」。
+            if (mode == UIShowMode.SkipIfShown)
+            {
+                var shownRecord = GetRecord(targetId);
+                if (shownRecord?.UI != null && (shownRecord.IsVisibleCommitted || shownRecord.IsShowingLike))
+                {
+                    return shownRecord.UI is T shown ? shown : default;
+                }
+            }
+            else if (mode == UIShowMode.Replace)
+            {
+                var replaceRecord = GetRecord(targetId);
+                if (replaceRecord?.UI != null && (replaceRecord.IsVisibleCommitted || replaceRecord.IsShowingLike))
+                {
+                    // 先等旧实例彻底关掉，再走一遍完整显示流程。
+                    // 这里不检查栈：否则关掉的瞬间栈会尝试把「上一个界面」弹回来，形成自我复读。
+                    await _Hide(targetId, false, false);
+                }
+            }
+            // NewInstance 由显示链准备阶段处理（见 PrepareShowChain 的 forceNew）：
+            // 只有「没有父级的根界面」（弹窗/飘字）才会真的新建实例；
+            // 页签子界面挂在同一个根下，同一类型在一条根链路里只可能有一个活动实例，按 Reuse 处理。
+
             var session = Pool.Get<ShowSession>();
-            session.Reset(id, targetId, param, isAnim, checkStack);
+            session.Reset(id, param, isAnim, checkStack, mode);
             try
             {
                 // 构建显示链
@@ -144,6 +177,14 @@ namespace Ux
 
                 var record = GetRecord(targetId);
                 return record?.UI is T ui ? ui : default;
+            }
+            catch (Exception ex)
+            {
+                // 显示链路里的异常（创建实例失败、界面脚本自身抛错等）必须回滚：
+                // 否则记录会永久停留在 Creating，IsShowingLike 一直为 true，之后既显示不了也隐藏不掉。
+                Log.Error("显示UI异常，已回滚。Id[{0}] {1}", id, ex);
+                await AbortShowSession(session, session.Activated.Count);
+                return default;
             }
             finally
             {
@@ -181,7 +222,7 @@ namespace Ux
         /// </summary>
         private async UniTask<bool> RunShowSession(ShowSession session)
         {
-            session.CapturePreviousMountedChild(GetMountedRootChildId(session.RootId));
+            session.CapturePreviousMountedChild(GetMountedRootChildId(session.RootRecordId));
 
             // 1. 确保父子链中的每个节点都有可用的实例
             if (!await PrepareShowChain(session))
@@ -195,7 +236,7 @@ namespace Ux
             }
 
             // 2. 如果目标UI需要模糊截图背景，在显示前截图
-            var targetRecord = GetRecord(session.TargetId);
+            var targetRecord = GetRecord(session.TargetRecordId);
             if (targetRecord?.UI != null)
             {
                 await _blurHandler.PrepareBeforeShowAsync(targetRecord.UI);
@@ -246,13 +287,13 @@ namespace Ux
                 var previousRecord = GetRecord(previousId);
                 if (previousRecord != null && (previousRecord.IsVisibleCommitted || previousRecord.IsShowingLike))
                 {
-                    RegisterRecordToRoot(previousRecord, session.RootId);
-                    SetRootChildRequest(session.RootId, previousId);
+                    RegisterRecordToRoot(previousRecord, session.RootRecordId);
+                    SetRootChildRequest(session.RootRecordId, previousId);
                     return;
                 }
             }
 
-            SetRootChildRequest(session.RootId, session.RootId);
+            SetRootChildRequest(session.RootRecordId, session.RootRecordId);
         }
 
         private bool CanRestorePreviousRootChild(ShowSession session)
@@ -262,13 +303,13 @@ namespace Ux
                 return false;
             }
 
-            var rootRecord = GetRecord(session.RootId);
+            var rootRecord = GetRecord(session.RootRecordId);
             if (rootRecord == null)
             {
                 return false;
             }
 
-            if (GetRequestedRootChildId(rootRecord) != session.TargetId)
+            if (GetRequestedRootChildId(rootRecord) != session.TargetRecordId)
             {
                 return false;
             }
@@ -277,7 +318,7 @@ namespace Ux
             for (int i = 0; i < count; i++)
             {
                 var record = session.Activated[i];
-                if (record?.Id == session.RootId)
+                if (record?.Id == session.RootRecordId)
                 {
                     return IsRequestCurrent(record, session.ActivatedVersions[i]);
                 }
@@ -294,13 +335,13 @@ namespace Ux
             }
 
             var previousId = session.PreviousMountedChildId;
-            if (previousId == 0 || previousId == session.RootId || previousId == session.TargetId)
+            if (previousId == 0 || previousId == session.RootRecordId || previousId == session.TargetRecordId)
             {
                 return;
             }
 
             var previous = GetRecord(previousId);
-            if (previous == null || previous.ParentRootId != session.RootId || previous.UI == null)
+            if (previous == null || previous.ParentRootId != session.RootRecordId || previous.UI == null)
             {
                 return;
             }
@@ -346,7 +387,7 @@ namespace Ux
                 }
             }
 
-            return IsRootChildRequested(session.RootId, session.TargetId);
+            return IsRootChildRequested(session.RootRecordId, session.TargetRecordId);
         }
 
         /// <summary>
@@ -354,26 +395,61 @@ namespace Ux
         /// </summary>
         private async UniTask<bool> PrepareShowChain(ShowSession session)
         {
-            for (int i = 0; i < session.Chain.Count; i++)
+            var prepared = Pool.Get<List<UIRecord>>();
+            try
             {
-                var nodeId = session.Chain[i];
-                var record = GetOrCreateRecord(nodeId);
-                var version = BeginShowTransition(record);
-                BindRecordToRootRequest(record, session.RootId, session.TargetId);
-                record.LastShowParam = nodeId == session.RequestedId ? session.Param : null;
-                if (!await PrepareRecordForShow(record, version))
+                // 第一遍：按「根 -> 目标」顺序准备记录并接好父链。
+                // 必须先全部建好再绑根链路，否则绑定时还不知道目标记录 Id。
+                for (int i = 0; i < session.Chain.Count; i++)
                 {
-                    CompletePendingShow(record, false);
-                    RestorePreviousRootChild(session);
-                    await AbortShowSession(session, i);
-                    return false;
+                    var nodeTypeId = session.Chain[i];
+                    var forceNew = session.Mode == UIShowMode.NewInstance && i == session.Chain.Count - 1 && session.Chain.Count == 1;
+                    var record = GetOrCreateRecord(nodeTypeId, forceNew);
+
+                    if (i == 0)
+                    {
+                        // 根界面指向自己
+                        record.ParentRootId = record.Id;
+                        session.RootRecordId = record.Id;
+                    }
+                    else
+                    {
+                        record.ParentRootId = prepared[i - 1].Id;
+                    }
+
+                    prepared.Add(record);
+                    if (i == session.Chain.Count - 1)
+                    {
+                        session.TargetRecordId = record.Id;
+                    }
                 }
 
-                session.Activated.Add(record);
-                session.ActivatedVersions.Add(version);
-            }
+                // 第二遍：开始显示事务、绑定根链路请求、准备实例。
+                for (int i = 0; i < prepared.Count; i++)
+                {
+                    var record = prepared[i];
+                    var version = BeginShowTransition(record);
+                    BindRecordToRootRequest(record, session.RootRecordId, session.TargetRecordId);
+                    record.LastShowParam = record.TypeId == session.RequestedId ? session.Param : null;
+                    if (!await PrepareRecordForShow(record, version))
+                    {
+                        CompletePendingShow(record, false);
+                        RestorePreviousRootChild(session);
+                        await AbortShowSession(session, i);
+                        return false;
+                    }
 
-            return true;
+                    session.Activated.Add(record);
+                    session.ActivatedVersions.Add(version);
+                }
+
+                return true;
+            }
+            finally
+            {
+                prepared.Clear();
+                Pool.Push(prepared);
+            }
         }
 
         /// <summary>
@@ -391,15 +467,34 @@ namespace Ux
                     return false;
                 }
 
-                record.Phase = UIPhase.Showing;
-                record.LastShowStartFrame = Time.frameCount;
-                if (record.Id == session.TargetId)
+                // 已经在显示（或正在播放显示动画）的节点只是被父链重新带上，按「重新激活」处理：
+                // 不重发 UI_SHOW、不重放动画，也不把它的阶段降级成 Showing。
+                var reason = record.IsVisibleCommitted || record.Phase == UIPhase.Showing
+                    ? UIShowReason.Reactivate
+                    : UIShowReason.FirstShow;
+
+                if (reason == UIShowReason.FirstShow)
                 {
-                    MarkRootChildMounted(session.RootId, session.TargetId);
+                    SetPhase(record, UIPhase.Showing);
+                    record.LastShowStartTime = Time.unscaledTime;
+                }
+
+                if (i == session.Activated.Count - 1 && session.RootRecordId != 0)
+                {
+                    MarkRootChildMounted(session.RootRecordId, record.Id);
                 }
 
                 await record.UI.DoShow(session.IsAnim, session.RequestedId,
-                    record.Id == session.RequestedId ? session.Param : null, session.CheckStack);
+                    record.TypeId == session.RequestedId ? session.Param : null, session.CheckStack, reason);
+
+                if (reason == UIShowReason.Reactivate && record.IsVisibleCommitted)
+                {
+                    // 已经提交可见的节点不会再走 OnShow 回调，这里补上等待句柄，避免留下悬空的完成源。
+                    // 仍在播显示动画的节点不补：它的 OnShow 回调马上会到，补了会让调用方在
+                    // 界面真正上屏之前就拿到「显示成功」，后面的 WaitForTargetVisible 会误判失败。
+                    CompletePendingShow(record, true);
+                }
+
                 if (!IsShowSessionCurrent(session))
                 {
                     RestorePreviousRootChild(session);
@@ -416,6 +511,11 @@ namespace Ux
         /// </summary>
         private async UniTask<bool> WaitForTargetVisible(ShowSession session)
         {
+            if (session.Activated.Count == 0)
+            {
+                return false;
+            }
+
             var targetRecord = session.Activated[session.Activated.Count - 1];
             if (targetRecord.IsVisibleCommitted)
             {
@@ -427,6 +527,15 @@ namespace Ux
                 await targetRecord.PendingShow.Task;
             }
             if (!IsShowSessionCurrent(session))
+            {
+                RestorePreviousRootChild(session);
+                return false;
+            }
+
+            // 只有等待对象被提前完成、或者 DoShow 被界面内部排队丢弃时才会走到这里而界面并未上屏。
+            // 不能把「没有等待对象」当成「已经显示成功」，否则调用方会拿到一个还没可见的界面，
+            // 根链的子页签绑定也会被提前提交。
+            if (!targetRecord.IsVisibleCommitted)
             {
                 RestorePreviousRootChild(session);
                 return false;
@@ -477,7 +586,7 @@ namespace Ux
             if (_cacheHandler.TryTakeCached(record.Id, out var cached))
             {
                 record.UI = cached;
-                record.Phase = UIPhase.Hidden;
+                SetPhase(record, UIPhase.Hidden);
                 record.WaitDel = null;
                 record.CacheState = CacheState.None;
                 return IsRequestCurrent(record, version);
@@ -489,8 +598,18 @@ namespace Ux
             }
 
             // 创建新的UI实例
-            record.Phase = UIPhase.Creating;
-            var created = await CreateUI(GetUIData(record.Id));
+            if (!TryGetUIData(record.TypeId, out var uiData) || uiData.CType == null)
+            {
+                Log.Error("创建UI失败，找不到对应的UIData。TypeId[{0}] InstanceId[{1}]", record.TypeId, record.Id);
+                SetPhase(record, UIPhase.Idle);
+                return false;
+            }
+
+            // 提前缓存资源包名：动态 UIData 可能在销毁前就被移除，
+            // 销毁时再靠 UIData 反查会拿不到包名，资源包引用就永远减不掉。
+            record.Pkgs ??= uiData.Pkgs;
+            SetPhase(record, UIPhase.Creating);
+            var created = await CreateUI(uiData, record.Id);
             if (!IsRequestCurrent(record, version))
             {
                 if (created != null)
@@ -502,12 +621,12 @@ namespace Ux
 
             if (created == null)
             {
-                record.Phase = UIPhase.Idle;
+                SetPhase(record, UIPhase.Idle);
                 return false;
             }
 
             record.UI = created;
-            record.Phase = UIPhase.Hidden;
+            SetPhase(record, UIPhase.Hidden);
             return true;
         }
 
@@ -544,12 +663,12 @@ namespace Ux
 
                 if (record.UI == null)
                 {
-                    record.Phase = UIPhase.Hidden;
+                    SetPhase(record, UIPhase.Hidden);
                     CompletePendingShow(record, false);
                     continue;
                 }
 
-                record.Phase = UIPhase.Hidden;
+                SetPhase(record, UIPhase.Hidden);
                 _cacheHandler.TrackHidden(record);
                 CompletePendingShow(record, false);
             }
@@ -565,11 +684,11 @@ namespace Ux
             for (int i = 0; i < session.Activated.Count; i++)
             {
                 var record = session.Activated[i];
-                BindRecordToRootRequest(record, session.RootId, session.TargetId);
+                BindRecordToRootRequest(record, session.RootRecordId, session.TargetRecordId);
             }
 
 #if UNITY_EDITOR
-            ValidateSingleRootMountedChild(session.RootId, session.TargetId);
+            ValidateSingleRootMountedChild(session.RootRecordId, session.TargetRecordId);
 #endif
         }
 
@@ -628,22 +747,53 @@ namespace Ux
         /// <summary>
         /// 创建UI实例
         /// </summary>
-        private async UniTask<IUI> CreateUI(IUIData data)
+        private async UniTask<IUI> CreateUI(IUIData data, int instanceId)
         {
-            // 加载UI资源包
-            if (data.Pkgs is { Length: > 0 })
+            if (data == null || data.CType == null)
             {
-                if (!await ResMgr.Ins.LoadUIPackage(data.Pkgs))
-                {
-                    Log.Error($"[{data.Name}]资源包加载失败");
-                    return null;
-                }
+                Log.Error("创建UI失败，UIData 或界面类型为空。");
+                return null;
             }
 
-            // 创建UI实例
-            var ui = (IUI)Activator.CreateInstance(data.CType);
-            ui.InitData(data, _initData);
-            return ui;
+            var loaded = false;
+            try
+            {
+                // 加载UI资源包
+                if (data.Pkgs is { Length: > 0 })
+                {
+                    if (!await ResMgr.Ins.LoadUIPackage(data.Pkgs))
+                    {
+                        Log.Error("[{0}]资源包加载失败", data.Name);
+                        return null;
+                    }
+
+                    loaded = true;
+                }
+
+                // 创建UI实例
+                var ui = (IUI)Activator.CreateInstance(data.CType);
+                if (ui == null)
+                {
+                    Log.Error("[{0}]创建UI实例失败", data.Name);
+                    return null;
+                }
+
+                ui.InitData(data, _initData, instanceId);
+                return ui;
+            }
+            catch (Exception ex)
+            {
+                // 让异常在这里收敛为 null，由显示会话按失败流程回滚，
+                // 避免异常穿透导致记录停在 Creating 状态。
+                Log.Error("[{0}]创建UI异常 {1}", data.Name, ex);
+                if (loaded)
+                {
+                    // 实例没建出来，把刚才加上的包引用还回去，否则这个包永远不会被卸载。
+                    ResMgr.Ins.RemoveUIPackage(data.Pkgs);
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -673,12 +823,12 @@ namespace Ux
 
             // 附加到可见记录
             AttachVisibleRecord(record);
-            record.LastVisibleFrame = Time.frameCount;
+            record.LastVisibleTime = Time.unscaledTime;
             
             // 如果需要检查栈，将界面加入栈管理
             if (checkStack)
             {
-                _stackHandler.CommitVisible(rootId, activeId,
+                _stackHandler.CommitVisible(rootId, activeId, record.TypeId,
                     param, ResolveStackType(ui, rootId));
 #if UNITY_EDITOR
                 ValidateCurrentChild(rootId, activeId);

@@ -96,6 +96,14 @@ namespace Ux
 
             // 显示下载对话框
             var dialog = Dialog.Create();
+            if (dialog == null)
+            {
+                // 没有设置默认对话框类型时 Create 会返回 null，这里不判空会直接 NRE，
+                // 而且本次 Show 请求会静默消失。
+                Log.Error("显示下载提示失败：没有指定对话框类型，请检查是否已调用 Dialog.SetDefaultType。");
+                return false;
+            }
+
             dialog.SetTitle("下载");
             dialog.SetContent($"一共发现了{download.TotalDownloadCount}个资源需要更新下载。");
             dialog.SetBtn1Title("下载");

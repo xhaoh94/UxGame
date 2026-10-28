@@ -16,7 +16,7 @@ namespace Ux
         protected abstract string PkgName { get; }
         protected abstract string ResName { get; }
         /// <summary>
-        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默�?0�?
+        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默认60秒
         /// </summary>
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
@@ -38,8 +38,10 @@ namespace Ux
         protected virtual void OnFocusExit() { }
 
         private CallbackData? _cbData;
-        public virtual void InitData(IUIData data, CallbackData initData)
+        private int _instanceId;
+        public virtual void InitData(IUIData data, CallbackData initData, int instanceId)
         {
+            _instanceId = instanceId;
             Data = data;
             _cbData = initData;
             Init(CreateObject());
@@ -88,7 +90,8 @@ namespace Ux
                 }
             }
         }
-        public int ID => Data.ID;
+        public int ID => _instanceId;
+        public int TypeId => Data?.ID ?? 0;
         public string Name => Data.Name;
         public IUIData Data { get; private set; }
 
@@ -175,14 +178,32 @@ namespace Ux
             transition?.Invoke();
         }
 
-        UniTask IUI.DoShow(bool isAnim, int id, IUIParam param, bool checkStack)
+        UniTask IUI.DoShow(bool isAnim, int id, IUIParam param, bool checkStack, UIShowReason reason)
         {
             var task = AutoResetUniTaskCompletionSource.Create();
             switch (State)
             {
                 case UIState.Show:
                 case UIState.ShowAnim:
-                    if (id == ID)
+                    // 已经可见（或正在播放显示动画）时，父链重新把它带上来只是「重新激活」：
+                    // 刷新参数、通知激活，但不重发 UI_SHOW、不重放显示动画、也不重复做聚焦/入栈，
+                    // 否则切换页签会被监听方误判成「父界面重新打开了一次」，焦点也会被子界面抢走。
+                    if (reason == UIShowReason.Reactivate)
+                    {
+                        if (param != null && id == TypeId)
+                        {
+                            (this as IUISetParam).SetParam(param);
+                            ToOverwrite();
+                        }
+
+                        OnActivate();
+                        EventMgr.Ins.Run(MainEventType.UI_ACTIVATE, ID);
+                        EventMgr.Ins.Run(MainEventType.UI_ACTIVATE, GetType());
+                        task.TrySetResult();
+                        return task.Task;
+                    }
+
+                    if (id == TypeId)
                     {
                         (this as IUISetParam).SetParam(param);
                         ToOverwrite();
@@ -231,7 +252,7 @@ namespace Ux
 
         void IUI.DoHide(bool isAnim, bool checkStack)
         {
-            //子界面不需要检测栈，由最顶层父界面控�?
+            //子界面不需要检测栈，由最顶层父界面控制
             switch (State)
             {
                 case UIState.Hide:
@@ -281,7 +302,7 @@ namespace Ux
         }
 
         /// <summary>
-        /// 设置位置并添加关联关�?
+        /// 设置位置并添加关联关系
         /// </summary>
         private void _SetPositionAndRelations(float x, float y, bool restraint, RelationType rel1, RelationType rel2 = 0)
         {

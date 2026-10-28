@@ -107,6 +107,10 @@ namespace Ux
 
         public void ClearSnapshots()
         {
+            // _blurStacks 也要一起清：通过 ClearMemory 直接销毁的缓存界面不会再走 OnHide，
+            // 否则这里会留下已经销毁的 ID。
+            _blurStacks.Clear();
+
             while (_snapshots.Count > 0)
             {
                 var snapshot = _snapshots[_snapshots.Count - 1];

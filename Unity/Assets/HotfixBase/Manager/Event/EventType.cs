@@ -28,6 +28,10 @@ namespace Ux
         /// 战争迷雾初始化
         /// </summary>
         FOG_OF_WAR_INIT,
+        /// <summary>
+        /// UI界面重新激活（已可见的界面被父链重新带上，例如切换页签）
+        /// </summary>
+        UI_ACTIVATE,
 
         END
     }

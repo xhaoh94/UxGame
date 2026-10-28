@@ -32,9 +32,16 @@ namespace Ux
         string Name { get; }
         
         /// <summary>
-        /// UI唯一ID
+        /// 实例 ID：本次界面实例的唯一标识（同一类型可以有多个实例）。
+        /// 事件、栈、焦点、缓存、隐藏接口都用这个 ID。
         /// </summary>
         int ID { get; }
+
+        /// <summary>
+        /// 类型 ID：UI 注册表里的类型标识，用于查询 UIData / 资源包。
+        /// 与 ID 的区别：ID 唯一标识「这一次的实例」，TypeId 标识「是哪一种界面」。
+        /// </summary>
+        int TypeId { get; }
         
         /// <summary>
         /// UI数据
@@ -42,7 +49,7 @@ namespace Ux
         IUIData Data { get; }
         
         /// <summary>
-        /// 隐藏后销毁时间（毫秒），-1表示不自动销毁
+        /// 隐藏后自动销毁的延迟（单位：秒），-1表示不自动销毁（常驻缓存）
         /// </summary>
         int HideDestroyTime { get; }
         
@@ -61,7 +68,8 @@ namespace Ux
         /// </summary>
         /// <param name="data">UI数据</param>
         /// <param name="initData">初始化回调数据</param>
-        void InitData(IUIData data, CallbackData initData);
+        /// <param name="instanceId">实例 ID（由 UIMgr 分配，用于同一类型多实例）</param>
+        void InitData(IUIData data, CallbackData initData, int instanceId);
         
         /// <summary>
         /// 释放UI资源
@@ -75,8 +83,9 @@ namespace Ux
         /// <param name="id">请求显示的UI ID</param>
         /// <param name="param">显示参数</param>
         /// <param name="isStack">是否检查栈</param>
+        /// <param name="reason">显示原因：首次上屏还是已可见界面的重新激活</param>
         /// <returns>显示完成的异步任务</returns>
-        UniTask DoShow(bool isAnim, int id, IUIParam param, bool isStack);
+        UniTask DoShow(bool isAnim, int id, IUIParam param, bool isStack, UIShowReason reason = UIShowReason.FirstShow);
         
         /// <summary>
         /// 执行隐藏操作
@@ -106,6 +115,50 @@ namespace Ux
         void NotifyFocusExit();
     }
     
+    /// <summary>
+    /// UI 显示原因。
+    /// 区分「首次上屏」和「已经可见的界面被父链重新带上」：
+    /// 后者不应该重发 UI_SHOW、不应该重放显示动画，只做激活刷新。
+    /// </summary>
+    public enum UIShowReason
+    {
+        /// <summary>
+        /// 首次上屏：从不可见到可见，派发 UI_SHOW。
+        /// </summary>
+        FirstShow = 0,
+
+        /// <summary>
+        /// 重新激活：界面本来就在显示（例如切换页签时把父界面重新带了一遍），只做刷新。
+        /// </summary>
+        Reactivate = 1,
+    }
+
+    /// <summary>
+    /// 同一类型已经存在可见实例时的处理策略。
+    /// </summary>
+    public enum UIShowMode
+    {
+        /// <summary>
+        /// 复用已有实例（默认行为：直接刷新参数，不重新创建）。
+        /// </summary>
+        Reuse = 0,
+
+        /// <summary>
+        /// 如果已经可见则直接返回已有实例，不刷新、不重放动画。
+        /// </summary>
+        SkipIfShown = 1,
+
+        /// <summary>
+        /// 先关掉已有实例，再重新走一遍显示流程。
+        /// </summary>
+        Replace = 2,
+
+        /// <summary>
+        /// 允许同一类型存在多个实例：总是新建一个实例（弹窗/飘字用）。
+        /// </summary>
+        NewInstance = 3,
+    }
+
     /// <summary>
     /// UI类型枚举，定义UI的栈式管理行为
     /// </summary>
@@ -287,8 +340,26 @@ namespace Ux
         /// </summary>
         internal sealed class UIRecord
         {
-            public int Id;                          // UI的唯一ID
+            /// <summary>
+            /// 实例 ID：本次实例的唯一标识，由 UIMgr 从小到大分配（&lt; TypeIdBase）。
+            /// 所有「按实例」维护的表（记录表、可见索引、缓存、栈、焦点、模糊）都用它做键，
+            /// 因此同一类型可以同时存在多个实例。
+            /// </summary>
+            public int Id;
+
+            /// <summary>
+            /// 类型 ID：来自 UIData（&gt;= TypeIdBase），用于查询 UIData、资源包、事件派发。
+            /// </summary>
+            public int TypeId;
+
             public IUI UI;                          // UI实例引用
+
+            /// <summary>
+            /// 创建实例时使用的资源包名。
+            /// 动态界面可能在销毁之前就被移除 UIData，销毁时再靠 UIData 反查包名会拿不到，
+            /// 导致资源包引用计数永远减不掉，所以这里在创建时缓存一份。
+            /// </summary>
+            public string[] Pkgs;
             public UIPhase Phase = UIPhase.Idle;    // 当前生命周期阶段
 
             /// <summary>
@@ -300,34 +371,37 @@ namespace Ux
             public readonly UITransition Transition = new UITransition();
 
             /// <summary>
-            /// 当前界面所在父子链路对应的根界面 Id。
+            /// 当前界面所在父子链路对应的根界面记录 Id（实例 Id；根界面指向自己）。
             /// 当一个界面作为某个根界面的子级、孙级或更深层级页面存在时，
             /// 这里记录整条链路最上层的根节点，便于按根界面统一管理显示、隐藏与栈关系。
             /// </summary>
             public int ParentRootId;
 
             /// <summary>
-            /// 当前根链路下正在激活的直接子界面 Id。
+            /// 当前根链路下正在激活的直接子界面记录 Id（实例 Id）。
             /// 用于描述同一条 UI 根链路里当前焦点落在哪个子页面上，
             /// 方便父子界面切换时快速确定当前生效的节点。
             /// </summary>
             internal int CurrentChildId;
 
             /// <summary>
-            /// 当前根界面下实际挂载到内容容器中的子界面Id。
+            /// 当前根界面下实际挂载到内容容器中的子界面记录 Id（实例 Id）。
             /// 与CurrentChildId分离：CurrentChildId表示最新请求目标，MountedChildId表示真实挂载目标。
             /// </summary>
             internal int MountedChildId;
 
             public IUIParam LastShowParam;          // 最近一次显示时传递的参数
             /// <summary>
-            /// 最近一次开始执行显示流程时的帧号。
-            /// 主要用于识别"刚发起显示，马上又请求隐藏"的场景，
-            /// 将同帧或相邻帧内的 Show -> Hide 抖动请求折叠掉，减少状态抖动和重复逻辑。
+            /// 最近一次开始执行显示流程的时间（Time.unscaledTime，单位秒）。
+            /// 用于识别「刚发起显示，马上又请求隐藏」的抖动，把这个来回折叠成一次关闭。
+            /// 这里用时间而不是帧号：帧率高低、编辑器卡顿都不应该改变 UI 的行为。
             /// </summary>
-            public int LastShowStartFrame;
+            public float LastShowStartTime;
 
-            public int LastVisibleFrame;            // 最近一次变为可见状态的帧号
+            /// <summary>
+            /// 最近一次变为可见状态的时间（Time.unscaledTime，单位秒）。
+            /// </summary>
+            public float LastVisibleTime;
             public CacheState CacheState;           // 缓存状态
 
             /// <summary>
@@ -392,16 +466,21 @@ namespace Ux
             /// <summary>
             /// 构造函数
             /// </summary>
-            public StackEntry(int rootId, int activeId, IUIParam param, UIType type)
+            public StackEntry(int rootId, int activeId, int activeTypeId, IUIParam param, UIType type)
             {
                 RootId = rootId;
                 ActiveId = activeId;
+                ActiveTypeId = activeTypeId;
                 Param = param;
                 Type = type;
             }
 
-            public int RootId { get; }    // 根界面ID
-            public int ActiveId { get; }  // 激活界面ID
+            public int RootId { get; }    // 根界面记录Id（实例Id）
+            public int ActiveId { get; }  // 激活界面的记录Id（实例Id）
+            /// <summary>
+            /// 激活界面的类型Id。回到栈中上一个界面时需要用它查 UIData（实例Id 不是类型Id）。
+            /// </summary>
+            public int ActiveTypeId { get; }
             public IUIParam Param { get; } // 界面参数
             public UIType Type { get; }   // 界面类型（Normal/Stack/Fixed）
         }
@@ -414,6 +493,7 @@ namespace Ux
             int _id;              // UI ID
             IUIParam _param;      // 显示参数
             bool _isAnim = true;  // 是否播放动画
+            UIShowMode _mode = UIShowMode.Reuse; // 同类型已显示时的处理策略
 
             /// <summary>
             /// 设置UI ID
@@ -443,6 +523,17 @@ namespace Ux
             }
 
             /// <summary>
+            /// 设置「同类型已经有可见实例」时的处理策略。
+            /// 默认 Reuse（复用并刷新）；不希望覆盖已有实例时用 SkipIfShown；
+            /// 需要重开一次时用 Replace。
+            /// </summary>
+            public UIShowBuilder SetMode(UIShowMode mode)
+            {
+                _mode = mode;
+                return this;
+            }
+
+            /// <summary>
             /// 显示UI并返回泛型任务
             /// </summary>
             /// <typeparam name="T">UI类型</typeparam>
@@ -453,7 +544,7 @@ namespace Ux
                 {
                     _id = Ins.GetTypeId(typeof(T));
                 }
-                var task = Ins._ShowAsync<T>(_id, _param, _isAnim, true);
+                var task = Ins._ShowAsync<T>(_id, _param, _isAnim, true, _mode);
                 _Release();
                 return new UITask<T>(task);
             }
@@ -464,7 +555,7 @@ namespace Ux
             /// <returns>UI任务对象</returns>
             public UITask<IUI> Show()
             {
-                var task = Ins._ShowAsync<IUI>(_id, _param, _isAnim, true);
+                var task = Ins._ShowAsync<IUI>(_id, _param, _isAnim, true, _mode);
                 _Release();
                 return new UITask<IUI>(task);
             }
@@ -477,6 +568,7 @@ namespace Ux
                 _id = 0;
                 _param = null;
                 _isAnim = true;
+                _mode = UIShowMode.Reuse;
                 Pool.Push(this);
             }
         }
@@ -706,7 +798,7 @@ namespace Ux
             /// <summary>
             /// UI名称
             /// </summary>
-            public string Name => ui.Name;
+            public string Name => ui != null ? ui.Name : string.Empty;
             
             /// <summary>
             /// UI ID
@@ -751,6 +843,11 @@ namespace Ux
             /// </summary>
             public void Dispose()
             {
+                if (ui == null)
+                {
+                    return;
+                }
+
                 OnRemoveFromWaitDel?.Invoke(ui.ID);
                 Dialog.RemoveWaitDelById(ui.ID);
                 Tip.RemoveWaitDelById(ui.ID);    
@@ -764,6 +861,11 @@ namespace Ux
             public void GetUI(out IUI outUI)
             {
                 outUI = ui;
+                if (ui == null)
+                {
+                    return;
+                }
+
                 OnRemoveFromWaitDel?.Invoke(ui.ID);
                 Dialog.RemoveWaitDelById(ui.ID);
                 Tip.RemoveWaitDelById(ui.ID);                

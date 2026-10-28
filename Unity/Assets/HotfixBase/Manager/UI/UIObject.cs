@@ -197,6 +197,13 @@ namespace Ux
         }
         protected virtual void OnOverwrite() { }
         protected virtual void OnShow() { }
+
+        /// <summary>
+        /// 界面已经可见、又作为父链的一部分被重新带上时的回调（例如切换页签）。
+        /// 与 OnShow 的区别：不重放显示动画、不重新入栈、不抢焦点，
+        /// 只需要在重新进入时刷新数据的话覆写这个方法。
+        /// </summary>
+        protected virtual void OnActivate() { }
         protected virtual void OnShowAnimComplete() { }
         protected virtual void OnAddEvent() { }
 

@@ -428,6 +428,16 @@ namespace Ux
         }
 
         /// <summary>
+        /// 尝试获取UIData（不产生错误日志）。
+        /// 用于「数据可能已经被移除」的路径：动态界面在销毁前 UIData 可能已经被清理，
+        /// 此时依然需要把界面隐藏掉，不能把它当成致命错误处理。
+        /// </summary>
+        internal bool TryGetUIData(int id, out IUIData data)
+        {
+            return _idUIData.TryGetValue(id, out data);
+        }
+
+        /// <summary>
         /// 检查是否存在指定ID的UIData
         /// </summary>
         /// <param name="id">要检查的UI ID</param>

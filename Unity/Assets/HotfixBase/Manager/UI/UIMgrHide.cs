@@ -38,10 +38,6 @@ namespace Ux
             public bool CheckStack { get; private set; }
 
             /// <summary>
-            /// 是否通过回退链路收集到了目标
-            /// </summary>
-            
-            /// <summary>
             /// 隐藏目标列表
             /// </summary>
             internal readonly List<UIRecord> Targets = new List<UIRecord>();
@@ -79,7 +75,7 @@ namespace Ux
         /// 隐藏所有UI（内部方法）
         /// </summary>
         /// <param name="ignoreSet">需要忽略的UI ID集合</param>
-        void _HideAll(HashSet<int> ignoreSet)
+        void HideAllInternal(HashSet<int> ignoreSet)
         {
             // 清空UI栈
             _stackHandler.Clear();
@@ -123,12 +119,25 @@ namespace Ux
             for (int i = 0; i < _hideAllIdBuffer.Count; i++)
             {
                 var id = _hideAllIdBuffer[i];
-                if (ignoreSet != null && ignoreSet.Contains(id))
+                if (ignoreSet != null)
                 {
-                    continue;
+                    // 忽略集合里放的是「类型ID」（HideAllExceptTypes 的语义是按类型排除），
+                    // 而缓冲里是「实例ID」，两种都要认。
+                    var ignored = ignoreSet.Contains(id);
+                    if (!ignored && _records.TryGetValue(id, out var buffered) && buffered != null)
+                    {
+                        ignored = ignoreSet.Contains(buffered.TypeId);
+                    }
+
+                    if (ignored)
+                    {
+                        continue;
+                    }
                 }
 
-                if (GetUIData(id) != null)
+                // 有记录的走正常隐藏流程（不再依赖 UIData 是否存在），
+                // 只有 _showed 中残留（没有记录）的才走兜底关闭。
+                if (_records.ContainsKey(id))
                 {
                     Hide(id, false);
                     continue;
@@ -139,6 +148,9 @@ namespace Ux
 
             _hideAllIdBuffer.Clear();
             _blurHandler.ClearSnapshots();
+#if UNITY_EDITOR
+            AssertShowedConsistency("HideAllInternal");
+#endif
         }
 
         /// <summary>
@@ -146,49 +158,71 @@ namespace Ux
         /// </summary>
         public void HideAll()
         {
-            _HideAll(null);
+            HideAllInternal(null);
         }
 
         /// <summary>
         /// 隐藏所有UI，排除指定ID的UI
         /// </summary>
-        /// <param name="ignoreList">需要排除的UI ID列表</param>
-        public void HideAll(IList<int> ignoreList = null)
+        /// <param name="ids">需要排除的UI ID 列表</param>
+        public void HideAllExcept(IList<int> ids)
         {
-            if (ignoreList == null || ignoreList.Count == 0)
+            if (ids == null || ids.Count == 0)
             {
-                _HideAll(null);
+                HideAllInternal(null);
                 return;
             }
 
-            _ignoreSet ??= new HashSet<int>();
-            _ignoreSet.Clear();
-            for (int i = 0; i < ignoreList.Count; i++)
+            // 用局部集合而不是字段：HideAll 期间可能被界面回调重入，
+            // 复用字段会把外层的排除列表覆盖掉。
+            var ignoreSet = Pool.Get<HashSet<int>>();
+            try
             {
-                _ignoreSet.Add(ignoreList[i]);
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    ignoreSet.Add(ids[i]);
+                }
+
+                HideAllInternal(ignoreSet);
             }
-            _HideAll(_ignoreSet);
+            finally
+            {
+                ignoreSet.Clear();
+                Pool.Push(ignoreSet);
+            }
         }
 
         /// <summary>
         /// 隐藏所有UI，排除指定类型的UI
         /// </summary>
-        /// <param name="ignoreList">需要排除的UI类型列表</param>
-        public void HideAll(IList<Type> ignoreList = null)
+        /// <param name="types">需要排除的UI类型列表</param>
+        public void HideAllExceptTypes(IList<Type> types)
         {
-            if (ignoreList == null || ignoreList.Count == 0)
+            if (types == null || types.Count == 0)
             {
-                _HideAll(null);
+                HideAllInternal(null);
                 return;
             }
 
-            _ignoreSet ??= new HashSet<int>();
-            _ignoreSet.Clear();
-            for (int i = 0; i < ignoreList.Count; i++)
+            var ignoreSet = Pool.Get<HashSet<int>>();
+            try
             {
-                _ignoreSet.Add(GetTypeId(ignoreList[i]));
+                for (int i = 0; i < types.Count; i++)
+                {
+                    // 未注册的类型本来就没有界面在显示，不需要为它分配一个 Id。
+                    if (TryGetTypeId(types[i], out var ignoreId))
+                    {
+                        ignoreSet.Add(ignoreId);
+                    }
+                }
+
+                HideAllInternal(ignoreSet);
             }
-            _HideAll(_ignoreSet);
+            finally
+            {
+                ignoreSet.Clear();
+                Pool.Push(ignoreSet);
+            }
         }
 
         /// <summary>
@@ -198,7 +232,10 @@ namespace Ux
         /// <param name="isAnim">是否播放动画</param>
         public void Hide<T>(bool isAnim = true) where T : UIBase
         {
-            Hide(GetTypeId(typeof(T)), isAnim);
+            if (TryGetTypeId(typeof(T), out var id))
+            {
+                Hide(id, isAnim);
+            }
         }
 
         /// <summary>
@@ -218,7 +255,10 @@ namespace Ux
         /// <param name="isAnim">是否播放动画</param>
         public void HideNotStack<T>(bool isAnim = true) where T : UIBase
         {
-            HideNotStack(GetTypeId(typeof(T)), isAnim);
+            if (TryGetTypeId(typeof(T), out var id))
+            {
+                HideNotStack(id, isAnim);
+            }
         }
 
         /// <summary>
@@ -232,28 +272,34 @@ namespace Ux
         }
 
         /// <summary>
-        /// 内部隐藏方法
+        /// 内部隐藏方法。返回 UniTask 而不是 UniTaskVoid，
+        /// 便于 ShowMode.Replace 这种「先关掉再显示」的流程等待隐藏真正完成。
         /// </summary>
-        private async UniTaskVoid _Hide(int id, bool isAnim, bool checkStack)
+        private async UniTask _Hide(int id, bool isAnim, bool checkStack)
         {
-            var data = GetUIData(id);
-            if (data == null)
+            // 入口先把「类型ID」归一化成「实例ID」：外部调用可能传类型ID，
+            // 而根链路里的 CurrentChildId / 记录表都是按实例ID比较的，混用会让隐藏静默失效。
+            var requestId = ResolveRecordId(id);
+            if (requestId == 0)
             {
-                return;
+                requestId = id;
             }
 
-            var rootId = data.GetParentID();
+            // 注意：这里不再以 UIData 为入口。
+            // 动态界面的 UIData 可能在 Release/RemoveUIData 时先于实例被移除，
+            // 如果仍然依赖 UIData，这些界面就再也关不掉了（Hide 会直接 return）。
+            var rootId = ResolveRootId(requestId);
             var rootRecord = GetRecord(rootId);
             if (rootRecord == null || rootRecord.IsHidingLike || rootRecord.Phase == UIPhase.Hidden)
             {
                 return;
             }
             var session = Pool.Get<HideSession>();
-            session.Reset(id, rootId, isAnim, checkStack);
+            session.Reset(requestId, rootId, isAnim, checkStack);
             try
             {
                 // 1. 在任何隐藏回调改变可见性之前，收集当前根链路的所有目标
-                CollectHideTargets(rootId, session.Targets, id);
+                CollectHideTargets(rootId, session.Targets, requestId);
                 if (session.Targets.Count == 0)
                 {
                     return;
@@ -261,12 +307,12 @@ namespace Ux
 
                 rootRecord = GetRecord(rootId);
                 // 如果不是根界面且当前激活的子界面不是目标界面，则不隐藏
-                if (rootId != id && rootRecord != null && !IsRootChildRequested(rootId, id))
+                if (rootId != requestId && rootRecord != null && !IsRootChildRequested(rootId, requestId))
                 {
                     return;
                 }
 
-                ResetRootChildRequestIfCurrent(rootId, id);
+                ResetRootChildRequestIfCurrent(rootId, requestId);
 
                 // 2. 先触发所有隐藏，使父子动画可以重叠播放
                 BeginHideChain(session);
@@ -286,13 +332,69 @@ namespace Ux
                     var previous = _stackHandler.PeekPrevious(rootId);
                     if (previous.HasValue)
                     {
-                        _ShowAsync<IUI>(previous.Value.ActiveId, previous.Value.Param, false, false).Forget();
+                        _ShowAsync<IUI>(previous.Value.ActiveTypeId, previous.Value.Param, false, false).Forget();
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                // 隐藏链路异常时把记录从 Hiding 复位，
+                // 否则 IsHidingLike 会一直为 true，这条根链上后续的 Hide 全都会被跳过。
+                Log.Error("隐藏UI异常，已复位记录状态。Id[{0}] {1}", id, ex);
+                RecoverHidingRecords(session);
             }
             finally
             {
                 session.Release();
+            }
+        }
+
+        /// <summary>
+        /// 解析界面所属的根界面 Id。
+        /// 优先取记录上的根链路（最可靠），其次退化为 UIData，最后退化为自身，
+        /// 保证 UIData 被移除后隐藏流程依然可用。
+        /// </summary>
+        private int ResolveRootId(int id)
+        {
+            var record = GetRecord(id);
+            if (record != null)
+            {
+                return record.ParentRootId != 0 ? record.ParentRootId : record.Id;
+            }
+
+            // 没有记录时只可能是「还没走过显示流程」：退化成按 UIData 的父类型解析，
+            // 之后 GetRecord 又会按类型落到主实例，语义与之前保持一致。
+            if (_idUIData.TryGetValue(id, out var data) && data != null)
+            {
+                var parentId = data.GetParentID();
+                return parentId != 0 ? parentId : id;
+            }
+
+            return id;
+        }
+
+        /// <summary>
+        /// 隐藏流程异常时的兜底：把仍然停在 Hiding 的记录复位，
+        /// 并主动完成等待句柄，避免显示/隐藏请求永久悬挂。
+        /// </summary>
+        private void RecoverHidingRecords(HideSession session)
+        {
+            for (int i = session.Targets.Count - 1; i >= 0; i--)
+            {
+                var record = session.Targets[i];
+                if (record == null || record.Phase != UIPhase.Hiding)
+                {
+                    continue;
+                }
+
+                SetPhase(record, UIPhase.Hidden);
+                if (record.UI != null)
+                {
+                    _cacheHandler.TrackHidden(record);
+                }
+
+                CompletePendingShow(record, false);
+                CompletePendingHide(record, true);
             }
         }
 
@@ -367,13 +469,13 @@ namespace Ux
             ClearMountedRootChild(record);
             var wasVisible = record.IsVisibleCommitted;
             var wasShowing = record.IsShowingLike;
-            var wasFreshlyShown = IsFreshlyShown(record);
-            var wasFreshlyVisible = IsFreshlyVisible(record);
+            // 「刚显示又立刻隐藏」的折叠判断收敛到一个入口（按时间窗口，与帧率解耦）。
+            var collapseJitter = ShouldSkipHideAnim(record);
             var version = BeginHideTransition(record);
-            record.Phase = UIPhase.Hiding;
+            SetPhase(record, UIPhase.Hiding);
 
             // 如果是刚显示就立即隐藏的情况，中断显示动画但不播放隐藏动画
-            if (wasFreshlyShown || wasFreshlyVisible)
+            if (collapseJitter)
             {
                 CompletePendingShow(record, false);
                 record.UI?.DoHide(false, false);
@@ -386,7 +488,7 @@ namespace Ux
             // 如果请求在真正的显示提交之前就失去了竞态，立即关闭
             if (!wasVisible && !wasShowing)
             {
-                record.Phase = UIPhase.Hidden;
+                SetPhase(record, UIPhase.Hidden);
                 if (record.UI != null)
                 {
                     _cacheHandler.TrackHidden(record);
@@ -418,7 +520,7 @@ namespace Ux
             else
             {
                 // UI实例尚未就绪（如仍在Creating阶段），无法执行DoHide。
-                record.Phase = UIPhase.Hidden;
+                SetPhase(record, UIPhase.Hidden);
                 CompletePendingShow(record, false);
                 CompletePendingHide(record, true);
             }
@@ -432,40 +534,76 @@ namespace Ux
         private void CollectHideTargets(int rootId, List<UIRecord> targets, int requestedId)
         {
             targets.Clear();
-            if (!_rootRecordIds.TryGetValue(rootId, out var rootSet))
+            var seen = Pool.Get<HashSet<int>>();
+            try
             {
-#if UNITY_EDITOR
-                ValidateMissingRootIndex(rootId, requestedId);
-#endif
-                return;
-            }
-
-            if (rootSet.Count > 0)
-            {
-                // 收集根链路下所有需要隐藏的UI记录
-                foreach (var recordId in rootSet)
+                if (_rootRecordIds.TryGetValue(rootId, out var rootSet) && rootSet.Count > 0)
                 {
-                    if (!_records.TryGetValue(recordId, out var record))
+                    // 收集根链路下所有需要隐藏的UI记录
+                    foreach (var recordId in rootSet)
+                    {
+                        if (!_records.TryGetValue(recordId, out var record))
+                        {
+                            continue;
+                        }
+
+                        // 只收集有UI实例或正在显示的记录
+                        if (record.UI == null && !record.IsShowingLike)
+                        {
+                            continue;
+                        }
+
+                        if (seen.Add(recordId))
+                        {
+                            targets.Add(record);
+                        }
+                    }
+                }
+                else
+                {
+#if UNITY_EDITOR
+                    ValidateMissingRootIndex(rootId, requestedId);
+#endif
+                }
+
+                // 根链路索引在某些竞态下可能尚未建立或已临时失配。
+                // 这里必须真正回退扫描记录表补齐整条根链：只靠索引的话一个目标都收不到，
+                // 表现就是「界面关不掉」。
+                foreach (var kv in _records)
+                {
+                    var record = kv.Value;
+                    if (record == null)
                     {
                         continue;
                     }
 
-                    // 只收集有UI实例或正在显示的记录
+                    if (record.Id != rootId && record.ParentRootId != rootId)
+                    {
+                        continue;
+                    }
+
                     if (record.UI == null && !record.IsShowingLike)
                     {
                         continue;
                     }
 
-                    targets.Add(record);
+                    if (seen.Add(record.Id))
+                    {
+                        targets.Add(record);
+                    }
                 }
             }
+            finally
+            {
+                seen.Clear();
+                Pool.Push(seen);
+            }
 
-            // 根链路索引在某些竞态下可能尚未建立或已临时失配，回退到扫描记录表补齐整条根链。
             // 排序：层级深的子界面优先隐藏，同层级再按根界面和 Id 稳定排序
             targets.Sort((a, b) =>
             {
-                var depthA = GetUIData(a.Id)?.GetParentDepth() ?? 0;
-                var depthB = GetUIData(b.Id)?.GetParentDepth() ?? 0;
+                var depthA = TryGetUIData(a.TypeId, out var dataA) ? dataA.GetParentDepth() : 0;
+                var depthB = TryGetUIData(b.TypeId, out var dataB) ? dataB.GetParentDepth() : 0;
                 if (depthA != depthB) return depthB.CompareTo(depthA);
                 if (a.Id == rootId && b.Id != rootId) return 1;
                 if (a.Id != rootId && b.Id == rootId) return -1;
@@ -514,15 +652,19 @@ namespace Ux
                 return;
             }
 
-            _showed.Remove(id);
+            RemoveShowed(id);
+            // State 已经是 Hide 时 DoHide 会直接短路，_OnUIHidden 不会触发，需要在这里收尾。
+            // 其余情况统一交给 _OnUIHidden，避免 UI_HIDE 事件被派发两次。
+            var alreadyHidden = ui.State == UIState.Hide;
             ui.DoHide(false, false);
+            if (alreadyHidden)
+            {
+                NotifyOrphanHidden(ui);
+            }
+
 #if UNITY_EDITOR
-            __Debugger_Showed_Event();
+            AssertShowedConsistency("ForceHideShowedOnly");
 #endif
-            EventMgr.Ins.Run(MainEventType.UI_HIDE, id);
-            EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
-            _blurHandler.OnHide(ui);
-            _focusHandler.OnHidden(ui);
         }
 
         /// <summary>
@@ -532,21 +674,26 @@ namespace Ux
         private void _OnUIHidden(IUI ui)
         {
             var record = GetRecord(ui.ID);
-            if (record != null)
+            if (record == null)
             {
-                if (!ReferenceEquals(record.UI, ui))
-                {
-                    ui.Dispose();
-                    return;
-                }
-
-                // 从可见记录中分离
-                DetachVisibleRecord(record);
-                record.Phase = UIPhase.Hidden;
-                // 跟踪隐藏的UI到缓存处理器
-                _cacheHandler.TrackHidden(record);
-                CompletePendingHide(record, true);
+                // 没有记录说明这个实例已经游离在管理之外（例如 _showed 中只有 UI 没有记录的异常残留），
+                // 统一在这里收尾：补发事件并销毁，避免实例既不在缓存里也不被释放。
+                NotifyOrphanHidden(ui);
+                return;
             }
+
+            if (!ReferenceEquals(record.UI, ui))
+            {
+                ui.Dispose();
+                return;
+            }
+
+            // 从可见记录中分离
+            DetachVisibleRecord(record);
+            SetPhase(record, UIPhase.Hidden);
+            // 跟踪隐藏的UI到缓存处理器
+            _cacheHandler.TrackHidden(record);
+            CompletePendingHide(record, true);
 
 #if UNITY_EDITOR
             __Debugger_Showed_Event();
@@ -556,6 +703,34 @@ namespace Ux
             EventMgr.Ins.Run(MainEventType.UI_HIDE, ui.GetType());
             _blurHandler.OnHide(ui);
             _focusHandler.OnHidden(ui);
+#if UNITY_EDITOR
+            AssertShowedConsistency("OnUIHidden");
+#endif
+        }
+
+        /// <summary>
+        /// 处理「没有对应记录」的隐藏收尾：补发隐藏事件并直接销毁实例。
+        /// 事件必须在 Dispose 之前派发，Dispose 之后 IUI.ID 和 Data 已经不可用。
+        /// </summary>
+        private void NotifyOrphanHidden(IUI ui)
+        {
+            if (ui == null)
+            {
+                return;
+            }
+
+            var id = ui.ID;
+            var type = ui.GetType();
+
+#if UNITY_EDITOR
+            __Debugger_Showed_Event();
+#endif
+            EventMgr.Ins.Run(MainEventType.UI_HIDE, id);
+            EventMgr.Ins.Run(MainEventType.UI_HIDE, type);
+            _blurHandler.OnHide(ui);
+            _focusHandler.OnHidden(ui);
+            // 走完整的销毁流程：即使记录已经不存在，也要把资源包引用释放掉（否则整包无法卸载）。
+            Dispose(ui);
         }
 
         /// <summary>
@@ -563,25 +738,55 @@ namespace Ux
         /// </summary>
         private void Dispose(IUI ui)
         {
-            var id = ui.ID;
-            var record = GetRecord(id);
-            _focusHandler.OnDisposed(ui);
-            ui.Dispose();
-            _cacheHandler.RemoveRecord(record);
-            RemoveRecord(id);
-
-            // 如果UI有资源包，释放资源包
-            var data = GetUIData(id);
-            if (data == null || data.Pkgs == null || data.Pkgs.Length == 0)
+            if (ui == null)
             {
                 return;
             }
 
-            ResMgr.Ins.RemoveUIPackage(data.Pkgs);
-            // 对话框类型需要移除UIData
-            if (ui is UIDialog)
+            var id = ui.ID;
+            var typeId = ui.TypeId;
+            var record = GetRecord(id);
+
+            // 同一个 Id 下可能同时存在「缓存里的旧实例」和「记录上的新实例」（显示竞态 + 请求取消）：
+            // 回收旧实例时如果无条件 RemoveRecord(id)，会把新实例的记录一起删掉，
+            // 之后这个界面就再也隐藏不了了。只有记录确实属于当前实例（或是空壳）时才销毁记录。
+            var ownsRecord = record == null || record.UI == null || ReferenceEquals(record.UI, ui);
+
+            // 实例自身还持有 Data，在 Dispose 之前先取出包名：
+            // 记录已经被重置（例如 Release 期间）时，这是唯一还能找回资源包的地方。
+            var instancePkgs = ui.Data != null ? ui.Data.Pkgs : null;
+
+            _focusHandler.OnDisposed(ui);
+            ui.Dispose();
+
+            if (record != null && ownsRecord)
             {
-                RemoveUIData(id);
+                _cacheHandler.RemoveRecord(record);
+                RemoveRecord(id);
+            }
+
+            // 资源包引用一定要释放：动态界面可能在销毁前就被移除了 UIData，
+            // 因此按「记录缓存 -> 实例自身 -> UIData」的顺序依次兜底。
+            var pkgs = record?.Pkgs;
+            if (pkgs == null || pkgs.Length == 0)
+            {
+                pkgs = instancePkgs;
+            }
+
+            if ((pkgs == null || pkgs.Length == 0) && typeId != 0 && _idUIData.TryGetValue(typeId, out var data))
+            {
+                pkgs = data.Pkgs;
+            }
+
+            if (pkgs != null && pkgs.Length > 0)
+            {
+                ResMgr.Ins.RemoveUIPackage(pkgs);
+            }
+
+            // 对话框类型需要移除UIData
+            if (ui is UIDialog && typeId != 0)
+            {
+                RemoveUIData(typeId);
             }
         }
     }

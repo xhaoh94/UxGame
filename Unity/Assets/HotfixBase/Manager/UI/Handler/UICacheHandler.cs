@@ -31,7 +31,8 @@ namespace Ux
 #if UNITY_EDITOR
                 UIMgr.__Debugger_WaitDel_Event();
 #endif
-                return true;
+                // 等待销毁对象可能已经被释放（ui 为 null），此时不能把空实例交给显示流程。
+                return ui != null;
             }
 
             ui = null;
@@ -119,7 +120,7 @@ namespace Ux
 
             _waitDels.Remove(id);
             waitDel.GetUI(out var oldUI);
-            if (!ReferenceEquals(oldUI, keep))
+            if (oldUI != null && !ReferenceEquals(oldUI, keep))
             {
                 _callback.DisposeUI(oldUI);
             }
@@ -203,6 +204,25 @@ namespace Ux
             }
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// 导出缓存 / 等待销毁里的键（实例 ID），供编辑器一致性检查核对它们是否还有对应记录。
+        /// </summary>
+        internal void FillCacheDebugIds(List<int> output)
+        {
+            output.Clear();
+            foreach (var kv in _cache)
+            {
+                output.Add(kv.Key);
+            }
+
+            foreach (var kv in _waitDels)
+            {
+                output.Add(kv.Key);
+            }
+        }
+#endif
+
         void OnRemoveWaitDel(int id)
         {
             _waitDels.Remove(id);
@@ -213,11 +233,16 @@ namespace Ux
 
         void OnDisposeWaitDel(IUI ui)
         {
+            if (ui == null)
+            {
+                return;
+            }
+
             var record = UIMgr.Ins.GetRecord(ui.ID);
             if (record != null)
             {
                 record.UI = null;
-                record.Phase = UIMgr.UIPhase.Disposed;
+                UIMgr.SetPhase(record, UIMgr.UIPhase.Disposed);
                 record.WaitDel = null;
                 record.CacheState = UIMgr.CacheState.None;
                 UIMgr.Ins.RemoveRecord(ui.ID);

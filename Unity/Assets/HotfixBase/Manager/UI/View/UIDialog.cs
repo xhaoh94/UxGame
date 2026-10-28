@@ -25,10 +25,10 @@ namespace Ux
         protected virtual UIButton __checkbox { get; private set; } = null;
         #endregion
 
-        public override void InitData(IUIData data, CallbackData initData)
+        public override void InitData(IUIData data, CallbackData initData, int instanceId)
         {
             OnHideCallback += _Hide;
-            base.InitData(data, initData);
+            base.InitData(data, initData, instanceId);
         }
 
         protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)

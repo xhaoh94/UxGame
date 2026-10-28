@@ -18,8 +18,8 @@ namespace Ux
         protected readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
         
         /// <summary>
-        /// 当前正在显示的UI集合
-        /// value: UI的ID
+        /// 当前正在显示的UI集合（存类型 ID：这个工厂管理的是「类型级」的复用池，不是实例）
+        /// value: UI 的类型 ID
         /// </summary>
         protected readonly HashSet<int> _showed = new HashSet<int>();
         
@@ -29,7 +29,7 @@ namespace Ux
         /// <param name="ui">显示的UI实例</param>
         protected void OnShow(TUI ui)
         {
-            _showed.Add(ui.ID);
+            _showed.Add(ui.TypeId);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Ux
         /// <param name="ui">隐藏的UI实例</param>
         protected void OnHide(TUI ui)
         {
-            _showed.Remove(ui.ID);
+            _showed.Remove(ui.TypeId);
             if (ui.HideDestroyTime >= 0) return;
             var type = ui.GetType();
             if (!_pool.TryGetValue(type, out var ids))
@@ -46,7 +46,7 @@ namespace Ux
                 ids = new Queue<int>();
                 _pool.Add(type, ids);
             }
-            ids.Enqueue(ui.ID);
+            ids.Enqueue(ui.TypeId);
         }
         
         /// <summary>
@@ -66,7 +66,9 @@ namespace Ux
         }
 
         /// <summary>
-        /// 获取UI的ID，优先从对象池中获取可复用的ID
+        /// 获取UI的ID，优先从对象池中获取可复用的ID。
+        /// 注意：ID 由类型派生（UIMgr.GetTypeId），所以同一类型在同一时刻只支持一个实例，
+        /// 同时在显示的情况下再次 Create/Show 会覆盖正在显示的那个实例。
         /// </summary>
         /// <param name="type">UI的类型</param>
         /// <returns>UI的ID</returns>
@@ -80,6 +82,14 @@ namespace Ux
 
             // 使用UIMgr的递增ID分配器，保证类型到ID的映射唯一
             var id = UIMgr.Ins.GetTypeId(type);
+#if UNITY_EDITOR
+            // 同一类型同一时刻只支持一个实例（ID 由类型派生）。
+            // 这里给出显式告警，避免「弹窗/飘字被后一个覆盖」时无从排查。
+            if (_showed.Contains(id))
+            {
+                Log.Warning("同一类型的UI正在显示，本次显示会覆盖已有实例。Type[{0}]", type.FullName);
+            }
+#endif
             var data = new UIData(id, type);
             UIMgr.Ins.AddUIData(data);
             return data.ID;
