@@ -91,9 +91,12 @@ namespace Ux
             {
                 var ui = UIMgr.Ins.GetUI<UITip>(id);
                 if (ui == null) continue;
-                var gobj = ui.GObject;
-                // 将已有提示向上移动30像素
-                gobj.SetPosition(gobj.x, gobj.y - 30, 0);
+                if (ui.GameObject == null)
+                    continue;
+
+                var rect = ui.GameObject.transform as RectTransform;
+                if (rect != null)
+                    rect.anchoredPosition += new Vector2(0f, 30f);
             }
         }
     }

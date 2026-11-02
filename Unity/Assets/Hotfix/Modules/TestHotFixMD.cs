@@ -37,16 +37,14 @@ namespace Ux
 
     }
 
-    [Package("Common", "Login")]
     public class LoginTestUI : UIView
     {
         public string aaa;
 
-        protected override UILayer Layer => UILayer.Normal;
+        // 复用登录界面的 Prefab，覆盖默认的 UI_LoginTestUI。
+        protected override string ResAddress => "UI_LoginView";
 
-        protected override string PkgName => "Login";
-
-        protected override string ResName => "LoginUI";
+        protected override UILayer Layer => UILayer.View;
 
         protected override void OnShow()
         {
@@ -56,9 +54,8 @@ namespace Ux
 
     public class LoginTestSub : UITabView
     {
-        protected override string PkgName => "Login";
-
-        protected override string ResName => "Test1";
+        // 复用 Multiple1TabView 的 Prefab。
+        protected override string ResAddress => "UI_Multiple1TabView";
     }
 
     public class UITestData : UIData

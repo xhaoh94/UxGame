@@ -93,19 +93,6 @@ namespace Ux
             }
         }
 
-        
-        /// <summary>
-        /// 调试器资源包引用事件（仅编辑器模式）
-        /// 通知调试面板资源包引用信息
-        /// </summary>
-        public static void __Debugger_Pkg_Event()
-        {
-            if (UnityEditor.EditorApplication.isPlaying)
-            {
-                __Debugger_Pkg_CallBack?.Invoke(((IResUIDebuggerAccess)ResMgr.Ins).GetPkgRefs());
-            }
-        }
-        
         /// <summary>
         /// UI数据调试回调（仅编辑器模式）
         /// </summary>
@@ -134,7 +121,6 @@ namespace Ux
         /// <summary>
         /// 资源包引用调试回调（仅编辑器模式）
         /// </summary>
-        public static Action<Dictionary<string, UIPkgRef>> __Debugger_Pkg_CallBack;
 
         /// <summary>
         /// 全量校验 UI 管理器的内部索引是否自洽。

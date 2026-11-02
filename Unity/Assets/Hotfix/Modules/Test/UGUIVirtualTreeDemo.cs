@@ -7,31 +7,31 @@ namespace Ux.UI
     /// <summary>通过统一列表组件展示树，Item 仍由同一套虚拟化和对象池管理。</summary>
     public sealed class UGUIVirtualTreeDemo : MonoBehaviour
     {
-        [SerializeField] private UGUIVirtualListComponent _list;
+        [SerializeField] private UIVirtualListComponent _list;
         [Min(1)] [SerializeField] private int _rootCount = 20;
         [Min(1)] [SerializeField] private int _branchesPerRoot = 5;
         [Min(1)] [SerializeField] private int _leavesPerBranch = 20;
         [Min(0f)] [SerializeField] private float _indent = 24f;
 
         private readonly Dictionary<GameObject, Text> _texts = new();
-        private UGUIVirtualTreeAdapter _tree;
+        private UIVirtualTreeAdapter _tree;
         private bool _subscribed;
-        public UGUIVirtualTreeAdapter Adapter => _tree;
+        public UIVirtualTreeAdapter Adapter => _tree;
 
         private void Start()
         {
-            if (_list == null) _list = GetComponent<UGUIVirtualListComponent>();
+            if (_list == null) _list = GetComponent<UIVirtualListComponent>();
             if (_list == null)
             {
-                Debug.LogError("请先执行 UxGame/Test/Create UGUI Tree Demo。", this);
+                Debug.LogError("请先执行 UxGame/Test/Create UI Tree Demo。", this);
                 return;
             }
             // 兼容旧版树 Demo 场景：新加的列表类型字段尚未配置时，迁移为空树模式。
-            if (!_list.IsListTypeConfigured && _list.ListType == UGUIVirtualListType.Flat)
-                _list.ConfigureListType(UGUIVirtualListType.Tree);
-            if (_list.ListType != UGUIVirtualListType.Tree)
+            if (!_list.IsListTypeConfigured && _list.ListType == UIVirtualListType.Flat)
+                _list.ConfigureListType(UIVirtualListType.Tree);
+            if (_list.ListType != UIVirtualListType.Tree)
             {
-                Debug.LogWarning("树 Demo 需要把列表类型选为树形列表，或重新执行 Create UGUI Tree Demo。", this);
+                Debug.LogWarning("树 Demo 需要把列表类型选为树形列表，或重新执行 Create UI Tree Demo。", this);
                 return;
             }
             _list.ItemTypeProvider = GetItemType;
@@ -44,15 +44,15 @@ namespace Ux.UI
             Debug.Log($"[UGUIVirtualTreeDemo] 总节点 {_tree.TotalNodeCount}，当前展开行 {_tree.VisibleCount}。点击分类/分组展开折叠。", this);
         }
 
-        private int GetItemType(int index, object data) => ((UGUIVirtualTreeItem)data).HasChildren ? 0 : 1;
+        private int GetItemType(int index, object data) => ((UIVirtualTreeItem)data).HasChildren ? 0 : 1;
 
         private void BindItem(int index, object data, GameObject item)
         {
-            var row = (UGUIVirtualTreeItem)data;
+            var row = (UIVirtualTreeItem)data;
             if (!_texts.TryGetValue(item, out var text) || text == null)
             {
                 text = item.GetComponentInChildren<Text>(true);
-                if (text == null) throw new System.InvalidOperationException("树 Item 模板需要包含 UGUI Text。");
+                if (text == null) throw new System.InvalidOperationException("树 Item 模板需要包含 UI Text。");
                 _texts[item] = text;
             }
             var rect = (RectTransform)item.transform;
@@ -61,10 +61,10 @@ namespace Ux.UI
             text.rectTransform.offsetMin = offset;
             text.text = (row.HasChildren ? row.IsExpanded ? "[-] " : "[+] " : "    ") + (row.Data?.ToString() ?? row.Id);
             text.alignment = TextAnchor.MiddleLeft;
-            text.verticalOverflow = _list.LayoutMode == UGUIVirtualListLayoutMode.VariableLinear
+            text.verticalOverflow = _list.LayoutMode == UIVirtualListLayoutMode.VariableLinear
                 ? VerticalWrapMode.Overflow : VerticalWrapMode.Truncate;
             item.name = $"Tree Item [{index}] {row.Id}";
-            if (_list.LayoutMode == UGUIVirtualListLayoutMode.VariableLinear)
+            if (_list.LayoutMode == UIVirtualListLayoutMode.VariableLinear)
             {
                 float min = row.HasChildren ? 64f : 48f;
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(min, Mathf.Ceil(text.preferredHeight) + 20f));
@@ -73,7 +73,7 @@ namespace Ux.UI
 
         private void OnItemClicked(int index, object data)
         {
-            var item = (UGUIVirtualTreeItem)data;
+            var item = (UIVirtualTreeItem)data;
             // 是否点击展开由组件的“点击节点展开/折叠”开关控制，此处不能再 Toggle 一次。
             Debug.Log($"[UGUIVirtualTreeDemo] 节点 {item.Id}，层级 {item.Depth}，展开 {item.IsExpanded}，显示行 {_tree.VisibleCount}", this);
         }
@@ -115,20 +115,20 @@ namespace Ux.UI
             return false;
         }
 
-        private List<UGUIVirtualTreeNode> CreateRoots()
+        private List<UIVirtualTreeNode> CreateRoots()
         {
-            var roots = new List<UGUIVirtualTreeNode>();
+            var roots = new List<UIVirtualTreeNode>();
             for (int r = 0; r < _rootCount; r++)
             {
-                var branches = new List<UGUIVirtualTreeNode>();
+                var branches = new List<UIVirtualTreeNode>();
                 for (int b = 0; b < _branchesPerRoot; b++)
                 {
-                    var leaves = new List<UGUIVirtualTreeNode>();
+                    var leaves = new List<UIVirtualTreeNode>();
                     for (int i = 0; i < _leavesPerBranch; i++)
-                        leaves.Add(new UGUIVirtualTreeNode($"root-{r}/branch-{b}/leaf-{i}", $"条目 {r:D2}-{b:D2}-{i:D2}"));
-                    branches.Add(new UGUIVirtualTreeNode($"root-{r}/branch-{b}", $"分组 {r:D2}-{b:D2}", leaves, r == 0 && b == 0));
+                        leaves.Add(new UIVirtualTreeNode($"root-{r}/branch-{b}/leaf-{i}", $"条目 {r:D2}-{b:D2}-{i:D2}"));
+                    branches.Add(new UIVirtualTreeNode($"root-{r}/branch-{b}", $"分组 {r:D2}-{b:D2}", leaves, r == 0 && b == 0));
                 }
-                roots.Add(new UGUIVirtualTreeNode($"root-{r}", $"分类 {r:D2}", branches, r == 0));
+                roots.Add(new UIVirtualTreeNode($"root-{r}", $"分类 {r:D2}", branches, r == 0));
             }
             return roots;
         }

@@ -1,28 +1,27 @@
-using FairyGUI;
 using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 using static Ux.UIMgr;
 
 namespace Ux
 {
     public class UIDialog : UIWindow
     {
-        protected override string PkgName => null;
-
-        protected override string ResName => null;
-
         public override int HideDestroyTime => -1;
         public override UIType Type => UIType.Fixed;
         public override UIBlur Blur => UIBlur.Blur;
+
         protected DialogData dialogData;
         private DialogCallbackData _callbackData;
 
-        #region 组件
-        protected virtual GTextField __txtTitle { get; private set; } = null;
-        protected virtual GTextField __txtContent { get; private set; } = null;
-        protected virtual UIButton __btnClose { get; private set; } = null;
-        protected virtual UIButton __btn1 { get; private set; } = null;
-        protected virtual UIButton __btn2 { get; private set; } = null;
-        protected virtual UIButton __checkbox { get; private set; } = null;
+        #region UI 组件
+        protected virtual TMP_Text __txtTitle { get; } = null;
+        protected virtual TMP_Text __txtContent { get; } = null;
+        protected virtual GameObject __btnClose { get; } = null;
+        protected virtual GameObject __btn1 { get; } = null;
+        protected virtual GameObject __btn2 { get; } = null;
+        protected virtual Toggle __checkbox { get; } = null;
         #endregion
 
         public override void InitData(IUIData data, CallbackData initData, int instanceId)
@@ -33,15 +32,16 @@ namespace Ux
 
         protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)
         {
-            if (TryGetParam(out DialogData _dialogData))
+            if (TryGetParam(out DialogData value))
             {
-                dialogData = _dialogData;
+                dialogData = value;
             }
             else
             {
                 Log.Error("Dialog 参数类型错误");
                 return;
             }
+
             if (TryGetParam(out DialogCallbackData callbackData, UIParamType.B))
             {
                 _callbackData = callbackData;
@@ -59,81 +59,95 @@ namespace Ux
 
         protected virtual void InitParam()
         {
-            AddClick(__btnClose, HideSelf);
-            // 标题
-            if (__txtTitle != null)
+            SetText(__txtTitle, string.IsNullOrEmpty(dialogData.Title) ? "提示" : dialogData.Title);
+            SetText(__txtContent, dialogData.Content);
+
+            SetActive(__btn1, dialogData.Btn1.Visible);
+            if (dialogData.Btn1.Visible)
             {
-                __txtTitle.text =  string.IsNullOrEmpty(dialogData.Title) ? "提示" : dialogData.Title;
+                SetText(__btn1, dialogData.Btn1.BtnTitle);
+                AddClick(__btn1, OnBtn1Click);
             }
 
-            // 内容
-            if (__txtContent != null && !string.IsNullOrEmpty(dialogData.Content))
+            SetActive(__btn2, dialogData.Btn2.Visible);
+            if (dialogData.Btn2.Visible)
             {
-                __txtContent.text = dialogData.Content;
+                SetText(__btn2, dialogData.Btn2.BtnTitle);
+                AddClick(__btn2, OnBtn2Click);
             }
 
-            // 按钮1
-            if (__btn1 != null)
-            {
-                __btn1.visible = dialogData.Btn1.Visible;
-                if (dialogData.Btn1.Visible)
-                {
-                    __btn1.text =  dialogData.Btn1.BtnTitle;
-                    AddClick(__btn1, OnBtn1Click);
-                }
-            }
+            SetActive(__checkbox, dialogData.CheckBoxData.Visible);
+            if (dialogData.CheckBoxData.Visible)
+                SetText(__checkbox, dialogData.CheckBoxData.CheckBoxDesc);
 
-            // 按钮2
-            if (__btn2 != null)
-            {
-                __btn2.visible = dialogData.Btn2.Visible;
-                if (dialogData.Btn2.Visible)
-                {
-                    __btn2.text = dialogData.Btn2.BtnTitle;
-                    AddClick(__btn2, OnBtn2Click);
-                }
-            }
+            if (__btnClose != null)
+                AddClick(__btnClose, HideSelf);
 
-            // 复选框
-            if (__checkbox != null)
-            {
-                __checkbox.visible = dialogData.CheckBoxData.Visible;
-                if (dialogData.CheckBoxData.Visible)
-                {
-                    __checkbox.text = dialogData.CheckBoxData.CheckBoxDesc;
-                }
-            }
-
-            // 自定义参数处理
             OnParamCustom();
+        }
+
+        private static void SetActive(GameObject target, bool active)
+        {
+            if (target != null)
+                target.SetActive(active);
+        }
+
+        private static void SetActive(Toggle target, bool active)
+        {
+            if (target != null)
+                target.gameObject.SetActive(active);
+        }
+
+        private static void SetText(TMP_Text target, string value)
+        {
+            if (target != null)
+                target.text = value ?? string.Empty;
+        }
+
+        private static void SetText(Component target, string value)
+        {
+            if (target == null)
+                return;
+            var text = target.GetComponentInChildren<TMP_Text>(true);
+            if (text != null)
+                text.text = value ?? string.Empty;
+        }
+
+        private static void SetText(GameObject target, string value)
+        {
+            if (target == null)
+                return;
+            var text = target.GetComponentInChildren<TMP_Text>(true);
+            if (text != null)
+                text.text = value ?? string.Empty;
         }
 
         protected virtual void OnParamCustom()
         {
-            // 子类可重写处理额外逻辑
         }
-        void OnBtn1Click()
+
+        private void OnBtn1Click()
         {
             dialogData.Btn1.BtnCallback?.Invoke();
             HideSelf();
         }
 
-        void OnBtn2Click()
+        private void OnBtn2Click()
         {
             dialogData.Btn2.BtnCallback?.Invoke();
             HideSelf();
         }
-        protected override void OnLayout()
-        {
-            SetLayout(UILayout.Center_Middle);
-        }
+
         private void _Hide()
         {
-            // 如果勾选了复选框，触发回调
-            if (__checkbox != null && __checkbox.selected)
+            var selected = false;
+            if (__checkbox != null)
             {
-                dialogData.CheckBoxData.CheckBoxCallback?.Invoke(dialogData.CheckBoxData.CheckBoxTag);
+                selected = __checkbox.isOn;
             }
+
+            if (selected)
+                dialogData.CheckBoxData.CheckBoxCallback?.Invoke(dialogData.CheckBoxData.CheckBoxTag);
 
             _callbackData.HideCallback?.Invoke(this);
         }

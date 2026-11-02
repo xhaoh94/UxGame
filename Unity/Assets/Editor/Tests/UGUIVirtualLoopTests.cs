@@ -8,12 +8,12 @@ namespace Ux.Editor.Tests
 {
     public sealed class UGUIVirtualLoopTests
     {
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void VirtualIndicesWrapToSameDataAndPositionsRepeat(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void VirtualIndicesWrapToSameDataAndPositionsRepeat(UIVirtualListAxis axis)
         {
-            var inner = new UGUIFlowLayout(axis, new Vector2(100, 100), spacing: new Vector2(4, 4));
-            var loop = new UGUIVirtualLoopLayout(inner, 3);
+            var inner = new UIFlowLayout(axis, new Vector2(100, 100), spacing: new Vector2(4, 4));
+            var loop = new UIVirtualLoopLayout(inner, 3);
             loop.SetItemCount(5, true);
             Assert.AreEqual(15, loop.VirtualCount);
             Assert.AreEqual(0, loop.ToDataIndex(0));
@@ -26,16 +26,16 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(cycle * 3, loop.ContentLength, 0.01f);
             var first = loop.GetItemLayout(0);
             var second = loop.GetItemLayout(5);
-            Assert.AreEqual(axis == UGUIVirtualListAxis.Vertical ? -cycle : cycle,
-                axis == UGUIVirtualListAxis.Vertical ? second.Position.y : second.Position.x, 0.01f);
+            Assert.AreEqual(axis == UIVirtualListAxis.Vertical ? -cycle : cycle,
+                axis == UIVirtualListAxis.Vertical ? second.Position.y : second.Position.x, 0.01f);
             Assert.AreEqual(first.Size, second.Size);
         }
 
         [Test]
         public void VisibleRangeSpansCycleBoundary()
         {
-            var inner = new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 100));
-            var loop = new UGUIVirtualLoopLayout(inner, 3);
+            var inner = new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 100));
+            var loop = new UIVirtualLoopLayout(inner, 3);
             loop.SetItemCount(5, true);
             float cycle = loop.CycleLength;
             var range = loop.GetVisibleRange(cycle - 50f, 100f, 0f);
@@ -50,8 +50,8 @@ namespace Ux.Editor.Tests
         [Test]
         public void RecenterKeepsScrollInsideMiddleCycleAndGuardsShortContent()
         {
-            var inner = new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 100));
-            var loop = new UGUIVirtualLoopLayout(inner, 3);
+            var inner = new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 100));
+            var loop = new UIVirtualLoopLayout(inner, 3);
             loop.SetItemCount(10, true);
             float cycle = loop.CycleLength;
             Assert.AreEqual(cycle, loop.GetRecenterDelta(10f, 200f), 0.01f);
@@ -83,7 +83,7 @@ namespace Ux.Editor.Tests
         public void ScrollingIntoFirstCycleSilentlyShiftsOneCycle()
         {
             using var f = new Fixture(8, new Vector2(100, 100));
-            float cycle = ((IUGUIVirtualListLoopLayout)f.CoreLayout).CycleLength;
+            float cycle = ((IUIVirtualListLoopLayout)f.CoreLayout).CycleLength;
             Assert.AreEqual(cycle, f.Position, 0.5f, "应从中间周期开始");
             f.SetPosition(30f);
             f.Core.RefreshLayout();
@@ -100,18 +100,18 @@ namespace Ux.Editor.Tests
             Assert.IsFalse(f.Core.IsLoop, "多列配置下不启用循环");
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
             public readonly ScrollRect Scroll;
-            public readonly UGUIVirtualList Core;
-            public readonly IUGUIVirtualListLayout CoreLayout;
-            public readonly Dictionary<IUGUIVirtualListItem, int> RendererIndices = new Dictionary<IUGUIVirtualListItem, int>();
+            public readonly UIVirtualList Core;
+            public readonly IUIVirtualListLayout CoreLayout;
+            public readonly Dictionary<IUIVirtualListItem, int> RendererIndices = new Dictionary<IUIVirtualListItem, int>();
             public float Position => Scroll.content.anchoredPosition.y;
 
             public Fixture(int count, Vector2 itemSize, bool allowMultiple = false)
             {
-                Root = new GameObject("Loop test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Loop test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 Scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -123,11 +123,11 @@ namespace Ux.Editor.Tests
                 Scroll.vertical = true;
                 Scroll.horizontal = false;
                 Scroll.movementType = ScrollRect.MovementType.Clamped;
-                var inner = new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, itemSize,
+                var inner = new UIFlowLayout(UIVirtualListAxis.Vertical, itemSize,
                     allowMultiple: allowMultiple);
-                IUGUIVirtualListLayout layout = allowMultiple ? inner : (IUGUIVirtualListLayout)new UGUIVirtualLoopLayout(inner, 3);
+                IUIVirtualListLayout layout = allowMultiple ? inner : (IUIVirtualListLayout)new UIVirtualLoopLayout(inner, 3);
                 CoreLayout = layout;
-                Core = new UGUIVirtualList(Scroll, layout, this) { BufferSize = 100 };
+                Core = new UIVirtualList(Scroll, layout, this) { BufferSize = 100 };
                 var rows = new List<object>();
                 for (int i = 0; i < count; i++) rows.Add(i);
                 Core.SetDatas(rows);
@@ -142,17 +142,17 @@ namespace Ux.Editor.Tests
 
             public int GetItemType(int index, object data) => 0;
 
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var go = new GameObject("Loop row", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go, this);
             }
 
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose() { Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
 
-            internal sealed class View : IUGUIVirtualListItem
+            internal sealed class View : IUIVirtualListItem
             {
                 private readonly Fixture _owner;
                 private Action _click;

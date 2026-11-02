@@ -17,7 +17,7 @@ namespace Ux.Editor.Tests
             viewport.transform.SetParent(root.transform, false);
             var content = new GameObject("Content", typeof(RectTransform));
             content.transform.SetParent(viewport.transform, false);
-            var host = root.AddComponent<UGUIVirtualListComponent>();
+            var host = root.AddComponent<UIVirtualListComponent>();
             try
             {
                 var original = root.GetComponent<ScrollRect>();
@@ -36,7 +36,7 @@ namespace Ux.Editor.Tests
                 serialized.FindProperty("_scrollRect").objectReferenceValue = original;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
 
-                var upgraded = UGUIVirtualListScrollRectUpgrade.Upgrade(original);
+                var upgraded = UIVirtualListScrollRectUpgrade.Upgrade(original);
                 Assert.AreSame(upgraded, host.ScrollRect);
                 Assert.AreSame(upgraded, root.GetComponent<ScrollRect>());
                 Assert.AreEqual(1, root.GetComponents<ScrollRect>().Length);
@@ -52,14 +52,14 @@ namespace Ux.Editor.Tests
                 Assert.IsFalse(upgraded.enabled);
                 Assert.AreEqual(1, upgraded.onValueChanged.GetPersistentEventCount());
                 Assert.AreSame(upgraded, upgraded.onValueChanged.GetPersistentTarget(0));
-                Assert.AreSame(upgraded, UGUIVirtualListScrollRectUpgrade.Upgrade(upgraded));
+                Assert.AreSame(upgraded, UIVirtualListScrollRectUpgrade.Upgrade(upgraded));
 
                 Undo.FlushUndoRecordObjects();
                 Undo.PerformUndo();
                 Assert.AreEqual(typeof(ScrollRect), host.ScrollRect.GetType());
-                Assert.IsNull(root.GetComponent<UGUIVirtualListScrollRect>());
+                Assert.IsNull(root.GetComponent<UIVirtualListScrollRect>());
                 Undo.PerformRedo();
-                Assert.IsInstanceOf<UGUIVirtualListScrollRect>(host.ScrollRect);
+                Assert.IsInstanceOf<UIVirtualListScrollRect>(host.ScrollRect);
                 Assert.AreSame(content.transform, host.ScrollRect.content);
             }
             finally

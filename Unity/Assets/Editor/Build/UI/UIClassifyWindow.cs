@@ -44,7 +44,8 @@ namespace Ux.Editor.Build.UI
             var collectorBuiltin = new AssetBundleCollector();
             collectorBuiltin.AssetTags = "builtin";
             collectorBuiltin.CollectPath = ResClassifySettings.path;
-            collectorBuiltin.PackRuleName = typeof(PackTopDirectory).Name;
+            // 包里还会分 Prefab/Atlas 子目录，按目录拆 bundle 才能做到"改图只重下图集"。
+            collectorBuiltin.PackRuleName = typeof(PackDirectory).Name;
             collectorBuiltin.FilterRuleName = typeof(CollectBuiltinUI).Name;
             collectorBuiltin.AddressRuleName = nameof(AddressByGroupAndFileName);
             group.Collectors.Add(collectorBuiltin);
@@ -53,7 +54,7 @@ namespace Ux.Editor.Build.UI
             #region Preload
             var collectorPreload = new AssetBundleCollector();            
             collectorPreload.CollectPath = ResClassifySettings.path;
-            collectorPreload.PackRuleName = typeof(PackTopDirectory).Name;
+            collectorPreload.PackRuleName = typeof(PackDirectory).Name;
             collectorPreload.FilterRuleName = typeof(CollectPreloadUI).Name;
             collectorPreload.AddressRuleName = nameof(AddressByGroupAndFileName);
             group.Collectors.Add(collectorPreload);
@@ -209,7 +210,7 @@ namespace Ux.Editor.Build.UI
             ResClassifySettings.proloads = builtins.ToArray();
             ResClassifySettings.lazyloads = lazyloads.ToArray();
             CreateYooAssetUIGroup();
-            if (UICodeGenWindow.Export() && EditorUtility.DisplayDialog("提示", "配置成功!", "ok"))
+            if (EditorUtility.DisplayDialog("提示", "配置成功!", "ok"))
             {
                 _OnBtnLoadClick();
             }

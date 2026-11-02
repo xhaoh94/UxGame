@@ -1,5 +1,3 @@
-﻿using FairyGUI;
-using System.Collections;
 using UnityEngine;
 
 namespace Ux
@@ -9,138 +7,99 @@ namespace Ux
         public class ModelEntity : Entity
         {
             public AnimComponent Anim { get; private set; }
-
             public void Set(GameObject model)
             {
-                if (Anim != null)
-                {
-                    Remove(Anim);
-                }
-                Anim = Add<AnimComponent, Animator>(model.GetComponentInChildren<Animator>());
+                if (Anim != null) Remove(Anim);
+                Anim = Add<AnimComponent, Animator>(model != null ? model.GetComponentInChildren<Animator>() : null);
             }
-
             protected override void OnDestroy()
             {
                 base.OnDestroy();
                 Anim = null;
             }
         }
+
         public GameObject Model { get; private set; }
         public bool CloneMaterial { get; set; }
-        GoWrapper _wrapper;
-        bool _isInLoad;
-        ModelEntity _entity;
-        #region 组件
+        private bool _isInLoad;
+        private readonly Transform _container;
+        private ModelEntity _entity;
 
-        protected virtual GGraph __container => GObject.asGraph;
-
-        #endregion        
-        public UIModel(GObject container, UIObject parent)
+        public UIModel(GameObject container, UIObject parent)
         {
             Init(container, parent);
+            _container = container != null ? container.transform : null;
             parent?.AddComponent(this);
-            OnHideCallback += _Release;
-        }
-        protected override void CreateChildren()
-        {
-
+            OnHideCallback += ReleaseModel;
         }
 
         public UIModel Load(string location, float angle = 180, float scale = 180)
         {
             var model = ResMgr.Ins.LoadAsset<GameObject>(location);
-            switch (State)
+            if (State is UIState.Hide or UIState.HideAnim)
             {
-                case UIState.Hide:
-                case UIState.HideAnim:
-                    UnityPool.Push(model);
-                    return this;
+                if (model != null) UnityPool.Push(model);
+                return this;
             }
-            _Set(model, true, angle, scale);
+            SetInternal(model, true, angle, scale);
             return this;
         }
+
         public UIModel Set(GameObject model, float angle = 180, float scale = 180)
         {
-            switch (State)
-            {
-                case UIState.Hide:
-                case UIState.HideAnim:
-                    return this;
-            }
-
-            _Set(model, false, angle, scale);
+            if (State is UIState.Hide or UIState.HideAnim)
+                return this;
+            SetInternal(model, false, angle, scale);
             return this;
         }
-        void _Set(GameObject model, bool isLoad, float angle, float scale)
+
+        private void SetInternal(GameObject model, bool isLoad, float angle, float scale)
         {
-            if (__container == null)
+            if (_container == null || model == null)
             {
-                Log.Error("UIModel:没有存储模型的容器");
+                Log.Error("UIModel 容器或模型为空");
                 return;
             }
-            if (model == null)
-            {
-                Log.Error("UIModel:模型为null");
-                return;
-            }
+
+            if (Model != null && _isInLoad)
+                UnityPool.Push(Model);
+
             Model = model;
-            Model.transform.localPosition = new Vector3(GObject.width * 0.5f, -GObject.height, 1000);
-            Model.transform.localScale = new Vector3(scale, scale, scale);
-            Model.transform.localEulerAngles = new Vector3(0, angle, 0);
-            if (_wrapper == null)
-            {
-                _wrapper = new GoWrapper();
-            }
-            else
-            {
-                if (_wrapper.wrapTarget != null && _isInLoad)
-                {
-                    UnityPool.Push(_wrapper.wrapTarget);
-                }
-            }
-            _wrapper.SetWrapTarget(model, CloneMaterial);
-
+            Model.transform.SetParent(_container, false);
+            var rect = GameObject.transform as RectTransform;
+            var width = rect != null ? rect.rect.width : 0f;
+            var height = rect != null ? rect.rect.height : 0f;
+            Model.transform.localPosition = new Vector3(width * 0.5f, -height, 0f);
+            Model.transform.localScale = Vector3.one * scale;
+            Model.transform.localEulerAngles = new Vector3(0f, angle, 0f);
             _isInLoad = isLoad;
-            __container.SetNativeObject(_wrapper);
 
-            if (_entity == null)
-            {
-                _entity = Entity.Create<ModelEntity>();
-            }
+            _entity ??= Entity.Create<ModelEntity>();
             _entity.Name = $"UIModel@{model.name}";
             _entity.Set(model);
         }
 
-        public void Refresh()
+        public void Refresh() { }
+
+        public void Play(string animation)
         {
-            if (_wrapper == null) return;
-            if (_wrapper.wrapTarget == null) return;
-            _wrapper.CacheRenderers();
+            if (_entity?.Anim == null || string.IsNullOrEmpty(animation)) return;
+            var clip = ResMgr.Ins.LoadAsset<AnimationClip>(animation);
+            _entity.Anim.AddAnimation(animation, clip);
+            _entity.Anim.Play(animation, 0.3f);
         }
 
-        public void Play(string Anim)
-        {
-            if (_entity == null) return;
-
-            var clip = ResMgr.Ins.LoadAsset<AnimationClip>(Anim);
-            _entity.Anim.AddAnimation(Anim, clip);
-            _entity.Anim.Play(Anim, 0.3f);
-        }
-
-        void _Release()
+        private void ReleaseModel()
         {
             _entity?.Destroy();
             _entity = null;
-
-            if (_wrapper == null) return;
-            if (_wrapper.wrapTarget == null) return;
-            var temGo = _wrapper.wrapTarget;
-            _wrapper.wrapTarget = null;
-            if (_isInLoad)
+            if (Model != null)
             {
-                UnityPool.Push(temGo);
-                _isInLoad = false;
+                Model.transform.SetParent(null, false);
+                if (_isInLoad) UnityPool.Push(Model);
             }
+            Model = null;
+            _isInLoad = false;
         }
     }
 }

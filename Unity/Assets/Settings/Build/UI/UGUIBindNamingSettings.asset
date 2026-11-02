@@ -1,0 +1,256 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98fd71575b4d56b418433655e1728afa, type: 3}
+  m_Name: UGUIBindNamingSettings
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::Ux.Editor.Build.UI.UGUIBindNamingSettings
+  _rules:
+  - Enabled: 1
+    Match: 0
+    Pattern: CommonUIModel
+    FieldType: CommonUIModel
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: CommonRTModel
+    FieldType: CommonRTModel
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: Common1TabFrame
+    FieldType: Common1TabFrame
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: Common2TabFrame
+    FieldType: Common2TabFrame
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: CommonTabItem
+    FieldType: CommonTabItem
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: TestItem
+    FieldType: TestItem
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: Test22Item
+    FieldType: Test22Item
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: UIModel
+    FieldType: UIModel
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: RTModel
+    FieldType: RTModel
+    Events: 0
+  - Enabled: 1
+    Match: 0
+    Pattern: UITabFrame
+    FieldType: UITabFrame
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: btn
+    FieldType: GameObject
+    Events: 1
+  - Enabled: 1
+    Match: 1
+    Pattern: button
+    FieldType: GameObject
+    Events: 1
+  - Enabled: 1
+    Match: 1
+    Pattern: txt
+    FieldType: TMP_Text
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: text
+    FieldType: TMP_Text
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: label
+    FieldType: TMP_Text
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: img
+    FieldType: Image
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: image
+    FieldType: Image
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: icon
+    FieldType: Image
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: tog
+    FieldType: Toggle
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: toggle
+    FieldType: Toggle
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: check
+    FieldType: Toggle
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: ipt
+    FieldType: TMP_InputField
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: input
+    FieldType: TMP_InputField
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: list
+    FieldType: UIList
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: slider
+    FieldType: UIProgressBar
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: progress
+    FieldType: UIProgressBar
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: model
+    FieldType: UIModel
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: rtmodel
+    FieldType: RTModel
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: tabframe
+    FieldType: UITabFrame
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: tabcontent
+    FieldType: RectTransform
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: panel
+    FieldType: RectTransform
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: container
+    FieldType: RectTransform
+    Events: 0
+  - Enabled: 1
+    Match: 1
+    Pattern: root
+    FieldType: RectTransform
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Button
+    FieldType: GameObject
+    Events: 1
+  - Enabled: 1
+    Match: 2
+    Pattern: Btn
+    FieldType: GameObject
+    Events: 1
+  - Enabled: 1
+    Match: 2
+    Pattern: Text
+    FieldType: TMP_Text
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Label
+    FieldType: TMP_Text
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Title
+    FieldType: TMP_Text
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Image
+    FieldType: Image
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Icon
+    FieldType: Image
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Toggle
+    FieldType: Toggle
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: List
+    FieldType: UIList
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Slider
+    FieldType: UIProgressBar
+    Events: 0
+  - Enabled: 1
+    Match: 2
+    Pattern: Panel
+    FieldType: RectTransform
+    Events: 0
+  - Enabled: 1
+    Match: 3
+    Pattern: uimodel
+    FieldType: UIModel
+    Events: 0
+  - Enabled: 1
+    Match: 3
+    Pattern: rtmodel
+    FieldType: RTModel
+    Events: 0
+  - Enabled: 1
+    Match: 3
+    Pattern: tabframe
+    FieldType: UITabFrame
+    Events: 0
+  - Enabled: 1
+    Match: 3
+    Pattern: tabcontent
+    FieldType: RectTransform
+    Events: 0
+  _addressGroupName: UI

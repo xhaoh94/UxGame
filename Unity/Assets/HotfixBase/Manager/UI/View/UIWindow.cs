@@ -1,44 +1,18 @@
-﻿using FairyGUI;
-
 namespace Ux
 {
     public abstract class UIWindow : UIBase
-    {        
-        protected Window window
-        {
-            get
-            {
-                if (GObject == null) return null;
-                return GObject as Window;
-            }
-        }
-
-        protected override GObject CreateObject()
-        {
-            string pkg = PkgName;
-            string res = ResName;
-            if (string.IsNullOrEmpty(pkg) || string.IsNullOrEmpty(res))
-            {
-                Log.Fatal("没有指定pkgName或是resName");
-            }
-
-            GObject gObject = UIPackage.CreateObject(pkg, res);
-            var _window = new Window
-            {
-                contentPane = gObject.asCom,
-                modal = IsModal()
-            };
-            return _window;
-        }
-
+    {
         protected override void AddToStage()
         {
-            window?.Show();
+            // 创建阶段已保证 GameObject 有效（加载失败会抛异常并回滚）。
+            GameObject.transform.SetParent(UIMgr.Ins.GetUILayer(UILayer.Window), false);
+            GameObject.SetActive(true);
         }
 
         protected override void RemoveToStage()
         {
-            window?.Hide();
+            if (GameObject != null)
+                GameObject.SetActive(false);
         }
 
         protected virtual bool IsModal()
@@ -48,18 +22,10 @@ namespace Ux
 
         protected void ShowModalWait()
         {
-            this.window?.ShowModalWait();
         }
 
         protected void CloseModalWait()
         {
-            this.window?.CloseModalWait();
-        }
-
-        protected override void OnLayout()
-        {
-            if (window == null) return;
-            SetLayout(UILayout.Size);
         }
     }
 }

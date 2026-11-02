@@ -752,10 +752,6 @@ namespace Ux
             // 之后这个界面就再也隐藏不了了。只有记录确实属于当前实例（或是空壳）时才销毁记录。
             var ownsRecord = record == null || record.UI == null || ReferenceEquals(record.UI, ui);
 
-            // 实例自身还持有 Data，在 Dispose 之前先取出包名：
-            // 记录已经被重置（例如 Release 期间）时，这是唯一还能找回资源包的地方。
-            var instancePkgs = ui.Data != null ? ui.Data.Pkgs : null;
-
             _focusHandler.OnDisposed(ui);
             ui.Dispose();
 
@@ -763,24 +759,6 @@ namespace Ux
             {
                 _cacheHandler.RemoveRecord(record);
                 RemoveRecord(id);
-            }
-
-            // 资源包引用一定要释放：动态界面可能在销毁前就被移除了 UIData，
-            // 因此按「记录缓存 -> 实例自身 -> UIData」的顺序依次兜底。
-            var pkgs = record?.Pkgs;
-            if (pkgs == null || pkgs.Length == 0)
-            {
-                pkgs = instancePkgs;
-            }
-
-            if ((pkgs == null || pkgs.Length == 0) && typeId != 0 && _idUIData.TryGetValue(typeId, out var data))
-            {
-                pkgs = data.Pkgs;
-            }
-
-            if (pkgs != null && pkgs.Length > 0)
-            {
-                ResMgr.Ins.RemoveUIPackage(pkgs);
             }
 
             // 对话框类型需要移除UIData

@@ -21,7 +21,7 @@ namespace Ux.Editor.Tests
             f.Component.ItemClicked += (index, data) =>
             {
                 countAtEvent = f.Component.Count;
-                expandedAtEvent = ((UGUIVirtualTreeItem)data).IsExpanded;
+                expandedAtEvent = ((UIVirtualTreeItem)data).IsExpanded;
             };
             f.View(0).Click();
             Assert.AreEqual(automatic ? 2 : 1, f.Component.Count);
@@ -40,7 +40,7 @@ namespace Ux.Editor.Tests
             Assert.IsTrue(f.Component.ScrollToTreeNode("root/leaf"));
             Assert.AreEqual(1, f.Component.GetTreeVisibleIndex("root/leaf"));
             Assert.IsTrue(f.Component.UpdateTreeNodeData("root/leaf", "Updated"));
-            Assert.AreEqual("Updated", ((UGUIVirtualTreeItem)f.Component.GetData(1)).Data);
+            Assert.AreEqual("Updated", ((UIVirtualTreeItem)f.Component.GetData(1)).Data);
             Assert.IsTrue(f.Component.RefreshTreeNode("root/leaf"));
             f.Component.Clear();
             Assert.AreEqual(0, f.Component.Count);
@@ -81,12 +81,12 @@ namespace Ux.Editor.Tests
         public void TreeLayoutIgnoresInactiveMultiAxisLimitAndSpacingSettings()
         {
             using var f = new Fixture();
-            Set(f.Component, "_axis", (UGUIVirtualListAxis)999);
+            Set(f.Component, "_axis", (UIVirtualListAxis)999);
             Set(f.Component, "_allowMultiple", true);
             Set(f.Component, "_limitGridCount", true);
             Set(f.Component, "_gridCount", -1);
             Set(f.Component, "_gridSpacing", new Vector2(float.NaN, float.NaN));
-            var flow = (UGUIFlowLayout)typeof(UGUIVirtualListComponent)
+            var flow = (UIFlowLayout)typeof(UIVirtualListComponent)
                 .GetMethod("CreateLayout", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(f.Component, new object[] { new Vector2(100, 40) });
             flow.SetViewportSize(new Vector2(1000, 1000));
@@ -98,13 +98,13 @@ namespace Ux.Editor.Tests
         [Test]
         public void ExplicitTypeSwitchRequiresReleaseWhenDataExists()
         {
-            using var f = new Fixture(UGUIVirtualListType.Flat);
+            using var f = new Fixture(UIVirtualListType.Flat);
             f.Component.SetDatas(new[] { "flat" });
-            Assert.Throws<InvalidOperationException>(() => f.Component.ConfigureListType(UGUIVirtualListType.Tree));
-            Assert.AreEqual(UGUIVirtualListType.Flat, f.Component.ListType);
+            Assert.Throws<InvalidOperationException>(() => f.Component.ConfigureListType(UIVirtualListType.Tree));
+            Assert.AreEqual(UIVirtualListType.Flat, f.Component.ListType);
             f.Component.Release();
-            f.Component.ConfigureListType(UGUIVirtualListType.Tree);
-            Assert.AreEqual(UGUIVirtualListType.Tree, f.Component.ListType);
+            f.Component.ConfigureListType(UIVirtualListType.Tree);
+            Assert.AreEqual(UIVirtualListType.Tree, f.Component.ListType);
             Assert.IsTrue(f.Component.IsListTypeConfigured);
             Assert.IsFalse(f.Component.IsInitialized);
         }
@@ -112,11 +112,11 @@ namespace Ux.Editor.Tests
         [Test]
         public void EmptyLegacyWidgetCanChangeTypeWithoutLeavingOldCoreAlive()
         {
-            using var f = new Fixture(UGUIVirtualListType.Flat);
-            f.Component.ConfigureListType(UGUIVirtualListType.Tree);
+            using var f = new Fixture(UIVirtualListType.Flat);
+            f.Component.ConfigureListType(UIVirtualListType.Tree);
             Assert.IsTrue(f.Core.IsDisposalComplete);
             Assert.IsFalse(f.Component.IsInitialized);
-            Assert.AreEqual(UGUIVirtualListType.Tree, f.Component.ListType);
+            Assert.AreEqual(UIVirtualListType.Tree, f.Component.ListType);
         }
 
         [Test]
@@ -126,28 +126,28 @@ namespace Ux.Editor.Tests
             f.Component.SetTreeRoots(Roots());
             int clicks = 0;
             f.Component.ItemClicked += (index, data) => clicks++;
-            f.BindCallback = data => { if (data is UGUIVirtualTreeItem item && item.IsExpanded) f.Component.Release(); };
+            f.BindCallback = data => { if (data is UIVirtualTreeItem item && item.IsExpanded) f.Component.Release(); };
             f.View(0).Click();
             Assert.AreEqual(0, clicks);
             Assert.IsFalse(f.Component.IsInitialized);
             Assert.IsTrue(f.Core.IsDisposalComplete);
         }
 
-        [TestCase(true, false, UGUIVirtualListType.Tree)]
-        [TestCase(false, false, UGUIVirtualListType.Flat)]
-        [TestCase(true, true, UGUIVirtualListType.Flat)]
-        public void InspectorMigratesOnlyUnconfiguredLegacyTreeDemo(bool demoEnabled, bool configured, UGUIVirtualListType expected)
+        [TestCase(true, false, UIVirtualListType.Tree)]
+        [TestCase(false, false, UIVirtualListType.Flat)]
+        [TestCase(true, true, UIVirtualListType.Flat)]
+        public void InspectorMigratesOnlyUnconfiguredLegacyTreeDemo(bool demoEnabled, bool configured, UIVirtualListType expected)
         {
             var root = new GameObject("Tree inspector schema test");
             UnityEditor.Editor inspector = null;
             try
             {
-                var component = root.AddComponent<UGUIVirtualListComponent>();
+                var component = root.AddComponent<UIVirtualListComponent>();
                 var demo = root.AddComponent<Ux.UI.UGUIVirtualTreeDemo>();
                 demo.enabled = demoEnabled;
-                Set(component, "_listType", UGUIVirtualListType.Flat);
+                Set(component, "_listType", UIVirtualListType.Flat);
                 Set(component, "_listTypeConfigured", configured);
-                inspector = UnityEditor.Editor.CreateEditor(component, typeof(UGUIVirtualListComponentEditor));
+                inspector = UnityEditor.Editor.CreateEditor(component, typeof(UIVirtualListComponentEditor));
                 Assert.AreEqual(expected, component.ListType);
                 Assert.IsTrue(component.IsListTypeConfigured);
             }
@@ -158,22 +158,22 @@ namespace Ux.Editor.Tests
             }
         }
 
-        private static UGUIVirtualTreeNode[] Roots() => new[] {
-            new UGUIVirtualTreeNode("root", "Root", new[] { new UGUIVirtualTreeNode("root/leaf", "Leaf") }) };
+        private static UIVirtualTreeNode[] Roots() => new[] {
+            new UIVirtualTreeNode("root", "Root", new[] { new UIVirtualTreeNode("root/leaf", "Leaf") }) };
 
-        private static void Set(object target, string name, object value) => typeof(UGUIVirtualListComponent)
+        private static void Set(object target, string name, object value) => typeof(UIVirtualListComponent)
             .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(target, value);
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualListComponent Component;
-            public readonly UGUIVirtualTreeAdapter Tree;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualListComponent Component;
+            public readonly UIVirtualTreeAdapter Tree;
             public Action<object> BindCallback;
-            public Fixture(UGUIVirtualListType type = UGUIVirtualListType.Tree)
+            public Fixture(UIVirtualListType type = UIVirtualListType.Tree)
             {
-                Root = new GameObject("Tree component test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Tree component test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -185,20 +185,20 @@ namespace Ux.Editor.Tests
                 scroll.vertical = true;
                 scroll.horizontal = false;
                 scroll.movementType = ScrollRect.MovementType.Clamped;
-                var layout = new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 40));
-                Core = new UGUIVirtualList(scroll, layout, this);
-                Component = Root.AddComponent<UGUIVirtualListComponent>();
+                var layout = new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 40));
+                Core = new UIVirtualList(scroll, layout, this);
+                Component = Root.AddComponent<UIVirtualListComponent>();
                 Set(Component, "_listType", type);
                 Set(Component, "_listTypeConfigured", true);
                 Set(Component, "_list", Core);
                 Set(Component, "_flowLayout", layout);
-                if (type == UGUIVirtualListType.Tree)
+                if (type == UIVirtualListType.Tree)
                 {
-                    Tree = new UGUIVirtualTreeAdapter(Core);
+                    Tree = new UIVirtualTreeAdapter(Core);
                     Set(Component, "_treeAdapter", Tree);
                     Tree.SetRoots(null);
                 }
-                var forward = typeof(UGUIVirtualListComponent).GetMethod("ForwardClick", BindingFlags.Instance | BindingFlags.NonPublic);
+                var forward = typeof(UIVirtualListComponent).GetMethod("ForwardClick", BindingFlags.Instance | BindingFlags.NonPublic);
                 Core.ItemClicked += (Action<int, object>)Delegate.CreateDelegate(typeof(Action<int, object>), Component, forward);
             }
             public View View(int index)
@@ -206,14 +206,14 @@ namespace Ux.Editor.Tests
                 Assert.IsTrue(Core.TryGetItem(index, out var item));
                 return (View)item;
             }
-            public int GetItemType(int index, object data) => data is UGUIVirtualTreeItem item && item.HasChildren ? 0 : 1;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public int GetItemType(int index, object data) => data is UIVirtualTreeItem item && item.HasChildren ? 0 : 1;
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 var go = new GameObject("Tree component item", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go, this);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose()
             {
                 BindCallback = null;
@@ -222,7 +222,7 @@ namespace Ux.Editor.Tests
                 UnityEngine.Object.DestroyImmediate(Root);
             }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             private readonly Fixture _owner;
             private Action _click;

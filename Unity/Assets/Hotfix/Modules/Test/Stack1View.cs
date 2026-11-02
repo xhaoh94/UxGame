@@ -1,5 +1,3 @@
-﻿using FairyGUI;
-
 namespace Ux.UI
 {
     [UI]
@@ -7,19 +5,19 @@ namespace Ux.UI
     {
         protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Stack;
-        partial void OnBtn2Click(EventContext e)
+        partial void OnBtn2Click(UIEventContext e)
         {
             UIMgr.Ins.Create().Show<UI.Stack2View>();
         }
-        partial void OnBtn3Click(EventContext e)
+        partial void OnBtn3Click(UIEventContext e)
         {
             UIMgr.Ins.Create().Show<UI.Stack3View>();
         }
-        partial void OnBtn4Click(EventContext e)
+        partial void OnBtn4Click(UIEventContext e)
         {
             UIMgr.Ins.Create().Show<UI.Stack4View>();
         }
-        partial void OnBtnBackClick(EventContext e)
+        partial void OnBtnBackClick(UIEventContext e)
         {
             HideSelf();            
         }

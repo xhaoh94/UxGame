@@ -1,23 +1,24 @@
-﻿//自动生成的代码，请勿修改!!!
-using FairyGUI;
+//自动生成的代码，请勿修改!!!
+using UnityEngine;
+using UnityEngine.UI;
+
 namespace Ux.UI
 {
-	public partial class Common2TabFrame : UITabFrame
-	{
-		protected override UIButton __btnClose => btnClose;
-		protected UIButton btnClose;
-		public Common2TabFrame(GObject gObject,UIObject parent): base(gObject, parent) { }
-		protected override void CreateChildren()
-		{
-			try
-			{
-				var gCom = ObjAs<GComponent>();
-				btnClose = new UIButton(gCom.GetChildAt(1), this);
-			}
-			catch (System.Exception e)
-			{
-				 Log.Error(e);
-			}
-		}
-	}
+    public partial class Common2TabFrame : UITabFrame
+    {
+        protected GameObject btnClose;
+
+        public Common2TabFrame(GameObject gameObject, UIObject parent)
+            : base(gameObject, parent)
+        {
+        }
+
+        protected override void CreateChildren()
+        {
+            // FGUI: Common2TabFrame.xml displayList = graph n0(0), btnClose(1)
+            btnClose = GameObject.transform.GetChild(1).gameObject;
+        }
+
+        protected override GameObject __btnClose => btnClose;
+    }
 }

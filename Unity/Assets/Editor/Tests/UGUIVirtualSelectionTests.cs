@@ -11,7 +11,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void SingleModeKeepsExactlyOneAndReplacesPrevious()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Single);
+            using var f = new Fixture(UIVirtualSelectionMode.Single);
             Assert.IsTrue(f.Selection.Select(3));
             Assert.IsTrue(f.Selection.IsSelected(3));
             Assert.IsTrue(f.Selection.Select(5));
@@ -26,7 +26,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void MultipleModeTogglesAndSelectRangeAddsOrReplaces()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Multiple);
+            using var f = new Fixture(UIVirtualSelectionMode.Multiple);
             Assert.IsTrue(f.Selection.Toggle(2));
             Assert.IsTrue(f.Selection.Toggle(4));
             Assert.IsTrue(f.Selection.Toggle(2));
@@ -44,29 +44,29 @@ namespace Ux.Editor.Tests
         [Test]
         public void NoneModeIgnoresRequestsAndModeSwitchNarrowsSelection()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.None);
+            using var f = new Fixture(UIVirtualSelectionMode.None);
             Assert.IsFalse(f.Selection.Select(1));
             Assert.IsFalse(f.Selection.Toggle(1));
             Assert.IsFalse(f.Selection.HasSelection);
-            f.Selection.Mode = UGUIVirtualSelectionMode.Multiple;
+            f.Selection.Mode = UIVirtualSelectionMode.Multiple;
             f.Selection.SelectRange(3, 5);
             Assert.AreEqual(3, f.Selection.SelectedCount);
-            f.Selection.Mode = UGUIVirtualSelectionMode.Single;
+            f.Selection.Mode = UIVirtualSelectionMode.Single;
             Assert.AreEqual(1, f.Selection.SelectedCount);
             Assert.IsTrue(f.Selection.IsSelected(3));
-            f.Selection.Mode = UGUIVirtualSelectionMode.None;
+            f.Selection.Mode = UIVirtualSelectionMode.None;
             Assert.IsFalse(f.Selection.HasSelection);
         }
 
         [Test]
         public void SelectionSurvivesRecyclingAndRebind()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Multiple);
+            using var f = new Fixture(UIVirtualSelectionMode.Multiple);
             f.Selection.Select(0);
             Assert.IsTrue(f.Core.TryGetItem(0, out _));
-            f.Core.ScrollToView(500, UGUIVirtualListAlignment.Start);
+            f.Core.ScrollToView(500, UIVirtualListAlignment.Start);
             Assert.IsFalse(f.Core.TryGetItem(0, out _));
-            f.Core.ScrollToView(0, UGUIVirtualListAlignment.Start);
+            f.Core.ScrollToView(0, UIVirtualListAlignment.Start);
             Assert.IsTrue(f.Selection.IsSelected(0), "滚动复用后选择必须仍保留");
             Assert.IsTrue(f.Core.TryGetItem(0, out _));
         }
@@ -74,7 +74,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void InsertAndRemoveRemapSelectionIndices()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Multiple);
+            using var f = new Fixture(UIVirtualSelectionMode.Multiple);
             f.Selection.Select(2);
             f.Selection.Select(5);
             f.Core.InsertData(0, "inserted");
@@ -90,7 +90,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void DataResetClearsSelectionAndNotifiesDeselected()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Multiple);
+            using var f = new Fixture(UIVirtualSelectionMode.Multiple);
             f.Selection.Select(1);
             var changes = new List<(int, bool)>();
             f.Selection.SelectionChanged += (index, data, selected) => changes.Add((index, selected));
@@ -102,7 +102,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void ChangedEventReportsOnlyDifferencesAndRefreshesVisibleItems()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Multiple);
+            using var f = new Fixture(UIVirtualSelectionMode.Multiple);
             var changes = new List<(int, bool)>();
             f.Selection.SelectionChanged += (index, data, selected) => changes.Add((index, selected));
             f.Selection.Select(0);
@@ -121,7 +121,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void RendererCanReadSelectionDuringBindAndBatchCompletes()
         {
-            using var f = new Fixture(UGUIVirtualSelectionMode.Multiple, inspectSelection: true);
+            using var f = new Fixture(UIVirtualSelectionMode.Multiple, inspectSelection: true);
             int batch = 0;
             f.Selection.SelectionBatchCompleted += () => batch++;
             f.Selection.SelectRange(0, 2);
@@ -132,7 +132,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void DisposeStopsTrackingAndInvalidIndicesAreRejected()
         {
-            var f = new Fixture(UGUIVirtualSelectionMode.Multiple);
+            var f = new Fixture(UIVirtualSelectionMode.Multiple);
             try
             {
                 Assert.IsFalse(f.Selection.Select(-1));
@@ -141,23 +141,23 @@ namespace Ux.Editor.Tests
                 f.Selection.Dispose();
                 Assert.IsFalse(f.Selection.Select(2));
                 f.Core.AddData("x");
-                Assert.Throws<ObjectDisposedException>(() => f.Selection.Mode = UGUIVirtualSelectionMode.Single);
+                Assert.Throws<ObjectDisposedException>(() => f.Selection.Mode = UIVirtualSelectionMode.Single);
             }
             finally { f.Dispose(); }
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualSelection Selection;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualSelection Selection;
             public bool SawSelectedInBind;
             private readonly bool _inspectSelection;
             private readonly List<object> _data = new List<object>();
-            public Fixture(UGUIVirtualSelectionMode mode, bool inspectSelection = false)
+            public Fixture(UIVirtualSelectionMode mode, bool inspectSelection = false)
             {
                 _inspectSelection = inspectSelection;
-                Root = new GameObject("Selection test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Selection test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -167,22 +167,22 @@ namespace Ux.Editor.Tests
                 content.transform.SetParent(viewport.transform, false);
                 scroll.content = (RectTransform)content.transform;
                 scroll.vertical = true; scroll.horizontal = false;
-                Core = new UGUIVirtualList(scroll, new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 50)), this);
+                Core = new UIVirtualList(scroll, new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 50)), this);
                 for (int i = 0; i < 1000; i++) _data.Add("row " + i);
                 Core.SetDatas(_data);
-                Selection = new UGUIVirtualSelection(Core, mode);
+                Selection = new UIVirtualSelection(Core, mode);
                 if (_inspectSelection)
                     Selection.SelectionChanged += (index, data, selected) => { if (selected) SawSelectedInBind = true; };
             }
             public int BindCountFor(int index) => Core.TryGetItem(index, out var item) ? ((View)item).Binds : 0;
             public int GetItemType(int index, object data) => 0;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 var go = new GameObject("Selection item", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose()
             {
                 Selection.Dispose();
@@ -190,7 +190,7 @@ namespace Ux.Editor.Tests
                 UnityEngine.Object.DestroyImmediate(Root);
             }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             public int Binds;
             public GameObject GameObject { get; }

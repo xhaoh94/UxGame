@@ -14,27 +14,27 @@ namespace Ux.Editor.Tests
             using var f = new TreeFixture();
             f.Tree.SetRoots(new[]
             {
-                new UGUIVirtualTreeNode("a", "A", new[] { new UGUIVirtualTreeNode("a1", "A1") }),
-                new UGUIVirtualTreeNode("b", "B")
+                new UIVirtualTreeNode("a", "A", new[] { new UIVirtualTreeNode("a1", "A1") }),
+                new UIVirtualTreeNode("b", "B")
             });
             f.Tree.Expand("a");
             var a = f.View(0);
             var a1 = f.View(1);
-            Assert.IsTrue(f.Tree.AddChild("a", new UGUIVirtualTreeNode("a2", "A2")));
+            Assert.IsTrue(f.Tree.AddChild("a", new UIVirtualTreeNode("a2", "A2")));
             Assert.AreEqual(4, f.Core.Count);
             Assert.AreSame(a, f.View(0));
             Assert.AreSame(a1, f.View(1));
-            Assert.AreEqual("a2", ((UGUIVirtualTreeItem)f.Core.GetData(2)).Id);
+            Assert.AreEqual("a2", ((UIVirtualTreeItem)f.Core.GetData(2)).Id);
 
             Assert.IsTrue(f.Tree.RemoveNode("a1"));
             Assert.AreEqual(3, f.Core.Count);
             Assert.AreEqual(1, a1.Binds, "编辑后只应重绑受影响行");
-            Assert.AreEqual("a2", ((UGUIVirtualTreeItem)f.Core.GetData(1)).Id);
+            Assert.AreEqual("a2", ((UIVirtualTreeItem)f.Core.GetData(1)).Id);
 
             Assert.IsTrue(f.Tree.MoveNode("a2", null, 0));
-            Assert.AreEqual("a2", ((UGUIVirtualTreeItem)f.Core.GetData(0)).Id);
-            Assert.AreEqual("a", ((UGUIVirtualTreeItem)f.Core.GetData(1)).Id);
-            Assert.AreEqual(0, ((UGUIVirtualTreeItem)f.Core.GetData(0)).Depth);
+            Assert.AreEqual("a2", ((UIVirtualTreeItem)f.Core.GetData(0)).Id);
+            Assert.AreEqual("a", ((UIVirtualTreeItem)f.Core.GetData(1)).Id);
+            Assert.AreEqual(0, ((UIVirtualTreeItem)f.Core.GetData(0)).Depth);
             Assert.IsTrue(f.Tree.TryGetItem("a2", out var moved));
             Assert.IsNull(moved.Parent);
         }
@@ -45,12 +45,12 @@ namespace Ux.Editor.Tests
             using var f = new TreeFixture();
             f.Tree.SetRoots(new[]
             {
-                new UGUIVirtualTreeNode("a", "A", new[] { new UGUIVirtualTreeNode("a1", "A1") }),
-                new UGUIVirtualTreeNode("b", "B")
+                new UIVirtualTreeNode("a", "A", new[] { new UIVirtualTreeNode("a1", "A1") }),
+                new UIVirtualTreeNode("b", "B")
             });
             Assert.IsFalse(f.Tree.MoveNode("a", "a1", 0), "不能移动到自己的子孙下");
-            Assert.IsFalse(f.Tree.InsertChild("missing", 0, new UGUIVirtualTreeNode("x", "X")));
-            Assert.Throws<ArgumentException>(() => f.Tree.AddRoot(new UGUIVirtualTreeNode("a", "Duplicate")));
+            Assert.IsFalse(f.Tree.InsertChild("missing", 0, new UIVirtualTreeNode("x", "X")));
+            Assert.Throws<ArgumentException>(() => f.Tree.AddRoot(new UIVirtualTreeNode("a", "Duplicate")));
             Assert.IsTrue(f.Tree.OwnsCurrentData);
             Assert.AreEqual(2, f.Core.Count, "未展开时只显示两个根节点");
         }
@@ -61,13 +61,13 @@ namespace Ux.Editor.Tests
             using var f = new GroupFixture();
             f.Groups.SetGroups(new[]
             {
-                UGUIVirtualGroup.Create("g1", "G1", new[] { "a", "b" }),
-                UGUIVirtualGroup.Create("g2", "G2", new[] { "c" })
+                UIVirtualGroup.Create("g1", "G1", new[] { "a", "b" }),
+                UIVirtualGroup.Create("g2", "G2", new[] { "c" })
             });
             var g2Header = f.View(3);
-            Assert.IsTrue(f.Groups.InsertGroup(1, UGUIVirtualGroup.Create("mid", "MID", new[] { "m" })));
+            Assert.IsTrue(f.Groups.InsertGroup(1, UIVirtualGroup.Create("mid", "MID", new[] { "m" })));
             Assert.AreEqual(7, f.Core.Count);
-            Assert.AreEqual("MID", ((UGUIVirtualGroupItem)f.Core.GetData(3)).Data);
+            Assert.AreEqual("MID", ((UIVirtualGroupItem)f.Core.GetData(3)).Data);
             Assert.AreSame(g2Header, f.View(5), "被移动的组头应复用原行实例");
 
             Assert.IsTrue(f.Groups.InsertItem("g1", 1, "ab"));
@@ -90,8 +90,8 @@ namespace Ux.Editor.Tests
         public void GroupRejectsDuplicateAndOutOfRangeEditsWithoutChangingRows()
         {
             using var f = new GroupFixture();
-            f.Groups.SetGroups(new[] { UGUIVirtualGroup.Create("g", "G", new[] { "a" }), UGUIVirtualGroup.Create("h", "H", new[] { "b" }) });
-            Assert.Throws<ArgumentException>(() => f.Groups.AddGroup(new UGUIVirtualGroup("g", "Dup")));
+            f.Groups.SetGroups(new[] { UIVirtualGroup.Create("g", "G", new[] { "a" }), UIVirtualGroup.Create("h", "H", new[] { "b" }) });
+            Assert.Throws<ArgumentException>(() => f.Groups.AddGroup(new UIVirtualGroup("g", "Dup")));
             Assert.Throws<ArgumentOutOfRangeException>(() => f.Groups.InsertItem("g", 5, "x"));
             Assert.Throws<ArgumentOutOfRangeException>(() => f.Groups.RemoveItem("g", -1));
             Assert.IsFalse(f.Groups.RemoveGroup("missing"));
@@ -102,13 +102,13 @@ namespace Ux.Editor.Tests
         private sealed class TreeFixture : IDisposable
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualTreeAdapter Tree;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualTreeAdapter Tree;
             public TreeFixture()
             {
-                Root = new GameObject("Tree edit test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Tree edit test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 Core = MakeCore(Root, out _);
-                Tree = new UGUIVirtualTreeAdapter(Core);
+                Tree = new UIVirtualTreeAdapter(Core);
             }
             public View View(int index) { Assert.IsTrue(Core.TryGetItem(index, out var item)); return (View)item; }
             public void Dispose() { Tree.Dispose(); Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
@@ -117,21 +117,21 @@ namespace Ux.Editor.Tests
         private sealed class GroupFixture : IDisposable
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualGroupAdapter Groups;
-            public readonly UGUIVirtualStickyHeader Sticky;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualGroupAdapter Groups;
+            public readonly UIVirtualStickyHeader Sticky;
             public GroupFixture()
             {
-                Root = new GameObject("Group edit test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Group edit test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 Core = MakeCore(Root, out var factory);
-                Groups = new UGUIVirtualGroupAdapter(Core);
-                Sticky = new UGUIVirtualStickyHeader(Core, Groups, factory);
+                Groups = new UIVirtualGroupAdapter(Core);
+                Sticky = new UIVirtualStickyHeader(Core, Groups, factory);
             }
             public View View(int index) { Assert.IsTrue(Core.TryGetItem(index, out var item)); return (View)item; }
             public void Dispose() { Sticky.Dispose(); Groups.Dispose(); Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
         }
 
-        private static UGUIVirtualList MakeCore(GameObject root, out IUGUIVirtualListItemFactory factory)
+        private static UIVirtualList MakeCore(GameObject root, out IUIVirtualListItemFactory factory)
         {
             var scroll = root.GetComponent<ScrollRect>();
             var viewport = new GameObject("Viewport", typeof(RectTransform));
@@ -145,29 +145,29 @@ namespace Ux.Editor.Tests
             scroll.movementType = ScrollRect.MovementType.Clamped;
             var f = new Factory();
             factory = f;
-            return new UGUIVirtualList(scroll,
-                new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 40), variableSize: true, spacing: new Vector2(0, 2)),
+            return new UIVirtualList(scroll,
+                new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 40), variableSize: true, spacing: new Vector2(0, 2)),
                 f) { BufferSize = 100 };
         }
 
-        private sealed class Factory : IUGUIVirtualListItemFactory
+        private sealed class Factory : IUIVirtualListItemFactory
         {
             public int GetItemType(int index, object data)
             {
-                if (data is UGUIVirtualTreeItem tree) return tree.HasChildren ? 0 : 1;
-                var group = (UGUIVirtualGroupItem)data;
+                if (data is UIVirtualTreeItem tree) return tree.HasChildren ? 0 : 1;
+                var group = (UIVirtualGroupItem)data;
                 return group.IsHeader ? 0 : 1;
             }
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var go = new GameObject("Row", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
         }
 
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             public int Binds;
             public GameObject GameObject { get; }

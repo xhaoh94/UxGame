@@ -1,86 +1,37 @@
-﻿using FairyGUI;
 using System;
-using System.Collections;
 using UnityEngine;
 
 namespace Ux
 {
-    /// <summary>
-    /// UI动画接口，定义UI动画的基本操作
-    /// </summary>
     public interface IUIAnim
     {
-        /// <summary>
-        /// 播放动画
-        /// </summary>
-        /// <param name="end">动画结束回调</param>
         void Play(Action end = null);
-        
-        /// <summary>
-        /// 停止动画
-        /// </summary>
         void Stop();
-        
-        /// <summary>
-        /// 设置到动画开始状态
-        /// </summary>
         void SetToStart();
-        
-        /// <summary>
-        /// 设置到动画结束状态
-        /// </summary>
         void SetToEnd();
     }
 
-    /// <summary>
-    /// FairyGUI Transition动画适配器
-    /// 将FairyGUI的Transition封装为IUIAnim接口
-    /// </summary>
-    public class UIAnimTransition : IUIAnim
+    public sealed class UIAnimCanvasGroup : IUIAnim
     {
-        Transition _transition;  // FairyGUI的Transition对象
-        
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="transition">FairyGUI的Transition对象</param>
-        public UIAnimTransition(Transition transition)
+        private readonly CanvasGroup _group;
+        private readonly float _start;
+        private readonly float _end;
+
+        public UIAnimCanvasGroup(GameObject target, float start = 0f, float end = 1f)
         {
-            _transition = transition;
-        }
-        
-        /// <summary>
-        /// 播放动画
-        /// </summary>
-        /// <param name="end">动画结束回调</param>
-        public void Play(Action end)
-        {
-            _transition?.Play(() => end?.Invoke());
+            _group = target != null ? target.GetComponent<CanvasGroup>() ?? target.AddComponent<CanvasGroup>() : null;
+            _start = start;
+            _end = end;
         }
 
-        /// <summary>
-        /// 停止动画
-        /// </summary>
-        public void Stop()
+        public void Play(Action end = null)
         {
-            _transition?.Stop();
+            SetToEnd();
+            end?.Invoke();
         }
 
-        /// <summary>
-        /// 设置到动画结束状态
-        /// </summary>
-        public void SetToEnd()
-        {
-            _transition.Play(1, 0, _transition.totalDuration, _transition.totalDuration, null);
-        }
-
-        /// <summary>
-        /// 设置到动画开始状态
-        /// </summary>
-        public void SetToStart()
-        {
-            _transition?.Play();
-            _transition?.Stop(false, false);
-        }
+        public void Stop() { }
+        public void SetToStart() { if (_group != null) _group.alpha = _start; }
+        public void SetToEnd() { if (_group != null) _group.alpha = _end; }
     }
 }

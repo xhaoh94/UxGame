@@ -9,8 +9,8 @@
         Root,
         Bottom,
         BlurBackdrop,
-        Normal,
         View,
+        Window,
         Tip,
         Top
     }

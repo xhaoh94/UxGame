@@ -1,4 +1,4 @@
-﻿using Cinemachine;
+using Cinemachine;
 using Ux;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -14,7 +14,7 @@ namespace Ux
         {
             MapCamera = GameObject.Find("mapCamera").GetComponent<Camera>();
             MapVCamear = GameObject.Find("mapVCam").GetComponent<CinemachineVirtualCamera>();
-            //MapCamera.GetUniversalAdditionalCameraData().cameraStack.Add(FairyGUI.StageCamera.main);            
+            //mapVCam 等相机堆栈配置由业务层处理
         }
 
         public void SetFollow(Transform follow)

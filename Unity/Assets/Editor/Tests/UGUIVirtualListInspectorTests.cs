@@ -15,15 +15,15 @@ namespace Ux.Editor.Tests
             var root = new GameObject("Inspector mode test");
             try
             {
-                root.AddComponent<UGUIVirtualListComponent>();
+                root.AddComponent<UIVirtualListComponent>();
                 Selection.activeGameObject = root;
                 tracker.inspectorMode = InspectorMode.Debug;
                 tracker.ForceRebuild();
-                UGUIVirtualListInspectorTools.RestoreSelectedInspector();
+                UIVirtualListInspectorTools.RestoreSelectedInspector();
                 Assert.AreEqual(InspectorMode.Normal, tracker.inspectorMode);
                 bool matched = false;
                 foreach (var editor in tracker.activeEditors)
-                    if (editor is UGUIVirtualListComponentEditor) matched = true;
+                    if (editor is UIVirtualListComponentEditor) matched = true;
                 Assert.IsTrue(matched, "切换回 Normal 后必须实际使用统一布局 Inspector。");
             }
             finally
@@ -50,7 +50,7 @@ namespace Ux.Editor.Tests
             EditorWindow window = null;
             try
             {
-                root.AddComponent<UGUIVirtualListComponent>();
+                root.AddComponent<UIVirtualListComponent>();
                 Selection.activeGameObject = root;
                 window = ScriptableObject.CreateInstance(inspectorType) as EditorWindow;
                 window.Show();
@@ -58,7 +58,7 @@ namespace Ux.Editor.Tests
                 var tracker = (ActiveEditorTracker)trackerProperty.GetValue(window);
                 tracker.ForceRebuild();
                 Assert.AreEqual(InspectorMode.Debug, mode.GetValue(window));
-                UGUIVirtualListInspectorTools.RestoreSelectedInspector();
+                UIVirtualListInspectorTools.RestoreSelectedInspector();
                 Assert.AreEqual(InspectorMode.Normal, mode.GetValue(window));
                 // 再次取窗口 tracker 会执行 CreateTracker，验证窗口不会把模式改回 Debug。
                 tracker = (ActiveEditorTracker)trackerProperty.GetValue(window);
@@ -66,7 +66,7 @@ namespace Ux.Editor.Tests
                 Assert.AreEqual(InspectorMode.Normal, tracker.inspectorMode);
                 bool matched = false;
                 foreach (var editor in tracker.activeEditors)
-                    if (editor is UGUIVirtualListComponentEditor) matched = true;
+                    if (editor is UIVirtualListComponentEditor) matched = true;
                 Assert.IsTrue(matched);
             }
             finally
@@ -88,12 +88,12 @@ namespace Ux.Editor.Tests
             UnityEditor.Editor inspector = null;
             try
             {
-                var first = a.AddComponent<UGUIVirtualListComponent>();
-                var second = b.AddComponent<UGUIVirtualListComponent>();
+                var first = a.AddComponent<UIVirtualListComponent>();
+                var second = b.AddComponent<UIVirtualListComponent>();
                 inspector = multiple
                     ? UnityEditor.Editor.CreateEditor(new UnityEngine.Object[] { first, second })
                     : UnityEditor.Editor.CreateEditor(first);
-                Assert.IsInstanceOf<UGUIVirtualListComponentEditor>(inspector,
+                Assert.IsInstanceOf<UIVirtualListComponentEditor>(inspector,
                     "必须验证 Unity 自动选中的 Inspector，不能通过指定 editorType 绕过注册匹配。");
             }
             finally

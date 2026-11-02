@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using FairyGUI;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Rendering.Universal;
 
 namespace Ux
@@ -76,30 +76,89 @@ namespace Ux
         private readonly List<string> _debugWaitDelUI = new List<string>();
 #endif
 
-        // 层级容器在 Initialize 里创建（构造期不碰 GRoot），这里只留声明。
-        private readonly Dictionary<UILayer, GComponent> _layerCom = new Dictionary<UILayer, GComponent>(7);
+        private readonly Dictionary<UILayer, RectTransform> _uguiLayers = new Dictionary<UILayer, RectTransform>(7);
+        private bool _uiInitialized;
+
+        /// <summary>是否已完成 UI 初始化（UI Root 与各层级已创建）。</summary>
+        public bool IsInitialized => _uiInitialized;
+
+        private static RectTransform _CreateUILayer(Transform root, UILayer layer)
+        {
+            var go = new GameObject(layer.ToString(), typeof(RectTransform));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(root, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+            return rect;
+        }
+
+        private const string UiRootName = "[UIRoot]";
+        private static RectTransform _uiRoot;
 
         /// <summary>
-        /// 是否已经完成初始化（GRoot 缩放、层级、相机、加载器扩展）。
+        /// 获取或创建 UI 专用根节点。
+        /// 不复用场景里其他 Canvas（例如调试控制台），避免 UI 层级混入无关对象。
         /// </summary>
-        public bool IsInitialized { get; private set; }
-
-        static GComponent _CreateLayer(UILayer layer, int v)
+        private static RectTransform EnsureUiRoot()
         {
-            var com = new GComponent();
-            com.name = com.gameObjectName = layer.ToString();
-            com.sortingOrder = v;
-            GRoot.inst.AddChild(com);
-            com.MakeFullScreen();
-            com.AddRelation(GRoot.inst, RelationType.Size);
-            return com;
+            if (_uiRoot != null)
+                return _uiRoot;
+
+            var existing = GameObject.Find(UiRootName);
+            if (existing != null)
+            {
+                _uiRoot = existing.transform as RectTransform;
+                if (existing.GetComponent<UIRelationDriver>() == null)
+                    existing.AddComponent<UIRelationDriver>();
+                return _uiRoot;
+            }
+
+            var go = new GameObject(UiRootName,
+                typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster),
+                typeof(UIRelationDriver));
+
+            var canvas = go.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+
+            var scaler = go.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280f, 720f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            _uiRoot = (RectTransform)go.transform;
+            return _uiRoot;
+        }
+
+        /// <summary>初始化 UI 系统（幂等）。单例创建时调用一次。</summary>
+        private void Initialize()
+        {
+            // 已初始化且根节点仍存活时直接返回；根节点被销毁时重建，避免层级字典指向失效对象。
+            if (_uiInitialized && _uiRoot != null)
+                return;
+
+            var root = EnsureUiRoot();
+
+            _uiInitialized = false;
+            _uguiLayers.Clear();
+            _uguiLayers[UILayer.Root] = root;
+            _uguiLayers[UILayer.Bottom] = _CreateUILayer(root, UILayer.Bottom);
+            _uguiLayers[UILayer.BlurBackdrop] = _CreateUILayer(root, UILayer.BlurBackdrop);
+            _uguiLayers[UILayer.View] = _CreateUILayer(root, UILayer.View);
+            _uguiLayers[UILayer.Window] = _CreateUILayer(root, UILayer.Window);
+            _uguiLayers[UILayer.Tip] = _CreateUILayer(root, UILayer.Tip);
+            _uguiLayers[UILayer.Top] = _CreateUILayer(root, UILayer.Top);
+            _uiInitialized = true;
         }
 
         public UIMgr()
         {
-            // 构造函数只做纯字段初始化，不产生 Unity 运行时副作用：
-            // GRoot / StageCamera / UIObjectFactory 的配置统一放到 Initialize，
-            // 这样启动顺序是显式的，单例创建也不会因为运行时还没准备好而炸在 ctor 里。
+            // 构造函数只做纯字段初始化；Unity 对象在 Initialize 中创建。
             _cacheHandler = new UICacheHandler(this);
             _blurHandler = new UIBlurHandler(this);
             _stackHandler = new UIStackHandler(_stackEntries);
@@ -111,68 +170,6 @@ namespace Ux
         {
             Initialize();
             GameMethod.LowMemory += _LowMemory;
-        }
-
-        /// <summary>
-        /// 初始化 UI 系统（幂等）。
-        /// 正常流程在单例创建时自动调用；如果第一次访问时 GRoot 还没准备好，
-        /// 会在后续 Show/GetLayer 时重试。
-        /// </summary>
-        public void Initialize()
-        {
-            if (IsInitialized)
-            {
-                return;
-            }
-
-            if (GRoot.inst == null)
-            {
-                Log.Error("UIMgr 初始化失败：GRoot.inst 为空，请确认 FairyGUI 已经初始化。");
-                return;
-            }
-
-            GRoot.inst.SetContentScaleFactor(1280, 720, UIContentScaler.ScreenMatchMode.MatchWidthOrHeight);
-            UIObjectFactory.SetLoaderExtension(typeof(UxLoader));
-
-            var stageCamera = StageCamera.main;
-            if (stageCamera != null)
-            {
-                var cameraData = stageCamera.GetUniversalAdditionalCameraData();
-                if (cameraData != null && PatchMgr.Ins.IsDone)
-                {
-                    cameraData.renderType = CameraRenderType.Overlay;
-                }
-            }
-            else
-            {
-                Log.Warning("UIMgr 初始化时没有找到 StageCamera，跳过 Overlay 相机配置。");
-            }
-
-            CreateLayers();
-            IsInitialized = true;
-        }
-
-        private void EnsureInitialized()
-        {
-            if (!IsInitialized)
-            {
-                Initialize();
-            }
-        }
-
-        /// <summary>
-        /// 创建各层级容器。重复调用会先清空旧映射，避免重复挂载。
-        /// </summary>
-        private void CreateLayers()
-        {
-            _layerCom.Clear();
-            _layerCom[UILayer.Root] = GRoot.inst;
-            _layerCom[UILayer.Bottom] = _CreateLayer(UILayer.Bottom, -100);
-            _layerCom[UILayer.BlurBackdrop] = _CreateLayer(UILayer.BlurBackdrop, 0);
-            _layerCom[UILayer.Normal] = _CreateLayer(UILayer.Normal, 100);
-            _layerCom[UILayer.View] = _CreateLayer(UILayer.View, 150);
-            _layerCom[UILayer.Tip] = _CreateLayer(UILayer.Tip, 200);
-            _layerCom[UILayer.Top] = _CreateLayer(UILayer.Top, 300);
         }
 
         void _LowMemory()
@@ -865,17 +862,19 @@ namespace Ux
 #endif
         }
 
-        public GComponent GetLayer(UILayer layer)
+        /// <summary>
+        /// 获取 UI 层级。UI 页面通过 RectTransform.SetParent 挂载。
+        /// </summary>
+        public RectTransform GetUILayer(UILayer layer)
         {
-            EnsureInitialized();
-            if (_layerCom.TryGetValue(layer, out var com))
+            // 调用方都经由 UIMgr.Ins，单例创建时已完成初始化，这里不再做防御性补齐。
+            if (_uguiLayers.TryGetValue(layer, out var rect))
             {
-                return com;
+                return rect;
             }
 
-            // 静默回退会让声明的层级彻底失效（界面被挂到根节点上，排序完全靠插入顺序），必须报出来。
-            Log.Error("UI 层级未创建，已回退到根节点。Layer[{0}]", layer);
-            return GRoot.inst;
+            Log.Error("UI UI 层级未创建，已回退到 Root。Layer[{0}]", layer);
+            return _uguiLayers[UILayer.Root];
         }
 
         /// <summary>

@@ -9,13 +9,13 @@ using UnityEngine.UI;
 
 namespace Ux.Editor.Tests
 {
-    public sealed class UGUIVirtualKeySelectionTests
+    public sealed class UIVirtualKeySelectionTests
     {
         [Test]
         public void SelectionFollowsBusinessKeyAcrossReorderAndFullReplace()
         {
             using var f = new Fixture();
-            f.Selection.Mode = UGUIVirtualSelectionMode.Multiple;
+            f.Selection.Mode = UIVirtualSelectionMode.Multiple;
             f.Selection.KeySelector = data => ((Row)data).Key;
             f.Selection.Select(1);
             Assert.IsTrue(f.Selection.IsSelectedKey("b"));
@@ -31,7 +31,7 @@ namespace Ux.Editor.Tests
         public void SelectByKeyAndRemoveKeepKeySetConsistent()
         {
             using var f = new Fixture();
-            f.Selection.Mode = UGUIVirtualSelectionMode.Multiple;
+            f.Selection.Mode = UIVirtualSelectionMode.Multiple;
             f.Selection.KeySelector = data => ((Row)data).Key;
             Assert.IsTrue(f.Selection.SelectByKey("c"));
             Assert.IsTrue(f.Selection.IsSelected(2));
@@ -46,7 +46,7 @@ namespace Ux.Editor.Tests
         public void IndexModeStillClearsOnReplaceWhileKeyModeRestores()
         {
             using var f = new Fixture();
-            f.Selection.Mode = UGUIVirtualSelectionMode.Multiple;
+            f.Selection.Mode = UIVirtualSelectionMode.Multiple;
             f.Selection.Select(0);
             f.Core.SetDatas(new[] { new Row("z") });
             Assert.IsFalse(f.Selection.HasSelection);
@@ -58,14 +58,14 @@ namespace Ux.Editor.Tests
             public Row(string key) { Key = key; }
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualSelection Selection;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualSelection Selection;
             public Fixture()
             {
-                Root = new GameObject("Key selection test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Key selection test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -75,21 +75,21 @@ namespace Ux.Editor.Tests
                 content.transform.SetParent(viewport.transform, false);
                 scroll.content = (RectTransform)content.transform;
                 scroll.vertical = true; scroll.horizontal = false;
-                Core = new UGUIVirtualList(scroll, new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 50)), this);
+                Core = new UIVirtualList(scroll, new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 50)), this);
                 Core.SetDatas(new[] { new Row("a"), new Row("b"), new Row("c") });
-                Selection = new UGUIVirtualSelection(Core);
+                Selection = new UIVirtualSelection(Core);
             }
             public int GetItemType(int index, object data) => 0;
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var go = new GameObject("Key row", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose() { Selection.Dispose(); Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;
@@ -101,7 +101,7 @@ namespace Ux.Editor.Tests
         }
     }
 
-    public sealed class UGUIVirtualCursorPagingTests
+    public sealed class UIVirtualCursorPagingTests
     {
         [Test]
         public void CursorPagingAdvancesCursorAndStopsAtEnd()
@@ -112,7 +112,7 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(2, f.Pager.LoadedCount);
             Assert.IsTrue(Done(f.Pager.LoadNextPageAsync()));
             Assert.AreEqual("c2", f.Pager.Cursor);
-            Assert.AreEqual(UGUIVirtualPageState.Completed, f.Pager.State);
+            Assert.AreEqual(UIVirtualPageState.Completed, f.Pager.State);
             Assert.IsFalse(Done(f.Pager.LoadNextPageAsync()));
         }
 
@@ -122,7 +122,7 @@ namespace Ux.Editor.Tests
             using var f = new Fixture(stuck: true);
             Assert.IsTrue(Done(f.Pager.LoadNextPageAsync()));
             Assert.IsFalse(Done(f.Pager.LoadNextPageAsync()), "游标未变化必须判为失败");
-            Assert.AreEqual(UGUIVirtualPageState.Error, f.Pager.State);
+            Assert.AreEqual(UIVirtualPageState.Error, f.Pager.State);
             Assert.IsNotNull(f.Pager.LastError);
         }
 
@@ -143,16 +143,16 @@ namespace Ux.Editor.Tests
             return task.GetAwaiter().GetResult();
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualPagedAdapter Pager;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualPagedAdapter Pager;
             private readonly bool _stuck;
             public Fixture(bool stuck = false)
             {
                 _stuck = stuck;
-                Root = new GameObject("Cursor paging test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Cursor paging test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -162,28 +162,28 @@ namespace Ux.Editor.Tests
                 content.transform.SetParent(viewport.transform, false);
                 scroll.content = (RectTransform)content.transform;
                 scroll.vertical = true; scroll.horizontal = false;
-                Core = new UGUIVirtualList(scroll, new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 50)), this);
-                Pager = new UGUIVirtualPagedAdapter(Core, (cursor, size, token) =>
+                Core = new UIVirtualList(scroll, new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 50)), this);
+                Pager = new UIVirtualPagedAdapter(Core, (cursor, size, token) =>
                 {
                     if (string.IsNullOrEmpty(cursor))
-                        return Task.FromResult(UGUIVirtualCursorPage.Create(new[] { "a", "b" }, "c1", true));
+                        return Task.FromResult(UIVirtualCursorPage.Create(new[] { "a", "b" }, "c1", true));
                     if (cursor == "c1" && !_stuck)
-                        return Task.FromResult(UGUIVirtualCursorPage.Create(new[] { "c" }, "c2", false));
-                    return Task.FromResult(UGUIVirtualCursorPage.Create(new[] { "d" }, _stuck ? "c1" : "c2", true));
+                        return Task.FromResult(UIVirtualCursorPage.Create(new[] { "c" }, "c2", false));
+                    return Task.FromResult(UIVirtualCursorPage.Create(new[] { "d" }, _stuck ? "c1" : "c2", true));
                 });
                 Pager.Initialize();
             }
             public int GetItemType(int index, object data) => 0;
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var go = new GameObject("Cursor row", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose() { Pager.Dispose(); Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;
@@ -195,13 +195,13 @@ namespace Ux.Editor.Tests
         }
     }
 
-    public sealed class UGUIVirtualCarouselTests
+    public sealed class UIVirtualCarouselTests
     {
         [Test]
         public void DragEndSnapsToNearestPage()
         {
             using var f = new Fixture();
-            var carousel = new UGUIVirtualCarousel(f.Core, 300f, 0.1f);
+            var carousel = new UIVirtualCarousel(f.Core, 300f, 0.1f);
             try
             {
                 f.SetPosition(160f);
@@ -218,8 +218,8 @@ namespace Ux.Editor.Tests
         public void SnapToPageClampsAtEndAndRejectsBadPageLength()
         {
             using var f = new Fixture();
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIVirtualCarousel(f.Core, 0f));
-            var carousel = new UGUIVirtualCarousel(f.Core, 300f, 0.05f);
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIVirtualCarousel(f.Core, 0f));
+            var carousel = new UIVirtualCarousel(f.Core, 300f, 0.05f);
             try
             {
                 int lastPage = Mathf.FloorToInt((f.Core.ContentLength - f.Core.ViewportSize.y) / 300f);
@@ -235,7 +235,7 @@ namespace Ux.Editor.Tests
         public void SmallOffsetDoesNotStartAnimation()
         {
             using var f = new Fixture();
-            var carousel = new UGUIVirtualCarousel(f.Core, 300f, 0.1f);
+            var carousel = new UIVirtualCarousel(f.Core, 300f, 0.1f);
             try
             {
                 f.SetPosition(300.2f);
@@ -245,17 +245,17 @@ namespace Ux.Editor.Tests
             finally { carousel.Dispose(); }
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualListScrollRect Scroll;
-            public readonly UGUIVirtualList Core;
+            public readonly UIVirtualListScrollRect Scroll;
+            public readonly UIVirtualList Core;
             private readonly GameObject _eventSystem;
             public float Position => Scroll.content.anchoredPosition.y;
             public Fixture()
             {
-                Root = new GameObject("Carousel test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
-                Scroll = Root.GetComponent<UGUIVirtualListScrollRect>();
+                Root = new GameObject("Carousel test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
+                Scroll = Root.GetComponent<UIVirtualListScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
                 Scroll.viewport = (RectTransform)viewport.transform;
@@ -265,7 +265,7 @@ namespace Ux.Editor.Tests
                 Scroll.content = (RectTransform)content.transform;
                 Scroll.vertical = true; Scroll.horizontal = false;
                 Scroll.movementType = ScrollRect.MovementType.Clamped;
-                Core = new UGUIVirtualList(Scroll, new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(300, 300)), this)
+                Core = new UIVirtualList(Scroll, new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(300, 300)), this)
                 { BufferSize = 300 };
                 var rows = new List<object>();
                 for (int i = 0; i < 20; i++) rows.Add(i);
@@ -290,13 +290,13 @@ namespace Ux.Editor.Tests
                 Scroll.OnEndDrag(data);
             }
             public int GetItemType(int index, object data) => 0;
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var go = new GameObject("Carousel row", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose()
             {
                 Core.Dispose();
@@ -304,7 +304,7 @@ namespace Ux.Editor.Tests
                 UnityEngine.Object.DestroyImmediate(Root);
             }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;

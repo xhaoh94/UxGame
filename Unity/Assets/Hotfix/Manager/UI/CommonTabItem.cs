@@ -1,45 +1,46 @@
-﻿using FairyGUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace Ux.UI
 {
-    public class CommonTabItemAnim : IUIAnim
+    partial class CommonTabItem
     {
-        Transition transition;
-        float _delay;
-        public CommonTabItemAnim(Transition transition, float delay)
+        protected override void OnShow()
         {
-            _delay = delay;
-            this.transition = transition;
-        }
-        public void Play(Action end)
-        {
-            transition?.Play(1, _delay, () => end?.Invoke());
-        }
+            if (!TryGetParam(out int id))
+                return;
 
-        public void Stop()
-        {                    
-            transition?.Stop();
-        }
-
-        public void SetToEnd()
-        {
-            transition.Play(1, 0, transition.totalDuration, transition.totalDuration, null);
-        }
-
-        public void SetToStart()
-        {
-            transition?.Play();
-            transition?.Stop(false, false);
+            var data = UIMgr.Ins.GetUIData(id);
+            if (data?.TabData?.Title is string title)
+                UITextUtil.SetText(txtTitle, title);
         }
     }
 
-    partial class CommonTabItem
+    internal static class UITextUtil
     {
-        protected override IUIAnim ShowAnim => new CommonTabItemAnim(showanim, Index * 0.3f);
+        /// <summary>
+        /// 统一写文本：优先 TMP，其次传统 UI Text。
+        /// </summary>
+        public static void SetText(GameObject target, string value)
+        {
+            if (target == null)
+                return;
+
+            var tmp = target.GetComponent<TMP_Text>();
+            if (tmp == null)
+                tmp = target.GetComponentInChildren<TMP_Text>(true);
+            if (tmp != null)
+            {
+                tmp.text = value ?? string.Empty;
+                return;
+            }
+
+            var text = target.GetComponent<Text>();
+            if (text == null)
+                text = target.GetComponentInChildren<Text>(true);
+            if (text != null)
+                text.text = value ?? string.Empty;
+        }
     }
 }

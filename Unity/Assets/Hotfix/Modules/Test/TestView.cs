@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using FairyGUI;
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,8 +8,37 @@ namespace Ux.UI
     public partial class TestView
     {
         bool _runningUiChecklist;
+        int _singleClickCount;
+        int _doubleClickCount;
+        int _longPressCount;
+        int _topTipCount;
 
-        partial void OnBtnTestClick(EventContext e)
+        protected override void OnInit()
+        {
+            base.OnInit();
+
+            // Prefab 里配置了两个模板：
+            //   TypeId 0 -> TestItem.prefab
+            //   TypeId 1 -> Test22Item.prefab
+            // 映射注册在 testList 实例上，其他列表可以有自己的映射。
+            testList.SetItemRenderer<TestItem>(0);
+            testList.SetItemRenderer<Test22Item>(1);
+
+            // 按索引切换模板与 Renderer：偶数行 TestItem，奇数行 Test22Item。
+            testList.SetItemProvider(index => index % 2 == 0 ? 0 : 1);
+        }
+
+        protected override void OnShow()
+        {
+            base.OnShow();
+
+            var datas = new List<int>(20);
+            for (var i = 0; i < 20; i++)
+                datas.Add(i);
+            testList.SetDatas(datas);
+        }
+
+        partial void OnBtnTestClick(UIEventContext e)
         {
             if (_runningUiChecklist)
             {
@@ -19,12 +47,63 @@ namespace Ux.UI
             }    
             RunUiChecklist().Forget();
         }
-        partial void OnBtnMultipleClick(EventContext e)
+
+        /// <summary>多页签：显示子页签会自动带出父面板 MultipleView。</summary>
+        partial void OnBtnMultipleClick(UIEventContext e)
         {
-            // RunUiTest().Forget();
+            Log.Info("[Test] 多页签界面 Multiple2TabView");
             UIMgr.Ins.Create().Show<Multiple2TabView>();
         }
 
+        /// <summary>弹窗：普通窗口类型，带模糊背景。</summary>
+        partial void OnBtnNoneWindowClick(UIEventContext e)
+        {
+            Log.Info("[Test] 弹窗 BagWindow");
+            UIMgr.Ins.Create().Show<BagWindow>();
+        }
+
+        /// <summary>置顶界面：TipView 是 UITip（Layer=Top），必须带 TipData 参数。</summary>
+        partial void OnBtnNoneViewClick(UIEventContext e)
+        {
+            _topTipCount++;
+            Log.Info($"[Test] 置顶界面 TipView x{_topTipCount}");
+            var tip = new UITipFactory.TipData(null, null, $"置顶提示 {_topTipCount}");
+            UIMgr.Ins.Create().SetParam(IUIParam.Create(tip)).Show<TipView>();
+        }
+
+        /// <summary>单击：计数 + 工厂 Tip，验证 UIMgr.Tip 与 UITip 生命周期。</summary>
+        partial void OnBtnSingleClick(UIEventContext e)
+        {
+            _singleClickCount++;
+            Log.Info($"[Test] 单击 x{_singleClickCount}");
+            UIMgr.Tip.Show($"单击 {_singleClickCount} 次");
+        }
+
+        /// <summary>双击：奇数打开、偶数关闭 BagWindow，验证双击节流与窗口缓存复用。</summary>
+        partial void OnBtnDoubleMultipleClick(UIEventContext e)
+        {
+            _doubleClickCount++;
+            var show = _doubleClickCount % 2 == 1;
+            Log.Info($"[Test] 双击 x{_doubleClickCount} -> {(show ? "打开" : "关闭")} BagWindow");
+            if (show) UIMgr.Ins.Create().Show<BagWindow>();
+            else UIMgr.Ins.Hide<BagWindow>();
+        }
+
+        /// <summary>长按：持续回调，每 10 次打印一次当前 UI 状态，避免刷屏。</summary>
+        partial void OnBtnLongClickLongPress(ref bool isBreak)
+        {
+            _longPressCount++;
+            if (_longPressCount % 10 != 0) return;
+            Log.Info($"[Test] 长按持续 x{_longPressCount}");
+            DumpUiState("[Test] 长按期间状态");
+        }
+
+        /// <summary>返回：关闭当前 TestView，验证 HideSelf 与缓存。</summary>
+        partial void OnBtnBackClick(UIEventContext e)
+        {
+            Log.Info("[Test] 返回：关闭 TestView");
+            HideSelf();
+        }
         async UniTaskVoid RunUiTest()
         {
             Log.Info("xxxxxxxxxx111");
@@ -137,12 +216,16 @@ namespace Ux.UI
         async UniTask Case_CacheAndReuse()
         {
             Log.Info("[Case] 缓存复用开始");
-            await UIMgr.Ins.Create().Show<TipView>().Task();
+
+            // TipView 需要 TipData 参数，直接 Show 会报“Tip 参数类型错误”
+            var tip1 = new UITipFactory.TipData(null, null, "缓存复用 1");
+            await UIMgr.Ins.Create().SetParam(IUIParam.Create(tip1)).Show<TipView>().Task();
             await UniTask.DelayFrame(2);
             UIMgr.Ins.Hide<TipView>();
             await UniTask.DelayFrame(10);
 
-            await UIMgr.Ins.Create().Show<TipView>().Task();
+            var tip2 = new UITipFactory.TipData(null, null, "缓存复用 2");
+            await UIMgr.Ins.Create().SetParam(IUIParam.Create(tip2)).Show<TipView>().Task();
             await UniTask.DelayFrame(10);
 
             DumpUiState("[Case] 缓存复用结束");

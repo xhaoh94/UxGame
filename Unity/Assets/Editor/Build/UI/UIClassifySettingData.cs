@@ -46,14 +46,10 @@ namespace Ux.Editor.Build.UI
         public static bool IsProload(string path)
         {
             var rc = UIClassifyWindow.ResClassifySettings;
-            var dirName = Path.GetDirectoryName(path);
-            dirName = dirName.Replace('\\', '/');
             var buildins = rc.proloads;
-            var uiPath = rc.path;
-            foreach (var buildin in buildins)
+            for (int i = 0; i < buildins.Length; i++)
             {
-                var dir = $"{uiPath}/{buildin}";
-                if (dirName == dir)
+                if (IsUnder(path, $"{rc.path}/{buildins[i]}"))
                 {
                     return true;
                 }
@@ -63,20 +59,24 @@ namespace Ux.Editor.Build.UI
         public static bool IsLazyload(string path)
         {
             var rc = UIClassifyWindow.ResClassifySettings;
-            var dirName = Path.GetDirectoryName(path);
-            dirName = dirName.Replace('\\', '/');
-
             var lazyloads = rc.lazyloads;
-            var uiPath = rc.path;
-            foreach (var lazyload in lazyloads)
+            for (int i = 0; i < lazyloads.Length; i++)
             {
-                var dir = $"{uiPath}/{lazyload.key}";
-                if (dirName == dir)
+                if (IsUnder(path, $"{rc.path}/{lazyloads[i].key}"))
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        /// <summary>目录本身或它的子目录都算命中：包目录下还会再分 Prefab/Atlas 子目录。</summary>
+        private static bool IsUnder(string assetPath, string dir)
+        {
+            var dirName = Path.GetDirectoryName(assetPath);
+            if (string.IsNullOrEmpty(dirName)) return false;
+            dirName = dirName.Replace('\\', '/');
+            return dirName == dir || dirName.StartsWith(dir + "/", StringComparison.Ordinal);
         }
     }
 

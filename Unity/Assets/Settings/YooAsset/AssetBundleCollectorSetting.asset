@@ -19,6 +19,7 @@ MonoBehaviour:
   - PackageName: MainPackage
     PackageDesc: "\u4E3B\u5305"
     EnableAddressable: 1
+    SupportExtensionless: 1
     LocationToLower: 0
     IncludeAssetGUID: 0
     AutoCollectShaders: 1
@@ -56,23 +57,23 @@ MonoBehaviour:
       ActiveRuleName: EnableGroup
       Collectors:
       - CollectPath: Assets/GameRes/Res/UI
-        CollectorGUID: 
+        CollectorGUID: 842f3d9ad4df8ac40a8239c3a4e822e1
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackTopDirectory
+        PackRuleName: PackDirectory
         FilterRuleName: CollectBuiltinUI
         AssetTags: builtin
         UserData: 
       - CollectPath: Assets/GameRes/Res/UI
-        CollectorGUID: 
+        CollectorGUID: 842f3d9ad4df8ac40a8239c3a4e822e1
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackTopDirectory
+        PackRuleName: PackDirectory
         FilterRuleName: CollectPreloadUI
         AssetTags: 
         UserData: 
       - CollectPath: Assets/GameRes/Res/UI/Bag
-        CollectorGUID: 
+        CollectorGUID: 95cbd8a0475e80e4b8d6937b4ad08745
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
         PackRuleName: PackDirectory
@@ -80,32 +81,19 @@ MonoBehaviour:
         AssetTags: lazyload_bag
         UserData: 
       - CollectPath: Assets/GameRes/Res/UI/Multiple
-        CollectorGUID: 
+        CollectorGUID: 09d0d225c75310b49b582ffbe6e15854
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: lazyload_multiple
         UserData: 
-    - GroupName: Atlas
-      GroupDesc: "\u56FE\u96C6"
-      AssetTags: 
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/GameRes/Res/Atlas
-        CollectorGUID: bbf62020395cb4c489585f2ffd312862
-        CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackSeparately
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
     - GroupName: Prefab
       GroupDesc: "\u9884\u5236"
       AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/GameRes/Res/Prefab/Common
+      - CollectPath: Assets/GameRes/Res/Scene/Common
         CollectorGUID: 9dfef7769977a774bb51fbe27ef660e3
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
@@ -113,19 +101,11 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: builtin
         UserData: 
-      - CollectPath: Assets/GameRes/Res/Prefab/Map
+      - CollectPath: Assets/GameRes/Res/Scene/Map001
         CollectorGUID: 81531e71e6b35264bad074572c22b908
         CollectorType: 0
         AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackTopDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
-      - CollectPath: Assets/GameRes/Res/Prefab/Unit
-        CollectorGUID: fc832313cf58974478c3ac031ba7f277
-        CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackTopDirectory
+        PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 

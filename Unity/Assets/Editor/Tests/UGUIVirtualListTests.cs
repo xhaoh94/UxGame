@@ -8,21 +8,21 @@ namespace Ux.Editor.Tests
 {
     public sealed class UGUIVirtualListTests
     {
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void FixedLayoutCalculatesContentAndItemOffset(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void FixedLayoutCalculatesContentAndItemOffset(UIVirtualListAxis axis)
         {
-            var layout = new UGUIFixedLinearLayout(axis, new Vector2(100, 100), 8, 12, 20);
+            var layout = new UIFixedLinearLayout(axis, new Vector2(100, 100), 8, 12, 20);
             layout.SetItemCount(10, true);
             Assert.AreEqual(1104, layout.ContentLength, 0.01f);
             var info = layout.GetItemLayout(3);
-            Assert.AreEqual(336, axis == UGUIVirtualListAxis.Vertical ? -info.Position.y : info.Position.x, 0.01f);
+            Assert.AreEqual(336, axis == UIVirtualListAxis.Vertical ? -info.Position.y : info.Position.x, 0.01f);
         }
 
         [Test]
         public void VariableLayoutCachesMeasurementAndResetsOnNewData()
         {
-            var layout = new UGUIVariableLinearLayout(UGUIVirtualListAxis.Vertical, new Vector2(300, 100));
+            var layout = new UIVariableLinearLayout(UIVirtualListAxis.Vertical, new Vector2(300, 100));
             layout.SetItemCount(10, true);
             Assert.IsTrue(layout.SetItemSize(0, new Vector2(300, 60)));
             Assert.AreEqual(960, layout.ContentLength, 0.01f);
@@ -31,19 +31,19 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(1000, layout.ContentLength, 0.01f);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void VariableListMeasuresBindSizeBeforeOverwritingGeometry(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void VariableListMeasuresBindSizeBeforeOverwritingGeometry(UIVirtualListAxis axis)
         {
             var root = CreateScroll(out var scroll);
             var factory = new TestFactory(axis);
-            var list = new UGUIVirtualList(scroll,
-                new UGUIVariableLinearLayout(axis, new Vector2(100, 100)), factory);
+            var list = new UIVirtualList(scroll,
+                new UIVariableLinearLayout(axis, new Vector2(100, 100)), factory);
             try
             {
                 list.SetDatas(new[] { 60f, 140f, 90f, 110f });
                 Assert.IsTrue(list.TryGetItem(0, out var item));
-                float actual = axis == UGUIVirtualListAxis.Vertical
+                float actual = axis == UIVirtualListAxis.Vertical
                     ? item.RectTransform.rect.height : item.RectTransform.rect.width;
                 Assert.AreEqual(60, actual, 0.01f);
             }
@@ -54,14 +54,14 @@ namespace Ux.Editor.Tests
             }
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void DistantScrollReusesItemsAndShowsRequestedIndex(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void DistantScrollReusesItemsAndShowsRequestedIndex(UIVirtualListAxis axis)
         {
             var root = CreateScroll(out var scroll);
             var factory = new TestFactory(axis);
-            var list = new UGUIVirtualList(scroll,
-                new UGUIFixedLinearLayout(axis, new Vector2(100, 100)), factory);
+            var list = new UIVirtualList(scroll,
+                new UIFixedLinearLayout(axis, new Vector2(100, 100)), factory);
             try
             {
                 var data = new List<float>();
@@ -69,7 +69,7 @@ namespace Ux.Editor.Tests
                 list.SetDatas(data);
                 Assert.Less(factory.Created, 20);
                 int before = factory.Created;
-                list.ScrollToView(500, UGUIVirtualListAlignment.Start);
+                list.ScrollToView(500, UIVirtualListAlignment.Start);
                 Assert.IsTrue(list.TryGetItem(500, out _));
                 Assert.IsFalse(list.TryGetItem(0, out _));
                 Assert.LessOrEqual(factory.Created, before + 4);
@@ -95,31 +95,31 @@ namespace Ux.Editor.Tests
             return root;
         }
 
-        private sealed class TestFactory : IUGUIVirtualListItemFactory
+        private sealed class TestFactory : IUIVirtualListItemFactory
         {
-            private readonly UGUIVirtualListAxis _axis;
+            private readonly UIVirtualListAxis _axis;
             public int Created { get; private set; }
-            public TestFactory(UGUIVirtualListAxis axis) { _axis = axis; }
+            public TestFactory(UIVirtualListAxis axis) { _axis = axis; }
             public int GetItemType(int index, object data) => index % 2;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 Created++;
                 var go = new GameObject("Test Item", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new TestItem(go, _axis);
             }
-            public void Destroy(IUGUIVirtualListItem item)
+            public void Destroy(IUIVirtualListItem item)
             {
                 if (item.GameObject != null) UnityEngine.Object.DestroyImmediate(item.GameObject);
             }
         }
 
-        private sealed class TestItem : IUGUIVirtualListItem
+        private sealed class TestItem : IUIVirtualListItem
         {
-            private readonly UGUIVirtualListAxis _axis;
+            private readonly UIVirtualListAxis _axis;
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;
-            public TestItem(GameObject gameObject, UGUIVirtualListAxis axis)
+            public TestItem(GameObject gameObject, UIVirtualListAxis axis)
             {
                 GameObject = gameObject;
                 _axis = axis;
@@ -127,7 +127,7 @@ namespace Ux.Editor.Tests
             public void Bind(int index, object data)
             {
                 RectTransform.SetSizeWithCurrentAnchors(
-                    _axis == UGUIVirtualListAxis.Vertical ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal,
+                    _axis == UIVirtualListAxis.Vertical ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal,
                     (float)data);
             }
             public Vector2 Measure() => RectTransform.rect.size;

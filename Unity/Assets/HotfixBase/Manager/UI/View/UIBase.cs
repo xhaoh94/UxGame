@@ -1,7 +1,5 @@
-using Cysharp.Threading.Tasks;
-using FairyGUI;
 using System;
-using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using static Ux.UIMgr;
 
@@ -9,132 +7,104 @@ namespace Ux
 {
     public abstract class UIBase : UIObject, IUI, IUIAsync
     {
-#if UNITY_EDITOR
-        static Transform __ui_cache_content;
-#endif
+        private string _resAddress;
 
-        protected abstract string PkgName { get; }
-        protected abstract string ResName { get; }
         /// <summary>
-        /// 关闭界面后，多久（秒）销毁：-1：不销毁，n:n秒后销毁。默认60秒
+        /// UI 资源地址。默认按类型名推导为 UI_{类名}，与 YooAsset 的
+        /// AddressByGroupAndFileName 规则一致（分组 UI + Prefab 名）。
+        /// 需要复用其他 Prefab 时在子类重写本属性。
         /// </summary>
+        protected virtual string ResAddress
+        {
+            get
+            {
+                _resAddress ??= $"UI_{GetType().Name}";
+                return _resAddress;
+            }
+        }
+
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Normal;
         public virtual UIBlur Blur => UIBlur.None;
         public virtual UIFocusMode FocusMode => UIFocusMode.Auto;
         public virtual bool CanFocus => FocusMode != UIFocusMode.None && Visible;
 
-        void IUI.NotifyFocusEnter()
-        {
-            OnFocusEnter();
-        }
-
-        void IUI.NotifyFocusExit()
-        {
-            OnFocusExit();
-        }
-
+        void IUI.NotifyFocusEnter() => OnFocusEnter();
+        void IUI.NotifyFocusExit() => OnFocusExit();
         protected virtual void OnFocusEnter() { }
         protected virtual void OnFocusExit() { }
 
         private CallbackData? _cbData;
         private int _instanceId;
+
         public virtual void InitData(IUIData data, CallbackData initData, int instanceId)
         {
             _instanceId = instanceId;
             Data = data;
             _cbData = initData;
-            Init(CreateObject());
-            OnHideCallback += _Hide;
-            OnShowCallback += _Show;
+            Init(CreateGameObject());
+            OnHideCallback += HideInternal;
+            OnShowCallback += ShowInternal;
         }
 
         public virtual void AddChild(UITabView child) { }
 
-        protected virtual GObject CreateObject()
+        protected virtual GameObject CreateGameObject()
         {
-            string pkg = PkgName;
-            string res = ResName;
-            if (string.IsNullOrEmpty(pkg) || string.IsNullOrEmpty(res))
-            {
-                Log.Fatal("没有指定pkgName或是resName");
-            }
-            var gobj = UIPackage.CreateObject(pkg, res);
-#if UNITY_EDITOR
-            if (__ui_cache_content == null)
-            {
-                __ui_cache_content = new GameObject($"[UI]").transform;
-                __ui_cache_content.SetParent(UnityPool.PoolContent);
-            }
-            gobj.displayObject.home = __ui_cache_content;
-#endif
-            return gobj;
+            // 默认实现按类型名推导，但子类可以重写 ResAddress，仍需防御空地址。
+            if (string.IsNullOrEmpty(ResAddress))
+                throw new InvalidOperationException($"UI 资源地址为空：{GetType().FullName}");
+
+            // 加载失败直接抛异常，由 _ShowAsync 的 catch 回滚，
+            // 避免界面对象带着空 GameObject 继续走显示流程。
+            var gameObject = ResMgr.Ins.LoadAsset<GameObject>(ResAddress);
+            if (gameObject == null)
+                throw new InvalidOperationException($"UI 资源加载失败：{ResAddress}");
+            return gameObject;
         }
-        public IFilter Filter
-        {
-            get => GObject?.filter;
-            set
-            {
-                if (GObject == null) return;
-                GObject.filter = value;
-            }
-        }
+
         public bool Visible
         {
-            get => GObject.visible;
+            get => GameObject != null && GameObject.activeSelf;
             set
             {
-                if (GObject.visible != value)
-                {
-                    GObject.visible = value;
-                }
+                if (GameObject != null && GameObject.activeSelf != value)
+                    GameObject.SetActive(value);
             }
         }
+
         public int ID => _instanceId;
         public int TypeId => Data?.ID ?? 0;
-        public string Name => Data.Name;
+        public string Name => Data?.Name;
         public IUIData Data { get; private set; }
 
-        protected void HideSelf()
-        {
-            Hide(true);
-        }
-
-        public virtual void Hide(bool isAnim = true)
-        {
-            UIMgr.Ins.Hide(ID, isAnim);
-        }
-
-        protected void MakeFullScreen()
-        {
-            ObjAs<GComponent>()?.MakeFullScreen();
-        }
+        protected void HideSelf() => Hide(true);
+        public virtual void Hide(bool isAnim = true) => UIMgr.Ins.Hide(ID, isAnim);
 
         protected virtual void AddToStage() { }
 
         protected virtual void RemoveToStage()
         {
-            GObject?.RemoveFromParent();
+            if (GameObject != null)
+                GameObject.SetActive(false);
         }
-
-        protected virtual void OnLayout() { }
 
         private enum QueuedTransitionKind
         {
             None,
             Show,
-            Hide,
+            Hide
         }
 
-        bool _async;
-        int _asyncVersion;
-        int _transitionVersionSeed;
-        Action _queuedTransition;
-        AutoResetUniTaskCompletionSource _queuedShowTask;
+        private bool _async;
+        private int _asyncVersion;
+        private int _transitionVersionSeed;
+        private Action _queuedTransition;
+        private AutoResetUniTaskCompletionSource _queuedShowTask;
 
-        void IUIAsync.Change(bool b, int version)
+        void IUIAsync.Change(bool value, int version)
         {
-            if (b)
+            if (value)
             {
                 _async = true;
                 _asyncVersion = version;
@@ -142,19 +112,14 @@ namespace Ux
             }
 
             if (_asyncVersion != version)
-            {
                 return;
-            }
 
             _async = false;
             _asyncVersion = 0;
             RunQueuedTransition();
         }
 
-        private int NextTransitionVersion()
-        {
-            return ++_transitionVersionSeed;
-        }
+        private int NextTransitionVersion() => ++_transitionVersionSeed;
 
         private void QueueTransition(QueuedTransitionKind kind, Action transition, AutoResetUniTaskCompletionSource showTask = null)
         {
@@ -185,9 +150,6 @@ namespace Ux
             {
                 case UIState.Show:
                 case UIState.ShowAnim:
-                    // 已经可见（或正在播放显示动画）时，父链重新把它带上来只是「重新激活」：
-                    // 刷新参数、通知激活，但不重发 UI_SHOW、不重放显示动画、也不重复做聚焦/入栈，
-                    // 否则切换页签会被监听方误判成「父界面重新打开了一次」，焦点也会被子界面抢走。
                     if (reason == UIShowReason.Reactivate)
                     {
                         if (param != null && id == TypeId)
@@ -195,7 +157,6 @@ namespace Ux
                             (this as IUISetParam).SetParam(param);
                             ToOverwrite();
                         }
-
                         OnActivate();
                         EventMgr.Ins.Run(MainEventType.UI_ACTIVATE, ID);
                         EventMgr.Ins.Run(MainEventType.UI_ACTIVATE, GetType());
@@ -208,88 +169,70 @@ namespace Ux
                         (this as IUISetParam).SetParam(param);
                         ToOverwrite();
                     }
-                    _Show(id, param, checkStack);
+                    ShowInternal(id, param, checkStack);
                     task.TrySetResult();
                     return task.Task;
+
                 case UIState.Hide:
                     AddToStage();
-                    OnLayout();
                     break;
             }
 
             if (_async && State != UIState.HideAnim)
-            {
-                QueueTransition(QueuedTransitionKind.Show, _DoShow, task);
-            }
+                QueueTransition(QueuedTransitionKind.Show, DoShow, task);
             else
             {
                 if (State == UIState.HideAnim)
-                {
                     ClearQueuedTransition();
-                }
-                _DoShow();
+                DoShow();
             }
-            void _DoShow()
+
+            void DoShow()
             {
                 (this as IUISetParam).SetParam(param);
                 _showVersion = NextTransitionVersion();
                 ToShow(isAnim, id, checkStack, _showVersion);
                 task.TrySetResult();
             }
+
             return task.Task;
         }
 
-        void _Show(int id, IUIParam param, bool checkStack)
+        private void ShowInternal(int id, IUIParam param, bool checkStack)
         {
-            if (_cbData != null)
-            {
-                _cbData.Value.showCb?.Invoke(this, param, checkStack);
-            }
-
+            _cbData?.showCb?.Invoke(this, param, checkStack);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, ID);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, GetType());
         }
 
         void IUI.DoHide(bool isAnim, bool checkStack)
         {
-            //子界面不需要检测栈，由最顶层父界面控制
-            switch (State)
-            {
-                case UIState.Hide:
-                case UIState.HideAnim:
-                    return;
-            }
+            if (State is UIState.Hide or UIState.HideAnim)
+                return;
 
             if (_async && State != UIState.ShowAnim)
-            {
-                QueueTransition(QueuedTransitionKind.Hide, _DoHide);
-            }
+                QueueTransition(QueuedTransitionKind.Hide, DoHide);
             else
             {
                 if (State == UIState.ShowAnim)
-                {
                     ClearQueuedTransition();
-                }
-                _DoHide();
+                DoHide();
             }
-            void _DoHide()
+
+            void DoHide()
             {
                 _hideVersion = NextTransitionVersion();
                 ToHide(isAnim, checkStack, _hideVersion);
             }
         }
 
-        private void _Hide()
+        private void HideInternal()
         {
             RemoveToStage();
-            Filter = null;
             _cbData?.hideCb?.Invoke(this);
         }
 
-        void IUI.Dispose()
-        {
-            ToDispose(true);
-        }
+        void IUI.Dispose() => ToDispose(true);
 
         protected override void OnDispose()
         {
@@ -300,84 +243,5 @@ namespace Ux
             _transitionVersionSeed = 0;
             ClearQueuedTransition();
         }
-
-        /// <summary>
-        /// 设置位置并添加关联关系
-        /// </summary>
-        private void _SetPositionAndRelations(float x, float y, bool restraint, RelationType rel1, RelationType rel2 = 0)
-        {
-            GObject.SetPosition(x, y, 0);
-            if (restraint)
-            {
-                if (rel1 != 0) AddRelation(rel1);
-                if (rel2 != 0) AddRelation(rel2);
-            }
-        }
-
-        protected void SetLayout(UILayout layout, bool restraint = true)
-        {
-            if (GObject == null) return;
-            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
-            switch (layout)
-            {
-                case UILayout.Left_Top:
-                    _SetPositionAndRelations(0, 0, restraint, RelationType.Left_Left, RelationType.Top_Top);
-                    break;
-                case UILayout.Left_Middle:
-                    _SetPositionAndRelations(0, (parent.height - GObject.height) / 2, restraint, RelationType.Left_Left, RelationType.Middle_Middle);
-                    break;
-                case UILayout.Left_Bottom:
-                    _SetPositionAndRelations(0, parent.height - GObject.height, restraint, RelationType.Left_Left, RelationType.Bottom_Bottom);
-                    break;
-                case UILayout.Center_Top:
-                    _SetPositionAndRelations((parent.width - GObject.width) / 2, 0, restraint, RelationType.Center_Center, RelationType.Top_Top);
-                    break;
-                case UILayout.Center_Middle:
-                    GObject.Center(restraint);
-                    break;
-                case UILayout.Center_Bottom:
-                    _SetPositionAndRelations((parent.width - GObject.width) / 2, parent.height - GObject.height, restraint, RelationType.Center_Center, RelationType.Bottom_Bottom);
-                    break;
-                case UILayout.Right_Top:
-                    _SetPositionAndRelations(parent.width - GObject.width, 0, restraint, RelationType.Right_Right, RelationType.Top_Top);
-                    break;
-                case UILayout.Right_Middle:
-                    _SetPositionAndRelations(parent.width - GObject.width, (parent.height - GObject.height) / 2, restraint, RelationType.Right_Right, RelationType.Middle_Middle);
-                    break;
-                case UILayout.Right_Bottom:
-                    _SetPositionAndRelations(parent.width - GObject.width, parent.height - GObject.height, restraint, RelationType.Right_Right, RelationType.Bottom_Bottom);
-                    break;
-                case UILayout.Size:
-                    GObject.SetPosition(0, 0, 0);
-                    GObject.SetSize(parent.width, parent.height);
-                    if (restraint) AddRelation(RelationType.Size);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(layout), layout, null);
-            }
-        }
-
-        // 提取公共方法：获取父对象
-        private GComponent GetParentComponent()
-        {
-            if (GObject == null) return null;
-            return GObject.parent as GComponent ?? UIMgr.Ins.GetLayer(UILayer.Root);
-        }
-
-        protected void AddRelation(RelationType relation)
-        {
-            var parent = GetParentComponent();
-            if (parent == null) return;
-            GObject.AddRelation(parent, relation);
-        }
-
-        protected void RemoveRelation(RelationType relation)
-        {
-            var parent = GetParentComponent();
-            if (parent == null) return;
-            GObject.RemoveRelation(parent, relation);
-        }
-
     }
 }
-

@@ -1,11 +1,7 @@
-using FairyGUI;
-using Ux;
-using System;
-using System.Diagnostics;
-using UnityEngine;
-using UnityEditor.UI;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace Ux.UI
 {
@@ -14,27 +10,48 @@ namespace Ux.UI
     {
         protected override UILayer Layer => UILayer.Tip;
 
+        private TMP_InputField _accountInput;
+        private InputField _legacyAccountInput;
+        private int _campIndex;
+
         protected override void OnInit()
         {
             base.OnInit();
+            DisableClickScale(btnLogin);
+            
+            _accountInput = inputAcc.GetComponent<TMP_InputField>();
+            if (_accountInput == null)
+                _legacyAccountInput = inputAcc.GetComponent<InputField>();
+
+            _campIndex = 0;
         }
 
+        private string Account
+        {
+            get
+            {
+                if (_accountInput != null) return _accountInput.text;
+                if (_legacyAccountInput != null) return _legacyAccountInput.text;
+                return string.Empty;
+            }
+        }
 
-        partial void OnBtnLoginClick(EventContext e)
+        partial void OnBtnLoginClick(UIEventContext e)
         {
             LoginModule.Ins.Connect(null);
             // OnConnectAsync().Forget();
         }
 
+        // partial void OnCamp1Click(UIEventContext e) => _campIndex = 0;
+        // partial void OnCamp2Click(UIEventContext e) => _campIndex = 1;
+        // partial void OnCamp3Click(UIEventContext e) => _campIndex = 2;
+
         async UniTaskVoid OnConnectAsync()
         {
-            int mask =(int) Mathf.Pow(2, camp.selectedIndex);
-            LoginModule.Ins.LoginAccount(inputAcc.text, "x", mask).Forget();
-            //LoginModule.Instance.LoginAccountRPC(inputAcc.text, inputPass.text);
-
-            // await UIMgr.Ins.Create().Show<UI.MainView>().Task();
+            var mask = 1 << _campIndex;
+            LoginModule.Ins.LoginAccount(Account, "x", mask).Forget();
             UIMgr.Ins.Hide<UI.LoginView>();
+            await UniTask.CompletedTask;
         }
-
     }
 }

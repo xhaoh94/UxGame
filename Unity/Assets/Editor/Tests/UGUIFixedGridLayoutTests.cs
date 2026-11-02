@@ -8,9 +8,9 @@ namespace Ux.Editor.Tests
 {
     public sealed class UGUIFixedGridLayoutTests
     {
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void PositionsAndContentIncludeSpacingPaddingAndPartialLastLine(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void PositionsAndContentIncludeSpacingPaddingAndPartialLastLine(UIVirtualListAxis axis)
         {
             var layout = CreateLayout(axis);
             layout.SetItemCount(8, true);
@@ -18,15 +18,15 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(316f, layout.CrossSize, 0.01f);
             Assert.IsFalse(layout.SupportsDynamicSize);
             var info = layout.GetItemLayout(4);
-            Assert.AreEqual(axis == UGUIVirtualListAxis.Vertical ? new Vector2(108, -82) : new Vector2(82, -108), info.Position);
-            Assert.AreEqual(axis == UGUIVirtualListAxis.Vertical ? new Vector2(100, 60) : new Vector2(60, 100), info.Size);
+            Assert.AreEqual(axis == UIVirtualListAxis.Vertical ? new Vector2(108, -82) : new Vector2(82, -108), info.Position);
+            Assert.AreEqual(axis == UIVirtualListAxis.Vertical ? new Vector2(100, 60) : new Vector2(60, 100), info.Size);
             info = layout.GetItemLayout(7);
-            Assert.AreEqual(axis == UGUIVirtualListAxis.Vertical ? new Vector2(108, -152) : new Vector2(152, -108), info.Position);
+            Assert.AreEqual(axis == UIVirtualListAxis.Vertical ? new Vector2(108, -152) : new Vector2(152, -108), info.Position);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void VisibleRangeIncludesWholeLinesAndClampsPartialLastLine(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void VisibleRangeIncludesWholeLinesAndClampsPartialLastLine(UIVirtualListAxis axis)
         {
             var layout = CreateLayout(axis);
             layout.SetItemCount(8, true);
@@ -39,7 +39,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void PaddingGapZeroViewportAndOutsideContentCanReturnEmpty()
         {
-            var layout = CreateLayout(UGUIVirtualListAxis.Vertical);
+            var layout = CreateLayout(UIVirtualListAxis.Vertical);
             layout.SetItemCount(8, true);
             Assert.IsTrue(layout.GetVisibleRange(0, 12, 0).IsEmpty);
             Assert.IsTrue(layout.GetVisibleRange(72, 10, 0).IsEmpty);
@@ -52,7 +52,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void EmptyAndSmallCountsHaveValidBounds()
         {
-            var layout = CreateLayout(UGUIVirtualListAxis.Vertical);
+            var layout = CreateLayout(UIVirtualListAxis.Vertical);
             layout.SetItemCount(0, true);
             Assert.AreEqual(32, layout.ContentLength, 0.01f);
             Assert.AreEqual(0, layout.CrossSize);
@@ -67,10 +67,10 @@ namespace Ux.Editor.Tests
         [Test]
         public void SingleCellPerLineMatchesFixedLinearGeometry()
         {
-            foreach (var axis in new[] { UGUIVirtualListAxis.Vertical, UGUIVirtualListAxis.Horizontal })
+            foreach (var axis in new[] { UIVirtualListAxis.Vertical, UIVirtualListAxis.Horizontal })
             {
-                var grid = new UGUIFixedGridLayout(axis, new Vector2(100, 80), 1, new Vector2(8, 8), 12, 20);
-                var linear = new UGUIFixedLinearLayout(axis, new Vector2(100, 80), 8, 12, 20);
+                var grid = new UIFixedGridLayout(axis, new Vector2(100, 80), 1, new Vector2(8, 8), 12, 20);
+                var linear = new UIFixedLinearLayout(axis, new Vector2(100, 80), 8, 12, 20);
                 grid.SetItemCount(20, true);
                 linear.SetItemCount(20, true);
                 Assert.AreEqual(linear.ContentLength, grid.ContentLength, 0.01f);
@@ -85,7 +85,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void GridUsesNoPerItemStorageAndSupportsLargeCount()
         {
-            var grid = new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, Vector2.one, 4);
+            var grid = new UIFixedGridLayout(UIVirtualListAxis.Vertical, Vector2.one, 4);
             grid.SetItemCount(int.MaxValue, true);
             Assert.Greater(grid.ContentLength, 0f);
             var range = grid.GetVisibleRange(10000, 100, 0);
@@ -95,25 +95,25 @@ namespace Ux.Editor.Tests
         [Test]
         public void InvalidConfigurationIsRejected()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, Vector2.one, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, Vector2.zero, 3));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, new Vector2(float.NaN, 1), 3));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, Vector2.one, 3, new Vector2(-1, 0)));
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, Vector2.one, 3, paddingStart: float.PositiveInfinity));
-            var grid = CreateLayout(UGUIVirtualListAxis.Vertical);
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIFixedGridLayout(UIVirtualListAxis.Vertical, Vector2.one, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIFixedGridLayout(UIVirtualListAxis.Vertical, Vector2.zero, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIFixedGridLayout(UIVirtualListAxis.Vertical, new Vector2(float.NaN, 1), 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIFixedGridLayout(UIVirtualListAxis.Vertical, Vector2.one, 3, new Vector2(-1, 0)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIFixedGridLayout(UIVirtualListAxis.Vertical, Vector2.one, 3, paddingStart: float.PositiveInfinity));
+            var grid = CreateLayout(UIVirtualListAxis.Vertical);
             Assert.Throws<ArgumentOutOfRangeException>(() => grid.SetItemCount(-1, true));
         }
 
         [Test]
         public void FiniteInputsCannotOverflowIntoInfiniteLayout()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UGUIFixedGridLayout(
-                UGUIVirtualListAxis.Vertical, new Vector2(1, float.MaxValue), 1, new Vector2(0, float.MaxValue)));
-            var mainOverflow = new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, new Vector2(1, float.MaxValue), 1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => new UIFixedGridLayout(
+                UIVirtualListAxis.Vertical, new Vector2(1, float.MaxValue), 1, new Vector2(0, float.MaxValue)));
+            var mainOverflow = new UIFixedGridLayout(UIVirtualListAxis.Vertical, new Vector2(1, float.MaxValue), 1);
             mainOverflow.SetItemCount(1, true);
             Assert.Throws<ArgumentOutOfRangeException>(() => mainOverflow.SetItemCount(2, true));
             Assert.IsFalse(float.IsInfinity(mainOverflow.ContentLength));
-            var crossOverflow = new UGUIFixedGridLayout(UGUIVirtualListAxis.Vertical, new Vector2(float.MaxValue, 1), 2);
+            var crossOverflow = new UIFixedGridLayout(UIVirtualListAxis.Vertical, new Vector2(float.MaxValue, 1), 2);
             crossOverflow.SetItemCount(1, true);
             Assert.Throws<ArgumentOutOfRangeException>(() => crossOverflow.SetItemCount(2, true));
             Assert.IsFalse(float.IsInfinity(crossOverflow.CrossSize));
@@ -122,15 +122,14 @@ namespace Ux.Editor.Tests
         [Test]
         public void ExistingSerializedLayoutValuesRemainCompatible()
         {
-            Assert.AreEqual(0, (int)UGUIVirtualListLayoutMode.FixedLinear);
-            Assert.AreEqual(1, (int)UGUIVirtualListLayoutMode.VariableLinear);
-            Assert.AreEqual(2, (int)UGUIVirtualListLayoutMode.FixedGrid);
-            Assert.AreEqual(0, (int)UGUIVirtualListItemSizeMode.Manual);
+            Assert.AreEqual(0, (int)UIVirtualListLayoutMode.FixedLinear);
+            Assert.AreEqual(1, (int)UIVirtualListLayoutMode.VariableLinear);
+            Assert.AreEqual(0, (int)UIVirtualListItemSizeMode.Custom);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void GridVirtualizesReusesDifferentTypesAndSkipsMeasurement(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void GridVirtualizesReusesDifferentTypesAndSkipsMeasurement(UIVirtualListAxis axis)
         {
             var root = new GameObject("Grid Test", typeof(RectTransform), typeof(ScrollRect));
             var viewport = new GameObject("Viewport", typeof(RectTransform));
@@ -142,8 +141,8 @@ namespace Ux.Editor.Tests
             scroll.viewport = (RectTransform)viewport.transform;
             scroll.content = (RectTransform)content.transform;
             var factory = new GridFactory();
-            var list = new UGUIVirtualList(scroll,
-                new UGUIFixedGridLayout(axis, new Vector2(80, 80), 3, new Vector2(8, 8)), factory)
+            var list = new UIVirtualList(scroll,
+                new UIFixedGridLayout(axis, new Vector2(80, 80), 3, new Vector2(8, 8)), factory)
             {
                 BufferSize = 40
             };
@@ -154,7 +153,7 @@ namespace Ux.Editor.Tests
                 list.SetDatas(data);
                 Assert.Less(factory.Created, 30);
                 int before = factory.Created;
-                list.ScrollToView(9001, UGUIVirtualListAlignment.Start);
+                list.ScrollToView(9001, UIVirtualListAlignment.Start);
                 Assert.IsTrue(list.TryGetItem(9001, out var item));
                 Assert.IsFalse(list.TryGetItem(0, out _));
                 Assert.AreEqual(new Vector2(80, 80), item.RectTransform.rect.size);
@@ -164,7 +163,7 @@ namespace Ux.Editor.Tests
                 list.ItemClicked += (index, value) => clicked = index;
                 ((GridItem)item).Click();
                 Assert.AreEqual(9001, clicked);
-                list.ScrollToView(9999, UGUIVirtualListAlignment.End);
+                list.ScrollToView(9999, UIVirtualListAlignment.End);
                 Assert.IsTrue(list.TryGetItem(9999, out _));
             }
             finally
@@ -174,35 +173,35 @@ namespace Ux.Editor.Tests
             }
         }
 
-        private static UGUIFixedGridLayout CreateLayout(UGUIVirtualListAxis axis) => new UGUIFixedGridLayout(
+        private static UIFixedGridLayout CreateLayout(UIVirtualListAxis axis) => new UIFixedGridLayout(
             axis,
-            axis == UGUIVirtualListAxis.Vertical ? new Vector2(100, 60) : new Vector2(60, 100),
+            axis == UIVirtualListAxis.Vertical ? new Vector2(100, 60) : new Vector2(60, 100),
             3,
-            axis == UGUIVirtualListAxis.Vertical ? new Vector2(8, 10) : new Vector2(10, 8),
+            axis == UIVirtualListAxis.Vertical ? new Vector2(8, 10) : new Vector2(10, 8),
             12, 20);
 
-        private static void AssertRange(UGUIVirtualListRange range, int start, int end)
+        private static void AssertRange(UIVirtualListRange range, int start, int end)
         {
             Assert.AreEqual(start, range.Start);
             Assert.AreEqual(end, range.End);
         }
 
-        private sealed class GridFactory : IUGUIVirtualListItemFactory
+        private sealed class GridFactory : IUIVirtualListItemFactory
         {
             public int Created;
             public int Measurements;
             public int GetItemType(int index, object data) => index % 3;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 Created++;
                 var go = new GameObject("Grid Item", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new GridItem(go, this);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
         }
 
-        private sealed class GridItem : IUGUIVirtualListItem
+        private sealed class GridItem : IUIVirtualListItem
         {
             private readonly GridFactory _factory;
             private Action _click;

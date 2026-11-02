@@ -1,8 +1,8 @@
-﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 using System.Threading;
 using UnityEngine;
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 using UnityEngine.EventSystems;
 #endif
 
@@ -3418,7 +3418,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region BeginDrag
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnBeginDragHandler
     {
@@ -3479,7 +3479,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Cancel
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnCancelHandler
     {
@@ -3540,7 +3540,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Deselect
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnDeselectHandler
     {
@@ -3601,7 +3601,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Drag
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnDragHandler
     {
@@ -3662,7 +3662,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Drop
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnDropHandler
     {
@@ -3723,7 +3723,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region EndDrag
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnEndDragHandler
     {
@@ -3784,7 +3784,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region InitializePotentialDrag
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnInitializePotentialDragHandler
     {
@@ -3845,7 +3845,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Move
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnMoveHandler
     {
@@ -3906,7 +3906,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region PointerClick
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnPointerClickHandler
     {
@@ -3967,7 +3967,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region PointerDown
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnPointerDownHandler
     {
@@ -4028,7 +4028,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region PointerEnter
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnPointerEnterHandler
     {
@@ -4089,7 +4089,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region PointerExit
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnPointerExitHandler
     {
@@ -4150,7 +4150,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region PointerUp
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnPointerUpHandler
     {
@@ -4211,7 +4211,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Scroll
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnScrollHandler
     {
@@ -4272,7 +4272,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Select
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnSelectHandler
     {
@@ -4333,7 +4333,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region Submit
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnSubmitHandler
     {
@@ -4394,7 +4394,7 @@ namespace Cysharp.Threading.Tasks.Triggers
 #endregion
 
 #region UpdateSelected
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
 
     public interface IAsyncOnUpdateSelectedHandler
     {

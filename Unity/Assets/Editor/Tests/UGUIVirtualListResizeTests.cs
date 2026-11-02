@@ -10,9 +10,9 @@ namespace Ux.Editor.Tests
 {
     public sealed class UGUIVirtualListResizeTests
     {
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void ResizingBufferedItemPreservesPartiallyVisibleAnchorWithoutRebinding(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void ResizingBufferedItemPreservesPartiallyVisibleAnchorWithoutRebinding(UIVirtualListAxis axis)
         {
             using var f = new Fixture(axis);
             f.ShowMiddle();
@@ -29,9 +29,9 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(resizedBinds, f.View(19).Binds);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void BatchNotificationUsesOneAnchorAndDoesNotRebindExistingViews(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void BatchNotificationUsesOneAnchorAndDoesNotRebindExistingViews(UIVirtualListAxis axis)
         {
             using var f = new Fixture(axis);
             f.ShowMiddle();
@@ -45,9 +45,9 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(binds, f.View(20).Binds);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void ViewportStartingInSpacingAnchorsTheNextActuallyVisibleItem(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void ViewportStartingInSpacingAnchorsTheNextActuallyVisibleItem(UIVirtualListAxis axis)
         {
             using var f = new Fixture(axis, spacing: 20);
             f.ShowMiddle();
@@ -63,7 +63,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void ItemsAfterAnchorDoNotShiftViewportAndPreserveCanBeDisabled()
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
             f.ShowMiddle();
             f.SetSize(23, 200f);
             f.List.NotifyItemSizeChanged(23);
@@ -79,9 +79,9 @@ namespace Ux.Editor.Tests
         [TestCase(true)]
         public void KeepingEndIsOptionalAndDoesNotPullHistoryToEnd(bool keepEnd)
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
             f.List.KeepEndOnSizeChange = keepEnd;
-            f.List.ScrollToView(99, UGUIVirtualListAlignment.End);
+            f.List.ScrollToView(99, UIVirtualListAlignment.End);
             f.SetSize(98, 200f);
             f.List.NotifyItemSizeChanged(98);
             Assert.AreEqual(keepEnd ? 9800f : 9700f, f.Position, 0.01f);
@@ -94,8 +94,8 @@ namespace Ux.Editor.Tests
         [Test]
         public void ShrinkingNearEndClampsBoundsAndKeepsLastItemVisible()
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
-            f.List.ScrollToView(99, UGUIVirtualListAlignment.End);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
+            f.List.ScrollToView(99, UIVirtualListAlignment.End);
             f.SetSize(98, 1f);
             f.List.NotifyItemSizeChanged(98);
             Assert.AreEqual(9601f, f.Position, 0.01f);
@@ -105,13 +105,13 @@ namespace Ux.Editor.Tests
         [Test]
         public void ElasticOverscrollDistanceSurvivesSizeChanges()
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
             f.Scroll.movementType = ScrollRect.MovementType.Elastic;
             f.SetPosition(-30f);
             f.SetSize(0, 150f);
             f.List.NotifyItemSizeChanged(0);
             Assert.AreEqual(-30f, f.Position, 0.01f);
-            f.List.ScrollToView(99, UGUIVirtualListAlignment.End);
+            f.List.ScrollToView(99, UIVirtualListAlignment.End);
             float oldMax = f.Layout.ContentLength - 300;
             f.SetPosition(oldMax + 40f);
             f.SetSize(98, 200f);
@@ -122,8 +122,8 @@ namespace Ux.Editor.Tests
         [Test]
         public void TokensRejectRecyclingRefreshDataReplacementWrongOwnerAndDisposal()
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
-            using var other = new Fixture(UGUIVirtualListAxis.Vertical);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
+            using var other = new Fixture(UIVirtualListAxis.Vertical);
             Assert.IsTrue(f.List.TryGetItemToken(0, out var token));
             Assert.IsTrue(token.IsCurrent);
             Assert.IsFalse(other.List.NotifyItemSizeChanged(token));
@@ -148,7 +148,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void NotifyInvalidOrUncreatedIndexIsHarmlessAndBadMeasurementIsRejected()
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
             Assert.IsFalse(f.List.NotifyItemSizeChanged(-1));
             Assert.IsFalse(f.List.NotifyItemSizeChanged(99));
             f.View(0).InvalidMeasurement = true;
@@ -161,7 +161,7 @@ namespace Ux.Editor.Tests
         [Test]
         public void NotificationDuringMeasureIsConsumedWithoutRecursiveRefresh()
         {
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical);
+            using var f = new Fixture(UIVirtualListAxis.Vertical);
             var item = f.View(0);
             int measurements = item.Measurements;
             item.MeasureCallback = () => { item.MeasureCallback = null; f.List.NotifyItemSizeChanged(0); };
@@ -169,22 +169,22 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(measurements + 2, item.Measurements);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void LayoutShiftPreservesInertialVelocity(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void LayoutShiftPreservesInertialVelocity(UIVirtualListAxis axis)
         {
             using var f = new Fixture(axis);
             f.ShowMiddle();
-            var velocity = axis == UGUIVirtualListAxis.Vertical ? new Vector2(0, 500) : new Vector2(-500, 0);
+            var velocity = axis == UIVirtualListAxis.Vertical ? new Vector2(0, 500) : new Vector2(-500, 0);
             f.Scroll.velocity = velocity;
             f.SetSize(19, 180);
             f.List.NotifyItemSizeChanged(19);
             Assert.AreEqual(velocity, f.Scroll.velocity);
         }
 
-        [TestCase(UGUIVirtualListAxis.Vertical)]
-        [TestCase(UGUIVirtualListAxis.Horizontal)]
-        public void DraggingDoesNotSnapBackAfterLayoutCompensation(UGUIVirtualListAxis axis)
+        [TestCase(UIVirtualListAxis.Vertical)]
+        [TestCase(UIVirtualListAxis.Horizontal)]
+        public void DraggingDoesNotSnapBackAfterLayoutCompensation(UIVirtualListAxis axis)
         {
             using var f = new Fixture(axis, true);
             f.ShowMiddle();
@@ -197,7 +197,7 @@ namespace Ux.Editor.Tests
                     position = new Vector2(100, 100)
                 };
                 f.Scroll.OnBeginDrag(pointer);
-                pointer.position += axis == UGUIVirtualListAxis.Vertical ? new Vector2(0, 30) : new Vector2(-30, 0);
+                pointer.position += axis == UIVirtualListAxis.Vertical ? new Vector2(0, 30) : new Vector2(-30, 0);
                 f.Scroll.OnDrag(pointer);
                 f.Scroll.onValueChanged.Invoke(Vector2.zero);
                 f.SetSize(19, 180);
@@ -215,7 +215,7 @@ namespace Ux.Editor.Tests
         {
             if (Time.unscaledDeltaTime <= 0f)
                 Assert.Ignore("该用例需要有效 unscaledDeltaTime，在 Play Mode 回归环境中执行。");
-            using var f = new Fixture(UGUIVirtualListAxis.Vertical, true);
+            using var f = new Fixture(UIVirtualListAxis.Vertical, true);
             f.ShowMiddle();
             var eventObject = new GameObject("Velocity test EventSystem", typeof(EventSystem));
             try
@@ -232,7 +232,7 @@ namespace Ux.Editor.Tests
                 f.SetSize(19, 180);
                 f.List.NotifyItemSizeChanged(19);
                 float expected = 30 / Time.unscaledDeltaTime * Mathf.Clamp01(Time.unscaledDeltaTime * 10f);
-                typeof(UGUIVirtualListScrollRect).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(f.Scroll, null);
+                typeof(UIVirtualListScrollRect).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(f.Scroll, null);
                 Assert.AreEqual(expected, f.Scroll.velocity.y, 0.1f);
                 f.Scroll.OnEndDrag(pointer);
             }
@@ -243,16 +243,16 @@ namespace Ux.Editor.Tests
         {
             public readonly GameObject Root;
             public readonly ScrollRect Scroll;
-            public readonly UGUIVirtualList List;
-            public readonly UGUIVariableLinearLayout Layout;
+            public readonly UIVirtualList List;
+            public readonly UIVariableLinearLayout Layout;
             public readonly List<float> Data = new();
-            private readonly UGUIVirtualListAxis _axis;
+            private readonly UIVirtualListAxis _axis;
 
-            public Fixture(UGUIVirtualListAxis axis, bool dragAware = false, float spacing = 0f)
+            public Fixture(UIVirtualListAxis axis, bool dragAware = false, float spacing = 0f)
             {
                 _axis = axis;
                 Root = new GameObject("Resize List", typeof(RectTransform));
-                Scroll = dragAware ? (ScrollRect)Root.AddComponent<UGUIVirtualListScrollRect>() : Root.AddComponent<ScrollRect>();
+                Scroll = dragAware ? (ScrollRect)Root.AddComponent<UIVirtualListScrollRect>() : Root.AddComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
                 ((RectTransform)viewport.transform).sizeDelta = new Vector2(300, 300);
@@ -260,20 +260,20 @@ namespace Ux.Editor.Tests
                 content.transform.SetParent(viewport.transform, false);
                 Scroll.viewport = (RectTransform)viewport.transform;
                 Scroll.content = (RectTransform)content.transform;
-                Scroll.horizontal = axis == UGUIVirtualListAxis.Horizontal;
-                Scroll.vertical = axis == UGUIVirtualListAxis.Vertical;
+                Scroll.horizontal = axis == UIVirtualListAxis.Horizontal;
+                Scroll.vertical = axis == UIVirtualListAxis.Vertical;
                 Scroll.movementType = ScrollRect.MovementType.Clamped;
-                Layout = new UGUIVariableLinearLayout(axis, new Vector2(100, 100), spacing);
-                List = new UGUIVirtualList(Scroll, Layout, new Factory(axis)) { BufferSize = 200 };
+                Layout = new UIVariableLinearLayout(axis, new Vector2(100, 100), spacing);
+                List = new UIVirtualList(Scroll, Layout, new Factory(axis)) { BufferSize = 200 };
                 for (int i = 0; i < 100; i++) Data.Add(100f);
                 List.SetDatas(Data);
             }
-            public void ShowMiddle() => List.ScrollToView(20, UGUIVirtualListAlignment.Start);
-            public float Position => _axis == UGUIVirtualListAxis.Vertical ? Scroll.content.anchoredPosition.y : -Scroll.content.anchoredPosition.x;
+            public void ShowMiddle() => List.ScrollToView(20, UIVirtualListAlignment.Start);
+            public float Position => _axis == UIVirtualListAxis.Vertical ? Scroll.content.anchoredPosition.y : -Scroll.content.anchoredPosition.x;
             public void SetPosition(float value)
             {
                 var pos = Scroll.content.anchoredPosition;
-                if (_axis == UGUIVirtualListAxis.Vertical) pos.y = value; else pos.x = -value;
+                if (_axis == UIVirtualListAxis.Vertical) pos.y = value; else pos.x = -value;
                 Scroll.content.anchoredPosition = pos;
                 Scroll.onValueChanged.Invoke(Vector2.zero);
             }
@@ -283,43 +283,43 @@ namespace Ux.Editor.Tests
                 return (View)view;
             }
             public void SetSize(int index, float size) => View(index).RectTransform.SetSizeWithCurrentAnchors(
-                _axis == UGUIVirtualListAxis.Vertical ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal, size);
+                _axis == UIVirtualListAxis.Vertical ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal, size);
             public float VisualStart(int index)
             {
                 var pos = View(index).RectTransform.anchoredPosition + Scroll.content.anchoredPosition;
-                return _axis == UGUIVirtualListAxis.Vertical ? -pos.y : pos.x;
+                return _axis == UIVirtualListAxis.Vertical ? -pos.y : pos.x;
             }
             public void Dispose() { List.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
         }
 
-        private sealed class Factory : IUGUIVirtualListItemFactory
+        private sealed class Factory : IUIVirtualListItemFactory
         {
-            private readonly UGUIVirtualListAxis _axis;
-            public Factory(UGUIVirtualListAxis axis) { _axis = axis; }
+            private readonly UIVirtualListAxis _axis;
+            public Factory(UIVirtualListAxis axis) { _axis = axis; }
             public int GetItemType(int index, object data) => 0;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 var go = new GameObject("Resize Item", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go, _axis);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
         }
 
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
-            private readonly UGUIVirtualListAxis _axis;
+            private readonly UIVirtualListAxis _axis;
             public int Binds;
             public int Measurements;
             public bool InvalidMeasurement;
             public Action MeasureCallback;
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;
-            public View(GameObject gameObject, UGUIVirtualListAxis axis) { GameObject = gameObject; _axis = axis; }
+            public View(GameObject gameObject, UIVirtualListAxis axis) { GameObject = gameObject; _axis = axis; }
             public void Bind(int index, object data)
             {
                 Binds++;
-                RectTransform.SetSizeWithCurrentAnchors(_axis == UGUIVirtualListAxis.Vertical
+                RectTransform.SetSizeWithCurrentAnchors(_axis == UIVirtualListAxis.Vertical
                     ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal, (float)data);
             }
             public Vector2 Measure()

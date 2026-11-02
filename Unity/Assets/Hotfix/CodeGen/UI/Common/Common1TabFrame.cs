@@ -1,29 +1,27 @@
-﻿//自动生成的代码，请勿修改!!!
-using FairyGUI;
+// 自动生成的代码，请勿修改!!!
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
 namespace Ux.UI
 {
-	public partial class Common1TabFrame : UITabFrame
-	{
-		protected override GComponent __tabContent => tabContent;
-		protected override UIList __listTab => listTab;
-		protected override UIButton __btnClose => btnClose;
-		protected GComponent tabContent;
-		protected UIList listTab;
-		protected UIButton btnClose;
-		public Common1TabFrame(GObject gObject,UIObject parent): base(gObject, parent) { }
-		protected override void CreateChildren()
-		{
-			try
-			{
-				var gCom = ObjAs<GComponent>();
-				tabContent = (GComponent)gCom.GetChildAt(2);
-				listTab = new UIList(gCom.GetChildAt(3), this);
-				btnClose = new UIButton(gCom.GetChildAt(4), this);
-			}
-			catch (System.Exception e)
-			{
-				 Log.Error(e);
-			}
-		}
-	}
+    public partial class Common1TabFrame : UITabFrame
+    {
+        protected RectTransform tabContent;
+        protected UIList listTab;
+        protected GameObject btnClose;
+
+        public Common1TabFrame(GameObject gameObject, UIObject parent) : base(gameObject, parent) { }
+        protected override RectTransform __tabContent => tabContent;
+        protected override UIList __listTab => listTab;
+        protected override GameObject __btnClose => btnClose;
+
+        protected override void CreateChildren()
+        {
+            var root = GameObject.transform;
+            tabContent = root.GetChild(2) as RectTransform;
+            listTab = new UIList(root.GetChild(3).gameObject, this);
+            btnClose = root.GetChild(4).gameObject;
+        }
+    }
 }

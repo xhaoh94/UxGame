@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using Ux.Editor.Debugger.Event;
-using Ux.Editor.Debugger.Res;
 using Ux.Editor.Debugger.Time;
 using Ux.Editor.Debugger.UI;
 namespace Ux.Editor.Debugger
@@ -15,7 +14,6 @@ namespace Ux.Editor.Debugger
         public static readonly Type[] DebuggerWindowTypes =
         {
         typeof(UIDebuggerWindow),
-        typeof(ResDebuggerWindow),
         typeof(EventDebuggerWindow),
         typeof(TimeDebuggerWindow),
         };

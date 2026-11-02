@@ -1,36 +1,34 @@
-﻿using FairyGUI;
-using Ux;
-using System.Net;
+﻿using Ux;
 
 namespace Ux.UI
 {
     [UI]
     public partial class MainView
     {
-        protected override UILayer Layer => UILayer.Normal;
+        protected override UILayer Layer => UILayer.View;
         public override UIType Type => UIType.Fixed;        
-        partial void OnBtnBackClick(EventContext e)
+        partial void OnBtnBackClick(UIEventContext e)
         {
             GameMain.Machine.Enter<StateLogin>();
         }
 
-        partial void OnBtnMainViewClick(EventContext e)
+        partial void OnBtnMainViewClick(UIEventContext e)
         {
             UIMgr.Ins.Create().SetParam(IUIParam.Create("1234")).Show<TestView>();
         }
-        partial void OnBtnStack1Click(EventContext e)
+        partial void OnBtnStack1Click(UIEventContext e)
         {
             UIMgr.Ins.Create().SetParam(IUIParam.Create("123")).Show<Stack1View>();
         }
-        partial void OnBtnStack2Click(EventContext e)
+        partial void OnBtnStack2Click(UIEventContext e)
         {
             UIMgr.Ins.Create().SetParam(IUIParam.Create(123)).Show<Stack2View>();
         }
-        partial void OnBtnStack3Click(EventContext e)
+        partial void OnBtnStack3Click(UIEventContext e)
         {
             UIMgr.Ins.Create().SetParam(IUIParam.Create(13)).Show<Stack3View>();
         }
-        partial void OnBtnStack4Click(EventContext e)
+        partial void OnBtnStack4Click(UIEventContext e)
         {
             UIMgr.Ins.Create().SetParam(IUIParam.Create(1)).Show<Stack4View>();
         }

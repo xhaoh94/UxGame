@@ -8,7 +8,7 @@ namespace Ux.UI
     /// <summary>无限循环示例：固定高度卡片，滚动到首尾时静默换周期；可选按页吸附。</summary>
     public sealed class UGUIVirtualLoopDemo : MonoBehaviour
     {
-        [SerializeField] private UGUIVirtualListComponent _list;
+        [SerializeField] private UIVirtualListComponent _list;
         [SerializeField] private bool _snapPerPage = true;
         [Min(1)] [SerializeField] private int _itemCount = 8;
 
@@ -31,10 +31,10 @@ namespace Ux.UI
 
         private void Start()
         {
-            if (_list == null) _list = GetComponent<UGUIVirtualListComponent>();
-            if (_list == null || _list.ListType != UGUIVirtualListType.Flat)
+            if (_list == null) _list = GetComponent<UIVirtualListComponent>();
+            if (_list == null || _list.ListType != UIVirtualListType.Flat)
             {
-                Debug.LogWarning("请使用 Create UGUI Loop Demo 菜单创建循环示例。", this);
+                Debug.LogWarning("请使用 Create UI Loop Demo 菜单创建循环示例。", this);
                 return;
             }
             _list.ItemRenderer = BindItem;
@@ -97,7 +97,7 @@ namespace Ux.UI
         [ContextMenu("测试/回到第一张")]
         public void BackToFirst()
         {
-            if (Ready()) _list.ScrollTo(0, UGUIVirtualListAlignment.Start);
+            if (Ready()) _list.ScrollTo(0, UIVirtualListAlignment.Start);
         }
 
         private bool Ready()

@@ -29,7 +29,7 @@ namespace Ux.Editor.Tests
         {
             using var f = new Fixture();
             f.Component.SetGroups(Groups());
-            f.Core.ScrollToView(0, UGUIVirtualListAlignment.Start);
+            f.Core.ScrollToView(0, UIVirtualListAlignment.Start);
             int attempts = 0;
             f.StickyRecycle = () =>
             {
@@ -51,12 +51,12 @@ namespace Ux.Editor.Tests
         public void GroupedLayoutIgnoresHiddenGridAndHorizontalConfiguration()
         {
             using var f = new Fixture();
-            Set(f.Component, "_axis", (UGUIVirtualListAxis)123);
+            Set(f.Component, "_axis", (UIVirtualListAxis)123);
             Set(f.Component, "_allowMultiple", true);
             Set(f.Component, "_limitGridCount", true);
             Set(f.Component, "_gridCount", -1);
             Set(f.Component, "_gridSpacing", new Vector2(float.NaN, float.NaN));
-            var flow = (UGUIFlowLayout)typeof(UGUIVirtualListComponent)
+            var flow = (UIFlowLayout)typeof(UIVirtualListComponent)
                 .GetMethod("CreateLayout", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(f.Component, new object[] { new Vector2(100, 60) });
             flow.SetViewportSize(new Vector2(1000, 1000));
@@ -64,33 +64,33 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(1, flow.CountPerLine);
             Assert.IsFalse(f.Component.AllowMultiple);
         }
-        private static UGUIVirtualGroup[] Groups() => new[] { UGUIVirtualGroup.Create("g", "Header", new string[20]) };
-        private static void Set(object owner, string name, object value) => typeof(UGUIVirtualListComponent)
+        private static UIVirtualGroup[] Groups() => new[] { UIVirtualGroup.Create("g", "Header", new string[20]) };
+        private static void Set(object owner, string name, object value) => typeof(UIVirtualListComponent)
             .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(owner, value);
 
         private sealed class Fixture : IDisposable
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualListComponent Component;
-            public readonly UGUIVirtualGroupAdapter Groups;
-            public readonly UGUIVirtualStickyHeader Sticky;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualListComponent Component;
+            public readonly UIVirtualGroupAdapter Groups;
+            public readonly UIVirtualStickyHeader Sticky;
             public Action StickyBind;
             public Action StickyRecycle;
             public Fixture()
             {
-                Root = new GameObject("Group component test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Group component test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform)); viewport.transform.SetParent(Root.transform, false);
                 scroll.viewport = (RectTransform)viewport.transform; scroll.viewport.sizeDelta = new Vector2(300, 120);
                 var content = new GameObject("Content", typeof(RectTransform)); content.transform.SetParent(viewport.transform, false);
                 scroll.content = (RectTransform)content.transform; scroll.vertical = true; scroll.horizontal = false;
-                var layout = new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 60), paddingStart: 12);
-                Core = new UGUIVirtualList(scroll, layout, new Factory(this, false));
-                Groups = new UGUIVirtualGroupAdapter(Core); Groups.SetGroups(null);
-                Sticky = new UGUIVirtualStickyHeader(Core, Groups, new Factory(this, true));
-                Component = Root.AddComponent<UGUIVirtualListComponent>();
-                Set(Component, "_listType", UGUIVirtualListType.Grouped); Set(Component, "_listTypeConfigured", true);
+                var layout = new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 60), paddingStart: 12);
+                Core = new UIVirtualList(scroll, layout, new Factory(this, false));
+                Groups = new UIVirtualGroupAdapter(Core); Groups.SetGroups(null);
+                Sticky = new UIVirtualStickyHeader(Core, Groups, new Factory(this, true));
+                Component = Root.AddComponent<UIVirtualListComponent>();
+                Set(Component, "_listType", UIVirtualListType.Grouped); Set(Component, "_listTypeConfigured", true);
                 Set(Component, "_list", Core); Set(Component, "_flowLayout", layout); Set(Component, "_groupAdapter", Groups); Set(Component, "_stickyHeader", Sticky);
             }
             public void Dispose()
@@ -99,20 +99,20 @@ namespace Ux.Editor.Tests
                 Component.Release(); Sticky.Dispose(); Groups.Dispose(); Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root);
             }
         }
-        private sealed class Factory : IUGUIVirtualListItemFactory
+        private sealed class Factory : IUIVirtualListItemFactory
         {
             private readonly Fixture _owner;
             private readonly bool _sticky;
             public Factory(Fixture owner, bool sticky) { _owner = owner; _sticky = sticky; }
             public int GetItemType(int index, object data) => 0;
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var root = new GameObject("Component group row", typeof(RectTransform)); root.transform.SetParent(parent, false);
                 return new View(root, _owner, _sticky);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             private readonly Fixture _owner;
             private readonly bool _sticky;

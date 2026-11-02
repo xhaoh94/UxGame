@@ -9,15 +9,15 @@ namespace Ux.Editor.Tests
 {
     public sealed class UGUIVirtualListDataTests
     {
-        [TestCase(UGUIVirtualListAxis.Vertical, false, false)]
-        [TestCase(UGUIVirtualListAxis.Horizontal, false, false)]
-        [TestCase(UGUIVirtualListAxis.Vertical, true, false)]
-        [TestCase(UGUIVirtualListAxis.Horizontal, true, false)]
-        [TestCase(UGUIVirtualListAxis.Vertical, false, true)]
-        [TestCase(UGUIVirtualListAxis.Horizontal, false, true)]
-        [TestCase(UGUIVirtualListAxis.Vertical, true, true)]
-        [TestCase(UGUIVirtualListAxis.Horizontal, true, true)]
-        public void InsertAndRemoveBeforeViewportKeepLogicalAnchorAndReuseItsView(UGUIVirtualListAxis axis, bool variable, bool multiple)
+        [TestCase(UIVirtualListAxis.Vertical, false, false)]
+        [TestCase(UIVirtualListAxis.Horizontal, false, false)]
+        [TestCase(UIVirtualListAxis.Vertical, true, false)]
+        [TestCase(UIVirtualListAxis.Horizontal, true, false)]
+        [TestCase(UIVirtualListAxis.Vertical, false, true)]
+        [TestCase(UIVirtualListAxis.Horizontal, false, true)]
+        [TestCase(UIVirtualListAxis.Vertical, true, true)]
+        [TestCase(UIVirtualListAxis.Horizontal, true, true)]
+        public void InsertAndRemoveBeforeViewportKeepLogicalAnchorAndReuseItsView(UIVirtualListAxis axis, bool variable, bool multiple)
         {
             using var f = new Fixture(axis, variable, multiple);
             f.ShowMiddle();
@@ -93,7 +93,7 @@ namespace Ux.Editor.Tests
             using var f = new Fixture(variable: true);
             f.List.KeepEndOnDataChange = follow;
             f.List.KeepEndOnSizeChange = false;
-            f.List.ScrollToView(99, UGUIVirtualListAlignment.End);
+            f.List.ScrollToView(99, UIVirtualListAlignment.End);
             float before = f.Position;
             f.List.AddDatas(new[] { new Row(1000, 220), new Row(1001, 240) });
             Assert.AreEqual(follow ? f.Layout.ContentLength - 300 : before, f.Position, 0.01f);
@@ -130,7 +130,7 @@ namespace Ux.Editor.Tests
         public void RemovingTailClampsBoundsAndKeepsRemainingLastItemVisible()
         {
             using var f = new Fixture();
-            f.List.ScrollToView(99, UGUIVirtualListAlignment.End);
+            f.List.ScrollToView(99, UIVirtualListAlignment.End);
             f.List.RemoveRange(95, 5);
             Assert.AreEqual(95, f.List.Count);
             Assert.AreEqual(9200, f.Position, 0.01f);
@@ -161,7 +161,7 @@ namespace Ux.Editor.Tests
         {
             using var f = new Fixture(variable: true);
             f.Rows[5].Size = 150;
-            f.List.ScrollToView(5, UGUIVirtualListAlignment.Start);
+            f.List.ScrollToView(5, UIVirtualListAlignment.Start);
             f.ShowMiddle();
             Assert.AreEqual(150, f.Layout.GetItemLayout(5).Size.y, 0.01f);
             f.List.TryGetItemToken(60, out var token);
@@ -170,7 +170,7 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(100, f.Layout.GetItemLayout(5).Size.y, 0.01f);
             Assert.IsTrue(token.IsCurrent);
             Assert.AreEqual(before, f.Visual(60), 0.01f);
-            f.List.ScrollToView(5, UGUIVirtualListAlignment.Start);
+            f.List.ScrollToView(5, UIVirtualListAlignment.Start);
             Assert.AreEqual(220, f.Layout.GetItemLayout(5).Size.y, 0.01f);
         }
 
@@ -178,15 +178,15 @@ namespace Ux.Editor.Tests
         [TestCase(true)]
         public void MutableSizeCachesMoveWithDataInsteadOfRemainingAtOldIndex(bool legacy)
         {
-            IUGUIVirtualListLayout layout = legacy
-                ? (IUGUIVirtualListLayout)new UGUIVariableLinearLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 100))
-                : new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 100), variableSize: true, allowMultiple: true);
+            IUIVirtualListLayout layout = legacy
+                ? (IUIVirtualListLayout)new UIVariableLinearLayout(UIVirtualListAxis.Vertical, new Vector2(100, 100))
+                : new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 100), variableSize: true, allowMultiple: true);
             layout.SetItemCount(4, true);
             layout.SetItemSize(0, new Vector2(100, 150));
             layout.SetItemSize(1, new Vector2(100, 200));
             layout.SetItemSize(2, new Vector2(100, 250));
             layout.SetItemSize(3, new Vector2(100, 300));
-            var mutable = (IUGUIVirtualListMutableLayout)layout;
+            var mutable = (IUIVirtualListMutableLayout)layout;
             mutable.InsertItems(1, 2);
             Assert.AreEqual(200, layout.GetItemLayout(3).Size.y);
             Assert.AreEqual(100, layout.GetItemLayout(1).Size.y);
@@ -260,7 +260,7 @@ namespace Ux.Editor.Tests
         public void FailedBindInvalidatesItsTokenAndCanRetryWithoutRebindingEverything()
         {
             using var f = new Fixture();
-            UGUIVirtualListItemToken failed = default;
+            UIVirtualListItemToken failed = default;
             f.BindCallback = () =>
             {
                 Assert.IsTrue(f.List.TryGetItemToken(0, out failed));
@@ -339,8 +339,8 @@ namespace Ux.Editor.Tests
         public void ComponentReleaseRejectsReinitializationEvenWhenCleanupWasDeferred(bool deferred)
         {
             using var f = new Fixture();
-            var component = f.Root.AddComponent<UGUIVirtualListComponent>();
-            typeof(UGUIVirtualListComponent).GetField("_list", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(component, f.List);
+            var component = f.Root.AddComponent<UIVirtualListComponent>();
+            typeof(UIVirtualListComponent).GetField("_list", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(component, f.List);
             int attempts = 0;
             f.RecycleCallback = () =>
             {
@@ -433,26 +433,26 @@ namespace Ux.Editor.Tests
             public Row(int id, float size = 100, int? kind = null) { Id = id; Size = size; Kind = kind ?? id % 2; }
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
             public readonly ScrollRect Scroll;
-            public readonly UGUIVirtualList List;
-            public readonly IUGUIVirtualListLayout Layout;
+            public readonly UIVirtualList List;
+            public readonly IUIVirtualListLayout Layout;
             public readonly List<Row> Rows = new();
             public int Created;
             public int Destroyed;
             public Action BindCallback;
             public Action RecycleCallback;
-            private readonly UGUIVirtualListAxis _axis;
+            private readonly UIVirtualListAxis _axis;
             private readonly bool _indexTypes;
-            public Fixture(UGUIVirtualListAxis axis = UGUIVirtualListAxis.Vertical, bool variable = false,
+            public Fixture(UIVirtualListAxis axis = UIVirtualListAxis.Vertical, bool variable = false,
                 bool multiple = false, bool indexTypes = false, bool fallback = false, bool legacy = false,
                 int count = 100, float initialSize = 100, float estimate = 100)
             {
                 _axis = axis;
                 _indexTypes = indexTypes;
-                Root = new GameObject("Data update test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Data update test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 Scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -461,19 +461,19 @@ namespace Ux.Editor.Tests
                 var content = new GameObject("Content", typeof(RectTransform));
                 content.transform.SetParent(viewport.transform, false);
                 Scroll.content = (RectTransform)content.transform;
-                Scroll.vertical = axis == UGUIVirtualListAxis.Vertical;
+                Scroll.vertical = axis == UIVirtualListAxis.Vertical;
                 Scroll.horizontal = !Scroll.vertical;
                 Scroll.movementType = ScrollRect.MovementType.Clamped;
-                Vector2 size = axis == UGUIVirtualListAxis.Vertical ? new Vector2(100, estimate) : new Vector2(estimate, 100);
-                Layout = fallback ? (IUGUIVirtualListLayout)new FallbackLayout(axis)
-                    : legacy ? variable ? (IUGUIVirtualListLayout)new UGUIVariableLinearLayout(axis, size) : new UGUIFixedLinearLayout(axis, size)
-                    : new UGUIFlowLayout(axis, size, variable, multiple);
-                List = new UGUIVirtualList(Scroll, Layout, this) { BufferSize = 200 };
+                Vector2 size = axis == UIVirtualListAxis.Vertical ? new Vector2(100, estimate) : new Vector2(estimate, 100);
+                Layout = fallback ? (IUIVirtualListLayout)new FallbackLayout(axis)
+                    : legacy ? variable ? (IUIVirtualListLayout)new UIVariableLinearLayout(axis, size) : new UIFixedLinearLayout(axis, size)
+                    : new UIFlowLayout(axis, size, variable, multiple);
+                List = new UIVirtualList(Scroll, Layout, this) { BufferSize = 200 };
                 for (int i = 0; i < count; i++) Rows.Add(new Row(i, initialSize));
                 List.SetDatas(Rows);
             }
-            public void ShowMiddle() => List.ScrollToView(60, UGUIVirtualListAlignment.Start);
-            public float Position => _axis == UGUIVirtualListAxis.Vertical ? Scroll.content.anchoredPosition.y : -Scroll.content.anchoredPosition.x;
+            public void ShowMiddle() => List.ScrollToView(60, UIVirtualListAlignment.Start);
+            public float Position => _axis == UIVirtualListAxis.Vertical ? Scroll.content.anchoredPosition.y : -Scroll.content.anchoredPosition.x;
             public View View(int index)
             {
                 Assert.IsTrue(List.TryGetItem(index, out var item), $"Item {index} 应已创建");
@@ -482,23 +482,23 @@ namespace Ux.Editor.Tests
             public float Visual(int index)
             {
                 var p = View(index).RectTransform.anchoredPosition + Scroll.content.anchoredPosition;
-                return _axis == UGUIVirtualListAxis.Vertical ? -p.y : p.x;
+                return _axis == UIVirtualListAxis.Vertical ? -p.y : p.x;
             }
             public int GetItemType(int index, object data) => _indexTypes ? index % 2 : ((Row)data).Kind;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 Created++;
                 var go = new GameObject("Data Item", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go, itemType, _axis, this);
             }
-            public void Destroy(IUGUIVirtualListItem item) { Destroyed++; UnityEngine.Object.DestroyImmediate(item.GameObject); }
+            public void Destroy(IUIVirtualListItem item) { Destroyed++; UnityEngine.Object.DestroyImmediate(item.GameObject); }
             public void Dispose() { List.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
         }
 
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
-            private readonly UGUIVirtualListAxis _axis;
+            private readonly UIVirtualListAxis _axis;
             private readonly Fixture _owner;
             private Action _click;
             public int Index;
@@ -507,14 +507,14 @@ namespace Ux.Editor.Tests
             public readonly int ViewType;
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;
-            public View(GameObject go, int viewType, UGUIVirtualListAxis axis, Fixture owner)
+            public View(GameObject go, int viewType, UIVirtualListAxis axis, Fixture owner)
             { GameObject = go; ViewType = viewType; _axis = axis; _owner = owner; }
             public void Bind(int index, object data)
             {
                 Index = index;
                 Data = (Row)data;
                 Binds++;
-                RectTransform.SetSizeWithCurrentAnchors(_axis == UGUIVirtualListAxis.Vertical ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal, Data.Size);
+                RectTransform.SetSizeWithCurrentAnchors(_axis == UIVirtualListAxis.Vertical ? RectTransform.Axis.Vertical : RectTransform.Axis.Horizontal, Data.Size);
                 _owner.BindCallback?.Invoke();
             }
             public Vector2 Measure() => RectTransform.rect.size;
@@ -523,18 +523,18 @@ namespace Ux.Editor.Tests
             public void Click() => _click?.Invoke();
         }
 
-        private sealed class FallbackLayout : IUGUIVirtualListLayout
+        private sealed class FallbackLayout : IUIVirtualListLayout
         {
-            private readonly UGUIVariableLinearLayout _inner;
-            public FallbackLayout(UGUIVirtualListAxis axis) { _inner = new UGUIVariableLinearLayout(axis, new Vector2(100, 100)); }
+            private readonly UIVariableLinearLayout _inner;
+            public FallbackLayout(UIVirtualListAxis axis) { _inner = new UIVariableLinearLayout(axis, new Vector2(100, 100)); }
             public bool IsVertical => _inner.IsVertical;
             public bool SupportsDynamicSize => true;
             public float ContentLength => _inner.ContentLength;
             public float CrossSize => _inner.CrossSize;
             public void SetItemCount(int count, bool resetSizes) => _inner.SetItemCount(count, resetSizes);
             public bool SetItemSize(int index, Vector2 size) => _inner.SetItemSize(index, size);
-            public UGUIVirtualListItemLayout GetItemLayout(int index) => _inner.GetItemLayout(index);
-            public UGUIVirtualListRange GetVisibleRange(float position, float length, float buffer) => _inner.GetVisibleRange(position, length, buffer);
+            public UIVirtualListItemLayout GetItemLayout(int index) => _inner.GetItemLayout(index);
+            public UIVirtualListRange GetVisibleRange(float position, float length, float buffer) => _inner.GetVisibleRange(position, length, buffer);
         }
     }
 }

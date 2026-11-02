@@ -1,4 +1,3 @@
-using FairyGUI;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
@@ -57,11 +56,6 @@ namespace Ux
         /// UI是否可见
         /// </summary>
         bool Visible { get; set; }
-        
-        /// <summary>
-        /// 滤镜效果
-        /// </summary>
-        IFilter Filter { get; set; }
         
         /// <summary>
         /// 初始化UI数据

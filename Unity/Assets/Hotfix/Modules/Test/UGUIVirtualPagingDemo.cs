@@ -9,7 +9,7 @@ namespace Ux.UI
 {
     public sealed class UGUIVirtualPagingDemo : MonoBehaviour
     {
-        [SerializeField] private UGUIVirtualListComponent _list;
+        [SerializeField] private UIVirtualListComponent _list;
         [Min(0)] [SerializeField] private int _totalItems = 95;
         [Min(0)] [SerializeField] private int _delayMilliseconds = 600;
         [Tooltip("从 0 开始；-1 不模拟失败。")]
@@ -17,15 +17,15 @@ namespace Ux.UI
         [SerializeField] private bool _failOnce = true;
         private readonly HashSet<int> _failed = new();
         private readonly Dictionary<GameObject, Text> _texts = new();
-        private UGUIVirtualPagedAdapter _adapter;
+        private UIVirtualPagedAdapter _adapter;
         private bool _subscribed;
 
         private async void Start()
         {
-            if (_list == null) _list = GetComponent<UGUIVirtualListComponent>();
-            if (_list == null || _list.ListType != UGUIVirtualListType.Paged)
+            if (_list == null) _list = GetComponent<UIVirtualListComponent>();
+            if (_list == null || _list.ListType != UIVirtualListType.Paged)
             {
-                Debug.LogWarning("请先选择分页列表，或使用 Create UGUI Paging Demo 菜单。", this);
+                Debug.LogWarning("请先选择分页列表，或使用 Create UI Paging Demo 菜单。", this);
                 return;
             }
             _list.ItemTypeProvider = GetItemType;
@@ -42,7 +42,7 @@ namespace Ux.UI
             catch (Exception ex) { if (this != null) Debug.LogException(ex, this); }
         }
 
-        private async Task<UGUIVirtualPage> LoadPage(int page, int pageSize, CancellationToken token)
+        private async Task<UIVirtualPage> LoadPage(int page, int pageSize, CancellationToken token)
         {
             await Task.Delay(_delayMilliseconds, token);
             token.ThrowIfCancellationRequested();
@@ -56,32 +56,32 @@ namespace Ux.UI
                 for (int j = 0; j < i % 4; j++) text += " 这段内容用于测试不定高分页。";
                 rows.Add(new DemoData(i, text));
             }
-            return UGUIVirtualPage.Create(rows, first + rows.Count < _totalItems);
+            return UIVirtualPage.Create(rows, first + rows.Count < _totalItems);
         }
 
-        private int GetItemType(int index, object data) => ((UGUIVirtualPageItem)data).IsStatus ? 1 : 0;
+        private int GetItemType(int index, object data) => ((UIVirtualPageItem)data).IsStatus ? 1 : 0;
         private void BindItem(int index, object data, GameObject view)
         {
-            var row = (UGUIVirtualPageItem)data;
+            var row = (UIVirtualPageItem)data;
             if (!_texts.TryGetValue(view, out var text) || text == null)
             {
                 text = view.GetComponentInChildren<Text>(true);
-                if (text == null) throw new InvalidOperationException("分页模板需要 UGUI Text 子节点。");
+                if (text == null) throw new InvalidOperationException("分页模板需要 UI Text 子节点。");
                 _texts[view] = text;
             }
             text.text = row.IsStatus ? row.Message : ((DemoData)row.Data).Text;
             text.alignment = row.IsStatus ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft;
-            text.color = row.Kind == UGUIVirtualPageItemKind.Error ? new Color(1f, 0.6f, 0.4f) : Color.white;
-            text.verticalOverflow = row.IsStatus || _list.LayoutMode != UGUIVirtualListLayoutMode.VariableLinear
+            text.color = row.Kind == UIVirtualPageItemKind.Error ? new Color(1f, 0.6f, 0.4f) : Color.white;
+            text.verticalOverflow = row.IsStatus || _list.LayoutMode != UIVirtualListLayoutMode.VariableLinear
                 ? VerticalWrapMode.Truncate : VerticalWrapMode.Overflow;
             view.name = row.IsStatus ? "Page Footer " + row.Kind : "Page Item " + row.DataIndex;
-            if (_list.LayoutMode == UGUIVirtualListLayoutMode.VariableLinear)
+            if (_list.LayoutMode == UIVirtualListLayoutMode.VariableLinear)
                 ((RectTransform)view.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
                     row.IsStatus ? 64f : Mathf.Max(76f, Mathf.Ceil(text.preferredHeight) + 20f));
         }
         private void OnItemClicked(int index, object data)
         {
-            var row = (UGUIVirtualPageItem)data;
+            var row = (UIVirtualPageItem)data;
             if (!row.IsStatus) Debug.Log($"[UGUIVirtualPagingDemo] 点击业务数据 {row.DataIndex}, id={((DemoData)row.Data).Id}", this);
         }
         private void OnItemRecycled(int index, object data, GameObject view)
@@ -102,7 +102,7 @@ namespace Ux.UI
         [ContextMenu("测试/滚动到末尾触发预加载")]
         public void ScrollToFooter()
         {
-            if (Ready()) _list.ScrollToView(_list.Count - 1, UGUIVirtualListAlignment.End);
+            if (Ready()) _list.ScrollToView(_list.Count - 1, UIVirtualListAlignment.End);
         }
         private bool Ready() => Application.isPlaying && _list != null && _list.IsInitialized && _adapter != null && !_adapter.IsDisposed;
         private async void Run(Func<Task<bool>> request)

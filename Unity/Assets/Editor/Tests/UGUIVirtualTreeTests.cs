@@ -64,7 +64,7 @@ namespace Ux.Editor.Tests
         public void ExpandingOnlyRebindsParentAndShiftedRows()
         {
             using var f = new Fixture();
-            var roots = new List<UGUIVirtualTreeNode> { new UGUIVirtualTreeNode("prefix", "Prefix") };
+            var roots = new List<UIVirtualTreeNode> { new UIVirtualTreeNode("prefix", "Prefix") };
             roots.AddRange(Forest());
             f.Tree.SetRoots(roots);
             var prefix = f.View(0);
@@ -99,15 +99,15 @@ namespace Ux.Editor.Tests
         public void CollapsingAncestorWhileViewingDescendantsBringsParentBackIntoView()
         {
             using var f = new Fixture();
-            var leaves = new List<UGUIVirtualTreeNode>();
-            for (int i = 0; i < 100; i++) leaves.Add(new UGUIVirtualTreeNode("leaf-" + i, i));
-            f.Tree.SetRoots(new[] { new UGUIVirtualTreeNode("root", "Root", leaves, true), new UGUIVirtualTreeNode("tail", "Tail") });
+            var leaves = new List<UIVirtualTreeNode>();
+            for (int i = 0; i < 100; i++) leaves.Add(new UIVirtualTreeNode("leaf-" + i, i));
+            f.Tree.SetRoots(new[] { new UIVirtualTreeNode("root", "Root", leaves, true), new UIVirtualTreeNode("tail", "Tail") });
             Assert.IsTrue(f.Tree.ScrollToNode("leaf-80"));
             Assert.IsFalse(f.List.TryGetItem(0, out _));
             f.Tree.Collapse("root");
             Assert.AreEqual(2, f.List.Count);
             Assert.IsTrue(f.List.TryGetItem(0, out var header));
-            Assert.AreEqual("root", ((UGUIVirtualTreeItem)f.List.GetData(0)).Id);
+            Assert.AreEqual("root", ((UIVirtualTreeItem)f.List.GetData(0)).Id);
             Assert.IsFalse(((View)header).RenderedExpanded);
         }
 
@@ -115,10 +115,10 @@ namespace Ux.Editor.Tests
         public void ExpandingOrCollapsingUnrelatedBranchBeforeViewportKeepsLogicalAnchor()
         {
             using var f = new Fixture();
-            var children = new List<UGUIVirtualTreeNode>();
-            for (int i = 0; i < 20; i++) children.Add(new UGUIVirtualTreeNode("child-" + i, i));
-            var roots = new List<UGUIVirtualTreeNode> { new UGUIVirtualTreeNode("folder", "Folder", children) };
-            for (int i = 0; i < 100; i++) roots.Add(new UGUIVirtualTreeNode("tail-" + i, i));
+            var children = new List<UIVirtualTreeNode>();
+            for (int i = 0; i < 20; i++) children.Add(new UIVirtualTreeNode("child-" + i, i));
+            var roots = new List<UIVirtualTreeNode> { new UIVirtualTreeNode("folder", "Folder", children) };
+            for (int i = 0; i < 100; i++) roots.Add(new UIVirtualTreeNode("tail-" + i, i));
             f.Tree.SetRoots(roots);
             f.Tree.ScrollToNode("tail-80");
             int oldIndex = f.Tree.GetVisibleIndex("tail-80");
@@ -139,14 +139,14 @@ namespace Ux.Editor.Tests
         public void ExpandingLastFolderDoesNotFollowChatTailPolicy()
         {
             using var f = new Fixture();
-            var roots = new List<UGUIVirtualTreeNode>();
-            for (int i = 0; i < 20; i++) roots.Add(new UGUIVirtualTreeNode("prefix-" + i, i));
-            var children = new List<UGUIVirtualTreeNode>();
-            for (int i = 0; i < 100; i++) children.Add(new UGUIVirtualTreeNode("child-" + i, i));
-            roots.Add(new UGUIVirtualTreeNode("folder", "Folder", children));
+            var roots = new List<UIVirtualTreeNode>();
+            for (int i = 0; i < 20; i++) roots.Add(new UIVirtualTreeNode("prefix-" + i, i));
+            var children = new List<UIVirtualTreeNode>();
+            for (int i = 0; i < 100; i++) children.Add(new UIVirtualTreeNode("child-" + i, i));
+            roots.Add(new UIVirtualTreeNode("folder", "Folder", children));
             f.Tree.SetRoots(roots);
             f.List.KeepEndOnDataChange = true;
-            f.List.ScrollToView(20, UGUIVirtualListAlignment.End);
+            f.List.ScrollToView(20, UIVirtualListAlignment.End);
             float before = f.Position;
             f.Tree.Expand("folder");
             Assert.AreEqual(before, f.Position, 0.01f);
@@ -180,13 +180,13 @@ namespace Ux.Editor.Tests
             using var f = new Fixture();
             f.Tree.SetRoots(Forest());
             f.List.TryGetItemToken(0, out var token);
-            Assert.Throws<ArgumentException>(() => new UGUIVirtualTreeNode(" ", null));
-            Assert.Throws<ArgumentException>(() => new UGUIVirtualTreeNode("bad", null, new UGUIVirtualTreeNode[] { null }));
-            Assert.Throws<ArgumentException>(() => f.Tree.SetRoots(new[] { new UGUIVirtualTreeNode("same", 1), new UGUIVirtualTreeNode("same", 2) }));
-            var shared = new UGUIVirtualTreeNode("shared", 1);
+            Assert.Throws<ArgumentException>(() => new UIVirtualTreeNode(" ", null));
+            Assert.Throws<ArgumentException>(() => new UIVirtualTreeNode("bad", null, new UIVirtualTreeNode[] { null }));
+            Assert.Throws<ArgumentException>(() => f.Tree.SetRoots(new[] { new UIVirtualTreeNode("same", 1), new UIVirtualTreeNode("same", 2) }));
+            var shared = new UIVirtualTreeNode("shared", 1);
             Assert.Throws<ArgumentException>(() => f.Tree.SetRoots(new[] {
-                new UGUIVirtualTreeNode("left", 1, new[] { shared }), new UGUIVirtualTreeNode("right", 2, new[] { shared }) }));
-            Assert.Throws<ArgumentException>(() => f.Tree.SetRoots(new UGUIVirtualTreeNode[] { null }));
+                new UIVirtualTreeNode("left", 1, new[] { shared }), new UIVirtualTreeNode("right", 2, new[] { shared }) }));
+            Assert.Throws<ArgumentException>(() => f.Tree.SetRoots(new UIVirtualTreeNode[] { null }));
             Assert.Throws<InvalidOperationException>(() => f.Tree.SetRoots(FailingRoots()));
             Assert.IsTrue(token.IsCurrent);
             AssertIds(f.Tree, "a", "b");
@@ -291,7 +291,7 @@ namespace Ux.Editor.Tests
             using var f = new Fixture();
             f.Tree.SetRoots(Forest());
             f.RecycleCallback = () => throw new InvalidOperationException("预期的森林替换回收错误");
-            Assert.Throws<InvalidOperationException>(() => f.Tree.SetRoots(new[] { new UGUIVirtualTreeNode("new", "New") }));
+            Assert.Throws<InvalidOperationException>(() => f.Tree.SetRoots(new[] { new UIVirtualTreeNode("new", "New") }));
             AssertIds(f.Tree, "a", "b");
             Assert.AreEqual(2, f.List.Count);
             Assert.IsTrue(f.Tree.OwnsCurrentData);
@@ -333,8 +333,8 @@ namespace Ux.Editor.Tests
         public void DeepTreesUseIterativeTraversalAndLargeTreesRemainVirtual()
         {
             using var f = new Fixture();
-            var root = new UGUIVirtualTreeNode("leaf", "Leaf");
-            for (int i = 1999; i >= 0; i--) root = new UGUIVirtualTreeNode("n-" + i, i, new[] { root }, true);
+            var root = new UIVirtualTreeNode("leaf", "Leaf");
+            for (int i = 1999; i >= 0; i--) root = new UIVirtualTreeNode("n-" + i, i, new[] { root }, true);
             f.Tree.SetRoots(new[] { root });
             Assert.AreEqual(2001, f.Tree.TotalNodeCount);
             Assert.AreEqual(2001, f.Tree.VisibleCount);
@@ -347,18 +347,18 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(2001, f.Tree.VisibleCount);
         }
 
-        private static List<UGUIVirtualTreeNode> Forest() => new List<UGUIVirtualTreeNode> {
-            new UGUIVirtualTreeNode("a", "A", new[] {
-                new UGUIVirtualTreeNode("a/leaf", "A leaf"),
-                new UGUIVirtualTreeNode("a/branch", "A branch", new[] {
-                    new UGUIVirtualTreeNode("a/branch/x", "X"), new UGUIVirtualTreeNode("a/branch/y", "Y") }, true) }),
-            new UGUIVirtualTreeNode("b", "B") };
-        private static IEnumerable<UGUIVirtualTreeNode> FailingRoots()
+        private static List<UIVirtualTreeNode> Forest() => new List<UIVirtualTreeNode> {
+            new UIVirtualTreeNode("a", "A", new[] {
+                new UIVirtualTreeNode("a/leaf", "A leaf"),
+                new UIVirtualTreeNode("a/branch", "A branch", new[] {
+                    new UIVirtualTreeNode("a/branch/x", "X"), new UIVirtualTreeNode("a/branch/y", "Y") }, true) }),
+            new UIVirtualTreeNode("b", "B") };
+        private static IEnumerable<UIVirtualTreeNode> FailingRoots()
         {
-            yield return new UGUIVirtualTreeNode("temp", "Temp");
+            yield return new UIVirtualTreeNode("temp", "Temp");
             throw new InvalidOperationException("预期的节点枚举失败");
         }
-        private static void AssertIds(UGUIVirtualTreeAdapter tree, params string[] expected)
+        private static void AssertIds(UIVirtualTreeAdapter tree, params string[] expected)
         {
             Assert.AreEqual(expected.Length, tree.VisibleCount);
             for (int i = 0; i < expected.Length; i++)
@@ -368,20 +368,20 @@ namespace Ux.Editor.Tests
             }
         }
 
-        private sealed class Fixture : IDisposable, IUGUIVirtualListItemFactory
+        private sealed class Fixture : IDisposable, IUIVirtualListItemFactory
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualList List;
-            public readonly UGUIVirtualTreeAdapter Tree;
+            public readonly UIVirtualList List;
+            public readonly UIVirtualTreeAdapter Tree;
             public readonly ScrollRect Scroll;
             public float Position => Scroll.content.anchoredPosition.y;
             public int Created;
-            public Action<UGUIVirtualTreeItem> BindCallback;
-            public Func<UGUIVirtualTreeItem, Vector2?> MeasureCallback;
+            public Action<UIVirtualTreeItem> BindCallback;
+            public Func<UIVirtualTreeItem, Vector2?> MeasureCallback;
             public Action RecycleCallback;
             public Fixture(bool variable = true)
             {
-                Root = new GameObject("Tree test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Tree test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 Scroll = scroll;
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
@@ -394,9 +394,9 @@ namespace Ux.Editor.Tests
                 scroll.horizontal = false;
                 scroll.vertical = true;
                 scroll.movementType = ScrollRect.MovementType.Clamped;
-                List = new UGUIVirtualList(scroll, new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 40),
+                List = new UIVirtualList(scroll, new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 40),
                     variableSize: variable, spacing: new Vector2(0, 4)), this) { BufferSize = 100 };
-                Tree = new UGUIVirtualTreeAdapter(List);
+                Tree = new UIVirtualTreeAdapter(List);
             }
             public View View(int index)
             {
@@ -404,22 +404,22 @@ namespace Ux.Editor.Tests
                 return (View)item;
             }
             public float Visual(int index) => View(index).RectTransform.anchoredPosition.y + Scroll.content.anchoredPosition.y;
-            public int GetItemType(int index, object data) => ((UGUIVirtualTreeItem)data).HasChildren ? 0 : 1;
-            public IUGUIVirtualListItem Create(int itemType, Transform parent)
+            public int GetItemType(int index, object data) => ((UIVirtualTreeItem)data).HasChildren ? 0 : 1;
+            public IUIVirtualListItem Create(int itemType, Transform parent)
             {
                 Created++;
                 var go = new GameObject("Tree row", typeof(RectTransform));
                 go.transform.SetParent(parent, false);
                 return new View(go, this);
             }
-            public void Destroy(IUGUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
+            public void Destroy(IUIVirtualListItem item) => UnityEngine.Object.DestroyImmediate(item.GameObject);
             public void Dispose() { BindCallback = null; MeasureCallback = null; RecycleCallback = null; Tree.Dispose(); List.Dispose(); UnityEngine.Object.DestroyImmediate(Root); }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             private readonly Fixture _owner;
             public int Binds;
-            public UGUIVirtualTreeItem Item;
+            public UIVirtualTreeItem Item;
             public object RenderedData;
             public bool RenderedExpanded;
             public GameObject GameObject { get; }
@@ -427,7 +427,7 @@ namespace Ux.Editor.Tests
             public View(GameObject gameObject, Fixture owner) { GameObject = gameObject; _owner = owner; }
             public void Bind(int index, object data)
             {
-                Item = (UGUIVirtualTreeItem)data;
+                Item = (UIVirtualTreeItem)data;
                 RenderedData = Item.Data;
                 RenderedExpanded = Item.IsExpanded;
                 Binds++;

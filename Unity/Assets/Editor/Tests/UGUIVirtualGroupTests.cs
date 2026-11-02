@@ -13,7 +13,7 @@ namespace Ux.Editor.Tests
         public void ProjectionIncludesHeadersAndOptionallyEmptyGroups(bool showEmpty)
         {
             using var f = new Fixture(showEmpty: showEmpty);
-            f.Groups.SetGroups(new[] { new UGUIVirtualGroup("empty", "Empty"), UGUIVirtualGroup.Create("a", "A", new[] { 1, 2 }) });
+            f.Groups.SetGroups(new[] { new UIVirtualGroup("empty", "Empty"), UIVirtualGroup.Create("a", "A", new[] { 1, 2 }) });
             Assert.AreEqual(2, f.Groups.GroupCount);
             Assert.AreEqual(showEmpty ? 2 : 1, f.Groups.VisibleGroupCount);
             Assert.AreEqual(2, f.Groups.DataCount);
@@ -30,9 +30,9 @@ namespace Ux.Editor.Tests
             using var f = new Fixture();
             f.Groups.SetGroups(Sample());
             f.Core.TryGetItemToken(0, out var token);
-            Assert.Throws<ArgumentException>(() => new UGUIVirtualGroup(" ", null));
-            Assert.Throws<ArgumentException>(() => f.Groups.SetGroups(new[] { new UGUIVirtualGroup("a", "A"), new UGUIVirtualGroup("a", "Again") }));
-            Assert.Throws<ArgumentException>(() => f.Groups.SetGroups(new UGUIVirtualGroup[] { null }));
+            Assert.Throws<ArgumentException>(() => new UIVirtualGroup(" ", null));
+            Assert.Throws<ArgumentException>(() => f.Groups.SetGroups(new[] { new UIVirtualGroup("a", "A"), new UIVirtualGroup("a", "Again") }));
+            Assert.Throws<ArgumentException>(() => f.Groups.SetGroups(new UIVirtualGroup[] { null }));
             Assert.Throws<InvalidOperationException>(() => f.Groups.SetGroups(FailingGroups()));
             Assert.IsTrue(token.IsCurrent);
             Assert.AreEqual(3, f.Groups.GroupCount);
@@ -198,22 +198,22 @@ namespace Ux.Editor.Tests
             f.NormalRecycle = null;
             f.Core.RefreshLayout();
             f.NormalBind = row => throw new InvalidOperationException("预期分组绑定错误");
-            Assert.Throws<InvalidOperationException>(() => f.Groups.SetGroups(new[] { new UGUIVirtualGroup("new", "New") }));
+            Assert.Throws<InvalidOperationException>(() => f.Groups.SetGroups(new[] { new UIVirtualGroup("new", "New") }));
             Assert.AreEqual(1, f.Groups.GroupCount);
             Assert.IsTrue(f.Groups.OwnsCurrentData);
             f.NormalBind = null;
             f.Core.RefreshLayout();
         }
 
-        private static IEnumerable<UGUIVirtualGroup> FailingGroups()
+        private static IEnumerable<UIVirtualGroup> FailingGroups()
         {
-            yield return new UGUIVirtualGroup("temp", "Temp");
+            yield return new UIVirtualGroup("temp", "Temp");
             throw new InvalidOperationException("预期枚举错误");
         }
-        private static UGUIVirtualGroup[] Sample()
+        private static UIVirtualGroup[] Sample()
         {
-            var result = new List<UGUIVirtualGroup>();
-            for (int g = 0; g < 3; g++) result.Add(UGUIVirtualGroup.Create("g-" + g, "Header " + g, new[] { "A", "B", "C" }));
+            var result = new List<UIVirtualGroup>();
+            for (int g = 0; g < 3; g++) result.Add(UIVirtualGroup.Create("g-" + g, "Header " + g, new[] { "A", "B", "C" }));
             return result.ToArray();
         }
 
@@ -221,18 +221,18 @@ namespace Ux.Editor.Tests
         {
             public readonly GameObject Root;
             public readonly ScrollRect Scroll;
-            public readonly UGUIVirtualList Core;
-            public readonly UGUIVirtualGroupAdapter Groups;
-            public readonly UGUIVirtualStickyHeader Sticky;
+            public readonly UIVirtualList Core;
+            public readonly UIVirtualGroupAdapter Groups;
+            public readonly UIVirtualStickyHeader Sticky;
             public int StickyCreated;
             public int StickyDestroyed;
             public View LastStickyView;
-            public Action<UGUIVirtualGroupItem> StickyBind;
-            public Action<UGUIVirtualGroupItem> NormalBind;
+            public Action<UIVirtualGroupItem> StickyBind;
+            public Action<UIVirtualGroupItem> NormalBind;
             public Action NormalRecycle;
             public Fixture(bool variable = true, bool showEmpty = true)
             {
-                Root = new GameObject("Group test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Group test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 Scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -243,10 +243,10 @@ namespace Ux.Editor.Tests
                 Scroll.content = (RectTransform)content.transform;
                 Scroll.vertical = true; Scroll.horizontal = false;
                 Scroll.movementType = ScrollRect.MovementType.Clamped;
-                Core = new UGUIVirtualList(Scroll, new UGUIFlowLayout(UGUIVirtualListAxis.Vertical, new Vector2(100, 60),
+                Core = new UIVirtualList(Scroll, new UIFlowLayout(UIVirtualListAxis.Vertical, new Vector2(100, 60),
                     variable, spacing: new Vector2(0, 4), paddingStart: 12, paddingEnd: 12), new Factory(this, false)) { BufferSize = 80 };
-                Groups = new UGUIVirtualGroupAdapter(Core, showEmpty);
-                Sticky = new UGUIVirtualStickyHeader(Core, Groups, new Factory(this, true));
+                Groups = new UIVirtualGroupAdapter(Core, showEmpty);
+                Sticky = new UIVirtualStickyHeader(Core, Groups, new Factory(this, true));
             }
             public void ScrollTo(float position)
             {
@@ -259,38 +259,38 @@ namespace Ux.Editor.Tests
                 Sticky.Dispose(); Groups.Dispose(); Core.Dispose(); UnityEngine.Object.DestroyImmediate(Root);
             }
         }
-        private sealed class Factory : IUGUIVirtualListItemFactory
+        private sealed class Factory : IUIVirtualListItemFactory
         {
             private readonly Fixture _owner;
             private readonly bool _sticky;
             public Factory(Fixture owner, bool sticky) { _owner = owner; _sticky = sticky; }
             public int GetItemType(int index, object data)
             {
-                var row = (UGUIVirtualGroupItem)data;
+                var row = (UIVirtualGroupItem)data;
                 return row.IsHeader ? row.GroupIndex % 2 == 0 ? 0 : 2 : 1;
             }
-            public IUGUIVirtualListItem Create(int type, Transform parent)
+            public IUIVirtualListItem Create(int type, Transform parent)
             {
                 var root = new GameObject("Group view", typeof(RectTransform)); root.transform.SetParent(parent, false);
                 var view = new View(root, _owner, _sticky);
                 if (_sticky) { _owner.StickyCreated++; _owner.LastStickyView = view; }
                 return view;
             }
-            public void Destroy(IUGUIVirtualListItem item)
+            public void Destroy(IUIVirtualListItem item)
             { if (_sticky) _owner.StickyDestroyed++; UnityEngine.Object.DestroyImmediate(item.GameObject); }
         }
-        private sealed class View : IUGUIVirtualListItem
+        private sealed class View : IUIVirtualListItem
         {
             private readonly Fixture _owner;
             private readonly bool _sticky;
             public int Binds;
-            public UGUIVirtualGroupItem Row;
+            public UIVirtualGroupItem Row;
             public GameObject GameObject { get; }
             public RectTransform RectTransform => (RectTransform)GameObject.transform;
             public View(GameObject root, Fixture owner, bool sticky) { GameObject = root; _owner = owner; _sticky = sticky; }
             public void Bind(int index, object data)
             {
-                Row = (UGUIVirtualGroupItem)data;
+                Row = (UIVirtualGroupItem)data;
                 Assert.AreEqual(_sticky, Row.IsSticky);
                 Binds++;
                 RectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Row.IsHeader ? 40 : 60);

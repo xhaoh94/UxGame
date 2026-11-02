@@ -15,7 +15,7 @@ namespace Ux.Editor.Tests
         public void LoadsTemplatesAndAppliesThemToComponent()
         {
             using var f = new Fixture();
-            var cache = new UGUIVirtualListTemplateCache(f.Load, f.Release);
+            var cache = new UIVirtualListTemplateCache(f.Load, f.Release);
             try
             {
                 Assert.IsTrue(cache.LoadAsync(f.Component, new Dictionary<int, string>
@@ -36,7 +36,7 @@ namespace Ux.Editor.Tests
         public void ConcurrentRequestsForSameLocationShareOneLoad()
         {
             using var f = new Fixture(delay: true);
-            var cache = new UGUIVirtualListTemplateCache(f.Load, f.Release);
+            var cache = new UIVirtualListTemplateCache(f.Load, f.Release);
             try
             {
                 var first = cache.LoadAsync(f.Component, new Dictionary<int, string> { { 0, "Assets/A.prefab" } });
@@ -55,7 +55,7 @@ namespace Ux.Editor.Tests
         public void PartialFailureKeepsSuccessesAndCanRetryOnlyFailedLocations()
         {
             using var f = new Fixture(fail: "Assets/B.prefab");
-            var cache = new UGUIVirtualListTemplateCache(f.Load, f.Release);
+            var cache = new UIVirtualListTemplateCache(f.Load, f.Release);
             try
             {
                 var locations = new Dictionary<int, string> { { 0, "Assets/A.prefab" }, { 1, "Assets/B.prefab" } };
@@ -77,7 +77,7 @@ namespace Ux.Editor.Tests
         public void CancellationAndDisposeReleaseEverythingOnce()
         {
             using var f = new Fixture(delay: true);
-            var cache = new UGUIVirtualListTemplateCache(f.Load, f.Release);
+            var cache = new UIVirtualListTemplateCache(f.Load, f.Release);
             var cts = new CancellationTokenSource();
             var task = cache.LoadAsync(f.Component, new Dictionary<int, string> { { 0, "Assets/A.prefab" } }, cts.Token);
             cts.Cancel();
@@ -94,7 +94,7 @@ namespace Ux.Editor.Tests
         public void DisposingAfterLoadReleasesEachLocationExactlyOnce()
         {
             using var f = new Fixture();
-            var cache = new UGUIVirtualListTemplateCache(f.Load, f.Release);
+            var cache = new UIVirtualListTemplateCache(f.Load, f.Release);
             cache.LoadAsync(f.Component, new Dictionary<int, string> { { 0, "Assets/A.prefab" }, { 1, "Assets/B.prefab" } })
                 .GetAwaiter().GetResult();
             cache.Dispose();
@@ -107,7 +107,7 @@ namespace Ux.Editor.Tests
         public void EmptyLocationFailsWithoutCallingLoader()
         {
             using var f = new Fixture();
-            var cache = new UGUIVirtualListTemplateCache(f.Load, f.Release);
+            var cache = new UIVirtualListTemplateCache(f.Load, f.Release);
             try
             {
                 Assert.IsFalse(cache.LoadAsync(f.Component, new Dictionary<int, string> { { 0, "" } }).GetAwaiter().GetResult());
@@ -132,7 +132,7 @@ namespace Ux.Editor.Tests
         private sealed class Fixture : IDisposable
         {
             public readonly GameObject Root;
-            public readonly UGUIVirtualListComponent Component;
+            public readonly UIVirtualListComponent Component;
             public readonly FailureBag Fail = new FailureBag();
             public int LoadCalls;
             public int ReleaseCalls;
@@ -146,7 +146,7 @@ namespace Ux.Editor.Tests
             {
                 _fail = fail;
                 _delay = delay;
-                Root = new GameObject("Template cache test", typeof(RectTransform), typeof(UGUIVirtualListScrollRect));
+                Root = new GameObject("Template cache test", typeof(RectTransform), typeof(UIVirtualListScrollRect));
                 var scroll = Root.GetComponent<ScrollRect>();
                 var viewport = new GameObject("Viewport", typeof(RectTransform));
                 viewport.transform.SetParent(Root.transform, false);
@@ -154,14 +154,14 @@ namespace Ux.Editor.Tests
                 var content = new GameObject("Content", typeof(RectTransform));
                 content.transform.SetParent(viewport.transform, false);
                 scroll.content = (RectTransform)content.transform;
-                Component = Root.AddComponent<UGUIVirtualListComponent>();
+                Component = Root.AddComponent<UIVirtualListComponent>();
                 Set(Component, "_scrollRect", scroll);
-                Set(Component, "_itemSizeMode", UGUIVirtualListItemSizeMode.Manual);
+                Set(Component, "_itemSizeMode", UIVirtualListItemSizeMode.Custom);
                 Set(Component, "_itemSize", new Vector2(100, 60));
-                Set(Component, "_listType", UGUIVirtualListType.Flat);
+                Set(Component, "_listType", UIVirtualListType.Flat);
                 Set(Component, "_listTypeConfigured", true);
-                var array = new UGUIVirtualListComponent.ItemTemplate[1];
-                array[0] = new UGUIVirtualListComponent.ItemTemplate { TypeId = 99, Template = MakePrefab("Serialized") };
+                var array = new UIVirtualListComponent.ItemTemplate[1];
+                array[0] = new UIVirtualListComponent.ItemTemplate { TypeId = 99, Template = MakePrefab("Serialized") };
                 Set(Component, "_itemTemplates", array);
             }
 
@@ -196,12 +196,12 @@ namespace Ux.Editor.Tests
 
             public void Release(string location) => ReleaseCalls++;
 
-            public int RuntimeTemplateCount(UGUIVirtualListComponent component) =>
-                ((System.Collections.IDictionary)typeof(UGUIVirtualListComponent)
+            public int RuntimeTemplateCount(UIVirtualListComponent component) =>
+                ((System.Collections.IDictionary)typeof(UIVirtualListComponent)
                     .GetField("_runtimeTemplates", BindingFlags.Instance | BindingFlags.NonPublic)
                     .GetValue(component)).Count;
 
-            private static void Set(object target, string name, object value) => typeof(UGUIVirtualListComponent)
+            private static void Set(object target, string name, object value) => typeof(UIVirtualListComponent)
                 .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(target, value);
 
             public void Dispose() { UnityEngine.Object.DestroyImmediate(Root); }

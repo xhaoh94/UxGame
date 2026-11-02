@@ -1,7 +1,6 @@
 ﻿using Ux;
 using System.Collections.Generic;
 using UnityEngine;
-using FairyGUI;
 
 namespace Ux
 {

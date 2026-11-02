@@ -1,6 +1,7 @@
-using FairyGUI;
 using System;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
 
 namespace Ux
 {
@@ -8,29 +9,21 @@ namespace Ux
     {
         public struct TagParse
         {
-            public TagParse(Type type)
-            {
-                this.type = type;
-            }
-
+            public TagParse(Type type) { this.type = type; }
             public Type type { get; }
         }
 
-        private readonly Dictionary<Type, TagBase> _keyToMap = new Dictionary<Type, TagBase>();
-        private readonly HashSet<Type> _keyToType = new HashSet<Type>();
-
-        private Dictionary<GObject, TagBase> _displayToTag;
-        private Dictionary<TagBase, List<GObject>> _tagToDisplay;
-
-
-        private Dictionary<GTextField, TagBase> _textToTag;
-        private Dictionary<TagBase, List<GTextField>> _tagToText;
+        private readonly Dictionary<Type, TagBase> _keyToMap = new();
+        private readonly HashSet<Type> _keyToType = new();
+        private Dictionary<GameObject, TagBase> _displayToTag;
+        private Dictionary<TagBase, List<GameObject>> _tagToDisplay;
+        private Dictionary<TMP_Text, TagBase> _textToTag;
+        private Dictionary<TagBase, List<TMP_Text>> _tagToText;
 
         public void Add(List<TagParse> tags)
         {
             foreach (var tag in tags)
             {
-                var tagId = tag.type.FullName.ToHash();
                 if (_keyToType.Contains(tag.type))
                 {
                     Log.Error("重复注册单例红点:{1}", tag.type.FullName);
@@ -42,259 +35,110 @@ namespace Ux
 
         public void Release()
         {
-            foreach (var kv in _keyToMap)
-            {
-                kv.Value.Release();
-            }
-
+            foreach (var kv in _keyToMap) kv.Value.Release();
             _keyToMap.Clear();
+            _displayToTag?.Clear();
+            _tagToDisplay?.Clear();
+            _textToTag?.Clear();
+            _tagToText?.Clear();
         }
-        /// <summary>
-        /// 是否红点，这个只适用单例类型判断，动态创建的红点需要通过GetTag获得单例红点后，通过Find获取
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public bool IsRed<T>() where T : TagBase
-        {
-            return IsRed(typeof(T));
-        }
-        /// <summary>
-        /// 是否红点，这个只适用单例类型判断，动态创建的红点需要通过GetTag获得单例红点后，通过Find获取
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public bool IsRed(Type type)
-        {
-            var tag = GetTag(type);
-            return tag != null && tag.IsRed();
-        }
-        /// <summary>
-        /// 获取单例红点
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetTag<T>() where T : TagBase
-        {
-            return _GetTag<T>(typeof(T));
-        }
-        /// <summary>
-        /// 获取单例红点
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+
+        public bool IsRed<T>() where T : TagBase => IsRed(typeof(T));
+        public bool IsRed(Type type) => GetTag(type)?.IsRed() == true;
+        public T GetTag<T>() where T : TagBase => GetTag(typeof(T)) as T;
         public TagBase GetTag(Type type)
         {
-            return _GetTag<TagBase>(type);
-        }
-
-        T _GetTag<T>(Type type) where T : TagBase
-        {
-            if (_keyToMap.TryGetValue(type, out var tag)) return (T)tag;
-            if (!_keyToType.Contains(type))
-            {
-                return null;
-            }
+            if (_keyToMap.TryGetValue(type, out var tag)) return tag;
+            if (!_keyToType.Contains(type)) return null;
             tag = Pool.Get<TagBase>(type);
             tag.Init(type);
             _keyToMap.Add(type, tag);
-            return (T)tag;
+            return tag;
         }
 
-        public void On(TagBase tag, GObject gObj)
+        public void On(TagBase tag, GameObject target)
         {
-            if (gObj == null) return;
-            this._displayToTag ??= new Dictionary<GObject, TagBase>();
-            this._tagToDisplay ??= new Dictionary<TagBase, List<GObject>>();
-            if (_displayToTag.TryGetValue(gObj, out var tempTag) && tempTag == tag)
-            {
-                return;
-            }
-
-            Off(gObj);
-            if (!_tagToDisplay.TryGetValue(tag, out var objList))
-            {
-                objList = new List<GObject>();
-                _tagToDisplay.Add(tag, objList);
-            }
-
-            objList.Add(gObj);
-            gObj.visible = tag.IsRed();
-            _displayToTag.Add(gObj, tag);
+            if (tag == null || target == null) return;
+            _displayToTag ??= new();
+            _tagToDisplay ??= new();
+            if (_displayToTag.TryGetValue(target, out var old) && old == tag) return;
+            Off(target);
+            if (!_tagToDisplay.TryGetValue(tag, out var list))
+                _tagToDisplay[tag] = list = new List<GameObject>();
+            list.Add(target);
+            target.SetActive(tag.IsRed());
+            _displayToTag[target] = tag;
         }
 
-        public void On(TagBase tag, GTextField text)
+        public void On(TagBase tag, TMP_Text text)
         {
-            if (text == null) return;
-            this._textToTag ??= new Dictionary<GTextField, TagBase>();
-            this._tagToText ??= new Dictionary<TagBase, List<GTextField>>();
-            if (_textToTag.TryGetValue(text, out var tempTag) && tempTag == tag)
-            {
-                return;
-            }
-
+            if (tag == null || text == null) return;
+            _textToTag ??= new();
+            _tagToText ??= new();
+            if (_textToTag.TryGetValue(text, out var old) && old == tag) return;
             Off(text);
-            if (!_tagToText.TryGetValue(tag, out var texts))
-            {
-                texts = new List<GTextField>();
-                _tagToText.Add(tag, texts);
-            }
-
-            texts.Add(text);
-            text.visible = tag.IsRed();
-            if (text.visible) text.text = tag.RedNum().ToString();
-            _textToTag.Add(text, tag);
+            if (!_tagToText.TryGetValue(tag, out var list))
+                _tagToText[tag] = list = new List<TMP_Text>();
+            list.Add(text);
+            text.gameObject.SetActive(tag.IsRed());
+            if (tag.IsRed()) text.text = tag.RedNum().ToString();
+            _textToTag[text] = tag;
         }
 
-        public void On<T>(GObject gObj) where T : TagBase
+        public void On<T>(GameObject target) where T : TagBase => On(GetTag<T>(), target);
+        public void On<T>(TMP_Text text) where T : TagBase => On(GetTag<T>(), text);
+
+        public void Off(GameObject target)
         {
-            if (gObj == null) return;
-            var tag = GetTag<T>();
-            On(tag, gObj);
+            if (target == null || _displayToTag == null || !_displayToTag.TryGetValue(target, out var tag)) return;
+            if (_tagToDisplay.TryGetValue(tag, out var list)) list.Remove(target);
+            target.SetActive(false);
+            _displayToTag.Remove(target);
         }
 
-        public void On<T>(GTextField text) where T : TagBase
+        public void Off(TMP_Text text)
         {
-            if (text == null) return;
-            var tag = GetTag<T>();
-            On(tag, text);
-        }
-
-
-        public void Off(GTextField text)
-        {
-            if (text == null) return;
-            if (_textToTag == null) return;
-            if (!_textToTag.TryGetValue(text, out var tag))
-            {
-                return;
-            }
-
-            if (_tagToText.TryGetValue(tag, out var texts))
-            {
-                texts.Remove(text);
-                text.visible = false;
-            }
-
+            if (text == null || _textToTag == null || !_textToTag.TryGetValue(text, out var tag)) return;
+            if (_tagToText.TryGetValue(tag, out var list)) list.Remove(text);
+            text.gameObject.SetActive(false);
             _textToTag.Remove(text);
-        }
-
-        public void Off(GObject gObj)
-        {
-            if (gObj == null) return;
-            if (_displayToTag == null) return;
-            if (!_displayToTag.TryGetValue(gObj, out var tag))
-            {
-                return;
-            }
-
-            if (_tagToDisplay.TryGetValue(tag, out var list))
-            {
-                gObj.visible = false;
-                list.Remove(gObj);
-            }
-
-            _displayToTag.Remove(gObj);
         }
 
         public void Off(TagBase tag)
         {
-            if (_tagToDisplay.TryGetValue(tag, out var list))
+            if (_tagToDisplay?.TryGetValue(tag, out var displays) == true)
             {
-                for (int i = list.Count - 1; i >= 0; i--)
-                {
-                    var gObj = list[i];
-                    if (gObj == null)
-                    {
-                        list.RemoveAt(i);
-                        continue;
-                    }
-
-                    if (gObj.isDisposed)
-                    {
-                        list.RemoveAt(i);
-                    }
-                    else
-                    {
-                        gObj.visible = false;
-                    }
-
-                    this._displayToTag.Remove(gObj);
-                }
-
+                foreach (var target in displays) if (target != null) target.SetActive(false);
                 _tagToDisplay.Remove(tag);
             }
-
-            if (_tagToText.TryGetValue(tag, out var texts))
+            if (_tagToText?.TryGetValue(tag, out var texts) == true)
             {
-                for (int i = texts.Count - 1; i >= 0; i--)
-                {
-                    var text = texts[i];
-                    if (text == null)
-                    {
-                        texts.RemoveAt(i);
-                        continue;
-                    }
-
-                    if (text.isDisposed)
-                    {
-                        texts.RemoveAt(i);
-                    }
-                    else
-                    {
-                        text.visible = false;
-                    }
-
-                    this._textToTag.Remove(text);
-                }
-
+                foreach (var text in texts) if (text != null) text.gameObject.SetActive(false);
                 _tagToText.Remove(tag);
             }
         }
 
         public void ___UpdateStatusByTag(TagBase tag)
         {
-            if (!_tagToDisplay.TryGetValue(tag, out var list)) return;
-            for (int i = list.Count - 1; i >= 0; i--)
+            if (_tagToDisplay?.TryGetValue(tag, out var list) != true) return;
+            for (var i = list.Count - 1; i >= 0; i--)
             {
-                var obj = list[i];
-                if (obj == null)
-                {
-                    list.RemoveAt(i);
-                    continue;
-                }
-
-                if (obj.isDisposed)
-                {
-                    _displayToTag.Remove(obj);
-                    list.RemoveAt(i);
-                    continue;
-                }
-
-                obj.visible = tag.IsRed();
+                if (list[i] == null) list.RemoveAt(i);
+                else list[i].SetActive(tag.IsRed());
             }
         }
 
         public void ___UpdateNumByTag(TagBase tag)
         {
-            if (!_tagToText.TryGetValue(tag, out var list)) return;
-            for (int i = list.Count - 1; i >= 0; i--)
+            if (_tagToText?.TryGetValue(tag, out var list) != true) return;
+            for (var i = list.Count - 1; i >= 0; i--)
             {
                 var text = list[i];
-                if (text == null)
-                {
-                    list.RemoveAt(i);
-                    continue;
-                }
-
-                if (text.isDisposed)
-                {
-                    list.RemoveAt(i);
-                    _textToTag.Remove(text);
-                }
+                if (text == null) list.RemoveAt(i);
                 else
                 {
-                    text.visible = tag.IsRed();
-                    if (text.visible) text.text = tag.RedNum().ToString();
+                    text.gameObject.SetActive(tag.IsRed());
+                    if (tag.IsRed()) text.text = tag.RedNum().ToString();
                 }
             }
         }

@@ -1,43 +1,15 @@
-﻿using FairyGUI;
+using Ux;
 using System;
 
 namespace Ux.UI
 {
-    partial class CommonTabItem
+    [UI]
+    partial class MultipleView
     {
         protected override void OnShow()
         {
-            if (TryGetParam(out int id))
-            {
-                var data = UIMgr.Ins.GetUIData(id);
-                if (data.TabData.Title is string title)
-                {
-                    txtTitle.text = title;
-                }
-            }
-        }
-    }
-    [UI]
-    partial class MultipleView
-    {        
-        protected override IUIAnim ShowAnim => new UIAnimTransition(t0);
-        protected override IUIAnim HideAnim => new UIAnimTransition(t1);
-        public override UIType Type => UIType.Stack;
-        protected override void OnInit()
-        {
-            base.OnInit();
-            SetItemRenderer<CommonTabItem>();
-            //SetTabRenderer
-        }
-        protected override void OnShow()
-        {
-            base.OnShow();            
-            TimeMgr.Ins.Timer(5, this, () =>
-            {
-                //var data = UIMgr.Ins.GetUIData(ID);
-                //data.Children.Reverse();
-                //RefreshTab();                                
-            }).Repeat(1).Build();
+            base.OnShow();
+            TimeMgr.Ins.Timer(5, this, () => { }).Repeat(1).Build();
         }
 
         int cnt = 0;
@@ -49,13 +21,10 @@ namespace Ux.UI
                 TimeMgr.Ins.Timer(.4f, this, () =>
                 {
                     UIMgr.Ins.Create().Show<Multiple2TabView>();
-                    UIMgr.Ins.Create().Show<Multiple3TabView>();                                        
-                    //UIMgr.Ins.Hide<Multiple2TabView>();                    
+                    UIMgr.Ins.Create().Show<Multiple3TabView>();
                 }).Repeat(1).Build();
             }
-
         }
-
     }
 
     [UI(typeof(MultipleView))]
@@ -63,13 +32,10 @@ namespace Ux.UI
     partial class Multiple1TabView
     {
         public override int HideDestroyTime => -1;
-        //protected override IUIAnim ShowAnim => new UITransition(t0);
-        //protected override IUIAnim HideAnim => new UITransition(t1);        
-        partial void OnBtn1Click(EventContext e)
+
+        partial void OnBtn1Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<Stack1View>();            
-            //UIMgr.Ins.Hide<MultipleView>();
-            //UIMgr.Ins.Show<MultipleView>("222");
+            UIMgr.Ins.Create().Show<Stack1View>();
         }
     }
 
@@ -78,13 +44,8 @@ namespace Ux.UI
     partial class Multiple2TabView
     {
         public override int HideDestroyTime => -1;
-        protected override IUIAnim ShowAnim => new UIAnimTransition(t0);
-        protected override IUIAnim HideAnim => new UIAnimTransition(t1);
-        protected override void OnShow()
-        {
-            base.OnShow();
-        }
-        partial void OnBtn1Click(EventContext e)
+
+        partial void OnBtn1Click(UIEventContext e)
         {
             UIMgr.Ins.Create().Show<Stack2View>();
         }
@@ -95,7 +56,8 @@ namespace Ux.UI
     partial class Multiple3TabView
     {
         public override int HideDestroyTime => -1;
-        partial void OnBtn1Click(EventContext e)
+
+        partial void OnBtn1Click(UIEventContext e)
         {
             UIMgr.Ins.Create().Show<Stack3View>();
         }

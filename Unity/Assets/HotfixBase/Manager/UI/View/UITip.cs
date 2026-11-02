@@ -1,15 +1,12 @@
-using FairyGUI;
-using System.Collections;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using static Ux.UIMgr;
 
 namespace Ux
 {
     public class UITip : UIView
     {
-        protected override string PkgName => null;
-
-        protected override string ResName => null;
         public override int HideDestroyTime => -1;
         protected override UILayer Layer => UILayer.Tip;
         public override UIType Type => UIType.Fixed;
@@ -17,11 +14,7 @@ namespace Ux
         public override UIFocusMode FocusMode => UIFocusMode.None;
 
         protected UITipFactory.TipData tipData;
-
-        #region 组件        
-        protected virtual GTextField __txtContent { get; private set; } = null;
-        protected virtual Transition __transition { get; private set; } = null;
-        #endregion
+        protected virtual TMP_Text __txtContent { get; } = null;
 
         public override void InitData(IUIData data, CallbackData initData, int instanceId)
         {
@@ -29,18 +22,19 @@ namespace Ux
             base.InitData(data, initData, instanceId);
         }
 
-        protected override void ToShow(bool isAnim, int id,  bool isStack, int showVersion)
-        {            
-            if (TryGetParam(out UITipFactory.TipData _tipData))
+        protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)
+        {
+            if (TryGetParam(out UITipFactory.TipData value))
             {
-                tipData = _tipData;
+                tipData = value;
                 tipData.ShowCallBack?.Invoke(this);
             }
             else
             {
                 Log.Error("Tip 参数类型错误");
                 return;
-            }            
+            }
+
             InitParam();
             base.ToShow(isAnim, id, isStack, showVersion);
         }
@@ -48,21 +42,9 @@ namespace Ux
         protected virtual void InitParam()
         {
             if (__txtContent != null)
-            {
-                __txtContent.text = tipData.Content;
-            }
-            if (__transition != null)
-            {
-                __transition?.Play(HideSelf);
-            }
+                __txtContent.text = tipData.Content ?? string.Empty;
         }
 
-        protected override void OnLayout()
-        {
-            GObject parent = GObject.parent ?? UIMgr.Ins.GetLayer(UILayer.Root);
-            GObject.SetPosition((parent.width - GObject.width) / 2, 150, 0);
-            //SetLayout(UILayout.Center_Middle);
-        }
         private void _Hide()
         {
             tipData.HideCallBack?.Invoke(this);

@@ -10,7 +10,7 @@ namespace Ux.UI
     /// </summary>
     public sealed class UGUIVirtualListDemo : MonoBehaviour
     {
-        [SerializeField] private UGUIVirtualListComponent _list;
+        [SerializeField] private UIVirtualListComponent _list;
         [Min(1)] [SerializeField] private int _dataCount = 1000;
 
         private readonly Dictionary<GameObject, Text> _texts = new();
@@ -20,14 +20,14 @@ namespace Ux.UI
         private void Start()
         {
             if (_list == null)
-                _list = GetComponent<UGUIVirtualListComponent>();
+                _list = GetComponent<UIVirtualListComponent>();
             if (_list == null)
             {
-                Debug.LogError("请先执行 UxGame/Test/Create UGUI VirtualList Demo 配置列表组件。", this);
+                Debug.LogError("请先执行 UxGame/Test/Create UI VirtualList Demo 配置列表组件。", this);
                 return;
             }
 
-            if (_list.ListType != UGUIVirtualListType.Flat)
+            if (_list.ListType != UIVirtualListType.Flat)
             {
                 Debug.LogWarning("当前不是普通列表类型，请使用对应的树形、分页或分组数据源 Demo。", this);
                 return;
@@ -59,14 +59,14 @@ namespace Ux.UI
             {
                 text = item.GetComponentInChildren<Text>(true);
                 if (text == null)
-                    throw new System.InvalidOperationException("Demo Item 模板需要包含 UGUI Text 子节点。");
+                    throw new System.InvalidOperationException("Demo Item 模板需要包含 UI Text 子节点。");
                 _texts[item] = text;
             }
 
             item.name = $"Demo Item [{index}] id={row.Id}";
-            text.verticalOverflow = _list.LayoutMode == UGUIVirtualListLayoutMode.VariableLinear
+            text.verticalOverflow = _list.LayoutMode == UIVirtualListLayoutMode.VariableLinear
                 ? VerticalWrapMode.Overflow : VerticalWrapMode.Truncate;
-            if (_list.AllowMultiple && _list.LayoutMode == UGUIVirtualListLayoutMode.FixedLinear)
+            if (_list.AllowMultiple && _list.LayoutMode == UIVirtualListLayoutMode.FixedLinear)
             {
                 text.text = $"道具 {row.Id:D4}\n数量：{row.Id % 99 + 1 + row.Revision}";
                 text.alignment = TextAnchor.MiddleCenter;
@@ -80,10 +80,10 @@ namespace Ux.UI
                 background.color = _list.IsSelected(index)
                     ? new Color(0.24f, 0.44f, 0.72f, 0.98f)
                     : new Color(0.12f, 0.16f, 0.23f, 0.96f);
-            if (_list.LayoutMode != UGUIVirtualListLayoutMode.VariableLinear)
+            if (_list.LayoutMode != UIVirtualListLayoutMode.VariableLinear)
                 return;
 
-            // 列表已在 Bind 前设置行宽。这里使用 UGUI 的文本布局结果，而不是按字数猜测高度。
+            // 列表已在 Bind 前设置行宽。这里使用 UI 的文本布局结果，而不是按字数猜测高度。
             // FixedLinear 会使用 Inspector 的固定尺寸；VariableLinear 会测量这里设置的实际高度。
             float height = Mathf.Max(76f, Mathf.Ceil(text.preferredHeight) + 20f);
             ((RectTransform)item.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
@@ -98,13 +98,13 @@ namespace Ux.UI
         private void OnItemClicked(int index, object data)
         {
             var row = (DemoRow)data;
-            if (_list.SelectionMode != UGUIVirtualSelectionMode.None)
+            if (_list.SelectionMode != UIVirtualSelectionMode.None)
             {
                 _list.ToggleSelection(index);
                 Debug.Log($"[UGUIVirtualListDemo] 选择 {index} => {_list.IsSelected(index)}，共 {_list.SelectedCount} 项");
                 return;
             }
-            Debug.Log(_list.AllowMultiple && _list.LayoutMode == UGUIVirtualListLayoutMode.FixedLinear
+            Debug.Log(_list.AllowMultiple && _list.LayoutMode == UIVirtualListLayoutMode.FixedLinear
                 ? $"[UGUIVirtualListDemo] 点击道具 index={index}, id={row.Id}"
                 : $"[UGUIVirtualListDemo] 点击 index={index}, id={row.Id}, text={row.Text}");
         }
@@ -113,7 +113,7 @@ namespace Ux.UI
         public void SimulateAsyncSizeChange()
         {
             if (!Application.isPlaying || _list == null || !_list.IsInitialized ||
-                _list.LayoutMode != UGUIVirtualListLayoutMode.VariableLinear)
+                _list.LayoutMode != UIVirtualListLayoutMode.VariableLinear)
             {
                 Debug.LogWarning("请先运行可变尺寸 Demo，再执行此测试。", this);
                 return;
@@ -125,7 +125,7 @@ namespace Ux.UI
             StartCoroutine(ExpandAfterDelay(token));
         }
 
-        private IEnumerator ExpandAfterDelay(UGUIVirtualListItemToken token)
+        private IEnumerator ExpandAfterDelay(UIVirtualListItemToken token)
         {
             yield return new WaitForSecondsRealtime(1f);
             // 必须先检查令牌再修改对象。滚动复用、刷新或数据替换后，旧任务不再写回。
@@ -145,7 +145,7 @@ namespace Ux.UI
         public void CycleSelectionMode()
         {
             if (!CanRunDataTest()) return;
-            var next = (UGUIVirtualSelectionMode)(((int)_list.SelectionMode + 1) % 3);
+            var next = (UIVirtualSelectionMode)(((int)_list.SelectionMode + 1) % 3);
             _list.SelectionMode = next;
             _list.ClearSelection();
             _list.Refresh();
@@ -156,7 +156,7 @@ namespace Ux.UI
         public void SelectFirstTen()
         {
             if (!CanRunDataTest()) return;
-            _list.SelectionMode = UGUIVirtualSelectionMode.Multiple;
+            _list.SelectionMode = UIVirtualSelectionMode.Multiple;
             _list.SelectRange(0, 9);
         }
 
@@ -164,7 +164,7 @@ namespace Ux.UI
         public void SmoothScrollToMiddleItem()
         {
             if (!CanRunDataTest()) return;
-            _list.ScrollTo(Mathf.Min(500, _list.Count - 1), UGUIVirtualListAlignment.Center);
+            _list.ScrollTo(Mathf.Min(500, _list.Count - 1), UIVirtualListAlignment.Center, 0f, 0.25f);
         }
 
         [ContextMenu("测试/停止滚动")]
@@ -226,7 +226,7 @@ namespace Ux.UI
             for (int i = 0; i < count; i++)
             {
                 int id = _nextRowId++;
-                string text = $"消息 ID {id}：这是一个 UGUIVirtualList 可变高度 Item 测试。";
+                string text = $"消息 ID {id}：这是一个 UIVirtualList 可变高度 Item 测试。";
                 for (int j = 0; j < id % 5; j++)
                     text += " 这段文字会让 Item 高度随内容变化。";
                 result.Add(new DemoRow(id, text));

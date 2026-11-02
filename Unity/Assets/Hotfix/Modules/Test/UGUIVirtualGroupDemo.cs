@@ -7,19 +7,19 @@ namespace Ux.UI
 {
     public sealed class UGUIVirtualGroupDemo : MonoBehaviour
     {
-        [SerializeField] private UGUIVirtualListComponent _list;
+        [SerializeField] private UIVirtualListComponent _list;
         [Min(1)] [SerializeField] private int _groupCount = 20;
         [Min(0)] [SerializeField] private int _itemsPerGroup = 20;
         private readonly Dictionary<GameObject, Text> _texts = new();
-        private UGUIVirtualGroupAdapter _adapter;
+        private UIVirtualGroupAdapter _adapter;
         private bool _subscribed;
         private int _headerRevision;
         private void Start()
         {
-            if (_list == null) _list = GetComponent<UGUIVirtualListComponent>();
-            if (_list == null || _list.ListType != UGUIVirtualListType.Grouped)
+            if (_list == null) _list = GetComponent<UIVirtualListComponent>();
+            if (_list == null || _list.ListType != UIVirtualListType.Grouped)
             {
-                Debug.LogWarning("请使用 Create UGUI Grouped Demo 或选择分组列表。", this);
+                Debug.LogWarning("请使用 Create UI Grouped Demo 或选择分组列表。", this);
                 return;
             }
             _list.ItemTypeProvider = GetItemType;
@@ -32,29 +32,29 @@ namespace Ux.UI
             _adapter = _list.GroupAdapter;
             _list.SetGroups(CreateGroups());
         }
-        private int GetItemType(int index, object data) => ((UGUIVirtualGroupItem)data).IsHeader ? 0 : 1;
+        private int GetItemType(int index, object data) => ((UIVirtualGroupItem)data).IsHeader ? 0 : 1;
         private void BindItem(int index, object data, GameObject view)
         {
-            var row = (UGUIVirtualGroupItem)data;
+            var row = (UIVirtualGroupItem)data;
             if (!_texts.TryGetValue(view, out var text) || text == null)
             {
                 text = view.GetComponentInChildren<Text>(true);
-                if (text == null) throw new InvalidOperationException("分组模板需要 UGUI Text。");
+                if (text == null) throw new InvalidOperationException("分组模板需要 UI Text。");
                 _texts[view] = text;
             }
             text.text = row.IsHeader ? row.Data?.ToString() : ((DemoData)row.Data).Text;
             text.color = row.IsSticky ? new Color(1f, 0.9f, 0.6f) : Color.white;
             text.alignment = TextAnchor.MiddleLeft;
-            text.verticalOverflow = _list.LayoutMode == UGUIVirtualListLayoutMode.VariableLinear
+            text.verticalOverflow = _list.LayoutMode == UIVirtualListLayoutMode.VariableLinear
                 ? VerticalWrapMode.Overflow : VerticalWrapMode.Truncate;
             view.name = row.IsSticky ? "Sticky " + row.GroupId : $"Group Item [{index}] {row.GroupId}";
-            if (_list.LayoutMode == UGUIVirtualListLayoutMode.VariableLinear)
+            if (_list.LayoutMode == UIVirtualListLayoutMode.VariableLinear)
                 ((RectTransform)view.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
                     Mathf.Max(row.IsHeader ? 64f : 76f, Mathf.Ceil(text.preferredHeight) + 20f));
         }
         private void OnItemClicked(int index, object data)
         {
-            var row = (UGUIVirtualGroupItem)data;
+            var row = (UIVirtualGroupItem)data;
             Debug.Log($"[UGUIVirtualGroupDemo] 点击 {row.GroupId} / {row.ItemIndex}，组头={row.IsHeader}", this);
         }
         private void OnRecycled(int index, object data, GameObject view)
@@ -79,9 +79,9 @@ namespace Ux.UI
             if (Ready()) _list.SetGroups(CreateGroups());
         }
         private bool Ready() => Application.isPlaying && _list != null && _list.IsInitialized && _adapter != null && _adapter.OwnsCurrentData;
-        private List<UGUIVirtualGroup> CreateGroups()
+        private List<UIVirtualGroup> CreateGroups()
         {
-            var result = new List<UGUIVirtualGroup>();
+            var result = new List<UIVirtualGroup>();
             for (int g = 0; g < _groupCount; g++)
             {
                 var rows = new List<DemoData>();
@@ -91,7 +91,7 @@ namespace Ux.UI
                     for (int n = 0; n < i % 4; n++) text += " 不同高度的 Item 也支持分组吸顶。";
                     rows.Add(new DemoData(text));
                 }
-                result.Add(UGUIVirtualGroup.Create("group-" + g, $"分组 {g:D2}", rows));
+                result.Add(UIVirtualGroup.Create("group-" + g, $"分组 {g:D2}", rows));
             }
             return result;
         }

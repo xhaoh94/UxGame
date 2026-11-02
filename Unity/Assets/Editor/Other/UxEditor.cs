@@ -18,11 +18,6 @@ namespace Ux.Editor
             {
                 //生成YooAsset UI收集器配置
                 UIClassifyWindow.CreateYooAssetUIGroup();
-                //生成UI代码文件
-                if (!UICodeGenWindow.Export())
-                {
-                    return false;
-                }
             }
 
             if (_config)

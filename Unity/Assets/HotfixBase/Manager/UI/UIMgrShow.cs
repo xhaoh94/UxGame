@@ -124,7 +124,7 @@ namespace Ux
         /// </summary>
         private async UniTask<T> _ShowAsync<T>(int id, IUIParam param, bool isAnim, bool checkStack, UIShowMode mode = UIShowMode.Reuse) where T : IUI
         {
-            EnsureInitialized();
+            // 单例创建时已完成初始化，所有入口都经由 UIMgr.Ins，这里无需再检查。
             var data = GetUIData(id);
             if (data == null)
             {
@@ -198,14 +198,9 @@ namespace Ux
         private void BuildShowChain(int targetId, List<int> chain)
         {
             chain.Clear();
-            var data = GetUIData(targetId);
-            if (data == null)
-            {
-                return;
-            }
-
+            // 唯一调用方 _ShowAsync 已经校验过 targetId 的数据，这里不再重复判空。
             // 获取父界面ID列表并反转（从根到目标）
-            var parents = data.GetParentIDs();
+            var parents = GetUIData(targetId).GetParentIDs();
             if (parents != null)
             {
                 for (int i = parents.Count - 1; i >= 0; i--)
@@ -222,8 +217,6 @@ namespace Ux
         /// </summary>
         private async UniTask<bool> RunShowSession(ShowSession session)
         {
-            session.CapturePreviousMountedChild(GetMountedRootChildId(session.RootRecordId));
-
             // 1. 确保父子链中的每个节点都有可用的实例
             if (!await PrepareShowChain(session))
             {
@@ -422,6 +415,13 @@ namespace Ux
                     {
                         session.TargetRecordId = record.Id;
                     }
+                }
+
+                // 根记录 Id 此时才确定，在绑定根链路请求之前记录「切换前挂载的子页签」，
+                // 否则 CapturePreviousMountedChild 会拿到 0，旧页签不会被隐藏。
+                if (session.RootRecordId != 0)
+                {
+                    session.CapturePreviousMountedChild(GetMountedRootChildId(session.RootRecordId));
                 }
 
                 // 第二遍：开始显示事务、绑定根链路请求、准备实例。
@@ -755,21 +755,9 @@ namespace Ux
                 return null;
             }
 
-            var loaded = false;
             try
             {
-                // 加载UI资源包
-                if (data.Pkgs is { Length: > 0 })
-                {
-                    if (!await ResMgr.Ins.LoadUIPackage(data.Pkgs))
-                    {
-                        Log.Error("[{0}]资源包加载失败", data.Name);
-                        return null;
-                    }
-
-                    loaded = true;
-                }
-
+                // UI 页面只加载 Prefab。
                 // 创建UI实例
                 var ui = (IUI)Activator.CreateInstance(data.CType);
                 if (ui == null)
@@ -786,12 +774,6 @@ namespace Ux
                 // 让异常在这里收敛为 null，由显示会话按失败流程回滚，
                 // 避免异常穿透导致记录停在 Creating 状态。
                 Log.Error("[{0}]创建UI异常 {1}", data.Name, ex);
-                if (loaded)
-                {
-                    // 实例没建出来，把刚才加上的包引用还回去，否则这个包永远不会被卸载。
-                    ResMgr.Ins.RemoveUIPackage(data.Pkgs);
-                }
-
                 return null;
             }
         }
