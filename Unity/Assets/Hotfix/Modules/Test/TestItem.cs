@@ -1,3 +1,4 @@
+using TMPro;
 namespace Ux.UI
 {
     partial class TestItem
@@ -5,7 +6,7 @@ namespace Ux.UI
         protected override void OnShow()
         {
             if (TryGetParam(out int index))
-                UITextUtil.SetText(txtNum, index.ToString());
+                txtNum.text = index.ToString();
 
             if (Index == 0)
             {
@@ -24,7 +25,7 @@ namespace Ux.UI
         protected override void OnShow()
         {
             if (TryGetParam(out int index))
-                UITextUtil.SetText(txtNum, index.ToString());
+                txtNum.text = index.ToString();
         }
     }
 }

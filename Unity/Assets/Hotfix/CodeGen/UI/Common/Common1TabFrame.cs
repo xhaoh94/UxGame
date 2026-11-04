@@ -12,13 +12,10 @@ namespace Ux.UI
         protected GameObject btnClose;
 
         public Common1TabFrame(GameObject gameObject, UIObject parent) : base(gameObject, parent) { }
-        protected override RectTransform __tabContent => tabContent;
-        protected override UIList __listTab => listTab;
-        protected override GameObject __btnClose => btnClose;
 
         protected override void CreateChildren()
         {
-            var root = GameObject.transform;
+            var root = Transform;
             tabContent = root.GetChild(2) as RectTransform;
             listTab = new UIList(root.GetChild(3).gameObject, this);
             btnClose = root.GetChild(4).gameObject;

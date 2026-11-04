@@ -1,17 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Rendering.Universal;
 
 namespace Ux
 {
     /// <summary>
     /// UI管理器类，负责管理整个UI系统的生命周期、显示、隐藏、栈管理等核心功能    
     /// </summary>
-    public partial class UIMgr : Singleton<UIMgr>, IUIBlurHandlerCallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess, IUIFocusHandlerCallback
-    {    
+    public partial class UIMgr : Singleton<UIMgr>, IUICallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess, IUIFocusHandlerCallback
+    {
         /// <summary>
         /// 对话框工厂实例，用于创建和管理对话框
         /// </summary>
@@ -54,14 +53,15 @@ namespace Ux
         private readonly Dictionary<int, HashSet<int>> _rootRecordIds = new();
 
         private readonly Dictionary<int, IUI> _showed = new(); // 当前显示的UI字典
-        private readonly Dictionary<int, List<string>> _idLazyloads = new (); // UI懒加载资源字典
-        private readonly Dictionary<int, Downloader> _idDownloader = new ();    // UI下载器字典
-        private readonly List<StackEntry> _stackEntries = new ();   // UI栈条目列表
-        private readonly CallbackData _initData;              // UI初始化回调数据
+        private readonly Dictionary<int, List<string>> _idLazyloads = new(); // UI懒加载资源字典
+        private readonly Dictionary<int, Downloader> _idDownloader = new();    // UI下载器字典
+        private readonly List<StackEntry> _stackEntries = new();   // UI栈条目列表        
         private readonly UICacheHandler _cacheHandler;      // UI缓存处理器
         private readonly UIBlurHandler _blurHandler;          // UI模糊效果处理器
         private readonly UIStackHandler _stackHandler;        // UI栈处理器
         private readonly UIFocusHandler _focusHandler;        // UI聚焦处理器
+        private readonly UICameraHandler _cameraHandler;      // UI 相机与相机栈挂载
+        private readonly UIStageHandler _stageHandler;        // 界面上屏排序
 
 #if UNITY_EDITOR
         /// <summary>
@@ -82,7 +82,7 @@ namespace Ux
         /// <summary>是否已完成 UI 初始化（UI Root 与各层级已创建）。</summary>
         public bool IsInitialized => _uiInitialized;
 
-        private static RectTransform _CreateUILayer(Transform root, UILayer layer)
+        private static RectTransform CreateUILayer(Transform root, UILayer layer)
         {
             var go = new GameObject(layer.ToString(), typeof(RectTransform));
             var rect = (RectTransform)go.transform;
@@ -95,34 +95,54 @@ namespace Ux
             return rect;
         }
 
-        private const string UiRootName = "[UIRoot]";
-        private static RectTransform _uiRoot;
+        private const string UiRootName = "[UIRoot]";        
 
         /// <summary>
-        /// 获取或创建 UI 专用根节点。
-        /// 不复用场景里其他 Canvas（例如调试控制台），避免 UI 层级混入无关对象。
+        /// 把 UI 相机切成 Overlay 挂进场景相机的栈（场景加载后由 CameraComponent 调用）。
+        /// 没有可挂的宿主时 UI 相机自持 Base 渲染，UI 照样可见。
         /// </summary>
-        private static RectTransform EnsureUiRoot()
+        public void AttachUIStack(Camera baseCamera) => _cameraHandler.Attach(baseCamera);
+
+        // —— 界面上屏排序（实现见 UIStageHandler）——
+
+        void IUICallback.RegisterStage(int instanceId, UILayer layer)
         {
-            if (_uiRoot != null)
-                return _uiRoot;
+            var record = GetRecord(instanceId);
+            if (record?.UI is not UIBase ui) return;
+            // 子页面挂在父界面容器下，不参与层排序。
+            if (record.ParentRootId != 0 && record.ParentRootId != record.Id) return;
 
-            var existing = GameObject.Find(UiRootName);
-            if (existing != null)
+            // 界面要上屏了：UI 相机还没有宿主时在这里找一次，不做每帧轮询。
+            _cameraHandler.TryAttachAny();
+            _stageHandler.Register(ui, layer);
+        }
+
+        void IUICallback.UnregisterStage(int instanceId, UILayer layer) => _stageHandler.Unregister(instanceId, layer);
+
+        bool IUICallback.TryGetStageSorting(int instanceId, out string sortingLayer, out int order)
+            => _stageHandler.TryGetSorting(instanceId, out sortingLayer, out order);
+
+        
+        private void Initialize()
+        {
+            // 已初始化且根节点仍存活时直接返回；根节点被销毁时重建，避免层级字典指向失效对象。
+            if (_uiInitialized)
+                return;            
+   
+
+            var go = GameObject.Find(UiRootName);
+            if (go == null)
             {
-                _uiRoot = existing.transform as RectTransform;
-                if (existing.GetComponent<UIRelationDriver>() == null)
-                    existing.AddComponent<UIRelationDriver>();
-                return _uiRoot;
+                go = new GameObject(UiRootName,typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster),typeof(UIRelationDriver));
             }
+            var root = (RectTransform)go.transform;
 
-            var go = new GameObject(UiRootName,
-                typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster),
-                typeof(UIRelationDriver));
+            if (go.GetComponent<UIRelationDriver>() == null)
+                go.AddComponent<UIRelationDriver>();
 
-            var canvas = go.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
+            UnityEngine.Object.DontDestroyOnLoad(go);            
+            _cameraHandler.ConfigureRoot(go.GetComponent<Canvas>(), root);
+            go.SetLayer(LayerMask.NameToLayer(Layers.UI));
 
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -130,29 +150,15 @@ namespace Ux
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
 
-            UnityEngine.Object.DontDestroyOnLoad(go);
-            _uiRoot = (RectTransform)go.transform;
-            return _uiRoot;
-        }
-
-        /// <summary>初始化 UI 系统（幂等）。单例创建时调用一次。</summary>
-        private void Initialize()
-        {
-            // 已初始化且根节点仍存活时直接返回；根节点被销毁时重建，避免层级字典指向失效对象。
-            if (_uiInitialized && _uiRoot != null)
-                return;
-
-            var root = EnsureUiRoot();
-
-            _uiInitialized = false;
             _uguiLayers.Clear();
             _uguiLayers[UILayer.Root] = root;
-            _uguiLayers[UILayer.Bottom] = _CreateUILayer(root, UILayer.Bottom);
-            _uguiLayers[UILayer.BlurBackdrop] = _CreateUILayer(root, UILayer.BlurBackdrop);
-            _uguiLayers[UILayer.View] = _CreateUILayer(root, UILayer.View);
-            _uguiLayers[UILayer.Window] = _CreateUILayer(root, UILayer.Window);
-            _uguiLayers[UILayer.Tip] = _CreateUILayer(root, UILayer.Tip);
-            _uguiLayers[UILayer.Top] = _CreateUILayer(root, UILayer.Top);
+            _uguiLayers[UILayer.Bottom] = CreateUILayer(root, UILayer.Bottom);
+            _uguiLayers[UILayer.BlurBackdrop] = CreateUILayer(root, UILayer.BlurBackdrop);
+            _uguiLayers[UILayer.View] = CreateUILayer(root, UILayer.View);
+            _uguiLayers[UILayer.Window] = CreateUILayer(root, UILayer.Window);
+            _uguiLayers[UILayer.Tip] = CreateUILayer(root, UILayer.Tip);
+            _uguiLayers[UILayer.Top] = CreateUILayer(root, UILayer.Top);            
+
             _uiInitialized = true;
         }
 
@@ -163,7 +169,8 @@ namespace Ux
             _blurHandler = new UIBlurHandler(this);
             _stackHandler = new UIStackHandler(_stackEntries);
             _focusHandler = new UIFocusHandler(this);
-            _initData = new CallbackData(_OnUIShown, _OnUIHidden);
+            _cameraHandler = new UICameraHandler();
+            _stageHandler = new UIStageHandler(_blurHandler);
         }
 
         protected override void OnCreated()
@@ -185,7 +192,7 @@ namespace Ux
         }
 
         public void Release()
-        {            
+        {
             // 1. 先收起所有界面，让「隐藏 -> 提交隐藏 -> 进入缓存」的链路完整走一遍。
             //    否则可见界面会继续挂在 _showed 上，下一个游戏状态仍然认为它们在显示。
             HideAllInternal(null);
@@ -223,6 +230,7 @@ namespace Ux
             _typeInstances.Clear();
             _hideAllIdBuffer.Clear();
             _stackHandler.Clear();
+            _stageHandler.Clear();
 
             // 索引清空后再完成挂起的等待对象，避免调用方（await Show/Hide）永久等待。
             for (int i = 0; i < pendingRecords.Count; i++)
@@ -993,7 +1001,7 @@ namespace Ux
         /// <summary>
         /// 获取当前显示的UI字典（用于模糊效果处理回调）
         /// </summary>
-        Dictionary<int, IUI> IUIBlurHandlerCallback.GetShowedDict()
+        Dictionary<int, IUI> IUICallback.GetShowedDict()
         {
             return _showed;
         }

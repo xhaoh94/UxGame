@@ -33,5 +33,9 @@ namespace Ux
         /// UI模型
         /// </summary>
         public const string RTModel = "RTModel";
+        /// <summary>
+        /// SSC 直挂 UI 下的 3D 模型（只有 UI 相机渲染，场景相机默认不含它，避免双渲染）
+        /// </summary>
+        public const string UIModel = "UIModel";
     }
 }

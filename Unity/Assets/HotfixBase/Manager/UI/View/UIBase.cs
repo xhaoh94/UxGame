@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using static Ux.UIMgr;
@@ -34,14 +34,14 @@ namespace Ux
         protected virtual void OnFocusEnter() { }
         protected virtual void OnFocusExit() { }
 
-        private CallbackData? _cbData;
+        private IUICallback _callback;
         private int _instanceId;
 
-        public virtual void InitData(IUIData data, CallbackData initData, int instanceId)
+        public virtual void InitData(int instanceId, IUIData data, IUICallback callback)
         {
             _instanceId = instanceId;
             Data = data;
-            _cbData = initData;
+            _callback = callback;
             Init(CreateGameObject());
             OnHideCallback += HideInternal;
             OnShowCallback += ShowInternal;
@@ -50,16 +50,15 @@ namespace Ux
         public virtual void AddChild(UITabView child) { }
 
         protected virtual GameObject CreateGameObject()
-        {
-            // 默认实现按类型名推导，但子类可以重写 ResAddress，仍需防御空地址。
+        {            
             if (string.IsNullOrEmpty(ResAddress))
                 throw new InvalidOperationException($"UI 资源地址为空：{GetType().FullName}");
-
-            // 加载失败直接抛异常，由 _ShowAsync 的 catch 回滚，
-            // 避免界面对象带着空 GameObject 继续走显示流程。
+            
             var gameObject = ResMgr.Ins.LoadAsset<GameObject>(ResAddress);
             if (gameObject == null)
                 throw new InvalidOperationException($"UI 资源加载失败：{ResAddress}");
+            
+            gameObject.SetLayer(LayerMask.NameToLayer(Layers.UI));
             return gameObject;
         }
 
@@ -78,15 +77,66 @@ namespace Ux
         public string Name => Data?.Name;
         public IUIData Data { get; private set; }
 
+        // —— SSC 上屏排序 ——
+        /// <summary>界面上屏后所在的 Sorting Layer（由 RegisterStage 写入）。</summary>
+        internal string StageSortingLayerName;
+        /// <summary>层内显示顺序 × 100，重排时由 UIMgr 写入。</summary>
+        internal int StageSortingOrder;
+        /// <summary>上屏时挂的 Canvas（RegisterStage 写入），重排时直接写它的 sortingOrder。</summary>
+        internal Canvas StageCanvas;
+        private bool _registeredToStage = false;
+
+        /// <summary>界面挂到哪个层；Root 表示不上屏（子页面自己挂到父级容器下）。</summary>
+        protected virtual UILayer Layer => UILayer.Root;
+
+        /// <summary>由 UIMgr 在层内重排时调用：写回新 order 并通知子组件（模型/特效跟随）。</summary>
+        internal void ApplyStageSortingOrder(int order)
+        {
+            StageSortingOrder = order;
+            if (StageCanvas != null)
+                StageCanvas.sortingOrder = order;
+            OnStageSortingChanged(order);
+        }
+
+        /// <summary>把排序变化分发给子组件（UIModel 等按它对齐 SortingGroup）。</summary>
+        internal override void OnStageSortingChanged(int order)
+        {
+            var components = Components;
+            for (int i = 0; i < components.Count; i++)
+            {
+                components[i].OnStageSortingChanged(order);
+            }
+        }
+
+        private void RegisterToStage()
+        {
+            if (_registeredToStage) return;
+            _callback?.RegisterStage(ID, Layer);
+            _registeredToStage = true;
+        }
+        private void UnregisterStage()
+        {
+            if (!_registeredToStage) return;
+            _callback?.UnregisterStage(ID, Layer);
+            _registeredToStage = false;
+        }
+
         protected void HideSelf() => Hide(true);
         public virtual void Hide(bool isAnim = true) => UIMgr.Ins.Hide(ID, isAnim);
 
-        protected virtual void AddToStage() { }
+        protected virtual void AddToStage()
+        {
+            var layer = Layer;
+            if (layer == UILayer.Root) return;
+
+            GameObject.transform.SetParent(UIMgr.Ins.GetUILayer(layer), false);
+            Visible = true;            
+            RegisterToStage();
+        }
 
         protected virtual void RemoveToStage()
         {
-            if (GameObject != null)
-                GameObject.SetActive(false);
+            Visible = false;            
         }
 
         private enum QueuedTransitionKind
@@ -200,7 +250,7 @@ namespace Ux
 
         private void ShowInternal(int id, IUIParam param, bool checkStack)
         {
-            _cbData?.showCb?.Invoke(this, param, checkStack);
+            _callback?.NotifyShown(this, param, checkStack);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, ID);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, GetType());
         }
@@ -229,15 +279,17 @@ namespace Ux
         private void HideInternal()
         {
             RemoveToStage();
-            _cbData?.hideCb?.Invoke(this);
+            UnregisterStage();
+            _callback?.NotifyHidden(this);
         }
 
         void IUI.Dispose() => ToDispose(true);
 
         protected override void OnDispose()
         {
+            UnregisterStage();
             Data = null;
-            _cbData = null;
+            _callback = null;
             _async = false;
             _asyncVersion = 0;
             _transitionVersionSeed = 0;

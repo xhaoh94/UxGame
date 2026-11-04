@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,10 +24,10 @@ namespace Ux
         protected virtual Toggle __checkbox { get; } = null;
         #endregion
 
-        public override void InitData(IUIData data, CallbackData initData, int instanceId)
+        public override void InitData(int instanceId, IUIData data, IUICallback callback)
         {
             OnHideCallback += _Hide;
-            base.InitData(data, initData, instanceId);
+            base.InitData(instanceId, data, callback);
         }
 
         protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)

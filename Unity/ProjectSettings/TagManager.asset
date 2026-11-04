@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags:
   - Ground
   - Obstacle
@@ -19,7 +19,7 @@ TagManager:
   - FogOfWar
   - Hidden
   - RTModel
-  - 
+  - UIModel
   - 
   - 
   - 
@@ -44,3 +44,24 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: sl1
+    uniqueID: 168041954
+    locked: 0
+  - name: sl2
+    uniqueID: 867935726
+    locked: 0
+  - name: sl3
+    uniqueID: 171248140
+    locked: 0
+  - name: sl4
+    uniqueID: 760913175
+    locked: 0
+  - name: sl5
+    uniqueID: 423102797
+    locked: 0
+  - name: sl6
+    uniqueID: 372769940
+    locked: 0
+  m_RenderingLayers:
+  - Default
+  m_MigratedRenderPipelines: []

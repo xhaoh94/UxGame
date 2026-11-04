@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -766,7 +766,7 @@ namespace Ux
                     return null;
                 }
 
-                ui.InitData(data, _initData, instanceId);
+                ui.InitData(instanceId, data, this);
                 return ui;
             }
             catch (Exception ex)
@@ -781,7 +781,7 @@ namespace Ux
         /// <summary>
         /// UI显示完成回调
         /// </summary>
-        void _OnUIShown(IUI ui, IUIParam param, bool checkStack)
+        void IUICallback.NotifyShown(IUI ui, IUIParam param, bool checkStack)
         {
             var record = GetRecord(ui.ID);
             if (record == null)

@@ -9,13 +9,16 @@ namespace Ux
         public class Res
         {
             public const string Root = "Assets/GameRes/Res";
-            public const string UI = "UI_{0}_{1}";     
-            public const string UIAtlas = "UI_{0}";     
+            //UI预制
+            public const string UI = "UI_{0}";
+            //散图
+            public const string Texture = "Texture_{0}";
+            //图集
+            public const string Atlas = "Atlas_{0}";
             public const string Combat = "Combat_{0}";
             public const string Timeline = "Timeline_{0}";
             public const string Config = "Config_{0}";
             public const string Prefab = "Prefab_{0}";
-            public const string Atlas = "Atlas_{0}";
         }
         
     }

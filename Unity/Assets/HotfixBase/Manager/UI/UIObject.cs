@@ -250,6 +250,9 @@ namespace Ux
             OnHideCallback?.Invoke();
         }
 
+        /// <summary>父界面的上屏 sortingOrder 变化时回调；SSC 直挂的模型/特效用它对齐排序。</summary>
+        internal virtual void OnStageSortingChanged(int order) { }
+
         protected int GetShowVersion() => _showVersion;
         protected int GetHideVersion() => _hideVersion;
         protected bool IsTransitionCurrent(int version) => _transitionVersion == version;

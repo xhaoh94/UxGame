@@ -1263,6 +1263,9 @@ namespace Ux
                 throw new InvalidOperationException($"没有找到 Item 模板，type={itemType}");
 
             var instance = UnityEngine.Object.Instantiate(prefab, parent, false);
+            // prefab 里的对象历史上都在 Default 层；UICamera 只渲染 UI/UIModel 层，
+            // 动态创建的 item 不改层就会被裁掉。
+            instance.SetLayer(LayerMask.NameToLayer(Layers.UI));
             var item = _itemResolver != null
                 ? _itemResolver(itemType, instance)
                 : instance.GetComponent<IUIVirtualListItem>();

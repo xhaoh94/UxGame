@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using static Ux.UIMgr;
@@ -60,10 +60,10 @@ namespace Ux
         /// <summary>
         /// 初始化UI数据
         /// </summary>
-        /// <param name="data">UI数据</param>
-        /// <param name="initData">初始化回调数据</param>
         /// <param name="instanceId">实例 ID（由 UIMgr 分配，用于同一类型多实例）</param>
-        void InitData(IUIData data, CallbackData initData, int instanceId);
+        /// <param name="data">UI数据</param>
+        /// <param name="callback">回调数据</param>
+        void InitData(int instanceId, IUIData data, IUICallback callback);
         
         /// <summary>
         /// 释放UI资源
@@ -565,25 +565,6 @@ namespace Ux
                 _mode = UIShowMode.Reuse;
                 Pool.Push(this);
             }
-        }
-
-        /// <summary>
-        /// 回调数据结构体，用于存储UI显示和隐藏的回调函数
-        /// </summary>
-        public readonly struct CallbackData
-        {
-            /// <summary>
-            /// 构造函数
-            /// </summary>
-            /// <param name="showCb">显示回调函数</param>
-            /// <param name="hideCb">隐藏回调函数</param>
-            public CallbackData(Action<IUI, IUIParam, bool> showCb, Action<IUI> hideCb)
-            {
-                this.showCb = showCb;
-                this.hideCb = hideCb;
-            }
-            public readonly Action<IUI, IUIParam, bool> showCb;  // 显示回调
-            public readonly Action<IUI> hideCb;                  // 隐藏回调
         }
 
         /// <summary>

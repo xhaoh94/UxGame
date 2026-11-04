@@ -1,0 +1,149 @@
+{
+    "maxPerBucket": 200,
+    "entries": [
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_1.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_10.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_11.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_12.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_13.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_14.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_16.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_17.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_18.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_19.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_2.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_20.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_4.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_7.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_8.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@128/item_9.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_1.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_10.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_11.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_12.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_13.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_14.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_16.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_17.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_18.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_19.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_2.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_20.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_21.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_22.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_24.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_25.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_4.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_7.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_8.png",
+            "bucket": 0
+        },
+        {
+            "path": "Assets/GameRes/Res/UI/Texture/Item@48/item_small_9.png",
+            "bucket": 0
+        }
+    ]
+}

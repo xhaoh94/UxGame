@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,13 +19,13 @@ namespace Ux
         private static bool _editorSkipWarned;
 #endif
 
-        private readonly IUIBlurHandlerCallback _callback;
+        private readonly IUICallback _callback;
         private readonly List<BlurStack> _blurStacks = new();
         private readonly List<BlurSnapshot> _snapshots = new();
         private RectTransform _backdropRoot;
         private RawImage _backdropImage;
 
-        public UIBlurHandler(IUIBlurHandlerCallback callback)
+        public UIBlurHandler(IUICallback callback)
         {
             _callback = callback;
         }
@@ -48,7 +48,7 @@ namespace Ux
 #endif
 
             // 截图必须在帧末（EndOfFrame）执行，LastPostLateUpdate 不保证满足该条件。
-            await UniTask.WaitForEndOfFrame();
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
 
             Texture2D texture = null;
             try
@@ -114,9 +114,15 @@ namespace Ux
         private void EnsureBackdrop()
         {
             if (_backdropRoot != null) return;
-            var go = new GameObject("BlurBackdrop", typeof(RectTransform), typeof(CanvasGroup));
+            // 背景自己是独立 Canvas：各界面都有了自己的 Canvas + SortingLayer 后，
+            // 挂在层容器下不加 Canvas 会被所有界面压在下面。
+            var go = new GameObject("BlurBackdrop",
+                typeof(RectTransform), typeof(CanvasGroup), typeof(Canvas), typeof(GraphicRaycaster));
+            var canvas = go.GetComponent<Canvas>();
+            canvas.overrideSorting = true;
             _backdropRoot = go.transform as RectTransform;
             _backdropRoot.SetParent(UIMgr.Ins.GetUILayer(UILayer.BlurBackdrop), false);
+            _backdropRoot.gameObject.SetLayer(LayerMask.NameToLayer(Layers.UI));
             _backdropRoot.anchorMin = Vector2.zero;
             _backdropRoot.anchorMax = Vector2.one;
             _backdropRoot.offsetMin = Vector2.zero;
@@ -131,11 +137,35 @@ namespace Ux
             _backdropImage = imageGo.GetComponent<RawImage>();
         }
 
+        /// <summary>
+        /// 背景插在「触发模糊的最上层窗口」之下：同它的 SortingLayer、order 少一半步长。
+        /// 窗口重排后由 UIMgr 调用本方法重新对齐。
+        /// </summary>
+        internal void RefreshBackdropSorting()
+        {
+            if (_backdropRoot == null) return;
+            var canvas = _backdropRoot.GetComponent<Canvas>();
+            if (canvas == null) return;
+
+            var showed = _callback.GetShowedDict();
+            for (var i = _blurStacks.Count - 1; i >= 0; i--)
+            {
+                var stack = _blurStacks[i];
+                if (!showed.ContainsKey(stack.ID)) continue;
+                if (!_callback.TryGetStageSorting(stack.ID, out var sortingLayer, out var order)) continue;
+
+                canvas.sortingLayerName = sortingLayer;
+                canvas.sortingOrder = order - UIStageHandler.ModelOffset;
+                return;
+            }
+        }
+
         private void ShowBackdrop(Texture texture)
         {
             EnsureBackdrop();
             _backdropImage.texture = texture;
             _backdropRoot.gameObject.SetActive(true);
+            RefreshBackdropSorting();
         }
 
         private void HideBackdrop()

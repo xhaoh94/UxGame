@@ -13,6 +13,20 @@ MonoBehaviour:
   m_Name: UIResClassifySettingData
   m_EditorClassIdentifier: 
   path: Assets/GameRes/Res/UI
+  preloadTag: preload
+  builtinTag: builtin
+  modules:
+  - name: Common
+    tag: builtin
+  - name: Main
+    tag: builtin
+  - name: Test
+    tag: test
+  - name: Bag
+    tag: bag
+  textureRules:
+  - folder: BigTex
+    packRule: PackSeparately
   proloads:
   - Test
   lazyloads:

@@ -80,6 +80,18 @@ namespace Ux
         }
 
 
+        /// <summary>
+        /// 同步加载并交出句柄，调用方负责 Release。
+        /// LoadAsset 对非 GameObject 是"用完即弃"语义（using 立刻释放），要长期持有的资源走这里。
+        /// </summary>
+        public AssetHandle LoadAssetHandle(string location, YooType resType = YooType.None)
+        {
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
+            return package != null ? package.Package.LoadAssetSync(location) : null;
+        }
+
         #endregion
 
         #region 异步
@@ -160,6 +172,29 @@ namespace Ux
             }
         }
 
+
+        /// <summary>异步加载并交出句柄，加载完成后返回，调用方负责 Release。</summary>
+        public async UniTask<AssetHandle> LoadAssetHandleAsync(string location, YooType resType = YooType.None)
+        {
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
+            if (package == null) return null;
+
+            var handle = package.Package.LoadAssetAsync(location);
+            try
+            {
+                await handle.ToUniTask();
+            }
+            catch
+            {
+                // 加载失败也要还回去，否则这个句柄会一直占着包引用。
+                handle.Release();
+                throw;
+            }
+
+            return handle;
+        }
 
         #endregion
     }

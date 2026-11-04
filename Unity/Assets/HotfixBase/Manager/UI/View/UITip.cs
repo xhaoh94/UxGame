@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static Ux.UIMgr;
@@ -16,10 +16,10 @@ namespace Ux
         protected UITipFactory.TipData tipData;
         protected virtual TMP_Text __txtContent { get; } = null;
 
-        public override void InitData(IUIData data, CallbackData initData, int instanceId)
+        public override void InitData(int instanceId, IUIData data, IUICallback callback)
         {
             OnHideCallback += _Hide;
-            base.InitData(data, initData, instanceId);
+            base.InitData(instanceId, data, callback);
         }
 
         protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)

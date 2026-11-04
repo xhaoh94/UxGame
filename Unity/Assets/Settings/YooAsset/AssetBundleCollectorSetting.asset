@@ -57,36 +57,44 @@ MonoBehaviour:
       ActiveRuleName: EnableGroup
       Collectors:
       - CollectPath: Assets/GameRes/Res/UI
-        CollectorGUID: 842f3d9ad4df8ac40a8239c3a4e822e1
-        CollectorType: 0
+        CollectorGUID: 
+        CollectorType: 1
         AddressRuleName: AddressByGroupAndFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAtlasSource
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/GameRes/Res/UI
+        CollectorGUID: 
+        CollectorType: 0
+        AddressRuleName: AddressByGroupOrAtlas
         PackRuleName: PackDirectory
         FilterRuleName: CollectBuiltinUI
         AssetTags: builtin
         UserData: 
       - CollectPath: Assets/GameRes/Res/UI
-        CollectorGUID: 842f3d9ad4df8ac40a8239c3a4e822e1
+        CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
+        AddressRuleName: AddressByGroupOrAtlas
         PackRuleName: PackDirectory
         FilterRuleName: CollectPreloadUI
-        AssetTags: 
+        AssetTags: preload
+        UserData: 
+      - CollectPath: Assets/GameRes/Res/UI/Test
+        CollectorGUID: 
+        CollectorType: 0
+        AddressRuleName: AddressByGroupOrAtlas
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAssetUI
+        AssetTags: test
         UserData: 
       - CollectPath: Assets/GameRes/Res/UI/Bag
-        CollectorGUID: 95cbd8a0475e80e4b8d6937b4ad08745
+        CollectorGUID: 
         CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
+        AddressRuleName: AddressByGroupOrAtlas
         PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: lazyload_bag
-        UserData: 
-      - CollectPath: Assets/GameRes/Res/UI/Multiple
-        CollectorGUID: 09d0d225c75310b49b582ffbe6e15854
-        CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: lazyload_multiple
+        FilterRuleName: CollectAssetUI
+        AssetTags: bag
         UserData: 
     - GroupName: Prefab
       GroupDesc: "\u9884\u5236"
@@ -137,4 +145,25 @@ MonoBehaviour:
         PackRuleName: PackTopDirectory
         FilterRuleName: CollectAll
         AssetTags: 
+        UserData: 
+    - GroupName: Texture
+      GroupDesc: "UI\u6563\u56FE"
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/GameRes/Res/UI/Texture
+        CollectorGUID: 
+        CollectorType: 0
+        AddressRuleName: AddressByGroupOrAtlas
+        PackRuleName: PackLooseAssetByBucket
+        FilterRuleName: CollectLooseTexture
+        AssetTags: preload
+        UserData: 
+      - CollectPath: Assets/GameRes/Res/UI/Texture/BigTex
+        CollectorGUID: 
+        CollectorType: 0
+        AddressRuleName: AddressByGroupOrAtlas
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: preload
         UserData: 

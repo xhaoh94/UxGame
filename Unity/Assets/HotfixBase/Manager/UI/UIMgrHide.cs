@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -671,7 +671,7 @@ namespace Ux
         /// UI隐藏完成回调
         /// 隐藏完成是提交可见性和生命周期缓存的唯一位置
         /// </summary>
-        private void _OnUIHidden(IUI ui)
+        void IUICallback.NotifyHidden(IUI ui)
         {
             var record = GetRecord(ui.ID);
             if (record == null)

@@ -1,6 +1,7 @@
-//自动生成的代码，请勿修改!!!
+// 自动生成的代码，请勿修改!!!
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Ux.UI
 {
@@ -8,17 +9,13 @@ namespace Ux.UI
     {
         protected GameObject btnClose;
 
-        public Common2TabFrame(GameObject gameObject, UIObject parent)
-            : base(gameObject, parent)
-        {
-        }
+        public Common2TabFrame(GameObject gameObject, UIObject parent) : base(gameObject, parent) { }
+        protected override GameObject __btnClose => btnClose;
 
         protected override void CreateChildren()
         {
-            // FGUI: Common2TabFrame.xml displayList = graph n0(0), btnClose(1)
-            btnClose = GameObject.transform.GetChild(1).gameObject;
+            var root = Transform;
+            btnClose = root.GetChild(1).gameObject;
         }
-
-        protected override GameObject __btnClose => btnClose;
     }
 }

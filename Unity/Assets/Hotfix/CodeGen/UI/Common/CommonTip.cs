@@ -1,15 +1,19 @@
-//自动生成的代码，请勿修改!!!
-using TMPro;
+// 自动生成的代码，请勿修改!!!
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
 namespace Ux.UI
 {
     public partial class CommonTip : UITip
     {
         protected TMP_Text txtContent;
+        protected override TMP_Text __txtContent => txtContent;
+
         protected override void CreateChildren()
         {
-            txtContent = GameObject.transform.GetChild(1).GetComponent<TMP_Text>();
+            var root = Transform;
+            txtContent = root.GetChild(1).GetComponent<TMP_Text>();
         }
-        protected override TMP_Text __txtContent => txtContent;
     }
 }

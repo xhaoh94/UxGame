@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<packageDescription id="dkvwcfbk">
-  <resources>
-    <component id="q30y8" name="TipView.xml" path="/View/" exported="true"/>
-  </resources>
-  <publish name="Tip"/>
-</packageDescription>
