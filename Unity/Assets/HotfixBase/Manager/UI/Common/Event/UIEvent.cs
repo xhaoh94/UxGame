@@ -35,6 +35,53 @@ namespace Ux
             binding.Cleanup += () => binding.Relay.Clicked -= handler;
         }
 
+        /// <summary>
+        /// 注册按下：轻量回调，用于“点一下就把窗口提到最上”这类不需要拖动的场景。
+        /// </summary>
+        public void AddPointerDown(GameObject target, Action<UIEventContext> callback)
+        {
+            if (target == null || callback == null)
+                return;
+
+            var binding = GetOrCreate(target);
+            Action<PointerEventData> handler = data => callback(new UIEventContext(target, data));
+            binding.Relay.PointerDown += handler;
+            binding.Cleanup += () => binding.Relay.PointerDown -= handler;
+        }
+
+        /// <summary>
+        /// 注册拖拽：onBegin/onEnd 可选，onDrag 必填。
+        /// 拖拽热区由 GetOrCreate 自动补齐（无 Graphic 时加透明 Image）。
+        /// </summary>
+        public void AddDrag(GameObject target,
+            Action<UIEventContext> onDrag,
+            Action<UIEventContext> onBegin = null,
+            Action<UIEventContext> onEnd = null)
+        {
+            if (target == null || onDrag == null)
+                return;
+
+            var binding = GetOrCreate(target);
+
+            if (onBegin != null)
+            {
+                Action<PointerEventData> begin = data => onBegin(new UIEventContext(target, data));
+                binding.Relay.DragBegan += begin;
+                binding.Cleanup += () => binding.Relay.DragBegan -= begin;
+            }
+
+            Action<PointerEventData> drag = data => onDrag(new UIEventContext(target, data));
+            binding.Relay.Dragged += drag;
+            binding.Cleanup += () => binding.Relay.Dragged -= drag;
+
+            if (onEnd != null)
+            {
+                Action<PointerEventData> end = data => onEnd(new UIEventContext(target, data));
+                binding.Relay.DragEnded += end;
+                binding.Cleanup += () => binding.Relay.DragEnded -= end;
+            }
+        }
+
         public void AddMultipleClick(GameObject target, Action<UIEventContext> callback,
             int clickCount = 2, float gapTime = 0.3f)
         {

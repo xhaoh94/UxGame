@@ -10,16 +10,21 @@ namespace Ux.Editor.Build.UI
     /// </summary>
     public static class UISortingLayerTool
     {
-        // 与 UIStageHandler.SortingLayerNames 一一对应，顺序即跨层渲染顺序
-        private static readonly string[] LayerNames =
+        // 与 UILayer 枚举一一对应（Root 除外）：sl + (int)layer，顺序即跨层渲染顺序。
+        // 加层只需要改 UILayer 枚举，这里自动跟随。
+        private static readonly string[] LayerNames = BuildLayerNames();
+
+        private static string[] BuildLayerNames()
         {
-            "sl1",
-            "sl2",
-            "sl3",
-            "sl4",
-            "sl5",
-            "sl6",
-        };
+            var names = new List<string>();
+            var values = (UILayer[])System.Enum.GetValues(typeof(UILayer));
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i] == UILayer.Root) continue;
+                names.Add("sl" + (int)values[i]);
+            }
+            return names.ToArray();
+        }
 
         private const string TagManagerPath = "ProjectSettings/TagManager.asset";
 

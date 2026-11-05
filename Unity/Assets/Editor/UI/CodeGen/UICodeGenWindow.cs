@@ -323,10 +323,16 @@ namespace Ux.Editor.Build.UI
         /// <summary>优先用保存的基类（面板里改过），否则按文件名推断。</summary>
         private static string ResolveSavedBaseType(SavedConfig saved, string prefabPath)
         {
-            if (saved != null && !string.IsNullOrEmpty(saved.BaseType) &&
-                Array.IndexOf(UIPrefabCodeGenerator.SupportedBaseTypes, saved.BaseType) >= 0)
-                return saved.BaseType;
-            return UIPrefabCodeGenerator.ResolveBaseTypeByPath(prefabPath);
+            var inferred = UIPrefabCodeGenerator.ResolveBaseTypeByPath(prefabPath);
+
+            // UIView 是默认兜底值，很少是用户主动选的。若文件名能推断出更具体的基类
+            // （如 *WindowFrame → UIWindowFrame），以推断为准，避免老缓存把新类型压在 UIView 上。
+            if (saved == null || string.IsNullOrEmpty(saved.BaseType) || saved.BaseType == "UIView")
+                return inferred;
+
+            return Array.IndexOf(UIPrefabCodeGenerator.SupportedBaseTypes, saved.BaseType) >= 0
+                ? saved.BaseType
+                : inferred;
         }
 
         /// <summary>恢复固定字段绑定；成员已删除的悬空绑定直接丢弃。</summary>
@@ -367,14 +373,47 @@ namespace Ux.Editor.Build.UI
         {
             if (saved?.Members == null) return scanned;
 
-            var map = new Dictionary<string, UGUIMemberData>(StringComparer.Ordinal);
+            var byPath = new Dictionary<string, UGUIMemberData>(StringComparer.Ordinal);
+            var byName = new Dictionary<string, Queue<UGUIMemberData>>(StringComparer.Ordinal);
             foreach (var member in saved.Members)
-                if (member != null && !string.IsNullOrEmpty(member.PathKey))
-                    map[member.PathKey] = member;
+            {
+                if (member == null) continue;
+
+                if (!string.IsNullOrEmpty(member.PathKey))
+                    byPath[member.PathKey] = member;
+
+                if (!string.IsNullOrEmpty(member.NodeName) && !string.IsNullOrEmpty(member.FieldType))
+                {
+                    var key = NameKey(member.NodeName, member.FieldType);
+                    if (!byName.TryGetValue(key, out var queue))
+                    {
+                        queue = new Queue<UGUIMemberData>();
+                        byName[key] = queue;
+                    }
+                    queue.Enqueue(member);
+                }
+            }
 
             foreach (var member in scanned)
             {
-                if (!map.TryGetValue(PathKey(member.Path), out var old)) continue;
+                // 位置相同、但节点名变了（节点被替换）：不能沿用旧字段名，
+                // 否则会生成 mCommonBg => CommonWindowFrame 这种错乱绑定。
+                UGUIMemberData old = null;
+                if (byPath.TryGetValue(PathKey(member.Path), out var byPathMatch) &&
+                    string.Equals(byPathMatch.NodeName, member.NodeName, StringComparison.Ordinal))
+                {
+                    old = byPathMatch;
+                }
+                else if (!string.IsNullOrEmpty(member.NodeName) &&
+                         !string.IsNullOrEmpty(member.FieldType) &&
+                         byName.TryGetValue(NameKey(member.NodeName, member.FieldType), out var queue) &&
+                         queue.Count > 0)
+                {
+                    // 节点被移动（路径变了、名字没变）：按名字 + 类型认回旧配置。
+                    old = queue.Dequeue();
+                }
+
+                if (old == null) continue;
 
                 // 手动指定过类型：以保存的配置为准。
                 // 否则扫描识别出 Wrapper 时用扫描结果，不被历史配置覆盖。
@@ -433,6 +472,10 @@ namespace Ux.Editor.Build.UI
         private void OnDisable() => Save();
 
         private static string PathKey(List<int> path) => UIPrefabCodeGenerator.PathKey(path);
+
+        /// <summary>合并保存配置时用于“节点被移动”的兜底键：节点名 + 类型。</summary>
+        private static string NameKey(string nodeName, string fieldType) =>
+            nodeName + "|" + fieldType;
 
         private static string ParentPathKey(List<int> path)
         {
@@ -503,10 +546,29 @@ namespace Ux.Editor.Build.UI
             {
                 var types = UIPrefabCodeGenerator.SupportedBaseTypes;
                 var index = Array.IndexOf(types, _baseType);
-                var next = EditorGUILayout.Popup("基类", index < 0 ? 0 : index, types,
-                    GUILayout.Width(240f));
+
+                // 下拉宽度按最长选项自适应，避免 UIWindowFrame 这类长名字被截断。
+                EditorGUILayout.PrefixLabel("基类");
+                var next = EditorGUILayout.Popup(index < 0 ? 0 : index, types,
+                    GUILayout.Width(CalcPopupWidth(types)));
                 if (next != index && next >= 0) _baseType = types[next];
             }
+        }
+
+        /// <summary>按最长选项文本计算下拉框宽度（含箭头与内边距）。</summary>
+        private static float CalcPopupWidth(string[] options)
+        {
+            var style = EditorStyles.popup;
+            var width = 80f;
+
+            for (int i = 0; i < options.Length; i++)
+            {
+                if (string.IsNullOrEmpty(options[i])) continue;
+                var size = style.CalcSize(new GUIContent(options[i]));
+                if (size.x > width) width = size.x;
+            }
+
+            return width + 28f;
         }
 
         private void DrawToolbar()
@@ -551,11 +613,30 @@ namespace Ux.Editor.Build.UI
             (UIOverrideSlot.TabClose, "关闭按钮", "GameObject"),
         };
 
+        private static readonly (UIOverrideSlot Slot, string Label, string FieldType)[] WindowSlots =
+        {
+            // 窗口只负责「主体」。标题栏/标题/按钮都属于框架预制，在 WindowFrameSlots 里配。
+            (UIOverrideSlot.WindowBody, "窗口主体（留空则用窗口根）", "RectTransform"),
+            (UIOverrideSlot.WindowDragArea, "拖动范围（留空则屏幕内）", "RectTransform"),
+        };
+
+        private static readonly (UIOverrideSlot Slot, string Label, string FieldType)[] WindowFrameSlots =
+        {
+            (UIOverrideSlot.FrameTitleBar, "标题栏（拖拽热区）", "RectTransform"),
+            (UIOverrideSlot.FrameTitle, "标题文本", "TMP_Text"),
+            (UIOverrideSlot.FrameBtnMin, "最小化按钮", "GameObject"),
+            (UIOverrideSlot.FrameBtnMax, "最大化按钮", "GameObject"),
+            (UIOverrideSlot.FrameBtnClose, "关闭按钮", "GameObject"),
+            (UIOverrideSlot.FrameBtnPin, "置顶按钮", "GameObject"),
+        };
+
         /// <summary>按当前基类显示对应的固定字段选择区；没选槽位的就不生成。</summary>
         private void DrawBindings()
         {
             var slots = _baseType == "UIDialog" ? DialogSlots
                 : _baseType == "UITabFrame" ? TabFrameSlots
+                : _baseType == "UIWindow" ? WindowSlots
+                : _baseType == "UIWindowFrame" ? WindowFrameSlots
                 : null;
             if (slots == null) return;
 

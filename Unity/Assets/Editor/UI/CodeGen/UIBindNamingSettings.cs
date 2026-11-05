@@ -90,6 +90,17 @@ namespace Ux.Editor.Build.UI
                     return _instance;
                 }
 
+                // 资产文件存在但加载失败（YAML 损坏）：绝不能新建资产覆盖，
+                // 否则用户已配的命名规则会静默丢失。用内存默认规则兜底并要求修好文件。
+                if (System.IO.File.Exists(AssetPath))
+                {
+                    Debug.LogError($"[UI 命名规则] {AssetPath} 存在但无法解析（YAML 损坏）。" +
+                                   "已使用内存默认规则且不会写盘，请先修好该文件的 YAML。");
+                    _instance = CreateInstance<UIBindNamingSettings>();
+                    _instance._rules = CreateDefaultRules();
+                    return _instance;
+                }
+
                 var directory = System.IO.Path.GetDirectoryName(AssetPath);
                 if (!string.IsNullOrEmpty(directory))
                     System.IO.Directory.CreateDirectory(directory);
@@ -116,9 +127,34 @@ namespace Ux.Editor.Build.UI
                 changed = true;
             }
 
+            // 窗口框架预制：已有工程的命名规则资产不会自动重置，这里补上新规则，
+            // 否则生成器识别不到 CommonWindowFrame，窗口里放框架也不会生成绑定。
+            if (!HasExactRule(settings._rules, "CommonWindowFrame"))
+            {
+                settings._rules.Add(new UIBindRule
+                {
+                    Enabled = true,
+                    Match = UIBindMatch.Exact,
+                    Pattern = "CommonWindowFrame",
+                    FieldType = "CommonWindowFrame",
+                });
+                changed = true;
+            }
+
             if (!changed) return;
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
+        }
+
+        private static bool HasExactRule(List<UIBindRule> rules, string pattern)
+        {
+            for (int i = 0; i < rules.Count; i++)
+            {
+                var rule = rules[i];
+                if (rule != null && rule.Match == UIBindMatch.Exact && rule.Pattern == pattern)
+                    return true;
+            }
+            return false;
         }
 
         // 仅编辑器工具内部使用；避免每次访问都走 AssetDatabase。
@@ -163,6 +199,8 @@ namespace Ux.Editor.Build.UI
             Add(UIBindMatch.Exact, "UIModel", "UIModel");
             Add(UIBindMatch.Exact, "RTModel", "RTModel");
             Add(UIBindMatch.Exact, "UITabFrame", "UITabFrame");
+            // 窗口框架预制：由 UIWindowFrame 派生，靠 Exact 规则让生成器识别为字段。
+            Add(UIBindMatch.Exact, "CommonWindowFrame", "CommonWindowFrame");
 
             // 2. 常见前缀。
             // 按钮统一用 GameObject：AddClick/AddMultipleClick/AddLongPress 都接收 GameObject。

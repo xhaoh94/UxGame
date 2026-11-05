@@ -6,11 +6,12 @@ using static Ux.UIMgr;
 
 namespace Ux
 {
-    public class UIDialog : UIWindow
+    public class UIDialog : UIBase
     {
+        override protected UILayer Layer => UILayer.Dialog;
         public override int HideDestroyTime => -1;
-        public override UIType Type => UIType.Fixed;
-        public override UIBlur Blur => UIBlur.Blur;
+        public override UIType Type => UIType.NonStackable;
+        public override UIBlurMode Blur => UIBlurMode.RenderTexture;
 
         protected DialogData dialogData;
         private DialogCallbackData _callbackData;
@@ -24,10 +25,10 @@ namespace Ux
         protected virtual Toggle __checkbox { get; } = null;
         #endregion
 
-        public override void InitData(int instanceId, IUIData data, IUICallback callback)
+        public override void InitData(int instanceId, IUIData data)
         {
             OnHideCallback += _Hide;
-            base.InitData(instanceId, data, callback);
+            base.InitData(instanceId, data);
         }
 
         protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
 namespace Ux
@@ -18,6 +18,9 @@ namespace Ux
         private Camera[] _buffer = new Camera[8];
 
         public Camera UICamera => _uiCamera;
+
+        /// <summary>UI 挂载的场景 Base 相机；没挂载时为 null（UI 相机自持 Base）。</summary>
+        public Camera StageHost => _stageHost;
 
         /// <summary>创建 UI 相机（幂等），并把根 Canvas 配成 Screen Space - Camera。</summary>
         public void ConfigureRoot(Canvas canvas, Transform root)
@@ -52,6 +55,28 @@ namespace Ux
             TryAttachAny();
         }
 
+        private static void TryEnableOpaqueTexture(UniversalAdditionalCameraData data)
+        {
+            var property = data.GetType().GetProperty("requiresOpaqueTexture",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+
+            if (property != null && property.PropertyType == typeof(bool) && property.CanWrite)
+            {
+                property.SetValue(data, true);
+                return;
+            }
+
+            // URP 17+ 没有相机级开关：必须去 URP Asset 里勾 Opaque Texture。
+            if (!_opaqueTextureWarned)
+            {
+                _opaqueTextureWarned = true;
+                Log.Warning("当前 URP 版本没有相机级 Opaque Texture 开关。UI 模糊需要 " +
+                            "在 URP Asset（Renderer 设置）里开启 Opaque Texture，否则背景会是纯色。");
+            }
+        }
+
+        private static bool _opaqueTextureWarned;
+
         /// <summary>场景相机加载后显式挂载（CameraComponent 调用）。</summary>
         public bool Attach(Camera baseCamera)
         {
@@ -63,6 +88,11 @@ namespace Ux
                 Log.Error($"AttachUIStack: {baseCamera.name} 不是 Base 相机，UI 相机无法挂载");
                 return false;
             }
+
+            // UI 模糊背景要采样 _CameraOpaqueTexture。
+            // 新版本 URP 移除了相机级 requiresOpaqueTexture，改为 URP Asset 全局开关，
+            // 这里用反射做兼容：能设就设，设不了就提示去 Asset 里开。
+            TryEnableOpaqueTexture(data);
 
             if (_stageHost == baseCamera && data.cameraStack.Contains(_uiCamera)) return true;
 

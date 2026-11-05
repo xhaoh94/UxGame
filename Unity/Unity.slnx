@@ -28,6 +28,7 @@
   <Project Path="Unity.Animation.Rigging.Editor.csproj" />
   <Project Path="ThirdParty.Runtime.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Obfuz4HybridCLR.Editor.csproj" />
   <Project Path="Unity.Main.csproj" />
   <Project Path="Unity.Searcher.Editor.csproj" />
@@ -44,7 +45,6 @@
   <Project Path="Unity.TextMeshPro.Editor.csproj" />
   <Project Path="com.unity.cinemachine.editor.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.AI.Navigation.Updater.csproj" />
   <Project Path="UnityEditor.UI.csproj" />
   <Project Path="Unity.RenderPipelines.Universal.2D.Editor.Overrides.csproj" />

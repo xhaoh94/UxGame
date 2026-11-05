@@ -286,6 +286,19 @@ namespace Ux
         protected void AddClick(GameObject target, Action callback) => _event?.AddClick(target, callback);
 
         /// <summary>
+        /// 注册按下事件（窗口“点一下即置顶”用）。
+        /// </summary>
+        protected void AddPointerDown(GameObject target, Action<UIEventContext> callback)
+            => _event?.AddPointerDown(target, callback);
+
+        /// <summary>
+        /// 注册拖拽事件（纯 C# 对象通过 UIEventRelay 转发）。
+        /// </summary>
+        protected void AddDrag(GameObject target, Action<UIEventContext> onDrag,
+            Action<UIEventContext> onBegin = null, Action<UIEventContext> onEnd = null)
+            => _event?.AddDrag(target, onDrag, onBegin, onEnd);
+
+        /// <summary>
         /// 设置点击缩放参数。默认已在 AddClick 时挂上（0.92 / 0.08s）。
         /// </summary>
         protected void SetClickScale(GameObject target, float pressedScale = 0.92f, float duration = 0.08f)

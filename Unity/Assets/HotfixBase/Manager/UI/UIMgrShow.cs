@@ -766,7 +766,7 @@ namespace Ux
                     return null;
                 }
 
-                ui.InitData(instanceId, data, this);
+                ui.InitData(instanceId, data);
                 return ui;
             }
             catch (Exception ex)
@@ -781,7 +781,7 @@ namespace Ux
         /// <summary>
         /// UI显示完成回调
         /// </summary>
-        void IUICallback.NotifyShown(IUI ui, IUIParam param, bool checkStack)
+        internal void NotifyShown(IUI ui, IUIParam param, bool checkStack)
         {
             var record = GetRecord(ui.ID);
             if (record == null)

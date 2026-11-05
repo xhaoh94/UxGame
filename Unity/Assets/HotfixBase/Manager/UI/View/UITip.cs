@@ -9,17 +9,17 @@ namespace Ux
     {
         public override int HideDestroyTime => -1;
         protected override UILayer Layer => UILayer.Tip;
-        public override UIType Type => UIType.Fixed;
-        public override UIBlur Blur => UIBlur.None;
+        public override UIType Type => UIType.NonStackable;
+        public override UIBlurMode Blur => UIBlurMode.None;
         public override UIFocusMode FocusMode => UIFocusMode.None;
 
         protected UITipFactory.TipData tipData;
         protected virtual TMP_Text __txtContent { get; } = null;
 
-        public override void InitData(int instanceId, IUIData data, IUICallback callback)
+        public override void InitData(int instanceId, IUIData data)
         {
             OnHideCallback += _Hide;
-            base.InitData(instanceId, data, callback);
+            base.InitData(instanceId, data);
         }
 
         protected override void ToShow(bool isAnim, int id, bool isStack, int showVersion)

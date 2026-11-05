@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
@@ -61,6 +61,18 @@ TagManager:
     locked: 0
   - name: sl6
     uniqueID: 372769940
+    locked: 0
+  - name: sl7
+    uniqueID: 1325583894
+    locked: 0
+  - name: sl8
+    uniqueID: 2054643734
+    locked: 0
+  - name: sl9
+    uniqueID: 1395659791
+    locked: 0
+  - name: sl10
+    uniqueID: 143216780
     locked: 0
   m_RenderingLayers:
   - Default

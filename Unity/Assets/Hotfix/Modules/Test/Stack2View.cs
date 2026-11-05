@@ -4,7 +4,7 @@ namespace Ux.UI
     partial class Stack2View
     {
         protected override UILayer Layer => UILayer.View;
-        public override UIType Type => UIType.Normal;
+        public override UIType Type => UIType.Stackable;
         partial void OnBtn1Click(UIEventContext e)
         {
             UIMgr.Ins.Create().Show<UI.Stack1View>();

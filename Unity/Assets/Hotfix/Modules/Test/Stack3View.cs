@@ -4,7 +4,7 @@ namespace Ux.UI
     partial class Stack3View
     {
         protected override UILayer Layer => UILayer.View;
-        public override UIType Type => UIType.Normal;
+        public override UIType Type => UIType.Stackable;
 
         protected override void OnShow()
         {

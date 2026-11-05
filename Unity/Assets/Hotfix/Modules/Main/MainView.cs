@@ -6,7 +6,7 @@ namespace Ux.UI
     public partial class MainView
     {
         protected override UILayer Layer => UILayer.View;
-        public override UIType Type => UIType.Fixed;        
+        public override UIType Type => UIType.NonStackable;        
         partial void OnBtnBackClick(UIEventContext e)
         {
             GameMain.Machine.Enter<StateLogin>();

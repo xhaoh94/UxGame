@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 
@@ -19,6 +19,7 @@ namespace Ux
                 __Debugger_Showed_Event();                
                 __Debugger_Cacel_Event();
                 __Debugger_WaitDel_Event();
+                __Debugger_Windows_Event();
             }
         }
 
@@ -94,6 +95,19 @@ namespace Ux
         }
 
         /// <summary>
+        /// 调试器窗口注册表事件（仅编辑器模式）
+        /// </summary>
+        public static void __Debugger_Windows_Event()
+        {
+            if (UnityEditor.EditorApplication.isPlaying)
+            {
+                var access = (IUIMgrDebuggerAccess)Ins;
+                access.FillWindows(Ins._debugWindows);
+                __Debugger_Windows_CallBack?.Invoke(Ins._debugWindows);
+            }
+        }
+
+        /// <summary>
         /// UI数据调试回调（仅编辑器模式）
         /// </summary>
         public static Action<Dictionary<string, IUIData>> __Debugger_UI_CallBack;
@@ -117,6 +131,11 @@ namespace Ux
         /// 等待销毁UI调试回调（仅编辑器模式）
         /// </summary>
         public static Action<List<string>> __Debugger_WaitDel_CallBack;
+
+        /// <summary>
+        /// 窗口注册表调试回调（仅编辑器模式）
+        /// </summary>
+        public static Action<List<string>> __Debugger_Windows_CallBack;
         
         /// <summary>
         /// 资源包引用调试回调（仅编辑器模式）
@@ -259,6 +278,9 @@ namespace Ux
                 Error($"焦点停在未显示的实例 {focused.ID}（{focused.Name}）上。");
             }
 
+            // 5.1 窗口注册表（顺序与焦点、上屏排序的一致性）
+            AssertWindowInvariants(Error, Warn);
+
             // 6. 缓存 / 等待销毁
             var cacheIds = Pool.Get<List<int>>();
             try
@@ -289,6 +311,74 @@ namespace Ux
         }
 
         /// <summary>
+        /// 窗口不变式：注册表 ↔ 可见表 ↔ 上屏排序表，以及“焦点窗口在同 Tier 内最靠上”。
+        /// 出错的都是“窗口点不上去/置顶后被打回”这类难复现问题。
+        /// </summary>
+        private void AssertWindowInvariants(Action<string> error, Action<string> warn)
+        {
+            var ids = Pool.Get<List<int>>();
+            try
+            {
+                _windowService.FillWindowIds(ids);
+
+                if (ids.Count > _windowService.MaxWindows)
+                {
+                    error($"窗口注册数 {ids.Count} 超过上限 {_windowService.MaxWindows}。");
+                }
+
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    var id = ids[i];
+                    if (!_windowService.TryGetWindow(id, out var window) || window == null)
+                    {
+                        error($"窗口注册表里的实例 {id} 取不到窗口对象。");
+                        continue;
+                    }
+
+                    if (!_showed.ContainsKey(id))
+                    {
+                        error($"窗口实例 {id}（{window.GetType().Name}）已注册但不在可见表里。");
+                    }
+
+                    if (!_stageHandler.TryGetSorting(id, out _, out _))
+                    {
+                        warn($"窗口实例 {id}（{window.GetType().Name}）已注册但不在上屏排序表里。");
+                    }
+                }
+
+                // 焦点窗口应当是所在 Tier 内 sortingOrder 最大的那个。
+                var focusedId = _focusHandler.FocusedId;
+                if (focusedId == 0 || !_windowService.IsRegistered(focusedId))
+                    return;
+
+                if (!_stageHandler.TryGetSorting(focusedId, out _, out var focusedOrder))
+                {
+                    warn($"焦点窗口 {focusedId} 不在上屏排序表里。");
+                    return;
+                }
+
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    var otherId = ids[i];
+                    if (otherId == focusedId) continue;
+                    if (!_stageHandler.TryGetSorting(otherId, out _, out var order)) continue;
+
+                    var sameTier = order / UIStageHandler.TierSpan == focusedOrder / UIStageHandler.TierSpan;
+                    if (sameTier && order > focusedOrder)
+                    {
+                        warn($"焦点窗口 {focusedId} 在同 Tier 内不是最上层（{otherId} 的 sortingOrder 更高）。");
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                ids.Clear();
+                Pool.Push(ids);
+            }
+        }
+
+        /// <summary>
         /// 菜单入口：运行时手动触发一次 UI 状态自检。
         /// </summary>
         [UnityEditor.MenuItem("Tools/UI/检查 UI 状态一致性", false, 100)]
@@ -301,6 +391,32 @@ namespace Ux
             }
 
             Ins.__DebugAssertAllInvariants("手动检查");
+        }
+
+        /// <summary>
+        /// 菜单入口：把当前所有最小化窗口还原到 Normal。
+        /// 任务栏/快捷键还没接，测试时用这个先把窗口找回来。
+        /// </summary>
+        [UnityEditor.MenuItem("Tools/UI/恢复所有最小化窗口", false, 104)]
+        private static void __MenuRestoreMinimizedWindows()
+        {
+            if (!UnityEditor.EditorApplication.isPlaying)
+            {
+                Log.Warning("[UI窗口] 需要进入运行时才能恢复最小化窗口。");
+                return;
+            }
+
+            var count = 0;
+            foreach (var kv in Ins._records)
+            {
+                if (kv.Value?.UI is UIWindow window && window.LayoutState == WindowState.Minimized)
+                {
+                    window.Restore();
+                    count++;
+                }
+            }
+
+            Log.Info("[UI窗口] 已恢复 {0} 个最小化窗口。", count);
         }
 
         private sealed class SmokeTarget

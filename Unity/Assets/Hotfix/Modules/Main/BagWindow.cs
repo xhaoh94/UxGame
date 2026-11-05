@@ -1,13 +1,11 @@
-using Ux;
+﻿using Ux;
 
 namespace Ux.UI
 {
     [UI]
     partial class BagWindow
-    {
-        // protected override UILayer Layer => UILayer.View;
-        public override UIType Type => UIType.Normal;
-        public override UIBlur Blur => UIBlur.Blur;
+    {        
+        public override UIBlurMode Blur => UIBlurMode.RendererFeature;
 
         protected override void OnShow()
         {

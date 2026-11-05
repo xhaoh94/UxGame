@@ -29,7 +29,7 @@ namespace Ux.UI
         private string Account
         {
             get
-            {
+            {                
                 if (_accountInput != null) return _accountInput.text;
                 if (_legacyAccountInput != null) return _legacyAccountInput.text;
                 return string.Empty;

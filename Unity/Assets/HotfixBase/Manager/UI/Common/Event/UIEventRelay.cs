@@ -13,12 +13,18 @@ namespace Ux
         IPointerClickHandler,
         IPointerDownHandler,
         IPointerUpHandler,
-        IPointerExitHandler
+        IPointerExitHandler,
+        IBeginDragHandler,
+        IDragHandler,
+        IEndDragHandler
     {
         public event Action<PointerEventData> Clicked;
         public event Action<PointerEventData> PointerDown;
         public event Action<PointerEventData> PointerUp;
         public event Action<PointerEventData> PointerExit;
+        public event Action<PointerEventData> DragBegan;
+        public event Action<PointerEventData> Dragged;
+        public event Action<PointerEventData> DragEnded;
 
         private Func<bool> _longPressHandler;
         private float _longPressFirst;
@@ -102,6 +108,23 @@ namespace Ux
             PointerExit?.Invoke(eventData);
         }
 
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            // 拖拽开始后不再触发长按：按下与拖动是互斥的手势。
+            _longPressPressed = false;
+            DragBegan?.Invoke(eventData);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            Dragged?.Invoke(eventData);
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            DragEnded?.Invoke(eventData);
+        }
+
         public void ClearListeners()
         {
             ClearLongPress();
@@ -109,6 +132,9 @@ namespace Ux
             PointerDown = null;
             PointerUp = null;
             PointerExit = null;
+            DragBegan = null;
+            Dragged = null;
+            DragEnded = null;
         }
     }
 }

@@ -10,6 +10,6 @@ namespace Ux.UI
     partial class TipView
     {
         protected override UILayer Layer => UILayer.Top;
-        public override UIType Type =>  UIType.Fixed;
+        public override UIType Type => UIType.NonStackable;
     }
 }

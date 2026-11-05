@@ -7,17 +7,24 @@ namespace Ux.UI
 {
     public partial class BagWindow : UIWindow
     {
-        protected Common2TabFrame mCommonBg;
+        protected RectTransform rect;
+        protected RectTransform body;
+        protected CommonWindowFrame mCommonFrame;
         protected GameObject btnTt;
         protected TMP_Text txtTt;
+        protected override RectTransform __winBody => body;
+        protected override RectTransform __winDragArea => rect;
 
         protected override void CreateChildren()
         {
-            var root = GameObject.transform;
-            mCommonBg = new Common2TabFrame(root.GetChild(0).gameObject, this);
-            btnTt = root.GetChild(3).gameObject;
-            var node_3 = root.GetChild(3);
-            txtTt = node_3.GetChild(0).GetComponent<TMP_Text>();
+            var root = Transform;
+            rect = root.GetChild(0) as RectTransform;
+            body = root.GetChild(1) as RectTransform;
+            var node_1 = root.GetChild(1);
+            mCommonFrame = new CommonWindowFrame(node_1.GetChild(0).gameObject, this);
+            btnTt = node_1.GetChild(2).gameObject;
+            var node_1_2 = node_1.GetChild(2);
+            txtTt = node_1_2.GetChild(0).GetComponent<TMP_Text>();
         }
     }
 }

@@ -1,10 +1,10 @@
-namespace Ux
+﻿namespace Ux
 {
     public abstract class UITabView : UIBase
     {
         public override UIObject Parent => UIMgr.Ins.GetPreparedUI<UIBase>(Data.TabData.PID);
-        public sealed override UIType Type => ParentAs<UIBase>()?.Type ?? UIType.Normal;
-        public sealed override UIBlur Blur => UIBlur.None;
+        public sealed override UIType Type => ParentAs<UIBase>()?.Type ?? UIType.Stackable;
+        public sealed override UIBlurMode Blur => UIBlurMode.None;
 
         protected override void AddToStage()
         {

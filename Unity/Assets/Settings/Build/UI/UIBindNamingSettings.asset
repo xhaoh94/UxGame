@@ -205,4 +205,8 @@ MonoBehaviour:
     Match: 3
     Pattern: tabcontent
     FieldType: RectTransform
+  - Enabled: 1
+    Match: 0
+    Pattern: CommonWindowFrame
+    FieldType: CommonWindowFrame
   _addressGroupName: UI

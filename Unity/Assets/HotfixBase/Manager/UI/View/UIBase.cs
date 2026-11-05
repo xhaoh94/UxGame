@@ -24,8 +24,8 @@ namespace Ux
         }
 
         public virtual int HideDestroyTime => 60;
-        public virtual UIType Type => UIType.Normal;
-        public virtual UIBlur Blur => UIBlur.None;
+        public virtual UIType Type => UIType.Stackable;
+        public virtual UIBlurMode Blur => UIBlurMode.None;
         public virtual UIFocusMode FocusMode => UIFocusMode.Auto;
         public virtual bool CanFocus => FocusMode != UIFocusMode.None && Visible;
 
@@ -34,14 +34,12 @@ namespace Ux
         protected virtual void OnFocusEnter() { }
         protected virtual void OnFocusExit() { }
 
-        private IUICallback _callback;
         private int _instanceId;
 
-        public virtual void InitData(int instanceId, IUIData data, IUICallback callback)
+        public virtual void InitData(int instanceId, IUIData data)
         {
             _instanceId = instanceId;
             Data = data;
-            _callback = callback;
             Init(CreateGameObject());
             OnHideCallback += HideInternal;
             OnShowCallback += ShowInternal;
@@ -111,13 +109,13 @@ namespace Ux
         private void RegisterToStage()
         {
             if (_registeredToStage) return;
-            _callback?.RegisterStage(ID, Layer);
+            UIMgr.Ins.RegisterStage(ID, Layer);
             _registeredToStage = true;
         }
         private void UnregisterStage()
         {
             if (!_registeredToStage) return;
-            _callback?.UnregisterStage(ID, Layer);
+            UIMgr.Ins.UnregisterStage(ID, Layer);
             _registeredToStage = false;
         }
 
@@ -250,7 +248,7 @@ namespace Ux
 
         private void ShowInternal(int id, IUIParam param, bool checkStack)
         {
-            _callback?.NotifyShown(this, param, checkStack);
+            UIMgr.Ins.NotifyShown(this, param, checkStack);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, ID);
             EventMgr.Ins.Run(MainEventType.UI_SHOW, GetType());
         }
@@ -280,7 +278,7 @@ namespace Ux
         {
             RemoveToStage();
             UnregisterStage();
-            _callback?.NotifyHidden(this);
+            UIMgr.Ins.NotifyHidden(this);
         }
 
         void IUI.Dispose() => ToDispose(true);
@@ -289,7 +287,6 @@ namespace Ux
         {
             UnregisterStage();
             Data = null;
-            _callback = null;
             _async = false;
             _asyncVersion = 0;
             _transitionVersionSeed = 0;

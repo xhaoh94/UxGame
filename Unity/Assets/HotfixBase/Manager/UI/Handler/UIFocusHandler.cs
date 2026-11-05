@@ -1,23 +1,23 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Ux
 {
     internal class UIFocusHandler
     {
-        private readonly IUIFocusHandlerCallback _callback;
+        private readonly UIMgr _manager;
         private readonly List<int> _focusStack = new();
         private int _focusedId;
 
-        public UIFocusHandler(IUIFocusHandlerCallback callback)
+        public UIFocusHandler(UIMgr manager)
         {
-            _callback = callback;
+            _manager = manager;
         }
 
         public int FocusedId => _focusedId;
 
         public IUI GetFocusedUI()
         {
-            return _focusedId == 0 ? null : _callback.GetShownUI(_focusedId);
+            return _focusedId == 0 ? null : _manager.GetShownUI(_focusedId);
         }
 
         public T GetFocusedUI<T>() where T : class, IUI
@@ -82,12 +82,12 @@ namespace Ux
                 return false;
             }
 
-            if (!_callback.IsVisible(id))
+            if (!_manager.IsVisible(id))
             {
                 return false;
             }
 
-            var ui = _callback.GetShownUI(id);
+            var ui = _manager.GetShownUI(id);
             if (ui == null || !ui.CanFocus)
             {
                 return false;
@@ -102,7 +102,7 @@ namespace Ux
         {
             if (_focusedId != 0)
             {
-                var oldUi = _callback.GetShownUI(_focusedId);
+                var oldUi = _manager.GetShownUI(_focusedId);
                 oldUi?.NotifyFocusExit();
                 _focusedId = 0;
             }
@@ -134,12 +134,12 @@ namespace Ux
                 return;
             }
 
-            var oldUi = _callback.GetShownUI(_focusedId);
+            var oldUi = _manager.GetShownUI(_focusedId);
             oldUi?.NotifyFocusExit();
 
             _focusedId = id;
 
-            var newUi = _callback.GetShownUI(_focusedId);
+            var newUi = _manager.GetShownUI(_focusedId);
             newUi?.NotifyFocusEnter();
         }
 
@@ -148,7 +148,7 @@ namespace Ux
             for (int i = _focusStack.Count - 1; i >= 0; i--)
             {
                 var id = _focusStack[i];
-                var ui = _callback.GetShownUI(id);
+                var ui = _manager.GetShownUI(id);
                 if (ui != null && ui.CanFocus)
                 {
                     SetFocusInternal(id);

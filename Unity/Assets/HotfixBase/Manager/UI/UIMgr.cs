@@ -9,7 +9,7 @@ namespace Ux
     /// <summary>
     /// UI管理器类，负责管理整个UI系统的生命周期、显示、隐藏、栈管理等核心功能    
     /// </summary>
-    public partial class UIMgr : Singleton<UIMgr>, IUICallback, IUICacheHandlerCallback, IUIMgrDebuggerAccess, IUIFocusHandlerCallback
+    public partial class UIMgr : Singleton<UIMgr>, IUIMgrDebuggerAccess, IWindowHostAccess
     {
         /// <summary>
         /// 对话框工厂实例，用于创建和管理对话框
@@ -62,6 +62,7 @@ namespace Ux
         private readonly UIFocusHandler _focusHandler;        // UI聚焦处理器
         private readonly UICameraHandler _cameraHandler;      // UI 相机与相机栈挂载
         private readonly UIStageHandler _stageHandler;        // 界面上屏排序
+        private readonly UIWindowService _windowService;      // 窗口注册表 / 激活 / 布局
 
 #if UNITY_EDITOR
         /// <summary>
@@ -74,6 +75,7 @@ namespace Ux
         private readonly List<UIStack> _debugUIStacks = new List<UIStack>();
         private readonly List<string> _debugCacheUI = new List<string>();
         private readonly List<string> _debugWaitDelUI = new List<string>();
+        private readonly List<string> _debugWindows = new List<string>();
 #endif
 
         private readonly Dictionary<UILayer, RectTransform> _uguiLayers = new Dictionary<UILayer, RectTransform>(7);
@@ -81,6 +83,9 @@ namespace Ux
 
         /// <summary>是否已完成 UI 初始化（UI Root 与各层级已创建）。</summary>
         public bool IsInitialized => _uiInitialized;
+
+        /// <summary>窗口服务：注册表、激活（z 序 + 焦点）、Tier、布局存取。仅供框架内部使用。</summary>
+        internal UIWindowService Windows => _windowService;
 
         private static RectTransform CreateUILayer(Transform root, UILayer layer)
         {
@@ -103,9 +108,22 @@ namespace Ux
         /// </summary>
         public void AttachUIStack(Camera baseCamera) => _cameraHandler.Attach(baseCamera);
 
+        /// <summary>模糊截图用的相机：优先场景 Base（含 UI 栈），否则 UI 相机。</summary>
+        internal Camera BlurCaptureCamera =>
+            _cameraHandler.StageHost != null && _cameraHandler.StageHost.isActiveAndEnabled
+                ? _cameraHandler.StageHost
+                : _cameraHandler.UICamera;
+
+        /// <summary>
+        /// 是否有场景 Base 相机。没有时 UI 相机自持 Base，画面里只有 UI ——
+        /// RendererFeature 采样的不透明纹理是空的，模糊要退回到「显示前截图」。
+        /// </summary>
+        internal bool HasSceneCamera =>
+            _cameraHandler.StageHost != null && _cameraHandler.StageHost.isActiveAndEnabled;
+
         // —— 界面上屏排序（实现见 UIStageHandler）——
 
-        void IUICallback.RegisterStage(int instanceId, UILayer layer)
+        internal void RegisterStage(int instanceId, UILayer layer)
         {
             var record = GetRecord(instanceId);
             if (record?.UI is not UIBase ui) return;
@@ -117,10 +135,7 @@ namespace Ux
             _stageHandler.Register(ui, layer);
         }
 
-        void IUICallback.UnregisterStage(int instanceId, UILayer layer) => _stageHandler.Unregister(instanceId, layer);
-
-        bool IUICallback.TryGetStageSorting(int instanceId, out string sortingLayer, out int order)
-            => _stageHandler.TryGetSorting(instanceId, out sortingLayer, out order);
+        internal void UnregisterStage(int instanceId, UILayer layer) => _stageHandler.Unregister(instanceId, layer);
 
         
         private void Initialize()
@@ -140,6 +155,14 @@ namespace Ux
             if (go.GetComponent<UIRelationDriver>() == null)
                 go.AddComponent<UIRelationDriver>();
 
+            // Canvas 根尺寸变化时（分辨率/窗口模式）重新应用窗口比例布局。
+            if (go.GetComponent<UIScreenWatcher>() == null)
+                go.AddComponent<UIScreenWatcher>();
+
+            // 窗口快捷键（ESC / Alt+Tab，默认关闭）。
+            if (go.GetComponent<UIWindowInputRouter>() == null)
+                go.AddComponent<UIWindowInputRouter>();
+
             UnityEngine.Object.DontDestroyOnLoad(go);            
             _cameraHandler.ConfigureRoot(go.GetComponent<Canvas>(), root);
             go.SetLayer(LayerMask.NameToLayer(Layers.UI));
@@ -152,14 +175,88 @@ namespace Ux
 
             _uguiLayers.Clear();
             _uguiLayers[UILayer.Root] = root;
-            _uguiLayers[UILayer.Bottom] = CreateUILayer(root, UILayer.Bottom);
-            _uguiLayers[UILayer.BlurBackdrop] = CreateUILayer(root, UILayer.BlurBackdrop);
-            _uguiLayers[UILayer.View] = CreateUILayer(root, UILayer.View);
-            _uguiLayers[UILayer.Window] = CreateUILayer(root, UILayer.Window);
-            _uguiLayers[UILayer.Tip] = CreateUILayer(root, UILayer.Tip);
-            _uguiLayers[UILayer.Top] = CreateUILayer(root, UILayer.Top);            
+
+            // 按枚举创建全部上屏层：新增层只需要改 UILayer，不再手写列表。
+            var layers = (UILayer[])Enum.GetValues(typeof(UILayer));
+            for (int i = 0; i < layers.Length; i++)
+            {
+                var layer = layers[i];
+                if (layer == UILayer.Root)
+                    continue;
+
+                _uguiLayers[layer] = CreateUILayer(root, layer);
+            }
 
             _uiInitialized = true;
+        }
+
+        // —— 窗口系统的业务门面（业务不直接访问 UIWindowService）——
+
+        private readonly List<IWindowObserver> _windowObservers = new List<IWindowObserver>();
+
+        /// <summary>全局默认拖动范围（通常是 UIRoot 下的安全区）。</summary>
+        public RectTransform WindowDefaultDragArea
+        {
+            get => _windowService.DefaultDragArea;
+            set => _windowService.DefaultDragArea = value;
+        }
+
+        /// <summary>同时存在的窗口上限。默认不限。</summary>
+        public int MaxWindows
+        {
+            get => _windowService.MaxWindows;
+            set => _windowService.MaxWindows = value;
+        }
+
+        /// <summary>模糊半径（像素，基于降采样后的纹理）。默认 8。</summary>
+        public float BlurSize
+        {
+            get => _blurHandler.BlurSize;
+            set => _blurHandler.BlurSize = value;
+        }
+
+        /// <summary>
+        /// 全局覆盖弹窗背景模糊模式；null 表示按界面自己的 UIBase.Blur 声明。
+        /// 低端机设 Mask 即可把所有已声明模糊的界面降级为半透明遮罩。
+        /// </summary>
+        public UIBlurMode? BlurModeOverride
+        {
+            get => _blurHandler.Override;
+            set => _blurHandler.Override = value;
+        }
+
+        /// <summary>超限是否自动淘汰最久未激活的窗口。默认关闭。</summary>
+        public bool EnableWindowLruEviction
+        {
+            get => _windowService.EnableLruEviction;
+            set => _windowService.EnableLruEviction = value;
+        }
+
+        public void AddWindowObserver(IWindowObserver observer)
+        {
+            if (observer != null && !_windowObservers.Contains(observer))
+                _windowObservers.Add(observer);
+        }
+
+        public void RemoveWindowObserver(IWindowObserver observer)
+        {
+            if (observer != null)
+                _windowObservers.Remove(observer);
+        }
+
+        private void NotifyWindowObservers(Action<IWindowObserver> notify)
+        {
+            for (int i = _windowObservers.Count - 1; i >= 0; i--)
+            {
+                var observer = _windowObservers[i];
+                if (observer == null)
+                {
+                    _windowObservers.RemoveAt(i);
+                    continue;
+                }
+
+                notify(observer);
+            }
         }
 
         public UIMgr()
@@ -170,7 +267,11 @@ namespace Ux
             _stackHandler = new UIStackHandler(_stackEntries);
             _focusHandler = new UIFocusHandler(this);
             _cameraHandler = new UICameraHandler();
-            _stageHandler = new UIStageHandler(_blurHandler);
+            _stageHandler = new UIStageHandler(_blurHandler, () => _focusHandler.FocusedId);
+            _windowService = new UIWindowService(this, new PlayerPrefsWindowLayoutStore());
+            _windowService.WindowShown += window => NotifyWindowObservers(o => o.OnWindowOpened(window));
+            _windowService.WindowHidden += window => NotifyWindowObservers(o => o.OnWindowClosed(window));
+            _windowService.WindowActivated += window => NotifyWindowObservers(o => o.OnWindowActivated(window));
         }
 
         protected override void OnCreated()
@@ -231,6 +332,8 @@ namespace Ux
             _hideAllIdBuffer.Clear();
             _stackHandler.Clear();
             _stageHandler.Clear();
+            _windowService.Clear();
+            _windowObservers.Clear();
 
             // 索引清空后再完成挂起的等待对象，避免调用方（await Show/Hide）永久等待。
             for (int i = 0; i < pendingRecords.Count; i++)
@@ -1001,7 +1104,7 @@ namespace Ux
         /// <summary>
         /// 获取当前显示的UI字典（用于模糊效果处理回调）
         /// </summary>
-        Dictionary<int, IUI> IUICallback.GetShowedDict()
+        internal Dictionary<int, IUI> GetShowedDict()
         {
             return _showed;
         }
@@ -1010,7 +1113,7 @@ namespace Ux
         /// 释放UI（用于缓存处理回调）
         /// </summary>
         /// <param name="ui">要释放的UI实例</param>
-        void IUICacheHandlerCallback.DisposeUI(IUI ui)
+        internal void DisposeUI(IUI ui)
         {
             Dispose(ui);
         }
@@ -1084,6 +1187,14 @@ namespace Ux
         }
 
         /// <summary>
+        /// 获取窗口注册表快照（实例序号 / 实例 ID / 类型 / Tier / 状态）。
+        /// </summary>
+        void IUIMgrDebuggerAccess.FillWindows(List<string> output)
+        {
+            _windowService.FillDebugNames(output);
+        }
+
+        /// <summary>
         /// 手动聚焦指定类型的UI
         /// </summary>
         public bool Focus<T>() where T : UIBase
@@ -1141,17 +1252,9 @@ namespace Ux
         }
 
         /// <summary>
-        /// 获取当前显示的UI字典（用于聚焦处理器回调）
-        /// </summary>
-        Dictionary<int, IUI> IUIFocusHandlerCallback.GetShowedDict()
-        {
-            return _showed;
-        }
-
-        /// <summary>
         /// 获取指定ID的已显示UI（用于聚焦处理器回调）
         /// </summary>
-        IUI IUIFocusHandlerCallback.GetShownUI(int id)
+        internal IUI GetShownUI(int id)
         {
             return _showed.TryGetValue(id, out var ui) ? ui : null;
         }
@@ -1159,9 +1262,30 @@ namespace Ux
         /// <summary>
         /// 检查指定ID的UI是否可见（用于聚焦处理器回调）
         /// </summary>
-        bool IUIFocusHandlerCallback.IsVisible(int id)
+        internal bool IsVisible(int id)
         {
             return IsShowPhase(GetRecord(id));
+        }
+
+        // —— IWindowHostAccess：窗口服务对内部处理器的唯一入口 ——
+
+        void IWindowHostAccess.Promote(int instanceId) => _stageHandler.Promote(instanceId);
+
+        bool IWindowHostAccess.IsLastInTier(int instanceId) => _stageHandler.IsLastInTier(instanceId);
+
+        void IWindowHostAccess.SendToBack(int instanceId) => _stageHandler.SendToBack(instanceId);
+
+        void IWindowHostAccess.SetWindowTier(int instanceId, UIWindowTier tier)
+            => _stageHandler.SetWindowTier(instanceId, tier);
+
+        bool IWindowHostAccess.Focus(int instanceId) => _focusHandler.Focus(instanceId);
+
+        RectTransform IWindowHostAccess.GetWindowLayer() => GetUILayer(UILayer.Window);
+
+        bool IWindowHostAccess.TryGetWindow(int instanceId, out UIWindow window)
+        {
+            window = GetUI(instanceId) as UIWindow;
+            return window != null;
         }
     }
 }

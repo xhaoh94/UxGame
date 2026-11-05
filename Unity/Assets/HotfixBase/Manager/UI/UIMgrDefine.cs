@@ -23,7 +23,7 @@ namespace Ux
         /// <summary>
         /// 模糊效果类型
         /// </summary>
-        UIBlur Blur { get; }
+        UIBlurMode Blur { get; }
         
         /// <summary>
         /// UI名称
@@ -63,7 +63,7 @@ namespace Ux
         /// <param name="instanceId">实例 ID（由 UIMgr 分配，用于同一类型多实例）</param>
         /// <param name="data">UI数据</param>
         /// <param name="callback">回调数据</param>
-        void InitData(int instanceId, IUIData data, IUICallback callback);
+        void InitData(int instanceId, IUIData data);
         
         /// <summary>
         /// 释放UI资源
@@ -154,24 +154,20 @@ namespace Ux
     }
 
     /// <summary>
-    /// UI类型枚举，定义UI的栈式管理行为
+    /// UI 是否参与「栈」：参与时显示入栈、隐藏后自动回到上一个界面。
+    /// 只有两个状态，与「谁显示在最上层」无关（那是 UILayer / UIWindowTier 的事）。
     /// </summary>
     public enum UIType
     {
         /// <summary>
-        /// 普通UI，不会进入UI栈管理
+        /// 参与栈：显示时入栈，隐藏后回到上一个界面。全屏页面用这个（默认）。
         /// </summary>
-        Normal,
-        
+        Stackable = 0,
+
         /// <summary>
-        /// 栈式UI，会被加入UI栈管理，隐藏时可能返回上一个UI
+        /// 不参与栈：显示/隐藏都不影响栈。弹窗、飘字、窗口用这个。
         /// </summary>
-        Stack,
-        
-        /// <summary>
-        /// 固定UI，始终显示在最顶层，不受栈管理影响
-        /// </summary>
-        Fixed,
+        NonStackable = 1,
     }
 
     /// <summary>
@@ -199,18 +195,22 @@ namespace Ux
     /// UI模糊效果类型枚举
     /// </summary>
     [Flags]
-    public enum UIBlur
+    /// <summary>弹窗背景模糊模式。</summary>
+    public enum UIBlurMode
     {
-        /// <summary>
-        /// 无模糊效果（默认）
-        /// </summary>
-        None = 0x0,
-        
-        /// <summary>
-        /// 强模糊（触发截图背景模糊）
-        /// </summary>
-        Blur = 0x1,
+        /// <summary>不显示背景。</summary>
+        None = 0,
+
+        /// <summary>低端兜底：半透明纯色遮罩，不跑 GPU 采样。</summary>
+        Mask = 1,
+
+        /// <summary>相机渲染到半分辨率 RT，UI 材质采样并模糊（默认，稳定）。</summary>
+        RenderTexture = 2,
+
+        /// <summary>URP Renderer Feature 生成 _UIBlurTex，UI 材质采样并模糊（需添加 Feature）。</summary>
+        RendererFeature = 3,
     }
+
 
     public partial class UIMgr
     {
@@ -476,7 +476,7 @@ namespace Ux
             /// </summary>
             public int ActiveTypeId { get; }
             public IUIParam Param { get; } // 界面参数
-            public UIType Type { get; }   // 界面类型（Normal/Stack/Fixed）
+            public UIType Type { get; }   // 界面类型（Stackable/NonStackable）
         }
         
         /// <summary>
@@ -572,7 +572,9 @@ namespace Ux
         /// </summary>
         public struct BlurStack
         {
-            public readonly UIBlur Blur;   // 模糊类型
+            public readonly UIBlurMode Blur;   // 模糊模式
+            public readonly string SortingLayer; // 触发窗口的 SortingLayer 快照
+            public readonly int SortingOrder;    // 触发窗口的 sortingOrder 快照
             public readonly int ID;        // UI ID
             
 #if UNITY_EDITOR
@@ -584,20 +586,24 @@ namespace Ux
             /// <summary>
             /// 构造函数（编辑器模式）
             /// </summary>
-            public BlurStack(string idStr, int id, UIBlur blur)
+            public BlurStack(string idStr, int id, UIBlurMode blur, string sortingLayer, int sortingOrder)
             {
                 IDStr = idStr;
                 ID = id;
                 Blur = blur;
+                SortingLayer = sortingLayer;
+                SortingOrder = sortingOrder;
             }
 #else
             /// <summary>
             /// 构造函数（发布模式）
             /// </summary>
-            public BlurStack(int id, UIBlur blur)
+            public BlurStack(int id, UIBlurMode blur, string sortingLayer, int sortingOrder)
             {
                 ID = id;
                 Blur = blur;
+                SortingLayer = sortingLayer;
+                SortingOrder = sortingOrder;
             }
 #endif
         }

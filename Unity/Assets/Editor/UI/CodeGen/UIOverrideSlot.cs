@@ -16,6 +16,28 @@ namespace Ux.Editor.Build.UI
         TabList,
         TabContent,
         TabClose,
+
+        // 窗口槽位：**只能追加在末尾**。SavedConfig 用 JsonUtility 存 EditorPrefs，
+        // enum 序列化成整数，插在中间会让已存工程的槽位绑定集体错位。
+        WindowBody,
+        WindowTitleBar,
+        WindowTitle,
+        WindowBtnMin,
+        WindowBtnMax,
+        WindowBtnClose,
+
+        // 窗口框架（*WindowFrame）槽位，同样只能往后追加。
+        FrameTitleBar,
+        FrameTitle,
+        FrameBtnMin,
+        FrameBtnMax,
+        FrameBtnClose,
+
+        // 窗口拖动范围（只能往后追加）
+        WindowDragArea,
+
+        // 窗口框架：置顶按钮
+        FrameBtnPin,
     }
 }
 #endif

@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &-8693615543961808567
 MonoBehaviour:
@@ -67,31 +67,6 @@ MonoBehaviour:
   chromaticAbberationIntensity:
     m_OverrideState: 1
     m_Value: 0.5
---- !u!114 &-8552510525323078786
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 318679ac061a7f24cbbc8c623070d3af, type: 3}
-  m_Name: BokehBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  EnableBokehBlur:
-    m_OverrideState: 1
-    m_Value: 0
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 1
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 32
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 2
 --- !u!114 &-8324870641179497731
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -164,28 +139,6 @@ MonoBehaviour:
   RTDownScaling:
     m_OverrideState: 1
     m_Value: 2
---- !u!114 &-7676995661214247446
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b332fffb77c1ca149b20668920ddf03a, type: 3}
-  m_Name: GrainyBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 4
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 1
 --- !u!114 &-7516897056464593846
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -206,28 +159,6 @@ MonoBehaviour:
   contribution:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &-7346203716099597404
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1227c91f6fec444d8173f1110ac2a4c, type: 3}
-  m_Name: DualTentBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 4
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 2
 --- !u!114 &-6704634718014665999
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -296,28 +227,6 @@ MonoBehaviour:
   scale:
     m_OverrideState: 1
     m_Value: 1
---- !u!114 &-6593018154213341165
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef3804f4e1653664aa789112e48631b5, type: 3}
-  m_Name: DualGaussianBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 4
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 2
 --- !u!114 &-6099531586852422598
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -364,56 +273,6 @@ MonoBehaviour:
   bladeRotation:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &-5886173974391029062
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f79c4f324983804995f6e0071ecb38f, type: 3}
-  m_Name: GaussianBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 6
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 2
---- !u!114 &-4427960271136409811
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 020cea735ba7b8b4ba0bc7ca83e74f54, type: 3}
-  m_Name: TiltShiftBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  QualityLevel:
-    m_OverrideState: 1
-    m_Value: 0
-  AreaSize:
-    m_OverrideState: 1
-    m_Value: 0.5
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 2
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 1
 --- !u!114 &-4317648423686601939
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -541,31 +400,6 @@ MonoBehaviour:
   worldOffset:
     m_OverrideState: 1
     m_Value: {x: 0, y: 0, z: 0}
---- !u!114 &-3886278758093727745
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5898f24c82fbc7f4d9bca122c99df1ae, type: 3}
-  m_Name: RadialBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 10
-  RadialCenterX:
-    m_OverrideState: 1
-    m_Value: 0.5
-  RadialCenterY:
-    m_OverrideState: 1
-    m_Value: 0.5
 --- !u!114 &-2877171465908438464
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -588,28 +422,6 @@ MonoBehaviour:
   balance:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &-2704126235550853870
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8cc6cab98b27ee444a024734c307cb6a, type: 3}
-  m_Name: BoxBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 4
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 2
 --- !u!114 &-2530946164281570913
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -894,19 +706,7 @@ MonoBehaviour:
   - {fileID: -8693615543961808567}
   - {fileID: -2877171465908438464}
   - {fileID: -3991685530271513260}
-  - {fileID: -7346203716099597404}
-  - {fileID: -5886173974391029062}
-  - {fileID: -4427960271136409811}
-  - {fileID: -2704126235550853870}
-  - {fileID: 8008502612264694217}
-  - {fileID: 8635741271636270079}
-  - {fileID: 1126990669292013354}
-  - {fileID: -6593018154213341165}
-  - {fileID: 1736638116952673144}
-  - {fileID: -3886278758093727745}
   - {fileID: -7857253968963242681}
-  - {fileID: -7676995661214247446}
-  - {fileID: -8552510525323078786}
   - {fileID: -8324870641179497731}
 --- !u!114 &248992276058061424
 MonoBehaviour:
@@ -924,34 +724,6 @@ MonoBehaviour:
   intensity:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &1126990669292013354
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0a86de8a5e20fe409beb39a1df84693, type: 3}
-  m_Name: GaussianBlur2
-  m_EditorClassIdentifier: 
-  active: 1
-  times:
-    m_OverrideState: 1
-    m_Value: 1
-  downSample:
-    m_OverrideState: 1
-    m_Value: 2
-  radius:
-    m_OverrideState: 1
-    m_Value: 1
-  depth:
-    m_OverrideState: 1
-    m_Value: 0.5
-  value:
-    m_OverrideState: 1
-    m_Value: 0.2
 --- !u!114 &1507464374188048615
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -980,28 +752,6 @@ MonoBehaviour:
   rounded:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &1736638116952673144
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a25c89454ee47db42bbb6a81ec2d6d8c, type: 3}
-  m_Name: DualKawaseBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 4
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 2
 --- !u!114 &3869539441911223620
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1092,56 +842,3 @@ MonoBehaviour:
   dirtIntensity:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &8008502612264694217
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 947ec1453b3baf047a0ab8b73f5bae81, type: 3}
-  m_Name: DirectionalBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 12
-  Angle:
-    m_OverrideState: 1
-    m_Value: 0.5
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 1
---- !u!114 &8635741271636270079
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 226316d83b0bee241988dfc3952c4812, type: 3}
-  m_Name: IrisBlur
-  m_EditorClassIdentifier: 
-  active: 1
-  QualityLevel:
-    m_OverrideState: 1
-    m_Value: 0
-  AreaSize:
-    m_OverrideState: 1
-    m_Value: 0.5
-  BlurRadius:
-    m_OverrideState: 1
-    m_Value: 0
-  Iteration:
-    m_OverrideState: 1
-    m_Value: 2
-  RTDownScaling:
-    m_OverrideState: 1
-    m_Value: 1

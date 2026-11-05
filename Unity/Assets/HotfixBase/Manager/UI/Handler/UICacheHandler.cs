@@ -1,16 +1,16 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Ux
 {
     internal class UICacheHandler
     {
-        private readonly IUICacheHandlerCallback _callback;
+        private readonly UIMgr _manager;
         private readonly Dictionary<int, IUI> _cache = new Dictionary<int, IUI>();
         private readonly Dictionary<int, UIMgr.WaitDel> _waitDels = new Dictionary<int, UIMgr.WaitDel>();
 
-        internal UICacheHandler(IUICacheHandlerCallback callback)
+        internal UICacheHandler(UIMgr manager)
         {
-            _callback = callback;
+            _manager = manager;
         }
 
         internal bool TryTakeCached(int id, out IUI ui)
@@ -104,7 +104,7 @@ namespace Ux
             _cache.Remove(id);
             if (!ReferenceEquals(cached, keep))
             {
-                _callback.DisposeUI(cached);
+                _manager.DisposeUI(cached);
             }
 #if UNITY_EDITOR
             UIMgr.__Debugger_Cacel_Event();
@@ -122,7 +122,7 @@ namespace Ux
             waitDel.GetUI(out var oldUI);
             if (oldUI != null && !ReferenceEquals(oldUI, keep))
             {
-                _callback.DisposeUI(oldUI);
+                _manager.DisposeUI(oldUI);
             }
 #if UNITY_EDITOR
             UIMgr.__Debugger_WaitDel_Event();
@@ -162,7 +162,7 @@ namespace Ux
                 _cache.Clear();
                 for (int i = 0; i < cachedUIs.Count; i++)
                 {
-                    _callback.DisposeUI(cachedUIs[i]);
+                    _manager.DisposeUI(cachedUIs[i]);
                 }
                 cachedUIs.Clear();
                 Pool.Push(cachedUIs);
@@ -247,7 +247,7 @@ namespace Ux
                 record.CacheState = UIMgr.CacheState.None;
                 UIMgr.Ins.RemoveRecord(ui.ID);
             }
-            _callback.DisposeUI(ui);
+            _manager.DisposeUI(ui);
         }
     }
 }

@@ -324,9 +324,10 @@ namespace Ux
                     return;
                 }
 
-                // 从栈中移除根界面
-                _stackHandler.RemoveRoot(rootId);
-                if (checkStack)
+                // 从栈中移除根界面。只有真的在栈里（Stackable 且走过显示流程）才回退，
+                // 否则关窗口/弹窗会把下面那个本来就可见的界面重新 Show 一遍。
+                var removedFromStack = _stackHandler.RemoveRoot(rootId);
+                if (checkStack && removedFromStack)
                 {
                     // 尝试显示上一个界面
                     var previous = _stackHandler.PeekPrevious(rootId);
@@ -671,7 +672,7 @@ namespace Ux
         /// UI隐藏完成回调
         /// 隐藏完成是提交可见性和生命周期缓存的唯一位置
         /// </summary>
-        void IUICallback.NotifyHidden(IUI ui)
+        internal void NotifyHidden(IUI ui)
         {
             var record = GetRecord(ui.ID);
             if (record == null)

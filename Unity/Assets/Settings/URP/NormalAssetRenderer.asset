@@ -26,11 +26,15 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 0}
   m_RendererFeatures:
   - {fileID: 5314796814531890227}
-  m_RendererFeatureMap: 330c8d378bf3c149
+  - {fileID: 7670356435553299690}
+  m_RendererFeatureMap: 330c8d378bf3c149ea2cc9f18994726a
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
-  m_AssetVersion: 2
+  m_AssetVersion: 3
+  m_PrepassLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   m_OpaqueLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -67,3 +71,18 @@ MonoBehaviour:
   m_Active: 1
   renderPassEvent: 550
   shader: {fileID: 4800000, guid: 8d1835bd65afc49409eae03b7ee8308f, type: 3}
+--- !u!114 &7670356435553299690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a53a488f7cb84fc8909bb5db25dd09d0, type: 3}
+  m_Name: UIBlurRendererFeature
+  m_EditorClassIdentifier: Unity.Main::UIBlurRendererFeature
+  m_Active: 1
+  passEvent: 500
+  DownSample: 2

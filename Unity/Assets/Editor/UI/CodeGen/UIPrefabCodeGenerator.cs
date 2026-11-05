@@ -34,6 +34,7 @@ namespace Ux.Editor.Build.UI
             "UIModel",
             "RTModel",
             "UITabFrame",
+            "UIWindowFrame",
             "ItemRenderer",
         };
 
@@ -343,7 +344,7 @@ namespace Ux.Editor.Build.UI
                 cb.Line($"protected {member.FieldType} {member.FieldName};");
             }
 
-            if (baseType == "UIModel" || baseType == "RTModel" || baseType == "UITabFrame")
+            if (baseType == "UIModel" || baseType == "RTModel" || baseType == "UITabFrame" || baseType == "UIWindowFrame")
             {
                 cb.Blank();
                 cb.Line($"public {className}(GameObject gameObject, UIObject parent) : base(gameObject, parent) {{ }}");
@@ -375,6 +376,23 @@ namespace Ux.Editor.Build.UI
                 EmitSlot(cb, bindings, members, UIOverrideSlot.DialogBtn1, "GameObject", "__btn1");
                 EmitSlot(cb, bindings, members, UIOverrideSlot.DialogBtn2, "GameObject", "__btn2");
                 EmitSlot(cb, bindings, members, UIOverrideSlot.DialogCheckbox, "Toggle", "__checkbox");
+            }
+            else if (baseType == "UIWindow")
+            {
+                // 窗口只生成「主体」与「拖动范围」；标题栏/标题/按钮属于框架预制。
+                // panelBody / panelDragArea 作为默认字段名兜底，没配槽位也能自动接上。
+                EmitSlot(cb, bindings, members, UIOverrideSlot.WindowBody, nameof(RectTransform), "__winBody", "panelBody");
+                EmitSlot(cb, bindings, members, UIOverrideSlot.WindowDragArea, nameof(RectTransform), "__winDragArea", "panelDragArea");
+            }
+            else if (baseType == "UIWindowFrame")
+            {
+                // 窗口框架：标题栏 + 标题 + 三个按钮。
+                EmitSlot(cb, bindings, members, UIOverrideSlot.FrameTitleBar, nameof(RectTransform), "__frameTitleBar", "panelTitleBar");
+                EmitSlot(cb, bindings, members, UIOverrideSlot.FrameTitle, "TMP_Text", "__frameTitle", "txtTitle");
+                EmitSlot(cb, bindings, members, UIOverrideSlot.FrameBtnMin, nameof(GameObject), "__frameBtnMin", "btnMin");
+                EmitSlot(cb, bindings, members, UIOverrideSlot.FrameBtnMax, nameof(GameObject), "__frameBtnMax", "btnMax");
+                EmitSlot(cb, bindings, members, UIOverrideSlot.FrameBtnClose, nameof(GameObject), "__frameBtnClose", "btnClose");
+                EmitSlot(cb, bindings, members, UIOverrideSlot.FrameBtnPin, nameof(GameObject), "__frameBtnPin", "btnPin");
             }
 
             cb.Blank();
@@ -495,17 +513,28 @@ namespace Ux.Editor.Build.UI
 
         /// <summary>按槽位取显式绑定的成员并输出 override；没绑定、类型不符、成员已删除都跳过。</summary>
         private static void EmitSlot(CodeBuilder cb, IReadOnlyDictionary<UIOverrideSlot, string> bindings,
-            List<UGUIMemberData> members, UIOverrideSlot slot, string fieldType, string overrideName)
+            List<UGUIMemberData> members, UIOverrideSlot slot, string fieldType, string overrideName,
+            string defaultMemberName = null)
         {
-            if (bindings == null || !bindings.TryGetValue(slot, out var pathKey) ||
-                string.IsNullOrEmpty(pathKey))
+            string pathKey = null;
+            if (bindings != null && bindings.TryGetValue(slot, out var configured) &&
+                !string.IsNullOrEmpty(configured))
+                pathKey = configured;
+
+            // 没配置槽位时，允许按字段名兜底（如 panelTitleBar），避免每个预制都要手动绑一次。
+            if (pathKey == null && string.IsNullOrEmpty(defaultMemberName))
                 return;
 
             for (int i = 0; i < members.Count; i++)
             {
                 var member = members[i];
                 if (member == null || member.FieldType != fieldType) continue;
-                if (!string.Equals(PathKey(member.Path), pathKey, StringComparison.Ordinal)) continue;
+
+                var matched = pathKey != null
+                    ? string.Equals(PathKey(member.Path), pathKey, StringComparison.Ordinal)
+                    : string.Equals(member.FieldName, defaultMemberName, StringComparison.Ordinal);
+
+                if (!matched) continue;
 
                 cb.Line($"protected override {fieldType} {overrideName} => {member.FieldName};");
                 return;
@@ -567,6 +596,8 @@ namespace Ux.Editor.Build.UI
 
         private static string ResolveBaseType(string prefabName)
         {
+            if (prefabName.EndsWith("WindowFrame", StringComparison.OrdinalIgnoreCase))
+                return "UIWindowFrame";
             if (prefabName.EndsWith("Window", StringComparison.OrdinalIgnoreCase))
                 return "UIWindow";
             if (prefabName.EndsWith("TabView", StringComparison.OrdinalIgnoreCase))
