@@ -27,17 +27,17 @@ namespace Ux
                 HideCallBack = _hideFn;
                 Content = content;
             }
-            
+
             /// <summary>
             /// 隐藏回调函数
             /// </summary>
             public Action<UITip> HideCallBack { get; }
-            
+
             /// <summary>
             /// 显示回调函数
             /// </summary>
             public Action<UITip> ShowCallBack { get; }
-            
+
             /// <summary>
             /// 提示内容文本
             /// </summary>
@@ -50,7 +50,14 @@ namespace Ux
         /// <param name="content">提示内容</param>
         public void Show(string content)
         {
-            Show(GetDefaultID(), content);
+            if (UIMgr.Ins.TryGetTypeId(_defaultType, out var id))
+            {
+                Show(id, content);
+            }
+            else
+            {
+                Log.Error("没有指定UI面板,请检查是否已初始化SetDefaultType");
+            }
         }
 
         /// <summary>
@@ -60,8 +67,11 @@ namespace Ux
         /// <param name="content">提示内容</param>
         public void Show<T>(string content) where T : UITip
         {
-            var id = GetUIID(typeof(T));
-            Show(id, content);
+            if (UIMgr.Ins.TryGetTypeId(typeof(T), out var id))
+            {
+                Show(id, content);
+            }
+
         }
 
         /// <summary>
@@ -70,15 +80,13 @@ namespace Ux
         /// <param name="id">提示UI ID</param>
         /// <param name="content">提示内容</param>
         void Show(int id, string content)
-        {
-            if (!CheckDefault(id))
-            {
-                Log.Error("没有指定Tip面板,请检查是否已初始化SetDefaultType");
-                return;
-            }
+        {            
             // 检查并调整位置，避免提示重叠
-            CheckPos();            
-            UIMgr.Ins.Create(id).SetParam(IUIParam.Create(new TipData(OnShow, OnHide, content))).Show();
+            CheckPos();
+            // 飘字要能同时堆叠，必须走多实例；否则后来的会覆盖前一条。
+            UIMgr.Ins.Request(id).SetParam(IUIParam.Create(new TipData(OnShow, OnHide, content)))
+                .SetMode(UIShowMode.NewInstance)
+                .Show();
         }
 
         /// <summary>

@@ -6,6 +6,15 @@ namespace Ux
 {
     public partial class UIMgr
     {
+        /// <summary>ID 到类型名的映射：只在编辑器里给错误日志和调试面板用。</summary>
+        private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
+        private readonly Dictionary<string, IUIData> _debugAllUIData = new Dictionary<string, IUIData>();
+        private readonly List<string> _debugShowedUI = new List<string>();
+        private readonly List<UIStack> _debugUIStacks = new List<UIStack>();
+        private readonly List<string> _debugCacheUI = new List<string>();
+        private readonly List<string> _debugWaitDelUI = new List<string>();
+        private readonly List<string> _debugWindows = new List<string>();
+
         /// <summary>
         /// 调试器事件触发函数（仅编辑器模式）
         /// 在游戏运行时触发所有调试回调，用于UI调试面板显示
@@ -494,7 +503,7 @@ namespace Ux
                 Ins.__DebugAssertAllInvariants("冒烟:关闭 " + label);
 
                 // 2) 用上次显示时的参数重新打开
-                var ui = await Ins.Create(target.TypeId).SetParam(target.Param).SetAnim(false).Show().Task();
+                var ui = await Ins.Request(target.TypeId).SetParam(target.Param).SetAnim(false).Show().Task();
                 if (ui == null || !await __WaitUntil(() => __IsTypeVisible(target.TypeId), 3f))
                 {
                     failed++;

@@ -128,7 +128,7 @@ namespace Ux
                 if (args is DownloadData data)
                 {
                     // 下载成功后显示UI
-                    Create(data.UIID).SetParam(data.Param).SetAnim(data.IsAnim).Show();                    
+                    Request(data.UIID).SetParam(data.Param).SetAnim(data.IsAnim).Show();                    
                 }
             }
             else

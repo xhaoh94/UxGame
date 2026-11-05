@@ -4,138 +4,47 @@ using System.Collections.Generic;
 namespace Ux
 {
     /// <summary>
-    /// UI基础工厂类，用于管理UI实例的创建、回收和复用
-    /// 这是一个泛型抽象类，TUI必须是实现了IUI接口的类型
+    /// UI 工厂基类：只维护「哪些实例正在显示」。
+    ///
+    /// 实例的创建/复用/回收全部由 UIMgr 按记录（record）管理：
+    /// 类型与 ID 一一对应（<see cref="UIMgr.GetTypeId"/>），同一类型要并存多个实例时
+    /// 由显示模式 <see cref="UIShowMode.NewInstance"/> 决定，不在这里做实例池。
     /// </summary>
-    /// <typeparam name="TUI">UI类型，必须是IUI的子类</typeparam>
     public abstract class UIBaseFactory<TUI> where TUI : IUI
     {
-        /// <summary>
-        /// UI对象池，按类型分类存储可复用的UI ID
-        /// key: UI类型
-        /// value: 可复用的UI ID队列
-        /// </summary>
-        protected readonly Dictionary<Type, Queue<int>> _pool = new Dictionary<Type, Queue<int>>();
-        
-        /// <summary>
-        /// 当前正在显示的UI集合（存类型 ID：这个工厂管理的是「类型级」的复用池，不是实例）
-        /// value: UI 的类型 ID
-        /// </summary>
+        /// <summary>当前正在显示的实例 ID（同一类型可能有多个）。</summary>
         protected readonly HashSet<int> _showed = new HashSet<int>();
-        
-        /// <summary>
-        /// 当UI显示时调用
-        /// </summary>
-        /// <param name="ui">显示的UI实例</param>
+
+        /// <summary>当UI显示时调用</summary>
         protected void OnShow(TUI ui)
         {
-            _showed.Add(ui.TypeId);
+            _showed.Add(ui.ID);
         }
 
-        /// <summary>
-        /// 当UI隐藏时调用
-        /// </summary>
-        /// <param name="ui">隐藏的UI实例</param>
+        /// <summary>当UI隐藏时调用</summary>
         protected void OnHide(TUI ui)
         {
-            _showed.Remove(ui.TypeId);
-            if (ui.HideDestroyTime >= 0) return;
-            var type = ui.GetType();
-            if (!_pool.TryGetValue(type, out var ids))
-            {
-                ids = new Queue<int>();
-                _pool.Add(type, ids);
-            }
-            ids.Enqueue(ui.TypeId);
+            _showed.Remove(ui.ID);
         }
-        
-        /// <summary>
-        /// 根据ID从等待销毁列表中移除UI
-        /// </summary>
-        /// <param name="id">要移除的UI ID</param>
+
+        /// <summary>实例销毁时由等待销毁队列回调；实例池已移除，这里保留空实现以兼容调用点。</summary>
         public void RemoveWaitDelById(int id)
         {
         }
 
-        /// <summary>
-        /// 清空对象池和类型ID缓存
-        /// </summary>
+        /// <summary>清空「正在显示」的记录。</summary>
         public void Clear()
         {
-            _pool.Clear();
+            _showed.Clear();
         }
 
-        /// <summary>
-        /// 获取UI的ID，优先从对象池中获取可复用的ID。
-        /// 注意：ID 由类型派生（UIMgr.GetTypeId），所以同一类型在同一时刻只支持一个实例，
-        /// 同时在显示的情况下再次 Create/Show 会覆盖正在显示的那个实例。
-        /// </summary>
-        /// <param name="type">UI的类型</param>
-        /// <returns>UI的ID</returns>
-        protected int GetUIID(Type type)
-        {
-            // 先从对象池中获取可复用的ID
-            if (_pool.TryGetValue(type, out var ids) && ids.Count > 0)
-            {
-                return ids.Dequeue();
-            }
-
-            // 使用UIMgr的递增ID分配器，保证类型到ID的映射唯一
-            var id = UIMgr.Ins.GetTypeId(type);
-#if UNITY_EDITOR
-            // 同一类型同一时刻只支持一个实例（ID 由类型派生）。
-            // 这里给出显式告警，避免「弹窗/飘字被后一个覆盖」时无从排查。
-            if (_showed.Contains(id))
-            {
-                Log.Warning("同一类型的UI正在显示，本次显示会覆盖已有实例。Type[{0}]", type.FullName);
-            }
-#endif
-            var data = new UIData(id, type);
-            UIMgr.Ins.AddUIData(data);
-            return data.ID;
-        }
-
-        /// <summary>
-        /// 默认的UI类型
-        /// </summary>
+        /// <summary>默认的UI类型</summary>
         protected Type _defaultType;
-        
-        /// <summary>
-        /// 设置默认的UI类型
-        /// </summary>
-        /// <typeparam name="T">UI类型</typeparam>
+
+        /// <summary>设置默认的UI类型</summary>
         public void SetDefaultType<T>() where T : TUI
         {
             _defaultType = typeof(T);
-        }
-
-        /// <summary>
-        /// 获取默认类型的UI ID
-        /// </summary>
-        /// <returns>默认UI的ID，如果没有设置默认类型则返回0</returns>
-        protected int GetDefaultID()
-        {
-            Type type = _defaultType;
-            if (type == null)
-            {
-                return 0;
-            }
-            return GetUIID(type);
-        }
-
-        /// <summary>
-        /// 检查是否为默认类型，ID是否为0
-        /// </summary>
-        /// <param name="id">要检查的UI ID</param>
-        /// <returns>如果ID为0返回false，否则返回true</returns>
-        protected bool CheckDefault(int id)
-        {
-            if (id == 0)
-            {
-                Log.Error("没有指定UI面板,请检查是否已初始化SetDefaultType");
-                return false;
-            }
-            return true;
         }
     }
 }

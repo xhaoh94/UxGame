@@ -134,7 +134,7 @@ namespace Ux
                 return;
             if (SelectItem != null && SelectItem.TypeId == id)
                 return;
-            UIMgr.Ins.Create(id).Show();
+            UIMgr.Ins.Request(id).Show();
         }
     }
 }

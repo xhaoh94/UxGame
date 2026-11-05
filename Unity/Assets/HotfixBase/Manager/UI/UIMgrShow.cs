@@ -16,17 +16,17 @@ namespace Ux
             /// 请求显示的UI ID（类型 ID：调用方传进来的那个）
             /// </summary>
             public int RequestedId { get; private set; }
-            
+
             /// <summary>
             /// 显示参数
             /// </summary>
             public IUIParam Param { get; private set; }
-            
+
             /// <summary>
             /// 是否播放动画
             /// </summary>
             public bool IsAnim { get; private set; }
-            
+
             /// <summary>
             /// 是否检查栈
             /// </summary>
@@ -36,21 +36,21 @@ namespace Ux
             /// 同类型已有可见实例时的处理策略
             /// </summary>
             public UIShowMode Mode { get; private set; }
-            
+
             /// <summary>
             /// 显示链，包含从根界面到目标界面的所有UI ID
             /// </summary>
-            public readonly List<int> Chain = new ();
-            
+            public readonly List<int> Chain = new();
+
             /// <summary>
             /// 已激活的UI记录列表
             /// </summary>
-            internal readonly List<UIRecord> Activated = new ();
+            internal readonly List<UIRecord> Activated = new();
 
             /// <summary>
             /// 已激活记录对应的请求版本
             /// </summary>
-            internal readonly List<int> ActivatedVersions = new ();
+            internal readonly List<int> ActivatedVersions = new();
 
             internal int PreviousMountedChildId { get; private set; }
 
@@ -63,7 +63,7 @@ namespace Ux
             /// 目标界面记录 ID（实例 ID）。显示链准备阶段解析出来后填入。
             /// </summary>
             public int TargetRecordId { get; set; }
-            
+
             /// <summary>
             /// 重置会话数据
             /// </summary>
@@ -107,12 +107,16 @@ namespace Ux
             }
         }
 
+        public UITask<T> Show<T>() where T : IUI => Request().Show<T>();
+        public UITask<T> Show<T>(IUIParam param) where T : IUI => Request().SetParam(param).Show<T>();
+
+
         /// <summary>
         /// 创建UI显示构建器
         /// </summary>
         /// <param name="id">UI ID，默认为0</param>
         /// <returns>UI显示构建器实例</returns>
-        public UIShowBuilder Create(int id = 0)
+        public UIShowBuilder Request(int id = 0)
         {
             var builder = Pool.Get<UIShowBuilder>();
             builder.SetId(id);
@@ -133,7 +137,7 @@ namespace Ux
 
             // 获取目标ID（可能是Tab页的子界面）
             var targetId = data.GetChildID();
-            
+
             // 检查是否需要下载资源
             if (_CheckDownload(targetId, param, isAnim))
             {
@@ -605,9 +609,6 @@ namespace Ux
                 return false;
             }
 
-            // 提前缓存资源包名：动态 UIData 可能在销毁前就被移除，
-            // 销毁时再靠 UIData 反查会拿不到包名，资源包引用就永远减不掉。
-            record.Pkgs ??= uiData.Pkgs;
             SetPhase(record, UIPhase.Creating);
             var created = await CreateUI(uiData, record.Id);
             if (!IsRequestCurrent(record, version))
@@ -806,7 +807,7 @@ namespace Ux
             // 附加到可见记录
             AttachVisibleRecord(record);
             record.LastVisibleTime = Time.unscaledTime;
-            
+
             // 如果需要检查栈，将界面加入栈管理
             if (checkStack)
             {
@@ -816,7 +817,7 @@ namespace Ux
                 ValidateCurrentChild(rootId, activeId);
 #endif
             }
-            
+
             // 通知模糊效果处理器
             _blurHandler.OnShowed(ui);
             // 通知聚焦处理器

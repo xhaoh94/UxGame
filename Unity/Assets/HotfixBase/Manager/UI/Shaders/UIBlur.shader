@@ -2,9 +2,8 @@ Shader "Ux/UIBlur"
 {
     Properties
     {
-        [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+        [PerRendererData] _MainTex ("Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
-        _BlurSize ("Blur Size", Range(0, 8)) = 2
         _BlurTint ("Blur Tint", Color) = (1,1,1,1)
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -51,10 +50,8 @@ Shader "Ux/UIBlur"
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
-            float4 _MainTex_TexelSize;
             fixed4 _Color;
             fixed4 _BlurTint;
-            float _BlurSize;
 
             struct appdata_t
             {
@@ -79,23 +76,10 @@ Shader "Ux/UIBlur"
                 return o;
             }
 
+            // 模糊在截图后一次性烘进纹理，这里只做一次采样 + 调色。
             fixed4 frag(v2f i) : SV_Target
             {
-                float2 uv = i.texcoord;
-                float2 texel = _MainTex_TexelSize.xy * _BlurSize;
-
-                // 9-tap 近似高斯：中心 + 4 边 + 4 角
-                fixed4 col = tex2D(_MainTex, uv) * 0.25;
-                col += tex2D(_MainTex, uv + float2(texel.x, 0.0)) * 0.125;
-                col += tex2D(_MainTex, uv - float2(texel.x, 0.0)) * 0.125;
-                col += tex2D(_MainTex, uv + float2(0.0, texel.y)) * 0.125;
-                col += tex2D(_MainTex, uv - float2(0.0, texel.y)) * 0.125;
-                col += tex2D(_MainTex, uv + texel) * 0.0625;
-                col += tex2D(_MainTex, uv - texel) * 0.0625;
-                col += tex2D(_MainTex, uv + float2(texel.x, -texel.y)) * 0.0625;
-                col += tex2D(_MainTex, uv + float2(-texel.x, texel.y)) * 0.0625;
-
-                col *= _BlurTint;
+                fixed4 col = tex2D(_MainTex, i.texcoord) * _BlurTint;
                 col.a = 1.0;
                 return col * i.color;
             }

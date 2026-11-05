@@ -59,7 +59,7 @@ namespace Ux
 
             if (!next.Visible)
             {
-                UIMgr.Ins.Create(next.TypeId).Show();
+                UIMgr.Ins.Request(next.TypeId).Show();
             }
             else
             {

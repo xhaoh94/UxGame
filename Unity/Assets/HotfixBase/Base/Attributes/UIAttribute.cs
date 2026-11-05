@@ -43,17 +43,6 @@ namespace Ux
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class PackageAttribute : Attribute
-    {
-        public PackageAttribute(params string[] pkgs)
-        {
-            this.pkgs = pkgs;
-        }
-
-        public string[] pkgs { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class LazyloadAttribute : Attribute
     {
         public LazyloadAttribute(params string[] lazyloads)
@@ -61,21 +50,6 @@ namespace Ux
             this.lazyloads = lazyloads;
         }
         public string[] lazyloads { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-    public class UIComponentAttribute : Attribute
-    {
-        public UIComponentAttribute()
-        {
-        }
-
-        public UIComponentAttribute(Type t)
-        {
-            Component = t;
-        }
-
-        public Type Component { get; }
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -86,16 +60,5 @@ namespace Ux
             this.Title = title;
         }
         public object Title { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class ItemUrlAttribute : Attribute
-    {
-        public ItemUrlAttribute(string url)
-        {
-            Url = url;
-        }
-
-        public string Url { get; }
     }
 }

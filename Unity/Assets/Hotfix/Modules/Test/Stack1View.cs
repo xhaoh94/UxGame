@@ -7,15 +7,15 @@ namespace Ux.UI
         public override UIType Type => UIType.Stackable;
         partial void OnBtn2Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<UI.Stack2View>();
+            UIMgr.Ins.Show<UI.Stack2View>();
         }
         partial void OnBtn3Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<UI.Stack3View>();
+            UIMgr.Ins.Show<UI.Stack3View>();
         }
         partial void OnBtn4Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<UI.Stack4View>();
+            UIMgr.Ins.Show<UI.Stack4View>();
         }
         partial void OnBtnBackClick(UIEventContext e)
         {

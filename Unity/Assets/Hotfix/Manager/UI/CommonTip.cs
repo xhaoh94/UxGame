@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Ux.UI
 {
+    [UI]
     public partial class CommonTip
     {
     }

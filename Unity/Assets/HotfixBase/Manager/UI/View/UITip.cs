@@ -10,7 +10,7 @@ namespace Ux
         public override int HideDestroyTime => -1;
         protected override UILayer Layer => UILayer.Tip;
         public override UIType Type => UIType.NonStackable;
-        public override UIBlurMode Blur => UIBlurMode.None;
+        public override UIBlurMode Blur => UIBlurMode.Off;
         public override UIFocusMode FocusMode => UIFocusMode.None;
 
         protected UITipFactory.TipData tipData;

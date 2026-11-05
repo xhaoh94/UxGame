@@ -22,7 +22,6 @@ namespace Ux
         public static readonly UITipFactory Tip = new();
 
         // UI系统核心数据存储
-        private readonly Dictionary<Type, string> _itemUrls = new(); // 类型到Item URL的映射
         private readonly Dictionary<Type, int> _typeId = new(); // 类型到ID的映射
         private static int _nextTypeId = 100000; // 递增ID分配器，保证绝对不碰撞
         private readonly Dictionary<int, UIRecord> _records = new();// 实例ID到UI记录的映射
@@ -64,20 +63,6 @@ namespace Ux
         private readonly UIStageHandler _stageHandler;        // 界面上屏排序
         private readonly UIWindowService _windowService;      // 窗口注册表 / 激活 / 布局
 
-#if UNITY_EDITOR
-        /// <summary>
-        /// ID到类型名称的映射（仅在编辑器模式下使用）
-        /// 用于调试和错误信息显示
-        /// </summary>
-        private readonly Dictionary<int, string> _idTypeName = new Dictionary<int, string>();
-        private readonly Dictionary<string, IUIData> _debugAllUIData = new Dictionary<string, IUIData>();
-        private readonly List<string> _debugShowedUI = new List<string>();
-        private readonly List<UIStack> _debugUIStacks = new List<UIStack>();
-        private readonly List<string> _debugCacheUI = new List<string>();
-        private readonly List<string> _debugWaitDelUI = new List<string>();
-        private readonly List<string> _debugWindows = new List<string>();
-#endif
-
         private readonly Dictionary<UILayer, RectTransform> _uguiLayers = new Dictionary<UILayer, RectTransform>(7);
         private bool _uiInitialized;
 
@@ -107,19 +92,6 @@ namespace Ux
         /// 没有可挂的宿主时 UI 相机自持 Base 渲染，UI 照样可见。
         /// </summary>
         public void AttachUIStack(Camera baseCamera) => _cameraHandler.Attach(baseCamera);
-
-        /// <summary>模糊截图用的相机：优先场景 Base（含 UI 栈），否则 UI 相机。</summary>
-        internal Camera BlurCaptureCamera =>
-            _cameraHandler.StageHost != null && _cameraHandler.StageHost.isActiveAndEnabled
-                ? _cameraHandler.StageHost
-                : _cameraHandler.UICamera;
-
-        /// <summary>
-        /// 是否有场景 Base 相机。没有时 UI 相机自持 Base，画面里只有 UI ——
-        /// RendererFeature 采样的不透明纹理是空的，模糊要退回到「显示前截图」。
-        /// </summary>
-        internal bool HasSceneCamera =>
-            _cameraHandler.StageHost != null && _cameraHandler.StageHost.isActiveAndEnabled;
 
         // —— 界面上屏排序（实现见 UIStageHandler）——
 
@@ -190,75 +162,6 @@ namespace Ux
             _uiInitialized = true;
         }
 
-        // —— 窗口系统的业务门面（业务不直接访问 UIWindowService）——
-
-        private readonly List<IWindowObserver> _windowObservers = new List<IWindowObserver>();
-
-        /// <summary>全局默认拖动范围（通常是 UIRoot 下的安全区）。</summary>
-        public RectTransform WindowDefaultDragArea
-        {
-            get => _windowService.DefaultDragArea;
-            set => _windowService.DefaultDragArea = value;
-        }
-
-        /// <summary>同时存在的窗口上限。默认不限。</summary>
-        public int MaxWindows
-        {
-            get => _windowService.MaxWindows;
-            set => _windowService.MaxWindows = value;
-        }
-
-        /// <summary>模糊半径（像素，基于降采样后的纹理）。默认 8。</summary>
-        public float BlurSize
-        {
-            get => _blurHandler.BlurSize;
-            set => _blurHandler.BlurSize = value;
-        }
-
-        /// <summary>
-        /// 全局覆盖弹窗背景模糊模式；null 表示按界面自己的 UIBase.Blur 声明。
-        /// 低端机设 Mask 即可把所有已声明模糊的界面降级为半透明遮罩。
-        /// </summary>
-        public UIBlurMode? BlurModeOverride
-        {
-            get => _blurHandler.Override;
-            set => _blurHandler.Override = value;
-        }
-
-        /// <summary>超限是否自动淘汰最久未激活的窗口。默认关闭。</summary>
-        public bool EnableWindowLruEviction
-        {
-            get => _windowService.EnableLruEviction;
-            set => _windowService.EnableLruEviction = value;
-        }
-
-        public void AddWindowObserver(IWindowObserver observer)
-        {
-            if (observer != null && !_windowObservers.Contains(observer))
-                _windowObservers.Add(observer);
-        }
-
-        public void RemoveWindowObserver(IWindowObserver observer)
-        {
-            if (observer != null)
-                _windowObservers.Remove(observer);
-        }
-
-        private void NotifyWindowObservers(Action<IWindowObserver> notify)
-        {
-            for (int i = _windowObservers.Count - 1; i >= 0; i--)
-            {
-                var observer = _windowObservers[i];
-                if (observer == null)
-                {
-                    _windowObservers.RemoveAt(i);
-                    continue;
-                }
-
-                notify(observer);
-            }
-        }
-
         public UIMgr()
         {
             // 构造函数只做纯字段初始化；Unity 对象在 Initialize 中创建。
@@ -276,6 +179,7 @@ namespace Ux
 
         protected override void OnCreated()
         {
+            BlurSize = 8f;
             Initialize();
             GameMethod.LowMemory += _LowMemory;
         }
@@ -367,14 +271,21 @@ namespace Ux
 
         /// <summary>
         /// 获取或创建UI记录。
-        /// 参数是「类型 ID」：默认复用该类型已有的实例，forceNew 为 true 时新建一个实例。
+        /// 参数是「类型 ID」：默认复用该类型的主实例，forceNew 为 true 时复用已隐藏的实例、没有才新建。
         /// </summary>
         /// <param name="typeId">UI 类型 ID</param>
-        /// <param name="forceNew">是否强制新建实例（同一类型多实例）</param>
+        /// <param name="forceNew">是否允许多实例（同一类型可同时存在多个）</param>
         /// <returns>UI记录对象</returns>
         internal UIRecord GetOrCreateRecord(int typeId, bool forceNew = false)
         {
-            if (!forceNew && TryGetPrimaryRecord(typeId, out var existing))
+            if (forceNew)
+            {
+                // 多实例：并发中的实例不复用，但同类型已经隐藏的那个要捡回来，
+                // 否则每次 NewInstance 都会新建一个常驻缓存的实例。
+                if (TryGetRecyclableRecord(typeId, out var recyclable))
+                    return recyclable;
+            }
+            else if (TryGetPrimaryRecord(typeId, out var existing))
             {
                 return existing;
             }
@@ -441,6 +352,32 @@ namespace Ux
             }
 
             return record != null;
+        }
+
+        /// <summary>
+        /// 按类型找「可回收」的实例：存在但已经不在显示流程里（隐藏/缓存中）。
+        /// 多实例每次开都新建记录的话，旧实例会一直挂在缓存里，这里把它们捡回来复用。
+        /// </summary>
+        private bool TryGetRecyclableRecord(int typeId, out UIRecord record)
+        {
+            record = null;
+            if (!_typeInstances.TryGetValue(typeId, out var instances) || instances.Count == 0)
+            {
+                return false;
+            }
+
+            for (int i = instances.Count - 1; i >= 0; i--)
+            {
+                if (!_records.TryGetValue(instances[i], out var candidate) || candidate == null)
+                    continue;
+                if (candidate.UI == null || candidate.IsVisibleCommitted || candidate.IsShowingLike || candidate.IsHidingLike)
+                    continue;
+
+                record = candidate;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -948,8 +885,7 @@ namespace Ux
         /// 解析UI数据并建立父子关系
         /// </summary>
         /// <param name="uis">UI解析数据列表</param>
-        /// <param name="itemUrls">Item URL解析数据列表</param>
-        public void Add(List<UIParse> uis, List<ItemUrlParse> itemUrls)
+        internal void Add(List<UIParse> uis)
         {
             // 第一步：将所有UIData添加到字典中
             foreach (var ui in uis)
@@ -961,12 +897,6 @@ namespace Ux
             foreach (var ui in uis)
             {
                 ui.Parse(_idUIData);
-            }
-
-            // 第三步：添加Item URL映射
-            foreach (var itemUrl in itemUrls)
-            {
-                itemUrl.Add(_itemUrls);
             }
 #if UNITY_EDITOR
             __Debugger_UI_Event();
@@ -986,16 +916,6 @@ namespace Ux
 
             Log.Error("UI UI 层级未创建，已回退到 Root。Layer[{0}]", layer);
             return _uguiLayers[UILayer.Root];
-        }
-
-        /// <summary>
-        /// 获取Item的URL
-        /// </summary>
-        /// <param name="type">Item类型</param>
-        /// <returns>Item的URL，如果不存在则返回null</returns>
-        public string GetItemUrl(Type type)
-        {
-            return type != null && _itemUrls.TryGetValue(type, out var url) ? url : null;
         }
 
         /// <summary>
@@ -1265,27 +1185,6 @@ namespace Ux
         internal bool IsVisible(int id)
         {
             return IsShowPhase(GetRecord(id));
-        }
-
-        // —— IWindowHostAccess：窗口服务对内部处理器的唯一入口 ——
-
-        void IWindowHostAccess.Promote(int instanceId) => _stageHandler.Promote(instanceId);
-
-        bool IWindowHostAccess.IsLastInTier(int instanceId) => _stageHandler.IsLastInTier(instanceId);
-
-        void IWindowHostAccess.SendToBack(int instanceId) => _stageHandler.SendToBack(instanceId);
-
-        void IWindowHostAccess.SetWindowTier(int instanceId, UIWindowTier tier)
-            => _stageHandler.SetWindowTier(instanceId, tier);
-
-        bool IWindowHostAccess.Focus(int instanceId) => _focusHandler.Focus(instanceId);
-
-        RectTransform IWindowHostAccess.GetWindowLayer() => GetUILayer(UILayer.Window);
-
-        bool IWindowHostAccess.TryGetWindow(int instanceId, out UIWindow window)
-        {
-            window = GetUI(instanceId) as UIWindow;
-            return window != null;
         }
     }
 }

@@ -12,7 +12,6 @@ namespace Ux
             var mols = new List<ModuleMgr.ModuleParse>();
             var tags = new List<TagMgr.TagParse>();
             var uis = new List<UIMgr.UIParse>();
-            var itemUrls = new List<UIMgr.ItemUrlParse>();
             var conditions = new List<ConditionMgr.ConditionParse>();
             foreach (Type type in assembly.GetTypes())
             {
@@ -34,12 +33,6 @@ namespace Ux
                     uis.Add(new UIMgr.UIParse(type, ui.id, ui.tabData));
                 }
 
-                var itemurl = type.GetAttribute<ItemUrlAttribute>();
-                if (itemurl != null)
-                {
-                    itemUrls.Add(new UIMgr.ItemUrlParse(type, itemurl.Url));
-                }
-
                 var condition = type.GetAttribute<ConditionAttribute>();
                 if (condition != null)
                 {
@@ -49,7 +42,7 @@ namespace Ux
 
             ModuleMgr.Ins.Add(mols);
             TagMgr.Ins.Add(tags);
-            UIMgr.Ins.Add(uis, itemUrls);
+            UIMgr.Ins.Add(uis);
             ConditionMgr.Ins.Add(conditions);
         }
     }

@@ -5,7 +5,7 @@ namespace Ux.UI
     [UI]
     partial class BagWindow
     {        
-        public override UIBlurMode Blur => UIBlurMode.RendererFeature;
+        public override UIBlurMode Blur => UIBlurMode.RenderTexture;
 
         protected override void OnShow()
         {

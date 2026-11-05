@@ -10,7 +10,6 @@ namespace Ux.Editor.Debugger.UI
         public Label txtIDStr;
         public TextField txtID;
         public TextField txtType;
-        public TextField txtPkgs;
         public TextField txtTags;
         public TextField txtChildrens;
         public TextField txtParID;
@@ -47,8 +46,6 @@ namespace Ux.Editor.Debugger.UI
 
             txtType = DebuggerUiUtil.LockedField("txtType", "注册类");
             content.Add(txtType);
-            txtPkgs = DebuggerUiUtil.LockedField("txtPkgs", "依赖资源包");
-            content.Add(txtPkgs);
             txtTags = DebuggerUiUtil.LockedField("txtTags", "懒加载标签");
             content.Add(txtTags);
             txtChildrens = DebuggerUiUtil.LockedField("txtChildrens", "子界面");
@@ -71,16 +68,6 @@ namespace Ux.Editor.Debugger.UI
             txtIDStr.text = nameParts.Length > 1 ? $"{nameParts[1]}" : data.Name;
             txtType.SetValueWithoutNotify(data.CType.FullName);
 
-
-            if (data.Pkgs != null && data.Pkgs.Length > 0)
-            {
-                txtPkgs.style.display = DisplayStyle.Flex;
-                txtPkgs.SetValueWithoutNotify(string.Join(",", data.Pkgs));
-            }
-            else
-            {
-                txtPkgs.style.display = DisplayStyle.None;
-            }
 
             if (data.Lazyloads != null && data.Lazyloads.Length > 0)
             {

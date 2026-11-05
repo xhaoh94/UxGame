@@ -52,14 +52,14 @@ namespace Ux.UI
         partial void OnBtnMultipleClick(UIEventContext e)
         {
             Log.Info("[Test] 多页签界面 Multiple2TabView");
-            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            UIMgr.Ins.Show<Multiple2TabView>();
         }
 
         /// <summary>弹窗：普通窗口类型，带模糊背景。</summary>
         partial void OnBtnNoneWindowClick(UIEventContext e)
         {
             Log.Info("[Test] 弹窗 BagWindow");
-            UIMgr.Ins.Create().Show<BagWindow>();
+            UIMgr.Ins.Show<BagWindow>();
         }
 
         /// <summary>置顶界面：TipView 是 UITip（Layer=Top），必须带 TipData 参数。</summary>
@@ -68,7 +68,7 @@ namespace Ux.UI
             _topTipCount++;
             Log.Info($"[Test] 置顶界面 TipView x{_topTipCount}");
             var tip = new UITipFactory.TipData(null, null, $"置顶提示 {_topTipCount}");
-            UIMgr.Ins.Create().SetParam(IUIParam.Create(tip)).Show<TipView>();
+            UIMgr.Ins.Show<TipView>(IUIParam.Create(tip));
         }
 
         /// <summary>单击：计数 + 工厂 Tip，验证 UIMgr.Tip 与 UITip 生命周期。</summary>
@@ -85,7 +85,7 @@ namespace Ux.UI
             _doubleClickCount++;
             var show = _doubleClickCount % 2 == 1;
             Log.Info($"[Test] 双击 x{_doubleClickCount} -> {(show ? "打开" : "关闭")} BagWindow");
-            if (show) UIMgr.Ins.Create().Show<BagWindow>();
+            if (show) UIMgr.Ins.Show<BagWindow>();
             else UIMgr.Ins.Hide<BagWindow>();
         }
 
@@ -107,8 +107,8 @@ namespace Ux.UI
         async UniTaskVoid RunUiTest()
         {
             Log.Info("xxxxxxxxxx111");
-            UIMgr.Ins.Create().Show<BagWindow>();
-            await UIMgr.Ins.Create().Show<BagWindow>().Task();
+            UIMgr.Ins.Show<BagWindow>();
+            await UIMgr.Ins.Show<BagWindow>().Task();
             Log.Info("xxxxxxxxxx222");
         }
         async UniTaskVoid RunUiChecklist()
@@ -139,7 +139,7 @@ namespace Ux.UI
         async UniTask Case_ShowHide_Single()
         {
             Log.Info("[Case] 单界面显示/关闭开始");
-            await UIMgr.Ins.Create().Show<BagWindow>().Task();
+            await UIMgr.Ins.Show<BagWindow>().Task();
             await UniTask.DelayFrame(2);
             UIMgr.Ins.Hide<BagWindow>();
             await UniTask.DelayFrame(10);
@@ -149,11 +149,11 @@ namespace Ux.UI
         async UniTask Case_Tab_B_Hide_B_Show_C()
         {
             Log.Info("[Case] Show(B) -> Hide(B) -> Show(C) 开始");
-            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            UIMgr.Ins.Show<Multiple2TabView>();
             await UniTask.DelayFrame(1);
             UIMgr.Ins.Hide<Multiple2TabView>();
             await UniTask.DelayFrame(1);
-            UIMgr.Ins.Create().Show<Multiple3TabView>();
+            UIMgr.Ins.Show<Multiple3TabView>();
             await UniTask.DelayFrame(20);
             DumpUiState("[Case] Show(B) -> Hide(B) -> Show(C) 结束");
             UIMgr.Ins.Hide<Multiple3TabView>();
@@ -164,12 +164,12 @@ namespace Ux.UI
         {
             Log.Info("[Case] 快速 Show/Hide Multiple2TabView 两次 开始");
 
-            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            UIMgr.Ins.Show<Multiple2TabView>();
             UIMgr.Ins.Hide<Multiple2TabView>();
             await UniTask.DelayFrame(15);
             DumpUiState("[Case] 第一次快速开关结束");
 
-            UIMgr.Ins.Create().Show<Multiple2TabView>();
+            UIMgr.Ins.Show<Multiple2TabView>();
             UIMgr.Ins.Hide<Multiple2TabView>();
             await UniTask.DelayFrame(15);
             DumpUiState("[Case] 第二次快速开关结束");
@@ -178,9 +178,9 @@ namespace Ux.UI
         async UniTask Case_Login_To_Main()
         {
             Log.Info("[Case] Login -> Main 开始");
-            await UIMgr.Ins.Create().Show<LoginView>().Task();
+            await UIMgr.Ins.Show<LoginView>().Task();
             await UniTask.DelayFrame(2);
-            await UIMgr.Ins.Create().Show<MainView>().Task();
+            await UIMgr.Ins.Show<MainView>().Task();
             UIMgr.Ins.Hide<LoginView>();
             await UniTask.DelayFrame(20);
             DumpUiState("[Case] Login -> Main 结束");
@@ -192,13 +192,13 @@ namespace Ux.UI
         async UniTask Case_Stack_Open_Close()
         {
             Log.Info("[Case] Stack 链路开始");
-            await UIMgr.Ins.Create().Show<Stack1View>().Task();
+            await UIMgr.Ins.Show<Stack1View>().Task();
             await UniTask.DelayFrame(2);
 
-            UIMgr.Ins.Create().Show<Stack2View>();
+            UIMgr.Ins.Show<Stack2View>();
             await UniTask.DelayFrame(10);
 
-            UIMgr.Ins.Create().Show<Stack3View>();
+            UIMgr.Ins.Show<Stack3View>();
             await UniTask.DelayFrame(10);
 
             UIMgr.Ins.Hide<Stack3View>();
@@ -219,13 +219,13 @@ namespace Ux.UI
 
             // TipView 需要 TipData 参数，直接 Show 会报“Tip 参数类型错误”
             var tip1 = new UITipFactory.TipData(null, null, "缓存复用 1");
-            await UIMgr.Ins.Create().SetParam(IUIParam.Create(tip1)).Show<TipView>().Task();
+            await UIMgr.Ins.Show<TipView>(IUIParam.Create(tip1)).Task();
             await UniTask.DelayFrame(2);
             UIMgr.Ins.Hide<TipView>();
             await UniTask.DelayFrame(10);
 
             var tip2 = new UITipFactory.TipData(null, null, "缓存复用 2");
-            await UIMgr.Ins.Create().SetParam(IUIParam.Create(tip2)).Show<TipView>().Task();
+            await UIMgr.Ins.Show<TipView>(IUIParam.Create(tip2)).Task();
             await UniTask.DelayFrame(10);
 
             DumpUiState("[Case] 缓存复用结束");

@@ -25,7 +25,7 @@ namespace Ux
 
         public virtual int HideDestroyTime => 60;
         public virtual UIType Type => UIType.Stackable;
-        public virtual UIBlurMode Blur => UIBlurMode.None;
+        public virtual UIBlurMode Blur => UIBlurMode.Off;
         public virtual UIFocusMode FocusMode => UIFocusMode.Auto;
         public virtual bool CanFocus => FocusMode != UIFocusMode.None && Visible;
 

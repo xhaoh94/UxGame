@@ -4,7 +4,7 @@
     {
         public override UIObject Parent => UIMgr.Ins.GetPreparedUI<UIBase>(Data.TabData.PID);
         public sealed override UIType Type => ParentAs<UIBase>()?.Type ?? UIType.Stackable;
-        public sealed override UIBlurMode Blur => UIBlurMode.None;
+        public sealed override UIBlurMode Blur => UIBlurMode.Off;
 
         protected override void AddToStage()
         {

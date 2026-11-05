@@ -27,11 +27,6 @@ namespace Ux
         Type CType { get; }
         
         /// <summary>
-        /// UI依赖的资源包名数组
-        /// </summary>
-        string[] Pkgs { get; }
-        
-        /// <summary>
         /// UI懒加载的资源标签数组
         /// </summary>
         string[] Lazyloads { get; }
@@ -129,10 +124,6 @@ namespace Ux
             TabData = tabData;
             Children = new List<int>();
 
-            // 从类型属性中获取资源包信息
-            var pkgsAttr = type.GetAttribute<PackageAttribute>();
-            Pkgs = pkgsAttr?.pkgs;
-
             // 从类型属性中获取懒加载资源信息
             var resAttr = type.GetAttribute<LazyloadAttribute>();
             Lazyloads = resAttr?.lazyloads;
@@ -155,11 +146,6 @@ namespace Ux
         /// UI的类型（只读属性）
         /// </summary>
         public virtual Type CType { get; }
-        
-        /// <summary>
-        /// UI依赖的资源包名数组（只读属性）
-        /// </summary>
-        public virtual string[] Pkgs { get; }
         
         /// <summary>
         /// UI懒加载的资源标签数组（只读属性）

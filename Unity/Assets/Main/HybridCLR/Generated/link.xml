@@ -13,53 +13,6 @@
     <type fullname="Cinemachine.CinemachineVirtualCamera" preserve="all" />
     <type fullname="Cinemachine.CinemachineVirtualCameraBase" preserve="all" />
   </assembly>
-  <assembly fullname="FairyGUI">
-    <type fullname="FairyGUI.BlurFilter" preserve="all" />
-    <type fullname="FairyGUI.ButtonMode" preserve="all" />
-    <type fullname="FairyGUI.Controller" preserve="all" />
-    <type fullname="FairyGUI.DestroyMethod" preserve="all" />
-    <type fullname="FairyGUI.DisplayObject" preserve="all" />
-    <type fullname="FairyGUI.EventCallback0" preserve="all" />
-    <type fullname="FairyGUI.EventCallback1" preserve="all" />
-    <type fullname="FairyGUI.EventContext" preserve="all" />
-    <type fullname="FairyGUI.EventDispatcher" preserve="all" />
-    <type fullname="FairyGUI.EventListener" preserve="all" />
-    <type fullname="FairyGUI.GButton" preserve="all" />
-    <type fullname="FairyGUI.GComponent" preserve="all" />
-    <type fullname="FairyGUI.GGraph" preserve="all" />
-    <type fullname="FairyGUI.GImage" preserve="all" />
-    <type fullname="FairyGUI.GList" preserve="all" />
-    <type fullname="FairyGUI.GLoader" preserve="all" />
-    <type fullname="FairyGUI.GObject" preserve="all" />
-    <type fullname="FairyGUI.GProgressBar" preserve="all" />
-    <type fullname="FairyGUI.GRoot" preserve="all" />
-    <type fullname="FairyGUI.GTextField" preserve="all" />
-    <type fullname="FairyGUI.GTextInput" preserve="all" />
-    <type fullname="FairyGUI.GTweener" preserve="all" />
-    <type fullname="FairyGUI.GoWrapper" preserve="all" />
-    <type fullname="FairyGUI.IFilter" preserve="all" />
-    <type fullname="FairyGUI.Image" preserve="all" />
-    <type fullname="FairyGUI.InputEvent" preserve="all" />
-    <type fullname="FairyGUI.ListItemRenderer" preserve="all" />
-    <type fullname="FairyGUI.NAudioClip" preserve="all" />
-    <type fullname="FairyGUI.NTexture" preserve="all" />
-    <type fullname="FairyGUI.PackageItem" preserve="all" />
-    <type fullname="FairyGUI.PlayCompleteCallback" preserve="all" />
-    <type fullname="FairyGUI.ProgressTitleType" preserve="all" />
-    <type fullname="FairyGUI.RelationType" preserve="all" />
-    <type fullname="FairyGUI.Stage" preserve="all" />
-    <type fullname="FairyGUI.StageCamera" preserve="all" />
-    <type fullname="FairyGUI.TimerCallback" preserve="all" />
-    <type fullname="FairyGUI.Timers" preserve="all" />
-    <type fullname="FairyGUI.Transition" preserve="all" />
-    <type fullname="FairyGUI.UIContentScaler" preserve="all" />
-    <type fullname="FairyGUI.UIContentScaler/ScreenMatchMode" preserve="all" />
-    <type fullname="FairyGUI.UIObjectFactory" preserve="all" />
-    <type fullname="FairyGUI.UIPackage" preserve="all" />
-    <type fullname="FairyGUI.UIPackage/LoadResourceAsync" preserve="all" />
-    <type fullname="FairyGUI.Utils.ByteBuffer" preserve="all" />
-    <type fullname="FairyGUI.Window" preserve="all" />
-  </assembly>
   <assembly fullname="Luban">
     <type fullname="Bright.Common.StringUtil" preserve="all" />
     <type fullname="Bright.Config.BeanBase" preserve="all" />

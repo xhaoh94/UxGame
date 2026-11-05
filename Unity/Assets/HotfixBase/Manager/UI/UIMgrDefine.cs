@@ -199,16 +199,13 @@ namespace Ux
     public enum UIBlurMode
     {
         /// <summary>不显示背景。</summary>
-        None = 0,
+        Off = 0,
 
         /// <summary>低端兜底：半透明纯色遮罩，不跑 GPU 采样。</summary>
         Mask = 1,
 
-        /// <summary>相机渲染到半分辨率 RT，UI 材质采样并模糊（默认，稳定）。</summary>
+        /// <summary>相机渲染到半分辨率 RT，UI 材质采样并模糊。</summary>
         RenderTexture = 2,
-
-        /// <summary>URP Renderer Feature 生成 _UIBlurTex，UI 材质采样并模糊（需添加 Feature）。</summary>
-        RendererFeature = 3,
     }
 
 
@@ -348,12 +345,6 @@ namespace Ux
 
             public IUI UI;                          // UI实例引用
 
-            /// <summary>
-            /// 创建实例时使用的资源包名。
-            /// 动态界面可能在销毁之前就被移除 UIData，销毁时再靠 UIData 反查包名会拿不到，
-            /// 导致资源包引用计数永远减不掉，所以这里在创建时缓存一份。
-            /// </summary>
-            public string[] Pkgs;
             public UIPhase Phase = UIPhase.Idle;    // 当前生命周期阶段
 
             /// <summary>
@@ -685,38 +676,6 @@ namespace Ux
 
                 var pData = pIData as UIData;
                 pData?.Children.Add(Data.ID);
-            }
-        }
-
-        /// <summary>
-        /// Item URL解析结构体
-        /// </summary>
-        public readonly struct ItemUrlParse
-        {
-            /// <summary>
-            /// 构造函数
-            /// </summary>
-            /// <param name="type">类型</param>
-            /// <param name="url">URL</param>
-            public ItemUrlParse(Type type, string url)
-            {
-                Type = type;
-                Url = url;
-            }
-            Type Type { get; }   // 类型
-            string Url { get; }  // URL
-
-            /// <summary>
-            /// 将URL添加到字典
-            /// </summary>
-            public void Add(Dictionary<Type, string> _urls)
-            {
-                if (_urls.ContainsKey(Type))
-                {
-                    Log.Error("ItemRenderer 注册URL 重复了。Type[{0}]", Type.FullName);
-                    return;
-                }
-                _urls.Add(Type, Url);
             }
         }
 

@@ -20,8 +20,8 @@ namespace Ux.UI
             {
                 TimeMgr.Ins.Timer(.4f, this, () =>
                 {
-                    UIMgr.Ins.Create().Show<Multiple2TabView>();
-                    UIMgr.Ins.Create().Show<Multiple3TabView>();
+                    UIMgr.Ins.Show<Multiple2TabView>();
+                    UIMgr.Ins.Show<Multiple3TabView>();
                 }).Repeat(1).Build();
             }
         }
@@ -35,7 +35,7 @@ namespace Ux.UI
 
         partial void OnBtn1Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<Stack1View>();
+            UIMgr.Ins.Show<Stack1View>();
         }
     }
 
@@ -47,7 +47,7 @@ namespace Ux.UI
 
         partial void OnBtn1Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<Stack2View>();
+            UIMgr.Ins.Show<Stack2View>();
         }
     }
 
@@ -59,7 +59,7 @@ namespace Ux.UI
 
         partial void OnBtn1Click(UIEventContext e)
         {
-            UIMgr.Ins.Create().Show<Stack3View>();
+            UIMgr.Ins.Show<Stack3View>();
         }
     }
 }
