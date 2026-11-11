@@ -19,17 +19,18 @@ namespace Ux
         static readonly Dictionary<YooType, YooPackage> _Packages = new Dictionary<YooType, YooPackage>()
         {
             { YooType.Main,new YooMainPackage() },
+            { YooType.RawFile,new YooRawFilePackage() },
         };
 
         readonly Dictionary<string, YooPackage> _locationToPackage = new Dictionary<string, YooPackage>();
 
         protected override void OnCreated()
         {
-            GameMethod.LowMemory += UnloadUnusedAssetsAsync;
+            GameMain.Ins.LowMemory += UnloadUnusedAssetsAsync;
         }
         public async UniTask<bool> Initialize()
         {
-            if (YooAssets.Initialized)
+            if (YooAssets.IsInitialized)
             {
                 Log.Error($"{nameof(YooAssets)} is initialized !");
                 return false;
@@ -83,19 +84,29 @@ namespace Ux
             {
                 ForEachPackage(x =>
                 {
-                    var valid = x.Package.CheckLocationValid(location);
+                    var valid = x.Package.IsLocationValid(location);
                     if (!valid) return false;
                     _locationToPackage.Add(location, x);
                     return true;
                 });
-            }
-            if (_locationToPackage.TryGetValue(location, out var result))
-            {
-                return result;
+
+                // 未命中也要缓存（存 null），否则调用方反复轮询同一个错地址会重复扫描并刷日志。
+                if (!_locationToPackage.ContainsKey(location))
+                {
+                    _locationToPackage.Add(location, null);
+                    Log.Error($"资源找不到Package:{location}");
+                    return null;
+                }
             }
 
-            Log.Error($"资源找不到Package:{location}");
-            return null;
+            // 命中 null 说明之前查过且不存在，直接返回，不再重复报错。
+            return _locationToPackage[location];
+        }
+
+        /// <summary>清单更新后地址集合会变，缓存的归属（含未命中的 null）必须失效。</summary>
+        public void ClearLocationCache()
+        {
+            _locationToPackage.Clear();
         }
 
         #region 资源卸载

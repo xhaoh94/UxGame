@@ -1,10 +1,10 @@
 using Cysharp.Threading.Tasks;
-using HybridCLR.Editor.Commands;
+using HybridCLR.Commands;
+using HybridCLR.Installer;
 using Obfuz.Settings;
 using Obfuz4HybridCLR;
 using UnityEditor;
 using Ux.Editor.HybridCLR;
-using InstallerController = HybridCLR.Editor.Installer.InstallerController;
 namespace Ux.Editor.Build.Version
 {
     public partial class VersionWindow
@@ -17,7 +17,8 @@ namespace Ux.Editor.Build.Version
                 HybridCLRCommand.ClearHOTDll();
                 await UxEditor.Export(tgCompileUI.value, tgCompileConfig.value, tgCompileProto.value, false);
                 var compile = (CompileType)compileType.value;
-                bool useObfuz = ObfuzSettings.Instance.polymorphicDllSettings.enable;
+                // Obfuz 4.x 移除了 polymorphicDllSettings，改为按"是否有待混淆程序集"判断
+                bool useObfuz = ObfuzSettings.Instance.assemblySettings.GetObfuscationRelativeAssemblyNames().Count > 0;
                 if (IsExportExecutable && tgCompileAot.value)
                 {
                     if (target != EditorUserBuildSettings.activeBuildTarget &&
@@ -40,10 +41,6 @@ namespace Ux.Editor.Build.Version
 
                     CompileDllCommand.CompileDll(target, compile == CompileType.Development);
                     Il2CppDefGeneratorCommand.GenerateIl2CppDef();
-                    if (useObfuz)
-                    {
-                        PrebuildCommandExt.GeneratePolymorphicCodes();
-                    }
                     // 这几个dll在HotUpdateDlls
                     LinkGeneratorCommand.GenerateLinkXml(target);
 

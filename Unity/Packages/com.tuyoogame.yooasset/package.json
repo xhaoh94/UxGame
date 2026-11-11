@@ -1,0 +1,53 @@
+{
+  "name": "com.tuyoogame.yooasset",
+  "displayName": "YooAsset",
+  "version": "3.0.7",
+  "unity": "2019.4",
+  "description": "unity3d resources management system.",
+  "author": {
+    "name": "TuYoo Games",
+    "url": "https://github.com/tuyoogame/YooAsset"
+  },
+  "samples": [
+    {
+      "displayName": "Space Shooter",
+      "description": "A complete demo game that shows the full workflow of resource update, resource download and resource loading.",
+      "path": "Samples~/Space Shooter"
+    },
+    {
+      "displayName": "Mini Game",
+      "description": "File system implementations for mini game platforms, including Wechat, Tiktok, Alipay, Taptap, Oppo, Vivo, KuaiShou and Google Play.",
+      "path": "Samples~/Mini Game"
+    },
+    {
+      "displayName": "Extension",
+      "description": "Runtime and editor extension examples, including asset reference, bundle encryption, custom operation, sprite atlas loader, shader variant collector and package tools.",
+      "path": "Samples~/Extension"
+    },
+    {
+      "displayName": "UniTask",
+      "description": "UniTask integration example, please read the README documentation in the sample.",
+      "path": "Samples~/UniTask"
+    },
+    {
+      "displayName": "Tests",
+      "description": "Unit test cases, including asset loading, encryption and file system tests.",
+      "path": "Samples~/Tests"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuyoogame/YooAsset",
+    "revision": "8cb910de899050d95b01644e7a3bd7a643f226c0"
+  },
+  "relatedPackages": {},
+  "dependencies": {
+    "com.unity.modules.assetbundle": "1.0.0",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.modules.unitywebrequestassetbundle": "1.0.0",
+    "com.unity.scriptablebuildpipeline": "1.21.25"
+  },
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  }
+}

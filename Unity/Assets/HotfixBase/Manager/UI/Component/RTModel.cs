@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using static Ux.UIModel;
@@ -20,6 +20,7 @@ namespace Ux
         private int _srcLayer;
         private string _curAnim;
         private ModelEntity _entity;
+        private long _timeKey;
 
         private static Stack<int> _queue;
         private static int GetPosZ()
@@ -43,7 +44,7 @@ namespace Ux
 
         public RTModel Load(string location, float angle = 180, float scale = 1)
         {
-            var model = ResMgr.Ins.LoadAsset<GameObject>(location);
+            var model = ResMgr.Ins.LoadGameObject(location);
             if (State is UIState.Hide or UIState.HideAnim)
             {
                 if (model != null) UnityPool.Push(model);
@@ -75,7 +76,7 @@ namespace Ux
             model.transform.localPosition = new Vector3(0f, -1f, 5f);
             model.transform.localScale = Vector3.one * scale;
             model.transform.localEulerAngles = new Vector3(0f, angle, 0f);
-            model.SetLayer(LayerMask.NameToLayer(Layers.RTModel));
+            model.SetLayer(Layers.RTModel);
 
             _entity ??= Entity.Create<ModelEntity>();
             _entity.Name = $"RTModel@{model.name}";
@@ -85,7 +86,7 @@ namespace Ux
         private void CreateCamera()
         {
             if (Camera != null) return;
-            var prefab = ResMgr.Ins.LoadAsset<GameObject>(string.Format(PathHelper.Res.Prefab, "RTModelCamera"));
+            var prefab = ResMgr.Ins.LoadGameObject(string.Format(PathHelper.Res.Prefab, "RTModelCamera"));
             Camera = prefab.GetComponent<Camera>();
             _posz = GetPosZ();
             Camera.transform.position = new Vector3(0f, 1000f, _posz);
@@ -101,13 +102,17 @@ namespace Ux
             _renderTexture.antiAliasing = 1;
             _renderTexture.filterMode = FilterMode.Bilinear;
             if (_image != null) _image.texture = _renderTexture;
-            GameMethod.Update += Render;
+            _timeKey = TimeMgr.Ins.Frame(1, this, Render).Loop().Build();            
             Render();
         }
 
         private void ReleaseModel()
         {
-            GameMethod.Update -= Render;
+            if (_timeKey > 0)
+            {
+                TimeMgr.Ins.RemoveFrame(_timeKey);
+                _timeKey = 0;
+            }            
             _entity?.Destroy();
             _entity = null;
             if (Camera != null)

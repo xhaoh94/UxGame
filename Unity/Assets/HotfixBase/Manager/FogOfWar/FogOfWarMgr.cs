@@ -7,9 +7,10 @@ using UnityEngine.Rendering.Universal;
 
 namespace Ux
 {
-    public partial class FogOfWarMgr : Singleton<FogOfWarMgr>
+    public partial class FogOfWarMgr : Singleton<FogOfWarMgr>, IFrameUpdate
     {         
-        const string _visable = "FogOfWar";
+        /// <summary>本模块占用的屏蔽位，业务侧自定义，勿与其他模块重复。</summary>
+        const ulong FogReason = 1UL << 0;
 
         bool _init;
         public bool IsInit => _init;
@@ -134,7 +135,7 @@ namespace Ux
                 return;
             }
             _init = true;
-            _FogOfWar = ResMgr.Ins.LoadAsset<GameObject>(string.Format(PathHelper.Res.Prefab, "FogOfWar"));
+            _FogOfWar = ResMgr.Ins.LoadGameObject(string.Format(PathHelper.Res.Prefab, "FogOfWar"));
 
             Width = width;
             Height = height;
@@ -149,14 +150,16 @@ namespace Ux
             _InitFinalRenderer();
             _InitBlurCamera();
             _InitFOWCamera();
-            GameMethod.Update += _Update;            
+            FrameDriver.Register(this);
             EventMgr.Ins.Run(MainEventType.FOG_OF_WAR_INIT);
         }
+        void IFrameUpdate.OnFrameUpdate() => _Update();
+
         public void Destroy()
         {
             _init = false;
             _units.Clear();
-            GameMethod.Update -= _Update;            
+            FrameDriver.Unregister(this);
             _mainCamera = null;
             if (_FogOfWar != null)
             {
@@ -396,7 +399,7 @@ namespace Ux
         {
             foreach (var unit in _units)
             {
-                unit.Visable.Set(_visable, IsVisible(unit));                
+                unit.Visable.Set(FogReason, IsVisible(unit));
             }
         }
 

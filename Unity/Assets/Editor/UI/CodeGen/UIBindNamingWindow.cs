@@ -44,7 +44,7 @@ namespace Ux.Editor.Build.UI
         private string _previewName = "btnBack";
         private bool _dirty;
 
-        [MenuItem("UxGame/工具/UI/代码生成规则", false, 513)]
+        [MenuItem("UxGame/工具/UI/代码生成规则", false, 502)]
         public static void ShowWindow()
         {
             var window = GetWindow<UIBindNamingWindow>("UI 命名规则", true);

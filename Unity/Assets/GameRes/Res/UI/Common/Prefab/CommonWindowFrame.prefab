@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8190645635919527051}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: CommonWindowFrame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46,7 +46,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4485008832793441005}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: panelTitleBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -161,7 +161,7 @@ GameObject:
   - component: {fileID: 178475191969882587}
   - component: {fileID: 143579022047032980}
   - component: {fileID: 5509772178479013814}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n0
   m_TagString: Untagged
   m_Icon: {fileID: 0}

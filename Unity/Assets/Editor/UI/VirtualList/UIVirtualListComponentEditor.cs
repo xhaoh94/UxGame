@@ -35,7 +35,11 @@ namespace Ux.Editor
         {
             foreach (var demo in component.GetComponentsInParent<Ux.UI.UGUIVirtualTreeDemo>(true))
                 if (IsDemoFor(demo, component)) return true;
+#if UNITY_6000_4_OR_NEWER
             foreach (var demo in Object.FindObjectsByType<Ux.UI.UGUIVirtualTreeDemo>(FindObjectsInactive.Include))
+#else
+            foreach (var demo in Object.FindObjectsByType<Ux.UI.UGUIVirtualTreeDemo>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+#endif
                 if (IsDemoFor(demo, component)) return true;
             return false;
         }
@@ -123,10 +127,7 @@ namespace Ux.Editor
                 if (!singleVertical && (multiple.boolValue || multiple.hasMultipleDifferentValues))
                 {
                     Field("_gridSpacing", "间距（X 水平 / Y 垂直）", "相邻 Item 的水平间距和相邻行的垂直间距。");
-                    Field("_limitGridCount", "限制最多" + unit + "数", "不勾选时只按可用空间计算；勾选后再应用数量上限。");
-                    var limited = serializedObject.FindProperty("_limitGridCount");
-                    if (limited.boolValue || limited.hasMultipleDifferentValues)
-                        Field("_gridCount", "最多" + unit + "数", "这是上限，不是强制数量；空间不足时自动减少。");     
+                    Field("_gridCount", "最多" + unit + "数", "0 表示不限制，只按视口可用空间计算；大于 0 时按上限并在空间不足时自动减少。");
                 }
                 if (singleVertical || !multiple.boolValue || multiple.hasMultipleDifferentValues)
                     Field("_spacing", axis.hasMultipleDifferentValues ? "主轴间距" : vertical ? "垂直间距" : "水平间距", "仅在单行/单列模式下使用。");
@@ -134,6 +135,15 @@ namespace Ux.Editor
                 Field("_paddingStart", "起点留白", "滚动主轴起点的留白。");
                 Field("_paddingEnd", "终点留白", "滚动主轴终点的留白。");
                 Field("_bufferSize", "视口外缓冲距离(像素)", "视口前后各预留的 UI 布局距离，不是 Item 数量。");
+                Field("_incrementalCreate", "分批生成", "首次填充时按批次逐帧创建 Item，避免一屏十几项同帧实例化造成峰值。池热（分页/刷新）时自动走同步。");
+                var incremental = serializedObject.FindProperty("_incrementalCreate");
+                if (incremental.boolValue || incremental.hasMultipleDifferentValues)
+                {
+                    Field("_batchIntervalMs", "批次间隔(毫秒)", "两批之间的最小间隔；0 表示每帧都可以补一批。");
+                    Field("_batchSize", "每批数量", "一批最多创建几项。");
+                    Field("_initialCount", "首帧创建数量", ">0：先同步建这么多再分批；0：首帧不建，等一个批次间隔后开始；-1：跟随每批数量，第一批立即执行。");
+                    Field("_frameBudgetMs", "单批耗时上限(毫秒)", "0 表示不限制；防止个别重 Item 把整批拖到掉帧。超预算时仍会建完当前项。");
+                }
                 if (!singleVertical)
                 {
                     Field("_loopEnabled", "无限循环", "单列/单行内容按周期循环；需要内容长度大于视口，且至少 3 个周期。");
@@ -195,6 +205,8 @@ namespace Ux.Editor
                     EditorGUILayout.LabelField("实际初始尺寸", component.ResolvedItemSize.ToString("F1"));
                     if (component.AllowMultiple)
                         EditorGUILayout.LabelField("实际每行/列数量", component.ActualCountPerLine.ToString());
+                    if (component.IncrementalCreate)
+                        EditorGUILayout.LabelField("待生成 Item", component.IsFilling ? component.PendingCreateCount.ToString() : "0（已完成）");
                 }
             }
             else
@@ -282,12 +294,11 @@ namespace Ux.Editor
             if (!multiple)
                 return;
             var spacing = serializedObject.FindProperty("_gridSpacing").vector2Value;
-            bool limited = serializedObject.FindProperty("_limitGridCount").boolValue;
-            int cap = limited ? serializedObject.FindProperty("_gridCount").intValue : 0;
-            if ((limited && cap < 1) || spacing.x < 0 || spacing.y < 0 || float.IsNaN(spacing.x) ||
+            int cap = serializedObject.FindProperty("_gridCount").intValue;
+            if (spacing.x < 0 || spacing.y < 0 || float.IsNaN(spacing.x) ||
                 float.IsNaN(spacing.y) || float.IsInfinity(spacing.x) || float.IsInfinity(spacing.y))
             {
-                EditorGUILayout.HelpBox("数量上限至少为 1，间距必须为有限非负数。", MessageType.Error);
+                EditorGUILayout.HelpBox("间距必须为有限非负数。", MessageType.Error);
                 return;
             }
             var scroll = serializedObject.FindProperty("_scrollRect").objectReferenceValue as ScrollRect;

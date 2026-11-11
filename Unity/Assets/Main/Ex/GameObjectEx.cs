@@ -5,13 +5,12 @@ namespace Ux
 {
     public static class GameObjectEx
     {
-        public static void Visible(this GameObject go, bool b)
+        public static void SetVisible(this GameObject go, bool visible)
         {
-            if (go != null && go.activeInHierarchy != b)
-            {
-                go.SetActive(b);
-            }
+            if (go.activeSelf != visible)
+                go.SetActive(visible);
         }
+
         public static void SetParent(this GameObject go, Transform parent, bool worldPositionStays = true)
         {
             go.transform.SetParent(parent, worldPositionStays);
@@ -20,15 +19,40 @@ namespace Ux
         {
             go.transform.SetParent(parent.transform, worldPositionStays);
         }
+        
+        private static readonly System.Collections.Generic.List<Transform> LayerBuffer =
+            new System.Collections.Generic.List<Transform>(64);
+
+        public static void SetLayer(this GameObject go, string layerName, bool includeChild = true)
+        {
+            var layer = LayerMask.NameToLayer(layerName);
+            if (layer < 0)
+            {
+                Log.Error("SetLayer 找不到层：{0}", layerName);
+                return;
+            }
+
+            SetLayer(go, layer, includeChild);
+        }
+
         public static void SetLayer(this GameObject go, int layer, bool includeChild = true)
         {
-            go.layer = layer;
-            if (includeChild)
+            if (go == null)
+                return;
+
+            if (go.layer != layer)
+                go.layer = layer;
+
+            if (!includeChild)
+                return;
+
+            LayerBuffer.Clear();            
+            go.GetComponentsInChildren(true, LayerBuffer);
+            for (int i = 0; i < LayerBuffer.Count; i++)
             {
-                foreach (var tran in go.GetComponentsInChildren<Transform>())
-                {
-                    tran.gameObject.layer = layer;
-                }
+                var child = LayerBuffer[i].gameObject;
+                if (child.layer != layer)
+                    child.layer = layer;
             }
         }
         public static void SetTag(this GameObject go, string tag, bool includeChild = true)

@@ -25,19 +25,6 @@ MonoBehaviour:
     AutoCollectShaders: 1
     IgnoreRuleName: NormalIgnoreRule
     Groups:
-    - GroupName: Code
-      GroupDesc: "\u4EE3\u7801"
-      AssetTags: builtin
-      ActiveRuleName: EnableGroup
-      Collectors:
-      - CollectPath: Assets/GameRes/Res/Code
-        CollectorGUID: 5136dcfd732443e4fbcedd13488bb8d5
-        CollectorType: 0
-        AddressRuleName: AddressByGroupAndFileName
-        PackRuleName: PackDirectory
-        FilterRuleName: CollectAll
-        AssetTags: 
-        UserData: 
     - GroupName: Config
       GroupDesc: "\u914D\u7F6E"
       AssetTags: builtin
@@ -166,4 +153,26 @@ MonoBehaviour:
         PackRuleName: PackSeparately
         FilterRuleName: CollectAll
         AssetTags: preload
+        UserData: 
+  - PackageName: RawFilePackage
+    PackageDesc: "\u539F\u751F\u6587\u4EF6"
+    EnableAddressable: 1
+    SupportExtensionless: 1
+    LocationToLower: 0
+    IncludeAssetGUID: 0
+    AutoCollectShaders: 0
+    IgnoreRuleName: NormalIgnoreRule
+    Groups:
+    - GroupName: Code
+      GroupDesc: "\u4EE3\u7801"
+      AssetTags: builtin
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/GameRes/Res/Code
+        CollectorGUID: 5136dcfd732443e4fbcedd13488bb8d5
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: 
         UserData: 

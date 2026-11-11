@@ -9,10 +9,9 @@ namespace Ux
     {
         OverdueMap<string, FormulaParser> _cache;
         const float _timeout = 60f;
-        long _timeoutKey;
         protected override void OnCreated()
         {
-            GameMethod.LowMemory += Release;
+            GameMain.Ins.LowMemory += Release;
         }
         public void Release()
         {

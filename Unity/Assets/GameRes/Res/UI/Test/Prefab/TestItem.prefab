@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1531317665977148981}
   - component: {fileID: 4192992435998896733}
   - component: {fileID: 2477247657761800553}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: txtNum
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -146,7 +146,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6947844874104909946}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TestItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -185,7 +185,7 @@ GameObject:
   - component: {fileID: 7195203614309944049}
   - component: {fileID: 8019159606909775101}
   - component: {fileID: 7427121271745096675}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n0
   m_TagString: Untagged
   m_Icon: {fileID: 0}

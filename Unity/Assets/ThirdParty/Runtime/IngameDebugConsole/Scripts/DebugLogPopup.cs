@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
@@ -70,6 +70,12 @@ namespace IngameDebugConsole
 			halfSize = popupTransform.sizeDelta * 0.5f;
             normalizedPosition = SavedNormalizedPosition;
 		}
+
+        protected void OnApplicationFocus(bool focus)
+        {
+            if (!focus)
+                SavedNormalizedPosition = normalizedPosition;
+        }
 
         protected void OnDestroy()
         {

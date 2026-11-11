@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Ux
@@ -13,49 +12,57 @@ namespace Ux
             public int farme;
         }
         static readonly Queue<DelayFn> _delayFn = new Queue<DelayFn>();
+        static bool _inited;
         public static void Init()
         {
-            GameMethod.LateUpdate += _DequeueDelay;            
+            // 幂等：状态机可能反复进出游戏态，重复订阅会导致每帧多跑一次且 Release 减不干净。
+            if (_inited) return;
+            _inited = true;
+
+            EntityScheduler.Init();
         }
         public static void Release()
         {
-            GameMethod.LateUpdate -= _DequeueDelay;
+            if (!_inited) return;
+            _inited = false;
+
+            EntityScheduler.Release();
         }
+
+        /// <summary>销毁延迟队列的每帧驱动，由 EntityScheduler 的 LateUpdate 入口调用。</summary>
+        internal static void TickDelay() => _DequeueDelay();
         static void _EnqueueDelay(Action fn)
         {
             _delayFn.Enqueue(new DelayFn() { delayFn = fn, farme = TimeMgr.Ins.TotalFrame });
         }    
         static void _DequeueDelay()
         {
-            var _exeNum = 0;
+            if (_delayFn.Count == 0) return;
+
+            var exeNum = 0;
             var max = 200;
-            while (_delayFn.Count > 0 && _exeNum++ < max) //一帧最多执行max次
+            var frame = TimeMgr.Ins.TotalFrame;
+            while (_delayFn.Count > 0 && exeNum++ < max) //一帧最多执行max次
             {
                 var fn = _delayFn.Peek();
                 //放进来后下一帧再销毁，以免同帧下销毁时，业务逻辑报错
-                if (fn.farme >= TimeMgr.Ins.TotalFrame) break;
+                if (fn.farme >= frame) break;
                 _delayFn.Dequeue().delayFn.Invoke();
             }
         }
 
 
-#if UNITY_EDITOR        
-        public EntityHierarchy Hierarchy { get; private set; }
-#endif        
         public EntityViewer Viewer { get; private set; }
         public long ID { get; private set; }
         string _name;
         public string Name
         {
-            get => _name; set
+            // 懒计算：Name 主要给日志和编辑器层级用，大多数实体创建时并不需要它。
+            get => _name ??= $"{GetType().Name}_{ID}";
+            set
             {
-                if (_name != value)
-                {
-                    _name = value;
-#if UNITY_EDITOR
-                    Hierarchy.name = value;
-#endif
-                }
+                if (ReferenceEquals(_name, value)) return;
+                _name = value;
             }
         }
         /// <summary>
@@ -69,8 +76,9 @@ namespace Ux
         bool _isDestroying;
         bool _isDestroyed;
  
-        readonly Dictionary<long, Entity> _entitys = new Dictionary<long, Entity>();
-        readonly Dictionary<Type, List<Entity>> _typeToentitys = new Dictionary<Type, List<Entity>>();
+        // 叶子实体占多数，两个索引表按需创建，省掉每个实体的空字典开销。
+        Dictionary<long, Entity> _entitys;
+        Dictionary<Type, List<Entity>> _typeToentitys;
         Entity _parent;        
 
         public Entity Parent
@@ -115,13 +123,12 @@ namespace Ux
             var entity = isFromPool ? Pool.Get<Entity>(type) : Activator.CreateInstance(type) as Entity;
             if (entity == null) return null;
 #if UNITY_EDITOR
-            entity.Hierarchy = EntityHierarchy.Create(entity);
+            EditorEntityRegistry.Register(entity);
 #endif
             entity._isDestroyed = false;
             entity._isDestroying = false;
             entity.IsFromPool = isFromPool;
             entity.ID = id;
-            entity.Name = $"{type.Name}_{id}";                 
             return entity;
         }
         /// <summary>
@@ -131,11 +138,13 @@ namespace Ux
         public void Link(GameObject gameObject)
         {
             Viewer = gameObject.GetOrAddComponent<EntityViewer>();
-#if UNITY_EDITOR
-            Viewer.SetEntity(this, Hierarchy);
-#else
-            Viwer.SetEntity(this);
-#endif
+            Viewer.SetEntity(this);
+
+            // 没有自定义过名字时，用视图对象的名字，方便在调试窗口里对应到场景对象。
+            if (_name == null && gameObject != null)
+            {
+                _name = gameObject.name;
+            }
         }
         bool _Add(Entity entity)
         {
@@ -164,12 +173,12 @@ namespace Ux
             }
 
 
-            if (_entitys.ContainsKey(entity.ID))
+            var entityID = entity.ID;
+            if (_entitys != null && _entitys.ContainsKey(entityID))
             {
-                Log.Error($"重复添加实体,ID:{entity.ID}");
+                Log.Error($"重复添加实体,ID:{entityID}");
                 return false;
             }
-            var entityID = entity.ID;
 
             if (entity._parent == this)
             {
@@ -178,11 +187,11 @@ namespace Ux
             entity._parent?.Remove(entity, false);
             entity._parent = this;
 
-#if UNITY_EDITOR
-            entity.Hierarchy.SetParent(Hierarchy.transform);
-#endif
 
+            _entitys ??= new Dictionary<long, Entity>();
             _entitys.Add(entityID, entity);
+
+            _typeToentitys ??= new Dictionary<Type, List<Entity>>();
             var type = entity.GetType();
             if (!_typeToentitys.TryGetValue(type, out var listData))
             {
@@ -501,10 +510,10 @@ namespace Ux
         }
         bool _Remove(Entity entity)
         {
-            if (_entitys.Remove(entity.ID))
+            if (_entitys != null && _entitys.Remove(entity.ID))
             {
                 var type = entity.GetType();
-                if (_typeToentitys.TryGetValue(type, out var entities))
+                if (_typeToentitys != null && _typeToentitys.TryGetValue(type, out var entities))
                 {
                     if (entities.Remove(entity) && entities.Count == 0)
                     {
@@ -516,17 +525,32 @@ namespace Ux
             return false;
         }
 
+        readonly List<long> _removingIds = new List<long>();
+
         void RemoveAll()
         {
-            var cnt = 0;
-            while (_entitys.Count > 0)
-            {                                
-                Remove(_entitys.ElementAt(0).Value, true);                
-                if(cnt++ >= 1000)
+            if (_entitys == null || _entitys.Count == 0) return;
+
+            // 先快照 ID 再删：Remove 过程中子实体会递归 RemoveAll 改 _entitys，
+            // 直接遍历会破坏迭代；ElementAt(0) 每次枚举到第一个元素是 O(n)，整体会退化成 O(n²)。
+            _removingIds.Clear();
+            foreach (var kv in _entitys)
+            {
+                _removingIds.Add(kv.Key);
+            }
+
+            for (int i = 0; i < _removingIds.Count; i++)
+            {
+                if (i >= 1000)
                 {
                     Log.Error("RemoveAll 删除超出循环，请检测");
+                    break;
                 }
+                Remove(_removingIds[i]);
             }
+
+            _removingIds.Clear();
+
             if (_entitys.Count > 0)
             {
                 Log.Error("RemoveChilds 存在无法删除的Child！检查是否存在已被Destroy却没有从父类清除的Child");
@@ -539,7 +563,7 @@ namespace Ux
         }
         public Entity Get(long id)
         {
-            if (_entitys.TryGetValue(id, out var entity))
+            if (_entitys != null && _entitys.TryGetValue(id, out var entity))
             {
                 return entity;
             }
@@ -553,7 +577,7 @@ namespace Ux
         }
         public T Get<T>() where T : Entity
         {
-            if (_typeToentitys.TryGetValue(typeof(T), out var _temList) && _temList.Count > 0)
+            if (_typeToentitys != null && _typeToentitys.TryGetValue(typeof(T), out var _temList) && _temList.Count > 0)
             {
                 return _temList[0] as T;
             }
@@ -561,11 +585,23 @@ namespace Ux
         }
         public Entity Get(Type type)
         {
-            if (_typeToentitys.TryGetValue(type, out var _temList) && _temList.Count > 0)
+            if (_typeToentitys != null && _typeToentitys.TryGetValue(type, out var _temList) && _temList.Count > 0)
             {
                 return _temList[0];
             }
             return null;
+        }
+
+        /// <summary>遍历直接子实体（供编辑器调试窗口构建树，不分配）。</summary>
+        public void GetChildren(List<Entity> buffer)
+        {
+            buffer.Clear();
+            if (_entitys == null) return;
+
+            foreach (var pair in _entitys)
+            {
+                buffer.Add(pair.Value);
+            }
         }
 
         public List<Entity> GetAll(bool includeNested = false)
@@ -598,8 +634,17 @@ namespace Ux
             _Get(listData, isIncludeNested);
             return listData;
         }
+        /// <summary>复用调用方列表的版本，避免每帧查询都分配 List。</summary>
+        public void GetAll<T>(List<T> buffer, bool isIncludeNested = false) where T : Entity
+        {
+            buffer.Clear();
+            if (CheckDestroy()) return;
+            _Get(buffer, isIncludeNested);
+        }
+
         void _Get<T>(List<T> listData, bool isIncludeNested) where T : Entity
         {
+            if (_typeToentitys == null) return;
             if (_typeToentitys.TryGetValue(typeof(T), out var _temList))
             {
                 foreach (var entity in _temList)
@@ -614,6 +659,7 @@ namespace Ux
         }
         void _Get(Type type, List<Entity> listData, bool isIncludeNested)
         {
+            if (_typeToentitys == null) return;
             if (_typeToentitys.TryGetValue(type, out var _temList))
             {
                 listData.AddRange(_temList);
@@ -628,6 +674,7 @@ namespace Ux
         }
         void _Get(List<Entity> listData, bool isIncludeNested)
         {
+            if (_typeToentitys == null) return;
             foreach (var entityKv in _typeToentitys)
             {
                 listData.AddRange(entityKv.Value);
@@ -684,13 +731,6 @@ namespace Ux
 
             RemoveAll();            
 
-            if (_event != null)
-            {
-                _event.Clear();
-                Pool.Push(_event);
-                _event = null;
-            }
-
             if (Application.isPlaying)
             {
                 _EnqueueDelay(_DelayDestroy);
@@ -708,8 +748,12 @@ namespace Ux
             OnDestroy();
             
             _parent = null;
-            _entitys.Clear();
-            _typeToentitys.Clear();
+            _entitys?.Clear();
+            _typeToentitys?.Clear();
+            // 池复用：清掉自己作为父实体登记的监听表，以及自己挂出去的订阅记录。
+            _childAdded?.Clear();
+            _childRemoved?.Clear();
+            _childListeners?.Clear();
             _name = null;
             _is_init = false;
             ID = 0;
@@ -719,11 +763,7 @@ namespace Ux
                 Viewer = null;
             }
 #if UNITY_EDITOR
-            if (Hierarchy != null)
-            {
-                Hierarchy.Release();
-                Hierarchy = null;
-            }
+            EditorEntityRegistry.Unregister(this);
 
             if (IsFromPool && UnityEngine.Application.isPlaying)
             {

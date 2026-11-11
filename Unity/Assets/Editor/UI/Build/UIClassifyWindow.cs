@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -18,7 +18,7 @@ namespace Ux.Editor.Build.UI
         /// <summary>目录下拉的固定列宽，保证多行之间标签列对齐。</summary>
         private const float DirColumnWidth = 260f;
 
-        [MenuItem("UxGame/工具/UI/UI打包规则", false, 511)]
+        [MenuItem("UxGame/工具/UI/UI打包规则", false, 500)]
         public static void ShowExample()
         {
             var window = GetWindow<UIClassifyWindow>("UIClassifyWindow", true);
@@ -38,11 +38,11 @@ namespace Ux.Editor.Build.UI
                 return;
             }
 
-            var packages = AssetBundleCollectorSettingData.Setting.Packages;
+            var packages = BundleCollectorSettingData.Setting.Packages;
             var package = packages.Find(x => x.PackageName == PackageName);
             if (package == null)
             {
-                package = new AssetBundleCollectorPackage
+                package = new BundleCollectorPackage
                 {
                     PackageName = PackageName,
                     PackageDesc = "主包",
@@ -124,16 +124,16 @@ namespace Ux.Editor.Build.UI
             }
 
             EditorUtility.SetDirty(settings);
-            AssetBundleCollectorSettingData.SaveFile();
+            BundleCollectorSettingData.SaveFile();
         }
 
-        private static AssetBundleCollectorGroup GetOrCreateGroup(AssetBundleCollectorPackage package,
+        private static BundleCollectorGroup GetOrCreateGroup(BundleCollectorPackage package,
             string groupName, string desc)
         {
             var group = package.Groups.Find(x => x.GroupName == groupName);
             if (group != null) return group;
 
-            group = new AssetBundleCollectorGroup
+            group = new BundleCollectorGroup
             {
                 GroupName = groupName,
                 GroupDesc = desc,
@@ -143,10 +143,10 @@ namespace Ux.Editor.Build.UI
             return group;
         }
 
-        private static AssetBundleCollector NewCollector(string collectPath, string filterRule, string tags,
+        private static BundleCollector NewCollector(string collectPath, string filterRule, string tags,
             string addressRule, string packRule = null)
         {
-            return new AssetBundleCollector
+            return new BundleCollector
             {
                 CollectPath = collectPath,
                 FilterRuleName = filterRule,

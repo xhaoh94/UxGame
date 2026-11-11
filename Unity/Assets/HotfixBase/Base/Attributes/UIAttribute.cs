@@ -2,44 +2,44 @@ using System;
 
 namespace Ux
 {
+    /// <summary>
+    /// 界面注册声明。
+    /// 只承载「声明」，不承载运行时数据：id 由注册流程分配（0 = 自动），
+    /// 父界面关系用 Type 表达，构造函数不允许有副作用——
+    /// 注册扫描/编辑器工具随时会读取它，不能在读元数据时拉起单例。
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class UIAttribute : Attribute
     {
+        /// <summary>顶层界面，ID 自动分配。</summary>
         public UIAttribute()
         {
-
         }
+
+        /// <summary>tab 子界面，声明父界面类型。</summary>
+        public UIAttribute(Type parent)
+        {
+            this.parent = parent;
+        }
+
+        /// <summary>显式指定界面 ID。</summary>
         public UIAttribute(int id)
         {
             this.id = id;
         }
-        public UIAttribute(int id, int pId)
+
+        /// <summary>显式指定界面 ID，并声明父界面类型。</summary>
+        public UIAttribute(int id, Type parent)
         {
             this.id = id;
-            tabData = new UITabData(pId);
-        }
-        public UIAttribute(int id, Type pId)
-        {
-            this.id = id;
-            tabData = new UITabData(UIMgr.Ins.GetTypeId(pId));
+            this.parent = parent;
         }
 
-        public UIAttribute(Type pId)
-        {
-            tabData = new UITabData(UIMgr.Ins.GetTypeId(pId));
-        }
-
-        public UIAttribute(IUITabData tabData)
-        {
-            this.tabData = tabData;
-        }
-        public UIAttribute(int id, IUITabData tabData)
-        {
-            this.id = id;
-            this.tabData = tabData;
-        }
+        /// <summary>界面 ID，0 表示由 UIMgr 自动分配。</summary>
         public readonly int id;
-        public readonly IUITabData tabData;
+
+        /// <summary>tab 子界面的父界面类型，null 表示顶层界面。</summary>
+        public readonly Type parent;
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]

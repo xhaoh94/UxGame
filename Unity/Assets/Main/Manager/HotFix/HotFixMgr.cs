@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using YooAsset;
 
 namespace Ux
 {
@@ -38,20 +39,23 @@ namespace Ux
             if (GameMain.Ins.HotfixCode)
             {
                 LoadMetadataForAOTAssembly();
+                var rawPackage = YooMgr.Ins.GetPackage(YooType.RawFile);
                 foreach (var hotfixName in HotfixAssembly)
                 {
-                    byte[] assBytes = null;
-                    var codePath = $"Assets/GameRes/Res/Code/{hotfixName}.dll";
-                    using (var handle = YooMgr.Ins.GetPackage(YooType.Main).Package.LoadAssetSync<TextAsset>(codePath))
+                    // dll 放在 RawFile 包里是原样字节（不经 AB）；地址由 AddressByFileName 决定，
+                    // 源文件名是 xxx.dll.bytes，去掉一个后缀后正好是 xxx.dll。
+                    byte[] assBytes;
+                    using (var handle = rawPackage.Package.LoadAssetSync<RawFileObject>($"{hotfixName}.dll"))
                     {
-                        assBytes = handle.GetAssetObject<TextAsset>().bytes;
-                        if (assBytes == null)
-                        {
-                            Log.Error($"HotFixMgr.Load 加载失败:{hotfixName}");
-                            continue;
-                        }
-                        Assemblys.Add(Assembly.Load(assBytes));
+                        assBytes = (handle.AssetObject as RawFileObject)?.GetBytes();
                     }
+
+                    if (assBytes == null || assBytes.Length == 0)
+                    {
+                        Log.Error($"HotFixMgr.Load 加载失败:{hotfixName}");
+                        continue;
+                    }
+                    Assemblys.Add(Assembly.Load(assBytes));
                 }
             }
             else

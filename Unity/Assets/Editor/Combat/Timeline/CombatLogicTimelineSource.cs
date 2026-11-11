@@ -53,8 +53,13 @@ namespace Ux.Editor.Combat
             var guid = string.IsNullOrEmpty(assetPath)
                 ? string.Empty
                 : AssetDatabase.AssetPathToGUID(assetPath);
+#if UNITY_6000_4_OR_NEWER
+            var fallbackId = EntityId.ToULong(action.GetEntityId());
+#else
+            var fallbackId = action.GetInstanceID().ToString();
+#endif
             id = string.IsNullOrEmpty(guid)
-                ? $"combat-action-instance:{action.GetInstanceID()}"
+                ? $"combat-action-instance:{fallbackId}"
                 : $"combat-action:{guid}";
 
             SyncTracks();

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Ux
@@ -24,7 +24,7 @@ namespace Ux
     /// 与网络方案解耦的固定逻辑帧时钟。单机由本地时间驱动，帧同步和录像由外部帧源驱动。
     /// 状态同步仍使用 LocalRealtime，服务器快照通过独立的状态同步层纠正实体状态。
     /// </summary>
-    public sealed class SimulationClock : Singleton<SimulationClock>
+    public sealed class SimulationClock : Singleton<SimulationClock>, IFrameUpdate
     {
         public event Action<long> FrameAdvanced;
 
@@ -41,9 +41,11 @@ namespace Ux
         private double _accumulator;
         private double FrameDuration => 1d / FrameRate;
 
+        void IFrameUpdate.OnFrameUpdate() => Update();
+
         protected override void OnCreated()
         {
-            GameMethod.Update += Update;
+            FrameDriver.Register(this);
         }
 
         /// <summary>单机和状态同步客户端使用本地固定步长推进。</summary>

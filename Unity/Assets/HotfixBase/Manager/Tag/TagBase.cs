@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ux
 {    
-    public abstract class TagBase:IEventTrigger
+    public abstract class TagBase
     {
         public int TagId { get; private set; }
         private bool _inited;
@@ -80,13 +80,7 @@ namespace Ux
         void _Init()
         {
             _inited = true;
-            EventMgr.Ins.RegisterEventTrigger(this);
             OnInit();
-            _DoMessage();
-        }
-
-        void IEventTrigger.OnTriggerEvent()
-        {
             _DoMessage();
         }
 

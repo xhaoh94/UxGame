@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3556561094929331904}
   - component: {fileID: 2895416534557972881}
   - component: {fileID: 658849613174184297}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: txtTt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 8223019417062940720}
   - component: {fileID: 1765231201772354772}
   - component: {fileID: 7659299090347973160}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: btnTt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -222,7 +222,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 565924742798559889}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -260,7 +260,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1827736977327844655}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: BagWindow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -299,7 +299,7 @@ GameObject:
   - component: {fileID: 4649347455018614878}
   - component: {fileID: 8893839595705287931}
   - component: {fileID: 8204847401028556264}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -434,7 +434,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8934197685341615460}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: rect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -473,8 +473,20 @@ PrefabInstance:
       value: mCommonFrame
       objectReference: {fileID: 0}
     - target: {fileID: 333049457921950590, guid: 881bbeb422165ff429b27bcad89788f2, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 333049457921950590, guid: 881bbeb422165ff429b27bcad89788f2, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2819816299894997141, guid: 881bbeb422165ff429b27bcad89788f2, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4927759666603993191, guid: 881bbeb422165ff429b27bcad89788f2, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 8190645635919527051, guid: 881bbeb422165ff429b27bcad89788f2, type: 3}
       propertyPath: m_Pivot.x

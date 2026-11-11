@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6869196413368987821}
   - component: {fileID: 3934565309452885567}
   - component: {fileID: 173161846719906481}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: txtContent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -146,7 +146,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3871069437060668441}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: CommonTip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -184,7 +184,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 561269043305245946}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -221,7 +221,7 @@ GameObject:
   - component: {fileID: 7088129497428639743}
   - component: {fileID: 372956637471151649}
   - component: {fileID: 7429469796778590257}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n0
   m_TagString: Untagged
   m_Icon: {fileID: 0}

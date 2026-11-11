@@ -52,10 +52,10 @@ namespace Ux.Editor.Build.Version
             {
                 setting = new BuildPackageSetting();
                 setting.PackageName = pkgName;
-                setting.PiplineOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageBuildPipeline(pkgName);
-                setting.CompressOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageCompressOption(pkgName, setting.PiplineOption);
-                setting.NameStyleOption = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageFileNameStyle(pkgName, setting.PiplineOption);
-                setting.EncyptionClassName = YooAsset.Editor.AssetBundleBuilderSetting.GetPackageEncyptionServicesClassName(pkgName, setting.PiplineOption);
+                setting.PiplineOption = YooAsset.Editor.BundleBuilderSetting.GetPackageBuildPipeline(pkgName);
+                setting.CompressOption = YooAsset.Editor.BundleBuilderSetting.GetPackageCompressOption(pkgName, setting.PiplineOption);
+                setting.NameStyleOption = YooAsset.Editor.BundleBuilderSetting.GetPackageFileNameStyle(pkgName, setting.PiplineOption);
+                setting.EncyptionClassName = YooAsset.Editor.BundleBuilderSetting.GetPackageBundleEncryptorClassName(pkgName, setting.PiplineOption);
                 PackageBuilds.Add(setting);
             }
             return setting;

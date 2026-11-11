@@ -37,6 +37,7 @@
 - Unity 挪文件必须 `.cs` + `.cs.meta` 成对，新目录要补 `.meta`。
 
 ## 资源与命名
+- **YooAsset 3.0.7（2026-11-09/10 升级）**：嵌入包 `Unity/Packages/com.tuyoogame.yooasset/`，`manifest.json` 无该条目（不走注册表，也就不需要网络）。**兼容宏已彻底移除**：`Runtime/Compatibility/*.cs` 整文件包在 `#if YOOASSET_LEGACY_API` 里，去掉宏后这些类型根本不存在。几条硬结论：`BundleFileHandle` 没有任何取数据的方法，原生文件只能 `LoadAssetSync/LoadAssetAsync<RawFileObject>` + `RawFileObject.GetBytes()/GetText()`；`LoadPackageManifestAsync` **不接受空版本**（先 `RequestPackageVersionAsync`）；`InstantiateSync(Transform)` 改 `InstantiateSync(new InstantiateOptions(true, parent, false))`；`SetDefaultPackage` 与默认包裹概念已删。清单是**二进制**，旧 AB 全不兼容，必须整包重打。
 - YooAsset 定位地址 = **组名_文件名**（`AddressByGroupAndFileName`；分组见 `Settings/YooAsset/AssetBundleCollectorSetting.asset`），**与文件夹层级无关** → 挪目录不影响加载，关键是文件名。前缀来自分组：`Prefab_` / `Combat_` / `Timeline_`。
 - 单位资源根（2026-09-30 起，原 Hero_ZS 已改名）：预制 `Res/Prefab/Unit/Role/Role_Dummy.prefab`（地址 `Prefab_Role_Dummy`），配置 `Res/Combat/Role/Role_DummyCombatProfile.asset`，时间轴 `Res/Timeline/Role/`。这些名字在 `Scene.cs`、`SceneModule.cs`、`Unit.cs` 三处硬编码，改名必须同步。
 - 单位 Prefab 必须带 `Pathfinding.Seeker`（`Unit.LoadModel` 取 `Model.GetComponent<Seeker>()`）和带 Avatar 的 Animator（动画走 AnimationClipPlayable）。

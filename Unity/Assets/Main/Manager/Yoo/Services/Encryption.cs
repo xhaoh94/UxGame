@@ -1,24 +1,24 @@
-using System;
+﻿using System;
 using System.IO;
 using Ux;
 using YooAsset;
 using static Ux.YooMgr;
 
-public class UxEncryption : IEncryptionServices
+public class UxEncryption : IBundleEncryptor
 {
     private const uint MAGIC = 0x58425558; // UXBX
     private const byte VERSION = 1;
     private const int HEADER_SIZE = 16;
     private const long MAX_XXTEA_SIZE = 10 * 1024 * 1024; // 10MB
 
-    public EncryptResult Encrypt(EncryptFileInfo fileInfo)
+    public BundleEncryptResult Encrypt(BundleEncryptArgs args)
     {
         // 先读取文件内容
-        byte[] rawData = File.ReadAllBytes(fileInfo.FileLoadPath);
+        byte[] rawData = File.ReadAllBytes(args.FilePath);
         long fileSize = rawData.Length;
         
         // 根据文件名和大小判断加密类型
-        EncyptionType encryptionType = DetermineEncryptionType(fileInfo.BundleName, fileSize);
+        EncyptionType encryptionType = DetermineEncryptionType(args.BundleName, fileSize);
         
         byte[] encryptedPayload = rawData;
 
@@ -58,11 +58,7 @@ public class UxEncryption : IEncryptionServices
             bw.Write(encryptedPayload);
         }
 
-        return new EncryptResult
-        {
-            Encrypted = encryptionType != EncyptionType.None,
-            EncryptedData = finalData
-        };
+        return new BundleEncryptResult(encryptionType != EncyptionType.None, finalData);
     }
     
     private EncyptionType DetermineEncryptionType(string bundleName, long fileSize)

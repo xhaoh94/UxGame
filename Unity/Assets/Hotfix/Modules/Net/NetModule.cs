@@ -1,11 +1,18 @@
-using System;
+﻿using System;
 
 namespace Ux
 {
     [Module]
     public class NetModule : ModuleBase<NetModule>
     {
-        [Evt(MainEventType.NET_SOCKET_CODE)]
+        protected override void OnInit()
+        {
+            base.OnInit();
+            // 显式注册：替代原来的 [Evt(MainEventType.NET_SOCKET_CODE)] 方法特性扫描。
+            // 模块 Release 时 ModuleBase 会按 tag 批量移除（OffTag），这里不需要手动反注册。
+            EventMgr.Ins.On<string, SocketCode>(MainEventType.NET_SOCKET_CODE, this, OnSocketCode);
+        }
+
         void OnSocketCode(string address, SocketCode code)
         {
             switch (code)

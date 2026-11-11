@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c427edfce20f8042bae0f3d9111360b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlayMode: 0
+  PlayMode: 1
   UseDecryption: 0
   IngameDebug: 1
   HotfixCode: 0

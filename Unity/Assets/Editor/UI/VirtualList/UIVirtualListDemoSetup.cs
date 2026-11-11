@@ -204,8 +204,7 @@ namespace Ux.Editor
             settings.FindProperty("_layoutMode").enumValueIndex = (int)(grid || loop
                 ? UIVirtualListLayoutMode.FixedLinear : UIVirtualListLayoutMode.VariableLinear);
             settings.FindProperty("_allowMultiple").boolValue = grid;
-            settings.FindProperty("_limitGridCount").boolValue = grid;
-            settings.FindProperty("_axis").enumValueIndex = (int)UIVirtualListAxis.Vertical;
+                        settings.FindProperty("_axis").enumValueIndex = (int)UIVirtualListAxis.Vertical;
             settings.FindProperty("_itemSizeMode").enumValueIndex = (int)UIVirtualListItemSizeMode.Custom;
             settings.FindProperty("_itemSize").vector2Value = loop ? new Vector2(620f, 120f)
                 : grid ? new Vector2(148f, 110f) : new Vector2(620f, tree ? 64f : 76f);
@@ -322,7 +321,11 @@ namespace Ux.Editor
 
         private static void EnsureEventSystem(UnityScene scene)
         {
+#if UNITY_6000_4_OR_NEWER
             foreach (var system in Object.FindObjectsByType<UnityEventSystem>(FindObjectsInactive.Exclude))
+#else
+            foreach (var system in Object.FindObjectsByType<UnityEventSystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+#endif
                 if (system.isActiveAndEnabled) return;
             var root = new GameObject("EventSystem", typeof(UnityEventSystem));
             SceneManager.MoveGameObjectToScene(root, scene);

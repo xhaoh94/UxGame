@@ -89,7 +89,7 @@ namespace Ux
         public void OnAwake(PlayerData playerData)
         {
             _playerData = playerData;
-            var root = UnityPool.Get(_ecs_root_pool, () => new GameObject());
+            var root = UnityPool.Get(_ecs_root_pool, null, () => new GameObject());
             root.name = _playerData.name;
             if (_playerData.self)
             {
@@ -120,8 +120,7 @@ namespace Ux
             {
                 UnityPool.Push(Model);
             }
-            Model = await ResMgr.Ins.LoadAssetAsync<GameObject>(_playerData.res);
-            Model.SetParent(Viewer.transform);
+            Model = await ResMgr.Ins.LoadGameObjectAsync(_playerData.res, Viewer.transform);
             Model.layer = Layer;
              
             Add<SeekerComponent, Seeker>(Model.GetComponent<Seeker>());

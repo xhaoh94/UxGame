@@ -20,6 +20,8 @@ namespace Ux
             var succeed = await YooMgr.Ins.ForEachPackage(UpdateManifestAsync);            
             if (succeed)
             {
+                // 新清单的地址集合可能变了，之前缓存的「地址→包裹」全部作废
+                YooMgr.Ins.ClearLocationCache();
                 PatchMgr.Enter<PatchCreateDownloader>();
             }
             else
@@ -34,9 +36,9 @@ namespace Ux
 
         async UniTask<bool> UpdateManifestAsync(YooPackage package)
         {
-            var operation = package.Package.UpdatePackageManifestAsync(package.Version);
+            var operation = package.Package.LoadPackageManifestAsync(new LoadPackageManifestOptions(package.Version, 60));
             await operation;
-            if (operation.Status != EOperationStatus.Succeed)
+            if (operation.Status != EOperationStatus.Succeeded)
             {
                 Log.Error(operation.Error);
                 return false;

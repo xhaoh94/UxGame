@@ -16,7 +16,7 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackageByLocation(location);
             if (package == null) return null;
-            return package.Package.LoadSceneAsync(location, sceneMode, physicsMode, suspendLoad, priority);
+            return package.Package.LoadSceneAsync(location, sceneMode, physicsMode, !suspendLoad, priority);
         }
         /// <summary>
         /// 异步加载场景
@@ -29,7 +29,7 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackageByLocation(assetInfo.Address);
             if (package == null) return null;
-            return package.Package.LoadSceneAsync(assetInfo, sceneMode, physicsMode, suspendLoad, priority);
+            return package.Package.LoadSceneAsync(assetInfo, sceneMode, physicsMode, !suspendLoad, priority);
         }        
     }
 }

@@ -18,7 +18,7 @@ namespace Ux.Editor.Build.Version
                 {
                     return SelectItem.BundlePath;
                 }
-                return AssetBundleBuilderHelper.GetDefaultBuildOutputRoot();
+                return BundleBuilderHelper.GetDefaultBuildOutputRoot();
             }
         }
         string TemBuildOutputRoot
@@ -33,7 +33,7 @@ namespace Ux.Editor.Build.Version
         {
             get
             {
-                return AssetBundleBuilderHelper.GetStreamingAssetsRoot();
+                return BundleBuilderHelper.GetStreamingAssetsRoot();
             }
         }
 
@@ -42,8 +42,8 @@ namespace Ux.Editor.Build.Version
             get
             {
                 string projectPath = Path.GetDirectoryName(UnityEngine.Application.dataPath);
-                projectPath = PathUtility.RegularPath(projectPath);
-                return PathUtility.Combine(projectPath, YooAssetSettingsData.Setting.DefaultYooFolderName);
+                projectPath = EditorPathUtility.GetRegularPath(projectPath);
+                return PathUtility.Combine(projectPath, YooAssetConfiguration.GetYooFolderName());
             }
         }
 
@@ -86,13 +86,13 @@ namespace Ux.Editor.Build.Version
             }
         }
 
-        private async UniTask<bool> BuildRes(BuildTarget buildTarget)
+        private UniTask<bool> BuildRes(BuildTarget buildTarget)
         {
             var packageValue = buildPackage.value;
             if (packageValue == 0)
             {
                 Log.Error("没有选择要构建的资源包");
-                return false;
+                return UniTask.FromResult(false);
             }
 
             if (IsForceRebuild)
@@ -132,81 +132,17 @@ namespace Ux.Editor.Build.Version
 
             if (packages.Count > 0)
             {
-                UniTask<bool> CollectSVC(string packageName)
-                {
-                    Log.Debug($"---------------------------------------->{packageName}:收集着色器变体<---------------------------------------");
-                    var collectPath = $"Assets/GameRes/Art/ShaderVariants/{packageName}";
-                    string savePath = $"{collectPath}/{packageName}SV.shadervariants";
-                    ShaderVariantCollectorSetting.SetFileSavePath(packageName, savePath);
-                    int processCapacity = ShaderVariantCollectorSetting.GeProcessCapacity(packageName);
-                    if (processCapacity <= 0)
-                    {
-                        processCapacity = 1000;
-                        ShaderVariantCollectorSetting.SetProcessCapacity(packageName, processCapacity);
-                    }
-                    var task = AutoResetUniTaskCompletionSource<bool>.Create();
-                    Action callback = () =>
-                    {
-                        Log.Debug("------------------------------------>添加YooAsset 着色器变体<------------------------------");
-                        var packages = AssetBundleCollectorSettingData.Setting.Packages;
-                        var package = packages.Find(x => x.PackageName == packageName);
-                        bool _IsDirty = false;
-                        if (package != null)
-                        {
-                            var group = package.Groups.Find(x => x.GroupName == "ShaderVariant");
-                            if (group == null)
-                            {
-                                group = new AssetBundleCollectorGroup();
-                                group.AssetTags = "builtin";
-                                group.GroupDesc = "颜色变体";
-                                group.GroupName = "ShaderVariant";
-                                package.Groups.Add(group);
-                            }
-                            var collector = group.Collectors.Find(x => x.CollectPath == collectPath);
-                            if (collector == null)
-                            {
-                                collector = new AssetBundleCollector();
-                                collector.CollectPath = collectPath;
-                                collector.AddressRuleName = nameof(AddressByFileName);
-                                collector.PackRuleName = nameof(PackShaderVariants);
-                                collector.FilterRuleName = nameof(CollectShaderVariants);
-                                group.Collectors.Add(collector);
-                                _IsDirty = true;
-                            }
-                        }
-
-                        task.TrySetResult(_IsDirty);
-                    };
-                    ShaderVariantCollector.Run(savePath, packageName, processCapacity, callback);
-                    return task.Task;
-                }
-
-                bool IsDirty = false;
-                foreach (var _packageName in packages)
-                {
-                    var packageSetting = SelectItem.GetPackageSetting(_packageName);
-                    if (packageSetting.IsCollectShaderVariant)
-                    {
-                        var temb = await CollectSVC(_packageName);
-                        if (temb && !IsDirty)
-                        {
-                            IsDirty = temb;
-                        }
-                    }
-                }
-                if (IsDirty)
-                {
-                    AssetBundleCollectorSettingData.SaveFile();
-                }
+                // v3 删除了 ShaderVariantCollector 示例；着色器变体收集改由收集器里的
+                // PackShaderVariants + CollectShaderVariants 规则处理，构建前不再自动生成 .shadervariants。
                 Log.Debug("---------------------------------------->开始构建资源<---------------------------------------");
                 foreach (var package in packages)
                 {
                     Log.Debug($"---------------------------------------->{package}:开始构建资源<---------------------------------------");
-                    if (!BuildRes(buildTarget, package)) return false;
+                    if (!BuildRes(buildTarget, package)) return UniTask.FromResult(false);
                 }
                 Log.Debug("---------------------------------------->完成资源构建<---------------------------------------");
             }
-            return true;
+            return UniTask.FromResult(true);
         }
 
         void CompareManifest(string path1, string path2, List<PackageBundle> changeList, List<PackageBundle> newList)
@@ -216,11 +152,11 @@ namespace Ux.Editor.Build.Version
 
             // 加载补丁清单1
             byte[] bytesData1 = FileUtility.ReadAllBytes(path1);
-            PackageManifest manifest1 = ManifestTools.DeserializeFromBinary(bytesData1, null); //TODO 自行处理解密
+            PackageManifest manifest1 = PackageManifestHelper.DeserializeManifestFromBinary(bytesData1, null); //TODO 自行处理解密
 
             // 加载补丁清单1
             byte[] bytesData2 = FileUtility.ReadAllBytes(path2);
-            PackageManifest manifest2 = ManifestTools.DeserializeFromBinary(bytesData2, null); //TODO 自行处理解密
+            PackageManifest manifest2 = PackageManifestHelper.DeserializeManifestFromBinary(bytesData2, null); //TODO 自行处理解密
 
             // 拷贝文件列表
             foreach (var bundle2 in manifest2.BundleList)
@@ -260,7 +196,7 @@ namespace Ux.Editor.Build.Version
 
             var buildOutputRoot = BuildOutputRoot;
             var temOutputRoot = TemBuildOutputRoot;
-            var versionFileName = YooAssetSettingsData.GetPackageVersionFileName(packageName);
+            var versionFileName = YooAssetConfiguration.GetPackageVersionFileName(packageName);
             var outputDir = "Output";
             var buildPath = $"{buildOutputRoot}/{buildTarget}/{packageName}";
             var temBuildPath = $"{temOutputRoot}/{buildTarget}/{packageName}";
@@ -284,12 +220,12 @@ namespace Ux.Editor.Build.Version
             var pipelineOption = (EBuildPipeline)Enum.Parse(typeof(EBuildPipeline), packageSetting.PiplineOption);
             switch (pipelineOption)
             {
-                case EBuildPipeline.BuiltinBuildPipeline:
-                    buildParameters = new BuiltinBuildParameters()
+                case EBuildPipeline.LegacyBuildPipeline:
+                    buildParameters = new LegacyBuildParameters()
                     {
                         CompressOption = packageSetting.CompressOption,
                     };
-                    pipeline = new BuiltinBuildPipeline();
+                    pipeline = new LegacyBuildPipeline();
                     break;
                 case EBuildPipeline.ScriptableBuildPipeline:
                     buildParameters = new ScriptableBuildParameters()
@@ -307,7 +243,7 @@ namespace Ux.Editor.Build.Version
                     return false;
             }
             buildParameters.BuildOutputRoot = temOutputRoot;
-            buildParameters.BuildinFileRoot = StreamingAssetsRoot;
+            buildParameters.BundledFileRoot = StreamingAssetsRoot;
             buildParameters.BuildPipeline = packageSetting.PiplineOption.ToString();
             buildParameters.BuildTarget = buildTarget;
             buildParameters.PackageName = packageName;
@@ -315,12 +251,12 @@ namespace Ux.Editor.Build.Version
             buildParameters.VerifyBuildingResult = true;
             buildParameters.EnableSharePackRule = true;
             buildParameters.FileNameStyle = packageSetting.NameStyleOption;
-            buildParameters.BuildinFileCopyOption = IsForceRebuild
-                ? EBuildinFileCopyOption.OnlyCopyByTags : EBuildinFileCopyOption.None;
-            buildParameters.BuildinFileCopyParams = packageSetting.BuildTags;
-            buildParameters.EncryptionServices = CreateServicesInstance<IEncryptionServices>(packageSetting.EncyptionClassName);
-            buildParameters.ManifestProcessServices = CreateServicesInstance<IManifestProcessServices>(packageSetting.ManifestProcessServices);
-            buildParameters.ManifestRestoreServices = CreateServicesInstance<IManifestRestoreServices>(packageSetting.ManifestRestoreServices);
+            buildParameters.BundledCopyOption = IsForceRebuild
+                ? EBundledCopyOption.OnlyCopyByTags : EBundledCopyOption.None;
+            buildParameters.BundledCopyParams = packageSetting.BuildTags;
+            buildParameters.BundleEncryptor = CreateServicesInstance<IBundleEncryptor>(packageSetting.EncyptionClassName);
+            buildParameters.ManifestEncryptor = CreateServicesInstance<IManifestEncryptor>(packageSetting.ManifestProcessServices);
+            buildParameters.ManifestDecryptor = CreateServicesInstance<IManifestDecryptor>(packageSetting.ManifestRestoreServices);
             buildParameters.ClearBuildCacheFiles = IsForceRebuild; //增量构建时需要清理构建缓存，否则可能导致构建失败或构建速度变慢，
             buildParameters.UseAssetDependencyDB = SelectItem.IsUseDb; //使用资源依赖关系数据库，提升构建速度，
 
@@ -359,16 +295,15 @@ namespace Ux.Editor.Build.Version
             var temfiles = Directory.GetFiles(temBuildPathVersion).ToList();
             foreach (var file in temfiles)
             {
-                var temFile = PathUtility.RegularPath(file);
+                var temFile = EditorPathUtility.GetRegularPath(file);
                 var index = temFile.LastIndexOf("/");
                 var fileName = temFile.Substring(index + 1);
                 File.Copy(file, Path.Combine(buildPathVersion, fileName), true);
             }
 
-            var nowJsonFileName = YooAssetSettingsData.GetManifestJsonFileName(packageName, nowVersion);
-            var nowHashFileName = YooAssetSettingsData.GetPackageHashFileName(packageName, nowVersion);
-            var nowBinaryFileName = YooAssetSettingsData.GetManifestBinaryFileName(packageName, nowVersion);
-            var lastBinaryFileName = YooAssetSettingsData.GetManifestBinaryFileName(packageName, lastVersion);
+            var nowHashFileName = YooAssetConfiguration.GetPackageHashFileName(packageName, nowVersion);
+            var nowBinaryFileName = YooAssetConfiguration.GetManifestBinaryFileName(packageName, nowVersion);
+            var lastBinaryFileName = YooAssetConfiguration.GetManifestBinaryFileName(packageName, lastVersion);
 
             List<string> files = null;
             if (!string.IsNullOrEmpty(lastVersion))
@@ -395,12 +330,10 @@ namespace Ux.Editor.Build.Version
                 File.Copy($"{temBuildPathVersion}/{versionFileName}", $"{diffPath}/{versionFileName}", true);
                 File.Copy($"{temBuildPathVersion}/{nowBinaryFileName}", $"{diffPath}/{nowBinaryFileName}", true);
                 File.Copy($"{temBuildPathVersion}/{nowHashFileName}", $"{diffPath}/{nowHashFileName}", true);
-                File.Copy($"{temBuildPathVersion}/{nowJsonFileName}", $"{diffPath}/{nowJsonFileName}", true);
 
                 files.Add($"{temBuildPathVersion}/{versionFileName}");
                 files.Add($"{temBuildPathVersion}/{nowBinaryFileName}");
                 files.Add($"{temBuildPathVersion}/{nowHashFileName}");
-                files.Add($"{temBuildPathVersion}/{nowJsonFileName}");
             }
 
             if (files == null)
@@ -425,10 +358,10 @@ namespace Ux.Editor.Build.Version
                 desPathList.Add(tPath);
             }
 
-            var reportFileName = YooAssetSettingsData.GetBuildReportFileName(packageName, nowVersion);
+            var reportFileName = YooAssetConfiguration.GetBuildReportFileName(packageName, nowVersion);
             foreach (var file in files)
             {
-                var temFile = PathUtility.RegularPath(file);
+                var temFile = EditorPathUtility.GetRegularPath(file);
                 var index = temFile.LastIndexOf("/");
                 var fileName = temFile.Substring(index + 1);
                 if (fileName == "link.xml") continue;
@@ -453,7 +386,7 @@ namespace Ux.Editor.Build.Version
         private List<string> GetBuildPackageNames()
         {
             List<string> result = new List<string>();
-            foreach (var package in AssetBundleCollectorSettingData.Setting.Packages)
+            foreach (var package in BundleCollectorSettingData.Setting.Packages)
             {
                 result.Add(package.PackageName);
             }

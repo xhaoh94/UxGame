@@ -2,14 +2,21 @@
 using UnityEngine;
 namespace Ux
 {
+    /// <summary>
+    /// 全局低频回调入口。
+    ///
+    /// 帧驱动（Update/LateUpdate/FixedUpdate/Quit）已经迁到 <see cref="FrameDriver"/>：
+    /// 想参与每帧驱动必须实现 IFrameUpdate / IFrameLateUpdate / IFrameFixedUpdate / IFrameQuit 接口，
+    /// 不再提供「任意委托订阅全局帧事件」的入口。
+    /// </summary>
     public static class GameMethod
     {
-        public static Action Update;
-        public static Action LateUpdate;
-        public static Action FixedUpdate;
-        public static Action Quit;
-        public static Action LowMemory;
+        /// <summary>低内存回调（系统内存告警，低频，允许各模块订阅）。</summary>
+        public static event Action LowMemory;
+
+        public static void TickLowMemory() => LowMemory?.Invoke();
     }
+
     public class Global
     {
         public static int DownloadingMaxNum => 10;

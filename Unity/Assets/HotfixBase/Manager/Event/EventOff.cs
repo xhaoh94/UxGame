@@ -25,14 +25,6 @@ namespace Ux
 
         partial class EventSystem
         {
-            public void Off(int eType, FastMethodInfo action)
-            {
-                if (TryGetKey(eType, action, out var key))
-                {
-                    RemoveByKey(key);
-                }
-            }
-
             public void Off(int eType, object tag, Action action)
             {
                 _Remove(eType, tag, action);

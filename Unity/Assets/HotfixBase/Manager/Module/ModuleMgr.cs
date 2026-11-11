@@ -19,8 +19,8 @@ namespace Ux
             public int priority { get; }
 
             public IModule Create()
-            {               
-                return (IModule)Activator.CreateInstance(_type);
+            {
+                return (IModule)TypeFactory.Create(_type);
             }
         }
         readonly List<ModuleParse> _parses = new List<ModuleParse>();

@@ -10,11 +10,11 @@ namespace Ux
             base.OnEnter();
             BeginDownload();
         }
-        void OnDownloadUpdateDataCallback(DownloadUpdateData data)
+        void OnDownloadUpdateDataCallback(DownloadProgressChangedEventArgs data)
         {
             PatchMgr.View.OnDownloadUpdateData(data);
         }
-        void OnDownloadErrorCallback(DownloadErrorData data)
+        void OnDownloadErrorCallback(DownloadErrorEventArgs data)
         {
             Log.Error($"文件下载失败:{data.FileName},error:{data.ErrorInfo}");
             Action callback = () =>

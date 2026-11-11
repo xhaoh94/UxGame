@@ -102,8 +102,8 @@ namespace Ux
                 return;
             }
 
-            tab.GameObject.transform.SetParent(__tabContent.transform, false);
-            tab.GameObject.SetActive(true);
+            tab.GameObject.SetParent(__tabContent.transform, false);            
+            tab.Visible = true;
             __listTab.SetSelectedIndex(index);
             SelectItem = tab;
         }

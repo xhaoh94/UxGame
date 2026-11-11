@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -15,7 +15,7 @@ namespace Ux.Editor.Build.UI
     /// </summary>
     public class UISpritePackingWindow : EditorWindow
     {
-        [MenuItem("UxGame/工具/UI/散图打包规则", false, 512)]
+        [MenuItem("UxGame/工具/UI/散图打包规则", false, 501)]
         public static void ShowWindow()
         {
             var window = GetWindow<UISpritePackingWindow>("散图打包规则", true);
@@ -31,7 +31,7 @@ namespace Ux.Editor.Build.UI
                 if (_packRules != null) return _packRules;
 
                 _packRules = new List<string>();
-                foreach (var type in EditorTools.GetAssignableTypes(typeof(IPackRule)))
+                foreach (var type in EditorTools.GetAssignableTypes(typeof(IBundlePackRule)))
                 {
                     if (type.IsAbstract || type.IsInterface) continue;
                     _packRules.Add(type.Name);

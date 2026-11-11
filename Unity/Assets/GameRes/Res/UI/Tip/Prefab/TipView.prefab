@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1725314968623345336}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TipView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -47,7 +47,7 @@ GameObject:
   - component: {fileID: 3775636054294952038}
   - component: {fileID: 2083059028930472402}
   - component: {fileID: 7163648366570347391}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n0
   m_TagString: Untagged
   m_Icon: {fileID: 0}

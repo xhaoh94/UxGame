@@ -34,7 +34,7 @@ namespace Ux
         {
             var operation = package.Package.RequestPackageVersionAsync();
             await operation;
-            if (operation.Status == EOperationStatus.Succeed)
+            if (operation.Status == EOperationStatus.Succeeded)
             {
                 Log.Debug($"{package.Name}:资源版本 : {operation.PackageVersion}");
                 package.Version = operation.PackageVersion;

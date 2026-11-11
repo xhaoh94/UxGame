@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Threading;
 using UnityEngine;
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
 using UnityEngine.UI;
 #endif
 
@@ -9,20 +9,20 @@ namespace Cysharp.Threading.Tasks
 {
     public static class UnityBindingExtensions
     {
-#if !UNITY_2019_1_OR_NEWER || UNITASK_UI_SUPPORT
+#if !UNITY_2019_1_OR_NEWER || UNITASK_UGUI_SUPPORT
         // <string> -> Text
 
-        public static void BindTo(this IUniTaskAsyncEnumerable<string> source, Text text, bool rebindOnError = true)
+        public static void BindTo(this IUniTaskAsyncEnumerable<string> source, UnityEngine.UI.Text text, bool rebindOnError = true)
         {
             BindToCore(source, text, text.GetCancellationTokenOnDestroy(), rebindOnError).Forget();
         }
 
-        public static void BindTo(this IUniTaskAsyncEnumerable<string> source, Text text, CancellationToken cancellationToken, bool rebindOnError = true)
+        public static void BindTo(this IUniTaskAsyncEnumerable<string> source, UnityEngine.UI.Text text, CancellationToken cancellationToken, bool rebindOnError = true)
         {
             BindToCore(source, text, cancellationToken, rebindOnError).Forget();
         }
 
-        static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<string> source, Text text, CancellationToken cancellationToken, bool rebindOnError)
+        static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<string> source, UnityEngine.UI.Text text, CancellationToken cancellationToken, bool rebindOnError)
         {
             var repeat = false;
             BIND_AGAIN:
@@ -68,22 +68,22 @@ namespace Cysharp.Threading.Tasks
 
         // <T> -> Text
 
-        public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, Text text, bool rebindOnError = true)
+        public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, UnityEngine.UI.Text text, bool rebindOnError = true)
         {
             BindToCore(source, text, text.GetCancellationTokenOnDestroy(), rebindOnError).Forget();
         }
 
-        public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, Text text, CancellationToken cancellationToken, bool rebindOnError = true)
+        public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, UnityEngine.UI.Text text, CancellationToken cancellationToken, bool rebindOnError = true)
         {
             BindToCore(source, text, cancellationToken, rebindOnError).Forget();
         }
 
-        public static void BindTo<T>(this AsyncReactiveProperty<T> source, Text text, bool rebindOnError = true)
+        public static void BindTo<T>(this AsyncReactiveProperty<T> source, UnityEngine.UI.Text text, bool rebindOnError = true)
         {
             BindToCore(source, text, text.GetCancellationTokenOnDestroy(), rebindOnError).Forget();
         }
 
-        static async UniTaskVoid BindToCore<T>(IUniTaskAsyncEnumerable<T> source, Text text, CancellationToken cancellationToken, bool rebindOnError)
+        static async UniTaskVoid BindToCore<T>(IUniTaskAsyncEnumerable<T> source, UnityEngine.UI.Text text, CancellationToken cancellationToken, bool rebindOnError)
         {
             var repeat = false;
             BIND_AGAIN:

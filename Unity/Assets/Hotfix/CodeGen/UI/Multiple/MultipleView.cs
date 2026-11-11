@@ -27,7 +27,7 @@ namespace Ux.UI
             return mCommonBg?.SelectItem;
         }
 
-                public void SetItemProvider(System.Func<int, int> templateIdProvider)
+        public void SetItemProvider(System.Func<int, int> templateIdProvider)
         {
             mCommonBg?.SetItemProvider(templateIdProvider);
         }

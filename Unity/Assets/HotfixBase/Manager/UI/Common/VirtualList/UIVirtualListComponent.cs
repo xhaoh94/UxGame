@@ -50,9 +50,8 @@ namespace Ux
         [Min(0f)] [SerializeField] private float _spacing = 8f;
         [Tooltip("垂直方向允许多列，水平方向允许多行；容量由视口交叉轴空间自动计算。")]
         [SerializeField] private bool _allowMultiple;
-        [SerializeField] private bool _limitGridCount;
-        [Tooltip("启用数量上限时才生效，实际数量仍受视口空间限制。")]
-        [Min(1)] [SerializeField] private int _gridCount = 4;
+        [Tooltip("最多行/列数；0 表示不限制，只按视口可用空间计算。")]
+        [Min(0)] [SerializeField] private int _gridCount;
         [Tooltip("启用多行/列时使用。X 为水平间距，Y 为垂直间距。")]
         [SerializeField] private Vector2 _gridSpacing = new Vector2(8f, 8f);
         [Min(0f)] [SerializeField] private float _paddingStart;
@@ -66,6 +65,17 @@ namespace Ux
         [Tooltip("原本在末尾时继续贴底：数据增删或 Item 变高/视口变化前已在末尾才跟随。")]
         [FormerlySerializedAs("_keepEndOnSizeChange")]
         [SerializeField] private bool _keepEndOnChange;
+
+        [Tooltip("首次填充时按批次创建 Item，避免一屏十几项同帧实例化造成峰值。滚动复用池仍走同步。")]
+        [SerializeField] private bool _incrementalCreate = true;
+        [Tooltip("一批最多创建几项。")]
+        [Min(1)] [SerializeField] private int _batchSize = 4;
+        [Tooltip("两批之间的最小间隔（毫秒）。0 表示每帧都可以补一批。")]
+        [Min(0f)] [SerializeField] private float _batchIntervalMs = 33f;
+        [Tooltip("首帧同步创建的数量。>0 先建这么多再分批；0 首帧不建、等一个批次间隔；-1 跟随每批数量，第一批立即执行。")]
+        [SerializeField] private int _initialCount = -1;
+        [Tooltip("单批耗时上限（毫秒），0 表示不限制。防止个别重 Item 把整批拖到掉帧。")]
+        [Min(0f)] [SerializeField] private float _frameBudgetMs;
 
         [SerializeField] private int _defaultItemType;
         [SerializeField] private ItemTemplate[] _itemTemplates = Array.Empty<ItemTemplate>();
@@ -91,6 +101,65 @@ namespace Ux
         public Vector2 ResolvedItemSize { get; private set; }
         public bool IsInitialized => _list != null;
         public int Count => _list?.Count ?? 0;
+
+        // —— 分批生成 ——
+
+        /// <summary>关闭后退回当帧全部创建，便于对比排查。</summary>
+        public bool IncrementalCreate
+        {
+            get => _incrementalCreate;
+            set
+            {
+                _incrementalCreate = value;
+                if (_list != null) _list.IncrementalEnabled = value;
+            }
+        }
+
+        public int BatchSize
+        {
+            get => _batchSize;
+            set
+            {
+                _batchSize = Mathf.Max(1, value);
+                if (_list != null) _list.BatchSize = _batchSize;
+            }
+        }
+
+        public float BatchIntervalMs
+        {
+            get => _batchIntervalMs;
+            set
+            {
+                _batchIntervalMs = Mathf.Max(0f, value);
+                if (_list != null) _list.BatchIntervalMs = _batchIntervalMs;
+            }
+        }
+
+        public int InitialCount
+        {
+            get => _initialCount;
+            set
+            {
+                _initialCount = value;
+                if (_list != null) _list.InitialCount = value;
+            }
+        }
+
+        public float FrameBudgetMs
+        {
+            get => _frameBudgetMs;
+            set
+            {
+                _frameBudgetMs = Mathf.Max(0f, value);
+                if (_list != null) _list.FrameBudgetMs = _frameBudgetMs;
+            }
+        }
+
+        public bool IsFilling => _list?.IsFilling ?? false;
+        public int PendingCreateCount => _list?.PendingCreateCount ?? 0;
+
+        /// <summary>首次填充的分批队列清空时触发。</summary>
+        public event Action FillingCompleted;
 
         /// <summary>
         /// 运行时快速配置入口。用于纯代码生成的 UI 列表，避免依赖 Inspector 拖拽引用。
@@ -155,6 +224,7 @@ namespace Ux
         {
             // 消费视口缩放/旋转及上一帧未收敛的布局；换行不重新 Bind 或让令牌失效。
             _list?.RefreshViewportIfChanged();
+            _list?.TickPendingCreate();
             TickPaging();
             TickGrouping();
             TickNavigation();
@@ -226,8 +296,14 @@ namespace Ux
                     PreserveScrollAnchor = _layoutMode != UIVirtualListLayoutMode.VariableLinear || _preserveScrollAnchor,
                     // 组件层只暴露一个“末尾追随”开关，同时驱动数据变化与尺寸变化两条路径。
                     KeepEndOnSizeChange = _listType == UIVirtualListType.Flat && _keepEndOnChange,
-                    KeepEndOnDataChange = _listType == UIVirtualListType.Flat && _keepEndOnChange
+                    KeepEndOnDataChange = _listType == UIVirtualListType.Flat && _keepEndOnChange,
+                    IncrementalEnabled = _incrementalCreate,
+                    BatchSize = _batchSize,
+                    BatchIntervalMs = _batchIntervalMs,
+                    InitialCount = _initialCount,
+                    FrameBudgetMs = _frameBudgetMs
                 };
+                _list.FillingCompleted += ForwardFillingCompleted;
                 if (_listType == UIVirtualListType.Tree)
                 {
                     _treeAdapter = new UIVirtualTreeAdapter(_list);
@@ -362,6 +438,7 @@ namespace Ux
                 try { DisposeOwnedCarousel(); } catch (Exception ex) { failure ??= ex; }
                 try { DisposeOwnedSelection(); } catch (Exception ex) { failure ??= ex; }
                 list.ItemClicked -= ForwardClick;
+                list.FillingCompleted -= ForwardFillingCompleted;
                 try { list.Dispose(); } catch (Exception ex) { failure ??= ex; }
                 if (failure != null) throw new InvalidOperationException("列表释放回调失败，其余资源已继续清理。", failure);
             }
@@ -411,17 +488,21 @@ namespace Ux
                 ItemClicked?.Invoke(index, data);
         }
 
+        private void ForwardFillingCompleted()
+        {
+            FillingCompleted?.Invoke();
+        }
+
         private IUIVirtualListLayout CreateLayout(Vector2 size)
         {
             bool multiple = AllowMultiple;
-            if (multiple && _limitGridCount && _gridCount < 1)
-                throw new InvalidOperationException("最大行/列数至少为 1。");
+            // 最多行/列数 <= 0 表示不限制，只按视口空间计算。
             Vector2 spacing = multiple ? _gridSpacing
                 : EffectiveAxis == UIVirtualListAxis.Vertical ? new Vector2(0f, _spacing) : new Vector2(_spacing, 0f);
             var flow = new UIFlowLayout(EffectiveAxis, size,
                 variableSize: _layoutMode == UIVirtualListLayoutMode.VariableLinear,
                 allowMultiple: multiple,
-                maxCountPerLine: multiple && _limitGridCount ? _gridCount : 0,
+                maxCountPerLine: multiple && _gridCount > 0 ? _gridCount : 0,
                 spacing: spacing,
                 paddingStart: _loopEnabled ? 0f : _paddingStart,
                 paddingEnd: _loopEnabled ? 0f : _paddingEnd);

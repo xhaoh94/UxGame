@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Ux;
 using UnityEngine;
 using System.Collections.Generic;
@@ -9,8 +9,21 @@ namespace Ux
     public class SceneModule : ModuleBase<SceneModule>
     {        
         public World World { get; private set; }
+
+        protected override void OnInit()
+        {
+            base.OnInit();
+            // 网络消息显式绑定，替代原来的 [Net] 方法特性扫描。
+            NetMgr.Ins.Bind<Pb.BcstUnitIntoView>(Pb.BCST.Bcst_UnitIntoView, this, _BcstUnitIntoView);
+            NetMgr.Ins.Bind<Pb.BcstUnitOutofView>(Pb.BCST.Bcst_UnitOutofView, this, _BcstUnitOutofView);
+            NetMgr.Ins.Bind<Pb.BcstUnitMove>(Pb.BCST.Bcst_UnitMove, this, _BcstUnitMove);
+            NetMgr.Ins.Bind<Pb.BcstUnitUpdatePosition>(Pb.BCST.Bcst_UnitUpdatePosition, this, _BcstUnitUpdatePosition);
+        }
+
         protected override void OnRelease()
         {
+            // NetMgr 用的是独立的事件系统，不走 ModuleBase 的 OffTag，这里显式解绑。
+
             World.Destroy();
             World = null;
         }
@@ -21,7 +34,7 @@ namespace Ux
                 World = Entity.Create<World>();
             }
             var path = string.Format(PathHelper.Res.Prefab, mapName);
-            var go = await ResMgr.Ins.LoadAssetAsync<GameObject>(path);
+            var go = await ResMgr.Ins.LoadGameObjectAsync(path);
             var map = World.Add<Scene, GameObject>(go);
             World.EnterScene(map);
 
@@ -86,25 +99,21 @@ namespace Ux
         #region 广播相关
 
 
-        [Net(Pb.BCST.Bcst_UnitIntoView)]
         void _BcstUnitIntoView(Pb.BcstUnitIntoView param)
         {
             EventMgr.Ins.Run(EventType.UNIT_INTO_VIEW, param);
         }
 
-        [Net(Pb.BCST.Bcst_UnitOutofView)]
         void _BcstUnitOutofView(Pb.BcstUnitOutofView param)
         {
             EventMgr.Ins.Run(EventType.UNIT_OUTOF_VIEW, param);
         }
 
-        [Net(Pb.BCST.Bcst_UnitMove)]
         void _BcstUnitMove(Pb.BcstUnitMove param)
         {
             EventMgr.Ins.Run(EventType.UNIT_MOVE, param);
         }
 
-        [Net(Pb.BCST.Bcst_UnitUpdatePosition)]
         void _BcstUnitUpdatePosition(Pb.BcstUnitUpdatePosition param)
         {
             EventMgr.Ins.Run(EventType.UNIT_UPDATE_POSITION, param);

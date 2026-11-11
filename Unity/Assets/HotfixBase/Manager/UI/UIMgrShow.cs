@@ -748,34 +748,34 @@ namespace Ux
         /// <summary>
         /// 创建UI实例
         /// </summary>
-        private async UniTask<IUI> CreateUI(IUIData data, int instanceId)
+        private UniTask<IUI> CreateUI(IUIData data, int instanceId)
         {
             if (data == null || data.CType == null)
             {
                 Log.Error("创建UI失败，UIData 或界面类型为空。");
-                return null;
+                return UniTask.FromResult<IUI>(null);
             }
 
             try
             {
                 // UI 页面只加载 Prefab。
                 // 创建UI实例
-                var ui = (IUI)Activator.CreateInstance(data.CType);
+                var ui = (IUI)TypeFactory.Create(data.CType);
                 if (ui == null)
                 {
                     Log.Error("[{0}]创建UI实例失败", data.Name);
-                    return null;
+                    return UniTask.FromResult<IUI>(null);
                 }
 
                 ui.InitData(instanceId, data);
-                return ui;
+                return UniTask.FromResult(ui);
             }
             catch (Exception ex)
             {
                 // 让异常在这里收敛为 null，由显示会话按失败流程回滚，
                 // 避免异常穿透导致记录停在 Creating 状态。
                 Log.Error("[{0}]创建UI异常 {1}", data.Name, ex);
-                return null;
+                return UniTask.FromResult<IUI>(null);
             }
         }
 

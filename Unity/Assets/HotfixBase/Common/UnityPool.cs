@@ -10,8 +10,12 @@ using Ux;
 public static class UnityPool
 {
     private static readonly Dictionary<string, Queue<UnityEngine.Object>> _unity = new Dictionary<string, Queue<UnityEngine.Object>>();
-#if UNITY_EDITOR
     static Transform _pool_content;
+
+    /// <summary>
+    /// 池根：DontDestroyOnLoad，池对象跨场景存活。
+    /// 不能把对象丢到 parent = null（会落在当前场景根，切场景被销毁）。
+    /// </summary>
     public static Transform PoolContent
     {
         get
@@ -19,24 +23,49 @@ public static class UnityPool
             if (_pool_content == null)
             {
                 _pool_content = new GameObject("[UnityPool]").transform;
-                UnityEngine.Object.DontDestroyOnLoad(PoolContent);
+                UnityEngine.Object.DontDestroyOnLoad(_pool_content);
             }
             return _pool_content;
         }
     }
+#if UNITY_EDITOR
+    // 编辑器下按 location 分子目录，只是为了方便在 Hierarchy 里翻。
     static Dictionary<string, Transform> _pool_location_content = new Dictionary<string, Transform>();
+
+    static Transform _hidden_ui_root;
+
+    /// <summary>
+    /// 编辑器下隐藏界面的收纳节点（[UnityPool]/[UI]）。
+    /// 只是为了让 Hierarchy 里能一眼看出哪些界面还在显示，运行逻辑不依赖它。
+    /// </summary>
+    public static Transform HiddenUIRoot
+    {
+        get
+        {
+            if (_hidden_ui_root == null)
+            {
+                _hidden_ui_root = new GameObject("[UI]").transform;
+                _hidden_ui_root.SetParent(PoolContent, false);
+            }
+            return _hidden_ui_root;
+        }
+    }
 #endif
     public static void Init()
     {
-        GameMethod.LowMemory += Clear;        
+        GameMain.Ins.LowMemory += Clear;        
     }
-    public static T Get<T>(string location, Func<T> create = null) where T : UnityEngine.Object
+    /// <summary>
+    /// 从池里取对象。给了 <paramref name="parent"/> 就直接挂到目标父级：
+    /// 跨场景的 SetParent 会顺带把对象搬进父级所在场景，省掉 MoveGameObjectToScene 和调用方再 SetParent。
+    /// </summary>
+    public static T Get<T>(string location, Transform parent = null, Func<T> create = null) where T : UnityEngine.Object
     {
         if (!_unity.TryGetValue(location, out var queue) || queue.Count == 0)
         {
             if (create != null)
             {
-                return create.Invoke();
+                return CreateWithParent(create, parent);
             }
             return null;
         }
@@ -51,14 +80,31 @@ public static class UnityPool
                 }
                 if (obj is GameObject go)
                 {
-                    go.Visible(true);
+                    if (parent != null)
+                    {
+                        go.transform.SetParent(parent, false);
+                        go.SetVisible(true);
+                        return obj as T;
+                    }
+
                     go.transform.SetParent(null);
                     SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
+                    go.SetVisible(true);
                 }
                 return obj as T;
             }
-            return create?.Invoke();
+            return create != null ? CreateWithParent(create, parent) : null;
         }
+    }
+
+    private static T CreateWithParent<T>(Func<T> create, Transform parent) where T : UnityEngine.Object
+    {
+        var created = create.Invoke();
+        if (parent != null && created is GameObject go)
+        {
+            go.transform.SetParent(parent, false);
+        }
+        return created;
     }
 
     public static void Push(UnityEngine.GameObject obj)
@@ -114,11 +160,11 @@ public static class UnityPool
                 locationContent.SetParent(PoolContent);
                 _pool_location_content.Add(location, locationContent);
             }
-            go.transform.parent = locationContent;
+            go.transform.SetParent(locationContent, false);
 #else
-            go.transform.parent = null;
+            go.transform.SetParent(PoolContent, false);
 #endif
-            go.Visible(false);
+            go.SetVisible(false);
         }
         queue.Enqueue(obj);
     }

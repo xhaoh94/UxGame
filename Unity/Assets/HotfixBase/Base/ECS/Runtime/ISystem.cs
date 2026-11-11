@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace Ux
 {
@@ -72,197 +70,117 @@ namespace Ux
         void OnApplicationQuit();
     }
 
-    /// <summary>
-    /// 监听添加或移除了某个组件或实体 只对同个父类实体且同层级的生效
-    /// </summary>
-    public interface IListenSystem
-    {
-    }
-
     #endregion
 
     #region 事件
 
     public partial class Entity
     {
-        public struct FastMethodRef
-        {
-            Type _type;
-            FastMethodInfo _methodInfo;
-            public FastMethodRef(Type type, FastMethodInfo methodInfo)
-            {
-                _type = type;
-                _methodInfo = methodInfo;
-            }
-            public void On(Dictionary<Type, List<FastMethodInfo>> dic)
-            {
-                if (!dic.TryGetValue(_type, out var list))
-                {
-                    list = new List<FastMethodInfo>();
-                    dic.Add(_type, list);
-                }
+        /// <summary>父实体上的子组件通知表：精确类型 → 多播委托。</summary>
+        private Dictionary<Type, Action<Entity>> _childAdded;
+        private Dictionary<Type, Action<Entity>> _childRemoved;
 
-                list.Add(_methodInfo);
-            }
-        }
-        public struct FastMethodRefList
+        /// <summary>本实体订阅过的项，实体移除时按记录自动注销，不需要单独的标记接口。</summary>
+        private List<ChildListenerReg> _childListeners;
+
+        private readonly struct ChildListenerReg
         {
-            List<FastMethodRef> _refAddList;
-            List<FastMethodRef> _refRemoveList;
-            public FastMethodRefList(List<FastMethodRef> refAddList, List<FastMethodRef> refRemoveList)
+            public readonly Entity Parent;
+            public readonly bool IsAdd;
+            public readonly Type ListenType;
+            public readonly Action<Entity> Handler;
+
+            public ChildListenerReg(Entity parent, bool isAdd, Type listenType, Action<Entity> handler)
             {
-                _refAddList = refAddList;
-                _refRemoveList = refRemoveList;
-            }
-            public void On(Event evt)
-            {
-                if (_refAddList != null && _refAddList.Count > 0)
-                {
-                    foreach (var refList in _refAddList)
-                    {
-                        refList.On(evt._eventAdd);
-                    }
-                }
-                if (_refRemoveList != null && _refRemoveList.Count > 0)
-                {
-                    foreach (var refList in _refRemoveList)
-                    {
-                        refList.On(evt._eventRemove);
-                    }
-                }
+                Parent = parent;
+                IsAdd = isAdd;
+                ListenType = listenType;
+                Handler = handler;
             }
         }
 
-        bool _isCheckFastMethod;
-        FastMethodRefList _fastMethodRefList;
-        FastMethodRefList _GetFastMethodRefList()
+        /// <summary>
+        /// 订阅「同一父实体下添加了 T 类型的兄弟组件」。只响应订阅之后发生的添加；
+        /// 「已经存在」的情况由业务自己判断（存在就直接走逻辑，不存在再订阅）：
+        /// <code>
+        /// var item = Parent.Get&lt;ItemComponent&gt;();
+        /// if (item != null) OnItemAdded(item);
+        /// else Parent.OnListenAddEntity&lt;ItemComponent&gt;(OnItemAdded);
+        /// </code>
+        /// 实体被移除/销毁时自动注销，无需手动反订阅。
+        /// </summary>
+        public void OnListenAddEntity<T>(Action<T> handler) where T : Entity
         {
-            if (!_isCheckFastMethod)
-            {
-                _isCheckFastMethod = true;
-                var methods = GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                                                      BindingFlags.Public | BindingFlags.NonPublic);
-                List<FastMethodRef> addList = null;
-                List<FastMethodRef> removeList = null;
-                foreach (var method in methods)
-                {
-                    var addAttrs = method.GetCustomAttributes(typeof(ListenAddEntityAttribute)).ToArray();
-                    if (addAttrs.Length > 0)
-                    {
-                        if (addAttrs.ElementAt(0) is not ListenAddEntityAttribute evtAttr) continue;
-                        var fastMethod = new FastMethodInfo(this, method);
-                        addList ??= new List<FastMethodRef>();
-                        addList.Add(new FastMethodRef(evtAttr.ListenType, fastMethod));
-                    }
-
-                    var removeAttrs = method.GetCustomAttributes(typeof(ListenRemoveEntityAttribute)).ToArray();
-                    if (removeAttrs.Length > 0)
-                    {
-                        if (removeAttrs.ElementAt(0) is not ListenRemoveEntityAttribute evtAttr) continue;
-                        var fastMethod = new FastMethodInfo(this, method);
-                        removeList ??= new List<FastMethodRef>();
-                        removeList.Add(new FastMethodRef(evtAttr.ListenType, fastMethod));
-                    }
-                }
-                _fastMethodRefList = new FastMethodRefList(addList, removeList);
-            }
-            return _fastMethodRefList;
-        }
-        
-        public class Event
-        {
-            public readonly Dictionary<Type, List<FastMethodInfo>> _eventAdd = new();
-
-            public readonly Dictionary<Type, List<FastMethodInfo>> _eventRemove = new();
-
-            public void AddSystem(Entity entity)
-            {
-                var key = entity.GetType();
-                if (!_eventAdd.TryGetValue(key, out var list))
-                {
-                    return;
-                }
-
-                foreach (var method in list)
-                {
-                    method.Invoke(entity);
-                }
-            }
-
-            public void RemoveSystem(Entity entity)
-            {
-                var key = entity.GetType();
-                if (!_eventRemove.TryGetValue(key, out var list))
-                {
-                    return;
-                }
-
-                foreach (var method in list)
-                {
-                    method.Invoke(entity);
-                }
-            }
-            List<Type> _waitDel = new List<Type>();
-            public void Off(Entity entity)
-            {
-                _waitDel.Clear();
-                foreach (var kv in _eventAdd)
-                {
-                    var listData = kv.Value;
-                    for (int i = listData.Count - 1; i >= 0; i--)
-                    {
-                        if (listData[i].Target == entity)
-                        {
-                            listData.RemoveAt(i);
-                        }
-                    }
-
-                    if (listData.Count == 0)
-                    {
-                        _waitDel.Add(kv.Key);
-                    }
-                }
-                foreach (var key in _waitDel)
-                {
-                    _eventAdd.Remove(key);
-                }
-
-                _waitDel.Clear();
-
-                foreach (var kv in _eventRemove)
-                {
-                    var listData = kv.Value;
-                    for (int i = listData.Count - 1; i >= 0; i--)
-                    {
-                        if (listData[i].Target == entity)
-                        {
-                            listData.RemoveAt(i);
-                        }
-                    }
-
-                    if (listData.Count == 0)
-                    {
-                        _waitDel.Add(kv.Key);
-                    }
-                }
-                foreach (var key in _waitDel)
-                {
-                    _eventAdd.Remove(key);
-                }
-            }
-            public void On(Entity entity)
-            {
-                entity._GetFastMethodRefList().On(this);                
-            }
-
-            public void Clear()
-            {
-                _eventAdd.Clear();
-                _eventRemove.Clear();
-            }
+            _SubscribeChild(true, handler);
         }
 
-        Event _event;
+        /// <summary>订阅「同一父实体下移除了 T 类型的兄弟组件」。</summary>
+        public void OnListenRemoveEntity<T>(Action<T> handler) where T : Entity
+        {
+            _SubscribeChild(false, handler);
+        }
+
+        private void _SubscribeChild<T>(bool isAdd, Action<T> handler) where T : Entity
+        {
+            if (handler == null) return;
+
+            var parent = Parent;
+            if (parent == null)
+            {
+                Log.Error("{0} 订阅子组件通知失败：还没有父实体", GetType().Name);
+                return;
+            }
+
+            Action<Entity> wrapper = e => handler((T)e);
+            var map = isAdd ? parent._childAdded : parent._childRemoved;
+            if (map == null)
+            {
+                map = new Dictionary<Type, Action<Entity>>();
+                if (isAdd) parent._childAdded = map;
+                else parent._childRemoved = map;
+            }
+
+            var listenType = typeof(T);
+            map[listenType] = map.TryGetValue(listenType, out var exist) ? exist + wrapper : wrapper;
+
+            (_childListeners ??= new List<ChildListenerReg>()).Add(
+                new ChildListenerReg(parent, isAdd, listenType, wrapper));
+        }
+
+        /// <summary>通知本实体下的监听者：某个子组件被添加。</summary>
+        internal void _NotifyChildAdded(Entity child)
+        {
+            if (_childAdded == null || !_childAdded.TryGetValue(child.GetType(), out var handler)) return;
+            handler?.Invoke(child);
+        }
+
+        /// <summary>通知本实体下的监听者：某个子组件即将被移除。</summary>
+        internal void _NotifyChildRemoved(Entity child)
+        {
+            if (_childRemoved == null || !_childRemoved.TryGetValue(child.GetType(), out var handler)) return;
+            handler?.Invoke(child);
+        }
+
+        /// <summary>把自己挂在父实体上的订阅全部摘掉。</summary>
+        private void _ClearChildListeners()
+        {
+            if (_childListeners == null || _childListeners.Count == 0) return;
+
+            for (int i = 0; i < _childListeners.Count; i++)
+            {
+                var reg = _childListeners[i];
+                var parent = reg.Parent;
+                if (parent == null) continue;
+
+                var map = reg.IsAdd ? parent._childAdded : parent._childRemoved;
+                if (map == null || !map.TryGetValue(reg.ListenType, out var exist)) continue;
+
+                var rest = exist - reg.Handler;
+                if (rest == null) map.Remove(reg.ListenType);
+                else map[reg.ListenType] = rest;
+            }
+            _childListeners.Clear();
+        }
 
         bool _is_init;
 
@@ -340,33 +258,24 @@ namespace Ux
 #endif
             if (this is IUpdateSystem updateSystem)
             {
-                GameMethod.Update += updateSystem.OnUpdate;
+                EntityScheduler.Add(updateSystem);
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
-                GameMethod.LateUpdate += lateUpdateSystem.OnLateUpdate;
+                EntityScheduler.Add(lateUpdateSystem);
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
             {
-                GameMethod.FixedUpdate += fixedUpdateSystem.OnFixedUpdate;
+                EntityScheduler.Add(fixedUpdateSystem);
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                GameMethod.Quit += applicationQuit.OnApplicationQuit;
+                EntityScheduler.Add(applicationQuit);
             }
-            var temPar = Parent;
-            if (temPar != null)
-            {
-                temPar._event?.AddSystem(this);
-                if (this is IListenSystem)
-                {
-                    temPar._event ??= Pool.Get<Event>();
-                    temPar._event.On(this);
-                }
-            }
+            Parent?._NotifyChildAdded(this);
 
 
             if (!_is_init)
@@ -377,6 +286,9 @@ namespace Ux
 
         void _RemoveSystem()
         {
+            // 放在最前面：编辑器非 Play 模式下方法会提前 return，订阅也要能清掉。
+            _ClearChildListeners();
+
             if (this is IRemoveComponentSystem removeComponentSystem)
             {
                 removeComponentSystem.OnRemoveComponent();
@@ -390,35 +302,30 @@ namespace Ux
 #endif
             if (this is IUpdateSystem updateSystem)
             {
-                GameMethod.Update -= updateSystem.OnUpdate;
+                EntityScheduler.Remove(updateSystem);
             }
 
             if (this is ILateUpdateSystem lateUpdateSystem)
             {
-                GameMethod.LateUpdate -= lateUpdateSystem.OnLateUpdate;
+                EntityScheduler.Remove(lateUpdateSystem);
             }
 
             if (this is IFixedUpdateSystem fixedUpdateSystem)
             {
-                GameMethod.FixedUpdate -= fixedUpdateSystem.OnFixedUpdate;
+                EntityScheduler.Remove(fixedUpdateSystem);
             }
 
             if (this is IApplicationQuitSystem applicationQuit)
             {
-                GameMethod.Quit -= applicationQuit.OnApplicationQuit;
+                EntityScheduler.Remove(applicationQuit);
             }
 
 
-            var temPar = Parent;
-
-            if (temPar != null && !temPar.IsDestroy && temPar._event != null)
+            var parent = Parent;
+            if (parent != null && !parent.IsDestroy)
             {
-                if (this is IListenSystem)
-                {
-                    temPar._event.Off(this);
-                }
-                temPar._event.RemoveSystem(this);
-            }            
+                parent._NotifyChildRemoved(this);
+            }
         }
     }
 

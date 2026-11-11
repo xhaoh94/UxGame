@@ -8,28 +8,28 @@ using YooAsset.Editor;
 /// 图集源图排除掉，交给全局的 CollectAtlasSource + StaticAssetCollector。
 /// 用在「单独一条收集器」的模块上（lazyload）。
 /// </summary>
-public class CollectAssetUI : IFilterRule
+public class CollectAssetUI : IAssetFilterRule
 {
     public string FindAssetType
     {
-        get { return EAssetSearchType.All.ToString(); }
+        get { return EAssetFilterType.All.ToString(); }
     }
 
-    public bool IsCollectAsset(FilterRuleData data)
+    public bool IsCollectAsset(AssetFilterRuleData data)
     {
         return CollectRuleUtil.IsUIAsset(data.AssetPath);
     }
 }
 
 /// <summary>归类为 builtin 的模块合并成一条收集器。</summary>
-public class CollectBuiltinUI : IFilterRule
+public class CollectBuiltinUI : IAssetFilterRule
 {
     public string FindAssetType
     {
-        get { return EAssetSearchType.All.ToString(); }
+        get { return EAssetFilterType.All.ToString(); }
     }
 
-    public bool IsCollectAsset(FilterRuleData data)
+    public bool IsCollectAsset(AssetFilterRuleData data)
     {
         var settings = UIClassifyWindow.ResClassifySettings;
         if (settings == null) return false;
@@ -39,14 +39,14 @@ public class CollectBuiltinUI : IFilterRule
 }
 
 /// <summary>归类为 preload（含没配置的模块）合并成一条收集器。</summary>
-public class CollectPreloadUI : IFilterRule
+public class CollectPreloadUI : IAssetFilterRule
 {
     public string FindAssetType
     {
-        get { return EAssetSearchType.All.ToString(); }
+        get { return EAssetFilterType.All.ToString(); }
     }
 
-    public bool IsCollectAsset(FilterRuleData data)
+    public bool IsCollectAsset(AssetFilterRuleData data)
     {
         var settings = UIClassifyWindow.ResClassifySettings;
         if (settings == null) return false;
@@ -56,14 +56,14 @@ public class CollectPreloadUI : IFilterRule
 }
 
 /// <summary>散图默认分桶：指定了其它打包规则的子目录排除掉，由各自的收集器接管。</summary>
-public class CollectLooseTexture : IFilterRule
+public class CollectLooseTexture : IAssetFilterRule
 {
     public string FindAssetType
     {
-        get { return EAssetSearchType.All.ToString(); }
+        get { return EAssetFilterType.All.ToString(); }
     }
 
-    public bool IsCollectAsset(FilterRuleData data)
+    public bool IsCollectAsset(AssetFilterRuleData data)
     {
         var settings = UIClassifyWindow.ResClassifySettings;
         return settings == null || settings.IsUnderTextureRule(data.AssetPath) == false;
@@ -71,14 +71,14 @@ public class CollectLooseTexture : IFilterRule
 }
 
 /// <summary>图集源图：只收 Atlas 目录下的 png，配合 StaticAssetCollector 使用（不写清单、不产生地址）。</summary>
-public class CollectAtlasSource : IFilterRule
+public class CollectAtlasSource : IAssetFilterRule
 {
     public string FindAssetType
     {
-        get { return EAssetSearchType.All.ToString(); }
+        get { return EAssetFilterType.All.ToString(); }
     }
 
-    public bool IsCollectAsset(FilterRuleData data)
+    public bool IsCollectAsset(AssetFilterRuleData data)
     {
         if (CollectRuleUtil.IsUnderAtlas(data.AssetPath) == false) return false;
         return string.Equals(Path.GetExtension(data.AssetPath), ".png", StringComparison.OrdinalIgnoreCase);

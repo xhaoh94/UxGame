@@ -309,7 +309,7 @@ namespace Ux
             // 层容器的 Canvas 设置（ScreenSpaceCamera/overrideSorting）会影响子 Canvas，
             // 挂根节点后背景排序完全由自己的 Canvas 控制。
             _backdropRoot.SetParent(UIMgr.Ins.GetUILayer(UILayer.Root), false);
-            _backdropRoot.gameObject.SetLayer(LayerMask.NameToLayer(Layers.UI));
+            _backdropRoot.gameObject.SetLayer(Layers.UI);
             _backdropRoot.anchorMin = Vector2.zero;
             _backdropRoot.anchorMax = Vector2.one;
             _backdropRoot.offsetMin = Vector2.zero;

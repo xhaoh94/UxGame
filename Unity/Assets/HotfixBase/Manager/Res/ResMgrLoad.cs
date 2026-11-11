@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using UnityEngine;
 using YooAsset;
 
 namespace Ux
@@ -30,6 +31,8 @@ namespace Ux
         /// <param name="assetInfo">资源信息</param>
         public TObject LoadAsset<TObject>(AssetInfo assetInfo, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
+            if (RejectGameObjectType<TObject>(assetInfo.Address)) return default(TObject);
+
             var obj = UnityPool.Get<TObject>(assetInfo.Address);
             if (obj != null)
             {
@@ -50,6 +53,8 @@ namespace Ux
         /// <param name="location">资源的定位地址</param>
         public TObject LoadAsset<TObject>(string location, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
+            if (RejectGameObjectType<TObject>(location)) return default(TObject);
+
             var obj = UnityPool.Get<TObject>(location);
             if (obj != null)
             {
@@ -63,11 +68,32 @@ namespace Ux
             return _LoadAsset<TObject>(location, handle);
         }
 
+        /// <summary>
+        /// GameObject 必须走 <see cref="LoadGameObject"/>：那边才会实例化 + 挂父级。
+        /// 用 LoadAsset 拿预制体会得到"没有父级的裸实例"，语义对不上，直接拦掉。
+        /// </summary>
+        private static bool RejectGameObjectType<TObject>(string location) where TObject : UnityEngine.Object
+        {
+            if (!typeof(GameObject).IsAssignableFrom(typeof(TObject)))
+                return false;
+
+            Log.Error("加载 GameObject 请用 ResMgr.LoadGameObject / LoadGameObjectAsync：{0}", location);
+            return true;
+        }
+
         TObject _LoadAsset<TObject>(string location, AssetHandle handle) where TObject : UnityEngine.Object
         {
             var obj = handle.GetAssetObject<TObject>();
             if (obj is UnityEngine.GameObject)
             {
+                // 泛型是 Object/Component 却取到预制体：调用方走错了入口。
+                if (typeof(TObject) != typeof(GameObject))
+                {
+                    Log.Error("加载 GameObject 请用 ResMgr.LoadGameObject / LoadGameObjectAsync：{0}", location);
+                    handle.Release();
+                    return default(TObject);
+                }
+
                 var ins = handle.InstantiateSync();
                 ins.AddComponent<ResHandleMono>().Init(location, handle);
                 return ins as TObject;
@@ -120,6 +146,8 @@ namespace Ux
         /// <param name="assetInfo">资源信息</param>
         public async UniTask<TObject> LoadAssetAsync<TObject>(AssetInfo assetInfo, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
+            if (RejectGameObjectType<TObject>(assetInfo.Address)) return default(TObject);
+
             var obj = UnityPool.Get<TObject>(assetInfo.Address);
             if (obj != null)
             {
@@ -140,6 +168,8 @@ namespace Ux
 		/// <param name="location">资源的定位地址</param>
 		public async UniTask<TObject> LoadAssetAsync<TObject>(string location, YooType resType = YooType.None) where TObject : UnityEngine.Object
         {
+            if (RejectGameObjectType<TObject>(location)) return default(TObject);
+
             var obj = UnityPool.Get<TObject>(location);
             if (obj != null)
             {
@@ -159,6 +189,14 @@ namespace Ux
             var obj = handle.GetAssetObject<TObject>();
             if (obj is UnityEngine.GameObject)
             {
+                // 泛型是 Object/Component 却取到预制体：调用方走错了入口。
+                if (typeof(TObject) != typeof(GameObject))
+                {
+                    Log.Error("加载 GameObject 请用 ResMgr.LoadGameObject / LoadGameObjectAsync：{0}", location);
+                    handle.Release();
+                    return default(TObject);
+                }
+
                 var insHandle = handle.InstantiateAsync();
                 await insHandle.ToUniTask();
                 var ins = insHandle.Result;
@@ -194,6 +232,67 @@ namespace Ux
             }
 
             return handle;
+        }
+
+        #endregion
+
+        #region GameObject
+
+        /// <summary>
+        /// 同步加载 GameObject 实例并挂到指定父级。
+        /// 文本 / 贴图 / 音频这类非实例化资源请继续用 <see cref="LoadAsset"/>。
+        /// parent 传了就一步挂好，省掉"先拿到再 SetParent"的第二次层级操作；
+        /// 传 null 时按对象池的默认放置规则（回到当前场景根）。
+        /// </summary>
+        public GameObject LoadGameObject(string location, Transform parent = null, YooType resType = YooType.None)
+        {
+            var pooled = UnityPool.Get<GameObject>(location, parent);
+            if (pooled != null)
+            {
+                return pooled;
+            }
+
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
+            if (package == null)
+            {
+                return null;
+            }
+
+            var handle = package.Package.LoadAssetSync<GameObject>(location);
+            var go = _LoadAsset<GameObject>(location, handle);
+            if (go != null && parent != null)
+            {
+                go.transform.SetParent(parent, false);
+            }
+            return go;
+        }
+
+        /// <summary>异步版 <see cref="LoadGameObject"/>。</summary>
+        public async UniTask<GameObject> LoadGameObjectAsync(string location, Transform parent = null, YooType resType = YooType.None)
+        {
+            var pooled = UnityPool.Get<GameObject>(location, parent);
+            if (pooled != null)
+            {
+                return pooled;
+            }
+
+            var package = resType == YooType.None
+                ? YooMgr.Ins.GetPackageByLocation(location)
+                : YooMgr.Ins.GetPackage(resType);
+            if (package == null)
+            {
+                return null;
+            }
+
+            var handle = package.Package.LoadAssetAsync<GameObject>(location);
+            var go = await _LoadAssetAsync<GameObject>(location, handle);
+            if (go != null && parent != null)
+            {
+                go.transform.SetParent(parent, false);
+            }
+            return go;
         }
 
         #endregion

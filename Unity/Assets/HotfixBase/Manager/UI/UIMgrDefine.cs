@@ -208,6 +208,22 @@ namespace Ux
         RenderTexture = 2,
     }
 
+    /// <summary>
+    /// 界面的隐藏方式（由 <see cref="UIBase.HideMode"/> 声明）。
+    /// 只有 Deactivate 会停更和释放绘制；另外两种是为了保留状态 / 避免重建。
+    /// </summary>
+    public enum UIHideMode
+    {
+        /// <summary>SetActive(false)：默认，隐藏后不再提交绘制、不再跑 Update。</summary>
+        Deactivate = 0,
+
+        /// <summary>localScale 置 0：保留层级与布局，3D 模型/SpriteRenderer 一起消失，但仍会提交绘制。</summary>
+        ScaleZero = 1,
+
+        /// <summary>CanvasGroup.alpha 置 0（同时关 raycast）：只影响 UGUI，UIModel/粒子不受影响。</summary>
+        AlphaZero = 2,
+    }
+
 
     public partial class UIMgr
     {

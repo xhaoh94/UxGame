@@ -1,0 +1,26 @@
+{
+    "name": "YooAsset.Editor",
+    "rootNamespace": "",
+    "references": [
+        "YooAsset",
+        "Unity.ScriptableBuildPipeline",
+        "Unity.ScriptableBuildPipeline.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.scriptablebuildpipeline",
+            "expression": "2.0.1",
+            "define": "SBP_2_0_1_OR_NEWER"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -158,9 +158,9 @@ namespace Ux.Editor.Build.UI
     /// <summary>
     /// 散图打包：按分桶表把同一目录下的图拆进 bucket_XX，桶号来自 LooseAssetBucketTable，稳定不变。
     /// </summary>
-    public class PackLooseAssetByBucket : IPackRule
+    public class PackLooseAssetByBucket : IBundlePackRule
     {
-        public PackRuleResult GetPackRuleResult(PackRuleData data)
+        public BundlePackRuleResult GetPackRuleResult(BundlePackRuleData data)
         {
             var bucket = LooseAssetBucketTable.GetBucket(data.AssetPath);
             if (bucket < 0)
@@ -171,7 +171,7 @@ namespace Ux.Editor.Build.UI
             }
 
             var bundleName = $"{data.CollectPath}/bucket_{bucket:00}";
-            return new PackRuleResult(bundleName, DefaultPackRule.AssetBundleFileExtension);
+            return new BundlePackRuleResult(bundleName, DefaultBundlePackRule.AssetBundleFileExtension);
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Ux;
@@ -11,11 +11,11 @@ public static class Pool
         object obj;
         if (!_dict.TryGetValue(type, out Queue<object> queue))
         {
-            obj = Activator.CreateInstance(type);
+            obj = TypeFactory.Create(type);
         }
         else if (queue.Count == 0)
         {
-            obj = Activator.CreateInstance(type);
+            obj = TypeFactory.Create(type);
         }
         else
         {

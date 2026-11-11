@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Ux
@@ -39,61 +38,12 @@ namespace Ux
             }
         }
 
-        public struct FastMethodRef
-        {
-            readonly Attribute[] _attributes;
-            readonly FastMethodInfo _methodInfo;
-
-            public FastMethodRef(Attribute[] attributes, FastMethodInfo methodInfo)
-            {
-                _attributes = attributes;
-                _methodInfo = methodInfo;
-            }
-
-            public void On(EventMgr.EventSystem system)
-            {
-                foreach (var attr in _attributes)
-                {
-                    var evtAttr = (IEvtAttribute)attr;
-                    system.On(evtAttr.EType, _methodInfo);
-                }
-            }
-        }
-
-        readonly struct FastMethodCacheKey : IEquatable<FastMethodCacheKey>
-        {
-            public readonly object Target;
-            public readonly Type AttributeType;
-
-            public FastMethodCacheKey(object target, Type attributeType)
-            {
-                Target = target;
-                AttributeType = attributeType;
-            }
-
-            public bool Equals(FastMethodCacheKey other) =>
-                ReferenceEquals(Target, other.Target) && ReferenceEquals(AttributeType, other.AttributeType);
-
-            public override bool Equals(object obj) => obj is FastMethodCacheKey other && Equals(other);
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hash = 17;
-                    hash = hash * 31 + (Target != null ? RuntimeHelpers.GetHashCode(Target) : 0);
-                    hash = hash * 31 + (AttributeType != null ? RuntimeHelpers.GetHashCode(AttributeType) : 0);
-                    return hash;
-                }
-            }
-        }
-
-        OverdueMap<FastMethodCacheKey, List<FastMethodRef>> _fastMethodRefMap;
-
         public interface IEventSystem
         {
             void Init(int exeLimit);
             void Release();
+            /// <summary>驱动一帧（由 EventMgr 统一调度，实例之间不再各自挂全局委托）。</summary>
+            void Tick();
         }
 
         public partial class EventSystem : IEventSystem
@@ -132,15 +82,13 @@ namespace Ux
             void IEventSystem.Init(int exeLimit)
             {
                 _exeLimit = exeLimit;
-                GameMethod.Update += _Update;
             }
 
             void IEventSystem.Release()
             {
-                GameMethod.Update -= _Update;
                 Clear();
                 Pool.Push(this);
-            }
+            }            
 
             public void Clear()
             {
@@ -155,71 +103,6 @@ namespace Ux
                 _waitDels.Clear();
                 _dispatchKeys.Clear();
                 _tempKeys.Clear();
-            }
-
-            Type _hotfixEvtAttribute;
-
-            public void SetEvtAttribute<T>() where T : Attribute, IEvtAttribute
-            {
-                _hotfixEvtAttribute = typeof(T);
-            }
-
-            public void RegisterEventTrigger(IEventTrigger eventObject)
-            {
-                _RegisterEventTrigger(typeof(MainEvtAttribute), eventObject);
-                if (_hotfixEvtAttribute != null)
-                {
-                    _RegisterEventTrigger(_hotfixEvtAttribute, eventObject);
-                }
-            }
-
-            void _RegisterEventTrigger(Type type, IEventTrigger eventObject)
-            {
-                var evtAttrs = Attribute.GetCustomAttributes(eventObject.GetType(), type);
-                if (evtAttrs.Length == 0) return;
-                foreach (var attr in evtAttrs)
-                {
-                    var evtAttr = (IEvtAttribute)attr;
-                    On(evtAttr.EType, eventObject, eventObject.OnTriggerEvent);
-                }
-            }
-
-            public void RegisterFastMethod(object target)
-            {
-                _RegisterFastMethod(typeof(MainEvtAttribute), target);
-                if (_hotfixEvtAttribute != null)
-                {
-                    _RegisterFastMethod(_hotfixEvtAttribute, target);
-                }
-            }
-
-            void _RegisterFastMethod(Type type, object target)
-            {
-                Ins._fastMethodRefMap ??= new OverdueMap<FastMethodCacheKey, List<FastMethodRef>>(100);
-                var key = new FastMethodCacheKey(target, type);
-                if (!Ins._fastMethodRefMap.TryGetValue(key, out var refList))
-                {
-                    var methods = target.GetType().GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                                              BindingFlags.Public | BindingFlags.NonPublic);
-                    foreach (var method in methods)
-                    {
-                        var evtAttrs = Attribute.GetCustomAttributes(method, type);
-                        if (evtAttrs.Length == 0) continue;
-                        if (refList == null)
-                        {
-                            refList = new List<FastMethodRef>();
-                            Ins._fastMethodRefMap.Add(key, refList);
-                        }
-
-                        refList.Add(new FastMethodRef(evtAttrs, new FastMethodInfo(target, method)));
-                    }
-                }
-
-                if (refList == null || refList.Count == 0) return;
-                foreach (var refMethod in refList)
-                {
-                    refMethod.On(this);
-                }
             }
 
             private EventSignature _CreateSignature(int eType, Delegate action, object tag)
@@ -247,21 +130,9 @@ namespace Ux
                 return key;
             }
 
-            private long _GetOrCreateKey(int eType, FastMethodInfo action)
-            {
-                if (!action.IsValid) return 0;
-                return _GetOrCreateKey(eType, action.Method, action.Target);
-            }
-
             private bool TryGetKey(int eType, Delegate action, object tag, out long key)
             {
                 return _signToKey.TryGetValue(_CreateSignature(eType, action, tag), out key);
-            }
-
-            private bool TryGetKey(int eType, FastMethodInfo action, out long key)
-            {
-                key = 0;
-                return action.IsValid && TryGetKey(eType, action.Method, action.Target, out key);
             }
 
             private void RemoveWaitAdds(Predicate<IEvent> match)
@@ -328,7 +199,7 @@ namespace Ux
                        RuntimeHelpers.IsReferenceOrContainsReferences<C>();
             }
 
-            void _Update()
+            void IEventSystem.Tick()
             {
                 if (_waitDels.Count > 0)
                 {
@@ -472,12 +343,6 @@ namespace Ux
             {
                 key = _GetOrCreateKey(eType, action, tag);
                 return _Add<T>(key);
-            }
-
-            private EventFastMethodData _Add(out long key, int eType, FastMethodInfo action)
-            {
-                key = _GetOrCreateKey(eType, action);
-                return _Add<EventFastMethodData>(key);
             }
 
             private void _Remove(int eType, object tag, Delegate action)

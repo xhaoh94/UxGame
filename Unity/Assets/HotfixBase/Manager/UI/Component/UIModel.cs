@@ -40,7 +40,7 @@ namespace Ux
 
         public UIModel Load(string location, float angle = 180, float scale = 180)
         {
-            var model = ResMgr.Ins.LoadAsset<GameObject>(location);
+            var model = ResMgr.Ins.LoadGameObject(location, _container);
             if (State is UIState.Hide or UIState.HideAnim)
             {
                 if (model != null) UnityPool.Push(model);
@@ -70,7 +70,10 @@ namespace Ux
                 UnityPool.Push(Model);
 
             Model = model;
-            Model.transform.SetParent(_container, false);
+            // Load 时已经挂好父级，这里只在外部 Set 进来的对象上补一次。
+            if (model.transform.parent != _container)
+                model.transform.SetParent(_container, false);
+
             var rect = GameObject.transform as RectTransform;
             var width = rect != null ? rect.rect.width : 0f;
             var height = rect != null ? rect.rect.height : 0f;
@@ -82,7 +85,7 @@ namespace Ux
 
             // 场景相机的 cullingMask 不含 UIModel 层，模型只能由 UI 相机渲染一次。
             _srcLayer = model.layer;
-            model.SetLayer(LayerMask.NameToLayer(Layers.UIModel));
+            model.SetLayer(Layers.UIModel);
 
             _entity ??= Entity.Create<ModelEntity>();
             _entity.Name = $"UIModel@{model.name}";

@@ -70,6 +70,32 @@ _list.SetDatas(messages);
 
 每次绑定可能是新数据或旧对象复用，必须完整覆盖上条数据的显示状态。需要时订阅 `ItemRecycled` 取消图片加载等异步操作。
 
+## 分批生成（可选）
+
+首屏十几项同帧实例化会造成峰值。开启后，首次填充只同步创建覆盖视口的那部分，其余按批次逐帧补：
+
+| Inspector | 属性 | 默认 | 说明 |
+|---|---|---|---|
+| Incremental Create | `IncrementalCreate` | true | 关闭即退回“当帧全部创建”，用于对比排查 |
+| Batch Size | `BatchSize` | 4 | 一批最多创建几项 |
+| Batch Interval Ms | `BatchIntervalMs` | 33 | 两批之间的最小间隔（毫秒），0 表示每帧可补 |
+| Initial Count | `InitialCount` | -1 | 首帧同步建几个；0 = 首帧不建；-1 = 跟随每批数量，第一批立即执行 |
+| Frame Budget Ms | `FrameBudgetMs` | 0 | 单批耗时上限，0 不限制；防止个别重 Item 拖垮整批 |
+
+```csharp
+_list.BatchSize = 3;
+_list.BatchIntervalMs = 20f;
+_list.FillingCompleted += () => loading.SetActive(false);
+```
+
+行为约定：
+
+- **只在数据变更后的首次填充生效**。滚动补齐走池复用，仍然同步，避免滑动时出现空白。
+- 队列按**索引升序（从上到下）** 出队；`InitialCount = -1` 时第一批在首个 `LateUpdate` 立即执行，`>= 0` 时等满一个批次间隔（计时从首帧批量建完那一刻起算）。
+- `IsFilling` / `PendingCreateCount` 可用于显示 Loading；`FillingCompleted` 在队列清空时触发一次。
+- 动态尺寸布局（`VariableLinear`）：未创建 Item 用 `_itemSize` 的主轴值占位，创建后由 `Measure` 修正并保持滚动锚点。
+- 直接 `new UIVirtualList(...)` 使用时默认**关闭**（需要宿主每帧调 `TickPendingCreate`），组件会自动打开。
+
 ## 增量数据更新
 
 不再需要每次用 `SetDatas` 全量重建：

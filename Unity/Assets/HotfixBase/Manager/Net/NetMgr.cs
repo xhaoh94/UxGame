@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 
@@ -8,9 +8,10 @@ namespace Ux
     {
         void Bind(uint cmd, object tag, Action action);
         void Bind<A>(uint cmd, object tag, Action<A> action);
-        void Bind(uint cmd, FastMethodInfo action);
         Type FindType(uint cmd);
         void Run(uint cmd, object message);
+        /// <summary>按 tag 批量移除网络消息绑定。</summary>
+        void Unbind(object tag);
     }
     public enum NetType
     {
@@ -18,7 +19,7 @@ namespace Ux
         TCP,
         WebSocket,
     }
-    public class NetMgr : Singleton<NetMgr>, INetEvent
+    public class NetMgr : Singleton<NetMgr>, INetEvent, IFrameFixedUpdate
     {
         readonly List<ClientSocket> _clientSockets = new List<ClientSocket>();
         ClientSocket _clientSocket;
@@ -29,7 +30,7 @@ namespace Ux
         {
             //一帧最多几条消息
             _eventSystem = EventMgr.Ins.CreateSystem(200);
-            GameMethod.FixedUpdate += _Update;
+            FrameDriver.Register(this);
             EventMgr.Ins.On<ClientSocket>(MainEventType.NET_DISPOSE, this, OnSocketDispose);
         }
         /// <summary>
@@ -157,10 +158,6 @@ namespace Ux
             _cmdType[cmd] = typeof(A);
             _eventSystem.On((int)cmd, tag, action);
         }
-        void INetEvent.Bind(uint cmd, FastMethodInfo action)
-        {
-            _eventSystem.On((int)cmd,action);
-        }
         Type INetEvent.FindType(uint cmd)
         {
             if (_cmdType.TryGetValue(cmd, out var type))
@@ -170,8 +167,16 @@ namespace Ux
             return null;
         }
         void INetEvent.Run(uint cmd, object message)
-        {            
+        {
             _eventSystem.Run((int)cmd, message);
+        }
+
+        /// <summary>按 tag 批量移除网络消息绑定（模块 Release 时调用）。</summary>
+        void IFrameFixedUpdate.OnFrameFixedUpdate() => _Update();
+
+        public void Unbind(object tag)
+        {
+            _eventSystem.OffTag(tag);
         }
 
         #endregion

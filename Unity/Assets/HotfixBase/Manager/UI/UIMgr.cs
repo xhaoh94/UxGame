@@ -137,7 +137,7 @@ namespace Ux
 
             UnityEngine.Object.DontDestroyOnLoad(go);            
             _cameraHandler.ConfigureRoot(go.GetComponent<Canvas>(), root);
-            go.SetLayer(LayerMask.NameToLayer(Layers.UI));
+            go.SetLayer(Layers.UI);
 
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -181,7 +181,7 @@ namespace Ux
         {
             BlurSize = 8f;
             Initialize();
-            GameMethod.LowMemory += _LowMemory;
+            GameMain.Ins.LowMemory += _LowMemory;
         }
 
         void _LowMemory()
@@ -1071,7 +1071,8 @@ namespace Ux
             for (int i = 0; i < _stackEntries.Count; i++)
             {
                 var entry = _stackEntries[i];
-                output.Add(new UIStack(entry.RootId, entry.ActiveId, entry.Param, entry.Type));
+                // UIStack 只给调试面板用，字段必须是类型 ID（实例 ID 查不到 UIData）。
+                output.Add(new UIStack(GetRecordTypeId(entry.RootId), entry.ActiveTypeId, entry.Param, entry.Type));
             }
         }
 

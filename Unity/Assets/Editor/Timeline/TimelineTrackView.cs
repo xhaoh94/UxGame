@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -142,6 +142,7 @@ namespace Ux.Editor.Timeline
         public void RefreshView()
         {
             BuildTrackMenu();
+
             foreach (var item in trackItemDic.Values)
             {
                 item.Release();

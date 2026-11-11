@@ -16,14 +16,4 @@ namespace Ux
 
         public int priority { get; }
     }
-
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class NetAttribute : Attribute
-    {
-        public NetAttribute(uint cmd)
-        {
-            this.cmd = cmd;
-        }
-        public uint cmd { get; }
-    }
 }

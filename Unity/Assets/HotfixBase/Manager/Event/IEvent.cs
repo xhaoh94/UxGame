@@ -5,10 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace Ux
 {
-    public interface IEventTrigger
-    {
-        void OnTriggerEvent();
-    }
     public partial class EventMgr
     {
         public struct EventTask
@@ -74,48 +70,6 @@ namespace Ux
             }
 
             protected abstract void OnRelease();
-        }
-
-        public sealed class EventFastMethodData : EventBaseData
-        {
-            public override Delegate Method => _method.Method;
-            FastMethodInfo _method;
-
-#if UNITY_EDITOR
-            public override string MethodName => _method.MethodName;
-#endif
-            public void Init(long key, int eType, FastMethodInfo method)
-            {
-                Tag = method.Target;
-                Key = key;
-                EType = eType;
-                _method = method;
-            }
-
-            protected override void OnRelease()
-            {
-                _method = default;
-            }
-
-            public override void Run0(EventSystem system)
-            {
-                if (_method.IsValid) _method.Invoke();
-            }
-
-            public override void Run1<T>(EventSystem system, T a)
-            {
-                if (_method.IsValid) _method.Invoke(a);
-            }
-
-            public override void Run2<T, U>(EventSystem system, T a, U b)
-            {
-                if (_method.IsValid) _method.Invoke(a, b);
-            }
-
-            public override void Run3<T, U, V>(EventSystem system, T a, U b, V c)
-            {
-                if (_method.IsValid) _method.Invoke(a, b, c);
-            }
         }
 
         public sealed class EventData : EventBaseData

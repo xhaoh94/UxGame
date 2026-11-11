@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -26,7 +26,6 @@ namespace Ux
             {
                 assembly.Initialize();
             });
-            EventMgr.Ins.SetEvtAttribute<EvtAttribute>();
 #if UNITY_EDITOR
             EventMgr.Ins.SetHotfixEvtType(typeof(EventType));
 #endif

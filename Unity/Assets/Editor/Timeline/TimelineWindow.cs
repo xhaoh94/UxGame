@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -380,6 +380,67 @@ namespace Ux.Editor.Timeline
             {
                 ScheduleAutoPlay();
             }
+        }
+
+        /// <summary>
+        /// 预创建一个不挂到任何容器的嵌入窗口（只建 UI，不绑数据）。
+        /// 用于把首次切到 Timeline 页面时的 CreateGUI 成本提前到窗口打开阶段。
+        /// </summary>
+        public static TimelineWindow CreateDetached()
+        {
+            var host = CreateInstance<TimelineWindow>();
+            host.hideFlags = HideFlags.HideAndDontSave;
+            host.titleContent = new GUIContent("双源时间轴");
+            host._isEmbedded = true;
+            host._hasOpenRequest = false;
+            host.CreateGUI();
+            return host;
+        }
+
+        /// <summary>把窗口的视觉树挂到目标容器。</summary>
+        public void AttachTo(VisualElement container)
+        {
+            if (container == null || root == null)
+            {
+                return;
+            }
+
+            if (root.parent != null)
+            {
+                root.parent.Remove(root);
+            }
+            container.Add(root);
+        }
+
+        /// <summary>
+        /// 复用已存在的嵌入窗口，只切换数据源，不重建 UI。
+        /// 切换技能时调用，避免每次 DestroyImmediate + CreateInstance + CreateGUI 整个窗口。
+        /// 返回 false 表示当前实例不可复用（需要调用方销毁重建）。
+        /// </summary>
+        public bool TryRebind(
+            TimelineAsset timeline,
+            CombatActionAsset action,
+            CharacterCombatProfile profile,
+            GameObject previewObject)
+        {
+            if (this == null || root == null || !_isEmbedded)
+            {
+                return false;
+            }
+
+            if (timeline == null && action == null)
+            {
+                return false;
+            }
+
+            _requestedTimeline = timeline;
+            _requestedCombatAction = action;
+            _requestedCombatProfile = profile;
+            _requestedPreviewObject = previewObject;
+            _requestedAutoPlay = false;
+            _hasOpenRequest = true;
+            ApplyOpenRequest();
+            return true;
         }
 
         private void ScheduleAutoPlay()
@@ -1201,7 +1262,11 @@ namespace Ux.Editor.Timeline
         // 预览场景（如 Boot）没有灯，这里补一盏，参数与 Hotfix.unity 的主光一致，随预览销毁。
         private static Light EnsurePreviewDirectionalLight()
         {
+#if UNITY_6000_4_OR_NEWER
+            var lights = UnityEngine.Object.FindObjectsByType<Light>();
+#else
             var lights = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None);
+#endif
             foreach (var light in lights)
             {
                 if (light != null && light.enabled && light.type == LightType.Directional && light.intensity > 0f)

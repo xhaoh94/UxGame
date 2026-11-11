@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Ux
 {
-    public class OneThreadSynchronizationContext : SynchronizationContext
+    public class OneThreadSynchronizationContext : SynchronizationContext, IFrameUpdate
     {
         public static OneThreadSynchronizationContext Instance { get; } = new OneThreadSynchronizationContext();        
 
@@ -16,8 +16,10 @@ namespace Ux
         public OneThreadSynchronizationContext()
         {
             SynchronizationContext.SetSynchronizationContext(this);
-            GameMethod.Update += _Update;
+            FrameDriver.Register(this);
         }
+
+        void IFrameUpdate.OnFrameUpdate() => _Update();
 
         void _Update()
         {

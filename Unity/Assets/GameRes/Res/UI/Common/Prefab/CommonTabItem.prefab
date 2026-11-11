@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8901637007316667085}
   - component: {fileID: 3065470883744035442}
   - component: {fileID: 5392187986346286930}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -85,7 +85,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2414605952978684324}
   - component: {fileID: 6853780323010536797}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: CommonTabItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133,7 +133,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6288806053032880767}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -170,7 +170,7 @@ GameObject:
   - component: {fileID: 2353131346954146092}
   - component: {fileID: 3455926441830712364}
   - component: {fileID: 4573480482266378806}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: txtTitle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -307,7 +307,7 @@ GameObject:
   - component: {fileID: 6267390322779085921}
   - component: {fileID: 5631189110150422881}
   - component: {fileID: 765338121042970385}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: redPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -382,7 +382,7 @@ GameObject:
   - component: {fileID: 1840337082372364991}
   - component: {fileID: 3020532923970415392}
   - component: {fileID: 1541450358953355678}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: n1
   m_TagString: Untagged
   m_Icon: {fileID: 0}

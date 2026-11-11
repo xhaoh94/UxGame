@@ -39,7 +39,8 @@ namespace Ux.Editor.Debugger.UI
         {
             this.data = data;
             var lb0 = this.Q<Label>("Label0");
-            lb0.text = UIMgr.Ins.GetUIData(data.ID).Name;
+            // 动态界面销毁后 UIData 会被移除，栈条目可能残留，这里不能走带错误日志的 GetUIData。
+            lb0.text = UIMgr.Ins.IsHasUIData(data.ID) ? UIMgr.Ins.GetUIData(data.ID).Name : $"未注册UI({data.ID})";
         }
     }
 }

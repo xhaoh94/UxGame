@@ -1,0 +1,11 @@
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\bin\Debug\netstandard2.0\Ux.Analyzers.deps.json
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\bin\Debug\netstandard2.0\Ux.Analyzers.dll
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\bin\Debug\netstandard2.0\Ux.Analyzers.pdb
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.csproj.AssemblyReference.cache
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.GeneratedMSBuildEditorConfig.editorconfig
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.AssemblyInfoInputs.cache
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.AssemblyInfo.cs
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.csproj.CoreCompileInputs.cache
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.sourcelink.json
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.dll
+C:\Project\UxGame\Unity\Tools\Analyzers\Ux.Analyzers\obj\Debug\netstandard2.0\Ux.Analyzers.pdb

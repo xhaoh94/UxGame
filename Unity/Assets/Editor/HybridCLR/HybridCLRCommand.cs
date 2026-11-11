@@ -1,7 +1,7 @@
-using HybridCLR.Editor;
-using HybridCLR.Editor.AOT;
-using HybridCLR.Editor.Commands;
-using HybridCLR.Editor.Meta;
+using HybridCLR;
+using HybridCLR.CodeGen.AOT;
+using HybridCLR.Meta;
+using HybridCLR.Utils;
 using Obfuz.Settings;
 using Obfuz4HybridCLR;
 using System;
@@ -130,7 +130,7 @@ namespace Ux.Editor.HybridCLR
             var hotUpdateDllNames = SettingsUtil.HotUpdateAssemblyNamesExcludePreserved;
             List<string> codes = new List<string>();
             AssemblyReferenceDeepCollector collector = new AssemblyReferenceDeepCollector(MetaUtil.CreateHotUpdateAndAOTAssemblyResolver(target, hotUpdateDllNames), hotUpdateDllNames);
-            var analyzer = new Analyzer(new Analyzer.Options
+            var analyzer = new AOTReferenceAnalyzer(new AOTReferenceAnalyzer.Options
             {
                 MaxIterationCount = Math.Min(20, gs.maxGenericReferenceIteration),
                 Collector = collector,

@@ -155,8 +155,7 @@ namespace Ux.Editor.Tests
                 var flags = BindingFlags.Instance | BindingFlags.NonPublic;
                 void Set(string name, object value) => typeof(UIVirtualListComponent).GetField(name, flags).SetValue(component, value);
                 Set("_allowMultiple", multiple);
-                Set("_limitGridCount", !multiple);
-                Set("_gridCount", -5); // 单列或不限制时，该值必须被忽略。
+                Set("_gridCount", -5); // <= 0 表示不限制，只按视口空间计算。
                 Set("_spacing", multiple ? float.NaN : 8f);
                 Set("_gridSpacing", multiple ? new Vector2(8, 8) : new Vector2(float.NaN, float.NaN));
                 var layout = (UIFlowLayout)typeof(UIVirtualListComponent).GetMethod("CreateLayout", flags)

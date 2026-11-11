@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System;
 
 namespace Ux
@@ -29,13 +29,15 @@ namespace Ux
         }
         public void Init()
         {
-            EventMgr.Ins.RegisterFastMethod(this);
+            // 事件监听在各自模块的 OnInit 里显式注册（EventMgr.Ins.On），
+            // 不再扫描方法特性，避免启动时反射 + 表达式树编译。
             OnInit();
         }
         protected virtual void OnInit() { }
         public void Release()
         {
             OnRelease();
+            NetMgr.Ins.Unbind(this);
             EventMgr.Ins.OffTag(this);
             TimeMgr.Ins.RemoveTag(this);
             _ins = null;

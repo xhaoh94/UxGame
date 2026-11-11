@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using YooAsset;
 
@@ -85,7 +85,7 @@ namespace Ux
 #endif
             try
             {
-                GameMethod.Update?.Invoke();                
+                FrameDriver.TickUpdate();                
             }
             catch (Exception e)
             {
@@ -97,7 +97,7 @@ namespace Ux
         {
             try
             {
-                GameMethod.LateUpdate?.Invoke();
+                FrameDriver.TickLateUpdate();
             }
             catch (Exception e)
             {
@@ -109,7 +109,7 @@ namespace Ux
         {
             try
             {
-                GameMethod.FixedUpdate?.Invoke();
+                FrameDriver.TickFixedUpdate();
             }
             catch (Exception e)
             {
@@ -119,13 +119,15 @@ namespace Ux
 
         private void OnApplicationQuit()
         {
-            GameMethod.Quit?.Invoke();
+            FrameDriver.TickQuit();
         }
 
+        public event Action LowMemory;
+        
         void OnLowMemory()
         {            
-            Pool.Clear();
-            GameMethod.LowMemory?.Invoke();
+            Pool.Clear();            
+            LowMemory?.Invoke();
         }
     }
 }

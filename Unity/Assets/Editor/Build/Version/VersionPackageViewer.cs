@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -82,7 +82,7 @@ namespace Ux.Editor.Build.Version
             nameStyleType.Init(EFileNameStyle.HashName);
             compressionType.Init(ECompressOption.LZ4);
 
-            _encryptionServicesClassTypes = GetServicesClassTypes<IEncryptionServices>();
+            _encryptionServicesClassTypes = GetServicesClassTypes<IBundleEncryptor>();
             _encryptionServicesClassNames = _encryptionServicesClassTypes.Select(t => t.FullName).ToList();
             if (_encryptionServicesClassNames.Count > 0)
             {
@@ -105,7 +105,7 @@ namespace Ux.Editor.Build.Version
                 encryptionContainer.Add(_popupFieldEncryption);
             }
 
-            _manifestProcessServicesClassTypes = GetServicesClassTypes<IManifestProcessServices>();
+            _manifestProcessServicesClassTypes = GetServicesClassTypes<IManifestEncryptor>();
             _manifestProcessServicesClassNames = _manifestProcessServicesClassTypes.Select(t => t.FullName).ToList();
             if (_manifestProcessServicesClassNames.Count > 0)
             {
@@ -128,7 +128,7 @@ namespace Ux.Editor.Build.Version
                 manifestContainer.Add(_popupFieldManifestProess);
             }
 
-            _manifestRestoreServicesClassTypes = GetServicesClassTypes<IManifestRestoreServices>();
+            _manifestRestoreServicesClassTypes = GetServicesClassTypes<IManifestDecryptor>();
             _manifestRestoreServicesClassNames = _manifestRestoreServicesClassTypes.Select(t => t.FullName).ToList();
             if (_manifestRestoreServicesClassNames.Count > 0)
             {

@@ -1,14 +1,14 @@
 using System;
 using YooAsset;
 
-public sealed class UxManifestCryptoServices : IManifestProcessServices, IManifestRestoreServices
+public sealed class UxManifestCryptoServices : IManifestEncryptor, IManifestDecryptor
 {
-    byte[] IManifestProcessServices.ProcessManifest(byte[] fileData)
+    byte[] IManifestEncryptor.Encrypt(byte[] fileData)
     {
         return XorCrypto.Encrypt(fileData);
     }
 
-    byte[] IManifestRestoreServices.RestoreManifest(byte[] fileData)
+    byte[] IManifestDecryptor.Decrypt(byte[] fileData)
     {
         return XorCrypto.Decrypt(fileData);
     }

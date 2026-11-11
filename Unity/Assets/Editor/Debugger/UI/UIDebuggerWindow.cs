@@ -148,6 +148,7 @@ namespace Ux.Editor.Debugger.UI
         }
         private void OnBtnClick(Ux.UIMgr.UIStack data)
         {
+            if (!UIMgr.Ins.IsHasUIData(data.ID)) return;
             _listUI.Search(UIMgr.Ins.GetUIData(data.ID).Name);
         }
 

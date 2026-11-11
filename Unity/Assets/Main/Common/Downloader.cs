@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using YooAsset;
-using static YooAsset.DownloaderOperation;
 
 namespace Ux
 {
@@ -15,19 +14,19 @@ namespace Ux
         {
             YooMgr.Ins.ForEachPackage(x =>
             {                
-                _handles.Add(x.Package.CreateResourceDownloader(tags, Global.DownloadingMaxNum, Global.FailedTryAgain));
+                _handles.Add(x.Package.CreateResourceDownloader(new ResourceDownloaderOptions(tags, Global.DownloadingMaxNum, Global.FailedTryAgain)));
             });
         }
 
         /// <summary>
         /// 当下载进度发生变化
         /// </summary>
-        public DownloadUpdate OnDownloadUpdateDataCallback { set; get; }
+        public Action<DownloadProgressChangedEventArgs> OnDownloadUpdateDataCallback { set; get; }
 
         /// <summary>
         /// 当某个文件下载失败
         /// </summary>
-        public DownloadError OnDownloadErrorCallback { set; get; }
+        public Action<DownloadErrorEventArgs> OnDownloadErrorCallback { set; get; }
 
         /// <summary>
         /// 下载文件总数量
@@ -246,18 +245,18 @@ namespace Ux
             IsBeginDownload = true;
             foreach (var handle in _handles)
             {
-                handle.DownloadErrorCallback = OnDownloadErrorCallback;
-                handle.DownloadUpdateCallback = _OnDownloadUpdateDataCallback;
-                handle.BeginDownload();
+                if (OnDownloadErrorCallback != null) handle.DownloadError += OnDownloadErrorCallback;
+                handle.DownloadProgressChanged += _OnDownloadUpdateDataCallback;
+                handle.StartDownload();
                 await handle.ToUniTask();
                 // 检测下载结果
-                if (handle.Status != EOperationStatus.Succeed)
+                if (handle.Status != EOperationStatus.Succeeded)
                     return false;
             }
             return true;
         }
 
-        void _OnDownloadUpdateDataCallback(DownloadUpdateData data)
+        void _OnDownloadUpdateDataCallback(DownloadProgressChangedEventArgs data)
         {
             OnDownloadUpdateDataCallback?.Invoke(data);
         }

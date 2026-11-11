@@ -1,6 +1,6 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using System;
-using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 using YooAsset;
 
@@ -11,7 +11,7 @@ namespace Ux
         None,
         //主包
         Main,
-        //原生文件,由于微信小游戏不支持多Pacage,所以暂时不用原生文件。如果要读取原生文件，放到Main里面，用TextAsset方式读取
+        //原生文件
         RawFile,
     }
     public interface IYooPackage
@@ -27,29 +27,29 @@ namespace Ux
     {
         public override YooType YooType => YooType.RawFile;
         public override string Name => "RawFilePackage";
+        // 原生文件包不产 AB，编辑器模拟必须走 VirtualRawBundle，否则会按 AB 去解析源文件。
+        protected override EBundleType SimulateBundleType => EBundleType.VirtualRawBundle;
     }
 
     public abstract class YooPackage : IYooPackage
     {
         public abstract YooType YooType { get; }
         public abstract string Name { get; }
+
+        /// <summary>编辑器模拟构建时用的包裹类型：主包是 AB，原生文件包是 Raw。</summary>
+        protected virtual EBundleType SimulateBundleType => EBundleType.VirtualAssetBundle;
         public ResourcePackage Package { get; private set; }
         public string Version { get; set; }
         void _CreatePackage()
-        {
-            Package = YooAssets.TryGetPackage(Name);
+        {            
+            Package = YooAssets.TryGetPackage(Name, out var package) ? package : null;
             Package ??= YooAssets.CreatePackage(Name);
-            if (YooType.Main == YooType)
-            {
-                // 设置该资源包为默认的资源包
-                YooAssets.SetDefaultPackage(Package);
-            }
         }
         async UniTask<bool> IYooPackage.Initialize(EPlayMode playMode)
         {
-            // 创建资源包            
+            // 创建资源包
             _CreatePackage();
-            InitializationOperation initializationOperation = null;
+            InitializePackageOperation initializationOperation = null;
 
             switch (playMode)
             {
@@ -57,82 +57,71 @@ namespace Ux
                 // 编辑器模拟模式
                 case EPlayMode.EditorSimulateMode:
                     {
-                        var simulateBuildResult = EditorSimulateModeHelper.SimulateBuild(Name);
+                        var simulateBuildResult = EditorSimulateBuildInvoker.Build(Name, (int)SimulateBundleType);
                         var packageRoot = simulateBuildResult.PackageRootDirectory;
                         var editorFileSystemParams = FileSystemParameters.CreateDefaultEditorFileSystemParameters(packageRoot);
-                        var initParameters = new EditorSimulateModeParameters
+                        var options = new EditorSimulateModeOptions
                         {
                             EditorFileSystemParameters = editorFileSystemParams
                         };
-                        initializationOperation = Package.InitializeAsync(initParameters);
+                        initializationOperation = Package.InitializePackageAsync(options);
                         break;
                     }
 #endif
                 // 单机模式
                 case EPlayMode.OfflinePlayMode:
                     {
-                        IDecryptionServices decryptionServices = null;
-                        if (GameMain.Ins.UseDecryption)
+                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuiltinFileSystemParameters();
+                        AddBundleDecryptor(buildinFileSystemParams);
+                        AddManifestDecryptor(buildinFileSystemParams);
+                        var options = new OfflinePlayModeOptions
                         {
-                            decryptionServices = new UxDecryption();
-                        }
-                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters(decryptionServices);
-                        var initParameters = new OfflinePlayModeParameters
-                        {
-                            BuildinFileSystemParameters = buildinFileSystemParams
+                            BuiltinFileSystemParameters = buildinFileSystemParams
                         };
-                        initializationOperation = Package.InitializeAsync(initParameters);
+                        initializationOperation = Package.InitializePackageAsync(options);
                         break;
                     }
                 // 联机模式
                 case EPlayMode.HostPlayMode:
                     {
-                        IDecryptionServices decryptionServices = null;
-                        if (GameMain.Ins.UseDecryption)
-                        {
-                            decryptionServices = new UxDecryption();
-                        }
-
-                        IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
+                        IRemoteService remoteService = new RemoteService(Global.GetHostServerURL(),
                             Global.GetFallbackHostServerURL());
-                        var cacheFileSystemParams = FileSystemParameters.CreateDefaultCacheFileSystemParameters(remoteServices, decryptionServices);
-                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuildinFileSystemParameters(decryptionServices);
-                        var initParameters = new HostPlayModeParameters
+                        var cacheFileSystemParams = FileSystemParameters.CreateDefaultSandboxFileSystemParameters(remoteService);
+                        var buildinFileSystemParams = FileSystemParameters.CreateDefaultBuiltinFileSystemParameters();
+                        AddBundleDecryptor(cacheFileSystemParams);
+                        AddBundleDecryptor(buildinFileSystemParams);
+                        AddManifestDecryptor(buildinFileSystemParams);
+                        var options = new HostPlayModeOptions
                         {
-                            BuildinFileSystemParameters = buildinFileSystemParams,
+                            BuiltinFileSystemParameters = buildinFileSystemParams,
                             CacheFileSystemParameters = cacheFileSystemParams
                         };
-                        var manifestServices = new UxManifestCryptoServices();
-                        initParameters.BuildinFileSystemParameters.AddParameter(FileSystemParametersDefine.MANIFEST_SERVICES, manifestServices);
-                        initializationOperation = Package.InitializeAsync(initParameters);
+                        initializationOperation = Package.InitializePackageAsync(options);
                         break;
                     }
                 // WebGL运行模式
                 case EPlayMode.WebPlayMode:
                     {
-                        IWebDecryptionServices decryptionServices = null;
-                        if (GameMain.Ins.UseDecryption)
-                        {
-                            decryptionServices = new WebFileMemoryDecryption();
-                        }
-                        IRemoteServices remoteServices = new RemoteServices(Global.GetHostServerURL(),
+                        IRemoteService remoteService = new RemoteService(Global.GetHostServerURL(),
                             Global.GetFallbackHostServerURL());
-                        var webRemoteFileSystemParams = FileSystemParameters.CreateDefaultWebRemoteFileSystemParameters(remoteServices, decryptionServices); //支持跨域下载
-
-                        var webServerFileSystemParams = FileSystemParameters.CreateDefaultWebServerFileSystemParameters(decryptionServices);
-                        var initParameters = new WebPlayModeParameters
+                        var webRemoteFileSystemParams = FileSystemParameters.CreateDefaultWebNetworkFileSystemParameters(remoteService); //支持跨域下载
+                        var webServerFileSystemParams = FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
+                        AddBundleDecryptor(webRemoteFileSystemParams);
+                        AddBundleDecryptor(webServerFileSystemParams);
+                        AddManifestDecryptor(webServerFileSystemParams);
+                        var options = new WebPlayModeOptions
                         {
                             WebServerFileSystemParameters = webServerFileSystemParams,
-                            WebRemoteFileSystemParameters = webRemoteFileSystemParams
+                            WebNetworkFileSystemParameters = webRemoteFileSystemParams
                         };
-                        initializationOperation = Package.InitializeAsync(initParameters);
+                        initializationOperation = Package.InitializePackageAsync(options);
                         break;
                     }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
             await initializationOperation;
-            if (initializationOperation.Status != EOperationStatus.Succeed)
+            if (initializationOperation.Status != EOperationStatus.Succeeded)
             {
                 Log.Warning($"{initializationOperation.Error}");
                 return false;
@@ -140,29 +129,42 @@ namespace Ux
             return true;
         }
 
+        /// <summary>v3 把解密拆成独立接口，必须显式注册；兼容层的工厂方法会忽略旧参数。</summary>
+        void AddBundleDecryptor(FileSystemParameters parameters)
+        {
+            if (GameMain.Ins.UseDecryption)
+                parameters.AddParameter(EFileSystemParameter.AssetBundleDecryptor, new UxDecryption());
+        }
+
+        void AddManifestDecryptor(FileSystemParameters parameters)
+        {
+            parameters.AddParameter(EFileSystemParameter.ManifestDecryptor, new UxManifestCryptoServices());
+        }
+
         #region 远端地址
         /// <summary>
         /// 远端资源地址查询服务类
         /// </summary>
-        private class RemoteServices : IRemoteServices
+        private class RemoteService : IRemoteService
         {
             private readonly string _defaultHostServer;
             private readonly string _fallbackHostServer;
 
-            public RemoteServices(string defaultHostServer, string fallbackHostServer)
+            public RemoteService(string defaultHostServer, string fallbackHostServer)
             {
                 _defaultHostServer = defaultHostServer;
                 _fallbackHostServer = fallbackHostServer;
             }
-            string IRemoteServices.GetRemoteMainURL(string fileName)
+
+            IReadOnlyList<string> IRemoteService.GetRemoteUrls(string fileName)
             {
-                return $"{_defaultHostServer}/{fileName}";
-            }
-            string IRemoteServices.GetRemoteFallbackURL(string fileName)
-            {
-                return $"{_fallbackHostServer}/{fileName}";
+                return new[]
+                {
+                    $"{_defaultHostServer}/{fileName}",
+                    $"{_fallbackHostServer}/{fileName}"
+                };
             }
         }
-        #endregion      
+        #endregion
     }
 }

@@ -14,9 +14,9 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileSync(location))
+            using (var handle = package.Package.LoadAssetSync<RawFileObject>(location))
             {
-                return handle.GetRawFileData();
+                return (handle.AssetObject as RawFileObject)?.GetBytes();
             }
         }
 
@@ -27,22 +27,9 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileSync(location))
+            using (var handle = package.Package.LoadAssetSync<RawFileObject>(location))
             {
-                return handle.GetRawFileText();
-            }
-        }
-
-        /// <summary>
-        /// 获取原生文件的路径
-        /// </summary>
-        public string GetRawFilePath(string location)
-        {
-            var package = YooMgr.Ins.GetPackage(YooType.RawFile);
-            if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileSync(location))
-            {
-                return handle.GetRawFilePath();
+                return (handle.AssetObject as RawFileObject)?.GetText();
             }
         }
 
@@ -53,9 +40,9 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileSync(assetInfo))
+            using (var handle = package.Package.LoadAssetSync(assetInfo))
             {
-                return handle.GetRawFileData();
+                return (handle.AssetObject as RawFileObject)?.GetBytes();
             }
         }
 
@@ -66,25 +53,11 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileSync(assetInfo))
+            using (var handle = package.Package.LoadAssetSync(assetInfo))
             {
-                return handle.GetRawFileText();
+                return (handle.AssetObject as RawFileObject)?.GetText();
             }
         }
-
-        /// <summary>
-        /// 获取原生文件的路径
-        /// </summary>
-        public string GetRawFilePath(AssetInfo assetInfo)
-        {
-            var package = YooMgr.Ins.GetPackage(YooType.RawFile);
-            if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileSync(assetInfo))
-            {
-                return handle.GetRawFilePath();
-            }
-        }
-
 
         #endregion
 
@@ -96,10 +69,10 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileAsync(location))
+            using (var handle = package.Package.LoadAssetAsync<RawFileObject>(location))
             {
                 await handle.ToUniTask();
-                return handle.GetRawFileData();
+                return (handle.AssetObject as RawFileObject)?.GetBytes();
             }
         }
 
@@ -110,10 +83,10 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileAsync(location))
+            using (var handle = package.Package.LoadAssetAsync<RawFileObject>(location))
             {
                 await handle.ToUniTask();
-                return handle.GetRawFileText();
+                return (handle.AssetObject as RawFileObject)?.GetText();
             }
         }
 
@@ -124,11 +97,9 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileAsync(location))
-            {
-                await handle.ToUniTask();
-                return handle.GetRawFilePath();
-            }
+            var operation = package.Package.EnsureBundleFileAsync(new EnsureBundleFileOptions(location));
+            await operation.ToUniTask();
+            return operation.Status == EOperationStatus.Succeeded ? operation.Detail.BundleFilePath : null;
         }
 
         /// <summary>
@@ -138,10 +109,10 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileAsync(assetInfo))
+            using (var handle = package.Package.LoadAssetAsync(assetInfo))
             {
                 await handle.ToUniTask();
-                return handle.GetRawFileData();
+                return (handle.AssetObject as RawFileObject)?.GetBytes();
             }
         }
 
@@ -152,10 +123,10 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileAsync(assetInfo))
+            using (var handle = package.Package.LoadAssetAsync(assetInfo))
             {
                 await handle.ToUniTask();
-                return handle.GetRawFileText();
+                return (handle.AssetObject as RawFileObject)?.GetText();
             }
         }
 
@@ -166,13 +137,11 @@ namespace Ux
         {
             var package = YooMgr.Ins.GetPackage(YooType.RawFile);
             if (package == null) return null;
-            using (var handle = package.Package.LoadRawFileAsync(assetInfo))
-            {
-                await handle.ToUniTask();
-                return handle.GetRawFilePath();
-            }
+            var operation = package.Package.EnsureBundleFileAsync(new EnsureBundleFileOptions(assetInfo));
+            await operation.ToUniTask();
+            return operation.Status == EOperationStatus.Succeeded ? operation.Detail.BundleFilePath : null;
         }
-        #endregion        
+        #endregion
 
     }
 }

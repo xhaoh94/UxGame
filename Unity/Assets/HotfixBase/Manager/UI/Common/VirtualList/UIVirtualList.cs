@@ -22,6 +22,9 @@ namespace Ux
         private readonly Dictionary<int, Stack<IUIVirtualListItem>> _pools = new();
         private readonly UnityAction<Vector2> _onScroll;
         private readonly List<int> _removeIndices = new();
+        private readonly List<int> _missingIndices = new();
+        private readonly List<UIVirtualPendingCreate> _pendingCreate = new();
+        private readonly HashSet<int> _pendingCreateIndices = new();
 
         private bool _disposed;
         private bool _disposePending;
@@ -32,6 +35,15 @@ namespace Ux
         private bool _layoutRetryPending;
         private bool _layoutRetryWarningIssued;
         private bool _followEndForPendingLayout;
+
+        // —— 分批生成 ——
+        private int _createVersion;
+        private float _nextBatchTime;
+        private int _fillFrame = -1;
+        private bool _batchTimerArmed;
+        private bool _forceNextBatch;
+        private bool _initialFillPending;
+        private bool _initialBatchSpawned;
 
         /// <summary>尺寸缓存变化时保持首个可见 Item 及其视口偏移。</summary>
         public bool PreserveScrollAnchor { get; set; } = true;
@@ -122,8 +134,38 @@ namespace Ux
             RefreshVisible(false);
         }
         public bool IsDisposalComplete { get; private set; }
-        public bool HasPendingLayoutWork => _layoutRetryPending;
+        public bool HasPendingLayoutWork => _layoutRetryPending || _pendingCreate.Count > 0;
         public event Action<int, object> ItemClicked;
+
+        // —— 分批生成 ——
+
+        /// <summary>
+        /// 关闭后完全退回“当帧全部创建”的旧行为，便于对比排查。
+        /// 默认关闭：只有宿主每帧调 <see cref="TickPendingCreate"/> 时才该打开（组件会自动开）。
+        /// </summary>
+        public bool IncrementalEnabled { get; set; }
+
+        /// <summary>一批最多创建几项。</summary>
+        public int BatchSize { get; set; } = 4;
+
+        /// <summary>两批之间的最小间隔（毫秒）；0 表示每帧都可以补一批。</summary>
+        public float BatchIntervalMs { get; set; } = 33f;
+
+        /// <summary>
+        /// 首帧同步创建的数量。
+        /// &gt;0：先建这么多再分批；0：首帧一个都不建，等第一个批次间隔后开始；
+        /// -1（默认）：跟随每批数量，第一批在首个 tick 立即执行。
+        /// </summary>
+        public int InitialCount { get; set; } = -1;
+
+        /// <summary>单批耗时上限（毫秒），0 表示不限制。防止个别重 Item 把整批拖到掉帧。</summary>
+        public float FrameBudgetMs { get; set; }
+
+        public bool IsFilling => _pendingCreate.Count > 0;
+        public int PendingCreateCount => _pendingCreate.Count;
+
+        /// <summary>首次填充的分批队列清空时触发一次。</summary>
+        public event Action FillingCompleted;
 
         public void SetDatas<T>(IEnumerable<T> datas, int scrollToIndex = -1)
         {
@@ -137,6 +179,7 @@ namespace Ux
             {
                 // 回收回调失败时，数据和布局仍保持旧数量，可以修复回调后重试。
                 ResetActiveItems();
+                ResetIncrementalFill();
                 _layout.SetItemCount(values.Count, true);
                 _datas.Clear();
                 _datas.AddRange(values);
@@ -385,6 +428,11 @@ namespace Ux
             _remappedItems.Clear();
             _pools.Clear();
             _datas.Clear();
+            _pendingCreate.Clear();
+            _pendingCreateIndices.Clear();
+            _missingIndices.Clear();
+            _createVersion++;
+            FillingCompleted = null;
             DataRevision++;
             ItemClicked = null;
             _layoutRetryPending = false;
@@ -507,6 +555,7 @@ namespace Ux
             for (int i = 0; i < _removeIndices.Count; i++)
                 ReleaseItem(_removeIndices[i]);
 
+            _missingIndices.Clear();
             for (int index = range.Start; index <= range.End && !_disposePending; index++)
             {
                 if (index < 0 || index >= RenderCount)
@@ -516,30 +565,223 @@ namespace Ux
                 int itemType = _factory.GetItemType(ToDataIndex(index), data);
                 if (!_activeItems.TryGetValue(index, out var active))
                 {
-                    active = new ActiveItem
-                    {
-                        Item = GetItem(itemType),
-                        ItemType = itemType
-                    };
-                    _activeItems.Add(index, active);
-                    BindItem(index, active);
+                    _missingIndices.Add(index);
+                    continue;
                 }
-                else if (active.ItemType != itemType)
+
+                if (active.ItemType != itemType)
                 {
                     ReleaseItem(index);
-                    active = new ActiveItem
-                    {
-                        Item = GetItem(itemType),
-                        ItemType = itemType
-                    };
-                    _activeItems.Add(index, active);
-                    BindItem(index, active);
+                    _missingIndices.Add(index);
+                    continue;
                 }
-                else if (force || active.NeedsBind)
-                {
+
+                if (force || active.NeedsBind)
                     BindItem(index, active);
-                }
             }
+
+            if (_missingIndices.Count == 0)
+                return;
+
+            if (!ShouldBatchCreate(_missingIndices.Count))
+            {
+                for (int i = 0; i < _missingIndices.Count && !_disposePending; i++)
+                    CreateItem(_missingIndices[i]);
+
+                // 数据量小到一屏建得完，或者根本不是首次填充：不进队列。
+                _initialFillPending = false;
+                _pendingCreate.Clear();
+                _pendingCreateIndices.Clear();
+                return;
+            }
+
+            // 首次填充：InitialCount > 0 时先同步建这么多，其余按批次从上到下补；
+            // InitialCount = -1 / 0 时不做首帧特批，全部交给批次（区别在首批是否立即执行）。
+            int immediate = 0;
+            if (!_initialBatchSpawned && InitialCount > 0)
+                immediate = Mathf.Clamp(InitialCount, 0, _missingIndices.Count);
+
+            for (int i = 0; i < immediate && !_disposePending; i++)
+                CreateItem(_missingIndices[i]);
+            _initialBatchSpawned = true;
+
+            // 首帧同步建完后重新计时：否则同一帧的 LateUpdate 会拿上一帧的 delta 直接开批，
+            // 变成“首帧 + 首批”一起出。
+            if (immediate > 0)
+            {
+                _nextBatchTime = NowSeconds() + BatchIntervalSeconds;
+                _fillFrame = Time.frameCount;
+            }
+
+            for (int i = immediate; i < _missingIndices.Count; i++)
+                EnqueueCreate(_missingIndices[i]);
+        }
+
+        /// <summary>只有数据变更后的首次填充才分批；滚动补齐仍同步，避免滑动时出现空白。</summary>
+        private bool ShouldBatchCreate(int missingCount)
+        {
+            if (!IncrementalEnabled || !_initialFillPending || missingCount <= 0)
+                return false;
+
+            // 首帧批已经下过之后一律进队列，否则剩余项会在某一轮里被一次性补完，等于没分批。
+            if (_initialBatchSpawned)
+                return true;
+
+            // 池里已有可复用对象时没有 Instantiate 峰值，分批反而让缓冲项晚一帧出现。
+            // 分页/刷新这类“全量重置但池是热的”场景因此完全不受影响。
+            if (HasWarmPool())
+                return false;
+
+            // -1：不做首帧特批，全部交给批次。
+            if (InitialCount < 0)
+                return true;
+
+            return missingCount > InitialCount;
+        }
+
+        private bool HasWarmPool()
+        {
+            foreach (var pool in _pools.Values)
+            {
+                if (pool.Count > 0)
+                    return true;
+            }
+            return false;
+        }
+
+        private void CreateItem(int index)
+        {
+            int itemType = _factory.GetItemType(ToDataIndex(index), DataAt(index));
+            CreateItem(index, itemType);
+        }
+
+        private void CreateItem(int index, int itemType)
+        {
+            var active = new ActiveItem
+            {
+                Item = GetItem(itemType),
+                ItemType = itemType
+            };
+            _activeItems.Add(index, active);
+            BindItem(index, active);
+        }
+
+        private void EnqueueCreate(int index)
+        {
+            if (!_pendingCreateIndices.Add(index))
+                return;
+
+            _pendingCreate.Add(new UIVirtualPendingCreate
+            {
+                Index = index,
+                Version = _createVersion
+            });
+        }
+
+        private void ResetIncrementalFill()
+        {
+            _pendingCreate.Clear();
+            _pendingCreateIndices.Clear();
+            _nextBatchTime = NowSeconds() + BatchIntervalSeconds;
+            _fillFrame = -1;
+            // -1：跟随每批数量，首个 tick 立刻开第一批；>=0：等满一个批次间隔。
+            _forceNextBatch = InitialCount < 0;
+            _batchTimerArmed = _forceNextBatch;
+            _initialFillPending = true;
+            _initialBatchSpawned = false;
+            _createVersion++;
+        }
+
+        private static float NowSeconds() => Time.unscaledTime;
+
+        private float BatchIntervalSeconds => Mathf.Max(0f, BatchIntervalMs) * 0.001f;
+
+        /// <summary>
+        /// 宿主每帧调用：凑够一批就建几项。队列按索引升序（从上到下）出队。
+        /// 计时从「首帧批之后的第一帧」开始算：打开界面那一帧本身可能卡好几秒，
+        /// 从 SetDatas 起算会让第一批立刻被这个卡顿“等够了”。
+        /// </summary>
+        public bool TickPendingCreate()
+        {
+            if (_disposed || _disposePending || _refreshing || _changingData)
+                return false;
+            if (_pendingCreate.Count == 0)
+                return false;
+
+            if (!_batchTimerArmed)
+            {
+                // 首帧批所在帧还没走完，不开始计时。
+                if (Time.frameCount <= _fillFrame)
+                    return false;
+
+                _nextBatchTime = NowSeconds() + BatchIntervalSeconds;
+                _batchTimerArmed = true;
+                return false;
+            }
+
+            if (!_forceNextBatch && NowSeconds() < _nextBatchTime)
+                return false;
+
+            _forceNextBatch = false;
+            _nextBatchTime = NowSeconds() + BatchIntervalSeconds;
+
+            SortPendingByIndex();
+
+            int budget = Mathf.Max(1, BatchSize);
+            float startTime = FrameBudgetMs > 0f ? Time.realtimeSinceStartup : 0f;
+            int created = 0;
+
+            while (created < budget && _pendingCreate.Count > 0)
+            {
+                var pending = _pendingCreate[0];
+                _pendingCreate.RemoveAt(0);
+                _pendingCreateIndices.Remove(pending.Index);
+
+                if (pending.Version != _createVersion)
+                    continue;
+                if (pending.Index < 0 || pending.Index >= RenderCount)
+                    continue;
+                if (_activeItems.ContainsKey(pending.Index))
+                    continue;
+                if (!IsIndexInCurrentRange(pending.Index))
+                    continue;
+
+                CreateItem(pending.Index);
+                created++;
+
+                // 单个 Item 超预算时至少建一个，否则队列永远推不动。
+                if (FrameBudgetMs > 0f && (Time.realtimeSinceStartup - startTime) * 1000f >= FrameBudgetMs)
+                    break;
+            }
+
+            if (created > 0)
+                RefreshVisible(false);
+
+            if (_pendingCreate.Count == 0)
+            {
+                _initialFillPending = false;
+                FillingCompleted?.Invoke();
+            }
+
+            return created > 0;
+        }
+
+        /// <summary>从上到下补：按索引升序，滚动过程中插入的项也回到正确顺序。</summary>
+        private void SortPendingByIndex()
+        {
+            if (_pendingCreate.Count <= 1)
+                return;
+
+            _pendingCreate.Sort(PendingIndexComparison);
+        }
+
+        private static readonly Comparison<UIVirtualPendingCreate> PendingIndexComparison =
+            (a, b) => a.Index.CompareTo(b.Index);
+
+        private bool IsIndexInCurrentRange(int index)
+        {
+            var range = _layout.GetVisibleRange(GetScrollPosition(), GetViewportLength(), _bufferSize);
+            return range.Contains(index);
         }
 
         private void BindItem(int index, ActiveItem active)
@@ -854,6 +1096,13 @@ namespace Ux
             public bool NeedsBind;
             public ulong BindingVersion;
             public IUIVirtualListItem Item;
+        }
+
+        /// <summary>待创建项。Version 与列表的 _createVersion 不一致时丢弃。</summary>
+        private struct UIVirtualPendingCreate
+        {
+            public int Index;
+            public int Version;
         }
     }
 
@@ -1262,10 +1511,7 @@ namespace Ux
             if (!_prefabs.TryGetValue(itemType, out var prefab) || prefab == null)
                 throw new InvalidOperationException($"没有找到 Item 模板，type={itemType}");
 
-            var instance = UnityEngine.Object.Instantiate(prefab, parent, false);
-            // prefab 里的对象历史上都在 Default 层；UICamera 只渲染 UI/UIModel 层，
-            // 动态创建的 item 不改层就会被裁掉。
-            instance.SetLayer(LayerMask.NameToLayer(Layers.UI));
+            var instance = UnityEngine.Object.Instantiate(prefab, parent, false);                        
             var item = _itemResolver != null
                 ? _itemResolver(itemType, instance)
                 : instance.GetComponent<IUIVirtualListItem>();

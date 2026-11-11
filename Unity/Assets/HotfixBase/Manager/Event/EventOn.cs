@@ -20,19 +20,6 @@ namespace Ux
     {
         partial class EventSystem
         {
-            
-
-            public long On(int eType, FastMethodInfo action)
-            {
-                var evtData = _Add(out var key, eType, action);
-                if (evtData != default)
-                {
-                    evtData.Init(key, eType, action);
-                }
-
-                return key;
-            }
-
             public long On(int eType, object tag, Action action)
             {
                 var evtData = _Add<EventData>(out var key, eType, tag, action);

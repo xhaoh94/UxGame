@@ -34,3 +34,12 @@ MonoBehaviour:
       PiplineOption: ScriptableBuildPipeline
       NameStyleOption: 0
       BuildTags: builtin
+    - New: 0
+      IsCollectShaderVariant: 0
+      PackageName: RawFilePackage
+      EncyptionClassName: YooAsset.Editor.EncryptionNone
+      ManifestClassName: YooAsset.Editor.ManifestNone
+      CompressOption: 2
+      PiplineOption: RawFileBuildPipeline
+      NameStyleOption: 0
+      BuildTags: builtin

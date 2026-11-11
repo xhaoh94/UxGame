@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
+using Ux.Editor.Debugger.ECS;
 using Ux.Editor.Debugger.Event;
 using Ux.Editor.Debugger.Time;
 using Ux.Editor.Debugger.UI;
@@ -16,6 +17,7 @@ namespace Ux.Editor.Debugger
         typeof(UIDebuggerWindow),
         typeof(EventDebuggerWindow),
         typeof(TimeDebuggerWindow),
+        typeof(EntityDebuggerWindow),
         };
     }
     public class DebuggerObjectListView<T, V> where T : TemplateContainer, IDebuggerListItem<V>, new()

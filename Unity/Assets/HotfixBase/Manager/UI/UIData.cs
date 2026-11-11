@@ -27,7 +27,8 @@ namespace Ux
         Type CType { get; }
         
         /// <summary>
-        /// UI懒加载的资源标签数组
+        /// UI懒加载的资源标签数组。
+        /// 同一类型的多个 UIData 共享同一个数组实例（类型级声明），调用方只读，不得修改。
         /// </summary>
         string[] Lazyloads { get; }
         
@@ -124,9 +125,8 @@ namespace Ux
             TabData = tabData;
             Children = new List<int>();
 
-            // 从类型属性中获取懒加载资源信息
-            var resAttr = type.GetAttribute<LazyloadAttribute>();
-            Lazyloads = resAttr?.lazyloads;
+            // 从类型属性中获取懒加载资源信息（类型级声明，按类型缓存，避免重复反射）
+            Lazyloads = GetLazyloads(type);
 
             // 初始化Tab数据
             tabData?.Init(this);
@@ -161,6 +161,21 @@ namespace Ux
         /// Tab页数据接口（只读属性）
         /// </summary>
         public virtual IUITabData TabData { get; }
+
+        /// <summary>
+        /// 懒加载声明的缓存。LazyloadAttribute 是类型级、不会变的声明，
+        /// 同一类型重复构造 UIData（动态界面）时不必再反射一次。
+        /// 注意：缓存的是特性里的原始数组，调用方只读，不要修改。
+        /// </summary>
+        private static readonly Dictionary<Type, string[]> _lazyloadCache = new();
+
+        private static string[] GetLazyloads(Type type)
+        {
+            if (_lazyloadCache.TryGetValue(type, out var cached)) return cached;
+            cached = type.GetAttribute<LazyloadAttribute>()?.lazyloads;
+            _lazyloadCache[type] = cached;
+            return cached;
+        }
 
         /// <summary>
         /// 获取父类面板链（从当前面板到最顶层父面板的所有父面板ID）
@@ -362,6 +377,16 @@ namespace Ux
         /// <param name="data">要添加的UI数据</param>
         public void AddUIData(IUIData data)
         {
+            AddUIData(data, true);
+        }
+
+        /// <summary>
+        /// 添加UIData，可选择是否立刻刷新调试面板。
+        /// 批量注册（一次添加多个动态界面）时传 notify: false，最后调一次
+        /// <see cref="NotifyUIDataChanged"/>，避免每条都全量刷新一次。
+        /// </summary>
+        public void AddUIData(IUIData data, bool notify)
+        {
             if (IsHasUIData(data.ID))
             {
                 Log.Error("重复注册UI面板:{0}", data.Name);
@@ -369,6 +394,14 @@ namespace Ux
             }
             _idUIData.Add(data.ID, data);
             _dymUIData.Add(data.ID);
+#if UNITY_EDITOR
+            if (notify) __Debugger_UI_Event();
+#endif
+        }
+
+        /// <summary>批量修改 UIData 后调用一次，刷新编辑器调试面板（运行时为空操作）。</summary>
+        public static void NotifyUIDataChanged()
+        {
 #if UNITY_EDITOR
             __Debugger_UI_Event();
 #endif

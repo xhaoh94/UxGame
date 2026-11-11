@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Ux.Editor.Timeline;
@@ -39,62 +40,6 @@ namespace Ux.Editor.Combat
         // 右栏分区折叠状态：按分区独立记忆，避免每次打开都要重新展开。
         private const string LogicSectionKey = "Ux.CombatEditor.Fold.Logic";
         private const string ValidationSectionKey = "Ux.CombatEditor.Fold.Validation";
-        private static GUIStyle _sectionFoldoutStyle;
-        private static GUIStyle _skillItemStyle;
-        private static GUIStyle _skillDeleteStyle;
-
-        private static GUIStyle SectionFoldoutStyle
-        {
-            get
-            {
-                if (_sectionFoldoutStyle == null)
-                {
-                    _sectionFoldoutStyle = new GUIStyle(EditorStyles.foldout)
-                    {
-                        fontStyle = FontStyle.Bold,
-                    };
-                }
-                return _sectionFoldoutStyle;
-            }
-        }
-
-        private static GUIStyle SkillItemStyle
-        {
-            get
-            {
-                if (_skillItemStyle == null)
-                {
-                    _skillItemStyle = new GUIStyle(EditorStyles.label)
-                    {
-                        alignment = TextAnchor.MiddleLeft,
-                        padding = new RectOffset(12, 6, 0, 0),
-                        fontSize = 12,
-                    };
-                    _skillItemStyle.normal.textColor = new Color(0.88f, 0.88f, 0.88f);
-                    _skillItemStyle.hover.textColor = Color.white;
-                    _skillItemStyle.active.textColor = Color.white;
-                }
-                return _skillItemStyle;
-            }
-        }
-
-        private static GUIStyle SkillDeleteStyle
-        {
-            get
-            {
-                if (_skillDeleteStyle == null)
-                {
-                    _skillDeleteStyle = new GUIStyle(EditorStyles.miniButton)
-                    {
-                        alignment = TextAnchor.MiddleCenter,
-                        fontSize = 12,
-                        padding = new RectOffset(0, 0, 0, 0),
-                    };
-                }
-                return _skillDeleteStyle;
-            }
-        }
-
         private static readonly StateLayer[] PresentationLayers =
         {
             StateLayer.Locomotion,
@@ -113,8 +58,12 @@ namespace Ux.Editor.Combat
         private List<CombatValidationIssue> _issues = new List<CombatValidationIssue>();
         private bool _showIssues;
         private float _leftPanelWidth = DefaultLeftPanelWidth;
-        private IMGUIContainer _configContainer;
-        private IMGUIContainer _navigationContainer;
+        private VisualElement _configContainer;
+        private VisualElement _navigationContainer;
+        private ScrollView _configScroll;
+        private TimelineWindow _prewarmedTimeline;
+        private VisualElement _leftPanel;
+        private bool _rebuildPending;
         private VisualElement _rightPanel;
         private ResizeSplitter _leftSplitter;
         private ResizeSplitter _rightSplitter;
@@ -225,7 +174,7 @@ namespace Ux.Editor.Combat
             }
         }
 
-        [MenuItem("UxGame/工具/战斗/角色配置", false, 520)]
+        [MenuItem("UxGame/工具/战斗", false,520)]
         public static void ShowWindow()
         {
             var window = GetWindow<CombatEditorWindow>();
@@ -244,7 +193,7 @@ namespace Ux.Editor.Combat
             mainArea.style.flexDirection = FlexDirection.Row;
             mainArea.style.flexGrow = 1;
 
-            _navigationContainer = new IMGUIContainer(DrawNavigationGUI)
+            _navigationContainer = new VisualElement
             {
                 name = "CombatEditorNavigation",
             };
@@ -262,7 +211,7 @@ namespace Ux.Editor.Combat
             _rightPanel.style.flexGrow = 1;
             _rightPanel.RegisterCallback<GeometryChangedEvent>(_ => ApplyRightPanelLayout());
 
-            _configContainer = new IMGUIContainer(DrawRightEditorGUI)
+            _configContainer = new VisualElement
             {
                 name = "CombatEditorConfig",
             };
@@ -285,6 +234,10 @@ namespace Ux.Editor.Combat
             _rightPanel.Add(_embeddedTimelineContainer);
             mainArea.Add(_rightPanel);
             rootVisualElement.Add(mainArea);
+            RebuildNavigation();
+            RebuildConfig();
+            EditorApplication.delayCall += PrewarmTimeline;
+            EditorApplication.delayCall += WarmupTrackTypes;
             ScheduleEmbeddedTimelineRefresh();
         }
 
@@ -459,32 +412,31 @@ namespace Ux.Editor.Combat
             }
             _issues.Clear();
             TimelineWindow.RefreshCurrentDocumentAfterUndo();
-            _navigationContainer?.MarkDirtyRepaint();
-            _configContainer?.MarkDirtyRepaint();
+            RequestRebuild();
             _embeddedTimeline?.Repaint();
             ScheduleEmbeddedTimelineRefresh();
             Repaint();
         }
 
-        private void DrawNavigationGUI()
+        private void RebuildNavigation()
         {
-            _leftPanelWidth = Mathf.Clamp(
-                _leftPanelWidth,
-                MinLeftPanelWidth,
-                GetMaxLeftPanelWidth());
-            if (_navigationContainer != null)
-            {
-                _navigationContainer.style.width = _leftPanelWidth;
-            }
-            DrawNavigation();
+            if (_navigationContainer == null) return;
+
+            _navigationContainer.style.width = _leftPanelWidth;
+            _navigationContainer.Clear();
+            BuildNavigation(_navigationContainer);
         }
 
-        private void DrawRightEditorGUI()
+        private void RebuildConfig()
         {
-            DrawHeader();
+            if (_configContainer == null) return;
+
+            _configContainer.Clear();
+            BuildHeader(_configContainer);
+
             if (_profile == null)
             {
-                DrawEmptyState();
+                BuildEmptyState(_configContainer);
                 ScheduleEmbeddedTimelineRefresh();
                 return;
             }
@@ -494,34 +446,77 @@ namespace Ux.Editor.Combat
                 _selectedAction = FindFirstAction();
             }
 
-            if (_page == Page.Skills)
+            _configScroll = new ScrollView();
+            _configScroll.style.flexGrow = 1;
+            _configScroll.style.minHeight = 0;
+            _configScroll.scrollOffset = _contentScroll;
+            _configContainer.Add(_configScroll);
+
+            switch (_page)
             {
-                // 技能页需要把完整信息高度交给外层布局，避免 ScrollView 把 Timeline 顶出大段空白。
-                using (new EditorGUILayout.VerticalScope(GUILayout.ExpandWidth(true)))
-                {
-                    DrawSkillsPage();
-                }
+                case Page.Profile:
+                    BuildProfilePage(_configScroll);
+                    break;
+                case Page.States:
+                    BuildStatesPage(_configScroll);
+                    break;
+                case Page.Skills:
+                    BuildSkillsPage(_configScroll);
+                    break;
             }
-            else
-            {
-                using (var scroll = new EditorGUILayout.ScrollViewScope(_contentScroll))
-                {
-                    _contentScroll = scroll.scrollPosition;
-                    using (new EditorGUILayout.VerticalScope(GUILayout.ExpandWidth(true)))
-                    {
-                        switch (_page)
-                        {
-                            case Page.Profile:
-                                DrawProfilePage();
-                                break;
-                            case Page.States:
-                                DrawStatesPage();
-                                break;
-                        }
-                    }
-                }
-            }
+
             ScheduleEmbeddedTimelineRefresh();
+        }
+
+        /// <summary>把重建推迟到下一帧末尾，避免在回调里同步改 UI 树。</summary>
+        private void RequestRebuild()
+        {
+            if (_rebuildPending) return;
+            _rebuildPending = true;
+            EditorApplication.delayCall += () =>
+            {
+                _rebuildPending = false;
+                if (this == null) return;
+                RebuildNavigation();
+                RebuildConfig();
+            };
+        }
+
+        private static HelpBox CreateHelpBox(string text, MessageType type)
+        {
+            return new HelpBox(text, ToHelpBoxType(type));
+        }
+
+        private static HelpBoxMessageType ToHelpBoxType(MessageType type)
+        {
+            switch (type)
+            {
+                case MessageType.Error: return HelpBoxMessageType.Error;
+                case MessageType.Warning: return HelpBoxMessageType.Warning;
+                case MessageType.Info: return HelpBoxMessageType.Info;
+                default: return HelpBoxMessageType.None;
+            }
+        }
+
+        private static VisualElement Space(float height)
+        {
+            var element = new VisualElement();
+            element.style.height = height;
+            return element;
+        }
+
+        private static VisualElement FlexibleSpace()
+        {
+            var element = new VisualElement();
+            element.style.flexGrow = 1;
+            return element;
+        }
+
+        private static Button ToolbarButton(string text, Action onClick, float width = 0)
+        {
+            var button = new Button(onClick) { text = text };
+            if (width > 0) button.style.width = width;
+            return button;
         }
 
         private void ScheduleEmbeddedTimelineRefresh()
@@ -565,6 +560,40 @@ namespace Ux.Editor.Combat
                 return;
             }
 
+            // 首次进入 Skills 页：优先复用预创建的窗口，省掉 CreateGUI 的 500ms+。
+            if (_embeddedTimeline == null && _prewarmedTimeline != null)
+            {
+                _embeddedTimeline = _prewarmedTimeline;
+                _prewarmedTimeline = null;
+                _embeddedTimeline.AttachTo(_embeddedTimelineContainer);
+                _embeddedTimelineContainer.style.display = DisplayStyle.Flex;
+                ApplyRightPanelLayout();
+
+                if (_embeddedTimeline.TryRebind(timeline, _selectedAction, _profile, _previewObject))
+                {
+                    _embeddedAction = _selectedAction;
+                    _embeddedTimelineAsset = timeline;
+                    _embeddedPreviewObject = _previewObject;
+                    Repaint();
+                    return;
+                }
+
+                DestroyEmbeddedTimeline();
+            }
+
+            // 复用已存在的嵌入窗口：只切换数据源，不重建整个 Timeline UI。
+            if (_embeddedTimeline != null)
+            {
+                _embeddedAction = _selectedAction;
+                _embeddedTimelineAsset = timeline;
+                _embeddedPreviewObject = _previewObject;
+                if (_embeddedTimeline.TryRebind(timeline, _selectedAction, _profile, _previewObject))
+                {
+                    Repaint();
+                    return;
+                }
+            }
+
             DestroyEmbeddedTimeline();
             _embeddedAction = _selectedAction;
             _embeddedTimelineAsset = timeline;
@@ -582,6 +611,34 @@ namespace Ux.Editor.Combat
                 DestroyEmbeddedTimeline();
             }
             Repaint();
+        }
+
+        private void PrewarmTimeline()
+        {
+            if (this == null || _prewarmedTimeline != null || _embeddedTimeline != null)
+            {
+                return;
+            }
+
+            _prewarmedTimeline = TimelineWindow.CreateDetached();
+        }
+
+        private void WarmupTrackTypes()
+        {
+            if (this == null) return;
+
+            TimelineAssetEditorSource.Warmup();
+        }
+
+        private void DiscardPrewarmedTimeline()
+        {
+            if (_prewarmedTimeline == null)
+            {
+                return;
+            }
+
+            UnityEngine.Object.DestroyImmediate(_prewarmedTimeline);
+            _prewarmedTimeline = null;
         }
 
         private void DestroyEmbeddedTimeline()
@@ -605,173 +662,169 @@ namespace Ux.Editor.Combat
             ApplyRightPanelLayout();
         }
 
-        private void DrawHeader()
+        private void BuildHeader(VisualElement parent)
         {
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            var box = new VisualElement();
+            box.style.marginBottom = 6;
+
+            var row1 = new VisualElement();
+            row1.style.flexDirection = FlexDirection.Row;
+
+            var roleLabel = new Label("角色");
+            roleLabel.style.width = 36;
+            row1.Add(roleLabel);
+
+            var profileField = new ObjectField
             {
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-                {
-                    GUILayout.Label("角色", EditorStyles.miniLabel, GUILayout.Width(36));
-                    EditorGUI.BeginChangeCheck();
-                    var profile = (CharacterCombatProfile)EditorGUILayout.ObjectField(
-                        _profile,
-                        typeof(CharacterCombatProfile),
-                        false,
-                        GUILayout.MinWidth(220));
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        SetProfile(profile);
-                    }
+                objectType = typeof(CharacterCombatProfile),
+                allowSceneObjects = false,
+            };
+            profileField.SetValueWithoutNotify(_profile);
+            profileField.style.flexGrow = 1;
+            profileField.RegisterValueChangedCallback(e =>
+            {
+                SetProfile(e.newValue as CharacterCombatProfile);
+                RequestRebuild();
+            });
+            row1.Add(profileField);
 
-                    if (GUILayout.Button("新建", EditorStyles.toolbarButton, GUILayout.Width(48)))
-                    {
-                        CreateProfile();
-                    }
-                    using (new EditorGUI.DisabledScope(_profile == null))
-                    {
-                        if (GUILayout.Button("保存", EditorStyles.toolbarButton, GUILayout.Width(48)))
-                        {
-                            SaveAll();
-                        }
-                        if (GUILayout.Button("校验", EditorStyles.toolbarButton, GUILayout.Width(48)))
-                        {
-                            ValidateAndReport();
-                        }
-                    }
+            row1.Add(ToolbarButton("新建", () => { CreateProfile(); RequestRebuild(); }, 48));
 
-                    GUILayout.FlexibleSpace();
-                    if (_profile != null)
-                    {
-                        var states = _profile.StatePresentations == null ? 0 : _profile.StatePresentations.Count;
-                        var actions = _profile.Actions == null ? 0 : _profile.Actions.Count;
-                        GUILayout.Label($"状态 {states}  技能 {actions}", EditorStyles.miniLabel);
-                    }
-                }
+            var saveButton = ToolbarButton("保存", SaveAll, 48);
+            saveButton.SetEnabled(_profile != null);
+            row1.Add(saveButton);
 
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-                {
-                    GUILayout.Label("预览对象", EditorStyles.miniLabel, GUILayout.Width(60));
-                    EditorGUI.BeginChangeCheck();
-                    var previewObject = (GameObject)EditorGUILayout.ObjectField(
-                        _previewObject,
-                        typeof(GameObject),
-                        false,
-                        GUILayout.MinWidth(220));
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        _previewObject = previewObject;
-                        SavePreviewObject(_profile, _previewObject);
-                        ScheduleEmbeddedTimelineRefresh();
-                    }
-                    GUILayout.FlexibleSpace();
-                    using (new EditorGUI.DisabledScope(_profile == null))
-                    {
-                        if (GUILayout.Button("同步全部帧率", EditorStyles.toolbarButton, GUILayout.Width(96)))
-                        {
-                            SyncAllTimelineFrameRates();
-                        }
-                    }
-                }
+            var validateButton = ToolbarButton("校验", () => { ValidateAndReport(); RequestRebuild(); }, 48);
+            validateButton.SetEnabled(_profile != null);
+            row1.Add(validateButton);
+
+            row1.Add(FlexibleSpace());
+
+            if (_profile != null)
+            {
+                var states = _profile.StatePresentations == null ? 0 : _profile.StatePresentations.Count;
+                var actions = _profile.Actions == null ? 0 : _profile.Actions.Count;
+                row1.Add(new Label($"状态 {states}  技能 {actions}"));
             }
+            box.Add(row1);
+
+            var row2 = new VisualElement();
+            row2.style.flexDirection = FlexDirection.Row;
+
+            var previewLabel = new Label("预览对象");
+            previewLabel.style.width = 60;
+            row2.Add(previewLabel);
+
+            var previewField = new ObjectField
+            {
+                objectType = typeof(GameObject),
+                allowSceneObjects = false,
+            };
+            previewField.SetValueWithoutNotify(_previewObject);
+            previewField.style.flexGrow = 1;
+            previewField.RegisterValueChangedCallback(e =>
+            {
+                _previewObject = e.newValue as GameObject;
+                SavePreviewObject(_profile, _previewObject);
+                ScheduleEmbeddedTimelineRefresh();
+            });
+            row2.Add(previewField);
+
+            row2.Add(FlexibleSpace());
+
+            var syncButton = ToolbarButton("同步全部帧率", SyncAllTimelineFrameRates, 96);
+            syncButton.SetEnabled(_profile != null);
+            row2.Add(syncButton);
+            box.Add(row2);
+
+            parent.Add(box);
         }
 
-        private void DrawEmptyState()
+        private void BuildEmptyState(VisualElement parent)
         {
-            GUILayout.FlexibleSpace();
-            using (new EditorGUILayout.HorizontalScope())
+            var center = new VisualElement();
+            center.style.flexGrow = 1;
+            center.style.justifyContent = Justify.Center;
+            center.style.alignItems = Align.Center;
+
+            var box = new VisualElement();
+            box.style.width = 430;
+
+            var title = new Label("角色战斗配置");
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            box.Add(title);
+
+            box.Add(CreateHelpBox(
+                "选择 CharacterCombatProfile 开始编辑。\n\n" +
+                "状态表现只做状态到 Timeline 的映射；技能列表管理主动动作；" +
+                "技能的逻辑轨道和表现 Timeline 默认在当前窗口内编辑，也可以按需打开独立窗口。",
+                MessageType.Info));
+
+            var createButton = new Button(() => { CreateProfile(); RequestRebuild(); })
             {
-                GUILayout.FlexibleSpace();
-                using (new EditorGUILayout.VerticalScope(GUILayout.Width(430)))
-                {
-                    GUILayout.Label("角色战斗配置", EditorStyles.boldLabel);
-                    EditorGUILayout.HelpBox(
-                        "选择 CharacterCombatProfile 开始编辑。\n\n" +
-                        "状态表现只做状态到 Timeline 的映射；技能列表管理主动动作；" +
-                        "技能的逻辑轨道和表现 Timeline 默认在当前窗口内编辑，也可以按需打开独立窗口。",
-                        MessageType.Info);
-                    if (GUILayout.Button("新建角色战斗配置", GUILayout.Height(30)))
-                    {
-                        CreateProfile();
-                    }
-                }
-                GUILayout.FlexibleSpace();
-            }
-            GUILayout.FlexibleSpace();
+                text = "新建角色战斗配置",
+            };
+            createButton.style.height = 30;
+            box.Add(createButton);
+
+            center.Add(box);
+            parent.Add(center);
         }
 
-        private void DrawNavigation()
+        private void BuildNavigation(VisualElement parent)
         {
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_leftPanelWidth)))
+            var box = new VisualElement();
+            box.style.flexGrow = 1;
+
+            var title = new Label("配置");
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            box.Add(title);
+
+            box.Add(BuildPageButton("基础参数", Page.Profile));
+            box.Add(BuildPageButton("状态表现映射", Page.States));
+            box.Add(Space(10));
+
+            var skillHeader = new VisualElement();
+            skillHeader.style.flexDirection = FlexDirection.Row;
+
+            var skillTitle = new Label("技能列表");
+            skillTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+            skillHeader.Add(skillTitle);
+            skillHeader.Add(FlexibleSpace());
+
+            var addButton = new Button(() => { AddAction(false); RequestRebuild(); }) { text = "+" };
+            addButton.style.width = 24;
+            addButton.SetEnabled(_profile != null);
+            skillHeader.Add(addButton);
+            box.Add(skillHeader);
+
+            var scroll = new ScrollView();
+            scroll.style.flexGrow = 1;
+            scroll.scrollOffset = _leftScroll;
+
+            if (_profile?.Actions == null || _profile.Actions.Count == 0)
             {
-                GUILayout.Label("配置", EditorStyles.boldLabel);
-                DrawPageButton("基础参数", Page.Profile);
-                DrawPageButton("状态表现映射", Page.States);
-
-                EditorGUILayout.Space(10);
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    GUILayout.Label("技能列表", EditorStyles.boldLabel);
-                    GUILayout.FlexibleSpace();
-                    using (new EditorGUI.DisabledScope(_profile == null))
-                    {
-                        if (GUILayout.Button("+", GUILayout.Width(24)))
-                        {
-                            AddAction(false);
-                        }
-                    }
-                }
-
-                using (var scroll = new EditorGUILayout.ScrollViewScope(_leftScroll))
-                {
-                    _leftScroll = scroll.scrollPosition;
-                    if (_profile?.Actions == null || _profile.Actions.Count == 0)
-                    {
-                        EditorGUILayout.HelpBox("暂无技能", MessageType.Info);
-                    }
-                    else
-                    {
-                        var rowWidth = MeasureLeftRowWidth();
-                        for (var i = 0; i < _profile.Actions.Count; i++)
-                        {
-                            DrawActionButton(_profile.Actions[i], i, rowWidth);
-                        }
-                    }
-                }
-
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.HelpBox(
-                    "代码触发技能，Profile 提供数据，双源时间轴在当前窗口内编辑表现。",
-                    MessageType.None);
+                scroll.Add(CreateHelpBox("暂无技能", MessageType.Info));
             }
+            else
+            {
+                for (var i = 0; i < _profile.Actions.Count; i++)
+                {
+                    scroll.Add(BuildActionRow(_profile.Actions[i], i));
+                }
+            }
+            box.Add(scroll);
 
+            box.Add(CreateHelpBox(
+                "代码触发技能，Profile 提供数据，双源时间轴在当前窗口内编辑表现。",
+                MessageType.None));
+
+            parent.Add(box);
         }
 
         private float GetMaxLeftPanelWidth()
         {
             return Mathf.Max(MinLeftPanelWidth, position.width - LeftPanelReserve);
-        }
-
-        /// <summary>
-        /// 左栏技能行的可用宽度：直接问布局要一个整行矩形（零高度、可拉伸）。
-        /// 这样拿到的宽度就是滚动视图内容区的真实宽度（已扣除纵向滚动条），
-        /// 行宽不会超出视口（不出现横向滚动条），也能铺满（右侧不留空白）。
-        /// </summary>
-        private float MeasureLeftRowWidth()
-        {
-            var probe = GUILayoutUtility
-                .GetRect(0f, 0f, GUILayout.ExpandWidth(true))
-                .width - 2f;
-
-            if (probe <= 60f)
-            {
-                // 兜底：布局没给出可用宽度时按面板宽度估算。
-                probe = _leftPanelWidth
-                    - EditorStyles.helpBox.padding.horizontal
-                    - GUI.skin.verticalScrollbar.fixedWidth
-                    - 2f;
-            }
-
-            return Mathf.Clamp(probe, 60f, Mathf.Max(60f, _leftPanelWidth));
         }
 
         private void OnDisable()
@@ -828,174 +881,184 @@ namespace Ux.Editor.Combat
             Undo.undoRedoEvent -= OnUndoRedo;
             TimelineWindow.StandaloneWindowClosed -= OnStandaloneTimelineClosed;
             TimelineWindow.StandaloneWindowOpened -= OnStandaloneTimelineOpened;
+            EditorApplication.delayCall -= PrewarmTimeline;
             ClosePreviewTimeline();
+            DiscardPrewarmedTimeline();
         }
 
-        private void DrawPageButton(string text, Page page)
+        private Button BuildPageButton(string text, Page page)
         {
-            var oldColor = GUI.backgroundColor;
-            if (_page == page)
-            {
-                GUI.backgroundColor = new Color(0.32f, 0.52f, 0.82f, 1f);
-            }
-            if (GUILayout.Button(text, EditorStyles.toolbarButton, GUILayout.Height(28)))
+            var button = new Button(() =>
             {
                 if (page != _page || _timelineDetachedToStandalone)
                 {
                     ClosePreviewTimeline();
                 }
                 _page = page;
+                RequestRebuild();
+            })
+            {
+                text = text,
+            };
+            button.style.height = 28;
+            if (_page == page)
+            {
+                button.style.backgroundColor = new Color(0.32f, 0.52f, 0.82f, 1f);
             }
-            GUI.backgroundColor = oldColor;
+            return button;
         }
 
-        private void DrawActionButton(CombatActionAsset action, int index, float rowWidth)
+        private VisualElement BuildActionRow(CombatActionAsset action, int index)
         {
             if (action == null)
             {
-                EditorGUILayout.LabelField($"[{index}] 空引用", EditorStyles.miniLabel);
-                return;
+                return new Label($"[{index}] 空引用");
             }
 
-            var row = GUILayoutUtility.GetRect(
-                Mathf.Max(60, rowWidth),
-                32,
-                GUILayout.ExpandWidth(true));
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.height = 32;
+            row.style.marginBottom = 3;
+
             var selected = _page == Page.Skills && _selectedAction == action;
-            var hovered = row.Contains(Event.current.mousePosition);
-            var background = selected
+            row.style.backgroundColor = selected
                 ? new Color(0.19f, 0.34f, 0.58f, 1f)
-                : hovered
-                    ? new Color(0.22f, 0.22f, 0.22f, 1f)
-                    : new Color(0.16f, 0.16f, 0.16f, 1f);
-            EditorGUI.DrawRect(row, background);
-            if (selected)
-            {
-                EditorGUI.DrawRect(
-                    new Rect(row.x, row.y, 3, row.height),
-                    new Color(0.35f, 0.65f, 1f, 1f));
-            }
+                : new Color(0.16f, 0.16f, 0.16f, 1f);
 
-            const float deleteButtonHeight = 22;
-            var deleteRect = new Rect(
-                row.xMax - 28,
-                row.y + (row.height - deleteButtonHeight) * 0.5f,
-                24,
-                deleteButtonHeight);
-            var labelRect = new Rect(
-                row.x + 3,
-                row.y,
-                Mathf.Max(30, deleteRect.x - row.x - 3),
-                row.height);
-            var label = $"{action.ActionId}    {GetActionName(action)}";
-            if (GetActionTimeline(action) == null)
-            {
-                label += "  *";
-            }
+            var text = $"{action.ActionId}    {GetActionName(action)}";
+            if (GetActionTimeline(action) == null) text += "  *";
 
-            if (GUI.Button(labelRect, label, SkillItemStyle))
+            var selectButton = new Button(() =>
             {
-                if (_selectedAction != action || _timelineDetachedToStandalone)
+                // 切技能时不销毁嵌入 Timeline：RefreshEmbeddedTimeline 会走 TryRebind 复用，
+                // 销毁重建整个 Timeline 窗口是切换慢的主要原因。
+                // 只有从独立窗口模式切回来时才关闭独立窗口。
+                if (_timelineDetachedToStandalone)
                 {
-                    ClosePreviewTimeline();
+                    _timelineDetachedToStandalone = false;
+                    TimelineWindow.CloseStandalone();
                 }
                 _selectedAction = action;
                 _page = Page.Skills;
                 _actionSerialized = null;
-                _timelineDetachedToStandalone = false;
-            }
-            if (GUI.Button(deleteRect, "-", SkillDeleteStyle))
+                RequestRebuild();
+            })
             {
-                RemoveAction(action);
-            }
-            GUILayout.Space(3);
+                text = text,
+            };
+            selectButton.style.flexGrow = 1;
+            selectButton.style.unityTextAlign = TextAnchor.MiddleLeft;
+            selectButton.style.paddingLeft = 12;
+            row.Add(selectButton);
+
+            var deleteButton = new Button(() => { RemoveAction(action); RequestRebuild(); }) { text = "-" };
+            deleteButton.style.width = 24;
+            row.Add(deleteButton);
+
+            return row;
         }
 
-        private void DrawProfilePage()
+        private void BuildProfilePage(VisualElement parent)
         {
-            GUILayout.Label("基础参数", EditorStyles.boldLabel);
+            var title = new Label("基础参数");
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            parent.Add(title);
 
             var serialized = GetProfileSerialized();
             serialized.Update();
             Undo.RecordObject(_profile, "修改角色战斗配置");
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                DrawProperty(serialized, "group", "角色分组");
-                DrawProperty(serialized, "frameRate", "逻辑帧率");
-                DrawProperty(serialized, "moveSpeedPerSecond", "移动速度 / 秒");
-                DrawProperty(serialized, "turnDegreesPerSecond", "转向速度 / 秒");
-            }
-            ApplyProfile(serialized);
 
-            EditorGUILayout.Space(8);            
+            var fields = new VisualElement();
+            AddProperty(fields, serialized, "group", "角色分组");
+            AddProperty(fields, serialized, "frameRate", "逻辑帧率");
+            AddProperty(fields, serialized, "moveSpeedPerSecond", "移动速度 / 秒");
+            AddProperty(fields, serialized, "turnDegreesPerSecond", "转向速度 / 秒");
+            parent.Add(fields);
 
-            using (new EditorGUILayout.HorizontalScope())
+            fields.Bind(serialized);
+            fields.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
             {
-                if (GUILayout.Button("创建基础普攻示例", GUILayout.Width(170)))
-                {
-                    AddAction(true);
-                }
-                if (GUILayout.Button("创建缺失技能 Timeline", GUILayout.Width(170)))
-                {
-                    CreateMissingActionTimelines();
-                }
-                if (GUILayout.Button("创建缺失状态 Timeline", GUILayout.Width(170)))
-                {
-                    CreateMissingStateTimelines();
-                }
-            }
-            DrawValidationPanel();
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                ApplyProfile(serialized);
+            });
+
+            parent.Add(Space(8));
+
+            var buttons = new VisualElement();
+            buttons.style.flexDirection = FlexDirection.Row;
+            buttons.Add(new Button(() => { AddAction(true); RequestRebuild(); })
+            {
+                text = "创建基础普攻示例",
+            });
+            buttons.Add(new Button(() => { CreateMissingActionTimelines(); RequestRebuild(); })
+            {
+                text = "创建缺失技能 Timeline",
+            });
+            buttons.Add(new Button(() => { CreateMissingStateTimelines(); RequestRebuild(); })
+            {
+                text = "创建缺失状态 Timeline",
+            });
+            parent.Add(buttons);
+
+            var panel = BuildValidationPanel();
+            if (panel != null) parent.Add(panel);
         }
 
-        private void DrawStatesPage()
+        private void BuildStatesPage(VisualElement parent)
         {
             var serialized = GetProfileSerialized();
             serialized.Update();
             Undo.RecordObject(_profile, "修改状态表现配置");
+
             var presentations = serialized.FindProperty("statePresentations");
             if (presentations == null)
             {
-                EditorGUILayout.HelpBox("找不到 statePresentations 字段。", MessageType.Error);
+                parent.Add(CreateHelpBox("找不到 statePresentations 字段。", MessageType.Error));
                 return;
             }
 
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                GUILayout.Label($"已配置 {presentations.arraySize} 条映射", EditorStyles.boldLabel);
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("添加默认映射", GUILayout.Width(110)))
-                {
-                    AddNextDefaultPresentation();
-                    return;
-                }
-                if (GUILayout.Button("补齐空 Timeline", GUILayout.Width(110)))
-                {
-                    CreateMissingStateTimelines();
-                }
-            }
+            var header = new VisualElement();
+            header.style.flexDirection = FlexDirection.Row;
 
-            var changed = false;
+            var countLabel = new Label($"已配置 {presentations.arraySize} 条映射");
+            countLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            header.Add(countLabel);
+            header.Add(FlexibleSpace());
+
+            header.Add(ToolbarButton("添加默认映射", () =>
+            {
+                AddNextDefaultPresentation();
+                RequestRebuild();
+            }, 110));
+
+            header.Add(ToolbarButton("补齐空 Timeline", () =>
+            {
+                CreateMissingStateTimelines();
+                RequestRebuild();
+            }, 110));
+            parent.Add(header);
+
             for (var i = 0; i < presentations.arraySize; i++)
             {
-                changed |= DrawPresentationRow(presentations, i);
+                var row = BuildPresentationRow(serialized, presentations, i);
+                if (row != null) parent.Add(row);
             }
+
             if (presentations.arraySize == 0)
             {
-                EditorGUILayout.HelpBox(
+                parent.Add(CreateHelpBox(
                     "还没有状态表现映射。建议至少配置 Locomotion/Idle 和 Locomotion/Move。",
-                    MessageType.Warning);
+                    MessageType.Warning));
             }
 
-            if (serialized.ApplyModifiedPropertiesWithoutUndo() || changed)
-            {
-                _profile.ValidateData();
-                EditorUtility.SetDirty(_profile);
-                _issues.Clear();
-            }
-            DrawValidationPanel();
+            var panel = BuildValidationPanel();
+            if (panel != null) parent.Add(panel);
         }
 
-        private bool DrawPresentationRow(SerializedProperty presentations, int index)
+        private VisualElement BuildPresentationRow(
+            SerializedObject serialized,
+            SerializedProperty presentations,
+            int index)
         {
             var element = presentations.GetArrayElementAtIndex(index);
             var layer = element.FindPropertyRelative("layer");
@@ -1005,334 +1068,418 @@ namespace Ux.Editor.Combat
             var priority = element.FindPropertyRelative("priority");
             var timelineProperty = element.FindPropertyRelative("timeline");
             var stableId = element.FindPropertyRelative("stableId");
+
             if (layer == null || stateId == null || variant == null || timelineProperty == null)
             {
-                EditorGUILayout.HelpBox($"第 {index + 1} 条状态映射字段不完整。", MessageType.Error);
-                return false;
+                return CreateHelpBox($"第 {index + 1} 条状态映射字段不完整。", MessageType.Error);
             }
 
-            var changed = false;
+            var box = new VisualElement();
+            box.style.marginBottom = 6;
+            box.style.paddingLeft = 6;
+            box.style.paddingRight = 6;
+            box.style.paddingTop = 4;
+            box.style.paddingBottom = 4;
+            box.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f, 1f);
+
             var currentLayer = (StateLayer)layer.enumValueIndex;
             var layerIndex = Array.IndexOf(PresentationLayers, currentLayer);
-            var ids = CombatEditorUtility.GetDefinedStateIds(currentLayer);
             var stateName = CombatStateId.GetDisplayName(currentLayer, stateId.intValue);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+
+            // ---- 标题行 ----
+            var titleRow = new VisualElement();
+            titleRow.style.flexDirection = FlexDirection.Row;
+
+            var title = new Label(
+                $"{CombatEditorUtility.GetStateLayerDisplayName(currentLayer)} / {stateName}");
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleRow.Add(title);
+            titleRow.Add(FlexibleSpace());
+
+            titleRow.Add(ToolbarButton("打开", () =>
             {
-                using (new EditorGUILayout.HorizontalScope())
+                var timeline = timelineProperty.objectReferenceValue as TimelineAsset;
+                if (timeline != null) OpenTimeline(timeline);
+            }, 48));
+
+            titleRow.Add(ToolbarButton("移除", () =>
+            {
+                presentations.DeleteArrayElementAtIndex(index);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                _profile.ValidateData();
+                EditorUtility.SetDirty(_profile);
+                _issues.Clear();
+                RequestRebuild();
+            }, 48));
+            box.Add(titleRow);
+
+            // ---- 层 / 状态 ----
+            var selectRow = new VisualElement();
+            selectRow.style.flexDirection = FlexDirection.Row;
+
+            if (layerIndex >= 0)
+            {
+                var layerNames = new List<string>(PresentationLayers.Length);
+                for (var i = 0; i < PresentationLayers.Length; i++)
                 {
-                    GUILayout.Label(
-                        $"{CombatEditorUtility.GetStateLayerDisplayName(currentLayer)} / {stateName}",
-                        EditorStyles.boldLabel);
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button("打开", GUILayout.Width(48)) && timelineProperty.objectReferenceValue != null)
-                    {
-                        OpenTimeline(timelineProperty.objectReferenceValue as TimelineAsset);
-                    }
-                    if (GUILayout.Button("移除", GUILayout.Width(48)))
-                    {
-                        presentations.DeleteArrayElementAtIndex(index);
-                        return true;
-                    }
+                    layerNames.Add(CombatEditorUtility.GetStateLayerDisplayName(PresentationLayers[i]));
                 }
 
-                using (new EditorGUILayout.HorizontalScope())
+                var layerField = new DropdownField("层", layerNames, layerIndex);
+                layerField.style.flexGrow = 1;
+                layerField.RegisterValueChangedCallback(e =>
                 {
-                    if (layerIndex >= 0)
-                    {
-                        var names = new string[PresentationLayers.Length];
-                        for (var i = 0; i < names.Length; i++)
-                        {
-                            names[i] = CombatEditorUtility.GetStateLayerDisplayName(PresentationLayers[i]);
-                        }
-                        var nextLayer = EditorGUILayout.Popup("层", layerIndex, names);
-                        if (nextLayer != layerIndex)
-                        {
-                            layer.enumValueIndex = (int)PresentationLayers[nextLayer];
-                            stateId.intValue = CombatEditorUtility.GetDefinedStateIds(PresentationLayers[nextLayer])[0];
-                            changed = true;
-                        }
-                    }
-                    else
-                    {
-                        EditorGUILayout.PropertyField(layer, new GUIContent("层"));
-                    }
+                    var nextIndex = layerNames.IndexOf(e.newValue);
+                    if (nextIndex < 0 || nextIndex == layerIndex) return;
 
-                    ids = CombatEditorUtility.GetDefinedStateIds((StateLayer)layer.enumValueIndex);
-                    var stateNames = new string[ids.Length];
-                    for (var i = 0; i < ids.Length; i++)
-                    {
-                        stateNames[i] = CombatStateId.GetDisplayName((StateLayer)layer.enumValueIndex, ids[i]);
-                    }
-                    if (ids.Length > 0)
-                    {
-                        var nextState = EditorGUILayout.IntPopup("状态", stateId.intValue, stateNames, ids);
-                        if (nextState != stateId.intValue)
-                        {
-                            stateId.intValue = nextState;
-                            changed = true;
-                        }
-                    }
-                    else
-                    {
-                        EditorGUILayout.PropertyField(stateId, new GUIContent("状态 ID"));
-                    }
+                    layer.enumValueIndex = (int)PresentationLayers[nextIndex];
+                    var ids2 = CombatEditorUtility.GetDefinedStateIds(PresentationLayers[nextIndex]);
+                    if (ids2.Length > 0) stateId.intValue = ids2[0];
+                    OnPresentationChanged(serialized);
+                    RequestRebuild();
+                });
+                selectRow.Add(layerField);
+            }
+            else
+            {
+                var layerField = new PropertyField(layer, "层");
+                selectRow.Add(layerField);
+            }
+
+            var ids = CombatEditorUtility.GetDefinedStateIds((StateLayer)layer.enumValueIndex);
+            if (ids.Length > 0)
+            {
+                var stateNames = new List<string>(ids.Length);
+                for (var i = 0; i < ids.Length; i++)
+                {
+                    stateNames.Add(CombatStateId.GetDisplayName((StateLayer)layer.enumValueIndex, ids[i]));
                 }
 
-                // 不放进 HorizontalScope：variantId 可伸缩、优先级是固定列，混排时后者宽度还要被 labelWidth
-                // 吃掉一截（默认 150 > 列宽就只剩标签）。整行取矩形自己切分，两侧宽度都可控。
-                var variantRow = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
-                const float priorityWidth = 150f;
-                const float priorityGap = 6f;
+                var stateIndex = Array.IndexOf(ids, stateId.intValue);
+                if (stateIndex < 0) stateIndex = 0;
 
-                var previousLabelWidth = EditorGUIUtility.labelWidth;
-                EditorGUI.BeginChangeCheck();
-                EditorGUI.PropertyField(
-                    new Rect(variantRow.x, variantRow.y, Mathf.Max(80f, variantRow.width - priorityWidth - priorityGap), variantRow.height),
-                    variant,
-                    new GUIContent("variantId"));
-                if (EditorGUI.EndChangeCheck())
+                var stateField = new DropdownField("状态", stateNames, stateIndex);
+                stateField.style.flexGrow = 1;
+                stateField.RegisterValueChangedCallback(e =>
                 {
-                    variant.stringValue = CombatStatePresentation.NormalizeVariantId(variant.stringValue);
-                    changed = true;
-                }
+                    var nextIndex = stateNames.IndexOf(e.newValue);
+                    if (nextIndex < 0 || nextIndex >= ids.Length) return;
 
-                if (priority != null)
-                {
-                    EditorGUIUtility.labelWidth = 56f;
-                    EditorGUI.PropertyField(
-                        new Rect(variantRow.xMax - priorityWidth, variantRow.y, priorityWidth, variantRow.height),
-                        priority,
-                        new GUIContent("优先级"));
-                }
-                EditorGUIUtility.labelWidth = previousLabelWidth;
+                    stateId.intValue = ids[nextIndex];
+                    OnPresentationChanged(serialized);
+                    RequestRebuild();
+                });
+                selectRow.Add(stateField);
+            }
+            else
+            {
+                selectRow.Add(new PropertyField(stateId, "状态 ID"));
+            }
+            box.Add(selectRow);
 
-                if (displayName != null)
-                {
-                    EditorGUILayout.PropertyField(displayName, new GUIContent("显示名称"));
-                }
+            // ---- variantId / priority / displayName ----
+            var variantRow = new VisualElement();
+            variantRow.style.flexDirection = FlexDirection.Row;
 
-                using (new EditorGUILayout.HorizontalScope())
+            var variantField = new PropertyField(variant, "variantId");
+            variantField.style.flexGrow = 1;
+            variantRow.Add(variantField);
+
+            if (priority != null)
+            {
+                var priorityField = new PropertyField(priority, "优先级");
+                priorityField.style.width = 150;
+                variantRow.Add(priorityField);
+            }
+            box.Add(variantRow);
+
+            if (displayName != null)
+            {
+                box.Add(new PropertyField(displayName, "显示名称"));
+            }
+
+            // ---- Timeline ----
+            var timelineRow = new VisualElement();
+            timelineRow.style.flexDirection = FlexDirection.Row;
+
+            var timelineField = new PropertyField(timelineProperty, "Timeline");
+            timelineField.style.flexGrow = 1;
+            timelineRow.Add(timelineField);
+
+            var timeline = timelineProperty.objectReferenceValue as TimelineAsset;
+            timelineRow.Add(new Button(() =>
+            {
+                var current = timelineProperty.objectReferenceValue as TimelineAsset;
+                if (current == null)
                 {
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(timelineProperty, new GUIContent("Timeline"));
-                    changed |= EditorGUI.EndChangeCheck();
-                    var timeline = timelineProperty.objectReferenceValue as TimelineAsset;
-                    if (GUILayout.Button(timeline == null ? "新建" : "编辑", GUILayout.Width(52)))
+                    Undo.IncrementCurrentGroup();
+                    var timelineUndoGroup = Undo.GetCurrentGroup();
+                    Undo.SetCurrentGroupName("创建状态 Timeline");
+                    current = CombatEditorUtility.CreateTimelineAsset(
+                        _profile,
+                        CombatEditorUtility.GetStatePresentationTimelineSuffix(
+                            (StateLayer)layer.enumValueIndex,
+                            stateId.intValue,
+                            variant.stringValue),
+                        true);
+                    if (current != null)
                     {
-                        if (timeline == null)
-                        {
-                            Undo.IncrementCurrentGroup();
-                            var timelineUndoGroup = Undo.GetCurrentGroup();
-                            Undo.SetCurrentGroupName("创建状态 Timeline");
-                            timeline = CombatEditorUtility.CreateTimelineAsset(
-                                _profile,
-                                CombatEditorUtility.GetStatePresentationTimelineSuffix(
-                                    (StateLayer)layer.enumValueIndex,
-                                    stateId.intValue,
-                                    variant.stringValue),
-                                true);
-                            if (timeline != null)
-                            {
-                                Undo.RecordObject(_profile, "关联状态 Timeline");
-                            }
-                            timelineProperty.objectReferenceValue = timeline;
-                            changed = timeline != null;
-                            Undo.CollapseUndoOperations(timelineUndoGroup);
-                        }
-                        else
-                        {
-                            OpenTimeline(timeline);
-                        }
+                        Undo.RecordObject(_profile, "关联状态 Timeline");
                     }
-                    using (new EditorGUI.DisabledScope(timeline == null))
-                    {
-                        if (GUILayout.Button("定位", GUILayout.Width(48)))
-                        {
-                            Selection.activeObject = timeline;
-                            EditorGUIUtility.PingObject(timeline);
-                        }
-                        if (GUILayout.Button("同步", GUILayout.Width(48)))
-                        {
-                            SetTimelineFrameRate(timeline, _profile.FrameRate);
-                        }
-                    }
-                }
-
-                if (stableId != null)
-                {
-                    EditorGUILayout.LabelField("StableId", stableId.stringValue, EditorStyles.miniLabel);
-                }
-                var currentTimeline = timelineProperty.objectReferenceValue as TimelineAsset;
-                if (currentTimeline == null)
-                {
-                    EditorGUILayout.HelpBox("未关联 Timeline。", MessageType.Warning);
+                    timelineProperty.objectReferenceValue = current;
+                    Undo.CollapseUndoOperations(timelineUndoGroup);
+                    OnPresentationChanged(serialized);
+                    RequestRebuild();
                 }
                 else
                 {
-                    EditorGUILayout.LabelField(
-                        "Timeline",
-                        $"{currentTimeline.FrameRate} fps / {currentTimeline.DurationFrames} 帧",
-                        EditorStyles.miniLabel);
+                    OpenTimeline(current);
                 }
+            })
+            {
+                text = timeline == null ? "新建" : "编辑",
+            });
+
+            var locateButton = new Button(() =>
+            {
+                var current = timelineProperty.objectReferenceValue as TimelineAsset;
+                if (current == null) return;
+                Selection.activeObject = current;
+                EditorGUIUtility.PingObject(current);
+            })
+            {
+                text = "定位",
+            };
+            locateButton.SetEnabled(timeline != null);
+            timelineRow.Add(locateButton);
+
+            var syncButton = new Button(() =>
+            {
+                var current = timelineProperty.objectReferenceValue as TimelineAsset;
+                if (current != null) SetTimelineFrameRate(current, _profile.FrameRate);
+            })
+            {
+                text = "同步",
+            };
+            syncButton.SetEnabled(timeline != null);
+            timelineRow.Add(syncButton);
+            box.Add(timelineRow);
+
+            if (stableId != null)
+            {
+                var stableLabel = new Label($"StableId {stableId.stringValue}");
+                stableLabel.style.fontSize = 10;
+                box.Add(stableLabel);
             }
-            return changed;
+
+            if (timeline == null)
+            {
+                box.Add(CreateHelpBox("未关联 Timeline。", MessageType.Warning));
+            }
+            else
+            {
+                var info = new Label($"{timeline.FrameRate} fps / {timeline.DurationFrames} 帧");
+                info.style.fontSize = 10;
+                box.Add(info);
+            }
+
+            box.Bind(serialized);
+            return box;
         }
 
-        private void DrawSkillsPage()
+        private void OnPresentationChanged(SerializedObject serialized)
+        {
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            _profile.ValidateData();
+            EditorUtility.SetDirty(_profile);
+            _issues.Clear();
+        }
+
+        private void BuildSkillsPage(VisualElement parent)
         {
             if (!IsActionInProfile(_selectedAction))
             {
-                EditorGUILayout.HelpBox("请从左侧技能列表选择技能。", MessageType.Info);
+                parent.Add(CreateHelpBox("请从左侧技能列表选择技能。", MessageType.Info));
                 return;
             }
 
             var action = _selectedAction;
-            var timeline = GetActionTimeline(action);
             var serialized = GetActionSerialized();
             serialized.Update();
             Undo.RecordObject(action, "修改技能逻辑配置");
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+
+            var fold = BuildSection("配置", LogicSectionKey);
+            parent.Add(fold);
+
+            var fields = new VisualElement();
+            AddProperty(fields, serialized, "stableId", "StableId");
+            AddProperty(fields, serialized, "actionId", "技能 ID");
+            AddProperty(fields, serialized, "displayName", "显示名称");
+            AddProperty(fields, serialized, "durationFrames", "逻辑帧数");
+            AddProperty(fields, serialized, "movementPolicy", "移动策略");
+            fold.Add(fields);
+
+            fields.Bind(serialized);
+            fields.RegisterCallback<SerializedPropertyChangeEvent>(_ =>
             {
-                if (DrawSection("配置", LogicSectionKey))
-                {
-                    EditorGUILayout.ObjectField("逻辑资产", action, typeof(CombatActionAsset), false);
-                    DrawProperty(serialized, "stableId", "StableId");
-                    DrawProperty(serialized, "actionId", "技能 ID");
-                    DrawProperty(serialized, "displayName", "显示名称");
-                    DrawProperty(serialized, "durationFrames", "逻辑帧数");
-                    DrawProperty(serialized, "movementPolicy", "移动策略");
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                action.ValidateData();
+                EditorUtility.SetDirty(action);
+                _issues.Clear();
+            });
 
-                    if (serialized.ApplyModifiedPropertiesWithoutUndo())
-                    {
-                        action.ValidateData();
-                        EditorUtility.SetDirty(action);
-                        _issues.Clear();
-                    }
+            fold.Add(BuildActionPresentation(action));
 
-                    timeline = DrawActionPresentation(action);
-                    if (timeline == null)
-                    {
-                        EditorGUILayout.HelpBox("尚未关联技能 Timeline。", MessageType.Warning);
-                        if (GUILayout.Button("创建技能 Timeline", GUILayout.Width(150)))
-                        {
-                            CreateActionTimeline(action);
-                            timeline = GetActionTimeline(action);
-                        }
-                    }
-                }
-            }
-
-            DrawValidationPanel();
+            var panel = BuildValidationPanel();
+            if (panel != null) parent.Add(panel);
         }
 
-        private TimelineAsset DrawActionPresentation(CombatActionAsset action)
+        private VisualElement BuildActionPresentation(CombatActionAsset action)
         {
+            var box = new VisualElement();
             var current = GetActionTimeline(action);
-            var next = (TimelineAsset)EditorGUILayout.ObjectField(
-                "Timeline",
-                current,
-                typeof(TimelineAsset),
-                false);
-            if (next != current)
+
+            var field = new ObjectField("Timeline")
             {
-                if (CombatEditorUtility.TrySetActionTimeline(
-                        _profile,
-                        action,
-                        next,
-                        out var error))
+                objectType = typeof(TimelineAsset),
+                allowSceneObjects = false,
+            };
+            field.SetValueWithoutNotify(current);
+            field.RegisterValueChangedCallback(e =>
+            {
+                var next = e.newValue as TimelineAsset;
+                if (CombatEditorUtility.TrySetActionTimeline(_profile, action, next, out var error))
                 {
                     AssetDatabase.SaveAssets();
                     _profileSerialized = null;
                     _issues.Clear();
-                    current = next;
+                    RequestRebuild();
                 }
                 else
                 {
                     Debug.LogError(error, _profile);
                     ShowNotification(new GUIContent(error));
+                    field.SetValueWithoutNotify(current);
                 }
+            });
+            box.Add(field);
+
+            current = GetActionTimeline(action);
+            if (current == null)
+            {
+                box.Add(CreateHelpBox("尚未关联技能 Timeline。", MessageType.Warning));
+
+                var createButton = new Button(() => { CreateActionTimeline(action); RequestRebuild(); })
+                {
+                    text = "创建技能 Timeline",
+                };
+                createButton.style.width = 150;
+                box.Add(createButton);
+            }
+            else if (current.DurationFrames <= 0)
+            {
+                box.Add(CreateHelpBox(
+                    "当前 Timeline 没有表现 Clip，该技能仅使用逻辑时序。",
+                    MessageType.Info));
+            }
+            else if (current.DurationFrames != action.DurationFrames)
+            {
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+
+                row.Add(CreateHelpBox(
+                    $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
+                    "两者独立保存，请确认差异符合设计。",
+                    MessageType.Warning));
+
+                var syncButton = new Button(() =>
+                {
+                    SyncActionDurationFromTimeline(action, current);
+                    RequestRebuild();
+                })
+                {
+                    text = "以Timeline帧为准同步",
+                };
+                syncButton.style.width = 112;
+                row.Add(syncButton);
+                box.Add(row);
             }
 
-            if (current != null && current.DurationFrames <= 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "当前 Timeline 没有表现 Clip，该技能仅使用逻辑时序。",
-                    MessageType.Info);
-            }
-            else if (current != null && current.DurationFrames != action.DurationFrames)
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    EditorGUILayout.HelpBox(
-                        $"逻辑时长 {action.DurationFrames} 帧，表现 Timeline {current.DurationFrames} 帧。" +
-                        "两者独立保存，请确认差异符合设计。",
-                        MessageType.Warning);
-                    if (GUILayout.Button("以Timeline帧为准同步", GUILayout.Width(112), GUILayout.Height(38)))
-                    {
-                        SyncActionDurationFromTimeline(action, current);
-                    }
-                }
-            }
-            return current;
+            return box;
         }
 
         /// <summary>
         /// 右栏分区折叠头：展开状态按分区记在 EditorPrefs，避免每次打开都要重新展开。
         /// </summary>
-        private bool DrawSection(string title, string foldKey, bool defaultExpanded = true)
+        private Foldout BuildSection(string title, string foldKey, bool defaultExpanded = true)
         {
             var expanded = EditorPrefs.GetBool(foldKey, defaultExpanded);
-            var next = EditorGUILayout.Foldout(expanded, title, true, SectionFoldoutStyle);
-            if (next != expanded)
+            var fold = new Foldout { text = title, value = expanded };
+            fold.RegisterValueChangedCallback(e =>
             {
-                EditorPrefs.SetBool(foldKey, next);
+                EditorPrefs.SetBool(foldKey, e.newValue);
                 _rightPanelManuallySized = false;
                 _rightPanelContentHeight = 0;
                 ApplyRightPanelLayout();
-            }
-            return next;
+            });
+            return fold;
         }
 
-        private void DrawValidationPanel()
+        private VisualElement BuildValidationPanel()
         {
             if (!_showIssues)
             {
-                return;
+                return null;
             }
 
-            EditorGUILayout.Space(8);
+            var wrapper = new VisualElement();
+            wrapper.Add(Space(8));
+
             var errors = CountIssues(CombatValidationSeverity.Error);
             var warnings = CountIssues(CombatValidationSeverity.Warning);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+
+            var fold = BuildSection($"诊断（错误 {errors} / 警告 {warnings}）", ValidationSectionKey);
+            if (_issues.Count == 0)
             {
-                if (DrawSection($"诊断（错误 {errors} / 警告 {warnings}）", ValidationSectionKey))
+                fold.Add(CreateHelpBox("没有发现问题。", MessageType.Info));
+            }
+            else
+            {
+                foreach (var issue in _issues)
                 {
-                    if (_issues.Count == 0)
+                    var prefix = issue.Severity == CombatValidationSeverity.Error
+                        ? "错误"
+                        : issue.Severity == CombatValidationSeverity.Warning ? "警告" : "提示";
+
+                    var row = new VisualElement();
+                    row.style.flexDirection = FlexDirection.Row;
+
+                    var label = new Label($"[{prefix}] {issue.Message}");
+                    label.style.fontSize = 10;
+                    label.style.flexGrow = 1;
+                    row.Add(label);
+
+                    if (issue.Severity == CombatValidationSeverity.Warning &&
+                        TryGetDurationMismatch(issue, out var action, out var timeline))
                     {
-                        EditorGUILayout.HelpBox("没有发现问题。", MessageType.Info);
-                    }
-                    else
-                    {
-                        foreach (var issue in _issues)
+                        var fixButton = new Button(() =>
                         {
-                            var prefix = issue.Severity == CombatValidationSeverity.Error
-                                ? "错误"
-                                : issue.Severity == CombatValidationSeverity.Warning ? "警告" : "提示";
-                            using (new EditorGUILayout.HorizontalScope())
-                            {
-                                EditorGUILayout.LabelField($"[{prefix}] {issue.Message}", EditorStyles.miniLabel);
-                                if (issue.Severity == CombatValidationSeverity.Warning &&
-                                    TryGetDurationMismatch(issue, out var action, out var timeline) &&
-                                    GUILayout.Button("以Timeline帧为准同步", GUILayout.Width(112)))
-                                {
-                                    SyncActionDurationFromTimeline(action, timeline);
-                                    break;
-                                }
-                            }
-                        }
+                            SyncActionDurationFromTimeline(action, timeline);
+                            RequestRebuild();
+                        })
+                        {
+                            text = "以Timeline帧为准同步",
+                        };
+                        fixButton.style.width = 112;
+                        row.Add(fixButton);
                     }
+
+                    fold.Add(row);
                 }
             }
+
+            wrapper.Add(fold);
+            return wrapper;
         }
 
         private bool TryGetDurationMismatch(
@@ -1387,8 +1534,7 @@ namespace Ux.Editor.Combat
             _issues = CombatEditorUtility.ValidateProfile(_profile);
             TimelineWindow.RefreshView?.Invoke();
             TimelineWindow.RefreshClip?.Invoke();
-            _navigationContainer?.MarkDirtyRepaint();
-            _configContainer?.MarkDirtyRepaint();
+            RequestRebuild();
             _embeddedTimeline?.Repaint();
             Repaint();
         }
@@ -2188,13 +2334,16 @@ namespace Ux.Editor.Combat
                 string.IsNullOrEmpty(fileName) ? "Character" : fileName);
         }
 
-        private static void DrawProperty(SerializedObject serialized, string name, string label)
+        private static void AddProperty(
+            VisualElement parent,
+            SerializedObject serialized,
+            string name,
+            string label)
         {
             var property = serialized.FindProperty(name);
-            if (property != null)
-            {
-                EditorGUILayout.PropertyField(property, new GUIContent(label), true);
-            }
+            if (property == null) return;
+
+            parent.Add(new PropertyField(property, label));
         }
 
         private static void SetProperty(SerializedObject serialized, string name, string value)

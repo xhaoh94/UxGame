@@ -1,4 +1,4 @@
-using Assets.Editor.Timeline;
+﻿using Assets.Editor.Timeline;
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -32,8 +32,13 @@ namespace Ux.Editor.Timeline
             var guid = string.IsNullOrEmpty(assetPath)
                 ? string.Empty
                 : AssetDatabase.AssetPathToGUID(assetPath);
+#if UNITY_6000_4_OR_NEWER
+            var fallbackId = EntityId.ToULong(asset.GetEntityId());
+#else
+            var fallbackId = asset.GetInstanceID().ToString();
+#endif
             id = string.IsNullOrEmpty(guid)
-                ? $"timeline-instance:{asset.GetInstanceID()}"
+                ? $"timeline-instance:{fallbackId}"
                 : $"timeline:{guid}";
             RebuildAdapters();
         }
@@ -57,10 +62,21 @@ namespace Ux.Editor.Timeline
             return trackType?.GetAttribute<TLTrackAttribute>()?.Lb ?? trackType?.Name ?? string.Empty;
         }
 
-        public IReadOnlyList<Type> GetTrackTypes()
+        // 轨道类型集合是静态的（只随编辑器域重载变化），缓存一次，避免每次打开菜单都全量反射。
+        private static List<Type> _cachedTrackTypes;
+
+        /// <summary>提前预热轨道类型缓存（打开编辑窗口时调用，避免首次切页时才扫描程序集）。</summary>
+        public static void Warmup()
         {
+            _ = BuildTrackTypes();
+        }
+
+        private static List<Type> BuildTrackTypes()
+        {
+            if (_cachedTrackTypes != null) return _cachedTrackTypes;
+
             var result = new List<Type>();
-            foreach (var trackType in YooAsset.Editor.EditorTools.GetAssignableTypes(typeof(TimelineTrackAsset)))
+            foreach (var trackType in EditorTools.GetAssignableTypes(typeof(TimelineTrackAsset)))
             {
                 if (trackType.IsAbstract ||
                     trackType.GetAttribute<TLTrackAttribute>() == null ||
@@ -70,8 +86,12 @@ namespace Ux.Editor.Timeline
                 }
                 result.Add(trackType);
             }
+
+            _cachedTrackTypes = result;
             return result;
         }
+
+        public IReadOnlyList<Type> GetTrackTypes() => BuildTrackTypes();
 
         public TimelineAssetEditorTrack AddTrack(Type trackType)
         {

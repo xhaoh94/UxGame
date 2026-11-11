@@ -12,11 +12,13 @@ namespace Ux
             base.OnInit();
             TTTChilds.Add(3333, new List<int>() { 333301, 333302 });
             var par = new UITestData(3333, typeof(LoginTestUI));
-            UIMgr.Ins.AddUIData(par);
             var data1 = new UITestData(333301, typeof(LoginTestSub), new UITestTabData(3333, "测试2"));
-            UIMgr.Ins.AddUIData(data1);
             var data3 = new UITestData(333302, typeof(LoginTestSub), new UITestTabData(3333, "测试3"));
-            UIMgr.Ins.AddUIData(data3);
+            // 批量注册：先关闭逐条通知，最后统一刷新一次调试面板
+            UIMgr.Ins.AddUIData(par, false);
+            UIMgr.Ins.AddUIData(data1, false);
+            UIMgr.Ins.AddUIData(data3, false);
+            UIMgr.NotifyUIDataChanged();
             Test_EventCallAsync().Forget();
         }
         async UniTaskVoid Test_EventCallAsync()

@@ -83,7 +83,7 @@ namespace Ux.Editor.Tests
             using var f = new Fixture();
             Set(f.Component, "_axis", (UIVirtualListAxis)999);
             Set(f.Component, "_allowMultiple", true);
-            Set(f.Component, "_limitGridCount", true);
+            Set(f.Component, "_gridCount", 1);
             Set(f.Component, "_gridCount", -1);
             Set(f.Component, "_gridSpacing", new Vector2(float.NaN, float.NaN));
             var flow = (UIFlowLayout)typeof(UIVirtualListComponent)

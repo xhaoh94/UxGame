@@ -18,7 +18,7 @@ namespace Ux
         {
             get
             {
-                _resAddress ??= $"UI_{GetType().Name}";
+                _resAddress ??= string.Format(PathHelper.Res.UI, GetType().Name);
                 return _resAddress;
             }
         }
@@ -28,6 +28,8 @@ namespace Ux
         public virtual UIBlurMode Blur => UIBlurMode.Off;
         public virtual UIFocusMode FocusMode => UIFocusMode.Auto;
         public virtual bool CanFocus => FocusMode != UIFocusMode.None && Visible;
+        /// <summary>隐藏方式。默认 SetActive(false)。</summary>
+        public virtual UIHideMode HideMode => UIHideMode.Deactivate;
 
         void IUI.NotifyFocusEnter() => OnFocusEnter();
         void IUI.NotifyFocusExit() => OnFocusExit();
@@ -48,26 +50,102 @@ namespace Ux
         public virtual void AddChild(UITabView child) { }
 
         protected virtual GameObject CreateGameObject()
-        {            
+        {
             if (string.IsNullOrEmpty(ResAddress))
                 throw new InvalidOperationException($"UI 资源地址为空：{GetType().FullName}");
-            
-            var gameObject = ResMgr.Ins.LoadAsset<GameObject>(ResAddress);
+
+            var gameObject = ResMgr.Ins.LoadGameObject(ResAddress);
             if (gameObject == null)
-                throw new InvalidOperationException($"UI 资源加载失败：{ResAddress}");
-            
-            gameObject.SetLayer(LayerMask.NameToLayer(Layers.UI));
+                throw new InvalidOperationException($"UI 资源加载失败：{ResAddress}");            
             return gameObject;
         }
 
         public bool Visible
         {
-            get => GameObject != null && GameObject.activeSelf;
+            get => GameObject != null && _visible;
             set
             {
-                if (GameObject != null && GameObject.activeSelf != value)
-                    GameObject.SetActive(value);
+                if (GameObject == null || _visible == value)
+                    return;
+                _visible = value;
+                switch (HideMode)
+                {
+                    case UIHideMode.ScaleZero: SetHideScale(_visible); break;
+                    case UIHideMode.AlphaZero: SetHideAlpha(_visible); break;
+                    default: GameObject.SetVisible(_visible); break;
+                }
+
+#if UNITY_EDITOR
+                SyncEditorHierarchy(value);
+#endif
             }
+        }
+
+#if UNITY_EDITOR
+        private Transform _editorStashParent;
+
+        /// <summary>
+        /// 编辑器下把隐藏的界面收进 [UnityPool]/[UI]：
+        /// 显示时 AddToStage 通常已经挂回层容器，这里只在还留在收纳节点下时才还原。
+        /// </summary>
+        private void SyncEditorHierarchy(bool visible)
+        {
+            if (!Application.isPlaying)
+                return;
+
+            if (!visible)
+            {
+                if (_editorStashParent != null)
+                    return;
+
+                _editorStashParent = Transform.parent;
+                GameObject.SetParent(UnityPool.HiddenUIRoot, false);
+                return;
+            }
+
+            if (_editorStashParent == null)
+                return;
+
+            if (Transform.parent == UnityPool.HiddenUIRoot)
+                GameObject.SetParent(_editorStashParent, false);
+
+            _editorStashParent = null;
+        }
+#endif
+
+        private bool _visible;
+        private Vector3 _defaultScale = Vector3.one;
+        private bool _defaultScaleCaptured;
+        private CanvasGroup _canvasGroup;
+
+        private void SetHideScale(bool visible)
+        {
+            if (visible)
+            {
+                if (!_defaultScaleCaptured) return;
+                GameObject.transform.localScale = _defaultScale;
+            }
+            else
+            {
+                if (_defaultScaleCaptured) return;
+                _defaultScale = GameObject.transform.localScale;
+                // 预制体本身就是 0 的话没有可还原的值，按 1 处理。
+                if (_defaultScale == Vector3.zero) _defaultScale = Vector3.one;
+                _defaultScaleCaptured = true;
+            }
+        }
+        
+        private void SetHideAlpha(bool visible)
+        {
+            if (_canvasGroup == null)
+            {
+                if (visible) return;
+                _canvasGroup = GameObject.GetOrAddComponent<CanvasGroup>();
+            }
+            _canvasGroup.alpha = visible ? 1f : 0f;
+            // 不可见时也要挡掉点击，否则隐形界面盖在上面会吃掉输入。            
+            _canvasGroup.blocksRaycasts = visible;
+            _canvasGroup.interactable = visible;
         }
 
         public int ID => _instanceId;
@@ -125,16 +203,21 @@ namespace Ux
         protected virtual void AddToStage()
         {
             var layer = Layer;
-            if (layer == UILayer.Root) return;
+            if (layer == UILayer.Root)
+            {
+                // Root 层不进层容器（自己带 Canvas），但实例确实是可见的。
+                Visible = true;
+                return;
+            }
 
-            GameObject.transform.SetParent(UIMgr.Ins.GetUILayer(layer), false);
-            Visible = true;            
+            Transform.SetParent(UIMgr.Ins.GetUILayer(layer), false);
+            Visible = true;
             RegisterToStage();
         }
 
         protected virtual void RemoveToStage()
         {
-            Visible = false;            
+            Visible = false;
         }
 
         private enum QueuedTransitionKind

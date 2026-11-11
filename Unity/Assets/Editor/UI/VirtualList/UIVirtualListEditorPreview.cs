@@ -48,8 +48,8 @@ namespace Ux.Editor
                 (int)UIVirtualListLayoutMode.VariableLinear;
             bool allowMultiple = (listType == UIVirtualListType.Flat || listType == UIVirtualListType.Paged) &&
                 so.FindProperty("_allowMultiple").boolValue;
-            bool limit = allowMultiple && so.FindProperty("_limitGridCount").boolValue;
-            int maxPerLine = limit ? Mathf.Max(1, so.FindProperty("_gridCount").intValue) : 0;
+            int gridCount = so.FindProperty("_gridCount").intValue;
+            int maxPerLine = allowMultiple && gridCount > 0 ? gridCount : 0;
             float singleSpacing = so.FindProperty("_spacing").floatValue;
             Vector2 gridSpacing = so.FindProperty("_gridSpacing").vector2Value;
             Vector2 spacing = allowMultiple
@@ -132,8 +132,12 @@ namespace Ux.Editor
         /// <summary>进入 Play 之前清理全部预览，避免残留对象混入运行时列表。</summary>
         public static void ClearAll()
         {
+#if UNITY_6000_4_OR_NEWER
+            foreach (var component in Object.FindObjectsByType<UIVirtualListComponent>(FindObjectsInactive.Include))
+#else
             foreach (var component in Object.FindObjectsByType<UIVirtualListComponent>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
+#endif
                 Clear(component);
 
             var stage = PrefabStageUtility.GetCurrentPrefabStage();

@@ -1,10 +1,9 @@
-using System;
-using System.Runtime.CompilerServices;
+﻿using System;
 using UnityEngine;
 
 namespace Ux
 {
-    public partial class TimeMgr : Singleton<TimeMgr>
+    public partial class TimeMgr : Singleton<TimeMgr>, IFrameUpdate
     {
         public double TotalTime => Time.unscaledTimeAsDouble;
         public int TotalFrame => Time.frameCount;
@@ -21,7 +20,7 @@ namespace Ux
         {
             LocalTime = new LocalTime();
             ServerTime = new ServerTime();
-            GameMethod.Update += _Update;
+            FrameDriver.Register(this);
             GameMethod.LowMemory += _OnLowMemory;
         }
         public void Release()
@@ -42,13 +41,12 @@ namespace Ux
             (ServerTime as ServerTime)?.SetOffset(offset);
         }
 
-        void _Update()
+        void IFrameUpdate.OnFrameUpdate()
         {
             _timer?.Run();
             _frame?.Run();
             _timeStamp?.Run();
-            _cron?.Run();
-            _frame?.Run();
+            _cron?.Run();            
         }
 
 

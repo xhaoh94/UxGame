@@ -56,13 +56,13 @@ namespace Ux.Editor.Combat
 
     internal static class CombatAssetMenuItems
     {
-        [MenuItem("Assets/UxGame/战斗/打开角色配置", true)]
+        [MenuItem("Assets/UxGame/战斗配置", true)]
         private static bool ValidateOpenProfile()
         {
             return Selection.activeObject is CharacterCombatProfile;
         }
 
-        [MenuItem("Assets/UxGame/战斗/打开角色配置", false, 100)]
+        [MenuItem("Assets/UxGame/战斗配置", false, 100)]
         private static void OpenProfile()
         {
             CombatEditorWindow.Open(Selection.activeObject as CharacterCombatProfile);

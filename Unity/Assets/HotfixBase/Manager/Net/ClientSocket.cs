@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 namespace Ux
 {
     public enum SocketCode
@@ -87,7 +86,6 @@ namespace Ux
         Dictionary<uint, Type> _rpcType = new Dictionary<uint, Type>();
         Dictionary<uint, float> _rpcTime = new Dictionary<uint, float>();
         List<uint> _rpcDels = new List<uint>();
-        Dictionary<uint, Type> _cmdType = new Dictionary<uint, Type>();
 
         Action _connectCallback;
         Action<object> _connect1Callback;
@@ -101,30 +99,6 @@ namespace Ux
             this._parser = new PacketParser(this.recvBytes);
             this.IsConnected = false;
             this.IsSending = false;
-            ModuleMgr.ForEach(mol =>
-            {
-                var methods = mol.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var method in methods)
-                {
-                    var net = method.GetCustomAttribute<NetAttribute>();
-                    if (net != null)
-                    {
-                        var parames = method.GetParameters();
-
-                        if (parames.Length > 1)
-                        {
-                            Log.Error($"网络接口{method.Name}：参数不能超过2个");
-                            continue;
-                        }
-                        if (parames.Length == 1)
-                        {
-                            var p = parames[0].ParameterType;
-                            _cmdType.Add(net.cmd, p);
-                        }
-                        (NetMgr.Ins as INetEvent).Bind(net.cmd, new FastMethodInfo(mol, method));
-                    }
-                }
-            });
         }
 
         protected void OnSocketCode(SocketCode e)
@@ -340,10 +314,6 @@ namespace Ux
         }
         Type FindType(uint cmd)
         {
-            if (_cmdType.TryGetValue(cmd, out var type))
-            {
-                return type;
-            }
             return (NetMgr.Ins as INetEvent).FindType(cmd);
         }
 
@@ -453,7 +423,6 @@ namespace Ux
             _rpcDels.Clear();
             _rpcMethod.Clear();
             _rpcType.Clear();
-            _cmdType.Clear();
             _sendStream.Dispose();
             _recvStream.Dispose();
             sendBytes.Dispose();
