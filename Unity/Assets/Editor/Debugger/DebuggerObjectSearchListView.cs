@@ -124,18 +124,22 @@ namespace Ux.Editor.Debugger
         private void FilterViewItems(Dictionary<string, V> dict)
         {
             _listData = new List<V>();
-            var searchKey = _inputSearch.text.ToLower();
-            if (searchKey == string.Empty)
+            // 窗口打开时 UIMgr 才补推一次数据，此前点左侧列表会走到这里，dict 可能为 null
+            if (dict != null)
             {
-                _listData = dict.Values.ToList();
-            }
-            else
-            {
-                foreach (var kv in dict)
+                var searchKey = _inputSearch.text.ToLower();
+                if (searchKey == string.Empty)
                 {
-                    if (kv.Key.ToLower().IndexOf(searchKey) >= 0)
+                    _listData = dict.Values.ToList();
+                }
+                else
+                {
+                    foreach (var kv in dict)
                     {
-                        _listData.Add(kv.Value);
+                        if (kv.Key.ToLower().IndexOf(searchKey) >= 0)
+                        {
+                            _listData.Add(kv.Value);
+                        }
                     }
                 }
             }

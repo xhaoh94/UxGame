@@ -88,7 +88,7 @@ namespace Ux.Editor.Debugger.Time
                 txtTotaCnt.style.display = DisplayStyle.None;
                 tgLoop.SetValueWithoutNotify(data.IsLoop);
             }
-            txtNext.SetValueWithoutNotify(data.ExeTime.ToString("#0.###"));
+            txtNext.SetValueWithoutNotify(((int)data.ExeTime).ToString());
             txtExeCnt.SetValueWithoutNotify(data.ExeCnt.ToString());
             txtGap.SetValueWithoutNotify(data.Delay.ToString());
             lbType.text = data.UseFrame ? "帧" : "秒";

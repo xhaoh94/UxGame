@@ -24,6 +24,7 @@ namespace Ux
             if (UnityEditor.EditorApplication.isPlaying)
             {
                 ((IUIMgrDebuggerAccess)Ins).FillAllUIData(Ins._debugAllUIData);
+                __Debugger_UI_CallBack?.Invoke(Ins._debugAllUIData);
                 __Debugger_Stack_Event();
                 __Debugger_Showed_Event();                
                 __Debugger_Cacel_Event();

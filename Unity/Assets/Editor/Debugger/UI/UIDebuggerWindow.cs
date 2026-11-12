@@ -95,7 +95,7 @@ namespace Ux.Editor.Debugger.UI
             TopBar.style.marginLeft = 1f;
             TopBar.style.marginRight = 1f;
             TopBar0 = new ToolbarButton { name = "TopBar0", text = "ID" };
-            TopBar0.style.width = 205f;
+            TopBar0.style.width = 300f;
             TopBar0.style.flexGrow = 0f;
             TopBar0.style.unityTextAlign = TextAnchor.MiddleLeft;
             TopBar.Add(TopBar0);

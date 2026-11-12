@@ -214,11 +214,11 @@ namespace Ux.Editor.Debugger.Time
         {
             if (EditorApplication.isPlaying)
             {
-                _txtTime.SetValueWithoutNotify(TimeMgr.Ins.TotalTime.ToString("#0.###"));
+                _txtTime.SetValueWithoutNotify(((int)TimeMgr.Ins.TotalTime).ToString());
                 _txtFrame.SetValueWithoutNotify(TimeMgr.Ins.TotalFrame.ToString());
 
-                _txtLocalTime.SetValueWithoutNotify(TimeMgr.Ins.LocalTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));
-                _txtServerTime.SetValueWithoutNotify(TimeMgr.Ins.ServerTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff"));
+                _txtLocalTime.SetValueWithoutNotify(TimeMgr.Ins.LocalTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                _txtServerTime.SetValueWithoutNotify(TimeMgr.Ins.ServerTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             }
         }
         private void OnChangeType(TimeType type, bool force = false)

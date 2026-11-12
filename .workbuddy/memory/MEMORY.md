@@ -35,6 +35,7 @@
 - 同一批里对**同一文件**发多个 Edit 会互相覆盖 → 串行发。
 - **本仓库行尾是混的** → 按文件保留、别归一化。`core.autocrlf=true` ⇒ **`git diff --stat` 测不出行尾翻转**（git 归一化后比较；实测整文件 LF 化仍只显示纯插入）。真实行尾看 `git ls-files --eol <p>` 的 `w/` 列；判断"原本是什么"只能靠动手前的备份。
 - Unity 挪文件必须 `.cs` + `.cs.meta` 成对，新目录要补 `.meta`。
+- **本仓库 .cs 的 BOM 状态不统一**：Python 用 `encoding="utf-8-sig"` 写回会给原本无 BOM 的文件补上 BOM，diff 里变成 `-using System;` / `+﻿using System;` 的假改动。动手前 `od -An -tx1 -N3` 看首字节，按文件决定是否带 BOM。
 
 ## 资源与命名
 - **YooAsset 3.0.7（2026-11-09/10 升级）**：嵌入包 `Unity/Packages/com.tuyoogame.yooasset/`，`manifest.json` 无该条目（不走注册表，也就不需要网络）。**兼容宏已彻底移除**：`Runtime/Compatibility/*.cs` 整文件包在 `#if YOOASSET_LEGACY_API` 里，去掉宏后这些类型根本不存在。几条硬结论：`BundleFileHandle` 没有任何取数据的方法，原生文件只能 `LoadAssetSync/LoadAssetAsync<RawFileObject>` + `RawFileObject.GetBytes()/GetText()`；`LoadPackageManifestAsync` **不接受空版本**（先 `RequestPackageVersionAsync`）；`InstantiateSync(Transform)` 改 `InstantiateSync(new InstantiateOptions(true, parent, false))`；`SetDefaultPackage` 与默认包裹概念已删。清单是**二进制**，旧 AB 全不兼容，必须整包重打。
