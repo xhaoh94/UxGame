@@ -387,6 +387,14 @@ namespace Ux.Editor
             if (items == null) return;
             for (int i = 0; i < items.Length; i++)
             {
+                // 布局组与关联同轴冲突时关联不会生效，用 Error 明确提示。
+                var conflict = UIRelationCore.DescribeLayoutConflict(rect, items[i]);
+                if (conflict != null)
+                {
+                    EditorGUILayout.HelpBox($"关联 {i}: {conflict}", MessageType.Error);
+                    continue;
+                }
+
                 var warning = UIRelationCore.Describe(rect, items[i]);
                 if (warning != null)
                     EditorGUILayout.HelpBox($"关联 {i}: {warning}", MessageType.Warning);

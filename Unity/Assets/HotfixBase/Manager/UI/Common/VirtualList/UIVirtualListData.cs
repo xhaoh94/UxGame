@@ -49,9 +49,10 @@ namespace Ux
             // 先物化，避免懒枚举中途失败或枚举原数据时导致部分写入。
             var values = MaterializeDatas(datas);
             ThrowIfDisposed();
-            if (values.Count == 0)
+            int inserted = values.Count;
+            if (inserted == 0)
                 return;
-            if (values.Count > int.MaxValue - Count)
+            if (inserted > int.MaxValue - Count)
                 throw new ArgumentOutOfRangeException(nameof(datas));
 
             var anchor = CaptureDataAnchor();
@@ -59,18 +60,21 @@ namespace Ux
             try
             {
                 if (_layout is IUIVirtualListMutableLayout mutable)
-                    mutable.InsertItems(index, values.Count);
+                    mutable.InsertItems(index, inserted);
                 else
-                    ResetUnsupportedLayout(Count + values.Count);
+                    ResetUnsupportedLayout(Count + inserted);
                 _datas.InsertRange(index, values);
                 DataRevision++;
-                RemapActiveItems(index, values.Count, false);
+                // 测量缓存跟着数据一起平移，避免把 A 的“已测”标到 B 上。
+                InsertMeasuredSizes(index, inserted);
+                RemapActiveItems(index, inserted, false);
+                RemapPinnedIndices(index, inserted, false);
             }
             finally { EndDataMutation(); }
             NotifyDataChanged();
-            DataInserted?.Invoke(index, values.Count);
+            DataInserted?.Invoke(index, inserted);
             if (anchor.Index >= index)
-                anchor.Index += values.Count;
+                anchor.Index += inserted;
             FinishDataMutation(anchor);
         }
 
@@ -102,7 +106,9 @@ namespace Ux
                     ResetUnsupportedLayout(Count - count);
                 _datas.RemoveRange(index, count);
                 DataRevision++;
+                RemoveMeasuredSizes(index, count);
                 RemapActiveItems(index, count, true);
+                RemapPinnedIndices(index, count, true);
             }
             finally { EndDataMutation(); }
             NotifyDataChanged();
@@ -130,6 +136,7 @@ namespace Ux
                     ResetUnsupportedLayout(Count);
                 _datas[index] = data;
                 DataRevision++;
+                InvalidateMeasuredSize(index);
                 if (_activeItems.TryGetValue(index, out var active))
                     active.NeedsBind = true;
             }
@@ -141,12 +148,34 @@ namespace Ux
         /// <summary>清空数据但保留可复用对象；释放对象和模板请使用 Dispose / 组件 Release。</summary>
         public void Clear() => RemoveRange(0, Count);
 
+        private List<object> PrepareDatasScratch<T>(IEnumerable<T> datas)
+        {
+            if (datas == null)
+            {
+                _scratchDatas.Clear();
+                return _scratchDatas;
+            }
+            return MaterializeDatas(datas);
+        }
+
         private List<object> MaterializeDatas<T>(IEnumerable<T> datas)
         {
             _changingData = true;
             try
             {
-                var result = new List<object>();
+                // 复用暂存列表：SetDatas 提交时与 _datas 交换引用，稳态下不再分配新表。
+                var result = _scratchDatas;
+                result.Clear();
+                // 按下标物化，避开 IEnumerable<T> 枚举器装箱与重复扩容。
+                if (datas is IReadOnlyList<T> list)
+                {
+                    result.Capacity = Mathf.Max(result.Capacity, list.Count);
+                    for (int i = 0; i < list.Count; i++)
+                        result.Add(list[i]);
+                    return result;
+                }
+                if (datas is ICollection<T> collection)
+                    result.Capacity = Mathf.Max(result.Capacity, collection.Count);
                 foreach (var data in datas)
                     result.Add(data);
                 return result;
@@ -171,6 +200,7 @@ namespace Ux
         {
             // 自定义布局没有增量接口时采用安全降级，不能把旧尺寸缓存错误地套到新索引。
             _layout.SetItemCount(count, true);
+            ClearMeasuredSizes();
             foreach (var active in _activeItems.Values)
                 active.NeedsMeasure = _layout.SupportsDynamicSize;
         }
@@ -196,6 +226,33 @@ namespace Ux
             foreach (var pair in _remappedItems)
                 _activeItems.Add(pair.Key, pair.Value);
             _remappedItems.Clear();
+        }
+
+        /// <summary>提权记录按数据索引保存，增删数据后必须跟着偏移，否则会指向别的项。</summary>
+        private void RemapPinnedIndices(int index, int count, bool removal)
+        {
+            if (_pinnedFront.Count == 0 && _pinnedBack.Count == 0)
+                return;
+            RemapPinnedList(_pinnedFront, index, count, removal);
+            RemapPinnedList(_pinnedBack, index, count, removal);
+        }
+
+        private static void RemapPinnedList(List<int> indices, int index, int count, bool removal)
+        {
+            for (int i = indices.Count - 1; i >= 0; i--)
+            {
+                int value = indices[i];
+                if (!removal)
+                {
+                    if (value >= index)
+                        indices[i] = value + count;
+                    continue;
+                }
+                if (value >= index && value < index + count)
+                    indices.RemoveAt(i);
+                else if (value >= index + count)
+                    indices[i] = value - count;
+            }
         }
 
         private ScrollAnchor CaptureDataAnchor()

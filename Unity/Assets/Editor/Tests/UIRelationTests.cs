@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Ux.Editor.Tests
 {
@@ -499,6 +500,185 @@ namespace Ux.Editor.Tests
             relation.Add(b, RelationSide.Left, RelationSide.Top);
 
             Assert.AreEqual(0, relation.Items.Length);
+        }
+
+        /// <summary>
+        /// 运行时（模拟播放模式）自身被外部改尺寸时，以关联配置为准拉回，
+        /// 不把外部写入重记成新基线；编辑器里手改才会更新配置值。
+        /// </summary>
+        [Test]
+        public void ManualSizeChangeIsPulledBackWhenRunning()
+        {
+            var a = CreateRect(_root.transform, "A", new Vector2(100f, 50f), Vector2.zero);
+            var b = CreateRect(_root.transform, "B", new Vector2(300f, 80f), new Vector2(200f, 0f));
+            var relation = a.gameObject.AddComponent<UIRelation>();
+
+            relation.AddTarget(b);
+            relation.SetFollowWidth(b, true, false);
+            relation.Apply();
+            Assert.AreEqual(100f, a.rect.width, 0.01f);
+            Assert.AreEqual(-200f, relation.Items[0].WidthDelta, 0.01f);
+
+            relation.RelinkOnSelfChangeOverride = false;
+            a.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400f);
+
+            Assert.IsTrue(relation.ApplyIfNeeded());
+            Assert.AreEqual(100f, a.rect.width, 0.01f);
+            Assert.AreEqual(-200f, relation.Items[0].WidthDelta, 0.01f, "运行时不重记基线");
+        }
+
+        /// <summary>
+        /// 目标是 stretch（left/right/top/bottom）布局时，父面板变高会同时改目标高度、
+        /// 并带着自身移动。父面板变高不能被当成“自身被外部改动”重记比例，否则不跟随。
+        /// </summary>
+        [Test]
+        public void FollowHeightTracksStretchTargetWhenParentResizes()
+        {
+            var (panel, target, self, relation) = CreateStretchScenario();
+
+            relation.SetFollowHeight(target, true, true);
+            relation.Apply();
+            Assert.AreEqual(40f, self.rect.height, 0.01f);
+            Assert.AreEqual(40f / 180f, relation.Items[0].HeightRatio, 0.001f);
+
+            panel.sizeDelta = new Vector2(400f, 400f);
+            Assert.AreEqual(380f, target.rect.height, 0.01f);
+
+            relation.ApplyIfNeeded();
+
+            // 比例保持 40/180：380 × 40/180 ≈ 84.44。
+            Assert.AreEqual(380f * 40f / 180f, self.rect.height, 0.01f);
+        }
+
+        [Test]
+        public void FollowHeightAbsoluteModeTracksStretchTargetWhenParentResizes()
+        {
+            var (panel, target, self, relation) = CreateStretchScenario();
+
+            relation.SetFollowHeight(target, true, false);
+            relation.Apply();
+            Assert.AreEqual(-140f, relation.Items[0].HeightDelta, 0.01f);
+
+            panel.sizeDelta = new Vector2(400f, 400f);
+            relation.ApplyIfNeeded();
+
+            // 差值保持 -140：380 - 140 = 240。
+            Assert.AreEqual(240f, self.rect.height, 0.01f);
+        }
+
+        /// <summary>
+        /// 目标 stretch 到父面板（上下各留 10），自身居中于父面板：
+        /// 父面板高度变化时自身位置会跟着变，用来覆盖“自身被带着走”的场景。
+        /// </summary>
+        private (RectTransform panel, RectTransform target, RectTransform self, UIRelation relation)
+            CreateStretchScenario()
+        {
+            var panel = CreateRect(_root.transform, "Panel", new Vector2(400f, 200f), Vector2.zero);
+
+            var target = CreateRect(panel, "Target", new Vector2(0f, -20f), Vector2.zero);
+            target.anchorMin = Vector2.zero;
+            target.anchorMax = Vector2.one;
+            target.pivot = new Vector2(0.5f, 0.5f);
+            target.anchoredPosition = Vector2.zero;
+
+            var self = CreateRect(panel, "Self", new Vector2(100f, 40f), Vector2.zero);
+            self.anchorMin = new Vector2(0.5f, 0.5f);
+            self.anchorMax = new Vector2(0.5f, 0.5f);
+            self.pivot = new Vector2(0.5f, 0.5f);
+            self.anchoredPosition = Vector2.zero;
+
+            var relation = self.gameObject.AddComponent<UIRelation>();
+            relation.AddTarget(target);
+            return (panel, target, self, relation);
+        }
+
+        [Test]
+        public void LayoutGroupSizeControlConflictsWithSizeFollow()
+        {
+            var panel = CreateRect(_root.transform, "Panel", new Vector2(400f, 300f), Vector2.zero);
+            var group = panel.gameObject.AddComponent<HorizontalLayoutGroup>();
+            group.childControlWidth = true;
+            group.childControlHeight = false;
+
+            var a = CreateRect(panel, "A", new Vector2(100f, 50f), Vector2.zero);
+            var b = CreateRect(panel, "B", new Vector2(100f, 50f), new Vector2(200f, 0f));
+            var relation = a.gameObject.AddComponent<UIRelation>();
+            relation.AddTarget(b);
+            relation.SetFollowWidth(b, true, false);
+
+            var conflict = UIRelationCore.DescribeLayoutConflict(a, relation.Items[0]);
+            Assert.IsNotNull(conflict, "布局组控制宽度时“宽 → 宽”应冲突");
+            StringAssert.Contains("宽 → 宽", conflict);
+
+            // 高度没有被布局组控制，“高 → 高”不冲突。
+            relation.SetFollowHeight(b, true, false);
+            relation.SetFollowWidth(b, false);
+            Assert.IsNull(UIRelationCore.DescribeLayoutConflict(a, relation.Items[0]),
+                "childControlHeight 关闭时高度跟随不应冲突");
+
+            // Ignore Layout 后布局组完全跳过该节点，冲突消失。
+            relation.SetFollowWidth(b, true, false);
+            var element = a.gameObject.AddComponent<LayoutElement>();
+            element.ignoreLayout = true;
+            Assert.IsNull(UIRelationCore.DescribeLayoutConflict(a, relation.Items[0]));
+        }
+
+        [Test]
+        public void LayoutGroupPositionControlConflictsWithLinks()
+        {
+            var panel = CreateRect(_root.transform, "Panel", new Vector2(400f, 300f), Vector2.zero);
+            var group = panel.gameObject.AddComponent<HorizontalLayoutGroup>();
+            group.childControlWidth = false;
+            group.childControlHeight = false;
+
+            var a = CreateRect(panel, "A", new Vector2(100f, 50f), Vector2.zero);
+            var b = CreateRect(panel, "B", new Vector2(100f, 50f), new Vector2(200f, 0f));
+            var relation = a.gameObject.AddComponent<UIRelation>();
+
+            // HorizontalLayoutGroup 只写 x：垂直边对不冲突，水平边对冲突。
+            relation.Add(b, RelationSide.Top, RelationSide.Top);
+            Assert.IsNull(UIRelationCore.DescribeLayoutConflict(a, relation.Items[0]));
+
+            relation.Add(b, RelationSide.Left, RelationSide.Left);
+            var conflict = UIRelationCore.DescribeLayoutConflict(a, relation.Items[0]);
+            Assert.IsNotNull(conflict);
+            StringAssert.Contains("水平边关联", conflict);
+        }
+
+        [Test]
+        public void GridLayoutGroupConflictsWithSizeAndPosition()
+        {
+            var panel = CreateRect(_root.transform, "Panel", new Vector2(400f, 300f), Vector2.zero);
+            panel.gameObject.AddComponent<GridLayoutGroup>();
+
+            var a = CreateRect(panel, "A", new Vector2(100f, 50f), Vector2.zero);
+            var b = CreateRect(panel, "B", new Vector2(100f, 50f), new Vector2(200f, 0f));
+            var relation = a.gameObject.AddComponent<UIRelation>();
+            relation.AddTarget(b);
+            relation.SetFollowHeight(b, true, false);
+
+            Assert.IsNotNull(UIRelationCore.DescribeLayoutConflict(a, relation.Items[0]));
+        }
+
+        [Test]
+        public void ConflictingRelationIsNotApplied()
+        {
+            var panel = CreateRect(_root.transform, "Panel", new Vector2(400f, 300f), Vector2.zero);
+            var group = panel.gameObject.AddComponent<HorizontalLayoutGroup>();
+            group.childControlWidth = true;
+
+            var a = CreateRect(panel, "A", new Vector2(100f, 50f), Vector2.zero);
+            var b = CreateRect(panel, "B", new Vector2(200f, 50f), new Vector2(200f, 0f));
+            var relation = a.gameObject.AddComponent<UIRelation>();
+            relation.AddTarget(b);
+            relation.SetFollowWidth(b, true, false);
+            Assert.AreEqual(-100f, relation.Items[0].WidthDelta, 0.01f);
+
+            // 目标变宽：宽度由布局组控制，关联应被跳过而不是写入。
+            b.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400f);
+            relation.ApplyIfNeeded();
+
+            Assert.AreEqual(100f, a.rect.width, 0.01f);
         }
 
         private static RectTransform CreateRect(Transform parent, string name, Vector2 size,

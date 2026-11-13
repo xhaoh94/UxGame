@@ -25,13 +25,14 @@ namespace Ux
         private readonly float _paddingStart;
         private readonly float _paddingEnd;
         private readonly List<float> _sizes;
+        // 行高缓存：数据/换行变化时全量重建，单项尺寸变化时只更新所在行。
         private readonly List<float> _lineSizes;
+        // 行起点缓存：只按需推进到可见位置。
         private readonly List<float> _lineStarts;
         private UIFixedGridLayout _fixedLayout;
         private int _count;
         private int _countPerLine = 1;
-        private bool _positionsDirty = true;
-        private float _contentLength;
+        private double _totalLineSize;
 
         public UIFlowLayout(UIVirtualListAxis axis, Vector2 itemSize,
             bool variableSize = false, bool allowMultiple = false, int maxCountPerLine = 0,
@@ -61,7 +62,8 @@ namespace Ux
         public bool SupportsDynamicSize => _variableSize;
         public int CountPerLine => _countPerLine;
         public float CrossSize => _fixedLayout.CrossSize;
-        private float MainSpacing => IsVertical ? _spacing.y : _spacing.x;
+        /// <summary>主轴间距。循环布局拼接周期时要把这段补进周期间隙，否则首尾两项会贴在一起。</summary>
+        internal float MainSpacing => IsVertical ? _spacing.y : _spacing.x;
         private float DefaultMainSize => IsVertical ? _itemSize.y : _itemSize.x;
 
         public float ContentLength
@@ -70,10 +72,14 @@ namespace Ux
             {
                 if (!_variableSize)
                     return _fixedLayout.ContentLength;
-                EnsurePositions();
-                return _contentLength;
+                int lines = LineCount;
+                if (lines <= 0) return _paddingStart + _paddingEnd;
+                // 增量总长：O(1)，不再依赖任何全量遍历。
+                return _paddingStart + _paddingEnd + (float)_totalLineSize + MainSpacing * (lines - 1);
             }
         }
+
+        private int LineCount => _count <= 0 ? 0 : (_count + _countPerLine - 1) / _countPerLine;
 
         /// <summary>最大数量为 0 时不设上限；空间不足一项时仍保留一项，不缩放 Item。</summary>
         public static int CalculateCountPerLine(float available, float itemCrossSize, float crossSpacing,
@@ -103,7 +109,7 @@ namespace Ux
             layout.SetItemCount(_count, false);
             _fixedLayout = layout;
             _countPerLine = count;
-            _positionsDirty = true;
+            RebuildLineMetrics();
             return true;
         }
 
@@ -120,7 +126,7 @@ namespace Ux
                     _sizes.Add(DefaultMainSize);
             }
             _count = count;
-            _positionsDirty = true;
+            RebuildLineMetrics();
         }
 
         public void InsertItems(int index, int count)
@@ -139,7 +145,7 @@ namespace Ux
                 _sizes.InsertRange(index, defaults);
             }
             _count += count;
-            _positionsDirty = true;
+            RebuildLineMetrics();
         }
 
         public void RemoveItems(int index, int count)
@@ -154,7 +160,7 @@ namespace Ux
             if (_variableSize)
                 _sizes.RemoveRange(index, count);
             _count -= count;
-            _positionsDirty = true;
+            RebuildLineMetrics();
         }
 
         public void InvalidateItemSize(int index)
@@ -164,7 +170,7 @@ namespace Ux
             if (_variableSize)
             {
                 _sizes[index] = DefaultMainSize;
-                _positionsDirty = true;
+                UpdateLineForSizeChange(index);
             }
         }
 
@@ -174,8 +180,8 @@ namespace Ux
                 return _fixedLayout.GetItemLayout(index);
             if (index < 0 || index >= _count)
                 throw new ArgumentOutOfRangeException(nameof(index));
-            EnsurePositions();
             int line = index / _countPerLine;
+            EnsureLineStarts(line + 1);
             int crossIndex = index % _countPerLine;
             double crossSize = IsVertical ? _itemSize.x : _itemSize.y;
             double crossSpacing = IsVertical ? _spacing.x : _spacing.y;
@@ -195,7 +201,7 @@ namespace Ux
             if (Mathf.Abs(_sizes[index] - main) < 0.01f)
                 return false;
             _sizes[index] = main;
-            _positionsDirty = true;
+            UpdateLineForSizeChange(index);
             return true;
         }
 
@@ -203,11 +209,12 @@ namespace Ux
         {
             if (!_variableSize)
                 return _fixedLayout.GetVisibleRange(scrollPosition, viewportLength, bufferSize);
-            EnsurePositions();
             if (_count == 0 || viewportLength <= 0f)
                 return new UIVirtualListRange(0, -1);
             float start = scrollPosition - Mathf.Max(0f, bufferSize);
             float end = scrollPosition + viewportLength + Mathf.Max(0f, bufferSize);
+            // 二分需要行起点覆盖 end，否则范围不完整。
+            EnsureLineStartsToCover(end);
             int first = FindFirstLineEndingAfter(start);
             int last = FindFirstLineStartingAtOrAfter(end) - 1;
             if (first >= _lineSizes.Count || first > last)
@@ -216,34 +223,93 @@ namespace Ux
                 (int)Math.Min(_count - 1L, ((long)last + 1) * _countPerLine - 1));
         }
 
-        private void EnsurePositions()
+        /// <summary>数据/换行变化后重建行高与总长；行起点按需再推进。</summary>
+        private void RebuildLineMetrics()
         {
-            if (!_positionsDirty)
+            if (!_variableSize)
+            {
+                _totalLineSize = 0;
                 return;
+            }
             _lineSizes.Clear();
             _lineStarts.Clear();
-            double start = _paddingStart;
-            for (int first = 0; first < _count;)
+            int lines = LineCount;
+            _lineSizes.Capacity = Mathf.Max(_lineSizes.Capacity, lines);
+            double total = 0;
+            for (int first = 0; first < _count; first += _countPerLine)
             {
                 int end = (int)Math.Min(_count, (long)first + _countPerLine);
-                float main = 0f;
+                float height = 0f;
                 for (int i = first; i < end; i++)
-                    main = Mathf.Max(main, _sizes[i]);
-                if (start + main + _paddingEnd > float.MaxValue)
-                    throw new InvalidOperationException("流式布局的内容总尺寸超出 RectTransform 范围。");
-                _lineStarts.Add((float)start);
-                _lineSizes.Add(main);
-                start += main + (double)MainSpacing;
-                first = end;
+                    height = Mathf.Max(height, _sizes[i]);
+                _lineSizes.Add(height);
+                total += height;
             }
-            _contentLength = (float)(_count == 0 ? (double)_paddingStart + _paddingEnd
-                : start - MainSpacing + _paddingEnd);
-            _positionsDirty = false;
+            _totalLineSize = total;
+        }
+
+        /// <summary>单项尺寸变化后，只重算它所在行的行高和总长。</summary>
+        private void UpdateLineForSizeChange(int index)
+        {
+            int line = index / _countPerLine;
+            if (line >= _lineSizes.Count)
+            {
+                RebuildLineMetrics();
+                return;
+            }
+            int first = line * _countPerLine;
+            int end = Mathf.Min(_count, first + _countPerLine);
+            float height = 0f;
+            for (int i = first; i < end; i++)
+                height = Mathf.Max(height, _sizes[i]);
+            _totalLineSize += height - _lineSizes[line];
+            _lineSizes[line] = height;
+            // 本行起点仍然有效（只依赖前面的行），之后的行起点要重算。
+            TrimLineStarts(line + 1);
+        }
+
+        private void EnsureLineStarts(int count)
+        {
+            int lines = LineCount;
+            if (count > lines) count = lines;
+            if (_lineStarts.Count >= count) return;
+
+            _lineStarts.Capacity = Mathf.Max(_lineStarts.Capacity, lines);
+            int line = _lineStarts.Count;
+            float start = line == 0
+                ? _paddingStart
+                : _lineStarts[line - 1] + _lineSizes[line - 1] + MainSpacing;
+            while (line < count)
+            {
+                _lineStarts.Add(start);
+                start += _lineSizes[line] + MainSpacing;
+                line++;
+            }
+        }
+
+        /// <summary>丢弃 count 之后的行起点；它们依赖已变化的行高。</summary>
+        private void TrimLineStarts(int count)
+        {
+            if (_lineStarts.Count <= count) return;
+            _lineStarts.RemoveRange(count, _lineStarts.Count - count);
+        }
+
+        /// <summary>从当前水位往后推进，直到 position 落在已计算区间内。</summary>
+        private void EnsureLineStartsToCover(float position)
+        {
+            while (_lineStarts.Count < LineCount)
+            {
+                int last = _lineStarts.Count - 1;
+                if (last >= 0 && _lineStarts[last] + _lineSizes[last] + MainSpacing > position)
+                    return;
+                EnsureLineStarts(_lineStarts.Count + 1);
+            }
         }
 
         private int FindFirstLineEndingAfter(float position)
         {
-            int low = 0, high = _lineSizes.Count;
+            // 只能二分已推进的起点区间（调用方保证它覆盖了 position）。
+            int low = 0, high = _lineStarts.Count;
             while (low < high)
             {
                 int middle = low + (high - low) / 2;

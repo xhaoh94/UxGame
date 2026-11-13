@@ -127,7 +127,9 @@ namespace Ux
                 if (_needsMeasure)
                 {
                     _needsMeasure = false;
-                    var size = _view.Measure();
+                    // 走列表测量链：吸顶副本不属于 active Item，不经过 MeasureVisibleItems，
+                    // 需要单独把关联测量等扩展补上。
+                    var size = _list.MeasureItem(selected.HeaderIndex, _view);
                     if (_disposePending || _list.IsDisposedOrDisposing) return;
                     float main = _list.IsVertical ? size.y : size.x;
                     if (main <= 0f || float.IsNaN(main) || float.IsInfinity(main))

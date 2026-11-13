@@ -21,7 +21,7 @@ namespace Ux
             LocalTime = new LocalTime();
             ServerTime = new ServerTime();
             FrameDriver.Register(this);
-            GameMethod.LowMemory += _OnLowMemory;
+            GameMain.Ins.LowMemory += _OnLowMemory;
         }
         public void Release()
         {

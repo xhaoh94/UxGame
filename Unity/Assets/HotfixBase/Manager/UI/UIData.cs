@@ -422,7 +422,7 @@ namespace Ux
 
         /// <summary>
         /// 获取已注册的UIData
-        /// 如果找不到对应的UIData，会记录错误日志（仅在编辑器模式下）
+        /// 找不到时记录错误日志：编辑器下带类型名，发布包带 ID。
         /// </summary>
         /// <param name="id">要获取的UI ID</param>
         /// <returns>对应的UI数据，如果不存在则返回null</returns>
@@ -433,16 +433,15 @@ namespace Ux
                 return data;
             }
 #if UNITY_EDITOR
-            // 编辑器模式下提供更详细的错误信息
+            // 编辑器下能查到类型名，日志更直观。
             if (Ins._idTypeName.TryGetValue(id, out var tName))
             {
                 Log.Error($"获取不到UIData[{tName}],请检查是否有注册UI");
-            }
-            else
-            {
-                Log.Error($"获取不到UIData[{id}],请检查是否有注册UI");
+                return null;
             }
 #endif
+            // 发布包也保留错误日志：否则拿不到 UI 时只能靠猜。
+            Log.Error($"获取不到UIData[{id}],请检查是否有注册UI");
             return null;
         }
 

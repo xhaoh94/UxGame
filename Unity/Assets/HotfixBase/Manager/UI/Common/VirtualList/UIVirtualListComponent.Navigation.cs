@@ -18,7 +18,8 @@ namespace Ux
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
             Controller.ValidateDataMutation();
-            if (index >= Count) throw new ArgumentOutOfRangeException(nameof(index));
+            // 循环列表的可定位索引是渲染行数（数据条数 × 周期数），不是业务条数。
+            if (index >= RenderCount) throw new ArgumentOutOfRangeException(nameof(index));
             if (durationSeconds <= 0f)
             {
                 _navigator?.Cancel();

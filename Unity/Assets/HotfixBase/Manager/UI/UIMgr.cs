@@ -996,12 +996,11 @@ namespace Ux
             }
 
             id = 0;
-#if UNITY_EDITOR
+            // 发布包也保留错误日志：未注册类型静默返回 false 是最难查的一类问题。
             if (type != null)
             {
                 Log.Error("UI 类型未注册，请检查 UIMgr.Add 的注册表。Type[{0}]", type.FullName);
             }
-#endif
             return false;
         }
 

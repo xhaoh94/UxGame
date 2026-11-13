@@ -201,7 +201,7 @@ namespace Ux.Editor.Tests
         public void DragEndSnapsToNearestPage()
         {
             using var f = new Fixture();
-            var carousel = new UIVirtualCarousel(f.Core, 300f, 0.1f);
+            var carousel = new UIVirtualCarousel(f.Core, 0.1f);
             try
             {
                 f.SetPosition(160f);
@@ -215,18 +215,17 @@ namespace Ux.Editor.Tests
         }
 
         [Test]
-        public void SnapToPageClampsAtEndAndRejectsBadPageLength()
+        public void SnapToRejectsOutOfRangeAndStopsAtLastItem()
         {
             using var f = new Fixture();
-            Assert.Throws<ArgumentOutOfRangeException>(() => new UIVirtualCarousel(f.Core, 0f));
-            var carousel = new UIVirtualCarousel(f.Core, 300f, 0.05f);
+            var carousel = new UIVirtualCarousel(f.Core, 0.05f);
             try
             {
-                int lastPage = Mathf.FloorToInt((f.Core.ContentLength - f.Core.ViewportSize.y) / 300f);
-                Assert.IsTrue(carousel.SnapTo(999));
+                Assert.IsFalse(carousel.SnapTo(f.Core.RenderCount));
+                Assert.IsTrue(carousel.SnapTo(f.Core.RenderCount - 1));
                 for (int i = 0; i < 60 && carousel.IsSnapping; i++) carousel.Tick(0.05f);
                 Assert.AreEqual(f.Core.ContentLength - f.Core.ViewportSize.y, f.Position, 1f);
-                Assert.GreaterOrEqual(lastPage, 0);
+                Assert.AreEqual(f.Core.RenderCount - 1, carousel.CurrentPage);
             }
             finally { carousel.Dispose(); }
         }
@@ -235,7 +234,7 @@ namespace Ux.Editor.Tests
         public void SmallOffsetDoesNotStartAnimation()
         {
             using var f = new Fixture();
-            var carousel = new UIVirtualCarousel(f.Core, 300f, 0.1f);
+            var carousel = new UIVirtualCarousel(f.Core, 0.1f);
             try
             {
                 f.SetPosition(300.2f);

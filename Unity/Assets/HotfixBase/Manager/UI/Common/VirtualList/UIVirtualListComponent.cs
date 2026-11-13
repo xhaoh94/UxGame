@@ -57,14 +57,21 @@ namespace Ux
         [Min(0f)] [SerializeField] private float _paddingStart;
         [Min(0f)] [SerializeField] private float _paddingEnd;
         [Min(0f)] [SerializeField] private float _bufferSize = 200f;
-        [Tooltip("启用后单列/单行内容按周期无限循环；需要 3 个周期，内容长度必须大于视口。")]
+        [Tooltip("Item 之间的绘制顺序。中心排序跟随视口中心，适合循环列表让中间项压住两侧。")]
+        [SerializeField] private UIVirtualListRenderOrder _renderOrder;
+        [Tooltip("启用后单列/单行内容按周期无限循环；固定 3 个周期，内容长度必须大于视口。")]
         [SerializeField] private bool _loopEnabled;
-        [Min(3)] [SerializeField] private int _loopRepeat = 3;
         [Tooltip("可变尺寸布局重排时，保持首个可见 Item 相对视口的位置。")]
         [SerializeField] private bool _preserveScrollAnchor = true;
         [Tooltip("原本在末尾时继续贴底：数据增删或 Item 变高/视口变化前已在末尾才跟随。")]
         [FormerlySerializedAs("_keepEndOnSizeChange")]
         [SerializeField] private bool _keepEndOnChange;
+        [Tooltip("测量前同步应用 Item 子树内的 UIRelation。高度/宽度由关联推导的模板需要打开；" +
+                 "模板没有关联时关闭，走零额外开销路径。")]
+        [SerializeField] private bool _applyRelationsOnMeasure;
+
+        /// <summary>滑出视口再回来时复用已测尺寸（默认开启，不进 Inspector）。</summary>
+        private bool _reuseMeasuredSize = true;
 
         [Tooltip("首次填充时按批次创建 Item，避免一屏十几项同帧实例化造成峰值。滚动复用池仍走同步。")]
         [SerializeField] private bool _incrementalCreate = true;
@@ -88,6 +95,7 @@ namespace Ux
         private bool _initializing;
         private bool _destroyed;
         private bool _releasing;
+        private UIRelationMeasureExtension _relationMeasure;
 
         public ScrollRect ScrollRect => _scrollRect;
         public UIVirtualListLayoutMode LayoutMode => _layoutMode;
@@ -96,11 +104,12 @@ namespace Ux
         public int ActualCountPerLine => _flowLayout?.CountPerLine ?? 1;
         /// <summary>当前是否启用了无限循环（初始化后才有意义）。</summary>
         public bool IsLoop => _list != null && _list.IsLoop;
-        public int LoopCycleCount => _loopRepeat;
         /// <summary>最近一次成功初始化使用的实际尺寸；初始化前为零。</summary>
         public Vector2 ResolvedItemSize { get; private set; }
         public bool IsInitialized => _list != null;
         public int Count => _list?.Count ?? 0;
+        /// <summary>渲染行数；循环列表是数据条数 × 周期数，滚动定位传入的就是这个索引。</summary>
+        public int RenderCount => _list?.RenderCount ?? 0;
 
         // —— 分批生成 ——
 
@@ -157,6 +166,73 @@ namespace Ux
 
         public bool IsFilling => _list?.IsFilling ?? false;
         public int PendingCreateCount => _list?.PendingCreateCount ?? 0;
+
+        /// <summary>
+        /// 关联测量开关：测量前同步应用 Item 子树内的 UIRelation，用于高度/宽度由关联推导的模板。
+        /// 切换立即对当前列表生效；列表重建（Release 后重新 SetDatas）时自动重新注册。
+        /// </summary>
+        public bool ApplyRelationsOnMeasure
+        {
+            get => _applyRelationsOnMeasure;
+            set
+            {
+                if (_applyRelationsOnMeasure == value) return;
+                _applyRelationsOnMeasure = value;
+                SyncMeasureExtensions(_list);
+            }
+        }
+
+        /// <summary>
+        /// 复用已测尺寸开关：数据引用与交叉轴尺寸不变时，滑回视口不再重跑布局重建。
+        /// 默认开启且不进 Inspector；只作为代码级的逃生口（排查时临时关闭对比）。
+        /// 发布包也会校验复用结果，漏通知会告警并自动重测，不会静默错位。
+        /// </summary>
+        public bool ReuseMeasuredSize
+        {
+            get => _reuseMeasuredSize;
+            set
+            {
+                if (_reuseMeasuredSize == value) return;
+                _reuseMeasuredSize = value;
+                if (_list != null) _list.ReuseMeasuredSize = value;
+            }
+        }
+
+        /// <summary>
+        /// 模板在运行时动态增删 UIRelation（例如按数据装配子模块）后调用，
+        /// 丢弃该 item 实例的关系收集缓存。关系结构不变时不需要调用。
+        /// </summary>
+        public void InvalidateRelationMeasure(GameObject item)
+        {
+            if (item == null || _relationMeasure == null) return;
+            _relationMeasure.Invalidate(item.transform as RectTransform);
+        }
+
+        /// <summary>按当前开关把测量扩展挂到列表上；未开启时保持列表原测量路径。</summary>
+        private void SyncMeasureExtensions(UIVirtualList list)
+        {
+            if (list == null) return;
+            if (_applyRelationsOnMeasure)
+            {
+                _relationMeasure ??= new UIRelationMeasureExtension();
+                list.RegisterMeasureExtension(_relationMeasure);
+            }
+            else if (_relationMeasure != null)
+            {
+                list.UnregisterMeasureExtension(_relationMeasure);
+            }
+        }
+
+        /// <summary>运行时切换绘制顺序，立即重排已激活的 Item。</summary>
+        public UIVirtualListRenderOrder RenderOrder
+        {
+            get => _renderOrder;
+            set
+            {
+                _renderOrder = value;
+                if (_list != null) _list.RenderOrder = value;
+            }
+        }
 
         /// <summary>首次填充的分批队列清空时触发。</summary>
         public event Action FillingCompleted;
@@ -293,6 +369,7 @@ namespace Ux
                 _list = new UIVirtualList(_scrollRect, layout, factory)
                 {
                     BufferSize = _bufferSize,
+                    RenderOrder = _renderOrder,
                     PreserveScrollAnchor = _layoutMode != UIVirtualListLayoutMode.VariableLinear || _preserveScrollAnchor,
                     // 组件层只暴露一个“末尾追随”开关，同时驱动数据变化与尺寸变化两条路径。
                     KeepEndOnSizeChange = _listType == UIVirtualListType.Flat && _keepEndOnChange,
@@ -301,9 +378,12 @@ namespace Ux
                     BatchSize = _batchSize,
                     BatchIntervalMs = _batchIntervalMs,
                     InitialCount = _initialCount,
-                    FrameBudgetMs = _frameBudgetMs
+                    FrameBudgetMs = _frameBudgetMs,
+                    ReuseMeasuredSize = _reuseMeasuredSize
                 };
                 _list.FillingCompleted += ForwardFillingCompleted;
+                // 必须在任何数据/刷新入口（SetRoots / SetGroups / SetDatas）之前注册测量扩展。
+                SyncMeasureExtensions(_list);
                 if (_listType == UIVirtualListType.Tree)
                 {
                     _treeAdapter = new UIVirtualTreeAdapter(_list);
@@ -325,6 +405,7 @@ namespace Ux
                 _list.ItemClicked += ForwardClick;
                 ResolvedItemSize = itemSize;
                 _flowLayout = layout as UIFlowLayout;
+                if (_carouselSnapMode != UIVirtualCarouselSnapMode.None) ApplyConfiguredCarousel();
             }
             catch
             {
@@ -374,6 +455,13 @@ namespace Ux
             Controller.SetDatas(datas, scrollToIndex);
         }
 
+        /// <summary>全量替换但保持当前滚动位置；适合改完数据整体刷新又不希望跳回顶部。</summary>
+        public void UpdateDatas<T>(IEnumerable<T> datas)
+        {
+            RequireFlatMode();
+            Controller.UpdateDatas(datas);
+        }
+
         public int AddData<T>(T data) { RequireFlatMode(); return Controller.AddData(data); }
         public void AddDatas<T>(IEnumerable<T> datas) { RequireFlatMode(); Controller.AddDatas(datas); }
         public void InsertData<T>(int index, T data) { RequireFlatMode(); Controller.InsertData(index, data); }
@@ -394,6 +482,12 @@ namespace Ux
         public void Refresh() => Controller.Refresh();
         public void RefreshLayout() => Controller.RefreshLayout();
         public void RefreshItem(int index) => Controller.RefreshItem(index);
+
+        /// <summary>把某条数据对应的 Item 提到最上层/压到最下层，滚动复用后仍保持。</summary>
+        public void BringToFront(int index) => _list?.BringToFront(index);
+        public void BringToBack(int index) => _list?.BringToBack(index);
+        /// <summary>清除全部提权记录，恢复 RenderOrder 的自然顺序。</summary>
+        public void ClearPinned() => _list?.ClearPinned();
 
         // 通知入口不自动 Initialize，避免晚到的异步回调在 Release 后重新创建列表。
         public bool NotifyItemSizeChanged(int index) => _list != null && _list.NotifyItemSizeChanged(index);
@@ -508,8 +602,8 @@ namespace Ux
                 paddingEnd: _loopEnabled ? 0f : _paddingEnd);
             if (!_loopEnabled) return flow;
             if (multiple) throw new InvalidOperationException("无限循环只支持单列/单行，请关闭多列。");
-            if (_loopRepeat < 3) throw new InvalidOperationException("循环周期数至少为 3。");
-            return new UIVirtualLoopLayout(flow, _loopRepeat);
+            // 3 是硬下限：只有中间周期是安全区，少于 3 个周期会反复触发反向平移。
+            return new UIVirtualLoopLayout(flow);
         }
 
         private Vector2 ResolveItemSize(GameObject defaultTemplate)
@@ -545,8 +639,6 @@ namespace Ux
                 throw new InvalidOperationException("视口外缓冲距离必须是有限数值。");
             if (_loopEnabled && _listType != UIVirtualListType.Flat)
                 throw new InvalidOperationException("无限循环只支持普通列表类型。");
-            if (_loopEnabled && _loopRepeat < 3)
-                throw new InvalidOperationException("循环周期数至少为 3。");
             if (_listType == UIVirtualListType.Paged && (_pageSize < 1 || (_autoLoadPages && _pagePreloadItems < 0)))
                 throw new InvalidOperationException("分页每页数量至少为 1，预加载项数不能为负数。");
             if (_itemTemplates == null || _itemTemplates.Length == 0)

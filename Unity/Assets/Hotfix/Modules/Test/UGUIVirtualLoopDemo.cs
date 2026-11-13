@@ -5,11 +5,10 @@ using UnityEngine.UI;
 
 namespace Ux.UI
 {
-    /// <summary>无限循环示例：固定高度卡片，滚动到首尾时静默换周期；可选按页吸附。</summary>
+    /// <summary>无限循环示例：固定高度卡片，滚动到首尾时静默换周期；吸附由列表组件的「按页吸附」开关控制。</summary>
     public sealed class UGUIVirtualLoopDemo : MonoBehaviour
     {
         [SerializeField] private UIVirtualListComponent _list;
-        [SerializeField] private bool _snapPerPage = true;
         [Min(1)] [SerializeField] private int _itemCount = 8;
 
         private static readonly Color[] Palette =
@@ -44,11 +43,6 @@ namespace Ux.UI
             _list.ItemRecycled += OnRecycled;
             _subscribed = true;
             _list.SetDatas(CreateRows());
-            if (_snapPerPage)
-            {
-                float page = _list.ResolvedItemSize.y + 8f;
-                if (page > 0f) _list.EnableCarousel(page, 0.18f);
-            }
             Debug.Log($"[UGUIVirtualLoopDemo] 循环已启用：{_itemCount} 条数据 × 3 周期。上下拖动可无限滚动，点击卡片打印真实索引。", this);
         }
 

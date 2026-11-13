@@ -49,6 +49,23 @@ namespace Ux
             set => _enableInEditor = value;
         }
 
+        /// <summary>
+        /// 是否由外部（虚拟列表测量链）主动驱动。置位后本组件不再把“自身几何被改动”当成权威：
+        /// 列表每轮都会写 anchoredPosition 与交叉轴尺寸，若仍在这里 relink，
+        /// 配置的距离与比例会被重记成列表摆好之后的值。驱动器的兜底应用仍然保留。
+        /// </summary>
+        internal bool ExternalDriven { get; set; }
+
+        /// <summary>
+        /// 自身几何被外部改写时，是否把当前几何重记成新的配置基线。
+        /// 编辑器里拖动/改尺寸就是在调配置值，需要重记；运行时以关联配置为准，
+        /// 外部写入不应改基线（显式改基线请调用 Relink / SetFollow* 等 API）。
+        /// 置 null 时按是否播放决定；测试可强制指定以模拟播放模式。
+        /// </summary>
+        internal bool? RelinkOnSelfChangeOverride { get; set; }
+
+        private bool RelinkOnSelfChange => RelinkOnSelfChangeOverride ?? !Application.isPlaying;
+
         private RectTransform Rect
         {
             get
@@ -106,13 +123,17 @@ namespace Ux
             var rect = Rect;
             if (rect == null) return false;
 
-            // 自身被外部改动（手动拖宽、Inspector 输入、布局系统调整、缩放或旋转）时，
-            // 以新变换为准重新记录距离与比例，否则会被旧值拉回去。
-            var selfChanged = SelfChanged();
-            if (selfChanged) RelinkAll();
+            // 自身几何被外部改动（拖动、Inspector 输入、布局系统调整、缩放或旋转）时：
+            // - 编辑器里这是“在调配置值”，需要把当前几何重记成新基线，对象不会跳动；
+            // - 运行时以关联配置为准，重记会把外部写入变成新配置，所以只跟随不重记
+            //   （要改基线请显式调用 Relink / SetFollow* 等 API）。
+            // 目标同轴也变了时同样不重记：目标用 left/right/top/bottom 拉伸时，父面板尺寸
+            // 变化会同时带动自身移动，重记等于把目标尺寸的变化吸收进比例/差值里，表现为完全不跟随。
+            var selfDrifted = !ExternalDriven && SelfChanged();
+            if (selfDrifted && RelinkOnSelfChange) RelinkAll(true);
 
-            // selfChanged 已经比过自身四个属性，这里只再查目标，避免每帧重复读一遍自身变换。
-            if (!_dirty && !selfChanged && !TargetsChanged()) return false;
+            // selfDrifted 已经比过自身四个属性；运行时不重记基线，但仍要靠它触发一次“拉回配置值”。
+            if (!_dirty && !selfDrifted && !TargetsChanged()) return false;
             return Apply();
         }
 
@@ -145,9 +166,12 @@ namespace Ux
         public bool Apply()
         {
 #if UNITY_EDITOR
-            if (UnityEditor.EditorApplication.isCompiling ||
-                UnityEditor.EditorApplication.isUpdating ||
-                UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            // 编译、资源刷新、切换播放期间不要写场景对象：此时 Unity 正在域重载/序列化。
+            // 只在非播放模式拦截；播放中（含编辑器 Play）必须放行，否则运行时关系全部不生效。
+            if (!Application.isPlaying &&
+                (UnityEditor.EditorApplication.isCompiling ||
+                 UnityEditor.EditorApplication.isUpdating ||
+                 UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode))
                 return false;
 #endif
             if (_applying) return false;
@@ -190,7 +214,9 @@ namespace Ux
                 if (item.IsEmpty) continue;
                 EnsureSizeRecorded(rect, ref item);
 
-                var warning = _validationWarnings[i];
+                // 布局组的驱动会覆盖同一轴上的关联，实时判定（不缓存），冲突优先于其它校验。
+                var warning = UIRelationCore.DescribeLayoutConflict(rect, item) ??
+                              _validationWarnings[i];
                 if (warning != null)
                 {
                     if (_lastWarning != warning)
@@ -381,29 +407,42 @@ namespace Ux
             SetDirty();
         }
 
-        /// <summary>重新记录某个目标下所有边对的当前距离（整理布局后使用）。</summary>
+        /// <summary>重新记录目标下所有边对的当前距离（整理布局后使用）。</summary>
         public void Relink(RectTransform target)
         {
             int index = IndexOf(target);
             if (index < 0) return;
-            Relink(index);
+            Relink(index, false);
         }
 
         /// <summary>重新记录全部边对的当前距离与宽高比例。</summary>
-        public void RelinkAll()
+        public void RelinkAll() => RelinkAll(false);
+
+        /// <summary>
+        /// 重新记录全部边对的距离与宽高比例。
+        /// </summary>
+        /// <param name="respectTargetChange">
+        /// true 时逐轴跳过“目标本轮也变了”的轴：这种变化应该由跟随逻辑响应，
+        /// 把自身被带着走的结果记成新基线会把目标的变化抵消掉。
+        /// </param>
+        private void RelinkAll(bool respectTargetChange)
         {
             if (_items == null) return;
-            for (int i = 0; i < _items.Length; i++) Relink(i);
+            for (int i = 0; i < _items.Length; i++) Relink(i, respectTargetChange);
             // 重新记录距离不会改变关联结构，无需让下一帧重复做整套校验。
             _dirty = true;
         }
 
-        private void Relink(int index)
+        private void Relink(int index, bool respectTargetChange)
         {
             var item = _items[index];
             var target = item.Target;
             var rect = Rect;
             if (target == null || rect == null) return;
+
+            // 目标在该轴上也变了时，这一轴交给跟随逻辑，不重记基线。
+            var relinkX = !respectTargetChange || !TargetChangedOn(index, true);
+            var relinkY = !respectTargetChange || !TargetChangedOn(index, false);
 
             // 只勾了“宽 -> 宽”时 Links 可能为空，不能因此跳过比例记录。
             var links = item.Links;
@@ -413,20 +452,21 @@ namespace Ux
                 {
                     var link = links[i];
                     if (!link.IsValid) continue;
+                    if (link.IsHorizontal ? !relinkX : !relinkY) continue;
                     link.Offset = UIRelationCore.MeasureOffset(rect, link.Self, target, link.Target,
                         link.Percent);
                     links[i] = link;
                 }
                 item.Links = links;
             }
-            if (item.FollowWidth)
+            if (item.FollowWidth && relinkX)
             {
                 if (item.WidthUsePercent)
                     item.WidthRatio = UIRelationCore.MeasureWidthRatio(rect, target);
                 else
                     item.WidthDelta = UIRelationCore.MeasureWidthDelta(rect, target);
             }
-            if (item.FollowHeight)
+            if (item.FollowHeight && relinkY)
             {
                 if (item.HeightUsePercent)
                     item.HeightRatio = UIRelationCore.MeasureHeightRatio(rect, target);
@@ -434,6 +474,24 @@ namespace Ux
                     item.HeightDelta = UIRelationCore.MeasureHeightDelta(rect, target);
             }
             _items[index] = item;
+        }
+
+        /// <summary>
+        /// 目标在某个轴上的参照（该轴尺寸或坐标）是否相对上次应用后变了。
+        /// 没有可比对的缓存（首次或数组重建）时按“变了”处理，宁可先跟随也不吞掉目标变化。
+        /// </summary>
+        private bool TargetChangedOn(int index, bool horizontal)
+        {
+            var target = _items[index].Target;
+            if (target == null) return false;
+            if (index >= _targetSizeCache.Length || index >= _targetPositionCache.Length) return true;
+            if (horizontal)
+            {
+                return target.rect.width != _targetSizeCache[index].x ||
+                       target.position.x != _targetPositionCache[index].x;
+            }
+            return target.rect.height != _targetSizeCache[index].y ||
+                   target.position.y != _targetPositionCache[index].y;
         }
 
         public void SetPercent(RectTransform target, RelationSide selfSide, RelationSide targetSide,

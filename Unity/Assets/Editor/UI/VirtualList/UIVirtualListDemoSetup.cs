@@ -199,7 +199,9 @@ namespace Ux.Editor
             settings.FindProperty("_pageStatusClick").boolValue = true;
             settings.FindProperty("_stickyGroupHeaders").boolValue = true;
             settings.FindProperty("_loopEnabled").boolValue = loop;
-            settings.FindProperty("_loopRepeat").intValue = 3;
+            settings.FindProperty("_carouselSnapMode").enumValueIndex = loop
+                ? (int)Ux.UIVirtualCarouselSnapMode.Nearest
+                : (int)Ux.UIVirtualCarouselSnapMode.None;
             settings.FindProperty("_showEmptyGroups").boolValue = true;
             settings.FindProperty("_layoutMode").enumValueIndex = (int)(grid || loop
                 ? UIVirtualListLayoutMode.FixedLinear : UIVirtualListLayoutMode.VariableLinear);
@@ -248,7 +250,6 @@ namespace Ux.Editor
                 if (loopDemo == null) loopDemo = Undo.AddComponent<UGUIVirtualLoopDemo>(canvas.gameObject);
                 var loopSettings = new SerializedObject(loopDemo);
                 loopSettings.FindProperty("_list").objectReferenceValue = component;
-                loopSettings.FindProperty("_snapPerPage").boolValue = true;
                 loopSettings.FindProperty("_itemCount").intValue = 8;
                 loopSettings.ApplyModifiedProperties();
             }

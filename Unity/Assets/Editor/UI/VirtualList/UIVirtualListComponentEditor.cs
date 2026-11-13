@@ -10,6 +10,13 @@ namespace Ux.Editor
     {
         private static readonly string[] SizeModes = { "固定", "变化" };
         private static readonly string[] ListTypes = { "普通列表", "树形列表", "分页列表", "分组列表" };
+        // Popup 选项串里的 '/' 会被 GenericMenu 当子菜单分隔符，这里只能用顿号。
+        private static readonly string[] RenderOrders = { "不干预", "正序", "倒序" };
+        private static readonly string[] RenderOrdersWithCenter =
+        {
+            "不干预", "正序", "倒序", "扩散", "收拢"
+        };
+        private static readonly string[] CarouselSnapModes = { "不吸附", "最近", "首项", "尾项", "惯性" };
 
         private void OnEnable()
         {
@@ -96,11 +103,29 @@ namespace Ux.Editor
                     Field("_showEmptyGroups", "显示空分组组头", "关闭时空分组不产生可见行，分组 Id 仍可查询。");
                     Field("_stickyGroupHeaders", "组头吸顶", "创建独立显示副本，下一组到来时顶出旧组头；不移动真实组头，不拦截滚动输入。");
                     EditorGUILayout.HelpBox("分组模式为竖向单列，通过 SetGroups 提供数据。Renderer 接收 UIVirtualGroupItem，可通过 IsHeader / IsSticky 区分内容、组头与吸顶副本。", MessageType.Info);
-                }                                
+                }
                 if (!singleVertical) Field("_axis", "滚动方向", "Vertical：竖向滚动；Horizontal：横向滚动。");
                 else EditorGUILayout.LabelField("滚动方向", grouped ? "竖向（分组单列）" : "竖向（树形单列）");
+                var multiple = serializedObject.FindProperty("_allowMultiple");
+                DrawRenderOrder(multiple.boolValue, singleVertical);
                 var axis = serializedObject.FindProperty("_axis");
                 bool vertical = singleVertical || axis.intValue == (int)UIVirtualListAxis.Vertical;
+                Field("_selectionMode", "选择模式", "选择按数据索引保存，滚动复用不会丢失。OnlyView 渲染时用 IsSelected 画选中态。");
+                if (!singleVertical && vertical && !multiple.boolValue)
+                {
+                    var snapMode = serializedObject.FindProperty("_carouselSnapMode");
+                    bool mixedSnap = EditorGUI.showMixedValue;
+                    EditorGUI.showMixedValue = snapMode.hasMultipleDifferentValues;
+                    EditorGUI.BeginChangeCheck();
+                    int snapSelected = EditorGUILayout.Popup("吸附效果",
+                        Mathf.Clamp(snapMode.intValue, 0, CarouselSnapModes.Length - 1), CarouselSnapModes);
+                    EditorGUI.showMixedValue = mixedSnap;
+                    if (EditorGUI.EndChangeCheck())
+                        snapMode.intValue = snapSelected;
+                    if (snapSelected != (int)Ux.UIVirtualCarouselSnapMode.None)
+                        Field("_carouselSnapDuration", "吸附时长(秒)", "0 表示立即对齐；默认 0.2。");
+                }
+
                 string unit = axis.hasMultipleDifferentValues ? "行/列" : vertical ? "列" : "行";
 
                 var mode = serializedObject.FindProperty("_layoutMode");
@@ -123,7 +148,7 @@ namespace Ux.Editor
                 }
 
                 if (!singleVertical) Field("_allowMultiple", "启用多" + unit, "关闭就是单行/单列；开启后根据视口可用空间自动换行。");
-                var multiple = serializedObject.FindProperty("_allowMultiple");
+
                 if (!singleVertical && (multiple.boolValue || multiple.hasMultipleDifferentValues))
                 {
                     Field("_gridSpacing", "间距（X 水平 / Y 垂直）", "相邻 Item 的水平间距和相邻行的垂直间距。");
@@ -134,7 +159,8 @@ namespace Ux.Editor
 
                 Field("_paddingStart", "起点留白", "滚动主轴起点的留白。");
                 Field("_paddingEnd", "终点留白", "滚动主轴终点的留白。");
-                Field("_bufferSize", "视口外缓冲距离(像素)", "视口前后各预留的 UI 布局距离，不是 Item 数量。");
+                Field("_bufferSize", "视口外缓冲距像素", "视口前后各预留的 UI 布局距离，不是 Item 数量。");
+
                 Field("_incrementalCreate", "分批生成", "首次填充时按批次逐帧创建 Item，避免一屏十几项同帧实例化造成峰值。池热（分页/刷新）时自动走同步。");
                 var incremental = serializedObject.FindProperty("_incrementalCreate");
                 if (incremental.boolValue || incremental.hasMultipleDifferentValues)
@@ -146,20 +172,23 @@ namespace Ux.Editor
                 }
                 if (!singleVertical)
                 {
-                    Field("_loopEnabled", "无限循环", "单列/单行内容按周期循环；需要内容长度大于视口，且至少 3 个周期。");
+                    Field("_loopEnabled", "循环模式", "单列/单行内容按周期循环；内容长度必须大于视口。");
                     var loop = serializedObject.FindProperty("_loopEnabled");
                     if (loop.boolValue || loop.hasMultipleDifferentValues)
                     {
-                        Field("_loopRepeat", "循环周期数", "默认 3；越多两侧缓冲越充足，内容长度也越大。");
                         EditorGUILayout.HelpBox("循环列表不支持多列、树形、分组；分页会在末尾加载状态行，不建议与循环组合。点击回调传入的是真实数据索引。", MessageType.Info);
                     }
                 }
-                Field("_selectionMode", "选择模式", "选择按数据索引保存，滚动复用不会丢失。OnlyView 渲染时用 IsSelected 画选中态。");
+
                 if (!singleVertical && !paged) Field("_keepEndOnChange", "在末尾时保持贴底", "数据增删或 Item 变高/视口变化前已在末尾才跟随；浏览历史时不强制跳底。");
                 if (variable || mode.hasMultipleDifferentValues)
                 {
                     Field("_preserveScrollAnchor", "变化时重定位可见项", "重排后仍守住首个可见 Item 的视口偏移；关闭则恢复绝对滚动位置。");
+                    Field("_applyRelationsOnMeasure", "关联测量",
+                        "测量前同步应用 Item 子树内的 UIRelation，用于高度/宽度由关联推导的模板。模板没有关联时关闭。");
                 }
+
+
 
                 Field("_itemTemplates", "Item模板", "可混合配置场景对象和 Project Prefab。");
                 Field("_defaultItemType", "默认模板", "未设置回调时使用的模板，也是自动尺寸的来源。");
@@ -220,7 +249,7 @@ namespace Ux.Editor
         private void DrawPreview()
         {
             if (serializedObject.isEditingMultipleObjects) return;
-            EditorGUILayout.Space();            
+            EditorGUILayout.Space();
             var component = (UIVirtualListComponent)target;
             var listType = (UIVirtualListType)serializedObject.FindProperty("_listType").intValue;
             if (listType != UIVirtualListType.Flat)
@@ -340,6 +369,28 @@ namespace Ux.Editor
         private void Field(string name, string label, string tooltip)
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty(name), new GUIContent(label, tooltip), true);
+        }
+
+        private void DrawRenderOrder(bool multiple, bool singleVertical)
+        {
+            // 等距网格相邻项不重叠，中心排序看不出任何差异，多列时不提供这两项。
+            bool centerAvailable = singleVertical || !multiple;
+            var property = serializedObject.FindProperty("_renderOrder");
+            int value = property.intValue;
+            if (!centerAvailable && value > (int)Ux.UIVirtualListRenderOrder.Reverse)
+            {
+                EditorGUILayout.HelpBox("多列网格下相邻项不重叠，「从中心向两侧」没有可见差异，请改选正序或倒序。", MessageType.Warning);
+                return;
+            }
+
+            string[] labels = centerAvailable ? RenderOrdersWithCenter : RenderOrders;
+            bool mixed = EditorGUI.showMixedValue;
+            EditorGUI.showMixedValue = property.hasMultipleDifferentValues;
+            EditorGUI.BeginChangeCheck();
+            int selected = EditorGUILayout.Popup("渲染顺序", Mathf.Clamp(value, 0, labels.Length - 1), labels);
+            EditorGUI.showMixedValue = mixed;
+            if (EditorGUI.EndChangeCheck())
+                property.intValue = selected;
         }
     }
 }

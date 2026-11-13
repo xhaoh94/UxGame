@@ -24,13 +24,19 @@ namespace Ux
     {
         private readonly IUIVirtualListLayout _inner;
         private readonly int _repeat;
+        // 周期末尾到下一周期首项的间距。单周期的 ContentLength 不含末尾间距，拼接时必须补上。
+        private readonly float _cycleSpacing;
         private int _dataCount;
 
-        public UIVirtualLoopLayout(IUIVirtualListLayout inner, int repeat = 3)
+        public UIVirtualLoopLayout(IUIVirtualListLayout inner, int repeat = 3, float cycleSpacing = -1f)
         {
             _inner = inner ?? throw new ArgumentNullException(nameof(inner));
             if (repeat < 3) throw new ArgumentOutOfRangeException(nameof(repeat), "循环至少需要 3 个周期，才能保证两侧有缓冲。");
             _repeat = repeat;
+            // 负数表示自动推断；包装非 UIFlowLayout 的自定义布局时请显式传入。
+            _cycleSpacing = cycleSpacing >= 0f
+                ? cycleSpacing
+                : inner is UIFlowLayout flow ? flow.MainSpacing : 0f;
         }
 
         public bool LoopEnabled => _dataCount > 0;
@@ -41,9 +47,10 @@ namespace Ux
         public bool SupportsDynamicSize => _inner.SupportsDynamicSize;
         public float CrossSize => _inner.CrossSize;
 
-        /// <summary>一个周期的长度（不含首尾留白）。</summary>
-        public float CycleLength => _inner.ContentLength;
-        public float ContentLength => _dataCount == 0 ? 0f : CycleLength * _repeat;
+        /// <summary>一个周期的步进长度：内容长度 + 末尾到下一周期首项的间距。</summary>
+        public float CycleLength => _inner.ContentLength + _cycleSpacing;
+        /// <summary>三个周期拼接后的总长度，最后一项后面不再补间距。</summary>
+        public float ContentLength => _dataCount == 0 ? 0f : CycleLength * _repeat - _cycleSpacing;
 
         public void SetItemCount(int count, bool resetSizes)
         {

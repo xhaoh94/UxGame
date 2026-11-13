@@ -81,6 +81,292 @@ namespace Ux.Editor.Tests
             }
         }
 
+        private static List<int> CollectActiveIndices(UIVirtualList list)
+        {
+            var indices = new List<int>();
+            for (int i = 0; i < list.RenderCount; i++)
+                if (list.TryGetItem(i, out _)) indices.Add(i);
+            return indices;
+        }
+
+        private static int SiblingOf(UIVirtualList list, int index)
+        {
+            Assert.IsTrue(list.TryGetItem(index, out var item), $"索引 {index} 应当已激活");
+            return item.RectTransform.GetSiblingIndex();
+        }
+
+        private static float[] FixedData(int count, float size = 100f)
+        {
+            var data = new float[count];
+            for (int i = 0; i < count; i++) data[i] = size;
+            return data;
+        }
+
+        private static UIVirtualList CreateVerticalList(ScrollRect scroll, TestFactory factory) =>
+            new UIVirtualList(scroll, new UIFixedLinearLayout(UIVirtualListAxis.Vertical, new Vector2(100, 100)), factory);
+
+        [Test]
+        public void ForwardRenderOrderPutsLaterIndexOnTop()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.RenderOrder = UIVirtualListRenderOrder.Forward;
+                list.SetDatas(FixedData(10));
+                var indices = CollectActiveIndices(list);
+                Assert.Greater(indices.Count, 2);
+                for (int i = 1; i < indices.Count; i++)
+                    Assert.Less(SiblingOf(list, indices[i - 1]), SiblingOf(list, indices[i]),
+                        "正序时后一个索引必须在更上层");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ReverseRenderOrderPutsEarlierIndexOnTop()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.SetDatas(FixedData(10));
+                // 运行时切换也必须立即生效，不能等下一次滚动。
+                list.RenderOrder = UIVirtualListRenderOrder.Reverse;
+                var indices = CollectActiveIndices(list);
+                Assert.Greater(indices.Count, 2);
+                for (int i = 1; i < indices.Count; i++)
+                    Assert.Greater(SiblingOf(list, indices[i - 1]), SiblingOf(list, indices[i]),
+                        "倒序时后一个索引必须在更下层");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void CenterRenderOrderFollowsViewportCenterWhileScrolling()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.RenderOrder = UIVirtualListRenderOrder.EdgeIn;
+                list.SetDatas(FixedData(20));
+                // 视口 300、Item 100、滚到 0：视口中心 150 落在索引 1 → 它必须在最上层。
+                int center = SiblingOf(list, 1);
+                foreach (int index in CollectActiveIndices(list))
+                    if (index != 1) Assert.Less(SiblingOf(list, index), center, "两侧项必须压在中心项下面");
+
+                // 滚到索引 3 顶部：视口中心变成 450，落在索引 4 上。
+                list.ScrollToView(3, UIVirtualListAlignment.Start);
+                Assert.IsTrue(list.TryGetItem(4, out _));
+                int moved = SiblingOf(list, 4);
+                foreach (int index in CollectActiveIndices(list))
+                    if (index != 4) Assert.Less(SiblingOf(list, index), moved, "滚动后中心项必须重新置顶");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void CenterOutRenderOrderPutsCenterItemAtBottom()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.RenderOrder = UIVirtualListRenderOrder.CenterOut;
+                list.SetDatas(FixedData(20));
+                int center = SiblingOf(list, 1);
+                foreach (int index in CollectActiveIndices(list))
+                    if (index != 1) Assert.Greater(SiblingOf(list, index), center, "中心项必须在最下层");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void UnmanagedRenderOrderLeavesSiblingsUntouched()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.SetDatas(FixedData(10));
+                var indices = CollectActiveIndices(list);
+                Assert.Greater(indices.Count, 2);
+                for (int i = 0; i < indices.Count; i++)
+                    Assert.AreEqual(i, SiblingOf(list, indices[i]), "不干预时保持创建顺序");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void BringToFrontAndBackOverrideRenderOrder()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.RenderOrder = UIVirtualListRenderOrder.Forward;
+                list.SetDatas(FixedData(10));
+
+                list.BringToFront(0);
+                int top = SiblingOf(list, 0);
+                foreach (int index in CollectActiveIndices(list))
+                    if (index != 0) Assert.Less(SiblingOf(list, index), top, "置顶项必须在最上层");
+
+                list.BringToBack(2);
+                Assert.AreEqual(0, SiblingOf(list, 2), "置底项必须是最小兄弟序号");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void PinnedItemSurvivesLayoutRebuildAndInsertion()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.RenderOrder = UIVirtualListRenderOrder.Forward;
+                list.SetDatas(FixedData(10));
+                list.BringToFront(3);
+
+                // 滚动会触发重排，提权必须重新应用。
+                list.ScrollToView(2, UIVirtualListAlignment.Start);
+                Assert.IsTrue(list.TryGetItem(3, out _));
+                int top = SiblingOf(list, 3);
+                foreach (int index in CollectActiveIndices(list))
+                    if (index != 3) Assert.Less(SiblingOf(list, index), top, "滚动后提权项必须仍在最上层");
+
+                // 头部插入一条：原索引 3 变成 4，提权要跟着偏移。
+                list.InsertData(0, 100f);
+                Assert.IsTrue(list.TryGetItem(4, out _));
+                int moved = SiblingOf(list, 4);
+                foreach (int index in CollectActiveIndices(list))
+                    if (index != 4) Assert.Less(SiblingOf(list, index), moved, "插入后提权项必须跟着索引偏移");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void ClearPinnedRestoresNaturalOrder()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.RenderOrder = UIVirtualListRenderOrder.Forward;
+                list.SetDatas(FixedData(10));
+                list.BringToFront(0);
+                list.ClearPinned();
+                Assert.Less(SiblingOf(list, 0), SiblingOf(list, 1), "清除提权后回到正序");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void UpdateDatasKeepsScrollPosition()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.SetDatas(FixedData(100));
+                list.ScrollToView(50, UIVirtualListAlignment.Start);
+                float before = list.ScrollPositionValue;
+                Assert.Greater(before, 0f);
+
+                list.UpdateDatas(FixedData(100));
+                Assert.AreEqual(before, list.ScrollPositionValue, 1f);
+                Assert.IsTrue(list.TryGetItem(50, out _), "保持位置后原首项仍在可视范围");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void UpdateDatasClampsAnchorWhenDataShrinks()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.SetDatas(FixedData(100));
+                list.ScrollToView(50, UIVirtualListAlignment.Start);
+                list.UpdateDatas(FixedData(10));
+                Assert.IsTrue(list.TryGetItem(9, out _), "锚点越界时夹到最后一项");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void SetDatasStillReturnsToTop()
+        {
+            var root = CreateScroll(out var scroll);
+            var factory = new TestFactory(UIVirtualListAxis.Vertical);
+            var list = CreateVerticalList(scroll, factory);
+            try
+            {
+                list.SetDatas(FixedData(100));
+                list.ScrollToView(50, UIVirtualListAlignment.Start);
+                list.SetDatas(FixedData(100));
+                Assert.AreEqual(0f, list.ScrollPositionValue, 1f, "SetDatas 仍然回顶部");
+            }
+            finally
+            {
+                list.Dispose();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
         private static GameObject CreateScroll(out ScrollRect scroll)
         {
             var root = new GameObject("VirtualList Test", typeof(RectTransform), typeof(ScrollRect));

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -17,7 +18,9 @@ namespace Ux
         private readonly RectTransform _content;
         private readonly IUIVirtualListLayout _layout;
         private readonly IUIVirtualListItemFactory _factory;
-        private readonly List<object> _datas = new();
+        private List<object> _datas = new();
+        // 全量替换时先物化到这份暂存，提交时与 _datas 交换引用，稳态零整表拷贝。
+        private List<object> _scratchDatas = new();
         private readonly Dictionary<int, ActiveItem> _activeItems = new();
         private readonly Dictionary<int, Stack<IUIVirtualListItem>> _pools = new();
         private readonly UnityAction<Vector2> _onScroll;
@@ -35,6 +38,13 @@ namespace Ux
         private bool _layoutRetryPending;
         private bool _layoutRetryWarningIssued;
         private bool _followEndForPendingLayout;
+        // 单次刷新里的测量限流：防止一个抖动项把整列表拖进 20 轮全量 Sync + Apply。
+        private bool _measureDeferred;
+        private readonly HashSet<int> _measureDeferredWarned = new();
+        private const int MaxMeasurePassesPerItem = 3;
+        // 多轮收敛诊断：5 秒限流，避免刷屏。
+        private float _diagnoseNextTime;
+        private readonly StringBuilder _diagnoseBuilder = new();
 
         // —— 分批生成 ——
         private int _createVersion;
@@ -45,6 +55,40 @@ namespace Ux
         private bool _initialFillPending;
         private bool _initialBatchSpawned;
 
+        // —— 渲染顺序（Content 子节点顺序 = UGUI 绘制顺序，越大越晚绘制、越压在上层）——
+        private UIVirtualListRenderOrder _renderOrder;
+        private int _renderOrderCenter = NoRenderOrderCenter;
+        private float _renderOrderViewportCenter;
+        private bool _renderOrderDirty;
+        private readonly List<int> _renderOrderBuffer = new();
+        private readonly Comparison<int> _renderOrderComparison;
+        private const int NoRenderOrderCenter = int.MinValue;
+
+        // 提权项按数据索引保存，重排后重新应用；顺序即叠放顺序。
+        private readonly List<int> _pinnedFront = new();
+        private readonly List<int> _pinnedBack = new();
+
+        // 测量扩展链：按 item 实例缓存，扩展列表变更（版本号）时整体作废。
+        private readonly List<IUIVirtualListMeasureExtension> _measureExtensions = new();
+        private readonly Dictionary<IUIVirtualListItem, MeasureChain> _measureChains = new();
+        private int _measureExtensionVersion;
+
+        // 已测尺寸缓存：按真实数据索引保存“测量时的数据引用 + 交叉轴尺寸”。
+        // 命中时滑回视口不再重跑 LayoutRebuilder。
+        private struct MeasuredSizeKey
+        {
+            public object Data;
+            public float CrossSize;
+            public bool Valid;
+        }
+        private MeasuredSizeKey[] _measuredSizes = Array.Empty<MeasuredSizeKey>();
+
+        private sealed class MeasureChain
+        {
+            public int Version;
+            public Func<int, Vector2> Call;
+        }
+
         /// <summary>尺寸缓存变化时保持首个可见 Item 及其视口偏移。</summary>
         public bool PreserveScrollAnchor { get; set; } = true;
         /// <summary>
@@ -52,6 +96,14 @@ namespace Ux
         /// 组件层只暴露一个“原本在末尾则继续贴底”开关，同时赋给本属性与 KeepEndOnDataChange。
         /// </summary>
         public bool KeepEndOnSizeChange { get; set; }
+
+        /// <summary>
+        /// 滑出视口再回来时复用已测尺寸，不再对每项重复 LayoutRebuilder。
+        /// 命中条件：同一数据引用 + 同一交叉轴尺寸。数据替换/增删/交叉轴变化由核心自动失效。
+        /// 异步内容变化仍需 NotifyItemSizeChanged：漏通知会直接错位，没有隐式修正。
+        /// 默认开启；关掉即退回“每次绑定都重测”的旧行为。
+        /// </summary>
+        public bool ReuseMeasuredSize { get; set; } = true;
         public int FirstVisibleIndex => GetVisibleRangeWithoutBuffer().Start;
         public int LastVisibleIndex => GetVisibleRangeWithoutBuffer().End;
 
@@ -80,6 +132,7 @@ namespace Ux
                 viewportLayout.SetViewportSize(_lastViewportSize);
 
             _onScroll = OnScroll;
+            _renderOrderComparison = CompareRenderOrder;
             _scrollRect.onValueChanged.AddListener(_onScroll);
             if (_scrollRect is UIVirtualListScrollRect virtualScroll)
             {
@@ -98,6 +151,126 @@ namespace Ux
                     throw new ArgumentOutOfRangeException(nameof(value), "缓冲距离必须是有限数值。");
                 _bufferSize = Mathf.Max(0f, value);
             }
+        }
+
+        /// <summary>
+        /// 注册测量扩展。必须在第一次测量（SetDatas / Refresh / 滚动 / 树或分组初始化）之前完成；
+        /// Dispose 后 core 被丢弃，重建列表需要重新注册。组件层已封装这一时序。
+        /// </summary>
+        public void RegisterMeasureExtension(IUIVirtualListMeasureExtension extension)
+        {
+            if (extension == null || _measureExtensions.Contains(extension)) return;
+            _measureExtensions.Add(extension);
+            InvalidateMeasureChains();
+        }
+
+        public bool UnregisterMeasureExtension(IUIVirtualListMeasureExtension extension)
+        {
+            if (extension == null || !_measureExtensions.Remove(extension)) return false;
+            InvalidateMeasureChains();
+            return true;
+        }
+
+        private void InvalidateMeasureChains()
+        {
+            _measureExtensionVersion++;
+            _measureChains.Clear();
+        }
+
+        /// <summary>
+        /// 走一次测量链；未注册扩展时保持原来的直接调用路径，不产生委托。
+        /// 吸顶副本等不经过 MeasureVisibleItems 的测量也可以复用这个入口。
+        /// </summary>
+        public Vector2 MeasureItem(int index, IUIVirtualListItem item)
+        {
+            if (item == null) throw new ArgumentNullException(nameof(item));
+            if (_measureExtensions.Count == 0) return item.Measure();
+            return GetMeasureChain(item)(index);
+        }
+
+        /// <summary>
+        /// 每个 item 实例只建一次链并缓存：item 池化复用，链随实例复用，扩展列表变更时整体作废。
+        /// 链签名带 index 是为了不把渲染索引固化进闭包（同一实例会换索引）。
+        /// </summary>
+        private Func<int, Vector2> GetMeasureChain(IUIVirtualListItem item)
+        {
+            if (_measureChains.TryGetValue(item, out var cached) &&
+                cached.Version == _measureExtensionVersion)
+                return cached.Call;
+
+            Func<int, Vector2> call = _ => item.Measure();
+            // 执行顺序：ext[0] → ext[1] → … → item.Measure()。
+            // 先注册的在外层先执行；后注册的更靠近原始 Measure。
+            for (int i = _measureExtensions.Count - 1; i >= 0; i--)
+            {
+                var extension = _measureExtensions[i];
+                var inner = call;
+                call = index => extension.Measure(new UIVirtualListMeasureContext(item, index), inner);
+            }
+
+            _measureChains[item] = new MeasureChain
+            {
+                Version = _measureExtensionVersion,
+                Call = call,
+            };
+            return call;
+        }
+
+        /// <summary>
+        /// Item 在 Content 下的兄弟顺序，即 UGUI 绘制顺序：序号大的后绘制、压在上层。
+        /// 中心排序按视口中心计算，滚动跨越 Item 边界时才会重排。
+        /// </summary>
+        public UIVirtualListRenderOrder RenderOrder
+        {
+            get => _renderOrder;
+            set
+            {
+                if (_renderOrder == value)
+                    return;
+                _renderOrder = value;
+                _renderOrderCenter = NoRenderOrderCenter;
+                _renderOrderDirty = true;
+                if (_refreshing || _disposed || _disposePending)
+                    return;
+                ApplyRenderOrder();
+            }
+        }
+
+        /// <summary>
+        /// 把指定数据索引的 Item 提到最上层，之后的重排仍会保持，直到 <see cref="ClearPinned"/> 或数据重置。
+        /// 索引语义与 ItemClicked 一致：循环列表传真实数据索引，所有周期副本一起提权。
+        /// </summary>
+        public void BringToFront(int index)
+        {
+            if (_disposed || _disposePending || index < 0 || index >= Count)
+                return;
+            _pinnedBack.Remove(index);
+            _pinnedFront.Remove(index);
+            _pinnedFront.Add(index);
+            if (!_refreshing) ApplyPinnedOrder();
+        }
+
+        /// <summary>把指定 Item 压到最下层，规则与 <see cref="BringToFront"/> 相同。</summary>
+        public void BringToBack(int index)
+        {
+            if (_disposed || _disposePending || index < 0 || index >= Count)
+                return;
+            _pinnedFront.Remove(index);
+            _pinnedBack.Remove(index);
+            _pinnedBack.Add(index);
+            if (!_refreshing) ApplyPinnedOrder();
+        }
+
+        /// <summary>清除全部提权记录。开启 RenderOrder 时立即恢复自然顺序，Unmanaged 保持现状。</summary>
+        public void ClearPinned()
+        {
+            if (_pinnedFront.Count == 0 && _pinnedBack.Count == 0)
+                return;
+            _pinnedFront.Clear();
+            _pinnedBack.Clear();
+            _renderOrderDirty = true;
+            if (!_refreshing && !_disposed && !_disposePending)
+                ApplyRenderOrder();
         }
 
         public int Count => _datas.Count;
@@ -167,11 +340,28 @@ namespace Ux
         /// <summary>首次填充的分批队列清空时触发一次。</summary>
         public event Action FillingCompleted;
 
-        public void SetDatas<T>(IEnumerable<T> datas, int scrollToIndex = -1)
+        public void SetDatas<T>(IEnumerable<T> datas, int scrollToIndex = -1) =>
+            SetDatasCore(datas, scrollToIndex, false);
+
+        /// <summary>
+        /// 全量替换数据但保持当前滚动位置，适合业务改完数据整体刷新。
+        /// 与 UpdateData(index, data) 的区别：那个只更新一项，这个换掉整个集合。
+        /// 循环列表的锚点跨周期不可靠，这里退化为回到中间周期。
+        /// </summary>
+        public void UpdateDatas<T>(IEnumerable<T> datas) =>
+            SetDatasCore(datas, -1, true);
+
+        private void SetDatasCore<T>(IEnumerable<T> datas, int scrollToIndex, bool preserveScroll)
         {
             GuardDataMutation();
-            var values = datas == null ? new List<object>() : MaterializeDatas(datas);
+            var values = PrepareDatasScratch(datas);
             ThrowIfDisposed();
+            var loop = _layout as IUIVirtualListLoopLayout;
+            bool isLoop = loop != null && loop.LoopEnabled;
+            // 锚点必须在回收之前取：它读的是当前可见范围。
+            bool canPreserve = preserveScroll && !isLoop;
+            var anchor = canPreserve ? CaptureDataAnchor() : default;
+
             _layoutRetryPending = false;
             _followEndForPendingLayout = false;
             _changingData = true;
@@ -179,10 +369,17 @@ namespace Ux
             {
                 // 回收回调失败时，数据和布局仍保持旧数量，可以修复回调后重试。
                 ResetActiveItems();
+                // 全量替换后索引语义已变，旧的提权记录不能继续指向别的数据。
+                ClearPinned();
                 ResetIncrementalFill();
                 _layout.SetItemCount(values.Count, true);
-                _datas.Clear();
-                _datas.AddRange(values);
+                // values 就是刚物化好的那份，直接交换引用，不再整表拷进 _datas。
+                var previous = _datas;
+                _datas = values;
+                _scratchDatas = previous;
+                _scratchDatas.Clear();
+                // 全量替换后尺寸缓存全部作废（布局本身已 SetItemCount(resetSizes: true)）。
+                ClearMeasuredSizes();
                 DataRevision++;
             }
             finally { EndDataMutation(); }
@@ -190,11 +387,16 @@ namespace Ux
             NotifyDataChanged();
             DataReset?.Invoke();
             _scrollRect.StopMovement();
-            if (_layout is IUIVirtualListLoopLayout loop && loop.LoopEnabled)
+
+            if (canPreserve)
             {
-                // 从中间周期开始，两侧都有完整周期可滚动。
-                SetScrollPosition(loop.CycleLength);
+                // 复用增量更新的收尾：按锚点恢复位置、必要时贴底、只刷新不重置。
+                FinishDataMutation(anchor);
+                return;
             }
+
+            // 从中间周期开始，两侧都有完整周期可滚动。
+            if (isLoop) SetScrollPosition(loop.CycleLength);
             else SetScrollPosition(0f);
             RefreshVisible(true);
 
@@ -270,6 +472,8 @@ namespace Ux
         public void Refresh()
         {
             ThrowIfDisposed();
+            // 强制刷新不复用旧测量结果：业务可能在数据引用不变的情况下改了内容。
+            ClearMeasuredSizes();
             RefreshVisible(true);
         }
 
@@ -303,6 +507,7 @@ namespace Ux
 
             if (_activeItems.TryGetValue(index, out var active))
             {
+                InvalidateMeasuredSize(ToDataIndex(index));
                 active.NeedsBind = true;
                 RefreshVisible(false);
             }
@@ -361,15 +566,16 @@ namespace Ux
 
         internal void NotifyDataChanged() => DataChanged?.Invoke();
 
-        /// <summary>导航用：先把目标 Item 带入缓冲区并完成测量。 Nearest 且已在可见范围时不移动。</summary>
+        /// <summary>
+        /// 导航用：目标已在可见范围时不改滚动位置，否则先把目标带进缓冲区并完成测量。
+        /// 索引是虚拟索引；循环列表用真实条数判断会永远拦住第 0 周期之外的目标。
+        /// </summary>
         internal void RefreshForNavigation(int index, UIVirtualListAlignment alignment = UIVirtualListAlignment.Nearest)
         {
-            if (_disposed || _disposePending || index < 0 || index >= _datas.Count) return;
-            if (alignment == UIVirtualListAlignment.Nearest)
-            {
-                var visible = GetVisibleRangeWithoutBuffer();
-                if (visible.Contains(index)) { RefreshVisible(false); return; }
-            }
+            if (_disposed || _disposePending || index < 0 || index >= RenderCount) return;
+            // 已在视口内就不要预跳：导航器随后会自己算目标，这里改位置会让画面先跳一下再被拉回。
+            var visible = GetVisibleRangeWithoutBuffer();
+            if (visible.Contains(index)) { RefreshVisible(false); return; }
             var layout = _layout.GetItemLayout(index);
             float start = _layout.IsVertical ? -layout.Position.y : layout.Position.x;
             float length = _layout.IsVertical ? layout.Size.y : layout.Size.x;
@@ -427,11 +633,17 @@ namespace Ux
             _activeItems.Clear();
             _remappedItems.Clear();
             _pools.Clear();
+            _pinnedFront.Clear();
+            _pinnedBack.Clear();
             _datas.Clear();
+            _scratchDatas.Clear();
             _pendingCreate.Clear();
             _pendingCreateIndices.Clear();
             _missingIndices.Clear();
             _createVersion++;
+            _measureExtensions.Clear();
+            _measureChains.Clear();
+            _measureExtensionVersion++;
             FillingCompleted = null;
             DataRevision++;
             ItemClicked = null;
@@ -458,18 +670,17 @@ namespace Ux
             }
         }
 
-        /// <summary>循环列表滚动越过首/尾周期时静默平移一个周期，视觉无缝。</summary>
+        /// <summary>
+        /// 循环列表滚动越过首/尾周期时静默平移一个周期，视觉无缝。
+        /// 必须在算可见范围之前调用：平移后要重新分配 Item，否则视口里是空的。
+        /// </summary>
         private void RecenterLoop()
         {
             if (_recenteringLoop || !(_layout is IUIVirtualListLoopLayout loop) || !loop.LoopEnabled) return;
             float delta = loop.GetRecenterDelta(GetScrollPosition(), GetViewportLength());
             if (Mathf.Abs(delta) < 0.01f) return;
             _recenteringLoop = true;
-            try
-            {
-                SetScrollPosition(GetScrollPosition() + delta);
-                RefreshVisible(true);
-            }
+            try { SetScrollPosition(GetScrollPosition() + delta); }
             finally { _recenteringLoop = false; }
         }
 
@@ -485,11 +696,18 @@ namespace Ux
             try
             {
                 UpdateViewportLayout();
+                // 先归位再算 range：循环 list 平移周期后必须按新位置重新分配 Item。
+                RecenterLoop();
                 bool settled = false;
                 _layoutRetryPending = false;
+                _measureDeferred = false;
+                int passUsed = 0;
+                // 每轮刷新重新计次：只有“本次刷新里反复抖动”的项才会被限流。
+                foreach (var active in _activeItems.Values) active.MeasurePasses = 0;
                 // 限制收敛次数，防止业务每次测量都改变尺寸而无限循环。
                 for (int pass = 0; pass < 20; pass++)
                 {
+                    passUsed = pass + 1;
                     UpdateContentSize();
                     float scrollPosition = GetScrollPosition();
                     float viewportLength = _layout.IsVertical
@@ -508,10 +726,20 @@ namespace Ux
                     bool layoutChanged = MeasureVisibleItems();
                     if (_disposePending) break;
                     force = false;
+                    // 有个别项在本轮刷新里反复变尺寸：保留待测标记交给下一帧，
+                    // 本帧不再继续全量重排。
+                    if (_measureDeferred) break;
                     if (layoutChanged)
                     {
                         UpdateContentSize();
                         RestoreScrollAnchor(anchor);
+                        // 尺寸变化会移动后面的项：如果新范围已被现有项覆盖且没有待测项，
+                        // 本轮已收敛，不必再跑一轮完整的 Sync + Apply。
+                        if (!HasPendingMeasurements() && IsRangeCovered())
+                        {
+                            settled = true;
+                            break;
+                        }
                     }
                     if (!layoutChanged && !HasPendingMeasurements())
                     {
@@ -524,15 +752,23 @@ namespace Ux
                 {
                     UpdateContentSize();
                     ApplyItemLayouts();
-                    RecenterLoop();
+                    // Item 位置已落定，按最终布局算绘制顺序。
+                    ApplyRenderOrder();
+                    ApplyPinnedOrder();
                     _layoutRetryPending = !settled;
                     _followEndForPendingLayout = !settled && (_followEndDuringDataUpdate || _followEndForPendingLayout);
+                    if (!_measureDeferred) _measureDeferredWarned.Clear();
+                    // 正常只需 1~2 轮（排一次 + 吸收一次关系）；4 轮以上说明有东西在反复变。
+                    if (passUsed >= 4) ReportLayoutDiagnostics(passUsed);
                     if (settled)
                         _layoutRetryWarningIssued = false;
                     else if (!_layoutRetryWarningIssued)
                     {
                         _layoutRetryWarningIssued = true;
-                        Debug.LogWarning("虚拟列表布局在 20 轮内未收敛，已保留待处理状态。宿主下一帧继续；请检查尺寸估算和 Measure 是否稳定。");
+                        if (_measureDeferred)
+                            Debug.LogWarning("虚拟列表有 Item 在单次刷新内反复变尺寸，已保留待测状态并推迟到下一帧；请检查该 Item 的 Measure / 关联是否稳定。");
+                        else
+                            Debug.LogWarning("虚拟列表布局在 20 轮内未收敛，已保留待处理状态。宿主下一帧继续；请检查尺寸估算和 Measure 是否稳定。");
                     }
                 }
             }
@@ -663,6 +899,8 @@ namespace Ux
                 ItemType = itemType
             };
             _activeItems.Add(index, active);
+            // 新项默认落在 Content 末尾（最上层），必须重新分配兄弟序号。
+            _renderOrderDirty = true;
             BindItem(index, active);
         }
 
@@ -789,7 +1027,9 @@ namespace Ux
             // 每次绑定都换令牌，包括同一索引被 Refresh 或 SetDatas 重新赋值的情况。
             active.BindingVersion = ++_bindingVersion;
             active.NeedsBind = false;
-            active.NeedsMeasure = _layout.SupportsDynamicSize;
+            // 数据与交叉轴都没变时直接用已测尺寸，避免滑回视口时重跑 LayoutRebuilder。
+            active.ReusedSize = _layout.SupportsDynamicSize && TryReuseMeasuredSize(index);
+            active.NeedsMeasure = _layout.SupportsDynamicSize && !active.ReusedSize;
             var item = active.Item;
             var token = new UIVirtualListItemToken(this, index, item, active.BindingVersion);
             try
@@ -827,16 +1067,31 @@ namespace Ux
                 if (!pair.Value.NeedsMeasure)
                     continue;
 
+                // 同一个项在单次刷新里反复变尺寸：保留待测标记并推迟到下一帧，
+                // 避免一个抖动项把整列表拖进 20 轮全量 Sync + Apply。
+                if (pair.Value.MeasurePasses >= MaxMeasurePassesPerItem)
+                {
+                    _measureDeferred = true;
+                    if (_measureDeferredWarned.Add(pair.Key))
+                    {
+                        Debug.LogWarning($"虚拟列表 Item {pair.Key} 在单次刷新内已测量 {MaxMeasurePassesPerItem} 次，尺寸仍在变化，已推迟到下一帧；请检查 Measure() / 关联关系是否稳定。");
+                    }
+                    continue;
+                }
+                pair.Value.MeasurePasses++;
+
                 // 先清标记，使 Measure 中产生的新通知能够被下一轮消费。
                 pair.Value.NeedsMeasure = false;
                 try
                 {
-                    var measured = pair.Value.Item.Measure();
+                    var measured = MeasureItem(pair.Key, pair.Value.Item);
                     if (_disposePending) break;
                     if (!IsValidSize(measured))
                         throw new InvalidOperationException($"Item {pair.Key} 的测量尺寸必须为有限正数，实际值为 {measured}。");
                     if (_layout.SetItemSize(pair.Key, measured))
                         changed = true;
+                    pair.Value.ReusedSize = false;
+                    MarkMeasured(pair.Key);
                 }
                 catch
                 {
@@ -857,6 +1112,131 @@ namespace Ux
                 if (active.NeedsMeasure)
                     return true;
             return false;
+        }
+
+        // ------------------------------------------------------------ 已测尺寸复用
+
+        /// <summary>数据引用与交叉轴尺寸都没变时返回 true，可以直接用已测尺寸。</summary>
+        private bool TryReuseMeasuredSize(int renderIndex)
+        {
+            if (!ReuseMeasuredSize) return false;
+            int dataIndex = ToDataIndex(renderIndex);
+            if (dataIndex < 0 || dataIndex >= _datas.Count || dataIndex >= _measuredSizes.Length)
+                return false;
+            ref var key = ref _measuredSizes[dataIndex];
+            if (!key.Valid) return false;
+            if (key.CrossSize != _layout.CrossSize) return false;
+            return ReferenceEquals(key.Data, _datas[dataIndex]);
+        }
+
+        private void MarkMeasured(int renderIndex)
+        {
+            int dataIndex = ToDataIndex(renderIndex);
+            if (dataIndex < 0 || dataIndex >= _datas.Count) return;
+            EnsureMeasuredCapacity(_datas.Count);
+            _measuredSizes[dataIndex] = new MeasuredSizeKey
+            {
+                Data = _datas[dataIndex],
+                CrossSize = _layout.CrossSize,
+                Valid = true,
+            };
+        }
+
+        private void InvalidateMeasuredSize(int dataIndex)
+        {
+            if (dataIndex < 0 || dataIndex >= _measuredSizes.Length) return;
+            _measuredSizes[dataIndex].Valid = false;
+        }
+
+        private void ClearMeasuredSizes()
+        {
+            if (_measuredSizes.Length > 0)
+                Array.Clear(_measuredSizes, 0, _measuredSizes.Length);
+        }
+
+        private void EnsureMeasuredCapacity(int count)
+        {
+            if (_measuredSizes.Length >= count) return;
+            Array.Resize(ref _measuredSizes, Mathf.Max(count, Mathf.Max(4, _measuredSizes.Length * 2)));
+        }
+
+        /// <summary>插入数据时同步移动测量缓存，保证 key 跟着同一个数据走。</summary>
+        private void InsertMeasuredSizes(int index, int count)
+        {
+            int oldLength = _measuredSizes.Length;
+            EnsureMeasuredCapacity(_datas.Count);
+            // 把 index 之后的项整体后移，插入区置空。
+            int moved = Mathf.Min(oldLength - index, _measuredSizes.Length - index - count);
+            if (moved > 0)
+                Array.Copy(_measuredSizes, index, _measuredSizes, index + count, moved);
+            int clear = Mathf.Min(count, _measuredSizes.Length - index);
+            if (clear > 0)
+                Array.Clear(_measuredSizes, index, clear);
+        }
+
+        private void RemoveMeasuredSizes(int index, int count)
+        {
+            if (index < 0 || count <= 0 || index >= _measuredSizes.Length) return;
+            int remove = Mathf.Min(count, _measuredSizes.Length - index);
+            int tail = _measuredSizes.Length - index - remove;
+            if (tail > 0)
+                Array.Copy(_measuredSizes, index + remove, _measuredSizes, index, tail);
+            Array.Clear(_measuredSizes, _measuredSizes.Length - remove, remove);
+            Array.Resize(ref _measuredSizes, Mathf.Max(0, _measuredSizes.Length - remove));
+        }
+
+        /// <summary>
+        /// 多轮才收敛时的汇总诊断（5 秒限流）。只定位“哪个 Item 在反复测”，不猜原因；
+        /// 原因需要去看该 Item 的 Measure / UIRelation 配置。
+        /// </summary>
+        private void ReportLayoutDiagnostics(int passUsed)
+        {
+            if (Time.unscaledTime < _diagnoseNextTime) return;
+            _diagnoseNextTime = Time.unscaledTime + 5f;
+
+            _diagnoseBuilder.Clear();
+            _diagnoseBuilder.Append("虚拟列表本次刷新跑了 ").Append(passUsed).Append(" 轮（正常 1~2 轮）");
+            _diagnoseBuilder.Append(_measureDeferred ? "，且有 Item 被限流" : "");
+            _diagnoseBuilder.Append("。反复测量的 Item：");
+
+            int count = 0;
+            foreach (var pair in _activeItems)
+            {
+                if (pair.Value.MeasurePasses <= 1) continue;
+                if (count == 0) _diagnoseBuilder.Append('#');
+                else _diagnoseBuilder.Append(", #");
+                _diagnoseBuilder.Append(pair.Key)
+                    .Append('(').Append(pair.Value.MeasurePasses).Append(" 次)");
+                if (++count >= 8)
+                {
+                    _diagnoseBuilder.Append(" …");
+                    break;
+                }
+            }
+            if (count == 0) _diagnoseBuilder.Append("无");
+            _diagnoseBuilder.Append("。请检查这些 Item 的 Measure / UIRelation 配置是否稳定。");
+            Debug.LogWarning(_diagnoseBuilder.ToString());
+        }
+
+        /// <summary>
+        /// 当前可见范围是否已被现有 active 项完整覆盖：没有缺项、没有多余项、没有待绑定项。
+        /// 用于尺寸变化后提前结束收敛循环，省掉一轮完整的 Sync + Apply。
+        /// </summary>
+        private bool IsRangeCovered()
+        {
+            float viewportLength = _layout.IsVertical ? _viewport.rect.height : _viewport.rect.width;
+            if (viewportLength <= 0f) return true;
+
+            var range = _layout.GetVisibleRange(GetScrollPosition(), viewportLength, _bufferSize);
+            if (range.IsEmpty) return _activeItems.Count == 0;
+            // 数量一致 + 逐个命中，才说明既没有缺项也没有需要回收的多余项。
+            if (_activeItems.Count != range.End - range.Start + 1) return false;
+            for (int i = range.Start; i <= range.End; i++)
+            {
+                if (!_activeItems.TryGetValue(i, out var active)) return false;
+                if (active.NeedsBind) return false;
+            }
+            return true;
         }
 
         private static bool IsValidSize(Vector2 size) => size.x > 0f && size.y > 0f &&
@@ -956,21 +1336,38 @@ namespace Ux
             foreach (var pair in _activeItems)
             {
                 var info = _layout.GetItemLayout(pair.Key);
-                SetItemGeometry(pair.Value.Item.RectTransform, info, pair.Value.NeedsMeasure);
+                // 复用项也不能写主轴：要让内容自己决定尺寸，否则漂移会被钳回去、永远测不出来。
+                SetItemGeometry(pair.Value.Item.RectTransform, info,
+                    pair.Value.NeedsMeasure || pair.Value.ReusedSize);
             }
         }
 
         private void SetItemGeometry(RectTransform rect, UIVirtualListItemLayout info, bool pendingMeasure)
         {
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = info.Position;
+            // anchor/pivot 是常量，绝大多数时候已经是目标值：先读再写，
+            // 避免滚动时每帧对每个 Item 重复写 4 次 RectTransform（每次写都会让布局/网格变脏）。
+            var topLeft = new Vector2(0f, 1f);
+            if (rect.anchorMin != topLeft) rect.anchorMin = topLeft;
+            if (rect.anchorMax != topLeft) rect.anchorMax = topLeft;
+            if (rect.pivot != topLeft) rect.pivot = topLeft;
+            if (rect.anchoredPosition != info.Position) rect.anchoredPosition = info.Position;
+
             // 可变布局不能在测量前覆盖 Bind 设置的主轴尺寸，否则只能测到估算值。
             if (!_layout.SupportsDynamicSize || !pendingMeasure || _layout.IsVertical)
-                rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, info.Size.x);
+                SetAxisSize(rect, RectTransform.Axis.Horizontal, info.Size.x);
             if (!_layout.SupportsDynamicSize || !pendingMeasure || !_layout.IsVertical)
-                rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, info.Size.y);
+                SetAxisSize(rect, RectTransform.Axis.Vertical, info.Size.y);
+        }
+
+        /// <summary>
+        /// anchorMin == anchorMax 时 sizeDelta 就是实际尺寸；值没变就不写，
+        /// 省掉一次 native 调用以及它引发的布局/网格重建。
+        /// </summary>
+        private static void SetAxisSize(RectTransform rect, RectTransform.Axis axis, float size)
+        {
+            float current = axis == RectTransform.Axis.Horizontal ? rect.sizeDelta.x : rect.sizeDelta.y;
+            if (Mathf.Abs(current - size) <= 0.01f) return;
+            rect.SetSizeWithCurrentAnchors(axis, size);
         }
 
         private void UpdateContentSize()
@@ -1037,6 +1434,7 @@ namespace Ux
                 return;
 
             _activeItems.Remove(index);
+            _renderOrderDirty = true;
             // 场景卸载时，Unity 可能先销毁子对象再回调宿主 OnDestroy。
             if (active.Item is UnityEngine.Object native && native == null)
                 return;
@@ -1062,6 +1460,138 @@ namespace Ux
                     pool.Push(active.Item);
                 }
             }
+        }
+
+        /// <summary>
+        /// 按 RenderOrder 重排 Content 下的兄弟顺序；顺序未变时直接返回。
+        /// 中心排序只在视口中心跨越 Item 边界时真正重排，不是每帧。
+        /// </summary>
+        private void ApplyRenderOrder()
+        {
+            if (_renderOrder == UIVirtualListRenderOrder.Unmanaged || _activeItems.Count == 0)
+                return;
+
+            if (_renderOrder == UIVirtualListRenderOrder.CenterOut ||
+                _renderOrder == UIVirtualListRenderOrder.EdgeIn)
+            {
+                // 比较器里不再读 anchoredPosition：一次排序有 n log n 次比较，native 属性访问太贵。
+                _renderOrderViewportCenter = GetScrollPosition() + GetViewportLength() * 0.5f;
+                int center = FindViewportCenterIndex();
+                if (!_renderOrderDirty && center == _renderOrderCenter)
+                    return;
+                _renderOrderCenter = center;
+            }
+            else if (!_renderOrderDirty)
+            {
+                return;
+            }
+
+            _renderOrderDirty = false;
+            _renderOrderBuffer.Clear();
+            foreach (var pair in _activeItems)
+                _renderOrderBuffer.Add(pair.Key);
+            if (_renderOrderBuffer.Count <= 1)
+                return;
+
+            // 按“从底层到顶层”依次落到 Content 末尾；池里的 inactive 对象被挤到前面，不参与绘制。
+            _renderOrderBuffer.Sort(_renderOrderComparison);
+            for (int i = 0; i < _renderOrderBuffer.Count; i++)
+            {
+                if (!_activeItems.TryGetValue(_renderOrderBuffer[i], out var active))
+                    continue;
+                var rect = active.Item?.RectTransform;
+                if (rect != null)
+                    rect.SetAsLastSibling();
+            }
+        }
+
+        /// <summary>
+        /// 在 ApplyRenderOrder 之后覆盖个别项。已位于目标位置时跳过，避免滚动期间每帧改动层级。
+        /// </summary>
+        private void ApplyPinnedOrder()
+        {
+            if (_pinnedFront.Count == 0 && _pinnedBack.Count == 0)
+                return;
+            // 先压底再置顶，保证同一次 Refresh 里两者都生效；先调用者更靠下，后调用者更靠上。
+            for (int i = _pinnedBack.Count - 1; i >= 0; i--)
+                ApplyPinnedItem(_pinnedBack[i], false);
+            for (int i = 0; i < _pinnedFront.Count; i++)
+                ApplyPinnedItem(_pinnedFront[i], true);
+        }
+
+        private void ApplyPinnedItem(int dataIndex, bool front)
+        {
+            if (!IsLoop)
+            {
+                if (_activeItems.TryGetValue(dataIndex, out var active))
+                    SetPinnedSibling(active.Item, front);
+                return;
+            }
+            // 循环列表一个数据有多个周期副本，一起提权；Recenter 后虚拟索引会变，只能按数据索引匹配。
+            foreach (var pair in _activeItems)
+                if (ToDataIndex(pair.Key) == dataIndex)
+                    SetPinnedSibling(pair.Value.Item, front);
+        }
+
+        private void SetPinnedSibling(IUIVirtualListItem item, bool front)
+        {
+            var rect = item?.RectTransform;
+            if (rect == null)
+                return;
+            int target = front ? _content.childCount - 1 : 0;
+            if (rect.GetSiblingIndex() != target)
+                rect.SetSiblingIndex(target);
+        }
+
+        /// <summary>排序结果即绘制顺序：序号小的先画、压在下面。</summary>
+        private int CompareRenderOrder(int a, int b)
+        {
+            switch (_renderOrder)
+            {
+                case UIVirtualListRenderOrder.Reverse:
+                    return b.CompareTo(a);
+                case UIVirtualListRenderOrder.CenterOut:
+                case UIVirtualListRenderOrder.EdgeIn:
+                {
+                    int distanceA = GetRenderDistanceKey(a);
+                    int distanceB = GetRenderDistanceKey(b);
+                    int compare = _renderOrder == UIVirtualListRenderOrder.CenterOut
+                        ? distanceA.CompareTo(distanceB)
+                        : distanceB.CompareTo(distanceA);
+                    // 对称位置距离相等，必须用索引定序；List.Sort 不稳定，否则层级会来回跳。
+                    return compare != 0 ? compare : a.CompareTo(b);
+                }
+                default:
+                    return a.CompareTo(b);
+            }
+        }
+
+        /// <summary>Item 中心到视口中心的主轴距离，量化到 1/16 像素以消除浮点尾差。</summary>
+        private int GetRenderDistanceKey(int index)
+        {
+            if (index < 0 || index >= RenderCount)
+                return int.MaxValue;
+            var info = _layout.GetItemLayout(index);
+            float center = _layout.IsVertical
+                ? -info.Position.y + info.Size.y * 0.5f
+                : info.Position.x + info.Size.x * 0.5f;
+            return Mathf.RoundToInt(Mathf.Abs(center - _renderOrderViewportCenter) * 16f);
+        }
+
+        private int FindViewportCenterIndex()
+        {
+            int best = -1;
+            int bestDistance = int.MaxValue;
+            foreach (var pair in _activeItems)
+            {
+                int distance = GetRenderDistanceKey(pair.Key);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = pair.Key;
+                }
+            }
+            return best;
         }
 
         private void ResetActiveItems()
@@ -1094,6 +1624,10 @@ namespace Ux
             public int ItemType;
             public bool NeedsMeasure;
             public bool NeedsBind;
+            /// <summary>本次绑定是否直接复用了已测尺寸（未重新测量）。</summary>
+            public bool ReusedSize;
+            /// <summary>本次刷新里已经测了几次；超限后保留待测标记并推迟到下一帧。</summary>
+            public int MeasurePasses;
             public ulong BindingVersion;
             public IUIVirtualListItem Item;
         }
@@ -1123,6 +1657,24 @@ namespace Ux
             Item = item;
             Version = version;
         }
+    }
+
+    /// <summary>
+    /// Item 之间的绘制顺序。兄弟序号越大越晚绘制、压在上层。
+    /// 中心排序只对单列/单行有意义：等距网格里相邻项不重叠，层级差异看不出来。
+    /// </summary>
+    public enum UIVirtualListRenderOrder
+    {
+        /// <summary>不干预，沿用创建/复用顺序。</summary>
+        Unmanaged = 0,
+        /// <summary>数据顺序：竖向从上到下、横向从左到右，后面的压住前面的。</summary>
+        Forward = 1,
+        /// <summary>反向：竖向从下到上、横向从右到左。</summary>
+        Reverse = 2,
+        /// <summary>从中心向两侧：中心项在最底层，两侧压住中心。</summary>
+        CenterOut = 3,
+        /// <summary>从两侧向中心：两侧在最底层，中心项压住两侧。</summary>
+        EdgeIn = 4
     }
 
     public enum UIVirtualListAxis
@@ -1174,6 +1726,34 @@ namespace Ux
         Vector2 Measure();
         void OnRecycle();
         void SetClickHandler(Action callback);
+    }
+
+    /// <summary>
+    /// 测量上下文。循环列表下 Index 是渲染索引，业务索引用 UIVirtualList.ToDataIndex(Index) 换算。
+    /// </summary>
+    public readonly struct UIVirtualListMeasureContext
+    {
+        public IUIVirtualListItem Item { get; }
+        public int Index { get; }
+        public RectTransform Rect => Item.RectTransform;
+
+        public UIVirtualListMeasureContext(IUIVirtualListItem item, int index)
+        {
+            Item = item;
+            Index = index;
+        }
+    }
+
+    /// <summary>
+    /// 测量链扩展。列表每轮测量都会经过（可变尺寸下同一项可能连续测多轮），实现必须幂等：
+    /// next 可能在同一轮内被调用多次（例如关联改了几何后需要重排再看尺寸）。
+    /// next 的返回值是权威尺寸，扩展可以重新读几何后返回自己的结果覆盖它。
+    /// 执行顺序：先注册的在外层先执行，后注册的更靠近原始 Measure()。
+    /// 未注册任何扩展时列表走零额外开销的原始路径。
+    /// </summary>
+    public interface IUIVirtualListMeasureExtension
+    {
+        Vector2 Measure(in UIVirtualListMeasureContext context, Func<int, Vector2> next);
     }
 
     public interface IUIVirtualListItemFactory
@@ -1293,10 +1873,10 @@ namespace Ux
         private readonly float _paddingStart;
         private readonly float _paddingEnd;
         private readonly List<float> _sizes = new();
+        // 项起点缓存：只按需推进到可见位置，尺寸变化不再全量重算。
         private readonly List<float> _starts = new();
-        private float _contentLength;
+        private double _totalSize;
         private int _count;
-        private bool _positionsDirty = true;
 
         public UIVariableLinearLayout(
             UIVirtualListAxis axis,
@@ -1321,8 +1901,9 @@ namespace Ux
         {
             get
             {
-                EnsurePositions();
-                return _contentLength;
+                if (_count <= 0) return _paddingStart + _paddingEnd;
+                // 增量总长：O(1)，不再依赖任何全量遍历。
+                return _paddingStart + _paddingEnd + (float)_totalSize + _spacing * (_count - 1);
             }
         }
 
@@ -1332,11 +1913,13 @@ namespace Ux
             if (resetSizes || _sizes.Count != _count)
             {
                 _sizes.Clear();
+                _sizes.Capacity = Mathf.Max(_sizes.Capacity, _count);
+                float defaultSize = GetDefaultMainSize();
                 for (int i = 0; i < _count; i++)
-                    _sizes.Add(GetDefaultMainSize());
+                    _sizes.Add(defaultSize);
+                _totalSize = (double)defaultSize * _count;
+                TrimStarts(0);
             }
-
-            _positionsDirty = true;
         }
 
         public UIVirtualListRange GetVisibleRange(
@@ -1344,7 +1927,6 @@ namespace Ux
             float viewportLength,
             float bufferSize)
         {
-            EnsurePositions();
             if (_count <= 0)
                 return new UIVirtualListRange(0, -1);
 
@@ -1359,11 +1941,10 @@ namespace Ux
 
         public UIVirtualListItemLayout GetItemLayout(int index)
         {
-            EnsurePositions();
             if (index < 0 || index >= _count)
                 return new UIVirtualListItemLayout(Vector2.zero, _defaultSize);
 
-            float offset = _starts[index];
+            float offset = GetStart(index);
             Vector2 size = IsVertical
                 ? new Vector2(_defaultSize.x, _sizes[index])
                 : new Vector2(_sizes[index], _defaultSize.y);
@@ -1379,11 +1960,14 @@ namespace Ux
                 return false;
 
             float newSize = Mathf.Max(0.01f, IsVertical ? size.y : size.x);
-            if (Mathf.Abs(_sizes[index] - newSize) < 0.01f)
+            float previous = _sizes[index];
+            if (Mathf.Abs(previous - newSize) < 0.01f)
                 return false;
 
             _sizes[index] = newSize;
-            _positionsDirty = true;
+            _totalSize += newSize - previous;
+            // _starts[index] 只依赖前面的尺寸，保留它；后面的起点按需重算。
+            TrimStarts(index + 1);
             return true;
         }
 
@@ -1398,7 +1982,8 @@ namespace Ux
             for (int i = 0; i < count; i++) defaults[i] = GetDefaultMainSize();
             _sizes.InsertRange(index, defaults);
             _count += count;
-            _positionsDirty = true;
+            _totalSize += (double)defaults[0] * count;
+            TrimStarts(index);
         }
 
         public void RemoveItems(int index, int count)
@@ -1408,17 +1993,21 @@ namespace Ux
             if (count < 0 || count > _count - index)
                 throw new ArgumentOutOfRangeException(nameof(count));
             if (count == 0) return;
+            for (int i = index; i < index + count; i++)
+                _totalSize -= _sizes[i];
             _sizes.RemoveRange(index, count);
             _count -= count;
-            _positionsDirty = true;
+            TrimStarts(index);
         }
 
         public void InvalidateItemSize(int index)
         {
             if (index < 0 || index >= _count)
                 throw new ArgumentOutOfRangeException(nameof(index));
-            _sizes[index] = GetDefaultMainSize();
-            _positionsDirty = true;
+            float defaultSize = GetDefaultMainSize();
+            _totalSize += defaultSize - _sizes[index];
+            _sizes[index] = defaultSize;
+            TrimStarts(index + 1);
         }
 
         private float GetDefaultMainSize()
@@ -1426,31 +2015,44 @@ namespace Ux
             return IsVertical ? _defaultSize.y : _defaultSize.x;
         }
 
-        private void EnsurePositions()
+        private void EnsureStarts(int count)
         {
-            if (!_positionsDirty)
-                return;
+            if (count > _count) count = _count;
+            if (_starts.Count >= count) return;
 
-            _starts.Clear();
             _starts.Capacity = Mathf.Max(_starts.Capacity, _count);
-
-            float position = _paddingStart;
-            for (int i = 0; i < _count; i++)
+            int i = _starts.Count;
+            float position = i == 0
+                ? _paddingStart
+                : _starts[i - 1] + _sizes[i - 1] + _spacing;
+            while (i < count)
             {
                 _starts.Add(position);
                 position += _sizes[i] + _spacing;
+                i++;
             }
+        }
 
-            _contentLength = _count > 0
-                ? position - _spacing + _paddingEnd
-                : _paddingStart + _paddingEnd;
-            _positionsDirty = false;
+        /// <summary>丢弃 count 之后的起点缓存；它们依赖已变化的尺寸。</summary>
+        private void TrimStarts(int count)
+        {
+            if (_starts.Count <= count) return;
+            _starts.RemoveRange(count, _starts.Count - count);
+        }
+
+        private float GetStart(int index)
+        {
+            EnsureStarts(index + 1);
+            return _starts[index];
         }
 
         private int FindIndexAtPosition(float position)
         {
+            // 先保证缓存覆盖 position，二分范围才完整。
+            EnsureStartsToCover(position);
+
             int low = 0;
-            int high = _count - 1;
+            int high = _starts.Count - 1;
             int result = _count - 1;
 
             while (low <= high)
@@ -1469,6 +2071,18 @@ namespace Ux
             }
 
             return result;
+        }
+
+        /// <summary>从当前水位往后推进，直到 position 落在已计算区间内。</summary>
+        private void EnsureStartsToCover(float position)
+        {
+            while (_starts.Count < _count)
+            {
+                int last = _starts.Count - 1;
+                if (last >= 0 && _starts[last] + _sizes[last] + _spacing > position)
+                    return;
+                EnsureStarts(_starts.Count + 1);
+            }
         }
     }
 

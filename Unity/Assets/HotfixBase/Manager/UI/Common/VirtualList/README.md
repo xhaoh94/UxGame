@@ -113,6 +113,21 @@ _list.Clear();                       // 清空数据，保留对象池
 
 这些接口支持单列、多列、横向/竖向以及固定/可变尺寸。`SetDatas` 仍表示全量替换、重置尺寸缓存并回到起点；增量接口不会这样做。
 
+### 全量刷新但保持位置
+
+改完自己的数据整体重刷、又不想跳回顶部时用它：
+
+```csharp
+_list.SetDatas(datas);     // 全量替换，回到顶部（循环列表回到中间周期）
+_list.UpdateDatas(datas);  // 全量替换，保持当前滚动位置
+```
+
+`UpdateDatas` 在替换前记录首个可见项和视口偏移，替换后按锚点恢复；数据条数变少导致锚点越界时夹到最后一项。原本就在末尾且开启「在末尾时保持贴底」时继续贴底。
+
+循环列表的锚点跨周期不可靠，循环模式下 `UpdateDatas` 退化为回到中间周期。
+
+有了它，「用掉道具 A 获得道具 B」这种场景直接重刷即可，不用手动拆成 `RemoveAt` + `UpdateData` + `InsertData`。
+
 ### 绑定、复用与缓存
 
 - 列表持有数据集合的快照；增量接口修改的是列表内部集合，不会反向修改传入的 `List<T>`。
@@ -557,15 +572,28 @@ _list.IsCursorPaging;  // true
 ### 轮播吸附
 
 ```csharp
-_list.EnableCarousel(pageLength: viewportHeight, snapDuration: 0.2f);
-_list.SnapToPage(2);
+_list.EnableCarousel(snapDuration: 0.2f, snapMode: UIVirtualCarouselSnapMode.Nearest);
+_list.SnapToPage(2);      // 对齐到第 2 项的顶部
 _list.SnapToNextPage();
 _list.DisableCarousel();
 ```
 
-- 拖拽结束后按 `pageLength` 四舍五入吸附到最近整页；偏移小于 0.5 不启动动画。
+Inspector 的 **按页吸附** 下拉框决定对齐策略；运行时可用 `CarouselSnapMode` 切换，或调 `EnableCarousel(duration, mode)`。
+
+| 模式 | 行为 |
+|---|---|
+| 不吸附 | 完全交给惯性，不排队 |
+| 最近 | 顶部对齐、底部对齐各算一个候选，取位移更小的；所以可能吸上面也可能吸下面（默认） |
+| 首项 | 一定是顶部对齐：顶部项露过半就回吸补齐，不足一半就让它滚出去、下一项顶上 |
+| 尾项 | 一定是底部对齐：底部项露过半就下移补齐，不足一半就上移让它滚出去 |
+
+对齐位置按**实际项边界**（`GetItemLayout`）计算，不依赖固定页长，可变高度列表也能精确对齐到某一项的顶/底。`CurrentPage` 返回视口顶部所在项的索引，`SnapTo(index)` 直接用渲染行号（循环列表下传虚拟索引）。
+| 惯性 | 向下滚（看后面的项）走首项对齐，向上滚走尾项对齐；速度低于 50 px/s 时退回最近 |
+
+- 拖拽结束后**先等惯性自然衰减到 0**，再按 `pageLength` 四舍五入吸附到最近整页；偏移小于 0.5 不启动动画。松手时若已无惯性则立即吸附。
+- 等待期间再次拖拽会放弃排队中的吸附，并把控制权交还用户。
 - 仅支持竖向列表；树/分组模式会拒绝启用。
-- 依赖 `UIVirtualListScrollRect` 的拖拽结束事件；普通 `ScrollRect` 无法自动吸附。
+- 依赖 `UIVirtualListScrollRect` 的拖拽开始/结束事件；普通 `ScrollRect` 无法自动吸附。
 - 自动 Tick 由组件完成；纯 C# 用法为 `new UIVirtualCarousel(core, pageLength)` 后每帧 `Tick()`。
 
 ## 无限循环列表
@@ -587,8 +615,9 @@ _list.ToDataIndex(virtualIndex); // 虚拟索引 → 真实数据索引
 
 - 真实 `Count`、`GetData` 语义保持为业务数据；渲染/点击回调拿到的是**真实索引**（0..N-1）。
 - 尺寸缓存按真实索引共享，各周期外观一致；支持固定与可变主轴尺寸。
+- 周期拼接处会补回一个主轴间距：单周期的 `ContentLength` 不含末尾间距，直接拿来当周期步进会让首尾两项贴在一起。
 - 滚动进入首/尾周期时静默平移一个周期长度，视觉无缝。
-- 需要至少 3 个周期；内容长度（一个周期）必须大于视口，否则不做重定位。
+- 固定 3 个周期，不可配置：只有中间周期是安全区，少于 3 个会反复触发反向平移。内容长度（一个周期）必须大于视口，否则不做重定位。
 - 只支持单列/单行：多列、树形、分组会拒绝；分页不建议与循环组合。
 - 选择、滚动定位、尺寸通知都对虚拟行生效；`ScrollToView` 传虚拟索引，业务层通常用 `ToDataIndex` 换算。
 
@@ -607,9 +636,50 @@ list.SetDatas(items);   // 自动从中间周期开始
 
 - 8 张彩色卡片，固定 620×120，3 个周期首尾相接。
 - 从中间周期开始，向上/向下连续滚动都不会到头；进入首尾周期时会静默换周期。
-- 默认开启按页吸附（每页 = 卡片高度 + 间距），松手后吸附到最近一张；可用组件菜单 `测试 / 下一页`、`上一页`、`回到第一张` 验证。
+- 创建示例时已在组件上勾选 **按页吸附**（每页 = 卡片高度 + 间距）；松手后先滑完惯性，再吸附到最近一张。可用组件菜单 `测试 / 下一页`、`上一页`、`回到第一张` 验证。
 - 点击卡片打印的是**真实索引 0..7**，可以直接确认虚拟行与业务索引的映射。
 - 视口附近只保留少量卡片实例（验证中不超过 20 个），不是把 3 个周期全部实例化。
+
+## 绘制顺序（Item 叠放）
+
+Content 的子节点顺序就是 UGUI 绘制顺序：序号大的后绘制、压在上层。默认不干预，沿用创建与复用顺序——**滚动复用后该顺序会与数据顺序脱钩**，不要依赖它。
+
+Inspector 的 **渲染顺序** 提供受管模式：
+
+| 选项 | 绘制方向 | 效果 |
+|---|---|---|
+| 不干预 | 创建/复用顺序 | 零开销，保持旧行为 |
+| 正序 | 索引升序 | 竖向从上到下、横向从左到右，后者压住前者 |
+| 倒序 | 索引降序 | 竖向从下到上、横向从右到左 |
+| 从中心向两侧 | 视口中心 → 两端 | 中心项在最下层，两侧压住中心 |
+| 从两侧向中心 | 两端 → 视口中心 | 两侧在最下层，中心项压住两侧（循环轮播常用） |
+
+```csharp
+list.RenderOrder = UIVirtualListRenderOrder.EdgeIn;   // 运行时切换，立即生效
+```
+
+- **中心 = 视口中心**，跟随滚动。只有视口中点跨越 Item 边界时才真正重排，不是每帧；静止时零开销。
+- 多列网格里相邻项不重叠，看不出层级差异，Inspector 不提供中心排序两项。
+- 距离相等（中心对称位置）时按索引定序；`List.Sort` 不稳定，不这样做层级会来回抖。
+- 只调整 Content 内的相对顺序：池中 inactive 对象被挤到底层，业务自行塞进 Content 的装饰节点也会被压到 Item 之下。
+- 顺带改变射线命中优先级（UGUI 从上往下测），视觉在上层的最先被点到。
+- 中心排序按布局坐标计算而非虚拟索引，循环列表平移周期后不会整片翻层。树/分组的吸顶副本在 Viewport 层，不受影响。
+
+### 单项提权（BringToFront / BringToBack）
+
+```csharp
+list.BringToFront(3);   // 提到最上层
+list.BringToBack(5);    // 压到最下层
+list.ClearPinned();     // 清除全部提权，恢复 RenderOrder 的自然顺序
+```
+
+用于「选中项放大压住邻居」「拖拽中的卡片置顶」这类单点例外，与 `RenderOrder` 正交：先按全局规则排，再把提权项挪到两端。
+
+- 传**真实数据索引**（与 `ItemClicked` 一致）；循环列表下该数据的所有周期副本一起提权。
+- 提权是持久的：滚动复用、布局重建后重新应用，直到 `ClearPinned`、`SetDatas` 或该项被删除。
+- 增删数据时索引自动跟随偏移，不需要业务重新调用。
+- 多个项同时提权时，置顶列表后调用更靠上，置底列表先调用更靠下；同一索引同时置顶和置底以最后一次为准。
+- 已位于目标位置时跳过写入，滚动期间不会每帧改动层级。
 
 ## 模板异步加载与资源句柄
 
@@ -743,6 +813,83 @@ list.RefreshViewportIfChanged(); // 同时消费上帧未收敛的布局工作
 
 可变竖向布局中，每个 Item 宽度统一、高度可变；横向中高度统一、宽度可变。多列/多行以行/列最大尺寸推进，不是任意二维瀑布流。
 
+### 与 UIRelation 的配合（关联测量）
+
+模板内部用 `UIRelation` 推导宽高时（例如“高 -> 高”跟随内部文本容器、左右边对撑满父级），**默认的 Measure 测不到关联结果**：
+
+- `Measure` 只调用 `LayoutRebuilder.ForceRebuildLayoutImmediate`，驱动的是 LayoutGroup / ContentSizeFitter。
+- `UIRelation` 由 `UIRelationDriver` 在 `LateUpdate` 应用，比测量晚。
+- 于是第一轮测到的是关联写入**之前**的尺寸，列表缓存偏小或偏大，项与项之间出现重叠 / 留白。
+- 更麻烦的是 `NeedsMeasure` 测完就清掉，关联随后改了高度，列表不会自动复查，误差会保留到该项被重新绑定或手动通知。
+
+这类模板在 Inspector 可变尺寸下勾选 **关联测量**，运行时对应：
+
+```csharp
+_list.ApplyRelationsOnMeasure = true;
+```
+
+开启后测量走“包装链”：先让内层完成 UGUI 布局，再同步应用 Item 子树内的关联，然后再排一次让 `LayoutGroup` / `ContentSizeFitter` 吸收关联结果，最后返回内层链的尺寸（自定义 `Measure()` 的算法仍被尊重）。`UIRelation.ExternalDriven` 会置位，列表布局成为权威，配置的距离/比例不会再被 `RelinkAll` 重记成摆好之后的值；驱动器的兜底应用仍然保留。
+
+行为约定：
+
+- 只处理 Item **子树内**的关系。关联目标在 Item 之外（跨行、关联列表外节点）时，虚拟复用会让目标随机变化，不支持。
+- 关系**不能指向自己的子节点**（会判为循环）。需要多层级联时用“兄弟 + 父级 LayoutGroup”的形式：同一层的项互相跟随，父级布局组汇总高度。
+- 收敛结构是“每轮应用一遍关系 → 重排一遍”，关系无变化立即停；上限 4 轮，支持四层**兄弟链**。嵌套子节点链不合法，不会消耗这么多轮。
+- Item 根上的**边对定位**与列表自己的布局写入冲突，只有“宽/高跟随”和“子树内部”的关系能与虚拟列表共存。
+- 模板在运行时动态增删 `UIRelation`（例如按数据装配子模块）后，调用 `InvalidateRelationMeasure(item)` 丢弃该实例的收集缓存；关系结构不变时不需要调用。
+- 分组吸顶副本也会走同一测量链，高度与真实行一致。
+- 开关默认关闭：没有关联的模板不为它付子树遍历与哈希查询开销；未注册任何扩展时列表保持原始 `Measure()` 直接调用，不产生委托。
+- 缓存按 `item` 实例（`RectTransform`）收集，每个实例只 `GetComponentsInChildren` 一次，滚动复用不会重复收集。
+
+自定义测量扩展（不限于关联）：
+
+```csharp
+public sealed class MyMeasureExtension : IUIVirtualListMeasureExtension
+{
+    public Vector2 Measure(in UIVirtualListMeasureContext context, Func<int, Vector2> next)
+    {
+        var size = next(context.Index);   // 内层链的返回值是权威尺寸
+        return new Vector2(size.x, size.y + 8f); // 也可以返回自己的结果覆盖
+    }
+}
+
+_list.Controller.RegisterMeasureExtension(new MyMeasureExtension());
+```
+
+- 注册顺序：先注册的在外层先执行；后注册的更靠近原始 `Measure()`。
+- 必须在第一次测量（`SetDatas` / `Refresh` / 树或分组初始化）之前注册；组件 `Release()` 后重建列表需重新注册（`ApplyRelationsOnMeasure` 已封装这一步）。
+- `next` 在同一轮内可能被调用多次，扩展必须幂等。
+- 吸顶副本不经 `MeasureVisibleItems`，需要时用公开的 `list.MeasureItem(index, item)` 入口。
+
+### 滑动时的尺寸复用
+
+可变尺寸默认开启复用：一个 Item 滑出视口被回收、再滑回来时，如果**数据引用没变**且**交叉轴尺寸没变**，直接用上次测量的尺寸，不再重跑一遍 `LayoutRebuilder`。
+
+它是常开的，Inspector 不提供开关；下面这行只是代码级的逃生口，排查问题时临时关闭对比用：
+
+```csharp
+_list.ReuseMeasuredSize = false; // 退回“每次绑定都重测”
+```
+
+判定与失效全部由列表完成，不需要业务配合：
+
+| 情况 | 行为 |
+|---|---|
+| 滚回原项（数据引用、交叉轴都没变） | 直接复用，不测量 |
+| `SetDatas` / `UpdateDatas` | 尺寸缓存全部作废 |
+| `UpdateData` | 只失效那一项 |
+| `InsertData(s)` / `RemoveAt/Range` | 缓存跟着数据一起平移，不会把 A 的“已测”标到 B 上 |
+| `Refresh()` / `RefreshItem(index)` | 强制失效（业务可能在数据引用不变时改了内容） |
+| 交叉轴尺寸变化 | 自动失效 |
+| `NotifyItemSizeChanged` | 立即重测（不需要清缓存） |
+
+**唯一需要业务配合的是异步内容**（图片、动态文本）。列表不做任何隐式修正：
+
+- 复用项不重测、也不会把主轴尺寸写回缓存值；
+- 漏调 `NotifyItemSizeChanged` 会直接错位（项与项重叠或留白），没有日志也没有自动修复。
+
+这是刻意保留的“错误可见”：漏通知是业务错误，不应该被列表默默掩盖。排查时把 `ReuseMeasuredSize` 临时设为 `false`，就回到“每次绑定都重测”，能快速确认是不是漏通知。
+
 ### 尺寸变化通知（不重新绑定数据）
 
 当图片加载完成、文本展开，且 Item 对象内容/尺寸已更新时，使用：
@@ -821,6 +968,8 @@ _list.NotifyItemSizeChanged(token);
 - ScrollRect / Viewport 引用和模板在初始化前配置。不要在已初始化后替换它们。
 - 组件自动检测视口变化并重排，不重新绑定现有项；纯 C# 调用方可显式调用 `RefreshLayout()` 或在更新中调用 `RefreshViewportIfChanged()`。
 - 极端估算差异可能需要超过 20 轮测量；达到单轮上限时 `HasPendingLayoutWork` 为 true，宿主下一帧继续，连续未收敛仅提示一次。纯 C# 调用方也应持续调用 `RefreshViewportIfChanged()` 消费这些待处理工作。
+- 单个 Item 在一次刷新里最多测量 3 次：超过后保留待测标记并推迟到下一帧，避免一个抖动项把整个列表拖进多轮全量同步。控制台会指出具体项，先检查它的 `Measure()` 或关联关系。
+- 一次刷新跑了 4 轮以上（正常 1~2 轮：排一次 + 吸收一次关系）时会输出一条汇总日志（5 秒限流），列出反复测量的 Item。日志只定位“哪个 Item”，不猜原因：拿着索引去看它的 `Measure` / `UIRelation` 配置。
 - `Dispose()` 在业务回调内部可延迟清理，`IsDisposalComplete` 表示清理结束；组件会管理这一过程。
 
 ```csharp

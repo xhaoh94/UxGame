@@ -1,9 +1,10 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Ux
 {
     /// <summary>
-    /// 关联计算核心。只做几何计算，不持有状态，可在编辑器和 EditMode 测试里直接调用。
+    /// 关联计算核心。做几何计算与布局冲突判定，不持有状态，可在编辑器和 EditMode 测试里直接调用。
     /// 语义对齐 FairyGUI：边对记录“距离”，宽高记录“比例”，目标变化时按记录值跟随。
     /// </summary>
     public static class UIRelationCore
@@ -122,6 +123,95 @@ namespace Ux
                     return "存在自身边与目标边类型不匹配的关联（水平必须配水平，垂直必须配垂直）。";
             }
             return null;
+        }
+
+        /// <summary>
+        /// 检测「自身的关联项」与直接父级 LayoutGroup 的冲突。
+        /// 布局组会写子节点的位置与尺寸，同一轴上的关联每帧都会被它覆盖，无法生效。
+        /// 节点挂了 LayoutElement 且勾选 Ignore Layout 时，布局组会完全跳过他，不算冲突。
+        /// 返回 null 表示没有冲突。
+        /// </summary>
+        public static string DescribeLayoutConflict(RectTransform self, in UIRelationItem item)
+        {
+            if (self == null || item.IsEmpty) return null;
+
+            // 布局组按 ILayoutIgnorer 跳过子节点：位置和尺寸都归关联自己管。
+            var ignorer = self.GetComponent<ILayoutIgnorer>();
+            if (ignorer != null && ignorer.ignoreLayout) return null;
+
+            var parent = self.parent as RectTransform;
+            if (parent == null) return null;
+            var group = parent.GetComponent<LayoutGroup>();
+            if (group == null || !group.isActiveAndEnabled) return null;
+
+            GetLayoutControl(group, out var controlsWidth, out var controlsHeight,
+                out var controlsX, out var controlsY);
+
+            var followWidth = item.FollowWidth && controlsWidth;
+            var followHeight = item.FollowHeight && controlsHeight;
+            var linkX = controlsX && HasLinkOnAxis(item, true);
+            var linkY = controlsY && HasLinkOnAxis(item, false);
+            if (!followWidth && !followHeight && !linkX && !linkY) return null;
+
+            var conflicts = new System.Collections.Generic.List<string>(4);
+            if (followWidth) conflicts.Add("“宽 → 宽”");
+            if (followHeight) conflicts.Add("“高 → 高”");
+            if (linkX) conflicts.Add("水平边关联");
+            if (linkY) conflicts.Add("垂直边关联");
+
+            var sizeConflict = followWidth || followHeight;
+            var positionConflict = linkX || linkY;
+            var drives = sizeConflict && positionConflict ? "尺寸和位置"
+                : sizeConflict ? "尺寸"
+                : "位置";
+
+            return $"父节点「{parent.name}」的 {group.GetType().Name} 会覆盖本节点的{drives}" +
+                   $"（{string.Join("、", conflicts)}），这些关联无法生效。" +
+                   "请关闭该轴的 Child Control，或在本节点加 LayoutElement 并勾选 Ignore Layout。";
+        }
+
+        /// <summary>
+        /// 布局组会写哪些位置/尺寸轴。Horizontal/Vertical 只写沿轴位置，尺寸按 childControl；
+        /// GridLayoutGroup 强制写位置与尺寸。
+        /// </summary>
+        private static void GetLayoutControl(LayoutGroup group, out bool width, out bool height,
+            out bool x, out bool y)
+        {
+            width = false;
+            height = false;
+            x = false;
+            y = false;
+            switch (group)
+            {
+                case HorizontalLayoutGroup horizontal:
+                    x = true;
+                    width = horizontal.childControlWidth;
+                    height = horizontal.childControlHeight;
+                    break;
+                case VerticalLayoutGroup vertical:
+                    y = true;
+                    width = vertical.childControlWidth;
+                    height = vertical.childControlHeight;
+                    break;
+                case GridLayoutGroup:
+                    x = true;
+                    y = true;
+                    width = true;
+                    height = true;
+                    break;
+            }
+        }
+
+        private static bool HasLinkOnAxis(in UIRelationItem item, bool horizontal)
+        {
+            if (item.Links == null) return false;
+            for (int i = 0; i < item.Links.Length; i++)
+            {
+                var link = item.Links[i];
+                if (!link.IsValid) continue;
+                if (horizontal ? link.IsHorizontal : link.IsVertical) return true;
+            }
+            return false;
         }
 
         // ------------------------------------------------------------------ 尺寸

@@ -63,12 +63,16 @@ namespace Ux
             if (_disposed) return false;
             var target = new UIVirtualScrollTarget(index, alignment, padding);
             if (!_list.CanMutateData) return false;
-            if (index < 0 || index >= _list.Count) throw new ArgumentOutOfRangeException(nameof(index));
+            if (index < 0 || index >= _list.RenderCount) throw new ArgumentOutOfRangeException(nameof(index));
             if (durationSeconds < 0f || float.IsNaN(durationSeconds) || float.IsInfinity(durationSeconds))
                 throw new ArgumentOutOfRangeException(nameof(durationSeconds));
             if (curve != null && !IsCurveSafe(curve)) throw new ArgumentException("滚动曲线必须返回有限值。", nameof(curve));
             if (_active) Cancel(); // 新请求视为取消上一个任务，监听方可停止旧动画。
 
+            // 接管滚动前必须停惯性：ScrollRect.LateUpdate 每帧仍会按 velocity 推内容，
+            // 否则 Tick 设的绝对位置会被叠加上一次位移，表现为来回抽搐。
+            // 不能依赖 RefreshForNavigation：目标已在视口内时它不再预跳，也就不会停惯性。
+            _list.StopScrollMotion();
             _target = target;
             _start = _list.ScrollPositionValue;
             _elapsed = 0f;
@@ -103,7 +107,7 @@ namespace Ux
             if (_list.IsDisposedOrDisposing) { Cancel(false); return false; }
             if (_list.FirstVisibleIndex < 0 && _list.Count == 0) { Cancel(); return false; }
             if (_revision != _list.DataRevision) { Cancel(); return false; }
-            if (_target.Index >= _list.Count) { Cancel(); return false; }
+            if (_target.Index >= _list.RenderCount) { Cancel(); return false; }
 
             if (_duration > 0f)
             {

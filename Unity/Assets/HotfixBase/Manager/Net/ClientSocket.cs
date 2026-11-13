@@ -399,9 +399,8 @@ namespace Ux
             this.sendBytes.PushUInt32(rpxID);
             this.sendBytes.PushByStream(_sendStream);
             isNeedSend = true;
-#if !UNITY_EDITOR
+            // 两端都记录：只在真机记录会让编辑器的 RPC 超时检测完全失效。
             _rpcTime.Add(rpxID, TimeMgr.Ins.TotalTime);
-#endif
             return task.Task;
         }
         #endregion
