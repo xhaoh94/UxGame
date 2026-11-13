@@ -84,7 +84,8 @@ namespace Ux
 
         Dictionary<uint, IRpcCompletionSource> _rpcMethod = new Dictionary<uint, IRpcCompletionSource>();
         Dictionary<uint, Type> _rpcType = new Dictionary<uint, Type>();
-        Dictionary<uint, float> _rpcTime = new Dictionary<uint, float>();
+        // 与 TimeMgr.TotalTime(double) 保持一致，避免每次写入都要转换。
+        Dictionary<uint, double> _rpcTime = new Dictionary<uint, double>();
         List<uint> _rpcDels = new List<uint>();
 
         Action _connectCallback;
