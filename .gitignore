@@ -76,3 +76,6 @@ Unity/.vscode/launch.json
 .kilocode
 .codex
 .vscode
+
+# WorkBuddy 工作区数据：记忆、审核报告、历史备份，仅本地保留
+.workbuddy/
