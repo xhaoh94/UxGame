@@ -117,6 +117,101 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(3, item.MeasureCalls);
         }
 
+        [Test]
+        public void RelationExtensionSkipsExtraPassWhenItemHasNoRelations()
+        {
+            var extension = new UIRelationMeasureExtension();
+            _list.RegisterMeasureExtension(extension);
+
+            Assert.AreEqual(50f, _list.MeasureItem(0, NewItem(50f)).y, 0.01f);
+            Assert.AreEqual(1, extension.LastNextCalls);
+            Assert.AreEqual(1, extension.CollectCount);
+        }
+
+        [Test]
+        public void RelationExtensionRemeasuresOnlyAfterRelationWrote()
+        {
+            var item = NewItem(50f);
+            var extension = AttachSingleHeightRelation(item, delta: 10f);
+
+            Assert.AreEqual(2, extension.LastNextCalls, "首次测量 + 关联应用后重排各一次");
+            Assert.AreEqual(1, extension.CollectCount);
+
+            _list.MeasureItem(0, item);
+            Assert.AreEqual(1, extension.LastNextCalls, "关系稳定后只跑一次内层测量");
+            Assert.AreEqual(1, extension.CollectCount, "同一 RectTransform 只收集一次");
+        }
+
+        [Test]
+        public void InvalidateForcesRelationRecollect()
+        {
+            var item = NewItem(50f);
+            var extension = AttachSingleHeightRelation(item, delta: 10f);
+            Assert.AreEqual(1, extension.CollectCount);
+
+            extension.Invalidate(item.RectTransform);
+            Assert.IsFalse(item.GameObject.GetComponent<UIRelation>().ExternalDriven,
+                "失效缓存时必须撤回外部驱动标记");
+            _list.MeasureItem(0, item);
+            Assert.AreEqual(2, extension.CollectCount);
+        }
+
+        [Test]
+        public void ResetAllClearsExternalDriven()
+        {
+            var item = NewItem(50f);
+            var extension = AttachSingleHeightRelation(item, delta: 10f);
+            var relation = item.GameObject.GetComponent<UIRelation>();
+            Assert.IsTrue(relation.ExternalDriven);
+
+            extension.ResetAll();
+            Assert.IsFalse(relation.ExternalDriven);
+        }
+
+        [Test]
+        public void RelationExtensionReportsPassLimitExhaustion()
+        {
+            var item = NewItem(50f);
+            var a = new GameObject("A", typeof(RectTransform));
+            var b = new GameObject("B", typeof(RectTransform));
+            a.transform.SetParent(item.GameObject.transform, false);
+            b.transform.SetParent(item.GameObject.transform, false);
+
+            var relationA = a.AddComponent<UIRelation>();
+            relationA.Items = new[] { HeightRelation((RectTransform)b.transform, 1f) };
+            var relationB = b.AddComponent<UIRelation>();
+            relationB.Items = new[] { HeightRelation((RectTransform)a.transform, 1f) };
+
+            var extension = new UIRelationMeasureExtension();
+            _list.RegisterMeasureExtension(extension);
+            _list.MeasureItem(0, item);
+
+            // A/B 每轮互相 +1，永远不会收敛：4 轮上限必须报出来，而不是静默截断。
+            Assert.GreaterOrEqual(extension.ExhaustedCount, 1);
+            Assert.AreEqual(5, extension.LastNextCalls);
+        }
+
+        private static UIRelationItem HeightRelation(RectTransform target, float delta) => new UIRelationItem
+        {
+            Target = target,
+            FollowHeight = true,
+            HeightUsePercent = false,
+            HeightDelta = delta,
+        };
+
+        private UIRelationMeasureExtension AttachSingleHeightRelation(FixedItem item, float delta)
+        {
+            var target = new GameObject("Relation Target", typeof(RectTransform));
+            target.transform.SetParent(item.GameObject.transform, false);
+            var relation = item.GameObject.AddComponent<UIRelation>();
+            relation.Items = new[] { HeightRelation((RectTransform)target.transform, delta) };
+
+            var extension = new UIRelationMeasureExtension();
+            _list.RegisterMeasureExtension(extension);
+            _list.MeasureItem(0, item);
+            return extension;
+        }
+
         private sealed class FixedItem : IUIVirtualListItem
         {
             private float _height;

@@ -340,12 +340,60 @@ namespace Ux
                 item.Parent.Node.RemoveChildInternal(node);
         }
 
+        /// <summary>
+        /// 结构编辑先改模型、再由 BuildState 校验；失败时只回滚投影不够，
+        /// 根列表和各节点 Children 也要还原，否则模型会被非法编辑永久污染。
+        /// </summary>
+        private sealed class StructureSnapshot
+        {
+            public readonly List<UIVirtualTreeNode> Roots;
+            public readonly List<KeyValuePair<UIVirtualTreeNode, UIVirtualTreeNode[]>> Children;
+
+            public StructureSnapshot(List<UIVirtualTreeNode> roots,
+                List<KeyValuePair<UIVirtualTreeNode, UIVirtualTreeNode[]>> children)
+            {
+                Roots = roots;
+                Children = children;
+            }
+        }
+
+        private StructureSnapshot CaptureStructure()
+        {
+            var roots = new List<UIVirtualTreeNode>(_rootModels);
+            var children = new List<KeyValuePair<UIVirtualTreeNode, UIVirtualTreeNode[]>>();
+            for (int i = 0; i < _rootModels.Count; i++) CaptureChildren(_rootModels[i], children);
+            return new StructureSnapshot(roots, children);
+        }
+
+        private static void CaptureChildren(UIVirtualTreeNode node,
+            List<KeyValuePair<UIVirtualTreeNode, UIVirtualTreeNode[]>> children)
+        {
+            var kids = new UIVirtualTreeNode[node.Children.Count];
+            for (int i = 0; i < kids.Length; i++) kids[i] = node.Children[i];
+            children.Add(new KeyValuePair<UIVirtualTreeNode, UIVirtualTreeNode[]>(node, kids));
+            for (int i = 0; i < kids.Length; i++) CaptureChildren(kids[i], children);
+        }
+
+        private void RestoreStructure(StructureSnapshot snapshot)
+        {
+            _rootModels.Clear();
+            _rootModels.AddRange(snapshot.Roots);
+            for (int i = 0; i < snapshot.Children.Count; i++)
+            {
+                var node = snapshot.Children[i].Key;
+                while (node.Children.Count > 0) node.RemoveChildInternal(node.Children[0]);
+                var kids = snapshot.Children[i].Value;
+                for (int j = 0; j < kids.Length; j++) node.InsertChildInternal(j, kids[j]);
+            }
+        }
+
         /// <summary>结构变更后重建投影，只对真正变化的行做增删，未变化行保留实例与绑定。</summary>
         private bool Mutate(Action change)
         {
             Guard();
             var previousState = _state;
             ulong revision = _list.DataRevision;
+            var snapshot = CaptureStructure();
             _changing = true;
             try
             {
@@ -357,6 +405,9 @@ namespace Ux
             }
             catch
             {
+                // change() 已经改过模型，BuildState 校验失败时必须先还原，
+                // 否则重复 Id 会留在 _rootModels 里，让后续所有编辑持续抛错。
+                RestoreStructure(snapshot);
                 if (_list.DataRevision == revision) _state = previousState;
                 else _expectedRevision = _list.DataRevision;
                 throw;

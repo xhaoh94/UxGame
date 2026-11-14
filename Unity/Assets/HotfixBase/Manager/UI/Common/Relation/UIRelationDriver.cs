@@ -12,8 +12,8 @@ namespace Ux
     [AddComponentMenu("Ux/UI/UI Relation Driver")]
     public sealed class UIRelationDriver : MonoBehaviour
     {
-        /// <summary>单帧最多收敛轮数，防止异常关系导致长时间循环。</summary>
-        private const int MaxPasses = 4;
+        /// <summary>单帧最多收敛轮数，防止异常关系导致长时间循环；测量扩展共用同一上限。</summary>
+        internal const int MaxPasses = 4;
 
         private static readonly List<UIRelation> Relations = new(64);
         private static UIRelationDriver _instance;
@@ -109,7 +109,7 @@ namespace Ux
         /// 内部复用 ApplyPass，两个入口不会分叉。
         /// 走 Apply() 而不是 ApplyIfNeeded()：不刷新基线，以配置的距离/比例为权威。
         /// </summary>
-        internal static bool ApplyImmediate(IReadOnlyList<UIRelation> relations, int maxPasses = 4)
+        internal static bool ApplyImmediate(IReadOnlyList<UIRelation> relations, int maxPasses = MaxPasses)
         {
             if (relations == null || relations.Count == 0 || maxPasses <= 0) return false;
 

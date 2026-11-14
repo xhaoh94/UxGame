@@ -61,6 +61,13 @@ namespace Ux
         private float _renderOrderViewportCenter;
         private bool _renderOrderDirty;
         private readonly List<int> _renderOrderBuffer = new();
+        // 滚动早退：可见范围与上次一致且没有待绑/待测项时，跳过整轮刷新。
+        private UIVirtualListRange _lastVisibleRange;
+        private bool _hasLastVisibleRange;
+        // 视口变化会改交叉轴尺寸，即使范围没变也必须重摆一次。
+        private bool _viewportChanged;
+        // Content 尺寸脏检查：值没变就不写 RectTransform。
+        private Vector2 _contentSizeCache = new(float.NaN, float.NaN);
         private readonly Comparison<int> _renderOrderComparison;
         private const int NoRenderOrderCenter = int.MinValue;
 
@@ -698,7 +705,10 @@ namespace Ux
                 UpdateViewportLayout();
                 // 先归位再算 range：循环 list 平移周期后必须按新位置重新分配 Item。
                 RecenterLoop();
+                if (!force && !_layoutRetryPending && !NeedsVisibleRefresh())
+                    return;
                 bool settled = false;
+                bool lastLayoutChanged = false;
                 _layoutRetryPending = false;
                 _measureDeferred = false;
                 int passUsed = 0;
@@ -724,6 +734,7 @@ namespace Ux
                     ApplyItemLayouts();
 
                     bool layoutChanged = MeasureVisibleItems();
+                    lastLayoutChanged = layoutChanged;
                     if (_disposePending) break;
                     force = false;
                     // 有个别项在本轮刷新里反复变尺寸：保留待测标记交给下一帧，
@@ -751,7 +762,12 @@ namespace Ux
                 if (!_disposePending)
                 {
                     UpdateContentSize();
-                    ApplyItemLayouts();
+                    // 最后一轮没有尺寸变化时，pass 内已经摆过位置，收尾不必再全量遍历一次。
+                    if (!settled || lastLayoutChanged) ApplyItemLayouts();
+                    _lastVisibleRange = _layout.GetVisibleRange(
+                        GetScrollPosition(), GetViewportLength(), _bufferSize);
+                    _hasLastVisibleRange = true;
+                    _viewportChanged = false;
                     // Item 位置已落定，按最终布局算绘制顺序。
                     ApplyRenderOrder();
                     ApplyPinnedOrder();
@@ -779,6 +795,27 @@ namespace Ux
             }
         }
 
+        /// <summary>滚动帧早退：范围、绑定、测量、绘制顺序都没有待处理时，整轮刷新可以跳过。</summary>
+        private bool NeedsVisibleRefresh()
+        {
+            if (_pendingCreate.Count > 0 || _renderOrderDirty || _viewportChanged)
+                return true;
+            // 中心排序要跟随视口中心，同一范围内也可能换中心项。
+            if (_renderOrder == UIVirtualListRenderOrder.CenterOut ||
+                _renderOrder == UIVirtualListRenderOrder.EdgeIn)
+                return true;
+            if (!_hasLastVisibleRange)
+                return true;
+
+            var range = _layout.GetVisibleRange(GetScrollPosition(), GetViewportLength(), _bufferSize);
+            if (range.Start != _lastVisibleRange.Start || range.End != _lastVisibleRange.End)
+                return true;
+            foreach (var active in _activeItems.Values)
+                if (active.NeedsBind || active.NeedsMeasure)
+                    return true;
+            return false;
+        }
+
         private void SyncVisibleItems(UIVirtualListRange range, bool force)
         {
             _removeIndices.Clear();
@@ -798,13 +835,24 @@ namespace Ux
                     continue;
 
                 object data = DataAt(index);
-                int itemType = _factory.GetItemType(ToDataIndex(index), data);
                 if (!_activeItems.TryGetValue(index, out var active))
                 {
                     _missingIndices.Add(index);
                     continue;
                 }
 
+                // 索引与数据引用都没变时复用上次类型；ItemTypeProvider 必须是 (index, data) 的纯函数。
+                int itemType;
+                if (active.CachedIndex == index && ReferenceEquals(active.CachedData, data))
+                {
+                    itemType = active.ItemType;
+                }
+                else
+                {
+                    itemType = _factory.GetItemType(ToDataIndex(index), data);
+                    active.CachedIndex = index;
+                    active.CachedData = data;
+                }
                 if (active.ItemType != itemType)
                 {
                     ReleaseItem(index);
@@ -896,8 +944,11 @@ namespace Ux
             var active = new ActiveItem
             {
                 Item = GetItem(itemType),
-                ItemType = itemType
+                ItemType = itemType,
+                CachedIndex = index,
+                CachedData = DataAt(index)
             };
+            active.ClickAction = () => InvokeItemClicked(active);
             _activeItems.Add(index, active);
             // 新项默认落在 Content 末尾（最上层），必须重新分配兄弟序号。
             _renderOrderDirty = true;
@@ -1031,19 +1082,18 @@ namespace Ux
             active.ReusedSize = _layout.SupportsDynamicSize && TryReuseMeasuredSize(index);
             active.NeedsMeasure = _layout.SupportsDynamicSize && !active.ReusedSize;
             var item = active.Item;
-            var token = new UIVirtualListItemToken(this, index, item, active.BindingVersion);
+            active.Index = index;
+            active.LogicalIndex = ToDataIndex(index);
+            active.Token = new UIVirtualListItemToken(this, index, item, active.BindingVersion);
+            active.CachedIndex = index;
+            active.CachedData = DataAt(index);
             try
             {
                 // 绑定前先给定交叉轴尺寸，文本换行及内容布局才能使用正确的宽/高。
                 SetItemGeometry(item.RectTransform, _layout.GetItemLayout(index), true);
                 item.GameObject.SetActive(true);
-                int logicalIndex = ToDataIndex(index);
-                item.SetClickHandler(() =>
-                {
-                    if (!_changingData && IsItemTokenCurrent(token))
-                        ItemClicked?.Invoke(logicalIndex, DataAt(index));
-                });
-                item.Bind(logicalIndex, data: DataAt(index));
+                item.SetClickHandler(active.ClickAction);
+                item.Bind(active.LogicalIndex, data: DataAt(index));
             }
             catch
             {
@@ -1053,6 +1103,12 @@ namespace Ux
                 active.NeedsMeasure = false;
                 throw;
             }
+        }
+
+        private void InvokeItemClicked(ActiveItem active)
+        {
+            if (!_changingData && IsItemTokenCurrent(active.Token))
+                ItemClicked?.Invoke(active.LogicalIndex, DataAt(active.Index));
         }
 
         private bool MeasureVisibleItems()
@@ -1283,6 +1339,7 @@ namespace Ux
             if (_layout is IUIVirtualListViewportLayout viewportLayout)
                 viewportLayout.SetViewportSize(size);
             _lastViewportSize = size;
+            _viewportChanged = true;
             UpdateContentSize();
             RestoreScrollAnchor(anchor);
         }
@@ -1372,24 +1429,24 @@ namespace Ux
 
         private void UpdateContentSize()
         {
+            float width, height;
             if (_layout.IsVertical)
             {
-                _content.SetSizeWithCurrentAnchors(
-                    RectTransform.Axis.Horizontal,
-                    Mathf.Max(_viewport.rect.width, _layout.CrossSize));
-                _content.SetSizeWithCurrentAnchors(
-                    RectTransform.Axis.Vertical,
-                    _layout.ContentLength);
+                width = Mathf.Max(_viewport.rect.width, _layout.CrossSize);
+                height = _layout.ContentLength;
             }
             else
             {
-                _content.SetSizeWithCurrentAnchors(
-                    RectTransform.Axis.Horizontal,
-                    _layout.ContentLength);
-                _content.SetSizeWithCurrentAnchors(
-                    RectTransform.Axis.Vertical,
-                    Mathf.Max(_viewport.rect.height, _layout.CrossSize));
+                width = _layout.ContentLength;
+                height = Mathf.Max(_viewport.rect.height, _layout.CrossSize);
             }
+            // 滚动帧里绝大多数时候长度没变，值相等就不要写 native 尺寸。
+            if (Mathf.Abs(width - _contentSizeCache.x) <= 0.01f &&
+                Mathf.Abs(height - _contentSizeCache.y) <= 0.01f)
+                return;
+            _contentSizeCache = new Vector2(width, height);
+            _content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+            _content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
         }
 
         private float GetScrollPosition()
@@ -1630,6 +1687,15 @@ namespace Ux
             public int MeasurePasses;
             public ulong BindingVersion;
             public IUIVirtualListItem Item;
+            /// <summary>当前渲染索引与业务索引；点击委托常驻，靠这两个字段跟随重绑。</summary>
+            public int Index;
+            public int LogicalIndex;
+            public UIVirtualListItemToken Token;
+            /// <summary>按 item 实例常驻，Bind 时不再新建闭包。</summary>
+            public Action ClickAction;
+            /// <summary>GetItemType 的输入缓存：索引与数据引用都没变时不再问业务。</summary>
+            public int CachedIndex = -1;
+            public object CachedData;
         }
 
         /// <summary>待创建项。Version 与列表的 _createVersion 不一致时丢弃。</summary>

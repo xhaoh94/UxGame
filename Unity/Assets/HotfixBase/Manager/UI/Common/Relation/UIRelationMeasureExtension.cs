@@ -1,46 +1,61 @@
 using System;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Ux
 {
     /// <summary>
     /// 虚拟列表测量扩展：先让 UGUI 完成布局，再同步应用 Item 子树内的 UIRelation，
-    /// 然后重新排一次让 LayoutGroup / ContentSizeFitter 吸收关联结果，最后返回内层链的尺寸。
-    /// 单例、无状态；关系数组按 RectTransform 缓存，每个 item 实例只收集一次。
+    /// 然后重排吸收关联结果，最后返回内层链的尺寸。
+    /// 关系数组按 RectTransform 缓存，每个 item 实例只收集一次；关闭开关时用 ResetAll 撤销 ExternalDriven。
     /// 边界：只处理 Item 子树内的关系。跨 Item 的目标会随复用/回收变化，结果不稳定，不支持。
     /// </summary>
-    internal sealed class UIRelationMeasureExtension : IUIVirtualListMeasureExtension
+    public sealed class UIRelationMeasureExtension : IUIVirtualListMeasureExtension
     {
-        /// <summary>
-        /// 外层最多四轮（关系链深 4 + 确认）：每轮只推进一次关系、再重排一次，
-        /// 而不是“内层 4 轮 × 外层 3 轮”的乘积。无变化时第二轮就退出。
-        /// </summary>
-        private const int MaxPasses = 4;
+        private readonly Dictionary<RectTransform, UIRelation[]> _relations = new();
+        private int _lastWarnFrame = -1;
 
-        // 弱键：item 回收/销毁后条目随托管对象回收，不需要在 Dispose 里手工清。
-        private static readonly ConditionalWeakTable<RectTransform, UIRelation[]>.CreateValueCallback CreateEntries =
-            Collect;
+        /// <summary>上一次测量的内层链调用次数，测试/诊断用。</summary>
+        internal int LastNextCalls { get; private set; }
 
-        private readonly ConditionalWeakTable<RectTransform, UIRelation[]> _cache = new();
+        /// <summary>关系收集次数；Invalidate 后再次测量会递增，测试用。</summary>
+        internal int CollectCount { get; private set; }
+
+        /// <summary>触达轮数上限的次数，测试/诊断用。</summary>
+        internal int ExhaustedCount { get; private set; }
 
         public Vector2 Measure(in UIVirtualListMeasureContext context, Func<int, Vector2> next)
         {
             var rect = context.Rect;
-            if (rect == null) return next(context.Index);
+            if (rect == null)
+            {
+                LastNextCalls = 1;
+                return next(context.Index);
+            }
 
-            var relations = _cache.GetValue(rect, CreateEntries);
+            if (!_relations.TryGetValue(rect, out var relations))
+            {
+                relations = Collect(rect);
+                _relations.Add(rect, relations);
+            }
+
             // 模板没有关联：完全不碰额外路径。
-            if (relations.Length == 0) return next(context.Index);
+            if (relations.Length == 0)
+            {
+                LastNextCalls = 1;
+                return next(context.Index);
+            }
 
+            LastNextCalls = 0;
             var size = next(context.Index); // 内层链的返回值始终是权威尺寸
-            for (int pass = 0; pass < MaxPasses; pass++)
+            LastNextCalls++;
+            for (int pass = 0; pass < UIRelationDriver.MaxPasses; pass++)
             {
                 // 每轮只跑一遍关系；有变化才重排一次，不再嵌套完整的多轮收敛。
                 if (!UIRelationDriver.ApplyPass(relations)) break;
-                // 关联改了子树尺寸：让内层链用新几何重算，默认 Measure 得到新的 rect.size，
-                // 自定义 Measure 仍用自己的算法，两边都不会被覆盖。
                 size = next(context.Index);
+                LastNextCalls++;
+                if (pass == UIRelationDriver.MaxPasses - 1) WarnExhausted();
             }
             return size;
         }
@@ -48,15 +63,45 @@ namespace Ux
         /// <summary>模板在运行时动态增删 UIRelation 后调用，丢弃该实例的收集结果。</summary>
         public void Invalidate(RectTransform rect)
         {
-            if (rect != null && _cache.TryGetValue(rect, out _)) _cache.Remove(rect);
+            if (rect == null) return;
+            if (_relations.TryGetValue(rect, out var relations))
+            {
+                ClearExternalDriven(relations);
+                _relations.Remove(rect);
+            }
         }
 
-        private static UIRelation[] Collect(RectTransform rect)
+        /// <summary>关闭外部驱动时调用：撤回 ExternalDriven 并清缓存，避免关系系统继续跳过 relink。</summary>
+        public void ResetAll()
         {
+            foreach (var relations in _relations.Values)
+                ClearExternalDriven(relations);
+            _relations.Clear();
+        }
+
+        private static void ClearExternalDriven(UIRelation[] relations)
+        {
+            for (int i = 0; i < relations.Length; i++)
+                if (relations[i] != null) relations[i].ExternalDriven = false;
+        }
+
+        private UIRelation[] Collect(RectTransform rect)
+        {
+            CollectCount++;
             var found = rect.GetComponentsInChildren<UIRelation>(true);
             for (int i = 0; i < found.Length; i++)
                 found[i].ExternalDriven = true;
             return found;
+        }
+
+        private void WarnExhausted()
+        {
+            ExhaustedCount++;
+            // 每帧最多报一次：链式关系未收敛时所有可见项都会触顶。
+            if (Time.frameCount == _lastWarnFrame) return;
+            _lastWarnFrame = Time.frameCount;
+            Debug.LogWarning(
+                $"虚拟列表关系测量达到 {UIRelationDriver.MaxPasses} 轮上限，链式关联可能未收敛；请检查 UIRelation 依赖深度。");
         }
     }
 }

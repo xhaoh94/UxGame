@@ -56,6 +56,28 @@ namespace Ux.Editor.Tests
         }
 
         [Test]
+        public void TreeEditFailureRollsBackModelAndAllowsFurtherEdits()
+        {
+            using var f = new TreeFixture();
+            f.Tree.SetRoots(new[]
+            {
+                new UIVirtualTreeNode("a", "A"),
+                new UIVirtualTreeNode("b", "B")
+            });
+
+            Assert.Throws<ArgumentException>(() => f.Tree.AddRoot(new UIVirtualTreeNode("a", "Duplicate")));
+            Assert.IsTrue(f.Tree.OwnsCurrentData);
+            Assert.AreEqual(2, f.Core.Count, "失败编辑不应改变可见行");
+
+            // 修复前 _rootModels 里会留下第二个 "a"，此后任何编辑都会继续抛重复 Id。
+            Assert.IsTrue(f.Tree.AddRoot(new UIVirtualTreeNode("c", "C")));
+            Assert.AreEqual(3, f.Core.Count);
+            Assert.IsTrue(f.Tree.RemoveNode("a"));
+            Assert.AreEqual(2, f.Core.Count);
+            Assert.IsTrue(f.Tree.TryGetItem("b", out _));
+        }
+
+        [Test]
         public void GroupInsertRemoveMoveAndItemEditsKeepStickyDataConsistent()
         {
             using var f = new GroupFixture();

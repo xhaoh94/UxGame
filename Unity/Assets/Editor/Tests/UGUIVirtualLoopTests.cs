@@ -23,7 +23,8 @@ namespace Ux.Editor.Tests
             Assert.AreEqual(4, loop.ToDataIndex(-1), "负索引对应上一周期的最后一项");
             float cycle = loop.CycleLength;
             Assert.Greater(cycle, 0f);
-            Assert.AreEqual(cycle * 3, loop.ContentLength, 0.01f);
+            // 最后一个周期末尾不再补间距，与 UIVirtualLoopLayout.ContentLength 的实现一致。
+            Assert.AreEqual(cycle * 3 - inner.MainSpacing, loop.ContentLength, 0.01f);
             var first = loop.GetItemLayout(0);
             var second = loop.GetItemLayout(5);
             Assert.AreEqual(axis == UIVirtualListAxis.Vertical ? -cycle : cycle,

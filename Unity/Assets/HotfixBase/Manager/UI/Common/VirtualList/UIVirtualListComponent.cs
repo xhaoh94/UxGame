@@ -179,6 +179,8 @@ namespace Ux
                 if (_applyRelationsOnMeasure == value) return;
                 _applyRelationsOnMeasure = value;
                 SyncMeasureExtensions(_list);
+                // 开/关都会改变尺寸来源：已测尺寸可能来自另一种路径，强制重测一次。
+                if (_list != null) _list.Refresh();
             }
         }
 
@@ -220,6 +222,8 @@ namespace Ux
             else if (_relationMeasure != null)
             {
                 list.UnregisterMeasureExtension(_relationMeasure);
+                // 关闭后关系不能再由列表接管，否则 Driver 会继续按 ExternalDriven 跳过 relink。
+                _relationMeasure.ResetAll();
             }
         }
 
@@ -525,6 +529,8 @@ namespace Ux
             _retiringList = list;
             _list = null;
             _flowLayout = null;
+            // 列表释放后关系不再由测量链驱动，撤掉 ExternalDriven 让 Driver 恢复兜底。
+            _relationMeasure?.ResetAll();
             try
             {
                 var failure = DisposeOwnedAdapters();
@@ -697,6 +703,7 @@ namespace Ux
             private readonly Button _button;
             private readonly bool _isSticky;
             private UnityAction _clickAction;
+            private Action _clickHandler;
             private int _index = -1;
             private object _data;
 
@@ -785,12 +792,23 @@ namespace Ux
                 }
                 if (_button == null)
                     return;
-                if (_clickAction != null)
-                    _button.onClick.RemoveListener(_clickAction);
-                _clickAction = callback == null ? null : new UnityAction(callback);
-                if (_clickAction != null)
+
+                // 委托由列表按 item 实例常驻，同一实例复用时不重建 UnityAction、不增删监听。
+                if (_clickAction == null)
+                {
+                    _clickAction = InvokeClick;
+                    _clickHandler = callback;
                     _button.onClick.AddListener(_clickAction);
+                }
+                else if (!ReferenceEquals(_clickHandler, callback))
+                {
+                    _clickHandler = callback;
+                    _button.onClick.RemoveListener(_clickAction);
+                    _button.onClick.AddListener(_clickAction);
+                }
             }
+
+            private void InvokeClick() => _clickHandler?.Invoke();
         }
     }
 }

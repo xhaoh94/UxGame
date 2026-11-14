@@ -8,7 +8,7 @@
 2. 拖入 `Scroll Rect`，并确保 ScrollRect 自己的 `Viewport`、`Content` 已赋值。
 3. 选择「列表类型」：**普通列表 / 树形列表 / 分页列表 / 分组列表**。这些是数据类型，不是尺寸布局模式。
 4. 选择「尺寸模式」：**固定尺寸 / 可变尺寸**，两种列表类型都支持。
-5. 选择「尺寸来源」：`Manual` 手动指定，或 `FromTemplate` 读取默认模板根尺寸。固定模式使用精确宽高；可变模式中主轴为初始估算值，交叉轴固定。
+5. 选择「尺寸来源」：`Custom`（手动指定），或 `FromTemplate` 读取默认模板根尺寸。固定模式使用精确宽高；可变模式中主轴为初始估算值，交叉轴固定。
 6. 普通/分页列表可以选择滚动方向、多列/多行及可选数量上限。树形/分组固定竖向单列；分组提供空组显示和吸顶开关。分页提供每页数量、自动预加载和状态点击选项。特殊数据类型隐藏聊天末尾跟随策略，避免投影变化时跳走当前内容。
 7. 在 `Item Templates` 添加元素，填写 `Type Id`，把 **Hierarchy 中的 GameObject** 或 **Project 中的 Prefab** 拖入 `Template`。
 8. `Default Item Type` 必须对应某个模板的 TypeId；只有一个模板时通常都用 0。
@@ -111,7 +111,7 @@ _list.UpdateData(index, updatedData); // 替换并重新绑定指定项
 _list.Clear();                       // 清空数据，保留对象池
 ```
 
-这些接口支持单列、多列、横向/竖向以及固定/可变尺寸。`SetDatas` 仍表示全量替换、重置尺寸缓存并回到起点；增量接口不会这样做。
+这些接口支持单列、多列、横向/竖向以及固定/可变尺寸。`SetDatas` 仍表示全量替换、重置尺寸缓存并回到起点；增量接口不会这样做。例外：循环列表与未实现 `IUIVirtualListMutableLayout` 的自定义布局会退化为全量重置尺寸缓存（循环列表另有约束，见「无限循环列表」）。
 
 ### 全量刷新但保持位置
 
@@ -255,11 +255,11 @@ component.Clear(); // 树模式清空根节点，仍保持树数据源归属
 - 组件可以通过 `TryGetTreeAdapter` 无副作用查询适配器；`TreeAdapter` 属性用于显式访问/初始化。
 - 仍保留纯 C# 手工方式：`new UIVirtualTreeAdapter(core)`，适用于不用组件或自定义布局的调用方。该 Adapter 不拥有 Core，Dispose 不会 Clear / Dispose Core，点击和外层释放由调用方负责；不要在组件树模式再创建第二个适配器。
 
-当前树结构在构造后固定，还没有异步加载子节点、节点拖拽排序、树内增删节点、搜索过滤或连线图。结构变化暂用新模型 SetRoots；后续可以在适配层扩展，不侵入核心布局。
+树结构支持运行时编辑：`AddRoot / InsertChild / RemoveNode / MoveNode`（见下文「树 / 分组运行时结构编辑」），完整替换结构仍用 `SetRoots`。暂未实现异步加载子节点、节点拖拽排序、搜索过滤或连线图；这些可以在适配层扩展，不侵入核心布局。
 
 ### 树形 Demo
 
-退出运行后执行 `UxGame/Test/Create UI Tree Demo`，再运行场景：
+退出运行后执行 `UxGame/工具/UI/虚拟列表/Create UI Tree Demo`，再运行场景：
 
 - 默认注册 2120 个节点，初始展开行 45 条，只创建视口和缓冲区附近的 Item。
 - 点击 `[-]` / `[+]` 分类或分组行折叠/展开，叶子点击只打印节点信息。
@@ -344,7 +344,7 @@ _list.RefreshPagePresentation();     // 修复 Renderer 后只重试视图，不
 
 ### 分页 Demo
 
-退出运行，执行 `UxGame/Test/Create UI Paging Demo`，保存后运行：
+退出运行，执行 `UxGame/工具/UI/虚拟列表/Create UI Paging Demo`，保存后运行：
 
 - 总业务记录 95 条，每页 20 条，模拟加载延迟。
 - 第 3 页（页号2）首次模拟网络失败，点击尾部错误状态项重试。
@@ -421,11 +421,11 @@ if (_list.TryGetStickyHeaderToken(out var token))
 - 不混用普通 AddData / SetDatas 改分组投影，数据版本会检测越权修改。Clear 在分组模式会清空分组。
 - 纯 C# 调用方可构造 UIVirtualGroupAdapter(core) 和 UIVirtualStickyHeader(core, groups, factory)，每帧 Tick；它们不拥有 Core，退出时分别 Dispose。
 - 同步 Renderer / 回收过程中不能重新改数据源。释放可延后到渲染安全位置，吸顶回收完成前 facade 也禁止重新初始化。
-- 本轮不含多列满行 Header、可折叠分组、多级吸顶、运行时组内增删或组排序；结构替换用 SetGroups，需树状展开请用树模式。
+- 暂不含多列满行 Header、可折叠分组、多级吸顶；组内增删与组排序已支持（`InsertGroup / RemoveGroup / MoveGroup / AddItem / InsertItem / RemoveItem`，见下文），完整结构替换仍用 `SetGroups`；需要树状展开请用树模式。
 
 ### 分组 Demo
 
-退出运行后执行 `UxGame/Test/Create UI Grouped Demo`：
+退出运行后执行 `UxGame/工具/UI/虚拟列表/Create UI Grouped Demo`：
 
 - 20 个分组，每组20条业务数据，总400条业务数据+20个组头；只创建视口附近的行。
 - 向下滚动观察金色文字吸顶副本和下一组顶出效果。
@@ -619,6 +619,7 @@ _list.ToDataIndex(virtualIndex); // 虚拟索引 → 真实数据索引
 - 滚动进入首/尾周期时静默平移一个周期长度，视觉无缝。
 - 固定 3 个周期，不可配置：只有中间周期是安全区，少于 3 个会反复触发反向平移。内容长度（一个周期）必须大于视口，否则不做重定位。
 - 只支持单列/单行：多列、树形、分组会拒绝；分页不建议与循环组合。
+- **循环列表请勿混用普通增量数据接口**（`AddData / InsertDatas / RemoveRange / UpdateData`）：循环布局未实现增量尺寸接口，调用会退化为全量重置尺寸缓存，且渲染索引与数据索引的键语义不一致，滚动位置不保证；循环数据请用 `SetDatas` 整体替换。
 - 选择、滚动定位、尺寸通知都对虚拟行生效；`ScrollToView` 传虚拟索引，业务层通常用 `ToDataIndex` 换算。
 
 纯 C# 用法：
@@ -632,7 +633,7 @@ list.SetDatas(items);   // 自动从中间周期开始
 
 ### 循环 Demo
 
-退出运行后执行 `UxGame/Test/Create UI Loop Demo`，保存并运行：
+退出运行后执行 `UxGame/工具/UI/虚拟列表/Create UI Loop Demo`，保存并运行：
 
 - 8 张彩色卡片，固定 620×120，3 个周期首尾相接。
 - 从中间周期开始，向上/向下连续滚动都不会到头；进入首尾周期时会静默换周期。
@@ -738,11 +739,11 @@ new UIVirtualListTemplateCache(
 
 - `FromTemplate` 在每次初始化时读取 `Default Item Type` 对应模板的 `RectTransform.rect.size`。
 - 场景对象和 Project Prefab 均支持，不会激活模板，也不会创建临时克隆。
-- 此时无需填写 `Item Size`，Inspector 会显示模板尺寸预览；切换到 `Manual` 可覆盖。
+- 此时无需填写 `Item Size`，Inspector 会显示模板尺寸预览；切换到 `Custom` 可覆盖。
 - 只读取默认模板作为全局固定尺寸或初始估算尺寸，不是把每种 Prefab 都当成不同尺寸的网格单元。
-- 建议模板根节点使用固定宽高。依赖父节点拉伸、根节点尺寸为零的模板，请先设置根尺寸或选择 `Manual`。
+- 建议模板根节点使用固定宽高。依赖父节点拉伸、根节点尺寸为零的模板，请先设置根尺寸或选择 `Custom`。
 - 不会为了读尺寸重建全部模板的布局；内容驱动高度仍在绑定后按可变布局测量。
-- 老场景缺省仍为 `Manual`，不会悄悄改变已有尺寸；新添加的组件默认选择 `FromTemplate`。
+- 老场景缺省仍为 `Custom`，不会悄悄改变已有尺寸；新添加的组件默认选择 `FromTemplate`。
 
 ## 统一列表与多列布局
 
@@ -796,8 +797,8 @@ list.RefreshViewportIfChanged(); // 同时消费上帧未收敛的布局工作
 
 退出 Play Mode 后执行：
 
-- `UxGame/Test/Create UI Multi Column Demo`：把当前示例切换成自动换行、最多 4 列、148×110 的布局，填充 1000 个测试道具。
-- `UxGame/Test/Create UI VirtualList Demo`：恢复已验收的垂直可变高度聊天示例。
+- `UxGame/工具/UI/虚拟列表/Create UI Multi Column Demo`：把当前示例切换成自动换行、最多 4 列、148×110 的布局，填充 1000 个测试道具。
+- `UxGame/工具/UI/虚拟列表/Create UI VirtualList Demo`：恢复已验收的垂直可变高度聊天示例。
 
 两个菜单都复用现有 Canvas、ScrollRect 和模板，标记场景为脏状态，由用户保存；不会自动覆盖磁盘场景。仅更新脚本不会切换现有 Demo 的布局。
 
@@ -982,5 +983,8 @@ _list.Release(); // 可重新 SetDatas 初始化
 
 ## 当前边界
 
-目前支持统一的固定/可变单轴流式布局、视口自适应多行/列、树形数据适配、页号分页、竖向分组与单级吸顶、滚动定位校正与平滑导航、单选/多选状态；不支持瀑布流、跨行跨列、循环、多级吸顶、游标分页和树的异步子节点加载等高级功能。
-可变尺寸仍采用估算加测量，未知区间的总长度和远距离定位是估算值；本轮支持尺寸变化后的视觉锚点保持，但未实现未知全量尺寸的预计算、全局精确滚动条，以及测量后对 Center/End 定位目标的持续追踪。
+目前支持：固定/可变单轴流式布局；视口自适应多行/列；树形数据适配与运行时结构编辑；页号/游标分页；竖向分组与单级吸顶；无限循环（固定 3 个周期）；单选/多选（含按业务 Id 保持）；滚动定位校正与平滑导航；轮播吸附；绘制顺序与单项提权；模板异步加载与资源句柄缓存。
+
+仍不支持：瀑布流/跨行跨列/任意二维装箱、多列满行 Header、可折叠分组、多级吸顶、树的异步子节点加载/拖拽排序/搜索过滤，以及循环列表的增量数据接口。
+
+可变尺寸仍采用估算加测量：未知区间的总长度和远距离定位是估算值，支持尺寸变化后的视觉锚点保持；未实现未知全量尺寸的预计算与全局精确滚动条，也不会持续追踪测量后的 Center/End 定位目标。

@@ -145,7 +145,11 @@ namespace Ux
                 _sizes.InsertRange(index, defaults);
             }
             _count += count;
-            RebuildLineMetrics();
+            // 尾部追加只影响最后一个不完整行及其后新增行；中部插入仍需全量重建。
+            if (_variableSize && index == _count - count && _count > count)
+                RebuildLineMetricsFrom((_count - count) / _countPerLine);
+            else
+                RebuildLineMetrics();
         }
 
         public void RemoveItems(int index, int count)
@@ -160,7 +164,11 @@ namespace Ux
             if (_variableSize)
                 _sizes.RemoveRange(index, count);
             _count -= count;
-            RebuildLineMetrics();
+            // 尾部删除只影响删除起点所在行及之后；中部删除仍需全量重建。
+            if (_variableSize && index == _count && _count + count > 0)
+                RebuildLineMetricsFrom(index / _countPerLine);
+            else
+                RebuildLineMetrics();
         }
 
         public void InvalidateItemSize(int index)
@@ -246,6 +254,39 @@ namespace Ux
                 total += height;
             }
             _totalLineSize = total;
+            _positionsDirty = false;
+        }
+
+        /// <summary>从受影响行开始重建行高；前面的行不变，行起点按需再推进。</summary>
+        private void RebuildLineMetricsFrom(int firstLine)
+        {
+            if (!_variableSize)
+            {
+                _totalLineSize = 0;
+                return;
+            }
+            int lines = LineCount;
+            if (firstLine < 0) firstLine = 0;
+            if (firstLine > lines) firstLine = lines;
+            if (firstLine > _lineSizes.Count)
+            {
+                RebuildLineMetrics();
+                return;
+            }
+
+            for (int i = firstLine; i < _lineSizes.Count; i++) _totalLineSize -= _lineSizes[i];
+            _lineSizes.RemoveRange(firstLine, _lineSizes.Count - firstLine);
+            TrimLineStarts(firstLine + 1);
+            for (int first = firstLine * _countPerLine; first < _count; first += _countPerLine)
+            {
+                int end = (int)Math.Min(_count, (long)first + _countPerLine);
+                float height = 0f;
+                for (int i = first; i < end; i++)
+                    height = Mathf.Max(height, _sizes[i]);
+                _lineSizes.Add(height);
+                _totalLineSize += height;
+            }
+            _positionsDirty = false;
         }
 
         /// <summary>单项尺寸变化后，只重算它所在行的行高和总长。</summary>
